@@ -6,31 +6,37 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ total: 0, inst: 0, mech: 0, elec: 0 });
 
   // Función para procesar el archivo CSV (Excel guardado como CSV)
-  const handleFileUpload = (e: any) => {
+const handleFileUpload = (e: any) => {
     const file = e.target.files[0];
     const reader = new FileReader();
     reader.onload = (event: any) => {
       const text = event.target.result;
-      const rows = text.split("\n").slice(1); // Omitir encabezados
-      const data = rows.map((row: string) => row.split(","));
+      
+      // 1. Limpiamos espacios y saltos de línea extra
+      const rows = text.split("\n").map((row: string) => row.trim()).filter((row: string) => row !== "");
+      
+      // 2. Quitamos el encabezado y separamos por comas
+      const data = rows.slice(1).map((row: string) => row.split(","));
       
       setFileData(data);
-      // Nueva lógica de conteo mejorada
+
+      // 3. ¡AHORA SÍ! Filtramos sobre 'data' (columnas), no sobre 'rows' (letras)
       setStats({
-        total: rows.length,
-        inst: rows.filter((r: any) => 
-          r[1]?.toLowerCase().includes("inst")).length,
-        mech: rows.filter((r: any) => 
-          r[1]?.toLowerCase().includes("mecanica") || 
-          r[1]?.toLowerCase().includes("mech")).length,
-        elec: rows.filter((r: any) => 
-          r[1]?.toLowerCase().includes("elec")).length,
+        total: data.length,
+        inst: data.filter((col: any) => 
+          col[1]?.toLowerCase().includes("inst")).length,
+        mech: data.filter((col: any) => 
+          col[1]?.toLowerCase().includes("mecanica") || 
+          col[1]?.toLowerCase().includes("mech")).length,
+        elec: data.filter((col: any) => 
+          col[1]?.toLowerCase().includes("elec")).length,
       });
-      alert("¡Instrument Index cargado con éxito!");
+
+      alert("¡Instrument Index procesado correctamente!");
     };
     reader.readAsText(file);
   };
-
+  
   return (
     <div style={{ padding: '30px', fontFamily: 'sans-serif', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
