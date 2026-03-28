@@ -6,6 +6,16 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Redirect to setup wizard if user has no organization yet
+  const { data: membership } = await supabase
+    .from('org_members')
+    .select('org_id')
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle()
+
+  if (!membership) redirect('/setup')
+
   return (
     <div style={{ padding: '32px' }}>
 
