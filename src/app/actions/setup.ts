@@ -33,12 +33,12 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
   // Use admin client for all DB writes (bypasses RLS — safe because we verified auth above)
   const admin = createAdminClient()
 
-  // Upsert profile
-  await admin.from('profiles').upsert({
+  // Upsert profile (profiles table: id, full_name, avatar_url — no email column)
+  const { error: profileError } = await admin.from('profiles').upsert({
     id: user.id,
-    email: user.email ?? '',
     full_name: (user.user_metadata?.full_name as string) || user.email || 'Usuario',
   })
+  if (profileError) return { error: `Error creando perfil: ${profileError.message}` }
 
   // 1. Create organization
   const { data: org, error: orgError } = await admin
