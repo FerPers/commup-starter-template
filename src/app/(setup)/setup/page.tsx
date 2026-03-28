@@ -245,17 +245,41 @@ export default function SetupPage() {
         {/* ── Step 3: Phases ── */}
         {step === 3 && (
           <div>
-            <h2 style={stepTitleStyle}>Fases del proyecto</h2>
-            <p style={stepDescStyle}>Las fases definen el ciclo de completamiento. Puedes editarlas o agregar las tuyas.</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h2 style={stepTitleStyle}>Fases del proyecto</h2>
+                <p style={stepDescStyle}>Las fases definen el ciclo de completamiento. Puedes editarlas o agregar las tuyas.</p>
+              </div>
+              <button
+                onClick={() => setPhases(DEFAULT_PHASES)}
+                style={{ fontSize: '12px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', flexShrink: 0, marginTop: '2px' }}
+              >
+                ↺ Restaurar
+              </button>
+            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+            {/* Column headers */}
+            <div style={{ display: 'grid', gridTemplateColumns: '32px 40px 1fr 90px 36px 56px', gap: '6px', padding: '0 4px', marginBottom: '4px' }}>
+              {['', 'Cód', 'Nombre', 'Certificado', 'Color', ''].map((h, i) => (
+                <span key={i} style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{h}</span>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {phases.map((phase, i) => (
                 <div key={i} style={{
-                  display: 'grid', gridTemplateColumns: '40px 1fr 1fr 80px 32px',
-                  gap: '8px', alignItems: 'center',
-                  padding: '10px 12px', background: '#f8fafc',
-                  borderRadius: '8px', border: '1px solid #e2e8f0',
+                  display: 'grid', gridTemplateColumns: '32px 40px 1fr 90px 36px 56px',
+                  gap: '6px', alignItems: 'center',
+                  padding: '8px 4px',
+                  borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc',
                 }}>
+                  {/* Reorder arrows */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', alignItems: 'center' }}>
+                    <button onClick={() => movePhase(i, -1)} disabled={i === 0}
+                      style={{ ...arrowBtn, opacity: i === 0 ? 0.2 : 1 }}>▲</button>
+                    <button onClick={() => movePhase(i, 1)} disabled={i === phases.length - 1}
+                      style={{ ...arrowBtn, opacity: i === phases.length - 1 ? 0.2 : 1 }}>▼</button>
+                  </div>
                   <input
                     style={{ ...inputSmall, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}
                     value={phase.code}
@@ -263,10 +287,8 @@ export default function SetupPage() {
                   />
                   <input style={inputSmall} value={phase.name} onChange={e => updatePhase(i, 'name', e.target.value)} placeholder="Nombre de fase" />
                   <input style={inputSmall} value={phase.certificate_name} onChange={e => updatePhase(i, 'certificate_name', e.target.value)} placeholder="Certificado" />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <input type="color" value={phase.color} onChange={e => updatePhase(i, 'color', e.target.value)}
-                      style={{ width: '28px', height: '28px', border: 'none', borderRadius: '6px', cursor: 'pointer', padding: 0 }} />
-                  </div>
+                  <input type="color" value={phase.color} onChange={e => updatePhase(i, 'color', e.target.value)}
+                    style={{ width: '32px', height: '30px', border: 'none', borderRadius: '6px', cursor: 'pointer', padding: 0 }} />
                   <button onClick={() => removePhase(i)} style={removeBtn} title="Eliminar">×</button>
                 </div>
               ))}
@@ -393,7 +415,15 @@ export default function SetupPage() {
     setPhases(prev => prev.filter((_, idx) => idx !== i).map((p, idx) => ({ ...p, order_index: idx + 1 })))
   }
   function addPhase() {
-    setPhases(prev => [...prev, { code: '', name: '', order_index: prev.length + 1, color: '#64748b', certificate_name: '' }])
+    const colors = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4']
+    setPhases(prev => [...prev, { code: '', name: '', order_index: prev.length + 1, color: colors[prev.length % colors.length], certificate_name: '' }])
+  }
+  function movePhase(i: number, dir: -1 | 1) {
+    setPhases(prev => {
+      const arr = [...prev]
+      const tmp = arr[i]; arr[i] = arr[i + dir]; arr[i + dir] = tmp
+      return arr.map((p, idx) => ({ ...p, order_index: idx + 1 }))
+    })
   }
 
   function updateDisc(i: number, field: keyof Discipline, value: string) {
@@ -452,4 +482,10 @@ const addRowBtn: React.CSSProperties = {
   marginTop: '10px', padding: '8px 14px', background: 'transparent',
   border: '1px dashed #cbd5e1', borderRadius: '8px', fontSize: '13px',
   color: '#64748b', cursor: 'pointer', width: '100%',
+}
+const arrowBtn: React.CSSProperties = {
+  width: '20px', height: '13px', border: 'none', background: 'transparent',
+  cursor: 'pointer', fontSize: '9px', color: '#94a3b8', padding: 0,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  lineHeight: '1',
 }
