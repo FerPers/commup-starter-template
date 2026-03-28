@@ -40,10 +40,14 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
   })
   if (profileError) return { error: `Error creando perfil: ${profileError.message}` }
 
-  // 1. Create organization
+  // 1. Create organization — make slug unique if it already exists
+  let slug = input.org.slug
+  const { data: existingSlug } = await admin.from('organizations').select('id').eq('slug', slug).maybeSingle()
+  if (existingSlug) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`
+
   const { data: org, error: orgError } = await admin
     .from('organizations')
-    .insert({ name: input.org.name, slug: input.org.slug, plan: 'starter', settings: {} })
+    .insert({ name: input.org.name, slug, plan: 'starter', settings: {} })
     .select()
     .single()
 
