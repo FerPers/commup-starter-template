@@ -19,7 +19,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
 
-  const [{ data: project }, { data: phases }, { data: disciplines }] = await Promise.all([
+  const [{ data: project }, { data: phases }, { data: disciplines }, { count: tagCount }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name, code, location, client, start_date, end_date, status, created_at')
@@ -35,6 +35,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       .from('disciplines')
       .select('id, code, name, color')
       .eq('org_id', membership.org_id),
+    supabase
+      .from('tags')
+      .select('id', { count: 'exact', head: true })
+      .eq('project_id', id),
   ])
 
   if (!project) notFound()
@@ -182,17 +186,32 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         <div style={cardStyle}>
           <h3 style={sectionTitle}>Tags / Equipos y Señales</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px' }}>
+
+            {/* Tags de Equipos */}
             <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Tags de Equipos</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>Mecánicos, eléctricos, tuberías… (Fase A)</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                  {tagCount && tagCount > 0
+                    ? <span style={{ color: '#3b82f6', fontWeight: 500 }}>{tagCount} tags importados</span>
+                    : 'Mecánicos, eléctricos, tuberías… (Fase A)'}
+                </div>
               </div>
-              {canEdit && (
-                <a href={`/projects/${project.id}/import`} style={{ padding: '6px 14px', background: '#3b82f6', color: 'white', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                  Importar
-                </a>
-              )}
+              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                {(tagCount ?? 0) > 0 && (
+                  <a href={`/projects/${project.id}/tags`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    Ver tags →
+                  </a>
+                )}
+                {canEdit && (
+                  <a href={`/projects/${project.id}/import`} style={{ padding: '6px 14px', background: '#3b82f6', color: 'white', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    {(tagCount ?? 0) > 0 ? 'Importar más' : 'Importar'}
+                  </a>
+                )}
+              </div>
             </div>
+
+            {/* Lista de Señales I&C */}
             <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Lista de Señales I&C</div>
@@ -204,6 +223,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 </a>
               )}
             </div>
+
           </div>
         </div>
       </div>
