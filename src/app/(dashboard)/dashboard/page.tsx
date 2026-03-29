@@ -183,12 +183,11 @@ function ProjectRow({ project, phases }: {
       </div>
       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
         {phases.slice(0, 4).map(phase => (
-          <div key={phase.id} style={{
+          <div key={phase.id} title={phase.name} style={{
             width: '28px', height: '28px', borderRadius: '50%',
             background: `${phase.color}20`, border: `2px solid ${phase.color}40`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '11px', fontWeight: 700, color: phase.color,
-            title: phase.name,
           }}>
             {phase.code}
           </div>
