@@ -178,8 +178,24 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        {/* Tags — coming soon */}
-        <ComingSoon title="Tags / Equipos" icon="◈" description="Importa tags desde Excel para comenzar a registrar equipos en este proyecto." />
+        {/* Tags — link to import */}
+        <div style={cardStyle}>
+          <h3 style={sectionTitle}>Tags / Equipos</h3>
+          <div style={{ marginTop: '16px', padding: '24px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '28px', marginBottom: '8px', opacity: 0.5 }}>◈</div>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 14px' }}>
+              Importa tu lista de equipos desde Excel para comenzar a asignar ITRs.
+            </p>
+            {canEdit && (
+              <a href={`/projects/${project.id}/import`} style={{
+                padding: '8px 18px', background: '#3b82f6', color: 'white',
+                borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none',
+              }}>
+                Importar desde Excel
+              </a>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ITRs + Punch List — coming soon */}
