@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { completeSetup } from '@/app/actions/setup'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { completeSetup, createProject } from '@/app/actions/setup'
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -54,11 +54,14 @@ interface Discipline {
 
 export default function SetupPage() {
   const router = useRouter()
-  const [step, setStep] = useState(1)
+  const searchParams = useSearchParams()
+  const isNewProject = searchParams.get('mode') === 'project'
+
+  const [step, setStep] = useState(isNewProject ? 2 : 1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Step 1 — Organization
+  // Step 1 — Organization (initial setup only)
   const [orgName, setOrgName] = useState('')
   const [orgSlug, setOrgSlug] = useState('')
 
@@ -70,10 +73,10 @@ export default function SetupPage() {
   const [projStart, setProjStart] = useState('')
   const [projEnd, setProjEnd] = useState('')
 
-  // Step 3 — Phases
+  // Step 3 — Phases (initial setup only)
   const [phases, setPhases] = useState<Phase[]>(DEFAULT_PHASES)
 
-  // Step 4 — Disciplines (selected codes from the full catalog)
+  // Step 4 — Disciplines (initial setup only)
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set(DEFAULT_SELECTED_CODES))
   const [customDiscs, setCustomDiscs] = useState<Discipline[]>([])
 
@@ -88,25 +91,48 @@ export default function SetupPage() {
   async function handleSubmit() {
     setLoading(true)
     setError(null)
-    const result = await completeSetup({
-      org: { name: orgName, slug: orgSlug },
-      project: { name: projName, code: projCode, location: projLocation, client: projClient, start_date: projStart, end_date: projEnd },
-      phases,
-      disciplines,
-    })
-    if (result.error) {
-      setError(result.error)
-      setLoading(false)
+
+    if (isNewProject) {
+      // New project within existing org — steps 2 only
+      const result = await createProject({
+        name: projName, code: projCode,
+        location: projLocation, client: projClient,
+        start_date: projStart, end_date: projEnd,
+      })
+      if (result.error) {
+        setError(result.error)
+        setLoading(false)
+      } else {
+        router.push('/dashboard')
+      }
     } else {
-      router.push('/dashboard')
+      // Initial setup — all 4 steps (org + project + phases + disciplines)
+      const result = await completeSetup({
+        org: { name: orgName, slug: orgSlug },
+        project: { name: projName, code: projCode, location: projLocation, client: projClient, start_date: projStart, end_date: projEnd },
+        phases,
+        disciplines,
+      })
+      if (result.error) {
+        setError(result.error)
+        setLoading(false)
+      } else {
+        router.push('/dashboard')
+      }
     }
   }
 
   // ── Progress bar ───────────────────────────────────────────
 
-  const steps = ['Organización', 'Proyecto', 'Fases', 'Disciplinas']
+  const steps = isNewProject
+    ? ['Proyecto']
+    : ['Organización', 'Proyecto', 'Fases', 'Disciplinas']
+
   const canNext1 = orgName.trim().length > 2 && orgSlug.trim().length > 2
   const canNext2 = projName.trim().length > 2 && projCode.trim().length > 0
+
+  // In new project mode, step 2 is the only step — submit directly
+  const isLastStep = isNewProject ? true : step === 4
 
   return (
     <div style={{ width: '100%', maxWidth: '560px' }}>
@@ -125,17 +151,17 @@ export default function SetupPage() {
           </svg>
         </div>
         <h1 style={{ color: 'white', fontSize: '24px', fontWeight: 700, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
-          Configuración inicial
+          {isNewProject ? 'Nuevo proyecto' : 'Configuración inicial'}
         </h1>
         <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
-          Configura tu organización y primer proyecto
+          {isNewProject ? 'Agrega un nuevo proyecto a tu organización' : 'Configura tu organización y primer proyecto'}
         </p>
       </div>
 
       {/* Progress steps */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '28px', gap: '0' }}>
         {steps.map((label, i) => {
-          const n = i + 1
+          const n = isNewProject ? i + 2 : i + 1   // new project starts at step 2
           const done = step > n
           const active = step === n
           return (
@@ -373,22 +399,16 @@ export default function SetupPage() {
             <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>
               {disciplines.length} disciplina{disciplines.length !== 1 ? 's' : ''} seleccionada{disciplines.length !== 1 ? 's' : ''}
             </p>
-
-            {error && (
-              <div style={{ marginTop: '12px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px' }}>
-                {error}
-              </div>
-            )}
           </div>
         )}
 
         {/* ── Navigation ── */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '28px', gap: '12px' }}>
-          {step > 1 ? (
+          {step > (isNewProject ? 2 : 1) ? (
             <button onClick={() => setStep(s => s - 1)} style={btnSecondary}>← Anterior</button>
           ) : <div />}
 
-          {step < 4 ? (
+          {!isLastStep ? (
             <button
               onClick={() => setStep(s => s + 1)}
               disabled={(step === 1 && !canNext1) || (step === 2 && !canNext2)}
@@ -397,11 +417,21 @@ export default function SetupPage() {
               Siguiente →
             </button>
           ) : (
-            <button onClick={handleSubmit} disabled={loading} style={loading ? btnDisabled : btnSuccess}>
-              {loading ? 'Creando...' : '✓ Completar configuración'}
+            <button
+              onClick={handleSubmit}
+              disabled={loading || !canNext2}
+              style={loading || !canNext2 ? btnDisabled : btnSuccess}
+            >
+              {loading ? 'Creando...' : isNewProject ? '✓ Crear proyecto' : '✓ Completar configuración'}
             </button>
           )}
         </div>
+
+        {error && (
+          <div style={{ marginTop: '12px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px' }}>
+            {error}
+          </div>
+        )}
       </div>
     </div>
   )

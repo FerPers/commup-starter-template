@@ -6,10 +6,10 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Get org membership
+  // Get org membership + role
   const { data: membership } = await supabase
     .from('org_members')
-    .select('org_id')
+    .select('org_id, role')
     .eq('user_id', user.id)
     .limit(1)
     .maybeSingle()
@@ -17,6 +17,7 @@ export default async function DashboardPage() {
   if (!membership) redirect('/setup')
 
   const orgId = membership.org_id
+  const canCreateProject = ['owner', 'admin', 'architect'].includes(membership.role)
 
   // Fetch org, projects, phases, disciplines in parallel
   const [
@@ -102,13 +103,15 @@ export default async function DashboardPage() {
       <div style={cardStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={cardTitleStyle}>Proyectos Activos</h3>
-          <a href="/projects" style={{
-            padding: '8px 16px', background: '#3b82f6', color: 'white',
-            borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-            textDecoration: 'none',
-          }}>
-            + Nuevo Proyecto
-          </a>
+          {canCreateProject && (
+            <a href="/setup?mode=project" style={{
+              padding: '8px 16px', background: '#3b82f6', color: 'white',
+              borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+              textDecoration: 'none',
+            }}>
+              + Nuevo Proyecto
+            </a>
+          )}
         </div>
 
         {activeProjects.length === 0 ? (

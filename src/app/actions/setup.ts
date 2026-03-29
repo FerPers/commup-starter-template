@@ -95,6 +95,54 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
   return { org_id: org.id, project_id: project.id }
 }
 
+// ── Create project within existing org (owner / admin / architect only) ──────
+
+interface ProjectInput {
+  name: string; code: string; location: string; client: string
+  start_date: string; end_date: string
+}
+
+const PRIVILEGED_ROLES = ['owner', 'admin', 'architect']
+
+export async function createProject(input: ProjectInput): Promise<{ error?: string; project_id?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  // Get membership + role
+  const { data: membership } = await supabase
+    .from('org_members')
+    .select('org_id, role')
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle()
+
+  if (!membership) return { error: 'No perteneces a ninguna organización' }
+  if (!PRIVILEGED_ROLES.includes(membership.role)) {
+    return { error: 'No tienes permisos para crear proyectos' }
+  }
+
+  const admin = createAdminClient()
+
+  const { data: project, error: projectError } = await admin
+    .from('projects')
+    .insert({
+      org_id: membership.org_id,
+      name: input.name,
+      code: input.code.toUpperCase(),
+      location: input.location || null,
+      client: input.client || null,
+      start_date: input.start_date || null,
+      end_date: input.end_date || null,
+      status: 'active',
+    })
+    .select()
+    .single()
+
+  if (projectError) return { error: projectError.message }
+  return { project_id: project.id }
+}
+
 export async function getUserOrg(): Promise<string | null> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
