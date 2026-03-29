@@ -178,22 +178,32 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        {/* Tags — link to import */}
+        {/* Tags + Signals — import links */}
         <div style={cardStyle}>
-          <h3 style={sectionTitle}>Tags / Equipos</h3>
-          <div style={{ marginTop: '16px', padding: '24px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', marginBottom: '8px', opacity: 0.5 }}>◈</div>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 14px' }}>
-              Importa tu lista de equipos desde Excel para comenzar a asignar ITRs.
-            </p>
-            {canEdit && (
-              <a href={`/projects/${project.id}/import`} style={{
-                padding: '8px 18px', background: '#3b82f6', color: 'white',
-                borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none',
-              }}>
-                Importar desde Excel
-              </a>
-            )}
+          <h3 style={sectionTitle}>Tags / Equipos y Señales</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px' }}>
+            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Tags de Equipos</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>Mecánicos, eléctricos, tuberías… (Fase A)</div>
+              </div>
+              {canEdit && (
+                <a href={`/projects/${project.id}/import`} style={{ padding: '6px 14px', background: '#3b82f6', color: 'white', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                  Importar
+                </a>
+              )}
+            </div>
+            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Lista de Señales I&C</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>AI/AO/DI/DO con rango, alarmas, P&IDs (Fases B/C)</div>
+              </div>
+              {canEdit && (
+                <a href={`/projects/${project.id}/import-signals`} style={{ padding: '6px 14px', background: '#10b981', color: 'white', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                  Importar
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
