@@ -211,6 +211,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
 
+            {/* Documentos P&ID */}
+            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Documentos P&ID</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>PDFs de planos de proceso para caminatas de verificación</div>
+              </div>
+              <a href={`/projects/${project.id}/pid-documents`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Gestionar →
+              </a>
+            </div>
+
             {/* Lista de Señales I&C */}
             <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
               <div>

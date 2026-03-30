@@ -20,7 +20,7 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
 
   const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
 
-  const [{ data: project }, { data: tags }] = await Promise.all([
+  const [{ data: project }, { data: tags }, { data: pidDocs }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name')
@@ -36,9 +36,22 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
       `)
       .eq('project_id', id)
       .order('tag_number'),
+    supabase
+      .from('pid_documents')
+      .select('drawing_number, file_path')
+      .eq('project_id', id),
   ])
 
   if (!project) notFound()
+
+  // Build signed URL map: drawing_number → signed URL
+  const pidUrlMap: Record<string, string> = {}
+  for (const doc of pidDocs ?? []) {
+    const { data } = await supabase.storage
+      .from('pid-documents')
+      .createSignedUrl(doc.file_path, 3600)
+    if (data?.signedUrl) pidUrlMap[doc.drawing_number] = data.signedUrl
+  }
 
   const tagCount = (tags ?? []).length
 
@@ -62,18 +75,31 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
               {tagCount === 0 ? 'Sin tags importados' : `${tagCount} tags importados`}
             </p>
           </div>
-          {canEdit && (
+          <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
             <a
-              href={`/projects/${id}/import`}
+              href={`/projects/${id}/pid-documents`}
               style={{
-                padding: '9px 18px', background: '#3b82f6', color: 'white',
+                padding: '9px 18px', background: 'white', color: '#475569',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 textDecoration: 'none', whiteSpace: 'nowrap',
+                border: '1px solid #e2e8f0',
               }}
             >
-              + Importar tags
+              Documentos P&ID
             </a>
-          )}
+            {canEdit && (
+              <a
+                href={`/projects/${id}/import`}
+                style={{
+                  padding: '9px 18px', background: '#3b82f6', color: 'white',
+                  borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                  textDecoration: 'none', whiteSpace: 'nowrap',
+                }}
+              >
+                + Importar tags
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
@@ -104,7 +130,7 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
         </div>
       ) : (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <TagsView projectId={id} tags={(tags ?? []) as any} canEdit={canEdit} />
+        <TagsView projectId={id} tags={(tags ?? []) as any} canEdit={canEdit} pidUrlMap={pidUrlMap} />
       )}
 
     </div>

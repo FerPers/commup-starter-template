@@ -30,10 +30,12 @@ export default function TagsView({
   projectId,
   tags,
   canEdit,
+  pidUrlMap = {},
 }: {
   projectId: string
   tags: Tag[]
   canEdit: boolean
+  pidUrlMap?: Record<string, string>
 }) {
   const [activeDiscipline, setActiveDiscipline] = useState<string>('ALL')
 
@@ -162,9 +164,26 @@ export default function TagsView({
                     {showPid && (
                       <td style={tdStyle}>
                         {tag.pid_drawing ? (
-                          <span style={{ fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace', background: '#eff6ff', padding: '2px 8px', borderRadius: '5px' }}>
-                            {tag.pid_drawing}
-                          </span>
+                          pidUrlMap[tag.pid_drawing] ? (
+                            <a
+                              href={pidUrlMap[tag.pid_drawing]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Abrir P&ID"
+                              style={{
+                                fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace',
+                                background: '#eff6ff', padding: '2px 8px', borderRadius: '5px',
+                                textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              }}
+                            >
+                              {tag.pid_drawing}
+                              <span style={{ opacity: 0.6, fontSize: '10px' }}>↗</span>
+                            </a>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace', background: '#eff6ff', padding: '2px 8px', borderRadius: '5px' }}>
+                              {tag.pid_drawing}
+                            </span>
+                          )
                         ) : (
                           <span style={{ color: '#e2e8f0', fontSize: '12px' }}>—</span>
                         )}
