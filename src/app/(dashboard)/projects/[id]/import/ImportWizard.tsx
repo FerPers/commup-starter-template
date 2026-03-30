@@ -141,8 +141,22 @@ export default function ImportWizard({
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const wb   = XLSX.read(data, { type: 'array' })
-        const ws   = wb.Sheets[wb.SheetNames[0]]
-        const rawRows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+
+        // Pick the sheet with the most keyword matches (avoids cover/index sheets)
+        let bestWs = wb.Sheets[wb.SheetNames[0]]
+        let bestWsScore = 0
+        for (const name of wb.SheetNames) {
+          const ws = wb.Sheets[name]
+          const testRows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+          let score = 0
+          for (let i = 0; i < Math.min(testRows.length, 15); i++) {
+            const cells = testRows[i].map(v => String(v ?? '').trim().toUpperCase())
+            score += ALL_KEYWORDS.filter(kw => cells.some(c => c.includes(kw))).length
+          }
+          if (score > bestWsScore) { bestWsScore = score; bestWs = ws }
+        }
+
+        const rawRows: unknown[][] = XLSX.utils.sheet_to_json(bestWs, { header: 1, defval: '' })
 
         if (rawRows.length === 0) {
           setParseWarnings(['El archivo está vacío.']); return
