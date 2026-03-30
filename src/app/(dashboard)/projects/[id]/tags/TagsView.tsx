@@ -15,6 +15,7 @@ type Tag = {
   model: string | null
   serial_number: string | null
   preservation_required: boolean
+  pid_drawing: string | null
   disciplines: Discipline
   subsystems: Subsystem
 }
@@ -51,39 +52,64 @@ export default function TagsView({
     ? tags
     : tags.filter(t => t.disciplines.code === activeDiscipline)
 
+  // Show P&ID column only if at least one tag in the filtered set has a P&ID value
+  const showPid = filtered.some(t => t.pid_drawing)
+
+  const activeDisc = activeDiscipline !== 'ALL'
+    ? disciplines.find(d => d.code === activeDiscipline)
+    : undefined
+
   return (
     <div>
-      {/* Discipline filter tabs */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
-        <FilterTab
-          label="Todos"
-          count={tags.length}
-          active={activeDiscipline === 'ALL'}
-          color="#3b82f6"
-          onClick={() => setActiveDiscipline('ALL')}
-        />
-        {disciplines.map(d => (
+      {/* Discipline filter tabs + import button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <FilterTab
-            key={d.code}
-            label={`${d.code} — ${d.name}`}
-            count={d.count}
-            active={activeDiscipline === d.code}
-            color={d.color}
-            onClick={() => setActiveDiscipline(d.code)}
+            label="Todos"
+            count={tags.length}
+            active={activeDiscipline === 'ALL'}
+            color="#3b82f6"
+            onClick={() => setActiveDiscipline('ALL')}
           />
-        ))}
+          {disciplines.map(d => (
+            <FilterTab
+              key={d.code}
+              label={`${d.code} — ${d.name}`}
+              count={d.count}
+              active={activeDiscipline === d.code}
+              color={d.color}
+              onClick={() => setActiveDiscipline(d.code)}
+            />
+          ))}
+        </div>
+
+        {/* Per-discipline import button */}
+        {canEdit && (
+          <a
+            href={
+              activeDiscipline === 'ALL'
+                ? `/projects/${projectId}/import`
+                : `/projects/${projectId}/import?discipline=${activeDiscipline}`
+            }
+            style={{
+              padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+              textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+              background: activeDisc ? `${activeDisc.color}15` : '#eff6ff',
+              color: activeDisc ? activeDisc.color : '#3b82f6',
+              border: `1px solid ${activeDisc ? `${activeDisc.color}40` : '#bfdbfe'}`,
+            }}
+          >
+            + Importar{activeDiscipline !== 'ALL' ? ` ${activeDiscipline}` : ' tags'}
+          </a>
+        )}
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{
-          textAlign: 'center', padding: '64px', color: '#94a3b8',
-          fontSize: '14px', background: 'white', borderRadius: '12px',
-          border: '1px solid #e2e8f0',
-        }}>
+        <div style={{ textAlign: 'center', padding: '64px', color: '#94a3b8', fontSize: '14px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           No hay tags en esta disciplina
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
@@ -91,6 +117,7 @@ export default function TagsView({
                 <Th>TAG</Th>
                 <Th>Descripción</Th>
                 <Th>Área / Sistema / Subsistema</Th>
+                {showPid && <Th>P&ID</Th>}
                 <Th>Fabricante · Modelo</Th>
                 <Th>Estado</Th>
               </tr>
@@ -98,18 +125,16 @@ export default function TagsView({
             <tbody>
               {filtered.map((tag, i) => {
                 const status = STATUS_CONFIG[tag.status] ?? STATUS_CONFIG.not_started
-                const area = tag.subsystems?.systems?.areas
-                const sys  = tag.subsystems?.systems
-                const sub  = tag.subsystems
-                const hier = [area?.code, sys?.code, sub?.code].filter(Boolean).join(' › ')
-                const d = tag.disciplines
-                const maker = [tag.manufacturer, tag.model].filter(Boolean).join(' · ')
+                const area   = tag.subsystems?.systems?.areas
+                const sys    = tag.subsystems?.systems
+                const sub    = tag.subsystems
+                const hier   = [area?.code, sys?.code, sub?.code].filter(Boolean).join(' › ')
+                const d      = tag.disciplines
+                const maker  = [tag.manufacturer, tag.model].filter(Boolean).join(' · ')
 
                 return (
-                  <tr key={tag.id} style={{
-                    borderBottom: '1px solid #f1f5f9',
-                    transition: 'background 0.1s',
-                  }}
+                  <tr key={tag.id}
+                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.1s' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
@@ -118,16 +143,10 @@ export default function TagsView({
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{
-                          padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700,
-                          background: `${d.color}18`, color: d.color, flexShrink: 0,
-                        }}>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: `${d.color}18`, color: d.color, flexShrink: 0 }}>
                           {d.code}
                         </span>
-                        <span style={{
-                          fontWeight: 600, fontSize: '13px', color: '#0f172a',
-                          fontFamily: 'ui-monospace, monospace',
-                        }}>
+                        <span style={{ fontWeight: 600, fontSize: '13px', color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>
                           {tag.tag_number}
                         </span>
                       </div>
@@ -140,14 +159,22 @@ export default function TagsView({
                         {hier || '—'}
                       </span>
                     </td>
+                    {showPid && (
+                      <td style={tdStyle}>
+                        {tag.pid_drawing ? (
+                          <span style={{ fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace', background: '#eff6ff', padding: '2px 8px', borderRadius: '5px' }}>
+                            {tag.pid_drawing}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#e2e8f0', fontSize: '12px' }}>—</span>
+                        )}
+                      </td>
+                    )}
                     <td style={tdStyle}>
                       <span style={{ fontSize: '12px', color: '#64748b' }}>{maker || '—'}</span>
                     </td>
                     <td style={tdStyle}>
-                      <span style={{
-                        padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 500,
-                        background: status.bg, color: status.color,
-                      }}>
+                      <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 500, background: status.bg, color: status.color }}>
                         {status.label}
                       </span>
                     </td>
@@ -162,30 +189,21 @@ export default function TagsView({
   )
 }
 
-function FilterTab({
-  label, count, active, color, onClick,
-}: {
+function FilterTab({ label, count, active, color, onClick }: {
   label: string; count: number; active: boolean; color: string; onClick: () => void
 }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: '7px 14px', borderRadius: '8px', border: '1px solid',
-        borderColor: active ? color : '#e2e8f0',
-        background: active ? `${color}15` : 'white',
-        color: active ? color : '#64748b',
-        fontSize: '13px', fontWeight: active ? 600 : 400,
-        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-        transition: 'all 0.15s',
-      }}
-    >
+    <button onClick={onClick} style={{
+      padding: '7px 14px', borderRadius: '8px', border: '1px solid',
+      borderColor: active ? color : '#e2e8f0',
+      background: active ? `${color}15` : 'white',
+      color: active ? color : '#64748b',
+      fontSize: '13px', fontWeight: active ? 600 : 400,
+      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+      transition: 'all 0.15s',
+    }}>
       {label}
-      <span style={{
-        padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
-        background: active ? color : '#f1f5f9',
-        color: active ? 'white' : '#64748b',
-      }}>
+      <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, background: active ? color : '#f1f5f9', color: active ? 'white' : '#64748b' }}>
         {count}
       </span>
     </button>
@@ -194,16 +212,10 @@ function FilterTab({
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th style={{
-      padding: '10px 16px', textAlign: 'left',
-      fontSize: '11px', fontWeight: 600, color: '#94a3b8',
-      textTransform: 'uppercase', letterSpacing: '0.06em',
-    }}>
+    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
       {children}
     </th>
   )
 }
 
-const tdStyle: React.CSSProperties = {
-  padding: '12px 16px', verticalAlign: 'middle',
-}
+const tdStyle: React.CSSProperties = { padding: '12px 16px', verticalAlign: 'middle' }

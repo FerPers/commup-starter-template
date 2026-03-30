@@ -20,6 +20,7 @@ export interface TagRow {
   model?: string
   serial_number?: string
   preservation_required?: boolean
+  pid_drawing?: string
 }
 
 export interface ImportResult {
@@ -163,6 +164,7 @@ export async function importTags(
       model: row.model?.trim() || null,
       serial_number: row.serial_number?.trim() || null,
       preservation_required: row.preservation_required ?? false,
+      pid_drawing: row.pid_drawing?.trim() || null,
       status: 'not_started',
     }, { onConflict: 'project_id,tag_number', ignoreDuplicates: false })
 

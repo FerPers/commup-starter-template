@@ -4,28 +4,109 @@ import { useState, useCallback } from 'react'
 import * as XLSX from 'xlsx'
 import { importTags, type TagRow, type ImportResult } from '@/app/actions/import'
 
-// ── Expected Excel columns ────────────────────────────────────
-// TAG | DESCRIPTION | DISCIPLINE | AREA_CODE | AREA_NAME |
-// SYSTEM_CODE | SYSTEM_NAME | SUBSYSTEM_CODE | SUBSYSTEM_NAME |
-// MANUFACTURER | MODEL | SERIAL | PRESERVATION
+// ── Column keyword mapping ──────────────────────────────────────
+const COL_KEYWORDS: Record<string, string[]> = {
+  tag:            ['TAG', 'ETIQUETA', 'TAG NUMBER', 'TAGNO', 'INSTRUMENT TAG'],
+  description:    ['DESCRIPCION', 'DESCRIPCIÓN', 'DESCRIPTION', 'EQUIPO', 'NOMBRE', 'EQUIPMENT'],
+  discipline:     ['DISCIPLINE', 'DISCIPLINA'],
+  area_code:      ['AREA_CODE', 'AREA', 'ÁREA', 'SE / SITIO', 'SITIO', 'UBICACION', 'LOCATION'],
+  area_name:      ['AREA_NAME', 'NOMBRE ÁREA', 'NOMBRE AREA'],
+  system_code:    ['SYSTEM_CODE', 'SISTEMA', 'SYSTEM', 'SYS'],
+  subsystem_code: ['SUBSYSTEM_CODE', 'SUBSISTEMA', 'SUBSYSTEM'],
+  manufacturer:   ['MANUFACTURER', 'FABRICANTE', 'MARCA', 'MARCA / MODELO', 'VENDOR'],
+  model:          ['MODEL', 'MODELO'],
+  serial:         ['SERIAL', 'SERIE', 'S/N', 'SERIAL_NUMBER'],
+  preservation:   ['PRESERVATION', 'PRESERVACION', 'PRESERVACIÓN'],
+  pid_drawing:    ['P&ID', 'PID', 'P_ID', 'PLANO P&ID', 'P&ID REF', 'P&ID DRAWING'],
+}
+const ALL_KEYWORDS = Object.values(COL_KEYWORDS).flat()
 
-const REQUIRED_COLS = ['TAG', 'DESCRIPTION', 'DISCIPLINE']
+// ── Smart header detection ──────────────────────────────────────
+// Scans first 15 rows and finds the one with the most column keyword matches.
+// Also peeks at the next row (handles 2-row headers like Instrument Index).
+function detectHeaderRow(rawRows: unknown[][]): {
+  headerRowIdx: number
+  colIndex: Record<string, number>
+} {
+  let bestRow = -1, bestScore = 0
+  for (let i = 0; i < Math.min(rawRows.length, 15); i++) {
+    const cells = rawRows[i].map(v => String(v ?? '').trim().toUpperCase())
+    const score = ALL_KEYWORDS.filter(kw => cells.some(c => c.includes(kw))).length
+    if (score > bestScore) { bestScore = score; bestRow = i }
+  }
+  if (bestRow < 0 || bestScore < 1) return { headerRowIdx: 0, colIndex: {} }
 
-const COLUMN_HINTS: { key: string; label: string; required: boolean; example: string }[] = [
-  { key: 'TAG',            label: 'Tag Number',       required: true,  example: 'P-101' },
-  { key: 'DESCRIPTION',   label: 'Descripción',       required: true,  example: 'Pump Feed Water' },
-  { key: 'DISCIPLINE',    label: 'Disciplina',        required: true,  example: 'MECH / INST / ELEC' },
-  { key: 'AREA_CODE',     label: 'Código Área',       required: false, example: 'AREA-01' },
-  { key: 'AREA_NAME',     label: 'Nombre Área',       required: false, example: 'Area de Proceso' },
-  { key: 'SYSTEM_CODE',   label: 'Código Sistema',    required: false, example: 'SYS-01' },
-  { key: 'SYSTEM_NAME',   label: 'Nombre Sistema',    required: false, example: 'Sistema de Agua' },
-  { key: 'SUBSYSTEM_CODE',label: 'Código Subsistema', required: false, example: 'SS-01' },
-  { key: 'SUBSYSTEM_NAME',label: 'Nombre Subsistema', required: false, example: 'Subsistema Bombeo' },
-  { key: 'MANUFACTURER',  label: 'Fabricante',        required: false, example: 'Grundfos' },
-  { key: 'MODEL',         label: 'Modelo',            required: false, example: 'CM5-A' },
-  { key: 'SERIAL',        label: 'Serial',            required: false, example: 'SN12345' },
-  { key: 'PRESERVATION',  label: 'Preservación',      required: false, example: 'YES / NO' },
-]
+  const h1 = rawRows[bestRow].map(v => String(v ?? '').trim().toUpperCase())
+  const h2 = bestRow + 1 < rawRows.length
+    ? rawRows[bestRow + 1].map(v => String(v ?? '').trim().toUpperCase())
+    : []
+
+  const colIndex: Record<string, number> = {}
+  for (const [field, keywords] of Object.entries(COL_KEYWORDS)) {
+    for (let col = 0; col < Math.max(h1.length, h2.length); col++) {
+      if (keywords.some(kw => (h1[col] ?? '').includes(kw) || (h2[col] ?? '').includes(kw))) {
+        colIndex[field] = col
+        break
+      }
+    }
+  }
+  return { headerRowIdx: bestRow, colIndex }
+}
+
+// A valid tag must contain at least one letter and one digit (e.g. FT-101, ESDV-7621001)
+function isValidTag(val: string): boolean {
+  return /[A-Za-z]/.test(val) && /\d/.test(val)
+}
+
+function parseRows(
+  rawRows: unknown[][],
+  colIndex: Record<string, number>,
+  dataStart: number,
+  disciplinePrefill: string,
+): TagRow[] {
+  const result: TagRow[] = []
+  for (let i = dataStart; i < rawRows.length; i++) {
+    const row = rawRows[i]
+    const get = (field: string) => {
+      const idx = colIndex[field]
+      return idx !== undefined ? String(row[idx] ?? '').trim() : ''
+    }
+    const tagNumber = get('tag')
+    if (!tagNumber || !isValidTag(tagNumber)) continue
+    const disciplineCode = (disciplinePrefill || get('discipline')).toUpperCase()
+    result.push({
+      tag_number:           tagNumber,
+      description:          get('description'),
+      discipline_code:      disciplineCode,
+      area_code:            get('area_code')      || 'GENERAL',
+      area_name:            get('area_name')      || 'General',
+      system_code:          get('system_code')    || 'GEN-SYS',
+      system_name:          get('system_code')    || 'General System',
+      subsystem_code:       get('subsystem_code') || 'GEN-SUB',
+      subsystem_name:       get('subsystem_code') || 'General Subsystem',
+      manufacturer:         get('manufacturer')   || undefined,
+      model:                get('model')          || undefined,
+      serial_number:        get('serial')         || undefined,
+      preservation_required: ['YES', 'SI', 'SÍ'].includes(get('preservation').toUpperCase()),
+      pid_drawing:          get('pid_drawing')    || undefined,
+    })
+  }
+  return result
+}
+
+function downloadTemplate(disciplineCode: string) {
+  const wb = XLSX.utils.book_new()
+  const headers = ['TAG', 'DESCRIPTION', 'AREA_CODE', 'AREA_NAME', 'SYSTEM_CODE', 'SYSTEM_NAME', 'SUBSYSTEM_CODE', 'SUBSYSTEM_NAME', 'P&ID', 'MANUFACTURER', 'MODEL', 'SERIAL', 'PRESERVATION']
+  const sample =
+    disciplineCode === 'INST'
+      ? [['FT-101', 'Flow transmitter feed water', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO']]
+      : disciplineCode === 'ELEC'
+        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO']]
+        : [['P-101A', 'Booster Pump', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO']]
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...sample])
+  XLSX.utils.book_append_sheet(wb, ws, 'Tags')
+  XLSX.writeFile(wb, `CommUp_${disciplineCode || 'Tags'}_Template.xlsx`)
+}
 
 type Step = 'upload' | 'preview' | 'result'
 
@@ -33,404 +114,326 @@ export default function ImportWizard({
   projectId,
   projectName,
   disciplines,
+  disciplinePrefill,
 }: {
   projectId: string
   projectName: string
   disciplines: { code: string; name: string; color: string }[]
+  disciplinePrefill?: { code: string; name: string; color: string }
 }) {
-  const [step, setStep] = useState<Step>('upload')
-  const [dragging, setDragging] = useState(false)
-  const [fileName, setFileName] = useState<string | null>(null)
-  const [rows, setRows] = useState<TagRow[]>([])
-  const [validationErrors, setValidationErrors] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<ImportResult | null>(null)
+  const [step, setStep]               = useState<Step>('upload')
+  const [dragging, setDragging]       = useState(false)
+  const [fileName, setFileName]       = useState<string | null>(null)
+  const [rows, setRows]               = useState<TagRow[]>([])
+  const [parseWarnings, setParseWarnings] = useState<string[]>([])
+  const [loading, setLoading]         = useState(false)
+  const [result, setResult]           = useState<ImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
 
   const disciplineCodes = new Set(disciplines.map(d => d.code.toUpperCase()))
+  const prefillCode     = disciplinePrefill?.code.toUpperCase() ?? ''
 
-  // ── File parsing ────────────────────────────────────────────
+  // ── File parsing ──────────────────────────────────────────────
 
-  function parseFile(file: File) {
+  const parseFile = useCallback((file: File) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
-        const wb = XLSX.read(data, { type: 'array' })
-        const ws = wb.Sheets[wb.SheetNames[0]]
-        const json: Record<string, string>[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+        const wb   = XLSX.read(data, { type: 'array' })
+        const ws   = wb.Sheets[wb.SheetNames[0]]
+        const rawRows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
 
-        if (json.length === 0) {
-          setValidationErrors(['El archivo está vacío o no tiene filas de datos.'])
-          return
+        if (rawRows.length === 0) {
+          setParseWarnings(['El archivo está vacío.']); return
         }
 
-        // Normalize headers (trim + uppercase)
-        const normalized = json.map(row => {
-          const out: Record<string, string> = {}
-          for (const [k, v] of Object.entries(row)) {
-            out[k.trim().toUpperCase().replace(/\s+/g, '_')] = String(v).trim()
-          }
-          return out
-        })
+        const { headerRowIdx, colIndex } = detectHeaderRow(rawRows)
+        const warnings: string[] = []
 
-        // Check required columns
-        const firstRow = normalized[0]
-        const missing = REQUIRED_COLS.filter(col => !(col in firstRow))
-        if (missing.length > 0) {
-          setValidationErrors([`Columnas requeridas no encontradas: ${missing.join(', ')}`])
-          return
+        if (colIndex['tag'] === undefined) {
+          warnings.push('No se encontró columna TAG / ETIQUETA. Verifica que tu archivo tenga encabezados reconocibles.')
         }
 
-        // Map to TagRow
-        const errors: string[] = []
-        const parsed: TagRow[] = []
+        const parsed = parseRows(rawRows, colIndex, headerRowIdx + 1, prefillCode)
 
-        normalized.forEach((row, i) => {
-          const rowNum = i + 2
-          const tag = row['TAG'] || ''
-          const desc = row['DESCRIPTION'] || ''
-          const disc = row['DISCIPLINE'] || ''
+        if (parsed.length === 0) {
+          setParseWarnings([...warnings, 'No se encontraron filas de datos válidas (TAG debe contener letras y números).']); return
+        }
 
-          if (!tag) { errors.push(`Fila ${rowNum}: TAG vacío`); return }
-          if (!desc) { errors.push(`Fila ${rowNum}: DESCRIPTION vacío (tag: ${tag})`); return }
-          if (!disc) { errors.push(`Fila ${rowNum}: DISCIPLINE vacío (tag: ${tag})`); return }
-          if (!disciplineCodes.has(disc.toUpperCase())) {
-            errors.push(`Fila ${rowNum}: Disciplina "${disc}" no existe en la organización (tag: ${tag})`)
-          }
+        if (!prefillCode) {
+          const unknown = [...new Set(parsed.map(r => r.discipline_code).filter(c => !disciplineCodes.has(c)))]
+          if (unknown.length > 0) warnings.push(`Disciplinas no reconocidas: ${unknown.join(', ')} — esas filas serán omitidas.`)
+        }
 
-          parsed.push({
-            tag_number:       tag,
-            description:      desc,
-            discipline_code:  disc,
-            area_code:        row['AREA_CODE'] || 'GENERAL',
-            area_name:        row['AREA_NAME'] || 'General',
-            system_code:      row['SYSTEM_CODE'] || 'GEN-SYS',
-            system_name:      row['SYSTEM_NAME'] || 'General System',
-            subsystem_code:   row['SUBSYSTEM_CODE'] || 'GEN-SUB',
-            subsystem_name:   row['SUBSYSTEM_NAME'] || 'General Subsystem',
-            manufacturer:     row['MANUFACTURER'] || undefined,
-            model:            row['MODEL'] || undefined,
-            serial_number:    row['SERIAL'] || undefined,
-            preservation_required: ['YES', 'SI', 'SÍ', '1', 'TRUE'].includes(
-              (row['PRESERVATION'] || '').toUpperCase()
-            ),
-          })
-        })
-
-        setValidationErrors(errors)
-        setRows(parsed)
+        setParseWarnings(warnings)
         setFileName(file.name)
+        setRows(parsed)
         setStep('preview')
       } catch {
-        setValidationErrors(['Error leyendo el archivo. Verifica que sea un .xlsx o .xls válido.'])
+        setParseWarnings(['Error al leer el archivo. Verifica que sea un .xlsx o .xls válido.'])
       }
     }
     reader.readAsArrayBuffer(file)
-  }
+  }, [prefillCode, disciplineCodes])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragging(false)
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) parseFile(file)
-  }, [disciplineCodes])
+  }, [parseFile])
 
-  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) parseFile(file)
   }
 
-  // ── Import ──────────────────────────────────────────────────
-
   async function handleImport() {
-    setLoading(true)
-    setImportError(null)
-    const validRows = rows.filter(r => disciplineCodes.has(r.discipline_code.toUpperCase()))
-    const res = await importTags(projectId, validRows)
-    if (res.error) {
-      setImportError(res.error)
-    } else {
-      setResult(res.result!)
-      setStep('result')
-    }
+    setLoading(true); setImportError(null)
+    const { error, result: res } = await importTags(projectId, rows)
     setLoading(false)
+    if (error) { setImportError(error); return }
+    setResult(res!); setStep('result')
   }
 
-  // ── Template download ───────────────────────────────────────
-
-  function downloadTemplate() {
-    const template = [
-      { TAG: 'P-101', DESCRIPTION: 'Feed Water Pump', DISCIPLINE: 'MECH', AREA_CODE: 'AREA-01', AREA_NAME: 'Process Area', SYSTEM_CODE: 'SYS-01', SYSTEM_NAME: 'Water System', SUBSYSTEM_CODE: 'SS-01', SUBSYSTEM_NAME: 'Feed System', MANUFACTURER: 'Grundfos', MODEL: 'CM5-A', SERIAL: '', PRESERVATION: 'NO' },
-      { TAG: 'FT-201', DESCRIPTION: 'Flow Transmitter Water', DISCIPLINE: 'INST', AREA_CODE: 'AREA-01', AREA_NAME: 'Process Area', SYSTEM_CODE: 'SYS-01', SYSTEM_NAME: 'Water System', SUBSYSTEM_CODE: 'SS-01', SUBSYSTEM_NAME: 'Feed System', MANUFACTURER: 'Endress+Hauser', MODEL: 'Promag', SERIAL: '', PRESERVATION: 'NO' },
-    ]
-    const ws = XLSX.utils.json_to_sheet(template)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Tags')
-    XLSX.writeFile(wb, 'CommUp_Tags_Template.xlsx')
-  }
-
-  // ── Render ──────────────────────────────────────────────────
+  const hasPid      = rows.some(r => r.pid_drawing)
+  const validRows   = rows.filter(r => prefillCode ? true : disciplineCodes.has(r.discipline_code))
+  const invalidRows = rows.filter(r => !prefillCode && !disciplineCodes.has(r.discipline_code))
 
   return (
     <div style={{ padding: '32px' }}>
 
+      <a href={`/projects/${projectId}/tags`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+        ← {projectName}
+      </a>
+
       {/* Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <a href={`/projects/${projectId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '16px' }}>
-          ← {projectName}
-        </a>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
-              Importar Tags / Equipos
-            </h1>
-            <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
-              Carga tu lista de equipos desde Excel. Se crean áreas, sistemas y subsistemas automáticamente.
-            </p>
-          </div>
-          <button onClick={downloadTemplate} style={{
-            padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0',
-            borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '6px',
-          }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px', gap: '16px' }}>
+        <div>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.4px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            Importar Tags / Equipos
+            {disciplinePrefill && (
+              <span style={{
+                padding: '3px 10px', borderRadius: '6px', fontSize: '14px', fontWeight: 700,
+                background: `${disciplinePrefill.color}18`, color: disciplinePrefill.color,
+              }}>
+                {disciplinePrefill.code} — {disciplinePrefill.name}
+              </span>
+            )}
+          </h1>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
+            Carga tu lista desde Excel. Se crean áreas, sistemas y subsistemas automáticamente.
+          </p>
+        </div>
+        {step === 'upload' && (
+          <button onClick={() => downloadTemplate(prefillCode || 'MECH')} style={{ padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
             ↓ Descargar plantilla
           </button>
-        </div>
+        )}
       </div>
 
-      {/* Steps indicator */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '28px' }}>
+      {/* Step indicator */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '28px' }}>
         {(['upload', 'preview', 'result'] as Step[]).map((s, i) => {
           const labels = ['Cargar archivo', 'Vista previa', 'Resultado']
-          const done = step === 'preview' ? i < 1 : step === 'result' ? i < 2 : false
+          const done   = (step === 'preview' && i === 0) || step === 'result'
           const active = step === s
           return (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {i > 0 && <div style={{ width: '32px', height: '1px', background: done ? '#3b82f6' : '#e2e8f0' }} />}
+            <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
+              {i > 0 && <div style={{ width: '40px', height: '1px', background: (done || active) ? '#3b82f6' : '#e2e8f0' }} />}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
-                  width: '24px', height: '24px', borderRadius: '50%', fontSize: '11px', fontWeight: 700,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: done || active ? '#3b82f6' : '#f1f5f9',
-                  color: done || active ? 'white' : '#94a3b8',
-                }}>{done ? '✓' : i + 1}</div>
-                <span style={{ fontSize: '13px', color: active ? '#0f172a' : '#94a3b8', fontWeight: active ? 500 : 400 }}>
-                  {labels[i]}
-                </span>
+                  width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '12px', fontWeight: 600,
+                  background: done ? '#3b82f6' : active ? '#eff6ff' : '#f1f5f9',
+                  color:      done ? 'white'   : active ? '#3b82f6' : '#94a3b8',
+                  border: active ? '2px solid #3b82f6' : '2px solid transparent',
+                }}>
+                  {done ? '✓' : i + 1}
+                </div>
+                <span style={{ fontSize: '13px', color: active ? '#1e40af' : '#94a3b8', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* ── Step 1: Upload ── */}
+      {/* ── STEP 1: Upload ─────────────────────────────────── */}
       {step === 'upload' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px' }}>
-          {/* Drop zone */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
           <div
             onDragOver={e => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
-            onDrop={handleDrop}
+            onDrop={onDrop}
+            onClick={() => document.getElementById('file-input')?.click()}
             style={{
               border: `2px dashed ${dragging ? '#3b82f6' : '#cbd5e1'}`,
-              borderRadius: '16px', padding: '64px 32px', textAlign: 'center',
+              borderRadius: '14px', padding: '56px 32px', textAlign: 'center',
               background: dragging ? '#eff6ff' : 'white',
-              transition: 'all 0.15s', cursor: 'pointer',
+              cursor: 'pointer', transition: 'all 0.2s',
             }}
-            onClick={() => document.getElementById('file-input')?.click()}
           >
-            <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📊</div>
-            <p style={{ fontWeight: 600, color: '#0f172a', fontSize: '16px', marginBottom: '6px' }}>
-              Arrastra tu archivo Excel aquí
-            </p>
-            <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '16px' }}>
-              o haz click para seleccionar
-            </p>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>.xlsx · .xls</p>
-            <input id="file-input" type="file" accept=".xlsx,.xls" onChange={handleFileInput} style={{ display: 'none' }} />
+            <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.4 }}>⊞</div>
+            <p style={{ fontSize: '15px', fontWeight: 500, color: '#475569', margin: '0 0 6px' }}>Arrastra tu archivo Excel aquí</p>
+            <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>o haz clic para seleccionar (.xlsx, .xls)</p>
+            <input id="file-input" type="file" accept=".xlsx,.xls" onChange={onFileChange} style={{ display: 'none' }} />
+            <span style={{ padding: '8px 20px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, pointerEvents: 'none' }}>
+              Seleccionar archivo
+            </span>
+            {parseWarnings.length > 0 && (
+              <div style={{ marginTop: '20px', padding: '12px', background: '#fef3c7', borderRadius: '8px', textAlign: 'left' }}>
+                {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '12px', color: '#92400e', margin: '2px 0' }}>⚠ {w}</p>)}
+              </div>
+            )}
           </div>
 
           {/* Column guide */}
-          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '20px' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: '0 0 12px' }}>
-              Columnas del archivo
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {COLUMN_HINTS.map(col => (
-                <div key={col.key} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{
-                    padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
-                    background: col.required ? '#3b82f615' : '#f8fafc',
-                    color: col.required ? '#3b82f6' : '#94a3b8',
-                    border: `1px solid ${col.required ? '#3b82f630' : '#e2e8f0'}`,
-                    flexShrink: 0, marginTop: '1px',
-                  }}>{col.key}</span>
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#475569', fontWeight: 500 }}>{col.label}</div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>Ej: {col.example}</div>
-                  </div>
+          <div style={{ background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '20px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Columnas detectadas automáticamente
+            </p>
+            {[
+              { key: 'TAG / ETIQUETA',           req: true,  note: 'ESDV-7621001, FT-101, P-762A' },
+              { key: 'DESCRIPCION / EQUIPO',      req: true,  note: 'Descripción del instrumento' },
+              { key: 'P&ID',                      req: false, note: 'Número de plano P&ID' },
+              { key: 'AREA_CODE / SE/Sitio',      req: false, note: 'Código de área' },
+              { key: 'SYSTEM_CODE / SISTEMA',     req: false, note: 'Código de sistema' },
+              { key: 'SUBSYSTEM_CODE',            req: false, note: 'Código de subsistema' },
+              { key: 'FABRICANTE / MARCA/MODELO', req: false, note: 'Fabricante y modelo' },
+            ].map(col => (
+              <div key={col.key} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
+                <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? '#fee2e2' : '#f1f5f9', color: col.req ? '#dc2626' : '#64748b' }}>
+                  {col.req ? 'REQ' : 'OPT'}
+                </span>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#334155', fontFamily: 'monospace' }}>{col.key}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{col.note}</div>
                 </div>
-              ))}
-            </div>
-            <div style={{ marginTop: '12px', padding: '8px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-              <p style={{ fontSize: '11px', color: '#166534', margin: 0 }}>
-                Disciplinas disponibles: {disciplines.map(d => d.code).join(', ')}
+              </div>
+            ))}
+            {!disciplinePrefill && (
+              <>
+                <div style={{ borderTop: '1px solid #e2e8f0', margin: '12px 0' }} />
+                <p style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Disciplinas disponibles</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {disciplines.map(d => <span key={d.code} style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: `${d.color}18`, color: d.color }}>{d.code}</span>)}
+                </div>
+              </>
+            )}
+            <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '14px', paddingTop: '12px' }}>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>
+                El encabezado puede estar en cualquier fila — se detecta automáticamente. Compatible con Instrument Index, listas eléctricas y mecánicas.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Step 2: Preview ── */}
+      {/* ── STEP 2: Preview ────────────────────────────────── */}
       {step === 'preview' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div>
-              <span style={{ fontWeight: 600, color: '#0f172a' }}>{fileName}</span>
-              <span style={{ color: '#64748b', fontSize: '14px', marginLeft: '12px' }}>
-                {rows.length} fila{rows.length !== 1 ? 's' : ''} detectadas
-              </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div style={{ fontSize: '14px', color: '#475569' }}>
+              <strong style={{ color: '#0f172a' }}>{fileName}</strong>
+              <span style={{ margin: '0 8px', color: '#cbd5e1' }}>·</span>
+              <span style={{ color: '#10b981', fontWeight: 500 }}>{validRows.length} válidos</span>
+              {invalidRows.length > 0 && <span style={{ color: '#ef4444', fontWeight: 500, marginLeft: '8px' }}>{invalidRows.length} omitidos</span>}
             </div>
-            <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]) }}
-              style={{ fontSize: '13px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
-              ← Cambiar archivo
-            </button>
+            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null) }} style={{ fontSize: '13px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>← Cambiar archivo</button>
           </div>
 
-          {/* Validation errors */}
-          {validationErrors.length > 0 && (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-              <p style={{ fontWeight: 600, color: '#dc2626', fontSize: '13px', marginBottom: '6px' }}>
-                ⚠ {validationErrors.length} advertencia{validationErrors.length !== 1 ? 's' : ''}
-              </p>
-              <ul style={{ margin: 0, paddingLeft: '16px' }}>
-                {validationErrors.slice(0, 8).map((e, i) => (
-                  <li key={i} style={{ fontSize: '12px', color: '#dc2626', marginBottom: '2px' }}>{e}</li>
-                ))}
-                {validationErrors.length > 8 && (
-                  <li style={{ fontSize: '12px', color: '#dc2626' }}>... y {validationErrors.length - 8} más</li>
-                )}
-              </ul>
+          {parseWarnings.length > 0 && (
+            <div style={{ padding: '12px 16px', background: '#fef3c7', borderRadius: '10px', marginBottom: '14px', border: '1px solid #fde68a' }}>
+              {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '13px', color: '#92400e', margin: '2px 0' }}>⚠ {w}</p>)}
             </div>
           )}
 
-          {/* Preview table */}
-          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '20px' }}>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                    {['#', 'Tag', 'Descripción', 'Disciplina', 'Área', 'Sistema', 'Subsistema', 'Fabricante'].map(h => (
-                      <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '11px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.slice(0, 20).map((row, i) => {
-                    const invalidDisc = !disciplineCodes.has(row.discipline_code.toUpperCase())
-                    return (
-                      <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: invalidDisc ? '#fef2f2' : 'white' }}>
-                        <td style={{ padding: '9px 12px', color: '#94a3b8' }}>{i + 2}</td>
-                        <td style={{ padding: '9px 12px', fontWeight: 600, color: '#0f172a', fontFamily: 'monospace' }}>{row.tag_number}</td>
-                        <td style={{ padding: '9px 12px', color: '#475569', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</td>
-                        <td style={{ padding: '9px 12px' }}>
-                          <span style={{
-                            padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                            background: invalidDisc ? '#fee2e2' : '#f0fdf4',
-                            color: invalidDisc ? '#dc2626' : '#166534',
-                          }}>{row.discipline_code}</span>
-                        </td>
-                        <td style={{ padding: '9px 12px', color: '#64748b' }}>{row.area_code}</td>
-                        <td style={{ padding: '9px 12px', color: '#64748b' }}>{row.system_code}</td>
-                        <td style={{ padding: '9px 12px', color: '#64748b' }}>{row.subsystem_code}</td>
-                        <td style={{ padding: '9px 12px', color: '#64748b' }}>{row.manufacturer || '—'}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {rows.length > 20 && (
-              <div style={{ padding: '10px 16px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
-                Mostrando 20 de {rows.length} filas
-              </div>
-            )}
+          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'auto', marginBottom: '20px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <Th>#</Th><Th>TAG</Th><Th>Descripción</Th><Th>Disciplina</Th>
+                  <Th>Área / Sistema / Subsistema</Th>
+                  {hasPid && <Th>P&ID</Th>}
+                  <Th>Fabricante</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.slice(0, 30).map((row, i) => {
+                  const isInvalid = !prefillCode && !disciplineCodes.has(row.discipline_code)
+                  const d = disciplines.find(x => x.code.toUpperCase() === row.discipline_code)
+                  const dColor = d?.color ?? (disciplinePrefill?.color ?? '#94a3b8')
+                  return (
+                    <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: isInvalid ? '#fff5f5' : undefined }}>
+                      <td style={tdStyle}><span style={{ color: '#cbd5e1' }}>{i + 1}</span></td>
+                      <td style={tdStyle}><span style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'monospace' }}>{row.tag_number}</span></td>
+                      <td style={tdStyle}><span style={{ color: '#334155' }}>{row.description || '—'}</span></td>
+                      <td style={tdStyle}>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: `${dColor}18`, color: isInvalid ? '#ef4444' : dColor }}>
+                          {row.discipline_code || '?'}
+                        </span>
+                      </td>
+                      <td style={tdStyle}><span style={{ color: '#64748b', fontFamily: 'monospace', fontSize: '11px' }}>{[row.area_code, row.system_code, row.subsystem_code].join(' / ')}</span></td>
+                      {hasPid && <td style={tdStyle}><span style={{ color: '#64748b', fontSize: '11px', fontFamily: 'monospace' }}>{row.pid_drawing || '—'}</span></td>}
+                      <td style={tdStyle}><span style={{ color: '#64748b' }}>{row.manufacturer || '—'}</span></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            {rows.length > 30 && <div style={{ padding: '10px 16px', fontSize: '12px', color: '#94a3b8', borderTop: '1px solid #f1f5f9' }}>Mostrando 30 de {rows.length} filas</div>}
           </div>
 
           {importError && (
-            <div style={{ padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px', marginBottom: '16px' }}>
-              {importError}
+            <div style={{ padding: '12px 16px', background: '#fef2f2', borderRadius: '10px', border: '1px solid #fca5a5', marginBottom: '16px' }}>
+              <p style={{ fontSize: '13px', color: '#dc2626', margin: 0 }}>{importError}</p>
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-            <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]) }}
-              style={{ padding: '10px 20px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', color: '#475569', cursor: 'pointer' }}>
-              Cancelar
-            </button>
-            <button
-              onClick={handleImport}
-              disabled={loading || rows.length === 0}
-              style={{
-                padding: '10px 24px', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
-                border: 'none', cursor: loading || rows.length === 0 ? 'not-allowed' : 'pointer',
-                background: loading || rows.length === 0 ? '#e2e8f0' : '#10b981',
-                color: loading || rows.length === 0 ? '#94a3b8' : 'white',
-              }}
-            >
-              {loading ? 'Importando...' : `✓ Importar ${rows.length} tag${rows.length !== 1 ? 's' : ''}`}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 20px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#475569', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Cancelar</a>
+            <button onClick={handleImport} disabled={loading || validRows.length === 0} style={{ padding: '10px 24px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: loading ? 'wait' : 'pointer', opacity: validRows.length === 0 ? 0.5 : 1 }}>
+              {loading ? 'Importando…' : `✓ Importar ${validRows.length} tags`}
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Step 3: Result ── */}
+      {/* ── STEP 3: Result ─────────────────────────────────── */}
       {step === 'result' && result && (
-        <div style={{ maxWidth: '560px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '56px', marginBottom: '16px' }}>{result.errors.length === 0 ? '✅' : '⚠️'}</div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
-            {result.errors.length === 0 ? 'Importación completada' : 'Importación con advertencias'}
-          </h2>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '24px 0' }}>
-            <div style={{ padding: '16px 28px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+        <div style={{ textAlign: 'center', padding: '32px' }}>
+          <div style={{ fontSize: '52px', marginBottom: '12px' }}>{result.errors.length === 0 ? '✅' : '⚠️'}</div>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: '0 0 24px' }}>Importación completada</h2>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '32px' }}>
+            <div style={{ padding: '20px 32px', background: '#ecfdf5', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
               <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>{result.imported}</div>
-              <div style={{ fontSize: '13px', color: '#166534' }}>Importados</div>
+              <div style={{ fontSize: '13px', color: '#059669', marginTop: '4px' }}>Importados</div>
             </div>
             {result.skipped > 0 && (
-              <div style={{ padding: '16px 28px', background: '#fef2f2', borderRadius: '12px', border: '1px solid #fecaca' }}>
-                <div style={{ fontSize: '32px', fontWeight: 700, color: '#ef4444' }}>{result.skipped}</div>
-                <div style={{ fontSize: '13px', color: '#dc2626' }}>Omitidos</div>
+              <div style={{ padding: '20px 32px', background: '#fef3c7', borderRadius: '12px', border: '1px solid #fde68a' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: '#d97706' }}>{result.skipped}</div>
+                <div style={{ fontSize: '13px', color: '#b45309', marginTop: '4px' }}>Omitidos</div>
               </div>
             )}
           </div>
-
           {result.errors.length > 0 && (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', textAlign: 'left' }}>
-              <p style={{ fontWeight: 600, color: '#dc2626', fontSize: '13px', marginBottom: '8px' }}>Filas con errores:</p>
-              {result.errors.map((e, i) => (
-                <div key={i} style={{ fontSize: '12px', color: '#dc2626', marginBottom: '4px' }}>
-                  Fila {e.row} · <strong>{e.tag}</strong>: {e.reason}
-                </div>
-              ))}
+            <div style={{ textAlign: 'left', background: '#fef2f2', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid #fca5a5' }}>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626', margin: '0 0 8px' }}>Errores:</p>
+              {result.errors.slice(0, 10).map((e, i) => <p key={i} style={{ fontSize: '12px', color: '#991b1b', margin: '2px 0', fontFamily: 'monospace' }}>Fila {e.row} [{e.tag}]: {e.reason}</p>)}
             </div>
           )}
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-            <a href={`/projects/${projectId}`} style={{
-              padding: '10px 24px', background: '#3b82f6', color: 'white',
-              borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none',
-            }}>
-              Ver proyecto
-            </a>
-            <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]); setResult(null) }}
-              style={{ padding: '10px 20px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', color: '#475569', cursor: 'pointer' }}>
-              Importar más
-            </button>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>Ver tags →</a>
+            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setResult(null) }} style={{ padding: '10px 22px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer' }}>Importar más</button>
           </div>
         </div>
       )}
+
     </div>
   )
 }
+
+function Th({ children }: { children: React.ReactNode }) {
+  return <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{children}</th>
+}
+const tdStyle: React.CSSProperties = { padding: '10px 14px', verticalAlign: 'middle' }

@@ -2,8 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import ImportWizard from './ImportWizard'
 
-export default async function ImportPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function ImportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ discipline?: string }>
+}) {
+  const { id }         = await params
+  const { discipline } = await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -17,8 +24,6 @@ export default async function ImportPage({ params }: { params: Promise<{ id: str
     .maybeSingle()
 
   if (!membership) redirect('/setup')
-
-  // Only privileged roles can import
   if (!['owner', 'admin', 'architect'].includes(membership.role)) redirect(`/projects/${id}`)
 
   const [{ data: project }, { data: disciplines }] = await Promise.all([
@@ -36,11 +41,17 @@ export default async function ImportPage({ params }: { params: Promise<{ id: str
 
   if (!project) notFound()
 
+  // If a discipline code was passed in the URL, find it in the org's disciplines
+  const disciplinePrefill = discipline
+    ? (disciplines ?? []).find(d => d.code.toUpperCase() === discipline.toUpperCase())
+    : undefined
+
   return (
     <ImportWizard
       projectId={project.id}
       projectName={project.name}
       disciplines={disciplines ?? []}
+      disciplinePrefill={disciplinePrefill}
     />
   )
 }
