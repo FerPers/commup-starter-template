@@ -129,13 +129,15 @@ export default function ImportWizard({
   const [loading, setLoading]         = useState(false)
   const [result, setResult]           = useState<ImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [manualDiscipline, setManualDiscipline] = useState<string>('')
 
-  const disciplineCodes = new Set(disciplines.map(d => d.code.toUpperCase()))
-  const prefillCode     = disciplinePrefill?.code.toUpperCase() ?? ''
+  const disciplineCodes  = new Set(disciplines.map(d => d.code.toUpperCase()))
+  const prefillCode      = disciplinePrefill?.code.toUpperCase() ?? ''
+  const effectivePrefill = prefillCode || manualDiscipline
 
   // ── File parsing ──────────────────────────────────────────────
 
-  const parseFile = useCallback((file: File) => {
+  const parseFile = useCallback((file: File, disciplineCode: string) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
@@ -169,13 +171,13 @@ export default function ImportWizard({
           warnings.push('No se encontró columna TAG / ETIQUETA. Verifica que tu archivo tenga encabezados reconocibles.')
         }
 
-        const parsed = parseRows(rawRows, colIndex, headerRowIdx + 1, prefillCode)
+        const parsed = parseRows(rawRows, colIndex, headerRowIdx + 1, disciplineCode)
 
         if (parsed.length === 0) {
           setParseWarnings([...warnings, 'No se encontraron filas de datos válidas (TAG debe contener letras y números).']); return
         }
 
-        if (!prefillCode) {
+        if (!disciplineCode) {
           const unknown = [...new Set(parsed.map(r => r.discipline_code).filter(c => !disciplineCodes.has(c)))]
           if (unknown.length > 0) warnings.push(`Disciplinas no reconocidas: ${unknown.join(', ')} — esas filas serán omitidas.`)
         }
@@ -189,17 +191,17 @@ export default function ImportWizard({
       }
     }
     reader.readAsArrayBuffer(file)
-  }, [prefillCode, disciplineCodes])
+  }, [disciplineCodes])
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setDragging(false)
     const file = e.dataTransfer.files[0]
-    if (file) parseFile(file)
-  }, [parseFile])
+    if (file) parseFile(file, effectivePrefill)
+  }, [parseFile, effectivePrefill])
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) parseFile(file)
+    if (file) parseFile(file, effectivePrefill)
   }
 
   async function handleImport() {
@@ -211,8 +213,8 @@ export default function ImportWizard({
   }
 
   const hasPid      = rows.some(r => r.pid_drawing)
-  const validRows   = rows.filter(r => prefillCode ? true : disciplineCodes.has(r.discipline_code))
-  const invalidRows = rows.filter(r => !prefillCode && !disciplineCodes.has(r.discipline_code))
+  const validRows   = rows.filter(r => effectivePrefill ? true : disciplineCodes.has(r.discipline_code))
+  const invalidRows = rows.filter(r => !effectivePrefill && !disciplineCodes.has(r.discipline_code))
 
   return (
     <div style={{ padding: '32px' }}>
@@ -275,6 +277,37 @@ export default function ImportWizard({
       {/* ── STEP 1: Upload ─────────────────────────────────── */}
       {step === 'upload' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
+
+          {/* Left column: discipline picker (when no URL prefill) + drop zone */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {!disciplinePrefill && (
+            <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500, whiteSpace: 'nowrap' }}>Disciplina:</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', flex: 1 }}>
+                {disciplines.map(d => (
+                  <button
+                    key={d.code}
+                    onClick={() => setManualDiscipline(manualDiscipline === d.code ? '' : d.code)}
+                    style={{
+                      padding: '5px 14px', borderRadius: '7px', border: '1px solid',
+                      borderColor: manualDiscipline === d.code ? d.color : '#e2e8f0',
+                      background: manualDiscipline === d.code ? `${d.color}15` : 'white',
+                      color: manualDiscipline === d.code ? d.color : '#64748b',
+                      fontSize: '12px', fontWeight: manualDiscipline === d.code ? 700 : 400,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {d.code}
+                  </button>
+                ))}
+              </div>
+              {!manualDiscipline && (
+                <span style={{ fontSize: '11px', color: '#f59e0b', whiteSpace: 'nowrap' }}>Selecciona una disciplina</span>
+              )}
+            </div>
+          )}
+
           <div
             onDragOver={e => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
@@ -300,6 +333,7 @@ export default function ImportWizard({
               </div>
             )}
           </div>
+          </div>{/* end left column */}
 
           {/* Column guide */}
           <div style={{ background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '20px' }}>
@@ -374,9 +408,10 @@ export default function ImportWizard({
               </thead>
               <tbody>
                 {rows.slice(0, 30).map((row, i) => {
-                  const isInvalid = !prefillCode && !disciplineCodes.has(row.discipline_code)
+                  const isInvalid = !effectivePrefill && !disciplineCodes.has(row.discipline_code)
                   const d = disciplines.find(x => x.code.toUpperCase() === row.discipline_code)
-                  const dColor = d?.color ?? (disciplinePrefill?.color ?? '#94a3b8')
+                  const manualD = disciplines.find(x => x.code.toUpperCase() === manualDiscipline)
+                  const dColor = d?.color ?? (disciplinePrefill?.color ?? manualD?.color ?? '#94a3b8')
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: isInvalid ? '#fff5f5' : undefined }}>
                       <td style={tdStyle}><span style={{ color: '#cbd5e1' }}>{i + 1}</span></td>
