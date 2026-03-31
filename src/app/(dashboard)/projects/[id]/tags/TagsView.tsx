@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 type Discipline = { id: string; code: string; name: string; color: string }
 type Area       = { id: string; code: string; name: string }
@@ -38,6 +39,7 @@ export default function TagsView({
   pidUrlMap?: Record<string, string>
 }) {
   const [activeDiscipline, setActiveDiscipline] = useState<string>('ALL')
+  const router = useRouter()
 
   // Build discipline summary with counts
   const disciplineMap = new Map<string, { code: string; name: string; color: string; count: number }>()
@@ -135,9 +137,11 @@ export default function TagsView({
                 const maker  = [tag.manufacturer, tag.model].filter(Boolean).join(' · ')
 
                 return (
-                  <tr key={tag.id}
-                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.1s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
+                  <tr
+                    key={tag.id}
+                    onClick={() => router.push(`/projects/${projectId}/tags/${tag.id}`)}
+                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.1s', cursor: 'pointer' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f8faff')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <td style={tdStyle}>

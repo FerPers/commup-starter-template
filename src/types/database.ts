@@ -138,6 +138,21 @@ export interface Tag {
   serial_number: string | null
   status: TagStatus
   preservation_required: boolean
+  pid_drawing: string | null
+  // Engineering parameters (Sprint 2)
+  range_min: number | null
+  range_max: number | null
+  eng_unit: string | null
+  sp_h: number | null
+  sp_hh: number | null
+  sp_l: number | null
+  sp_ll: number | null
+  signal_type: string | null
+  sil_level: string | null
+  io_address: string | null
+  junction_box: string | null
+  datasheet_number: string | null
+  revision: string | null
   created_at: string
 }
 
@@ -266,7 +281,9 @@ export interface ItrTemplateItem {
   id: string
   section_id: string
   template_id: string
+  item_number: string | null  // hierarchical numbering e.g. "1.0", "1.1", "10.0a"
   description: string
+  description_es: string | null  // Spanish translation
   item_type: ItrItemType
   is_required: boolean
   is_critical: boolean       // if fails → blocks ITR signature

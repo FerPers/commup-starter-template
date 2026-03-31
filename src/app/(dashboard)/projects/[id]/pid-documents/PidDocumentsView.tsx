@@ -476,7 +476,7 @@ function UploadForm({
   )
 }
 
-function Th({ children }: { children: React.ReactNode }) {
+function Th({ children }: { children?: React.ReactNode }) {
   return (
     <th style={{
       padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600,
