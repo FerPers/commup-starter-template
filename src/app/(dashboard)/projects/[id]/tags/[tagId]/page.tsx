@@ -28,6 +28,8 @@ export default async function TagDetailPage({
     { data: project },
     { data: tag },
     { data: allTagIds },
+    { data: tagItrs },
+    { data: orgMembers },
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -58,17 +60,42 @@ export default async function TagDetailPage({
       .select('id')
       .eq('project_id', projectId)
       .order('tag_number'),
+    supabase
+      .from('itrs')
+      .select(`
+        id, itr_number, status, progress_pct, scheduled_date, created_at,
+        itr_templates(code, title, disciplines(code, name, color)),
+        project_phases(code, name, color),
+        itr_assignments(user_id, role, profiles(full_name)),
+        itr_signatures(id, role, signed_at)
+      `)
+      .eq('tag_id', tagId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('org_members')
+      .select('user_id, role, profiles(full_name)')
+      .eq('org_id', membership.org_id)
+      .order('role'),
   ])
 
   if (!project) notFound()
   if (!tag) notFound()
+
+  // Templates for this tag's discipline (sequential — needs disciplineId)
+  const { data: templates } = await supabase
+    .from('itr_templates')
+    .select('id, code, title, phase_id, project_phases(id, code, name, color)')
+    .eq('org_id', membership.org_id)
+    .eq('is_active', true)
+    .eq('discipline_id', (tag.disciplines as unknown as { id: string }).id)
+    .order('code')
 
   // Prev / next tag navigation
   const tagIndex = (allTagIds ?? []).findIndex(t => t.id === tagId)
   const prevTagId = tagIndex > 0 ? allTagIds![tagIndex - 1].id : null
   const nextTagId = tagIndex < (allTagIds?.length ?? 0) - 1 ? allTagIds![tagIndex + 1].id : null
 
-  // P&ID signed URL if the tag references a drawing that has been uploaded
+  // P&ID signed URL
   let pidSignedUrl: string | null = null
   if (tag.pid_drawing) {
     const { data: pidDoc } = await supabase
@@ -96,6 +123,12 @@ export default async function TagDetailPage({
       prevTagId={prevTagId}
       nextTagId={nextTagId}
       canEdit={canEdit}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      tagItrs={(tagItrs ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      templates={(templates ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      orgMembers={(orgMembers ?? []) as any}
     />
   )
 }

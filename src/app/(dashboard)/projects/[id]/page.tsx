@@ -19,7 +19,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
 
-  const [{ data: project }, { data: phases }, { data: disciplines }, { count: tagCount }] = await Promise.all([
+  const [{ data: project }, { data: phases }, { data: disciplines }, { count: tagCount }, { data: itrCounts }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name, code, location, client, start_date, end_date, status, created_at')
@@ -38,6 +38,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     supabase
       .from('tags')
       .select('id', { count: 'exact', head: true })
+      .eq('project_id', id),
+    supabase
+      .from('itrs')
+      .select('id, status')
       .eq('project_id', id),
   ])
 
@@ -239,9 +243,43 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* ITRs + Punch List — coming soon */}
+      {/* ITRs + Punch List */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
-        <ComingSoon title="ITRs" icon="✓" description="Define y ejecuta Inspection & Test Records por tag y disciplina." />
+
+        {/* ITR card — real */}
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h3 style={sectionTitle}>ITRs</h3>
+            <a href={`/projects/${project.id}/itrs`} style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}>
+              Ver todos →
+            </a>
+          </div>
+          {(itrCounts ?? []).length === 0 ? (
+            <div style={{ padding: '24px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+                Sin ITRs asignados. Abre un tag y asigna un template.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {[
+                { key: 'not_started', label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9' },
+                { key: 'in_progress',  label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
+                { key: 'completed',    label: 'Completados',  color: '#10b981', bg: '#ecfdf5' },
+                { key: 'approved',     label: 'Aprobados',    color: '#7c3aed', bg: '#f5f3ff' },
+              ].map(s => {
+                const cnt = (itrCounts ?? []).filter(i => i.status === s.key).length
+                return cnt > 0 ? (
+                  <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: '8px', textAlign: 'center', minWidth: '70px' }}>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: s.color }}>{cnt}</div>
+                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>{s.label}</div>
+                  </div>
+                ) : null
+              })}
+            </div>
+          )}
+        </div>
+
         <ComingSoon title="Punch List" icon="⚑" description="Registra y gestiona observaciones por fase con bloqueo de certificados." />
       </div>
 

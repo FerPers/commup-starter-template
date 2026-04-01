@@ -109,13 +109,15 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
         const autoDisc: Record<string, string> = {}
         for (const letter of result.discLetters) {
           const match = disciplines.find(d =>
-            d.code.toUpperCase().startsWith(letter) ||
             (letter === 'E' && d.code === 'ELEC') ||
             (letter === 'H' && d.code === 'HVAC') ||
             (letter === 'I' && d.code === 'INST') ||
             (letter === 'M' && d.code === 'MECH') ||
             (letter === 'P' && d.code === 'PIPE') ||
-            (letter === 'T' && (d.code === 'TELE' || d.code === 'TELEC'))
+            (letter === 'T' && (d.code === 'TELE' || d.code === 'TELEC')) ||
+            (letter === 'L' && d.code === 'SAFE') ||
+            (letter === 'Q' && d.code === 'INSU') ||
+            (letter === 'X' && d.code === 'PAINT')
           )
           if (match) autoDisc[letter] = match.id
         }

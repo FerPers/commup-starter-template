@@ -1,0 +1,63 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect, notFound } from 'next/navigation'
+import ItrListView from './ItrListView'
+
+export default async function ProjectItrsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id: projectId } = await params
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: membership } = await supabase
+    .from('org_members')
+    .select('org_id, role')
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle()
+
+  if (!membership) redirect('/setup')
+
+  const [{ data: project }, { data: itrs }, { data: phases }] = await Promise.all([
+    supabase
+      .from('projects')
+      .select('id, name')
+      .eq('id', projectId)
+      .eq('org_id', membership.org_id)
+      .single(),
+    supabase
+      .from('itrs')
+      .select(`
+        id, itr_number, status, progress_pct, scheduled_date, created_at,
+        itr_templates(code, title, disciplines(code, name, color)),
+        tags(id, tag_number, description),
+        project_phases(code, name, color),
+        itr_assignments(user_id, role, profiles(full_name)),
+        itr_signatures(role, signed_at)
+      `)
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('project_phases')
+      .select('id, code, name, color, order_index')
+      .eq('project_id', projectId)
+      .order('order_index'),
+  ])
+
+  if (!project) notFound()
+
+  return (
+    <ItrListView
+      projectId={projectId}
+      projectName={project.name}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      itrs={(itrs ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      phases={(phases ?? []) as any}
+    />
+  )
+}

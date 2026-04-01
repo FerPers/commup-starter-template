@@ -2,6 +2,36 @@
 
 import { useState, useTransition } from 'react'
 import { updateTag } from '@/app/actions/tags'
+import TagItrTab from './TagItrTab'
+
+// ── ITR prop types ───────────────────────────────────────────────────
+
+export type TagItr = {
+  id: string
+  itr_number: string
+  status: string
+  progress_pct: number
+  scheduled_date: string | null
+  created_at: string
+  itr_templates: { code: string; title: string; disciplines: { code: string; name: string; color: string } } | null
+  project_phases: { code: string; name: string; color: string } | null
+  itr_assignments: Array<{ user_id: string; role: string; profiles: { full_name: string } | null }>
+  itr_signatures: Array<{ id: string; role: string; signed_at: string }>
+}
+
+export type ItrTemplate = {
+  id: string
+  code: string
+  title: string
+  phase_id: string
+  project_phases: { id: string; code: string; name: string; color: string } | null
+}
+
+export type OrgMember = {
+  user_id: string
+  role: string
+  profiles: { full_name: string } | null
+}
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -64,6 +94,9 @@ export default function TagDetail({
   prevTagId,
   nextTagId,
   canEdit,
+  tagItrs,
+  templates,
+  orgMembers,
 }: {
   tag: Tag
   projectId: string
@@ -72,6 +105,9 @@ export default function TagDetail({
   prevTagId: string | null
   nextTagId: string | null
   canEdit: boolean
+  tagItrs: TagItr[]
+  templates: ItrTemplate[]
+  orgMembers: OrgMember[]
 }) {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [editMode, setEditMode]   = useState(false)
@@ -86,7 +122,7 @@ export default function TagDetail({
 
   const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: 'overview',     label: 'Resumen' },
-    { key: 'itrs',         label: 'ITRs',         badge: 0 },
+    { key: 'itrs',         label: 'ITRs',         badge: tagItrs.length },
     { key: 'punches',      label: 'Punch List',   badge: 0 },
     { key: 'docs',         label: 'Documentos' },
     { key: 'preservation', label: 'Preservación' },
@@ -318,7 +354,17 @@ export default function TagDetail({
         ) : (
           <>
             {activeTab === 'overview'     && <OverviewTab tag={tag} area={area} sys={sys} sub={sub} pidSignedUrl={pidSignedUrl} />}
-            {activeTab === 'itrs'         && <EmptyTab icon="✓" title="Sin ITRs asignados" message="Los ITRs se asignarán a este tag desde el Template Builder. (Disponible en próximo sprint)" />}
+            {activeTab === 'itrs'         && (
+              <TagItrTab
+                projectId={projectId}
+                tagId={tag.id}
+                subsystemId={(tag.subsystems as unknown as { id: string }).id}
+                tagItrs={tagItrs}
+                templates={templates}
+                orgMembers={orgMembers}
+                canEdit={canEdit}
+              />
+            )}
             {activeTab === 'punches'      && <EmptyTab icon="⚑" title="Sin punches registrados" message="Los punches se generarán durante la ejecución de ITRs o manualmente." />}
             {activeTab === 'docs'         && <DocsTab tag={tag} pidSignedUrl={pidSignedUrl} />}
             {activeTab === 'preservation' && <EmptyTab icon="◉" title="Sin plan de preservación" message="El plan de preservación se activará cuando el equipo requiera rutinas de mantenimiento preventivo." />}

@@ -1,0 +1,300 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
+import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
+
+// ── Status config ────────────────────────────────────────────────────
+
+const ITR_STATUS: Record<string, { label: string; color: string; bg: string }> = {
+  not_started: { label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9' },
+  in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
+  completed:    { label: 'Completado',  color: '#10b981', bg: '#ecfdf5' },
+  approved:     { label: 'Aprobado',    color: '#7c3aed', bg: '#f5f3ff' },
+  rejected:     { label: 'Rechazado',   color: '#ef4444', bg: '#fee2e2' },
+}
+
+const SIGN_LABELS: Record<string, string> = {
+  executor: 'Ejec',
+  supervisor: 'Sup',
+  client: 'Cli',
+}
+
+// ── Props ────────────────────────────────────────────────────────────
+
+interface Props {
+  projectId: string
+  tagId: string
+  subsystemId: string
+  tagItrs: TagItr[]
+  templates: ItrTemplate[]
+  orgMembers: OrgMember[]
+  canEdit: boolean
+}
+
+// ── Component ────────────────────────────────────────────────────────
+
+export default function TagItrTab({
+  projectId,
+  tagId,
+  subsystemId,
+  tagItrs,
+  templates,
+  orgMembers,
+  canEdit,
+}: Props) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [showAssign, setShowAssign] = useState(false)
+  const [assignError, setAssignError] = useState<string | null>(null)
+
+  // Assignment form state
+  const [selectedTemplate, setSelectedTemplate] = useState('')
+  const [selectedInspector, setSelectedInspector] = useState('')
+  const [scheduledDate, setScheduledDate] = useState('')
+
+  function handleAssign() {
+    if (!selectedTemplate || !selectedInspector) return
+    setAssignError(null)
+    startTransition(async () => {
+      const res = await createItrAssignment({
+        projectId,
+        tagId,
+        subsystemId,
+        templateId: selectedTemplate,
+        inspectorId: selectedInspector,
+        scheduledDate: scheduledDate || undefined,
+      })
+      if (res.error) { setAssignError(res.error); return }
+      setShowAssign(false)
+      setSelectedTemplate('')
+      setSelectedInspector('')
+      setScheduledDate('')
+      router.refresh()
+    })
+  }
+
+  function handleDelete(itrId: string) {
+    if (!confirm('¿Eliminar este ITR y todas sus respuestas?')) return
+    startTransition(async () => {
+      await deleteItr(itrId, projectId, tagId)
+      router.refresh()
+    })
+  }
+
+  const templateObj = templates.find(t => t.id === selectedTemplate)
+
+  return (
+    <div style={{ padding: '24px 0' }}>
+
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+          {tagItrs.length === 0 ? 'No hay ITRs asignados a este tag.' : `${tagItrs.length} ITR${tagItrs.length > 1 ? 's' : ''} asignados`}
+        </p>
+        {canEdit && (
+          <button
+            onClick={() => setShowAssign(true)}
+            style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            + Asignar ITR
+          </button>
+        )}
+      </div>
+
+      {/* ITR list */}
+      {tagItrs.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {tagItrs.map(itr => {
+            const st = ITR_STATUS[itr.status] ?? ITR_STATUS.not_started
+            const executor = itr.itr_assignments.find(a => a.role === 'executor')
+            const tmpl = itr.itr_templates
+            const phase = itr.project_phases
+
+            return (
+              <div
+                key={itr.id}
+                style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}
+              >
+                {/* Phase badge */}
+                {phase && (
+                  <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: `${phase.color}18`, color: phase.color, whiteSpace: 'nowrap' }}>
+                    {phase.code}
+                  </span>
+                )}
+
+                {/* Code + title */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>
+                    {itr.itr_number}
+                  </div>
+                  {tmpl && (
+                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {tmpl.title}
+                    </div>
+                  )}
+                </div>
+
+                {/* Progress bar */}
+                <div style={{ width: '80px' }}>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '3px', textAlign: 'right' }}>{itr.progress_pct}%</div>
+                  <div style={{ height: '5px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '3px', transition: 'width 0.3s' }} />
+                  </div>
+                </div>
+
+                {/* Status pill */}
+                <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
+                  {st.label}
+                </span>
+
+                {/* Signatures */}
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {(['executor', 'supervisor', 'client'] as const).map(role => {
+                    const signed = itr.itr_signatures.some(s => s.role === role)
+                    return (
+                      <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? '#ecfdf5' : '#f8fafc', color: signed ? '#10b981' : '#cbd5e1', border: `1px solid ${signed ? '#a7f3d0' : '#e2e8f0'}`, fontWeight: 600 }}>
+                        {SIGN_LABELS[role]}
+                      </span>
+                    )
+                  })}
+                </div>
+
+                {/* Inspector */}
+                {executor?.profiles?.full_name && (
+                  <div style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {executor.profiles.full_name}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <a
+                    href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}`}
+                    style={{ padding: '6px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', color: '#374151', textDecoration: 'none', fontWeight: 500, whiteSpace: 'nowrap' }}
+                  >
+                    Abrir →
+                  </a>
+                  {canEdit && (
+                    <button
+                      onClick={() => handleDelete(itr.id)}
+                      disabled={isPending}
+                      style={{ padding: '6px 10px', background: 'white', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', color: '#ef4444', cursor: 'pointer' }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* ── Assign Modal ──────────────────────────────────────────── */}
+      {showAssign && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowAssign(false) }}
+        >
+          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Asignar ITR</h2>
+              <button onClick={() => setShowAssign(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
+            </div>
+
+            {templates.length === 0 ? (
+              <p style={{ fontSize: '13px', color: '#64748b', padding: '20px 0', textAlign: 'center' }}>
+                No hay templates activos para la disciplina de este tag.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                {/* Template selector */}
+                <div>
+                  <label style={labelStyle}>Template *</label>
+                  <select
+                    value={selectedTemplate}
+                    onChange={e => setSelectedTemplate(e.target.value)}
+                    style={selStyle}
+                  >
+                    <option value="">Seleccionar template...</option>
+                    {templates.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.code} — {t.title} {t.project_phases ? `[${t.project_phases.code}]` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {templateObj?.project_phases && (
+                    <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0' }}>
+                      Fase: <strong>{templateObj.project_phases.name}</strong>
+                    </p>
+                  )}
+                </div>
+
+                {/* Inspector selector */}
+                <div>
+                  <label style={labelStyle}>Inspector *</label>
+                  <select
+                    value={selectedInspector}
+                    onChange={e => setSelectedInspector(e.target.value)}
+                    style={selStyle}
+                  >
+                    <option value="">Seleccionar inspector...</option>
+                    {orgMembers.map(m => (
+                      <option key={m.user_id} value={m.user_id}>
+                        {m.profiles?.full_name ?? m.user_id} ({m.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Scheduled date */}
+                <div>
+                  <label style={labelStyle}>Fecha programada (opcional)</label>
+                  <input
+                    type="date"
+                    value={scheduledDate}
+                    onChange={e => setScheduledDate(e.target.value)}
+                    style={selStyle}
+                  />
+                </div>
+
+                {assignError && (
+                  <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: 0 }}>
+                    {assignError}
+                  </p>
+                )}
+
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
+                  <button
+                    onClick={() => setShowAssign(false)}
+                    style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleAssign}
+                    disabled={!selectedTemplate || !selectedInspector || isPending}
+                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || isPending ? '#93c5fd' : '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || isPending ? 'not-allowed' : 'pointer' }}
+                  >
+                    {isPending ? 'Asignando...' : 'Asignar →'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px',
+}
+const selStyle: React.CSSProperties = {
+  width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
+  fontSize: '13px', color: '#0f172a', background: 'white', fontFamily: 'inherit',
+}
