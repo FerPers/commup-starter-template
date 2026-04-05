@@ -14,23 +14,24 @@ const navItems = [
   {
     group: 'Ejecución',
     items: [
-      { href: '/itrs', label: 'ITRs', icon: '✓' },
-      { href: '/punch-list', label: 'Punch List', icon: '⚑' },
-      { href: '/preservation', label: 'Preservación', icon: '◉' },
-      { href: '/work-plans', label: 'Planes de Trabajo', icon: '▦' },
+      { href: '/itrs', label: 'ITRs', icon: '✓', disabled: true },
+      { href: '/punch-list', label: 'Punch List', icon: '⚑', disabled: true },
+      { href: '/preservation', label: 'Preservación', icon: '◉', disabled: true },
+      { href: '/work-plans', label: 'Planes de Trabajo', icon: '▦', disabled: true },
     ],
   },
   {
     group: 'Control',
     items: [
-      { href: '/certificates', label: 'Certificados', icon: '◎' },
-      { href: '/kpis', label: 'KPIs', icon: '▲' },
+      { href: '/certificates', label: 'Certificados', icon: '◎', disabled: true },
+      { href: '/kpis', label: 'KPIs', icon: '▲', disabled: true },
     ],
   },
   {
     group: 'Administración',
     items: [
       { href: '/admin/templates', label: 'Templates ITR', icon: '▤' },
+      { href: '/admin/templates/preservation', label: 'Templates Preserv.', icon: '◉' },
       { href: '/admin/users', label: 'Usuarios', icon: '◯' },
       { href: '/admin/config', label: 'Configuración', icon: '⚙' },
     ],
@@ -90,7 +91,31 @@ export default function Sidebar() {
               {group.group}
             </div>
             {group.items.map(item => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              const disabled = 'disabled' in item && item.disabled
+              const isActive = !disabled && (pathname === item.href || pathname.startsWith(item.href + '/'))
+              if (disabled) {
+                return (
+                  <div
+                    key={item.href}
+                    title="Próximamente"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      padding: '9px 20px', margin: '1px 8px',
+                      borderRadius: '8px', cursor: 'not-allowed',
+                      color: '#334155', fontSize: '14px', fontWeight: 400,
+                      borderLeft: '2px solid transparent',
+                    }}
+                  >
+                    <span style={{ fontSize: '16px', opacity: 0.4 }}>{item.icon}</span>
+                    <span style={{ opacity: 0.45 }}>{item.label}</span>
+                    <span style={{
+                      marginLeft: 'auto', fontSize: '9px', fontWeight: 600,
+                      color: '#475569', background: 'rgba(255,255,255,0.06)',
+                      padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.04em',
+                    }}>SOON</span>
+                  </div>
+                )
+              }
               return (
                 <a
                   key={item.href}

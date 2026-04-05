@@ -3,6 +3,7 @@
 import { useState, useTransition, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { upsertResponse, signItr } from '@/app/actions/itr-instances'
+import { createPunch } from '@/app/actions/punches'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -123,6 +124,9 @@ export default function ItrExecution({
   const [showSignModal, setShowSignModal] = useState(false)
   const [signRole, setSignRole] = useState<'executor' | 'supervisor' | 'client'>('executor')
   const [signError, setSignError] = useState<string | null>(null)
+  const [showPunchModal, setShowPunchModal] = useState(false)
+  const [punchItemDesc, setPunchItemDesc] = useState('')
+  const [punchItrItemId, setPunchItrItemId] = useState<string | null>(null)
   const savingRef = useRef(false)
 
   const template = itr.itr_templates
@@ -198,6 +202,14 @@ export default function ItrExecution({
       setShowSignModal(false)
       router.refresh()
     })
+  }
+
+  // ── Punch ────────────────────────────────────────────────────────────
+
+  function openPunchModal(itemDesc: string, itemId: string | null = null) {
+    setPunchItemDesc(itemDesc)
+    setPunchItrItemId(itemId)
+    setShowPunchModal(true)
   }
 
   // ── Render ───────────────────────────────────────────────────────────
@@ -310,6 +322,7 @@ export default function ItrExecution({
                   response={responses[item.id] ?? null}
                   canEdit={canEdit}
                   onSave={saveResponse}
+                  onAddPunch={openPunchModal}
                 />
               ))}
             </div>
@@ -323,6 +336,12 @@ export default function ItrExecution({
           {isPending ? 'Guardando...' : saveError ? `⚠ ${saveError}` : lastSaved ? `Guardado ${lastSaved.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}` : 'Auto-guardado activo'}
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => openPunchModal('')}
+            style={{ padding: '9px 16px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', fontSize: '13px', color: '#c2410c', cursor: 'pointer', fontWeight: 600 }}
+          >
+            ⚑ Punch
+          </button>
           <button
             disabled
             style={{ padding: '9px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#94a3b8', cursor: 'not-allowed' }}
@@ -345,6 +364,19 @@ export default function ItrExecution({
           </button>
         </div>
       </div>
+
+      {/* ── Punch Modal ─────────────────────────────────────────────── */}
+      {showPunchModal && (
+        <CreatePunchModal
+          itrId={itr.id}
+          itrItemId={punchItrItemId}
+          projectId={projectId}
+          tagId={tagId}
+          initialDescription={punchItemDesc}
+          onClose={() => setShowPunchModal(false)}
+          onCreated={() => { setShowPunchModal(false); router.refresh() }}
+        />
+      )}
 
       {/* ── Sign Modal ──────────────────────────────────────────────── */}
       {showSignModal && (
@@ -413,6 +445,132 @@ export default function ItrExecution({
   )
 }
 
+// ── Create Punch Modal ────────────────────────────────────────────────
+
+const CATEGORY_CONFIG = {
+  A: { label: 'Cat A — Bloqueante', color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
+  B: { label: 'Cat B — Transferible', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  C: { label: 'Cat C — Menor',        color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+} as const
+
+function CreatePunchModal({
+  itrId,
+  itrItemId: _itrItemId,
+  projectId,
+  tagId,
+  initialDescription,
+  onClose,
+  onCreated,
+}: {
+  itrId: string
+  itrItemId: string | null
+  projectId: string
+  tagId: string
+  initialDescription: string
+  onClose: () => void
+  onCreated: () => void
+}) {
+  const [description, setDescription] = useState(initialDescription)
+  const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
+  const [targetDate, setTargetDate] = useState('')
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  function handleSubmit() {
+    if (!description.trim()) { setError('La descripción es requerida'); return }
+    setError(null)
+    startTransition(async () => {
+      const res = await createPunch({
+        projectId,
+        tagId,
+        itrId,
+        category,
+        description: description.trim(),
+        targetDate: targetDate || null,
+      })
+      if (res.error) { setError(res.error); return }
+      onCreated()
+    })
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Registrar Punch</h2>
+        <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 20px' }}>Se vinculará a este ITR y tag</p>
+
+        {/* Category */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>Categoría</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {(['A', 'B', 'C'] as const).map(cat => {
+              const cfg = CATEGORY_CONFIG[cat]
+              const active = category === cat
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: `2px solid ${active ? cfg.color : '#e2e8f0'}`, background: active ? cfg.bg : 'white', color: active ? cfg.color : '#64748b', cursor: 'pointer', textAlign: 'center' }}
+                >
+                  {cfg.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Description */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>Descripción</label>
+          <textarea
+            rows={3}
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Describe la deficiencia o no-conformidad..."
+            style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        {/* Target date */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>Fecha límite (opcional)</label>
+          <input
+            type="date"
+            value={targetDate}
+            onChange={e => setTargetDate(e.target.value)}
+            style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px' }}
+          />
+        </div>
+
+        {error && (
+          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '0 0 16px' }}>
+            {error}
+          </p>
+        )}
+
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onClose}
+            style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={isPending}
+            style={{ padding: '9px 20px', background: isPending ? '#fed7aa' : '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}
+          >
+            {isPending ? 'Registrando...' : '⚑ Registrar Punch'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Item Row ──────────────────────────────────────────────────────────
 
 function ItemRow({
@@ -420,6 +578,7 @@ function ItemRow({
   response,
   canEdit,
   onSave,
+  onAddPunch,
 }: {
   item: Item
   response: Response | null
@@ -432,6 +591,7 @@ function ItemRow({
     remarks?: string | null
     isPassed?: boolean | null
   }) => void
+  onAddPunch: (itemDesc: string, itemId: string) => void
 }) {
   const isPassed = response?.is_passed
 
@@ -456,6 +616,15 @@ function ItemRow({
             <p style={{ fontSize: '11px', color: '#94a3b8', margin: '1px 0 0' }}>{item.description_es}</p>
           )}
         </div>
+
+        {/* Add punch button */}
+        <button
+          onClick={() => onAddPunch(item.description, item.id)}
+          title="Registrar punch en este ítem"
+          style={{ flexShrink: 0, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, color: '#c2410c', background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer', marginTop: '2px' }}
+        >
+          ⚑
+        </button>
 
         {/* Inline input for checkbox / yes_no */}
         {item.item_type === 'checkbox' && (

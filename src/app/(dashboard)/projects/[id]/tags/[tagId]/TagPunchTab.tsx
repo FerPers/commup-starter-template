@@ -1,0 +1,416 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { createPunch, updatePunchStatus, closePunch, addPunchComment } from '@/app/actions/punches'
+
+// ── Types ──────────────────────────────────────────────────────────────
+
+export type TagPunch = {
+  id: string
+  punch_number: string
+  category: 'A' | 'B' | 'C'
+  description: string
+  status: 'open' | 'in_progress' | 'closed' | 'cancelled'
+  priority: 'critical' | 'major' | 'minor'
+  target_date: string | null
+  closed_date: string | null
+  created_at: string
+  itr_id: string | null
+  raised_by_profile: { full_name: string } | null
+  assigned_to_profile: { full_name: string } | null
+}
+
+export type OrgMemberForPunch = {
+  user_id: string
+  profiles: { full_name: string } | null
+}
+
+// ── Config ──────────────────────────────────────────────────────────────
+
+const CATEGORY_CFG = {
+  A: { label: 'Cat A', color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
+  B: { label: 'Cat B', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  C: { label: 'Cat C', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+} as const
+
+const STATUS_CFG = {
+  open:        { label: 'Abierto',    color: '#ef4444', bg: '#fee2e2' },
+  in_progress: { label: 'En proceso', color: '#3b82f6', bg: '#eff6ff' },
+  closed:      { label: 'Cerrado',    color: '#10b981', bg: '#ecfdf5' },
+  cancelled:   { label: 'Cancelado',  color: '#64748b', bg: '#f1f5f9' },
+} as const
+
+// ── Main component ──────────────────────────────────────────────────────
+
+export default function TagPunchTab({
+  punches,
+  projectId,
+  tagId,
+  orgMembers,
+}: {
+  punches: TagPunch[]
+  projectId: string
+  tagId: string
+  orgMembers: OrgMemberForPunch[]
+}) {
+  const router = useRouter()
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedPunch, setSelectedPunch] = useState<TagPunch | null>(null)
+
+  function refresh() { router.refresh() }
+
+  if (punches.length === 0 && !showCreateModal) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚑</div>
+        <p style={{ fontSize: '15px', fontWeight: 600, color: '#374151', margin: '0 0 6px' }}>Sin punches registrados</p>
+        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>Los punches se generan durante la ejecución de ITRs o manualmente.</p>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{ padding: '9px 18px', background: '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+        >
+          + Nuevo Punch
+        </button>
+        {showCreateModal && (
+          <CreatePunchModal
+            projectId={projectId}
+            tagId={tagId}
+            orgMembers={orgMembers}
+            onClose={() => setShowCreateModal(false)}
+            onCreated={() => { setShowCreateModal(false); refresh() }}
+          />
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {/* Summary pills */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+        {(['A', 'B', 'C'] as const).map(cat => {
+          const cfg = CATEGORY_CFG[cat]
+          const count = punches.filter(p => p.category === cat).length
+          return (
+            <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: cfg.color }}>{cfg.label}</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: cfg.color }}>{count}</span>
+            </div>
+          )
+        })}
+        <div style={{ marginLeft: 'auto' }}>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{ padding: '6px 14px', background: '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            + Nuevo Punch
+          </button>
+        </div>
+      </div>
+
+      {/* Punch list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {punches.map(punch => {
+          const catCfg = CATEGORY_CFG[punch.category]
+          const stCfg = STATUS_CFG[punch.status] ?? STATUS_CFG.open
+          return (
+            <div
+              key={punch.id}
+              onClick={() => setSelectedPunch(punch)}
+              style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px', cursor: 'pointer', borderLeft: `4px solid ${catCfg.color}` }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: '#64748b', fontWeight: 600 }}>{punch.punch_number}</span>
+                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
+                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stCfg.bg, color: stCfg.color }}>{stCfg.label}</span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#0f172a', margin: '0 0 4px', lineHeight: '1.4' }}>{punch.description}</p>
+                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#94a3b8', flexWrap: 'wrap' }}>
+                    {punch.assigned_to_profile && <span>👤 {punch.assigned_to_profile.full_name}</span>}
+                    {punch.target_date && <span>📅 {punch.target_date}</span>}
+                    {punch.itr_id && <span>↗ ITR</span>}
+                  </div>
+                </div>
+                <span style={{ fontSize: '11px', color: '#cbd5e1' }}>›</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Create modal */}
+      {showCreateModal && (
+        <CreatePunchModal
+          projectId={projectId}
+          tagId={tagId}
+          orgMembers={orgMembers}
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => { setShowCreateModal(false); refresh() }}
+        />
+      )}
+
+      {/* Detail modal */}
+      {selectedPunch && (
+        <PunchDetailModal
+          punch={selectedPunch}
+          projectId={projectId}
+          tagId={tagId}
+          orgMembers={orgMembers}
+          onClose={() => setSelectedPunch(null)}
+          onUpdated={() => { setSelectedPunch(null); refresh() }}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Create Punch Modal ──────────────────────────────────────────────────
+
+const CATEGORY_CREATE_CFG = {
+  A: { label: 'Cat A — Bloqueante',   color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
+  B: { label: 'Cat B — Transferible', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  C: { label: 'Cat C — Menor',        color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+} as const
+
+function CreatePunchModal({
+  projectId,
+  tagId,
+  orgMembers,
+  onClose,
+  onCreated,
+}: {
+  projectId: string
+  tagId: string
+  orgMembers: OrgMemberForPunch[]
+  onClose: () => void
+  onCreated: () => void
+}) {
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
+  const [assignedTo, setAssignedTo] = useState('')
+  const [targetDate, setTargetDate] = useState('')
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  function handleSubmit() {
+    if (!description.trim()) { setError('La descripción es requerida'); return }
+    setError(null)
+    startTransition(async () => {
+      const res = await createPunch({
+        projectId,
+        tagId,
+        category,
+        description: description.trim(),
+        assignedTo: assignedTo || null,
+        targetDate: targetDate || null,
+      })
+      if (res.error) { setError(res.error); return }
+      onCreated()
+    })
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 20px' }}>Nuevo Punch</h2>
+
+        {/* Category */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>Categoría</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {(['A', 'B', 'C'] as const).map(cat => {
+              const cfg = CATEGORY_CREATE_CFG[cat]
+              const active = category === cat
+              return (
+                <button key={cat} onClick={() => setCategory(cat)} style={{ flex: 1, padding: '10px 6px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, border: `2px solid ${active ? cfg.color : '#e2e8f0'}`, background: active ? cfg.bg : 'white', color: active ? cfg.color : '#64748b', cursor: 'pointer', textAlign: 'center' }}>
+                  {cfg.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Description */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>Descripción</label>
+          <textarea
+            rows={3}
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Describe la deficiencia o no-conformidad..."
+            style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        {/* Assigned to */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>Asignar a (opcional)</label>
+          <select
+            value={assignedTo}
+            onChange={e => setAssignedTo(e.target.value)}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', background: 'white', fontFamily: 'inherit' }}
+          >
+            <option value="">Sin asignar</option>
+            {orgMembers.map(m => (
+              <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name ?? m.user_id}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Target date */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>Fecha límite (opcional)</label>
+          <input
+            type="date"
+            value={targetDate}
+            onChange={e => setTargetDate(e.target.value)}
+            style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px' }}
+          />
+        </div>
+
+        {error && (
+          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '0 0 16px' }}>
+            {error}
+          </p>
+        )}
+
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}>
+            Cancelar
+          </button>
+          <button onClick={handleSubmit} disabled={isPending} style={{ padding: '9px 20px', background: isPending ? '#fed7aa' : '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}>
+            {isPending ? 'Registrando...' : '⚑ Registrar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Punch Detail Modal ──────────────────────────────────────────────────
+
+function PunchDetailModal({
+  punch,
+  projectId,
+  tagId,
+  orgMembers,
+  onClose,
+  onUpdated,
+}: {
+  punch: TagPunch
+  projectId: string
+  tagId: string
+  orgMembers: OrgMemberForPunch[]
+  onClose: () => void
+  onUpdated: () => void
+}) {
+  const [comment, setComment] = useState('')
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  const catCfg = CATEGORY_CFG[punch.category]
+  const stCfg = STATUS_CFG[punch.status] ?? STATUS_CFG.open
+  const isClosed = punch.status === 'closed' || punch.status === 'cancelled'
+
+  function handleStatusChange(newStatus: 'open' | 'in_progress' | 'closed' | 'cancelled') {
+    startTransition(async () => {
+      let res: { error?: string }
+      if (newStatus === 'closed') {
+        res = await closePunch({ punchId: punch.id, projectId, tagId, resolutionComment: comment || undefined })
+      } else {
+        res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId })
+      }
+      if (res.error) { setError(res.error); return }
+      onUpdated()
+    })
+  }
+
+  function handleAddComment() {
+    if (!comment.trim()) return
+    startTransition(async () => {
+      const res = await addPunchComment({ punchId: punch.id, comment: comment.trim(), projectId, tagId })
+      if (res.error) { setError(res.error); return }
+      setComment('')
+      onUpdated()
+    })
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: '#475569' }}>{punch.punch_number}</span>
+              <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
+              <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stCfg.bg, color: stCfg.color }}>{stCfg.label}</span>
+            </div>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0, lineHeight: '1.4' }}>{punch.description}</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#94a3b8', cursor: 'pointer', padding: '0 0 0 12px' }}>✕</button>
+        </div>
+
+        {/* Meta */}
+        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b', marginBottom: '20px', flexWrap: 'wrap' }}>
+          {punch.raised_by_profile && <span><strong>Levantado por:</strong> {punch.raised_by_profile.full_name}</span>}
+          {punch.assigned_to_profile && <span><strong>Asignado a:</strong> {punch.assigned_to_profile.full_name}</span>}
+          {punch.target_date && <span><strong>Fecha límite:</strong> {punch.target_date}</span>}
+          {punch.closed_date && <span><strong>Cerrado:</strong> {punch.closed_date}</span>}
+        </div>
+
+        {/* Status actions */}
+        {!isClosed && (
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>Cambiar estado</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {punch.status !== 'in_progress' && (
+                <button onClick={() => handleStatusChange('in_progress')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#eff6ff', color: '#3b82f6', border: '1px solid #bfdbfe', cursor: 'pointer' }}>
+                  → En proceso
+                </button>
+              )}
+              <button onClick={() => handleStatusChange('closed')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', cursor: 'pointer' }}>
+                ✓ Cerrar punch
+              </button>
+              <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Comment */}
+        {!isClosed && (
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+              {punch.status !== 'closed' ? 'Comentario / Resolución' : 'Comentario'}
+            </label>
+            <textarea
+              rows={2}
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              placeholder="Añade un comentario..."
+              style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', marginBottom: '8px' }}
+            />
+            <button onClick={handleAddComment} disabled={isPending || !comment.trim()} style={{ padding: '7px 14px', background: comment.trim() ? '#0f172a' : '#f1f5f9', color: comment.trim() ? 'white' : '#94a3b8', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: comment.trim() ? 'pointer' : 'default' }}>
+              Agregar comentario
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '12px 0 0' }}>{error}</p>
+        )}
+      </div>
+    </div>
+  )
+}

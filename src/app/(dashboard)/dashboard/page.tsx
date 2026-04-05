@@ -33,14 +33,25 @@ export default async function DashboardPage() {
   ])
 
   const activeProjects = (projects ?? []).filter(p => p.status === 'active')
+  const projectIds = (projects ?? []).map(p => p.id)
 
-  // Next steps checklist — dynamically based on what exists
-  const nextSteps = [
-    { done: true, icon: '◎', color: '#10b981', text: 'Organización configurada' },
-    { done: activeProjects.length > 0, icon: '⬡', color: '#f59e0b', text: activeProjects.length > 0 ? `${activeProjects.length} proyecto(s) activo(s)` : 'Crea tu primer proyecto' },
-    { done: false, icon: '▤', color: '#3b82f6', text: 'Define templates de ITR' },
-    { done: false, icon: '◈', color: '#8b5cf6', text: 'Importa tags desde Excel' },
-  ]
+  // Fetch ITRs + punches + preservation plans expiring within 7 days
+  const in7Days = new Date()
+  in7Days.setDate(in7Days.getDate() + 7)
+  const in7DaysStr = in7Days.toISOString().split('T')[0]
+
+  const [{ data: orgItrs }, { data: orgPunches }, { data: orgPreservationDue }] = projectIds.length > 0
+    ? await Promise.all([
+        supabase.from('itrs').select('id, status, phase_id').in('project_id', projectIds),
+        supabase.from('punches').select('id, category, status').in('project_id', projectIds),
+        supabase
+          .from('preservation_plans')
+          .select('id, next_due_date')
+          .in('project_id', projectIds)
+          .eq('status', 'active')
+          .lte('next_due_date', in7DaysStr),
+      ])
+    : [{ data: [] }, { data: [] }, { data: [] }]
 
   return (
     <div style={{ padding: '32px' }}>
@@ -60,44 +71,53 @@ export default async function DashboardPage() {
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: '16px', marginBottom: '32px',
       }}>
-        {(phases ?? []).slice(0, 3).map(phase => (
-          <KpiCard
-            key={phase.id}
-            label={phase.name}
-            value="0%"
-            color={phase.color}
-            sub="0 / 0 ITRs"
-          />
-        ))}
-        <KpiCard label="Punch List Abiertos" value="0" color="#ef4444" sub="Cat A: 0 · Cat B: 0" danger />
+        {(phases ?? []).slice(0, 3).map(phase => {
+          const phaseItrs = (orgItrs ?? []).filter(i => i.phase_id === phase.id)
+          const total = phaseItrs.length
+          const approved = phaseItrs.filter(i => i.status === 'approved').length
+          const pct = total > 0 ? Math.round((approved / total) * 100) : 0
+          return (
+            <KpiCard
+              key={phase.id}
+              label={phase.name}
+              value={`${pct}%`}
+              color={phase.color}
+              sub={`${approved} / ${total} ITRs`}
+              progress={pct}
+            />
+          )
+        })}
+        {(() => {
+          const open = (orgPunches ?? []).filter(p => p.status !== 'closed' && p.status !== 'cancelled')
+          const catA = open.filter(p => p.category === 'A').length
+          const catB = open.filter(p => p.category === 'B').length
+          return (
+            <KpiCard
+              label="Punch List Abiertos"
+              value={String(open.length)}
+              color="#ef4444"
+              sub={`Cat A: ${catA} · Cat B: ${catB}`}
+              danger
+            />
+          )
+        })()}
+        {(() => {
+          const due = orgPreservationDue ?? []
+          const today = new Date().toISOString().split('T')[0]
+          const overdue  = due.filter(p => p.next_due_date < today).length
+          const upcoming = due.filter(p => p.next_due_date >= today).length
+          return (
+            <KpiCard
+              label="Preservación — próx. 7 días"
+              value={String(due.length)}
+              color={overdue > 0 ? '#f59e0b' : '#8b5cf6'}
+              sub={overdue > 0 ? `${overdue} vencido(s) · ${upcoming} por vencer` : `${upcoming} por vencer`}
+              danger={overdue > 0}
+            />
+          )
+        })()}
       </div>
 
-      {/* Secondary row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-
-        {/* Preservation */}
-        <div style={cardStyle}>
-          <h3 style={cardTitleStyle}>Preservación</h3>
-          <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
-            <PreservationBadge count={0} label="Mantenidos" color="#10b981" />
-            <PreservationBadge count={0} label="Vencidos" color="#ef4444" />
-            <PreservationBadge count={0} label="Por Vencer" color="#f59e0b" />
-          </div>
-          <div style={{ marginTop: '20px', padding: '24px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
-            No hay planes de preservación activos
-          </div>
-        </div>
-
-        {/* Alerts / Next steps */}
-        <div style={cardStyle}>
-          <h3 style={cardTitleStyle}>Próximos Pasos</h3>
-          <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {nextSteps.map((step, i) => (
-              <AlertItem key={i} icon={step.icon} color={step.color} text={step.text} done={step.done} />
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Projects list */}
       <div style={cardStyle}>
@@ -208,8 +228,8 @@ function ProjectRow({ project, phases }: {
   )
 }
 
-function KpiCard({ label, value, color, sub, danger = false }: {
-  label: string; value: string; color: string; sub: string; danger?: boolean
+function KpiCard({ label, value, color, sub, danger = false, progress = 0 }: {
+  label: string; value: string; color: string; sub: string; danger?: boolean; progress?: number
 }) {
   return (
     <div style={{ ...cardStyle, borderTop: `3px solid ${color}` }}>
@@ -222,40 +242,12 @@ function KpiCard({ label, value, color, sub, danger = false }: {
       </p>
       <p style={{ fontSize: '12px', color: '#94a3b8' }}>{sub}</p>
       <div style={{ marginTop: '12px', height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-        <div style={{ width: '0%', height: '100%', background: color, borderRadius: '3px' }} />
+        <div style={{ width: `${progress}%`, height: '100%', background: color, borderRadius: '3px' }} />
       </div>
     </div>
   )
 }
 
-function PreservationBadge({ count, label, color }: { count: number; label: string; color: string }) {
-  return (
-    <div style={{
-      flex: 1, textAlign: 'center', padding: '12px',
-      background: `${color}10`, borderRadius: '10px',
-      border: `1px solid ${color}30`,
-    }}>
-      <div style={{ fontSize: '24px', fontWeight: 700, color }}>{count}</div>
-      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{label}</div>
-    </div>
-  )
-}
-
-function AlertItem({ icon, color, text, done }: { icon: string; color: string; text: string; done: boolean }) {
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '12px',
-      padding: '12px', background: done ? `${color}08` : '#f8fafc', borderRadius: '8px',
-      border: `1px solid ${done ? color + '30' : '#f1f5f9'}`,
-    }}>
-      <span style={{ color: done ? color : '#94a3b8', fontSize: '18px' }}>{icon}</span>
-      <span style={{ fontSize: '14px', color: done ? '#0f172a' : '#94a3b8', textDecoration: done ? 'none' : 'none', fontWeight: done ? 500 : 400 }}>
-        {done && <span style={{ marginRight: '6px', color }}>✓</span>}
-        {text}
-      </span>
-    </div>
-  )
-}
 
 // ── Shared styles ─────────────────────────────────────────────
 

@@ -37,6 +37,14 @@ export async function createItrAssignment(input: {
 
   const { projectId, tagId, templateId, subsystemId, scheduledDate, inspectorId } = input
 
+  // Verify project belongs to user's org
+  const { data: project } = await ctx.supabase
+    .from('projects')
+    .select('org_id')
+    .eq('id', projectId)
+    .single()
+  if (!project || project.org_id !== ctx.orgId) return { error: 'Proyecto no encontrado' }
+
   const [{ data: tag }, { data: template }] = await Promise.all([
     ctx.supabase.from('tags').select('tag_number').eq('id', tagId).single(),
     ctx.supabase.from('itr_templates').select('code, phase_id').eq('id', templateId).single(),

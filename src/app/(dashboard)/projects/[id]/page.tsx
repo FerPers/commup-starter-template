@@ -19,7 +19,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
 
-  const [{ data: project }, { data: phases }, { data: disciplines }, { count: tagCount }, { data: itrCounts }] = await Promise.all([
+  const [{ data: project }, { data: phases }, { data: disciplines }, { count: tagCount }, { data: itrCounts }, { data: punchCounts }, { data: certCounts }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name, code, location, client, start_date, end_date, status, created_at')
@@ -41,6 +41,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       .eq('project_id', id),
     supabase
       .from('itrs')
+      .select('id, status, phase_id')
+      .eq('project_id', id),
+    supabase
+      .from('punches')
+      .select('id, category, status')
+      .eq('project_id', id),
+    supabase
+      .from('certificates')
       .select('id, status')
       .eq('project_id', id),
   ])
@@ -132,7 +140,12 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
       {/* Phase KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
-        {(phases ?? []).map(phase => (
+        {(phases ?? []).map(phase => {
+          const phaseItrs = (itrCounts ?? []).filter(i => i.phase_id === phase.id)
+          const total = phaseItrs.length
+          const approved = phaseItrs.filter(i => i.status === 'approved').length
+          const pct = total > 0 ? Math.round((approved / total) * 100) : 0
+          return (
           <div key={phase.id} style={{
             background: 'white', borderRadius: '12px', padding: '18px 20px',
             border: '1px solid #e2e8f0', borderTop: `3px solid ${phase.color}`,
@@ -150,22 +163,30 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 {phase.code}
               </span>
             </div>
-            <p style={{ fontSize: '32px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-1px' }}>0%</p>
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 8px' }}>0 / 0 ITRs</p>
+            <p style={{ fontSize: '32px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-1px' }}>{pct}%</p>
+            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 8px' }}>{approved} / {total} ITRs</p>
             <div style={{ height: '5px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ width: '0%', height: '100%', background: phase.color, borderRadius: '3px' }} />
+              <div style={{ width: `${pct}%`, height: '100%', background: phase.color, borderRadius: '3px' }} />
             </div>
           </div>
-        ))}
-        <div style={{
-          background: 'white', borderRadius: '12px', padding: '18px 20px',
-          border: '1px solid #e2e8f0', borderTop: '3px solid #ef4444',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        }}>
-          <p style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, margin: '0 0 10px' }}>Punch List Abiertos</p>
-          <p style={{ fontSize: '32px', fontWeight: 700, color: '#ef4444', margin: '0 0 4px', letterSpacing: '-1px' }}>0</p>
-          <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>Cat A: 0 · Cat B: 0</p>
-        </div>
+          )
+        })}
+        {(() => {
+          const openPunches = (punchCounts ?? []).filter(p => p.status !== 'closed' && p.status !== 'cancelled')
+          const catA = openPunches.filter(p => p.category === 'A').length
+          const catB = openPunches.filter(p => p.category === 'B').length
+          return (
+            <div style={{
+              background: 'white', borderRadius: '12px', padding: '18px 20px',
+              border: '1px solid #e2e8f0', borderTop: '3px solid #ef4444',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}>
+              <p style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, margin: '0 0 10px' }}>Punch List Abiertos</p>
+              <p style={{ fontSize: '32px', fontWeight: 700, color: '#ef4444', margin: '0 0 4px', letterSpacing: '-1px' }}>{openPunches.length}</p>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>Cat A: {catA} · Cat B: {catB}</p>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Disciplines + Coming soon modules */}
@@ -243,6 +264,57 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
+      {/* Certificates badge */}
+      {(() => {
+        const issued = (certCounts ?? []).filter(c => c.status === 'issued').length
+        return (
+          <div style={{ marginBottom: '16px' }}>
+            <a href={`/projects/${project.id}/certificates`} style={{ textDecoration: 'none' }}>
+              <div style={{
+                background: issued > 0 ? '#ecfdf5' : 'white',
+                border: `1px solid ${issued > 0 ? '#a7f3d0' : '#e2e8f0'}`,
+                borderRadius: '12px', padding: '14px 20px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                transition: 'box-shadow 0.15s',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '20px' }}>◎</span>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Certificados de Completación</div>
+                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px' }}>
+                      {issued > 0 ? `${issued} certificado${issued > 1 ? 's' : ''} emitido${issued > 1 ? 's' : ''}` : 'Ver elegibilidad por subsistema'}
+                    </div>
+                  </div>
+                </div>
+                <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 500 }}>Ver →</span>
+              </div>
+            </a>
+          </div>
+        )
+      })()}
+
+      {/* KPIs card */}
+      <div style={{ marginBottom: '16px' }}>
+        <a href={`/projects/${project.id}/kpis`} style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: 'white', border: '1px solid #e2e8f0',
+            borderRadius: '12px', padding: '14px 20px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '20px' }}>▲</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>KPIs & S-curve</div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px' }}>
+                  Avance por subsistema, curva S planificado vs real, export Excel
+                </div>
+              </div>
+            </div>
+            <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 500 }}>Ver →</span>
+          </div>
+        </a>
+      </div>
+
       {/* ITRs + Punch List */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
 
@@ -280,24 +352,46 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           )}
         </div>
 
-        <ComingSoon title="Punch List" icon="⚑" description="Registra y gestiona observaciones por fase con bloqueo de certificados." />
+        {/* Punch List card — real */}
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h3 style={sectionTitle}>Punch List</h3>
+            <a href={`/projects/${project.id}/punches`} style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}>
+              Ver todos →
+            </a>
+          </div>
+          {(punchCounts ?? []).length === 0 ? (
+            <div style={{ padding: '24px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+                Sin punches registrados. Se crean desde la ejecución de ITRs.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {[
+                { key: 'A', label: 'Cat A', color: '#ef4444', bg: '#fee2e2' },
+                { key: 'B', label: 'Cat B', color: '#f59e0b', bg: '#fffbeb' },
+                { key: 'C', label: 'Cat C', color: '#64748b', bg: '#f8fafc' },
+              ].map(s => {
+                const open = (punchCounts ?? []).filter(p => p.category === s.key && p.status !== 'closed' && p.status !== 'cancelled').length
+                const closed = (punchCounts ?? []).filter(p => p.category === s.key && (p.status === 'closed' || p.status === 'cancelled')).length
+                return (
+                  <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: '8px', textAlign: 'center', minWidth: '70px' }}>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: s.color }}>{open}</div>
+                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>{s.label} abiertos</div>
+                    {closed > 0 && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '1px' }}>{closed} cerrados</div>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
     </div>
   )
 }
 
-function ComingSoon({ title, icon, description }: { title: string; icon: string; description: string }) {
-  return (
-    <div style={cardStyle}>
-      <h3 style={sectionTitle}>{title}</h3>
-      <div style={{ marginTop: '16px', padding: '24px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
-        <div style={{ fontSize: '28px', marginBottom: '8px', opacity: 0.4 }}>{icon}</div>
-        <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{description}</p>
-      </div>
-    </div>
-  )
-}
 
 const cardStyle: React.CSSProperties = {
   background: 'white', borderRadius: '14px', padding: '20px 22px',

@@ -30,6 +30,9 @@ export default async function TagDetailPage({
     { data: allTagIds },
     { data: tagItrs },
     { data: orgMembers },
+    { data: tagPunches },
+    { data: preservationPlans },
+    { data: preservationProcedures },
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -76,6 +79,30 @@ export default async function TagDetailPage({
       .select('user_id, role, profiles(full_name)')
       .eq('org_id', membership.org_id)
       .order('role'),
+    supabase
+      .from('punches')
+      .select(`
+        id, punch_number, category, description, status, priority,
+        target_date, closed_date, created_at, itr_id,
+        raised_by_profile:profiles!raised_by(full_name),
+        assigned_to_profile:profiles!assigned_to(full_name)
+      `)
+      .eq('tag_id', tagId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('preservation_plans')
+      .select(`
+        id, status, start_date, next_due_date, last_performed_date, responsible_user_id,
+        preservation_procedures(id, code, title, frequency, interval_days, disciplines(code, color)),
+        profiles:responsible_user_id(full_name)
+      `)
+      .eq('tag_id', tagId)
+      .order('status'),
+    supabase
+      .from('preservation_procedures')
+      .select('id, code, title, frequency, interval_days, disciplines(code, color)')
+      .eq('org_id', membership.org_id)
+      .order('code'),
   ])
 
   if (!project) notFound()
@@ -129,6 +156,12 @@ export default async function TagDetailPage({
       templates={(templates ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       orgMembers={(orgMembers ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      tagPunches={(tagPunches ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      preservationPlans={(preservationPlans ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      preservationProcedures={(preservationProcedures ?? []) as any}
     />
   )
 }

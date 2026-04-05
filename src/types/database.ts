@@ -209,6 +209,7 @@ export interface PreservationProcedure {
   id: string
   org_id: string
   equipment_type_id: string | null
+  discipline_id: string | null
   code: string
   title: string
   description: string | null
@@ -216,6 +217,22 @@ export interface PreservationProcedure {
   interval_days: number
   requires_photo: boolean
   requires_signature: boolean
+}
+
+export type PreservationItemType = 'checkbox' | 'measurement' | 'number' | 'text' | 'yes_no'
+
+export interface PreservationProcedureItem {
+  id: string
+  procedure_id: string
+  order_index: number
+  label: string
+  item_type: PreservationItemType
+  unit: string | null
+  min_value: number | null
+  max_value: number | null
+  is_critical: boolean
+  is_required: boolean
+  created_at: string
 }
 
 export interface PreservationPlan {
@@ -240,7 +257,20 @@ export interface PreservationRecord {
   result: PreservationResult
   remarks: string | null
   punch_raised: boolean
+  punch_id: string | null
   created_at: string
+}
+
+export interface PreservationRecordResponse {
+  id: string
+  record_id: string
+  item_id: string
+  value_bool: boolean | null
+  value_numeric: number | null
+  value_text: string | null
+  is_passed: boolean | null
+  responded_at: string
+  responded_by: string
 }
 
 export interface PreservationAttachment {

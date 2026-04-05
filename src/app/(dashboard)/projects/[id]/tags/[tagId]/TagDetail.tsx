@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { updateTag } from '@/app/actions/tags'
 import TagItrTab from './TagItrTab'
+import TagPunchTab, { type TagPunch, type OrgMemberForPunch } from './TagPunchTab'
+import TagPreservationTab, { type PreservationPlanRow, type PreservationProcedureOption } from './TagPreservationTab'
 
 // ── ITR prop types ───────────────────────────────────────────────────
 
@@ -97,6 +99,9 @@ export default function TagDetail({
   tagItrs,
   templates,
   orgMembers,
+  tagPunches,
+  preservationPlans,
+  preservationProcedures,
 }: {
   tag: Tag
   projectId: string
@@ -108,6 +113,9 @@ export default function TagDetail({
   tagItrs: TagItr[]
   templates: ItrTemplate[]
   orgMembers: OrgMember[]
+  tagPunches: TagPunch[]
+  preservationPlans: PreservationPlanRow[]
+  preservationProcedures: PreservationProcedureOption[]
 }) {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [editMode, setEditMode]   = useState(false)
@@ -123,7 +131,7 @@ export default function TagDetail({
   const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: 'overview',     label: 'Resumen' },
     { key: 'itrs',         label: 'ITRs',         badge: tagItrs.length },
-    { key: 'punches',      label: 'Punch List',   badge: 0 },
+    { key: 'punches',      label: 'Punch List',   badge: tagPunches.length > 0 ? tagPunches.length : undefined },
     { key: 'docs',         label: 'Documentos' },
     { key: 'preservation', label: 'Preservación' },
   ]
@@ -365,9 +373,25 @@ export default function TagDetail({
                 canEdit={canEdit}
               />
             )}
-            {activeTab === 'punches'      && <EmptyTab icon="⚑" title="Sin punches registrados" message="Los punches se generarán durante la ejecución de ITRs o manualmente." />}
+            {activeTab === 'punches'      && (
+              <TagPunchTab
+                punches={tagPunches}
+                projectId={projectId}
+                tagId={tag.id}
+                orgMembers={orgMembers as OrgMemberForPunch[]}
+              />
+            )}
             {activeTab === 'docs'         && <DocsTab tag={tag} pidSignedUrl={pidSignedUrl} />}
-            {activeTab === 'preservation' && <EmptyTab icon="◉" title="Sin plan de preservación" message="El plan de preservación se activará cuando el equipo requiera rutinas de mantenimiento preventivo." />}
+            {activeTab === 'preservation' && (
+              <TagPreservationTab
+                tagId={tag.id}
+                projectId={projectId}
+                plans={preservationPlans}
+                procedures={preservationProcedures}
+                orgMembers={orgMembers}
+                canEdit={canEdit}
+              />
+            )}
           </>
         )}
       </div>
