@@ -366,6 +366,7 @@ export default function TagDetail({
               <TagItrTab
                 projectId={projectId}
                 tagId={tag.id}
+                tagNumber={tag.tag_number}
                 subsystemId={(tag.subsystems as unknown as { id: string }).id}
                 tagItrs={tagItrs}
                 templates={templates}

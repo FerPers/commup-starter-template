@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import * as XLSX from 'xlsx'
 import { importTags, type TagRow, type ImportResult } from '@/app/actions/import'
+import { detectTagType } from '@/lib/tag-types'
 
 // ── Column keyword mapping ──────────────────────────────────────
 const COL_KEYWORDS: Record<string, string[]> = {
@@ -400,7 +401,7 @@ export default function ImportWizard({
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  <Th>#</Th><Th>TAG</Th><Th>Descripción</Th><Th>Disciplina</Th>
+                  <Th>#</Th><Th>TAG</Th><Th>Descripción</Th><Th>Tipo detectado</Th><Th>Disciplina</Th>
                   <Th>Área / Sistema / Subsistema</Th>
                   {hasPid && <Th>P&ID</Th>}
                   <Th>Fabricante</Th>
@@ -417,6 +418,12 @@ export default function ImportWizard({
                       <td style={tdStyle}><span style={{ color: '#cbd5e1' }}>{i + 1}</span></td>
                       <td style={tdStyle}><span style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'monospace' }}>{row.tag_number}</span></td>
                       <td style={tdStyle}><span style={{ color: '#334155' }}>{row.description || '—'}</span></td>
+                      <td style={tdStyle}>{(() => {
+                        const t = detectTagType(row.tag_number)
+                        return t
+                          ? <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>{t.typeName}</span>
+                          : <span style={{ fontSize: '11px', color: '#cbd5e1' }}>—</span>
+                      })()}</td>
                       <td style={tdStyle}>
                         <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: `${dColor}18`, color: isInvalid ? '#ef4444' : dColor }}>
                           {row.discipline_code || '?'}

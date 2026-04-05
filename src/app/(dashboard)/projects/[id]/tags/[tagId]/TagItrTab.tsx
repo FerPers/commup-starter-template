@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
+import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
 
 // ── Status config ────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ const SIGN_LABELS: Record<string, string> = {
 interface Props {
   projectId: string
   tagId: string
+  tagNumber: string
   subsystemId: string
   tagItrs: TagItr[]
   templates: ItrTemplate[]
@@ -38,6 +40,7 @@ interface Props {
 export default function TagItrTab({
   projectId,
   tagId,
+  tagNumber,
   subsystemId,
   tagItrs,
   templates,
@@ -53,6 +56,12 @@ export default function TagItrTab({
   const [selectedTemplate, setSelectedTemplate] = useState('')
   const [selectedInspector, setSelectedInspector] = useState('')
   const [scheduledDate, setScheduledDate] = useState('')
+
+  // Tag type detection for ITR recommendations
+  const tagType = detectTagType(tagNumber)
+  const sortedTemplates = sortTemplatesByRelevance(templates, tagType)
+  const recommended = sortedTemplates.filter(t => t.recommended)
+  const others       = sortedTemplates.filter(t => !t.recommended)
 
   function handleAssign() {
     if (!selectedTemplate || !selectedInspector) return
@@ -213,18 +222,36 @@ export default function TagItrTab({
 
                 {/* Template selector */}
                 <div>
-                  <label style={labelStyle}>Template *</label>
+                  <label style={labelStyle}>
+                    Template *
+                    {tagType && (
+                      <span style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 400, color: '#15803d', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '1px 6px' }}>
+                        {tagType.typeName}
+                      </span>
+                    )}
+                  </label>
                   <select
                     value={selectedTemplate}
                     onChange={e => setSelectedTemplate(e.target.value)}
                     style={selStyle}
                   >
                     <option value="">Seleccionar template...</option>
-                    {templates.map(t => (
-                      <option key={t.id} value={t.id}>
-                        {t.code} — {t.title} {t.project_phases ? `[${t.project_phases.code}]` : ''}
-                      </option>
-                    ))}
+                    {recommended.length > 0 && (
+                      <optgroup label={`⭐ Recomendados para ${tagType?.typeName ?? 'este tag'}`}>
+                        {recommended.map(t => (
+                          <option key={t.id} value={t.id}>
+                            {t.code} — {t.title} {t.project_phases ? `[${t.project_phases.code}]` : ''}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <optgroup label={recommended.length > 0 ? 'Todos los templates' : 'Templates disponibles'}>
+                      {others.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.code} — {t.title} {t.project_phases ? `[${t.project_phases.code}]` : ''}
+                        </option>
+                      ))}
+                    </optgroup>
                   </select>
                   {templateObj?.project_phases && (
                     <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0' }}>
