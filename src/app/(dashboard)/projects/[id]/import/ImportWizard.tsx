@@ -7,18 +7,21 @@ import { detectTagType } from '@/lib/tag-types'
 
 // ── Column keyword mapping ──────────────────────────────────────
 const COL_KEYWORDS: Record<string, string[]> = {
-  tag:            ['TAG', 'ETIQUETA', 'TAG NUMBER', 'TAGNO', 'INSTRUMENT TAG'],
-  description:    ['DESCRIPCION', 'DESCRIPCIÓN', 'DESCRIPTION', 'EQUIPO', 'NOMBRE', 'EQUIPMENT'],
-  discipline:     ['DISCIPLINE', 'DISCIPLINA'],
-  area_code:      ['AREA_CODE', 'AREA', 'ÁREA', 'SE / SITIO', 'SITIO', 'UBICACION', 'LOCATION'],
-  area_name:      ['AREA_NAME', 'NOMBRE ÁREA', 'NOMBRE AREA'],
-  system_code:    ['SYSTEM_CODE', 'SISTEMA', 'SYSTEM', 'SYS'],
-  subsystem_code: ['SUBSYSTEM_CODE', 'SUBSISTEMA', 'SUBSYSTEM'],
-  manufacturer:   ['MANUFACTURER', 'FABRICANTE', 'MARCA', 'MARCA / MODELO', 'VENDOR'],
-  model:          ['MODEL', 'MODELO'],
-  serial:         ['SERIAL', 'SERIE', 'S/N', 'SERIAL_NUMBER'],
-  preservation:   ['PRESERVATION', 'PRESERVACION', 'PRESERVACIÓN'],
-  pid_drawing:    ['P&ID', 'PID', 'P_ID', 'PLANO P&ID', 'P&ID REF', 'P&ID DRAWING'],
+  tag:              ['TAG', 'ETIQUETA', 'TAG NUMBER', 'TAGNO', 'INSTRUMENT TAG'],
+  description:      ['DESCRIPCION', 'DESCRIPCIÓN', 'DESCRIPTION', 'EQUIPO', 'NOMBRE', 'EQUIPMENT'],
+  discipline:       ['DISCIPLINE', 'DISCIPLINA'],
+  area_code:        ['AREA_CODE', 'AREA', 'ÁREA', 'SE / SITIO', 'SITIO', 'UBICACION', 'LOCATION'],
+  area_name:        ['AREA_NAME', 'NOMBRE ÁREA', 'NOMBRE AREA'],
+  system_code:      ['SYSTEM_CODE', 'SISTEMA', 'SYSTEM', 'SYS'],
+  subsystem_code:   ['SUBSYSTEM_CODE', 'SUBSISTEMA', 'SUBSYSTEM'],
+  manufacturer:     ['MANUFACTURER', 'FABRICANTE', 'MARCA', 'MARCA / MODELO', 'VENDOR'],
+  model:            ['MODEL', 'MODELO'],
+  serial:           ['SERIAL', 'SERIE', 'S/N', 'SERIAL_NUMBER'],
+  preservation:     ['PRESERVATION', 'PRESERVACION', 'PRESERVACIÓN'],
+  pid_drawing:      ['P&ID', 'PID', 'P_ID', 'PLANO P&ID', 'P&ID REF', 'P&ID DRAWING'],
+  datasheet:        ['DATASHEET', 'DATA SHEET', 'DS NUMBER', 'DATASHEET NUMBER', 'NUMERO DATASHEET'],
+  fluid_type:       ['FLUID TYPE', 'TIPO DE FLUIDO', 'TIPO FLUIDO', 'FLUIDO', 'FLUID'],
+  mounting_typical: ['MOUNTING TYPICAL', 'TYPICAL', 'TIPICO DE MONTAJE', 'TIPICO MONTAJE', 'TÍPICO', 'TIPICO'],
 }
 const ALL_KEYWORDS = Object.values(COL_KEYWORDS).flat()
 
@@ -85,11 +88,13 @@ function parseRows(
       system_name:          get('system_code')    || 'General System',
       subsystem_code:       get('subsystem_code') || 'GEN-SUB',
       subsystem_name:       get('subsystem_code') || 'General Subsystem',
-      manufacturer:         get('manufacturer')   || undefined,
-      model:                get('model')          || undefined,
-      serial_number:        get('serial')         || undefined,
+      manufacturer:         get('manufacturer')       || undefined,
+      model:                get('model')              || undefined,
+      serial_number:        get('serial')             || undefined,
       preservation_required: ['YES', 'SI', 'SÍ'].includes(get('preservation').toUpperCase()),
-      pid_drawing:          get('pid_drawing')    || undefined,
+      pid_drawing:          get('pid_drawing')        || undefined,
+      fluid_type:           get('fluid_type')         || undefined,
+      mounting_typical:     get('mounting_typical')   || undefined,
     })
   }
   return result
@@ -97,13 +102,20 @@ function parseRows(
 
 function downloadTemplate(disciplineCode: string) {
   const wb = XLSX.utils.book_new()
-  const headers = ['TAG', 'DESCRIPTION', 'AREA_CODE', 'AREA_NAME', 'SYSTEM_CODE', 'SYSTEM_NAME', 'SUBSYSTEM_CODE', 'SUBSYSTEM_NAME', 'P&ID', 'MANUFACTURER', 'MODEL', 'SERIAL', 'PRESERVATION']
+  const baseHeaders = ['TAG', 'DESCRIPTION', 'AREA_CODE', 'AREA_NAME', 'SYSTEM_CODE', 'SYSTEM_NAME', 'SUBSYSTEM_CODE', 'SUBSYSTEM_NAME', 'P&ID', 'MANUFACTURER', 'MODEL', 'SERIAL', 'PRESERVATION', 'DATASHEET']
+  const isInst = disciplineCode === 'INST'
+  const isMec  = !isInst && disciplineCode !== 'ELEC'
+  const headers = [
+    ...baseHeaders,
+    ...(isMec  ? ['FLUID TYPE']       : []),
+    ...(isInst ? ['MOUNTING TYPICAL'] : []),
+  ]
   const sample =
-    disciplineCode === 'INST'
-      ? [['FT-101', 'Flow transmitter feed water', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO']]
+    isInst
+      ? [['FT-101', 'Flow transmitter feed water', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO', 'DS-FT-101', 'TYP-INST-001']]
       : disciplineCode === 'ELEC'
-        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO']]
-        : [['P-101A', 'Booster Pump', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO']]
+        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO', 'DS-SWG-CPF-1']]
+        : [['P-101A', 'Booster Pump', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO', 'DS-P-101A', 'Gas Natural']]
   const ws = XLSX.utils.aoa_to_sheet([headers, ...sample])
   XLSX.utils.book_append_sheet(wb, ws, 'Tags')
   XLSX.writeFile(wb, `CommUp_${disciplineCode || 'Tags'}_Template.xlsx`)
@@ -349,6 +361,9 @@ export default function ImportWizard({
               { key: 'SYSTEM_CODE / SISTEMA',     req: false, note: 'Código de sistema' },
               { key: 'SUBSYSTEM_CODE',            req: false, note: 'Código de subsistema' },
               { key: 'FABRICANTE / MARCA/MODELO', req: false, note: 'Fabricante y modelo' },
+              { key: 'DATASHEET',               req: false, note: 'Código de hoja de datos (todos)' },
+              { key: 'FLUID TYPE / FLUIDO',      req: false, note: 'Tipo de fluido (MEC/tubería)' },
+              { key: 'MOUNTING TYPICAL / TIPICO',req: false, note: 'Típico de montaje (INST)' },
             ].map(col => (
               <div key={col.key} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
                 <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? '#fee2e2' : '#f1f5f9', color: col.req ? '#dc2626' : '#64748b' }}>

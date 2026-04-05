@@ -1,0 +1,39 @@
+{
+  "name": "CommUp",
+  "short_name": "CommUp",
+  "description": "Commissioning & Completion Management System",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#7c3aed",
+  "lang": "es",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "Panel principal"
+    },
+    {
+      "name": "Proyectos",
+      "url": "/projects",
+      "description": "Lista de proyectos"
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useTransition, useCallback, useRef } from 'react'
+import { useState, useEffect, useTransition, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { upsertResponse, signItr } from '@/app/actions/itr-instances'
+import { signItr, saveItrAttachment, deleteItrAttachment } from '@/app/actions/itr-instances'
 import { createPunch } from '@/app/actions/punches'
+import { createClient } from '@/lib/supabase/client'
+import { useOfflineSync } from '@/hooks/useOfflineSync'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -51,6 +53,16 @@ type Signature = {
   role: string
   signed_at: string
   user_id: string
+  signature_image: string | null
+}
+
+type Attachment = {
+  id: string
+  item_id: string | null
+  file_url: string      // storage path
+  file_type: string
+  captured_at: string
+  signed_url: string | null
 }
 
 type ItrData = {
@@ -109,6 +121,7 @@ export default function ItrExecution({
   currentUserId: _currentUserId,
   currentUserRole: _currentUserRole,
   canEdit,
+  attachments: initialAttachments = [],
 }: {
   itr: ItrData
   projectId: string
@@ -116,18 +129,45 @@ export default function ItrExecution({
   currentUserId: string
   currentUserRole: string
   canEdit: boolean
+  attachments?: Attachment[]
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [showSignModal, setShowSignModal] = useState(false)
-  const [signRole, setSignRole] = useState<'executor' | 'supervisor' | 'client'>('executor')
   const [signError, setSignError] = useState<string | null>(null)
   const [showPunchModal, setShowPunchModal] = useState(false)
   const [punchItemDesc, setPunchItemDesc] = useState('')
   const [punchItrItemId, setPunchItrItemId] = useState<string | null>(null)
   const savingRef = useRef(false)
+
+  // Attachments state — keyed by itemId or 'general'
+  const [attachmentMap, setAttachmentMap] = useState<Record<string, Attachment[]>>(() => {
+    const map: Record<string, Attachment[]> = {}
+    for (const a of initialAttachments) {
+      const key = a.item_id ?? 'general'
+      ;(map[key] ??= []).push(a)
+    }
+    return map
+  })
+
+  const addAttachment = useCallback((itemId: string | null, att: Attachment) => {
+    const key = itemId ?? 'general'
+    setAttachmentMap(prev => ({ ...prev, [key]: [...(prev[key] ?? []), att] }))
+  }, [])
+
+  const removeAttachment = useCallback((itemId: string | null, attachmentId: string) => {
+    const key = itemId ?? 'general'
+    setAttachmentMap(prev => ({ ...prev, [key]: (prev[key] ?? []).filter(a => a.id !== attachmentId) }))
+  }, [])
+
+  const generalPhotoInputRef = useRef<HTMLInputElement>(null)
+  const [generalUploading, setGeneralUploading] = useState(false)
+  const [generalUploadError, setGeneralUploadError] = useState<string | null>(null)
+
+  // ── Offline sync ─────────────────────────────────────────────────────
+  const { isOffline, pendingCount, syncing, saveWithQueue } = useOfflineSync(itr.id, itr.template_id)
 
   const template = itr.itr_templates
   const tag = itr.tags
@@ -179,25 +219,21 @@ export default function ItrExecution({
     if (savingRef.current) return
     savingRef.current = true
     startTransition(async () => {
-      const res = await upsertResponse({
-        itrId: itr.id,
-        itemId,
-        templateId: itr.template_id,
-        ...data,
-      })
+      const res = await saveWithQueue(itemId, data)
       savingRef.current = false
+      if (res.queued) { return }           // offline — optimistic UI already set
       if (res.error) { setSaveError(res.error); return }
       setLastSaved(new Date())
       router.refresh()
     })
-  }, [itr.id, itr.template_id, router])
+  }, [saveWithQueue, router])
 
   // ── Sign ────────────────────────────────────────────────────────────
 
-  function handleSign() {
+  function handleSign(role: 'executor' | 'supervisor' | 'client', signatureImage: string) {
     setSignError(null)
     startTransition(async () => {
-      const res = await signItr(itr.id, signRole, projectId, tagId)
+      const res = await signItr(itr.id, role, projectId, tagId, signatureImage)
       if (res.error) { setSignError(res.error); return }
       setShowSignModal(false)
       router.refresh()
@@ -280,10 +316,17 @@ export default function ItrExecution({
           {(['executor', 'supervisor', 'client'] as const).map(role => {
             const sig = itr.itr_signatures.find(s => s.role === role)
             return (
-              <div key={role} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px', borderRadius: '7px', background: sig ? '#ecfdf5' : '#f8fafc', border: `1px solid ${sig ? '#a7f3d0' : '#e2e8f0'}` }}>
-                <span style={{ fontSize: '12px' }}>{sig ? '✓' : '○'}</span>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : '#94a3b8' }}>{ROLE_LABELS[role]}</span>
-                {sig && <span style={{ fontSize: '10px', color: '#64748b' }}>{sig.signed_at.split('T')[0]}</span>}
+              <div key={role} style={{ borderRadius: '7px', background: sig ? '#ecfdf5' : '#f8fafc', border: `1px solid ${sig ? '#a7f3d0' : '#e2e8f0'}`, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px' }}>
+                  <span style={{ fontSize: '12px' }}>{sig ? '✓' : '○'}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : '#94a3b8' }}>{ROLE_LABELS[role]}</span>
+                  {sig && <span style={{ fontSize: '10px', color: '#64748b' }}>{sig.signed_at.split('T')[0]}</span>}
+                </div>
+                {sig?.signature_image && (
+                  <div style={{ borderTop: '1px solid #a7f3d0', padding: '4px 6px', background: '#f0fdf4' }}>
+                    <img src={sig.signature_image} alt={`Firma ${ROLE_LABELS[role]}`} style={{ height: '36px', maxWidth: '140px', objectFit: 'contain', display: 'block' }} />
+                  </div>
+                )}
               </div>
             )
           })}
@@ -323,6 +366,12 @@ export default function ItrExecution({
                   canEdit={canEdit}
                   onSave={saveResponse}
                   onAddPunch={openPunchModal}
+                  itrId={itr.id}
+                  projectId={projectId}
+                  tagId={tagId}
+                  itemAttachments={attachmentMap[item.id] ?? []}
+                  onAttachmentAdded={att => addAttachment(item.id, att)}
+                  onAttachmentRemoved={attId => removeAttachment(item.id, attId)}
                 />
               ))}
             </div>
@@ -331,9 +380,47 @@ export default function ItrExecution({
       </div>
 
       {/* ── Sticky footer ──────────────────────────────────────────── */}
+      {/* Hidden file input for general (non-item) photos */}
+      <input
+        ref={generalPhotoInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={async e => {
+          const file = e.target.files?.[0]
+          if (!file) return
+          e.target.value = ''
+          setGeneralUploading(true)
+          setGeneralUploadError(null)
+          const ext = file.name.split('.').pop() ?? 'jpg'
+          const path = `${itr.id}/general/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+          const supabase = createClient()
+          const { error: upErr } = await supabase.storage.from('itr-attachments').upload(path, file)
+          if (upErr) { setGeneralUploading(false); setGeneralUploadError(upErr.message); return }
+          const { data: signed } = await supabase.storage.from('itr-attachments').createSignedUrl(path, 3600)
+          const res = await saveItrAttachment({ itrId: itr.id, itemId: null, storagePath: path, fileType: file.type, projectId, tagId })
+          setGeneralUploading(false)
+          if (res.error) { setGeneralUploadError(res.error); return }
+          addAttachment(null, { id: res.id!, item_id: null, file_url: path, file_type: file.type, captured_at: new Date().toISOString(), signed_url: signed?.signedUrl ?? null })
+        }}
+      />
+
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #e2e8f0', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', zIndex: 100 }}>
-        <div style={{ fontSize: '11px', color: isPending ? '#3b82f6' : lastSaved ? '#10b981' : '#94a3b8' }}>
-          {isPending ? 'Guardando...' : saveError ? `⚠ ${saveError}` : lastSaved ? `Guardado ${lastSaved.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}` : 'Auto-guardado activo'}
+        <div style={{ fontSize: '11px', color: isOffline ? '#f59e0b' : syncing ? '#3b82f6' : isPending ? '#3b82f6' : lastSaved ? '#10b981' : '#94a3b8' }}>
+          {isOffline && pendingCount > 0
+            ? `🔴 Sin red — ${pendingCount} pendiente${pendingCount > 1 ? 's' : ''}`
+            : isOffline
+            ? '🔴 Sin red'
+            : syncing
+            ? '⚡ Sincronizando...'
+            : isPending
+            ? 'Guardando...'
+            : saveError
+            ? `⚠ ${saveError}`
+            : lastSaved
+            ? `Guardado ${lastSaved.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}`
+            : 'Auto-guardado activo'}
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
@@ -343,20 +430,15 @@ export default function ItrExecution({
             ⚑ Punch
           </button>
           <button
-            disabled
-            style={{ padding: '9px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#94a3b8', cursor: 'not-allowed' }}
-            title="Próximamente"
+            onClick={() => generalPhotoInputRef.current?.click()}
+            disabled={!canEdit || generalUploading}
+            title={generalUploadError ?? 'Agregar foto general al ITR'}
+            style={{ padding: '9px 16px', background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, borderRadius: '8px', fontSize: '13px', color: generalUploading ? '#3b82f6' : '#15803d', cursor: canEdit && !generalUploading ? 'pointer' : 'not-allowed', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
           >
-            📷 Foto
+            {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? `Fotos (${(attachmentMap['general'] ?? []).length})` : 'Foto'}
           </button>
           <button
-            onClick={() => {
-              const nextRole = (['executor', 'supervisor', 'client'] as const).find(
-                r => !itr.itr_signatures.some(s => s.role === r),
-              ) ?? 'executor'
-              setSignRole(nextRole)
-              setShowSignModal(true)
-            }}
+            onClick={() => setShowSignModal(true)}
             disabled={!canEdit || itr.status === 'approved'}
             style={{ padding: '9px 20px', background: !canEdit || itr.status === 'approved' ? '#f8fafc' : '#7c3aed', color: !canEdit || itr.status === 'approved' ? '#94a3b8' : 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !canEdit || itr.status === 'approved' ? 'not-allowed' : 'pointer' }}
           >
@@ -380,65 +462,293 @@ export default function ItrExecution({
 
       {/* ── Sign Modal ──────────────────────────────────────────────── */}
       {showSignModal && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
-          onClick={e => { if (e.target === e.currentTarget) setShowSignModal(false) }}
-        >
-          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>Firmar ITR</h2>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 20px' }}>{itr.itr_number}</p>
+        <SignModal
+          itrNumber={itr.itr_number}
+          itrSignatures={itr.itr_signatures}
+          criticalBlocked={criticalBlocked}
+          isPending={isPending}
+          signError={signError}
+          onClose={() => setShowSignModal(false)}
+          onSign={handleSign}
+        />
+      )}
+    </div>
+  )
+}
 
-            {/* Role selector */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>Firmar como</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {(['executor', 'supervisor', 'client'] as const).map(role => {
-                  const alreadySigned = itr.itr_signatures.some(s => s.role === role)
-                  return (
-                    <button
-                      key={role}
-                      onClick={() => !alreadySigned && setSignRole(role)}
-                      disabled={alreadySigned}
-                      style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? '#7c3aed' : '#e2e8f0', background: alreadySigned ? '#f8fafc' : signRole === role ? '#f5f3ff' : 'white', color: alreadySigned ? '#94a3b8' : signRole === role ? '#7c3aed' : '#374151', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
-                    >
-                      {alreadySigned ? '✓ ' : ''}{ROLE_LABELS[role]}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+// ── Sign Modal (canvas drawing pad) ──────────────────────────────────
 
-            {/* Critical blocker warning */}
-            {signRole === 'executor' && criticalBlocked.length > 0 && (
-              <div style={{ padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', marginBottom: '16px' }}>
-                <p style={{ fontSize: '12px', color: '#ef4444', margin: 0, fontWeight: 600 }}>
-                  No se puede firmar: {criticalBlocked.length} ítem{criticalBlocked.length > 1 ? 's' : ''} crítico{criticalBlocked.length > 1 ? 's' : ''} reprobado{criticalBlocked.length > 1 ? 's' : ''}.
-                </p>
-              </div>
-            )}
+function SignModal({
+  itrNumber,
+  itrSignatures,
+  criticalBlocked,
+  isPending,
+  signError,
+  onClose,
+  onSign,
+}: {
+  itrNumber: string
+  itrSignatures: Signature[]
+  criticalBlocked: Item[]
+  isPending: boolean
+  signError: string | null
+  onClose: () => void
+  onSign: (role: 'executor' | 'supervisor' | 'client', signatureImage: string) => void
+}) {
+  const [signRole, setSignRole] = useState<'executor' | 'supervisor' | 'client'>(() => {
+    const roles = ['executor', 'supervisor', 'client'] as const
+    return roles.find(r => !itrSignatures.some(s => s.role === r)) ?? 'executor'
+  })
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [hasDrawn, setHasDrawn] = useState(false)
+  const lastPoint = useRef<{ x: number; y: number } | null>(null)
 
-            {signError && (
-              <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '0 0 16px' }}>
-                {signError}
-              </p>
-            )}
+  // Init canvas stroke style
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext('2d')
+    if (!ctx) return
+    ctx.strokeStyle = '#0f172a'
+    ctx.lineWidth = 2.5
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.fillStyle = '#0f172a'
+  }, [])
 
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowSignModal(false)}
-                style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSign}
-                disabled={isPending || (signRole === 'executor' && criticalBlocked.length > 0)}
-                style={{ padding: '9px 20px', background: isPending || (signRole === 'executor' && criticalBlocked.length > 0) ? '#ddd6fe' : '#7c3aed', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
-              >
-                {isPending ? 'Firmando...' : 'Confirmar firma'}
-              </button>
-            </div>
+  function getPoint(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current!
+    const rect = canvas.getBoundingClientRect()
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    }
+  }
+
+  function onPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setIsDrawing(true)
+    setHasDrawn(true)
+    const pt = getPoint(e)
+    lastPoint.current = pt
+    const ctx = canvasRef.current!.getContext('2d')!
+    ctx.beginPath()
+    ctx.arc(pt.x, pt.y, 1.2, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (!isDrawing) return
+    const ctx = canvasRef.current!.getContext('2d')!
+    const pt = getPoint(e)
+    ctx.beginPath()
+    ctx.moveTo(lastPoint.current!.x, lastPoint.current!.y)
+    ctx.lineTo(pt.x, pt.y)
+    ctx.stroke()
+    lastPoint.current = pt
+  }
+
+  function onPointerUp() {
+    setIsDrawing(false)
+    lastPoint.current = null
+  }
+
+  function clearCanvas() {
+    const canvas = canvasRef.current!
+    canvas.getContext('2d')!.clearRect(0, 0, canvas.width, canvas.height)
+    setHasDrawn(false)
+  }
+
+  const blocked = signRole === 'executor' && criticalBlocked.length > 0
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Firmar ITR</h2>
+        <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 18px' }}>{itrNumber}</p>
+
+        {/* Role selector */}
+        <div style={{ marginBottom: '18px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>Firmar como</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {(['executor', 'supervisor', 'client'] as const).map(role => {
+              const alreadySigned = itrSignatures.some(s => s.role === role)
+              return (
+                <button
+                  key={role}
+                  onClick={() => !alreadySigned && setSignRole(role)}
+                  disabled={alreadySigned}
+                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? '#7c3aed' : '#e2e8f0', background: alreadySigned ? '#f8fafc' : signRole === role ? '#f5f3ff' : 'white', color: alreadySigned ? '#94a3b8' : signRole === role ? '#7c3aed' : '#374151', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
+                >
+                  {alreadySigned ? '✓ ' : ''}{ROLE_LABELS[role]}
+                </button>
+              )
+            })}
           </div>
+        </div>
+
+        {/* Canvas drawing pad */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Firma</label>
+            <button onClick={clearCanvas} style={{ fontSize: '11px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+              Limpiar
+            </button>
+          </div>
+          <div style={{ position: 'relative', border: '1.5px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#fafafa' }}>
+            <canvas
+              ref={canvasRef}
+              width={392}
+              height={160}
+              style={{ display: 'block', width: '100%', height: '160px', cursor: 'crosshair', touchAction: 'none' }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+            />
+            {!hasDrawn && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Firme aquí con el dedo o cursor</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Critical blocker warning */}
+        {blocked && (
+          <div style={{ padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', marginBottom: '16px' }}>
+            <p style={{ fontSize: '12px', color: '#ef4444', margin: 0, fontWeight: 600 }}>
+              No se puede firmar: {criticalBlocked.length} ítem{criticalBlocked.length > 1 ? 's' : ''} crítico{criticalBlocked.length > 1 ? 's' : ''} reprobado{criticalBlocked.length > 1 ? 's' : ''}.
+            </p>
+          </div>
+        )}
+
+        {signError && (
+          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '0 0 16px' }}>
+            {signError}
+          </p>
+        )}
+
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onClose}
+            style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSign(signRole, canvasRef.current!.toDataURL('image/png'))}
+            disabled={isPending || blocked || !hasDrawn}
+            style={{ padding: '9px 20px', background: isPending || blocked || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending || blocked || !hasDrawn ? 'not-allowed' : 'pointer' }}
+          >
+            {isPending ? 'Firmando...' : 'Confirmar firma'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Photo Upload ──────────────────────────────────────────────────────
+
+function PhotoUpload({
+  itrId,
+  itemId,
+  projectId,
+  tagId,
+  existingAttachments,
+  canEdit,
+  onAdded,
+  onRemoved,
+}: {
+  itrId: string
+  itemId: string
+  projectId: string
+  tagId: string
+  existingAttachments: Attachment[]
+  canEdit: boolean
+  onAdded: (att: Attachment) => void
+  onRemoved: (attId: string) => void
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [lightbox, setLightbox] = useState<string | null>(null)
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setUploading(true)
+    setUploadError(null)
+    const ext = file.name.split('.').pop() ?? 'jpg'
+    const path = `${itrId}/${itemId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const supabase = createClient()
+    const { error: upErr } = await supabase.storage.from('itr-attachments').upload(path, file)
+    if (upErr) { setUploading(false); setUploadError(upErr.message); return }
+    const { data: signed } = await supabase.storage.from('itr-attachments').createSignedUrl(path, 3600)
+    const res = await saveItrAttachment({ itrId, itemId, storagePath: path, fileType: file.type, projectId, tagId })
+    setUploading(false)
+    if (res.error) { setUploadError(res.error); return }
+    onAdded({ id: res.id!, item_id: itemId, file_url: path, file_type: file.type, captured_at: new Date().toISOString(), signed_url: signed?.signedUrl ?? null })
+  }
+
+  async function handleDelete(att: Attachment) {
+    const res = await deleteItrAttachment({ attachmentId: att.id, storagePath: att.file_url, projectId, tagId, itrId })
+    if (res.error) { setUploadError(res.error); return }
+    onRemoved(att.id)
+  }
+
+  return (
+    <div style={{ marginTop: '4px' }}>
+      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />
+
+      {/* Thumbnails */}
+      {existingAttachments.length > 0 && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+          {existingAttachments.map(att => (
+            <div key={att.id} style={{ position: 'relative', width: '72px', height: '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', flexShrink: 0 }}>
+              {att.signed_url
+                ? <img src={att.signed_url} alt="foto" style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setLightbox(att.signed_url)} />
+                : <div style={{ width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📷</div>
+              }
+              {canEdit && (
+                <button
+                  onClick={() => handleDelete(att)}
+                  style={{ position: 'absolute', top: '2px', right: '2px', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,0,0,0.55)', border: 'none', color: 'white', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add button */}
+      {canEdit && (
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          style={{ padding: '7px 14px', background: uploading ? '#eff6ff' : '#f0fdf4', border: '1px dashed #86efac', borderRadius: '7px', fontSize: '12px', color: uploading ? '#3b82f6' : '#15803d', cursor: uploading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+        >
+          {uploading ? '⏳ Subiendo...' : '📷 Agregar foto'}
+        </button>
+      )}
+
+      {uploadError && (
+        <p style={{ fontSize: '11px', color: '#ef4444', margin: '4px 0 0' }}>{uploadError}</p>
+      )}
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}
+          onClick={() => setLightbox(null)}
+        >
+          <img src={lightbox} alt="foto ampliada" style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '10px', objectFit: 'contain' }} />
         </div>
       )}
     </div>
@@ -579,6 +889,12 @@ function ItemRow({
   canEdit,
   onSave,
   onAddPunch,
+  itrId,
+  projectId,
+  tagId,
+  itemAttachments,
+  onAttachmentAdded,
+  onAttachmentRemoved,
 }: {
   item: Item
   response: Response | null
@@ -592,6 +908,12 @@ function ItemRow({
     isPassed?: boolean | null
   }) => void
   onAddPunch: (itemDesc: string, itemId: string) => void
+  itrId: string
+  projectId: string
+  tagId: string
+  itemAttachments: Attachment[]
+  onAttachmentAdded: (att: Attachment) => void
+  onAttachmentRemoved: (attId: string) => void
 }) {
   const isPassed = response?.is_passed
 
@@ -736,14 +1058,18 @@ function ItemRow({
         />
       )}
 
-      {/* Photo placeholder */}
-      {item.item_type === 'photo' && (
-        <button
-          disabled
-          style={{ padding: '8px 16px', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '7px', fontSize: '12px', color: '#94a3b8', cursor: 'not-allowed' }}
-        >
-          📷 Agregar foto (próximamente)
-        </button>
+      {/* Photo upload */}
+      {(item.item_type === 'photo' || item.requires_photo) && (
+        <PhotoUpload
+          itrId={itrId}
+          itemId={item.id}
+          projectId={projectId}
+          tagId={tagId}
+          existingAttachments={itemAttachments}
+          canEdit={canEdit}
+          onAdded={onAttachmentAdded}
+          onRemoved={onAttachmentRemoved}
+        />
       )}
 
       {/* Remarks (for measurement + critical items) */}

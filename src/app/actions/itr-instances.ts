@@ -174,6 +174,75 @@ export async function upsertResponse(input: {
   return {}
 }
 
+// ── Upload ITR Attachment (save metadata after client-side storage upload) ──
+
+export async function saveItrAttachment(input: {
+  itrId: string
+  itemId?: string | null
+  storagePath: string
+  fileType: string
+  latitude?: number | null
+  longitude?: number | null
+  projectId: string
+  tagId: string
+}): Promise<{ id?: string; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { itrId, itemId, storagePath, fileType, latitude, longitude, projectId, tagId } = input
+
+  const { data, error } = await ctx.supabase
+    .from('itr_attachments')
+    .insert({
+      itr_id: itrId,
+      item_id: itemId ?? null,
+      file_url: storagePath,
+      file_type: fileType,
+      latitude: latitude ?? null,
+      longitude: longitude ?? null,
+      captured_at: new Date().toISOString(),
+      uploaded_by: ctx.userId,
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
+  return { id: data.id }
+}
+
+// ── Delete ITR Attachment ─────────────────────────────────────────────
+
+export async function deleteItrAttachment(input: {
+  attachmentId: string
+  storagePath: string
+  projectId: string
+  tagId: string
+  itrId: string
+}): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { attachmentId, storagePath, projectId, tagId, itrId } = input
+
+  // Delete from storage
+  const { error: storageError } = await ctx.supabase.storage
+    .from('itr-attachments')
+    .remove([storagePath])
+  if (storageError) return { error: storageError.message }
+
+  // Delete DB record
+  const { error } = await ctx.supabase
+    .from('itr_attachments')
+    .delete()
+    .eq('id', attachmentId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
+  return {}
+}
+
 // ── Sign ITR ─────────────────────────────────────────────────────────
 
 export async function signItr(
@@ -181,6 +250,7 @@ export async function signItr(
   role: 'executor' | 'supervisor' | 'client',
   projectId: string,
   tagId: string,
+  signatureImage?: string | null,
 ): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
@@ -196,7 +266,7 @@ export async function signItr(
 
   const { error } = await ctx.supabase
     .from('itr_signatures')
-    .insert({ itr_id: itrId, user_id: ctx.userId, role })
+    .insert({ itr_id: itrId, user_id: ctx.userId, role, signature_image: signatureImage ?? null })
 
   if (error) return { error: error.message }
 

@@ -42,13 +42,29 @@ export default async function ItrExecutionPage({
       project_phases(code, name, color),
       itr_assignments(id, user_id, role, profiles(full_name)),
       itr_responses(id, item_id, value_text, value_numeric, value_bool, value_option, remarks, is_passed, responded_at),
-      itr_signatures(id, role, signed_at, user_id)
+      itr_signatures(id, role, signed_at, user_id, signature_image)
     `)
     .eq('id', itrId)
     .eq('project_id', projectId)
     .single()
 
   if (!itr) notFound()
+
+  // Fetch existing attachments + generate signed URLs
+  const { data: rawAttachments } = await supabase
+    .from('itr_attachments')
+    .select('id, item_id, file_url, file_type, captured_at, uploaded_by')
+    .eq('itr_id', itrId)
+    .order('captured_at', { ascending: true })
+
+  const attachments = await Promise.all(
+    (rawAttachments ?? []).map(async att => {
+      const { data: signed } = await supabase.storage
+        .from('itr-attachments')
+        .createSignedUrl(att.file_url, 3600)
+      return { ...att, signed_url: signed?.signedUrl ?? null }
+    })
+  )
 
   const canEdit = ['owner', 'admin', 'architect', 'leader', 'inspector'].includes(membership.role)
 
@@ -61,6 +77,8 @@ export default async function ItrExecutionPage({
       currentUserId={user.id}
       currentUserRole={membership.role}
       canEdit={canEdit}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      attachments={attachments as any}
     />
   )
 }

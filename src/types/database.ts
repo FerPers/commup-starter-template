@@ -153,6 +153,8 @@ export interface Tag {
   junction_box: string | null
   datasheet_number: string | null
   revision: string | null
+  fluid_type: string | null
+  mounting_typical: string | null
   created_at: string
 }
 

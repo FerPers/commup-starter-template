@@ -49,6 +49,7 @@ export default async function TagDetailPage({
         range_min, range_max, eng_unit,
         sp_h, sp_hh, sp_l, sp_ll,
         signal_type, sil_level, io_address, junction_box, datasheet_number, revision,
+        fluid_type, mounting_typical,
         disciplines(id, code, name, color),
         subsystems(
           id, code, name,

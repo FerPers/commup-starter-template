@@ -65,6 +65,8 @@ type Tag = {
   junction_box: string | null
   datasheet_number: string | null
   revision: string | null
+  fluid_type: string | null
+  mounting_typical: string | null
   disciplines: Discipline
   subsystems: Subsystem
 }
@@ -430,6 +432,7 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
 
   const isInst = INST_DISCIPLINES.includes(tag.disciplines.code)
   const hasEngParams = tag.range_min != null || tag.range_max != null || tag.datasheet_number || tag.revision ||
+    tag.fluid_type || tag.mounting_typical ||
     (isInst && (tag.signal_type || (tag.sil_level && tag.sil_level !== 'None') || tag.io_address || tag.junction_box || tag.sp_h != null || tag.sp_hh != null || tag.sp_l != null || tag.sp_ll != null))
 
   const fmt = (v: number | null) => v != null ? String(v) : '—'
@@ -550,9 +553,21 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
                 </EngRow>
               )}
 
-              {!isInst && tag.datasheet_number && (
+              {tag.fluid_type && (
+                <EngRow label="Tipo de fluido">
+                  <span style={{ fontSize: '13px', color: '#0f172a' }}>{tag.fluid_type}</span>
+                </EngRow>
+              )}
+
+              {tag.datasheet_number && (
                 <EngRow label="Datasheet">
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.datasheet_number}</span>
+                </EngRow>
+              )}
+
+              {isInst && tag.mounting_typical && (
+                <EngRow label="Típico de montaje">
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.mounting_typical}</span>
                 </EngRow>
               )}
 
@@ -634,6 +649,8 @@ function EditForm({ tag, projectId, onCancel }: {
     junction_box:     tag.junction_box     ?? '',
     datasheet_number: tag.datasheet_number ?? '',
     revision:         tag.revision         ?? '',
+    fluid_type:       tag.fluid_type       ?? '',
+    mounting_typical: tag.mounting_typical ?? '',
   })
 
   const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }))
@@ -664,6 +681,8 @@ function EditForm({ tag, projectId, onCancel }: {
         junction_box:     form.junction_box.trim() || null,
         datasheet_number: form.datasheet_number.trim() || null,
         revision:         form.revision.trim() || null,
+        fluid_type:       form.fluid_type.trim() || null,
+        mounting_typical: form.mounting_typical.trim() || null,
       })
       if (res.error) {
         setError(res.error)
@@ -752,10 +771,14 @@ function EditForm({ tag, projectId, onCancel }: {
           </FormField>
 
           {!isInst && (
-            <FormField label="Datasheet (código)">
-              <input style={inputStyle} placeholder="Ej: DS-P-762802A" value={form.datasheet_number} onChange={e => set('datasheet_number', e.target.value)} />
+            <FormField label="Tipo de fluido">
+              <input style={inputStyle} placeholder="Ej: Gas Natural, Crudo, Agua Producida" value={form.fluid_type} onChange={e => set('fluid_type', e.target.value)} />
             </FormField>
           )}
+
+          <FormField label="Datasheet (código)">
+            <input style={inputStyle} placeholder="Ej: DS-P-762802A" value={form.datasheet_number} onChange={e => set('datasheet_number', e.target.value)} />
+          </FormField>
 
           <FormField label="Revisión doc.">
             <input style={inputStyle} placeholder="Ej: Rev. C" value={form.revision} onChange={e => set('revision', e.target.value)} />
@@ -809,6 +832,10 @@ function EditForm({ tag, projectId, onCancel }: {
 
               <FormField label="Caja de juntas">
                 <input style={inputStyle} placeholder="Ej: JB-101A" value={form.junction_box} onChange={e => set('junction_box', e.target.value)} />
+              </FormField>
+
+              <FormField label="Típico de montaje">
+                <input style={inputStyle} placeholder="Ej: TYP-INST-001" value={form.mounting_typical} onChange={e => set('mounting_typical', e.target.value)} />
               </FormField>
 
             </div>

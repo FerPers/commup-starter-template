@@ -1,3 +1,8 @@
 # https://developers.cloudflare.com/workers/static-assets/headers
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable
+
+# Service Worker must never be cached
+/sw.js
+  Cache-Control: no-cache,no-store,must-revalidate
+  Service-Worker-Allowed: /
