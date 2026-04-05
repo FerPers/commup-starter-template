@@ -123,17 +123,19 @@ export default async function TagDetailPage({
   const prevTagId = tagIndex > 0 ? allTagIds![tagIndex - 1].id : null
   const nextTagId = tagIndex < (allTagIds?.length ?? 0) - 1 ? allTagIds![tagIndex + 1].id : null
 
-  // P&ID signed URL
+  // P&ID signed URL + doc id
   let pidSignedUrl: string | null = null
+  let pidDocId: string | null = null
   if (tag.pid_drawing) {
     const { data: pidDoc } = await supabase
       .from('pid_documents')
-      .select('file_path')
+      .select('id, file_path')
       .eq('project_id', projectId)
       .eq('drawing_number', tag.pid_drawing)
       .maybeSingle()
 
     if (pidDoc) {
+      pidDocId = pidDoc.id
       const { data: signed } = await supabase.storage
         .from('pid-documents')
         .createSignedUrl(pidDoc.file_path, 3600)
@@ -148,6 +150,7 @@ export default async function TagDetailPage({
       projectId={projectId}
       projectName={project.name}
       pidSignedUrl={pidSignedUrl}
+      pidDocId={pidDocId}
       prevTagId={prevTagId}
       nextTagId={nextTagId}
       canEdit={canEdit}

@@ -525,3 +525,51 @@ export interface ItrWithRelations extends Itr {
   signatures: ItrSignature[]
   open_punches: number
 }
+
+// ── P&ID Hotspots ─────────────────────────────────────────────
+
+export interface PidHotspot {
+  id: string
+  pid_document_id: string
+  tag_id: string
+  project_id: string
+  org_id: string
+  page_num: number
+  x_pct: number
+  y_pct: number
+  created_by: string
+  created_at: string
+}
+
+export interface PidHotspotWithTag extends PidHotspot {
+  tag: Pick<Tag, 'id' | 'tag_number' | 'description' | 'status'>
+  discipline: Pick<Discipline, 'id' | 'code' | 'name' | 'color'>
+  open_punches_a: number
+  itr_completion_pct: number
+}
+
+// ── Explorer ──────────────────────────────────────────────────
+
+export interface ExplorerSubsystem {
+  id: string
+  code: string
+  name: string
+  tag_count: number
+  itr_total: number
+  itr_approved: number
+  open_punches_a: number
+}
+
+export interface ExplorerSystem {
+  id: string
+  code: string
+  name: string
+  subsystems: ExplorerSubsystem[]
+}
+
+export interface ExplorerArea {
+  id: string
+  code: string
+  name: string
+  systems: ExplorerSystem[]
+}

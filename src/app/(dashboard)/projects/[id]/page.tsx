@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
+import ProjectHeader from './ProjectHeader'
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -60,59 +61,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     return new Date(d).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
   }
 
-  const statusColor = project.status === 'active' ? '#10b981' : '#94a3b8'
-  const statusLabel = project.status === 'active' ? 'Activo' : 'Inactivo'
-
   return (
     <div style={{ padding: '32px' }}>
 
-      {/* Back + Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <a href="/projects" style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '16px',
-        }}>
-          ← Proyectos
-        </a>
-
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{
-              width: '56px', height: '56px', borderRadius: '14px',
-              background: '#3b82f615', border: '1px solid #3b82f625',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '12px', fontWeight: 700, color: '#3b82f6', flexShrink: 0,
-            }}>
-              {project.code.slice(0, 6)}
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
-                  {project.name}
-                </h1>
-                <span style={{
-                  padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                  background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`,
-                }}>
-                  {statusLabel}
-                </span>
-              </div>
-              <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
-                {[project.client, project.location].filter(Boolean).join(' · ') || 'Sin cliente / ubicación'}
-              </p>
-            </div>
-          </div>
-
-          {canEdit && (
-            <button style={{
-              padding: '9px 18px', background: 'white', border: '1px solid #e2e8f0',
-              borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer',
-            }}>
-              Editar proyecto
-            </button>
-          )}
-        </div>
-      </div>
+      <ProjectHeader project={project} canEdit={canEdit} />
 
       {/* Info strip */}
       <div style={{

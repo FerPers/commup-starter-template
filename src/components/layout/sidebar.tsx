@@ -42,6 +42,9 @@ export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
 
+  const projectMatch = pathname.match(/\/projects\/([^/]+)/)
+  const currentProjectId = projectMatch ? projectMatch[1] : null
+
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
@@ -81,6 +84,55 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
+        {/* Dynamic project-context section */}
+        {currentProjectId && (
+          <div style={{ marginBottom: '4px' }}>
+            <div style={{
+              padding: '8px 20px 4px',
+              fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em',
+              color: '#334155', textTransform: 'uppercase',
+            }}>
+              Proyecto
+            </div>
+            {[
+              { href: `/projects/${currentProjectId}/explorer`, label: 'Explorador', icon: '◧' },
+            ].map(item => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '9px 20px', margin: '1px 8px',
+                    borderRadius: '8px', textDecoration: 'none',
+                    background: isActive ? 'rgba(59,130,246,0.15)' : 'transparent',
+                    color: isActive ? '#60a5fa' : '#64748b',
+                    fontSize: '14px', fontWeight: isActive ? 500 : 400,
+                    transition: 'all 0.15s',
+                    borderLeft: isActive ? '2px solid #3b82f6' : '2px solid transparent',
+                  }}
+                  onMouseEnter={e => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'
+                      ;(e.currentTarget as HTMLElement).style.color = '#94a3b8'
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLElement).style.background = 'transparent'
+                      ;(e.currentTarget as HTMLElement).style.color = '#64748b'
+                    }
+                  }}
+                >
+                  <span style={{ fontSize: '16px', opacity: 0.8 }}>{item.icon}</span>
+                  {item.label}
+                </a>
+              )
+            })}
+          </div>
+        )}
+
         {navItems.map(group => (
           <div key={group.group} style={{ marginBottom: '4px' }}>
             <div style={{

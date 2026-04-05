@@ -95,6 +95,7 @@ export default function TagDetail({
   projectId,
   projectName,
   pidSignedUrl,
+  pidDocId,
   prevTagId,
   nextTagId,
   canEdit,
@@ -109,6 +110,7 @@ export default function TagDetail({
   projectId: string
   projectName: string
   pidSignedUrl: string | null
+  pidDocId: string | null
   prevTagId: string | null
   nextTagId: string | null
   canEdit: boolean
@@ -384,7 +386,7 @@ export default function TagDetail({
                 orgMembers={orgMembers as OrgMemberForPunch[]}
               />
             )}
-            {activeTab === 'docs'         && <DocsTab tag={tag} pidSignedUrl={pidSignedUrl} />}
+            {activeTab === 'docs'         && <DocsTab tag={tag} pidSignedUrl={pidSignedUrl} pidDocId={pidDocId} projectId={projectId} />}
             {activeTab === 'preservation' && (
               <TagPreservationTab
                 tagId={tag.id}
@@ -885,7 +887,7 @@ function FormField({ label, children, style }: { label: string; children: React.
 
 // ── Docs Tab ─────────────────────────────────────────────────────
 
-function DocsTab({ tag, pidSignedUrl }: { tag: Tag; pidSignedUrl: string | null }) {
+function DocsTab({ tag, pidSignedUrl, pidDocId, projectId }: { tag: Tag; pidSignedUrl: string | null; pidDocId: string | null; projectId: string }) {
   if (!tag.pid_drawing) {
     return (
       <EmptyTab
@@ -921,27 +923,41 @@ function DocsTab({ tag, pidSignedUrl }: { tag: Tag; pidSignedUrl: string | null 
               </div>
             </div>
           </div>
-          {pidSignedUrl ? (
-            <a
-              href={pidSignedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                padding: '7px 16px', background: '#f0fdf4', color: '#16a34a',
-                border: '1px solid #bbf7d0', borderRadius: '7px',
-                fontSize: '12px', fontWeight: 500, textDecoration: 'none',
-              }}
-            >
-              Ver PDF ↗
-            </a>
-          ) : (
-            <span style={{
-              padding: '7px 16px', background: '#fef3c7', color: '#92400e',
-              border: '1px solid #fde68a', borderRadius: '7px', fontSize: '12px',
-            }}>
-              PDF no subido
-            </span>
-          )}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {pidSignedUrl ? (
+              <a
+                href={pidSignedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '7px 16px', background: '#f0fdf4', color: '#16a34a',
+                  border: '1px solid #bbf7d0', borderRadius: '7px',
+                  fontSize: '12px', fontWeight: 500, textDecoration: 'none',
+                }}
+              >
+                Ver PDF ↗
+              </a>
+            ) : (
+              <span style={{
+                padding: '7px 16px', background: '#fef3c7', color: '#92400e',
+                border: '1px solid #fde68a', borderRadius: '7px', fontSize: '12px',
+              }}>
+                PDF no subido
+              </span>
+            )}
+            {pidDocId && (
+              <a
+                href={`/projects/${projectId}/pid-documents/${pidDocId}/viewer?tag=${tag.id}`}
+                style={{
+                  padding: '7px 16px', background: '#eff6ff', color: '#2563eb',
+                  border: '1px solid #bfdbfe', borderRadius: '7px',
+                  fontSize: '12px', fontWeight: 500, textDecoration: 'none',
+                }}
+              >
+                Ver en visor P&amp;ID →
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type Discipline = { id: string; code: string; name: string; color: string }
 type Area       = { id: string; code: string; name: string }
 type System     = { id: string; code: string; name: string; areas: Area }
-type Subsystem  = { id: string; code: string; name: string; systems: System }
+type Subsystem  = { id: string; code: string; name: string; systems: System; subsystem_id?: string }
 type Tag = {
   id: string
   tag_number: string
@@ -40,10 +40,21 @@ export default function TagsView({
 }) {
   const [activeDiscipline, setActiveDiscipline] = useState<string>('ALL')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const subsystemFilter = searchParams.get('subsystem')
 
-  // Build discipline summary with counts
+  // When subsystem filter changes from URL, reset discipline filter
+  useEffect(() => {
+    if (subsystemFilter) setActiveDiscipline('ALL')
+  }, [subsystemFilter])
+
+  // Build discipline summary with counts (respects subsystem filter)
   const disciplineMap = new Map<string, { code: string; name: string; color: string; count: number }>()
-  for (const tag of tags) {
+  const subsystemFilteredTags = subsystemFilter
+    ? tags.filter(t => t.subsystems?.id === subsystemFilter)
+    : tags
+
+  for (const tag of subsystemFilteredTags) {
     const d = tag.disciplines
     if (!disciplineMap.has(d.code)) {
       disciplineMap.set(d.code, { code: d.code, name: d.name, color: d.color, count: 0 })
@@ -52,9 +63,14 @@ export default function TagsView({
   }
   const disciplines = [...disciplineMap.values()].sort((a, b) => a.code.localeCompare(b.code))
 
-  const filtered = activeDiscipline === 'ALL'
-    ? tags
-    : tags.filter(t => t.disciplines.code === activeDiscipline)
+  const filtered = subsystemFilteredTags.filter(t =>
+    activeDiscipline === 'ALL' || t.disciplines.code === activeDiscipline
+  )
+
+  // Subsystem name for banner
+  const subsystemName = subsystemFilter
+    ? tags.find(t => t.subsystems?.id === subsystemFilter)?.subsystems?.name ?? subsystemFilter
+    : null
 
   // Show P&ID column only if at least one tag in the filtered set has a P&ID value
   const showPid = filtered.some(t => t.pid_drawing)
@@ -107,6 +123,26 @@ export default function TagsView({
           </a>
         )}
       </div>
+
+      {/* Subsystem filter banner */}
+      {subsystemName && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 14px', marginBottom: '12px',
+          background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px',
+          fontSize: '13px', color: '#1d4ed8',
+        }}>
+          <span>
+            Filtrando por subsistema: <strong>{subsystemName}</strong> · {subsystemFilteredTags.length} tags
+          </span>
+          <a
+            href={`/projects/${projectId}/tags`}
+            style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}
+          >
+            Limpiar filtro ×
+          </a>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px', color: '#94a3b8', fontSize: '14px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>

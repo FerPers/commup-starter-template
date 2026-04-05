@@ -208,6 +208,17 @@ function DocRow({
         <span style={{ fontSize: '12px', color: '#94a3b8' }}>{formatDate(doc.created_at)}</span>
       </td>
       <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
+        <a
+          href={`/projects/${projectId}/pid-documents/${doc.id}/viewer`}
+          style={{
+            padding: '5px 12px', fontSize: '12px', fontWeight: 500,
+            background: '#eff6ff', color: '#2563eb', borderRadius: '6px',
+            border: '1px solid #bfdbfe', textDecoration: 'none', marginRight: '8px',
+            display: 'inline-block',
+          }}
+        >
+          Abrir Visor
+        </a>
         {doc.signed_url && (
           <a
             href={doc.signed_url}
