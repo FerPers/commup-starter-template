@@ -420,9 +420,12 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
       {/* Main PDF area */}
       <div
         ref={containerRef}
-        style={{ flex: 1, overflow: 'auto', background: '#475569', padding: '16px', display: 'flex', justifyContent: 'center' }}
+        style={{ flex: 1, overflow: 'auto', background: '#475569', padding: '16px' }}
       >
-        <div style={{ position: 'relative', display: 'inline-block', userSelect: 'none' }}>
+        {/* width:max-content can exceed the container (unlike fit-content which caps at it).
+            margin:0 auto centers when PDF < container; resolves to 0 when PDF > container
+            so the left edge is always at scrollLeft=0 — no inaccessible left overflow. */}
+        <div style={{ width: 'max-content', margin: '0 auto', position: 'relative', userSelect: 'none' }}>
           {/* PDF Document */}
           <Document
             file={signedUrl}
