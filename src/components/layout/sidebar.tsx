@@ -14,17 +14,17 @@ const navItems = [
   {
     group: 'Ejecución',
     items: [
-      { href: '/itrs', label: 'ITRs', icon: '✓', disabled: true },
-      { href: '/punch-list', label: 'Punch List', icon: '⚑', disabled: true },
-      { href: '/preservation', label: 'Preservación', icon: '◉', disabled: true },
+      { href: '/itrs', label: 'ITRs', icon: '✓' },
+      { href: '/punch-list', label: 'Punch List', icon: '⚑' },
+      { href: '/preservation', label: 'Preservación', icon: '◉' },
       { href: '/work-plans', label: 'Planes de Trabajo', icon: '▦', disabled: true },
     ],
   },
   {
     group: 'Control',
     items: [
-      { href: '/certificates', label: 'Certificados', icon: '◎', disabled: true },
-      { href: '/kpis', label: 'KPIs', icon: '▲', disabled: true },
+      { href: '/certificates', label: 'Certificados', icon: '◎' },
+      { href: '/kpis', label: 'KPIs', icon: '▲' },
     ],
   },
   {
