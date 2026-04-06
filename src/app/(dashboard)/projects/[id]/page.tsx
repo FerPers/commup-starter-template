@@ -19,6 +19,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   if (!membership) redirect('/setup')
 
   const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
+  const canDelete = membership.role === 'owner'
 
   const [{ data: project }, { data: phases }, { data: disciplines }, { count: tagCount }, { data: itrCounts }, { data: punchCounts }, { data: certCounts }] = await Promise.all([
     supabase
@@ -64,7 +65,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   return (
     <div style={{ padding: '32px' }}>
 
-      <ProjectHeader project={project} canEdit={canEdit} />
+      <ProjectHeader project={project} canEdit={canEdit} canDelete={canDelete} />
 
       {/* Info strip */}
       <div style={{

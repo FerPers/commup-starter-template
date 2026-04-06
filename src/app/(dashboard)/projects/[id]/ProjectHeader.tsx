@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { updateProject } from '@/app/actions/projects'
+import { updateProject, deleteProject } from '@/app/actions/projects'
 import type { ProjectStatus } from '@/types/database'
 
 const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
@@ -34,13 +34,15 @@ interface ProjectData {
 interface Props {
   project: ProjectData
   canEdit: boolean
+  canDelete: boolean
 }
 
-export default function ProjectHeader({ project: initial, canEdit }: Props) {
+export default function ProjectHeader({ project: initial, canEdit, canDelete }: Props) {
   const [project, setProject] = useState(initial)
   const [showModal, setShowModal] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   // Form state
   const [name, setName] = useState(initial.name)
@@ -51,6 +53,18 @@ export default function ProjectHeader({ project: initial, canEdit }: Props) {
 
   const statusStyle = STATUS_STYLE[project.status] ?? STATUS_STYLE.planning
   const statusLabel = STATUS_OPTIONS.find(o => o.value === project.status)?.label ?? project.status
+
+  function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteProject(project.id)
+      if (result.error) {
+        setError(result.error)
+        setShowDeleteConfirm(false)
+        return
+      }
+      window.location.href = '/projects'
+    })
+  }
 
   function handleOpen() {
     setName(project.name)
@@ -205,6 +219,53 @@ export default function ProjectHeader({ project: initial, canEdit }: Props) {
                 </div>
               )}
             </div>
+
+            {/* Danger zone — owner only */}
+            {canDelete && (
+              <div style={{ margin: '0 24px 4px', borderTop: '1px solid #fee2e2', paddingTop: '14px' }}>
+                {!showDeleteConfirm ? (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    style={{
+                      width: '100%', padding: '8px 12px', background: 'white',
+                      border: '1px solid #fecaca', borderRadius: '7px',
+                      fontSize: '12px', color: '#dc2626', cursor: 'pointer', textAlign: 'left',
+                    }}
+                  >
+                    Eliminar proyecto…
+                  </button>
+                ) : (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#991b1b', fontWeight: 500 }}>
+                      Esta acción eliminará el proyecto y <strong>todos sus datos</strong> (tags, ITRs, punches, certificados, P&IDs). Es irreversible.
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={handleDelete}
+                        disabled={isPending}
+                        style={{
+                          padding: '7px 14px', background: '#dc2626', color: 'white',
+                          border: 'none', borderRadius: '6px', fontSize: '12px',
+                          fontWeight: 600, cursor: isPending ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {isPending ? 'Eliminando…' : 'Confirmar eliminación'}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        disabled={isPending}
+                        style={{
+                          padding: '7px 12px', background: 'white', color: '#64748b',
+                          border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Footer */}
             <div style={{ padding: '12px 24px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>

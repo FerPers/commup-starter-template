@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import type { ProjectStatus } from '@/types/database'
 
 const PRIVILEGED_ROLES = ['owner', 'admin', 'architect']
+const OWNER_ONLY = ['owner']
 
 export interface ProjectUpdatePayload {
   name?: string
@@ -50,5 +51,41 @@ export async function updateProject(
   if (error) return { error: error.message }
 
   revalidatePath(`/projects/${projectId}`)
+  return {}
+}
+
+export async function deleteProject(projectId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: membership } = await supabase
+    .from('org_members')
+    .select('org_id, role')
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle()
+
+  if (!membership) return { error: 'No perteneces a ninguna organización' }
+  if (!OWNER_ONLY.includes(membership.role)) return { error: 'Solo el owner puede eliminar proyectos' }
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('id', projectId)
+    .eq('org_id', membership.org_id)
+    .single()
+
+  if (!project) return { error: 'Proyecto no encontrado' }
+
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', projectId)
+    .eq('org_id', membership.org_id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/projects')
   return {}
 }
