@@ -31,6 +31,45 @@ export interface TagUpdatePayload {
   mounting_typical?: string | null
 }
 
+export async function deleteTag(
+  projectId: string,
+  tagId: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: membership } = await supabase
+    .from('org_members')
+    .select('org_id, role')
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle()
+
+  if (!membership) return { error: 'No perteneces a ninguna organización' }
+  if (!PRIVILEGED_ROLES.includes(membership.role)) return { error: 'Sin permisos para eliminar' }
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('id', projectId)
+    .eq('org_id', membership.org_id)
+    .single()
+
+  if (!project) return { error: 'Proyecto no encontrado' }
+
+  const { error } = await supabase
+    .from('tags')
+    .delete()
+    .eq('id', tagId)
+    .eq('project_id', projectId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${projectId}/tags`)
+  return {}
+}
+
 export async function updateTag(
   projectId: string,
   tagId: string,

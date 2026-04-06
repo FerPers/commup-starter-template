@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { updateTag } from '@/app/actions/tags'
+import { updateTag, deleteTag } from '@/app/actions/tags'
 import TagItrTab from './TagItrTab'
 import TagPunchTab, { type TagPunch, type OrgMemberForPunch } from './TagPunchTab'
 import TagPreservationTab, { type PreservationPlanRow, type PreservationProcedureOption } from './TagPreservationTab'
@@ -362,7 +362,7 @@ export default function TagDetail({
         borderRadius: '0 0 14px 14px', padding: '24px', minHeight: '300px',
       }}>
         {editMode ? (
-          <EditForm tag={tag} projectId={projectId} onCancel={() => setEditMode(false)} />
+          <EditForm tag={tag} projectId={projectId} onCancel={() => setEditMode(false)} canDelete={canEdit} />
         ) : (
           <>
             {activeTab === 'overview'     && <OverviewTab tag={tag} area={area} sys={sys} sub={sub} pidSignedUrl={pidSignedUrl} />}
@@ -619,14 +619,16 @@ function SetpointPill({ label, value, unit, color }: { label: string; value: num
 
 // ── Edit Form ────────────────────────────────────────────────────
 
-function EditForm({ tag, projectId, onCancel }: {
+function EditForm({ tag, projectId, onCancel, canDelete }: {
   tag: Tag
   projectId: string
   onCancel: () => void
+  canDelete: boolean
 }) {
   const isInst = INST_DISCIPLINES.includes(tag.disciplines.code)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   // Form state
   const [form, setForm] = useState({
@@ -658,6 +660,18 @@ function EditForm({ tag, projectId, onCancel }: {
   const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }))
 
   const toNum = (s: string) => s.trim() === '' ? null : parseFloat(s)
+
+  function handleDelete() {
+    startTransition(async () => {
+      const res = await deleteTag(projectId, tag.id)
+      if (res.error) {
+        setError(res.error)
+        setShowDeleteConfirm(false)
+        return
+      }
+      window.location.href = `/projects/${projectId}/tags`
+    })
+  }
 
   function handleSave() {
     setError(null)
@@ -869,6 +883,53 @@ function EditForm({ tag, projectId, onCancel }: {
           {isPending ? 'Guardando…' : 'Guardar cambios'}
         </button>
       </div>
+
+      {/* Danger zone */}
+      {canDelete && (
+        <div style={{ borderTop: '1px solid #fee2e2', paddingTop: '16px', marginTop: '4px' }}>
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                width: '100%', padding: '8px 12px', background: 'white',
+                border: '1px solid #fecaca', borderRadius: '7px',
+                fontSize: '12px', color: '#dc2626', cursor: 'pointer', textAlign: 'left',
+              }}
+            >
+              Eliminar tag…
+            </button>
+          ) : (
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px' }}>
+              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#991b1b', fontWeight: 500 }}>
+                Esta acción eliminará el tag <strong>{tag.tag_number}</strong> y <strong>todos sus datos</strong> (ITRs, punches, preservación, hotspots). Es irreversible.
+              </p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  style={{
+                    padding: '7px 14px', background: '#dc2626', color: 'white',
+                    border: 'none', borderRadius: '6px', fontSize: '12px',
+                    fontWeight: 600, cursor: isPending ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {isPending ? 'Eliminando…' : 'Confirmar eliminación'}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isPending}
+                  style={{
+                    padding: '7px 12px', background: 'white', color: '#64748b',
+                    border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   )
