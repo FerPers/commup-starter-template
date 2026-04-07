@@ -169,7 +169,7 @@ export default function WorkPlansGlobal({
     const resp = await fetch(`/api/itrs-for-plan?project_id=${plan.project_id}`, { cache: 'no-store' })
       .catch(() => null)
     if (resp?.ok) {
-      const data = await resp.json()
+      const data = await resp.json() as Array<{ id: string; itr_number: string; tag_number: string; title: string }>
       setAvailableItrs(data)
     }
   }
