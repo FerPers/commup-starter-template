@@ -42,7 +42,7 @@ export default async function ItrExecutionPage({
       project_phases(code, name, color),
       itr_assignments(id, user_id, role, profiles(full_name)),
       itr_responses(id, item_id, value_text, value_numeric, value_bool, value_option, remarks, is_passed, responded_at),
-      itr_signatures(id, role, signed_at, user_id, signature_image)
+      itr_signatures(id, role, signed_at, user_id, signature_image, profiles(full_name))
     `)
     .eq('id', itrId)
     .eq('project_id', projectId)

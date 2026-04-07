@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
 
 const PAGE_SIZE = 50
 
@@ -39,6 +41,8 @@ const STATUS_CFG = {
   cancelled:   { label: 'Cancelado',  color: '#64748b', bg: '#f1f5f9' },
 } as const
 
+const GRID = '36px 100px 70px 1fr 1fr 110px 90px 90px'
+
 export default function PunchListGlobal({
   projects,
   punches,
@@ -48,12 +52,20 @@ export default function PunchListGlobal({
   punches: Punch[]
   disciplines: Discipline[]
 }) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [filterProject, setFilterProject] = useState('')
   const [filterCat, setFilterCat] = useState<'A' | 'B' | 'C' | ''>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterDisc, setFilterDisc] = useState('')
   const [page, setPage] = useState(1)
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkStatus, setBulkStatus] = useState('')
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkError, setBulkError] = useState('')
+  const selectAllRef = useRef<HTMLInputElement>(null)
 
   const catACnt   = punches.filter(p => p.category === 'A' && p.status !== 'closed' && p.status !== 'cancelled').length
   const catBCnt   = punches.filter(p => p.category === 'B' && p.status !== 'closed' && p.status !== 'cancelled').length
@@ -81,6 +93,48 @@ export default function PunchListGlobal({
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  // Reset selections when filters change
+  useEffect(() => {
+    setSelectedIds(new Set())
+    setBulkError('')
+  }, [filterProject, filterCat, filterStatus, filterDisc, search])
+
+  // Indeterminate state on select-all checkbox
+  const allFilteredSelected = filtered.length > 0 && filtered.every(p => selectedIds.has(p.id))
+  const someSelected = selectedIds.size > 0 && !allFilteredSelected
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected
+  }, [someSelected])
+
+  function toggleSelectAll() {
+    if (allFilteredSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filtered.map(p => p.id)))
+    }
+  }
+
+  function toggleRow(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  async function handleBulkApply() {
+    if (!bulkStatus || selectedIds.size === 0) return
+    setBulkLoading(true)
+    setBulkError('')
+    const { error } = await bulkUpdatePunchStatus(Array.from(selectedIds), bulkStatus)
+    setBulkLoading(false)
+    if (error) { setBulkError(error); return }
+    setSelectedIds(new Set())
+    setBulkStatus('')
+    router.refresh()
+  }
 
   function exportCsv() {
     const headers = ['Proyecto', 'N° Punch', 'Categoría', 'Descripción', 'Tag', 'Disciplina', 'Subsistema', 'Levantado por', 'Asignado a', 'Fecha límite', 'Estado', 'Prioridad']
@@ -180,6 +234,52 @@ export default function PunchListGlobal({
         )}
       </div>
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '12px',
+          padding: '10px 16px', marginBottom: '8px',
+          background: '#1e293b', borderRadius: '10px', color: 'white',
+        }}>
+          <span style={{ fontSize: '13px', fontWeight: 500 }}>
+            {selectedIds.size} punch{selectedIds.size !== 1 ? 'es' : ''} seleccionado{selectedIds.size !== 1 ? 's' : ''}
+          </span>
+          <span style={{ color: '#475569' }}>|</span>
+          <span style={{ fontSize: '12px', color: '#94a3b8' }}>Cambiar estado a:</span>
+          <select
+            value={bulkStatus}
+            onChange={e => setBulkStatus(e.target.value)}
+            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white', fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer' }}
+          >
+            <option value="">— elegir —</option>
+            {Object.entries(STATUS_CFG).map(([k, v]) => (
+              <option key={k} value={k}>{v.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleBulkApply}
+            disabled={!bulkStatus || bulkLoading}
+            style={{
+              padding: '6px 14px', borderRadius: '6px', border: 'none',
+              background: bulkStatus && !bulkLoading ? '#3b82f6' : '#334155',
+              color: bulkStatus && !bulkLoading ? 'white' : '#64748b',
+              fontSize: '12px', fontWeight: 600, cursor: bulkStatus && !bulkLoading ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit',
+            }}
+          >
+            {bulkLoading ? 'Aplicando…' : 'Aplicar'}
+          </button>
+          {bulkError && <span style={{ fontSize: '12px', color: '#f87171' }}>{bulkError}</span>}
+          <button
+            onClick={() => { setSelectedIds(new Set()); setBulkStatus(''); setBulkError('') }}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '0 4px' }}
+            title="Deseleccionar todo"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
@@ -187,7 +287,16 @@ export default function PunchListGlobal({
         </div>
       ) : (
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 70px 1fr 1fr 110px 90px 90px', gap: '12px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {/* Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '12px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              ref={selectAllRef}
+              checked={allFilteredSelected}
+              onChange={toggleSelectAll}
+              title={allFilteredSelected ? 'Deseleccionar todo' : `Seleccionar ${filtered.length} punches`}
+              style={{ cursor: 'pointer', accentColor: '#3b82f6', width: '15px', height: '15px' }}
+            />
             <span>Proyecto</span>
             <span>Cat</span>
             <span>Punch / Tag</span>
@@ -204,12 +313,25 @@ export default function PunchListGlobal({
             const disc = p.tags?.disciplines
             const today = new Date().toISOString().slice(0, 10)
             const isOverdue = p.target_date && p.target_date < today && p.status !== 'closed' && p.status !== 'cancelled'
+            const isSelected = selectedIds.has(p.id)
 
             return (
               <div
                 key={p.id}
-                style={{ display: 'grid', gridTemplateColumns: '100px 70px 1fr 1fr 110px 90px 90px', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center' }}
+                style={{
+                  display: 'grid', gridTemplateColumns: GRID, gap: '12px',
+                  padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center',
+                  background: isSelected ? '#eff6ff' : undefined,
+                  transition: 'background 0.1s',
+                }}
               >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleRow(p.id)}
+                  style={{ cursor: 'pointer', accentColor: '#3b82f6', width: '15px', height: '15px' }}
+                />
+
                 {/* Proyecto */}
                 <div>
                   {proj && (

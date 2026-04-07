@@ -38,7 +38,12 @@ const navItems = [
   },
 ]
 
-export default function Sidebar() {
+interface NotifCounts {
+  punches: number
+  preservation: number
+}
+
+export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -145,6 +150,10 @@ export default function Sidebar() {
             {group.items.map(item => {
               const disabled = 'disabled' in item && item.disabled
               const isActive = !disabled && (pathname === item.href || pathname.startsWith(item.href + '/'))
+              const badge =
+                item.href === '/punch-list' ? (notifCounts?.punches ?? 0) :
+                item.href === '/preservation' ? (notifCounts?.preservation ?? 0) :
+                0
               if (disabled) {
                 return (
                   <div
@@ -197,6 +206,16 @@ export default function Sidebar() {
                 >
                   <span style={{ fontSize: '16px', opacity: 0.8 }}>{item.icon}</span>
                   {item.label}
+                  {badge > 0 && (
+                    <span style={{
+                      marginLeft: 'auto', background: '#ef4444', color: 'white',
+                      fontSize: '11px', fontWeight: 700,
+                      padding: '1px 6px', borderRadius: '10px',
+                      minWidth: '20px', textAlign: 'center', lineHeight: '18px',
+                    }}>
+                      {badge > 99 ? '99+' : badge}
+                    </span>
+                  )}
                 </a>
               )
             })}

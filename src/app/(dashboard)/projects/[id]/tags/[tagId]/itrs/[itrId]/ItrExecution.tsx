@@ -54,6 +54,7 @@ type Signature = {
   signed_at: string
   user_id: string
   signature_image: string | null
+  profiles: { full_name: string } | null
 }
 
 type Attachment = {
@@ -315,12 +316,25 @@ export default function ItrExecution({
         <div style={{ marginTop: '14px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {(['executor', 'supervisor', 'client'] as const).map(role => {
             const sig = itr.itr_signatures.find(s => s.role === role)
+            const signedDate = sig ? sig.signed_at.slice(0, 10).split('-').reverse().join('/') : null
+            const signedTime = sig ? sig.signed_at.slice(11, 16) : null
             return (
-              <div key={role} style={{ borderRadius: '7px', background: sig ? '#ecfdf5' : '#f8fafc', border: `1px solid ${sig ? '#a7f3d0' : '#e2e8f0'}`, overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px' }}>
-                  <span style={{ fontSize: '12px' }}>{sig ? '✓' : '○'}</span>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : '#94a3b8' }}>{ROLE_LABELS[role]}</span>
-                  {sig && <span style={{ fontSize: '10px', color: '#64748b' }}>{sig.signed_at.split('T')[0]}</span>}
+              <div key={role} style={{ borderRadius: '7px', background: sig ? '#ecfdf5' : '#f8fafc', border: `1px solid ${sig ? '#a7f3d0' : '#e2e8f0'}`, overflow: 'hidden', minWidth: '130px' }}>
+                <div style={{ padding: '7px 10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: sig ? '4px' : 0 }}>
+                    <span style={{ fontSize: '12px' }}>{sig ? '✓' : '○'}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : '#94a3b8' }}>{ROLE_LABELS[role]}</span>
+                  </div>
+                  {sig && (
+                    <>
+                      <div style={{ fontSize: '11px', color: '#374151', fontWeight: 500, marginLeft: '17px' }}>
+                        {sig.profiles?.full_name ?? '—'}
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', marginLeft: '17px', marginTop: '1px' }}>
+                        {signedDate} {signedTime}
+                      </div>
+                    </>
+                  )}
                 </div>
                 {sig?.signature_image && (
                   <div style={{ borderTop: '1px solid #a7f3d0', padding: '4px 6px', background: '#f0fdf4' }}>

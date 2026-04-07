@@ -8,6 +8,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,32 +30,38 @@ export default function LoginPage() {
     router.refresh()
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '13px 16px',
+    borderRadius: '10px',
+    background: 'white',
+    border: '1.5px solid #d1d5db',
+    color: '#0f172a',
+    fontSize: '16px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)',
+      background: '#f0f4f8',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px',
     }}>
-      {/* Background pattern */}
-      <div style={{
-        position: 'fixed', inset: 0, opacity: 0.05,
-        backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
-        backgroundSize: '40px 40px',
-        pointerEvents: 'none',
-      }} />
-
-      <div style={{ width: '100%', maxWidth: '420px', position: 'relative' }}>
+      <div style={{ width: '100%', maxWidth: '420px' }}>
 
         {/* Logo & Brand */}
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: '64px', height: '64px', borderRadius: '16px',
             background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-            marginBottom: '16px', boxShadow: '0 8px 32px rgba(59,130,246,0.4)',
+            marginBottom: '14px', boxShadow: '0 4px 20px rgba(59,130,246,0.35)',
           }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
               <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -62,34 +69,34 @@ export default function LoginPage() {
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
             </svg>
           </div>
-          <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'white', letterSpacing: '-0.5px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
             CommUp
           </h1>
-          <p style={{ color: '#64748b', marginTop: '6px', fontSize: '14px' }}>
+          <p style={{ color: '#64748b', marginTop: '4px', fontSize: '14px' }}>
             Completion Management System
           </p>
         </div>
 
         {/* Card */}
         <div style={{
-          background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'white',
+          border: '1px solid #e2e8f0',
           borderRadius: '20px',
           padding: '40px',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
         }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'white', marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
             Iniciar sesión
           </h2>
-          <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '32px' }}>
+          <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '28px' }}>
             Accede a tu proyecto de completamiento
           </p>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
             {/* Email */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#94a3b8', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '7px' }}>
                 Correo electrónico
               </label>
               <input
@@ -98,45 +105,63 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 placeholder="tu@empresa.com"
-                style={{
-                  width: '100%', padding: '12px 16px', borderRadius: '10px',
-                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)',
-                  color: 'white', fontSize: '15px', outline: 'none',
-                  transition: 'border-color 0.2s',
-                }}
+                style={inputStyle}
                 onFocus={e => e.target.style.borderColor = '#3b82f6'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+                onBlur={e => e.target.style.borderColor = '#d1d5db'}
               />
             </div>
 
             {/* Password */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#94a3b8', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '7px' }}>
                 Contraseña
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                style={{
-                  width: '100%', padding: '12px 16px', borderRadius: '10px',
-                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)',
-                  color: 'white', fontSize: '15px', outline: 'none',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e => e.target.style.borderColor = '#3b82f6'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  style={{ ...inputStyle, paddingRight: '48px' }}
+                  onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                  onBlur={e => e.target.style.borderColor = '#d1d5db'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  tabIndex={-1}
+                  style={{
+                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    padding: '4px', color: '#94a3b8', display: 'flex', alignItems: 'center',
+                  }}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? (
+                    // Eye-off icon
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    // Eye icon
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Error */}
             {error && (
               <div style={{
                 padding: '12px 16px', borderRadius: '10px',
-                background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
-                color: '#fca5a5', fontSize: '14px',
+                background: '#fef2f2', border: '1px solid #fecaca',
+                color: '#dc2626', fontSize: '14px', fontWeight: 500,
               }}>
                 {error}
               </div>
@@ -147,12 +172,14 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               style={{
-                width: '100%', padding: '13px', marginTop: '8px',
-                background: loading ? '#1e40af' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white', fontWeight: 600, fontSize: '15px',
+                width: '100%', padding: '14px', marginTop: '4px',
+                background: loading ? '#93c5fd' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                color: 'white', fontWeight: 700, fontSize: '15px',
                 border: 'none', borderRadius: '10px', cursor: loading ? 'not-allowed' : 'pointer',
-                boxShadow: '0 4px 16px rgba(59,130,246,0.4)',
+                boxShadow: loading ? 'none' : '0 4px 16px rgba(59,130,246,0.4)',
                 transition: 'all 0.2s',
+                fontFamily: 'inherit',
+                letterSpacing: '0.01em',
               }}
             >
               {loading ? 'Ingresando...' : 'Ingresar al proyecto'}
@@ -160,7 +187,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: '24px', color: '#475569', fontSize: '13px' }}>
+        <p style={{ textAlign: 'center', marginTop: '20px', color: '#94a3b8', fontSize: '12px' }}>
           CommUp v1.0 · Industrial Commissioning Platform
         </p>
       </div>
