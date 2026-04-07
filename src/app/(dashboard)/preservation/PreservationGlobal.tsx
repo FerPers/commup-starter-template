@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 
+const PAGE_SIZE = 50
+
 type Project = { id: string; name: string; code: string }
 
 type Plan = {
@@ -48,6 +50,7 @@ export default function PreservationGlobal({
   const [filterProject, setFilterProject] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterDue, setFilterDue] = useState<'overdue' | 'soon' | ''>('')
+  const [page, setPage] = useState(1)
 
   const today = new Date().toISOString().slice(0, 10)
   const soon  = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -73,6 +76,9 @@ export default function PreservationGlobal({
   }), [plans, filterProject, filterStatus, filterDue, search, today, soon])
 
   const hasFilters = filterProject || filterStatus || filterDue || search
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
@@ -121,7 +127,7 @@ export default function PreservationGlobal({
         </select>
         {hasFilters && (
           <button
-            onClick={() => { setFilterProject(''); setFilterStatus(''); setFilterDue(''); setSearch('') }}
+            onClick={() => { setFilterProject(''); setFilterStatus(''); setFilterDue(''); setSearch(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
             Limpiar filtros
@@ -149,7 +155,7 @@ export default function PreservationGlobal({
             <span>Estado</span>
           </div>
 
-          {filtered.map(plan => {
+          {paginated.map(plan => {
             const st   = STATUS_CFG[plan.status]
             const due  = dueDateStatus(plan.next_due_date)
             const proc = plan.preservation_procedures
@@ -215,6 +221,15 @@ export default function PreservationGlobal({
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>← Anterior</button>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>Página {page} de {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>Siguiente →</button>
         </div>
       )}
     </div>

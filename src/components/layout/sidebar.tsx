@@ -17,7 +17,7 @@ const navItems = [
       { href: '/itrs', label: 'ITRs', icon: '✓' },
       { href: '/punch-list', label: 'Punch List', icon: '⚑' },
       { href: '/preservation', label: 'Preservación', icon: '◉' },
-      { href: '/work-plans', label: 'Planes de Trabajo', icon: '▦', disabled: true },
+      { href: '/work-plans', label: 'Planes de Trabajo', icon: '▦' },
     ],
   },
   {

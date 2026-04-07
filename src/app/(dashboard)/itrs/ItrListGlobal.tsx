@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 
+const PAGE_SIZE = 50
+
 type Project = { id: string; name: string; code: string }
 
 type ItrRow = {
@@ -46,6 +48,7 @@ export default function ItrListGlobal({
   const [filterDisc, setFilterDisc] = useState('')
   const [filterProject, setFilterProject] = useState('')
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   const disciplines = useMemo(() => {
     const seen = new Set<string>()
@@ -84,6 +87,40 @@ export default function ItrListGlobal({
 
   const hasFilters = filterStatus || filterPhase || filterDisc || filterProject || search
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  function exportCsv() {
+    const headers = ['Proyecto', 'ITR', 'Tag', 'Descripción Tag', 'Template', 'Fase', 'Disciplina', 'Inspector', 'Fecha programada', 'Progreso %', 'Estado', 'Firm.E', 'Firm.S', 'Firm.C']
+    const rows = filtered.map(itr => {
+      const executor = itr.itr_assignments.find(a => a.role === 'executor')
+      return [
+        itr.projects?.code ?? '',
+        itr.itr_number,
+        itr.tags?.tag_number ?? '',
+        itr.tags?.description ?? '',
+        itr.itr_templates?.title ?? '',
+        itr.project_phases?.code ?? '',
+        itr.itr_templates?.disciplines?.code ?? '',
+        executor?.profiles?.full_name ?? '',
+        itr.scheduled_date ?? '',
+        String(itr.progress_pct),
+        itr.status,
+        itr.itr_signatures.some(s => s.role === 'executor') ? 'S' : 'N',
+        itr.itr_signatures.some(s => s.role === 'supervisor') ? 'S' : 'N',
+        itr.itr_signatures.some(s => s.role === 'client') ? 'S' : 'N',
+      ]
+    })
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `itrs_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div style={{ padding: '32px', maxWidth: '1400px' }}>
       <div style={{ marginBottom: '24px' }}>
@@ -117,21 +154,21 @@ export default function ItrListGlobal({
           placeholder="Buscar ITR, tag, template, proyecto..."
           style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '240px', fontFamily: 'inherit' }}
         />
-        <select value={filterProject} onChange={e => setFilterProject(e.target.value)} style={selStyle}>
+        <select value={filterProject} onChange={e => { setFilterProject(e.target.value); setPage(1) }} style={selStyle}>
           <option value="">Todos los proyectos</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
         </select>
-        <select value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={selStyle}>
+        <select value={filterPhase} onChange={e => { setFilterPhase(e.target.value); setPage(1) }} style={selStyle}>
           <option value="">Todas las fases</option>
           {phases.map(p => <option key={p.id} value={p.code}>{p.code} — {p.name}</option>)}
         </select>
-        <select value={filterDisc} onChange={e => setFilterDisc(e.target.value)} style={selStyle}>
+        <select value={filterDisc} onChange={e => { setFilterDisc(e.target.value); setPage(1) }} style={selStyle}>
           <option value="">Todas las disciplinas</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </select>
         {hasFilters && (
           <button
-            onClick={() => { setFilterStatus(''); setFilterPhase(''); setFilterDisc(''); setFilterProject(''); setSearch('') }}
+            onClick={() => { setFilterStatus(''); setFilterPhase(''); setFilterDisc(''); setFilterProject(''); setSearch(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
             Limpiar filtros
@@ -140,6 +177,14 @@ export default function ItrListGlobal({
         <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
           {filtered.length} de {itrs.length} ITRs
         </span>
+        {filtered.length > 0 && (
+          <button
+            onClick={exportCsv}
+            style={{ padding: '7px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: '#374151', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            ↓ CSV
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -160,7 +205,7 @@ export default function ItrListGlobal({
             <span>Firma</span>
           </div>
 
-          {filtered.map(itr => {
+          {paginated.map(itr => {
             const st = ITR_STATUS[itr.status] ?? ITR_STATUS.not_started
             const executor = itr.itr_assignments.find(a => a.role === 'executor')
             const disc = itr.itr_templates?.disciplines
@@ -250,6 +295,15 @@ export default function ItrListGlobal({
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>← Anterior</button>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>Página {page} de {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>Siguiente →</button>
         </div>
       )}
     </div>

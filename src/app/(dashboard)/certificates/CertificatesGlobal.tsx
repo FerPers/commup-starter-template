@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 
+const PAGE_SIZE = 50
+
 type Project = { id: string; name: string; code: string }
 type Phase   = { id: string; code: string; name: string; color: string; certificate_name: string | null }
 
@@ -37,6 +39,7 @@ export default function CertificatesGlobal({
   const [filterProject, setFilterProject] = useState('')
   const [filterPhase, setFilterPhase]     = useState('')
   const [filterStatus, setFilterStatus]   = useState('')
+  const [page, setPage]                   = useState(1)
 
   const issuedCnt   = certificates.filter(c => c.status === 'issued').length
   const pendingCnt  = certificates.filter(c => c.status === 'pending').length
@@ -60,6 +63,9 @@ export default function CertificatesGlobal({
   }), [certificates, filterProject, filterPhase, filterStatus, search])
 
   const hasFilters = filterProject || filterPhase || filterStatus || search
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
@@ -109,7 +115,7 @@ export default function CertificatesGlobal({
         </select>
         {hasFilters && (
           <button
-            onClick={() => { setFilterProject(''); setFilterPhase(''); setFilterStatus(''); setSearch('') }}
+            onClick={() => { setFilterProject(''); setFilterPhase(''); setFilterStatus(''); setSearch(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
             Limpiar filtros
@@ -137,7 +143,7 @@ export default function CertificatesGlobal({
             <span>Estado</span>
           </div>
 
-          {filtered.map(cert => {
+          {paginated.map(cert => {
             const st    = STATUS_CFG[cert.status]
             const proj  = cert.projects
             const phase = cert.project_phases
@@ -202,6 +208,15 @@ export default function CertificatesGlobal({
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>← Anterior</button>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>Página {page} de {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>Siguiente →</button>
         </div>
       )}
     </div>

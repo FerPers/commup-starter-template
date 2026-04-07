@@ -30,12 +30,14 @@ export async function createItrAssignment(input: {
   subsystemId: string
   scheduledDate?: string
   inspectorId: string
+  supervisorId?: string
+  clientId?: string
 }): Promise<{ itrId?: string; itrNumber?: string; error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
   if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos para asignar ITRs' }
 
-  const { projectId, tagId, templateId, subsystemId, scheduledDate, inspectorId } = input
+  const { projectId, tagId, templateId, subsystemId, scheduledDate, inspectorId, supervisorId, clientId } = input
 
   // Verify project belongs to user's org
   const { data: project } = await ctx.supabase
@@ -83,9 +85,15 @@ export async function createItrAssignment(input: {
 
   if (itrErr) return { error: itrErr.message }
 
+  const assignments: { itr_id: string; user_id: string; role: string }[] = [
+    { itr_id: itr.id, user_id: inspectorId, role: 'executor' },
+  ]
+  if (supervisorId) assignments.push({ itr_id: itr.id, user_id: supervisorId, role: 'supervisor' })
+  if (clientId) assignments.push({ itr_id: itr.id, user_id: clientId, role: 'client' })
+
   const { error: assignErr } = await ctx.supabase
     .from('itr_assignments')
-    .insert({ itr_id: itr.id, user_id: inspectorId, role: 'executor' })
+    .insert(assignments)
 
   if (assignErr) return { error: assignErr.message }
 

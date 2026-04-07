@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 
+const PAGE_SIZE = 50
+
 type Project    = { id: string; name: string; code: string }
 type Discipline = { id: string; code: string; name: string; color: string }
 
@@ -51,6 +53,7 @@ export default function PunchListGlobal({
   const [filterCat, setFilterCat] = useState<'A' | 'B' | 'C' | ''>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterDisc, setFilterDisc] = useState('')
+  const [page, setPage] = useState(1)
 
   const catACnt   = punches.filter(p => p.category === 'A' && p.status !== 'closed' && p.status !== 'cancelled').length
   const catBCnt   = punches.filter(p => p.category === 'B' && p.status !== 'closed' && p.status !== 'cancelled').length
@@ -75,6 +78,35 @@ export default function PunchListGlobal({
   }), [punches, filterProject, filterCat, filterStatus, filterDisc, search])
 
   const hasFilters = filterProject || filterCat || filterStatus || filterDisc || search
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  function exportCsv() {
+    const headers = ['Proyecto', 'N° Punch', 'Categoría', 'Descripción', 'Tag', 'Disciplina', 'Subsistema', 'Levantado por', 'Asignado a', 'Fecha límite', 'Estado', 'Prioridad']
+    const rows = filtered.map(p => [
+      p.projects?.code ?? '',
+      p.punch_number,
+      p.category,
+      p.description,
+      p.tags?.tag_number ?? '',
+      p.tags?.disciplines?.code ?? '',
+      p.subsystems?.code ?? '',
+      p.raised_by_profile?.full_name ?? '',
+      p.assigned_to_profile?.full_name ?? '',
+      p.target_date ?? '',
+      p.status,
+      p.priority,
+    ])
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `punches_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div style={{ padding: '32px', maxWidth: '1300px' }}>
@@ -129,7 +161,7 @@ export default function PunchListGlobal({
         </select>
         {hasFilters && (
           <button
-            onClick={() => { setFilterProject(''); setFilterCat(''); setFilterStatus(''); setFilterDisc(''); setSearch('') }}
+            onClick={() => { setFilterProject(''); setFilterCat(''); setFilterStatus(''); setFilterDisc(''); setSearch(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
             Limpiar filtros
@@ -138,6 +170,14 @@ export default function PunchListGlobal({
         <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
           {filtered.length} de {punches.length} punches
         </span>
+        {filtered.length > 0 && (
+          <button
+            onClick={exportCsv}
+            style={{ padding: '7px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: '#374151', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            ↓ CSV
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -157,7 +197,7 @@ export default function PunchListGlobal({
             <span>Estado</span>
           </div>
 
-          {filtered.map(p => {
+          {paginated.map(p => {
             const cat = CATEGORY_CFG[p.category]
             const st  = STATUS_CFG[p.status]
             const proj = p.projects
@@ -224,6 +264,15 @@ export default function PunchListGlobal({
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>← Anterior</button>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>Página {page} de {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>Siguiente →</button>
         </div>
       )}
     </div>

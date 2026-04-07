@@ -55,6 +55,8 @@ export default function TagItrTab({
   // Assignment form state
   const [selectedTemplate, setSelectedTemplate] = useState('')
   const [selectedInspector, setSelectedInspector] = useState('')
+  const [selectedSupervisor, setSelectedSupervisor] = useState('')
+  const [selectedClient, setSelectedClient] = useState('')
   const [scheduledDate, setScheduledDate] = useState('')
 
   // Tag type detection for ITR recommendations
@@ -73,12 +75,16 @@ export default function TagItrTab({
         subsystemId,
         templateId: selectedTemplate,
         inspectorId: selectedInspector,
+        supervisorId: selectedSupervisor || undefined,
+        clientId: selectedClient || undefined,
         scheduledDate: scheduledDate || undefined,
       })
       if (res.error) { setAssignError(res.error); return }
       setShowAssign(false)
       setSelectedTemplate('')
       setSelectedInspector('')
+      setSelectedSupervisor('')
+      setSelectedClient('')
       setScheduledDate('')
       router.refresh()
     })
@@ -262,7 +268,7 @@ export default function TagItrTab({
 
                 {/* Inspector selector */}
                 <div>
-                  <label style={labelStyle}>Inspector *</label>
+                  <label style={labelStyle}>Inspector * (Ejecutor)</label>
                   <select
                     value={selectedInspector}
                     onChange={e => setSelectedInspector(e.target.value)}
@@ -274,6 +280,47 @@ export default function TagItrTab({
                         {m.profiles?.full_name ?? m.user_id} ({m.role})
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                {/* Supervisor selector */}
+                <div>
+                  <label style={labelStyle}>Supervisor <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional)</span></label>
+                  <select
+                    value={selectedSupervisor}
+                    onChange={e => setSelectedSupervisor(e.target.value)}
+                    style={selStyle}
+                  >
+                    <option value="">Sin asignar</option>
+                    {orgMembers.map(m => (
+                      <option key={m.user_id} value={m.user_id}>
+                        {m.profiles?.full_name ?? m.user_id} ({m.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Client selector */}
+                <div>
+                  <label style={labelStyle}>Cliente <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional)</span></label>
+                  <select
+                    value={selectedClient}
+                    onChange={e => setSelectedClient(e.target.value)}
+                    style={selStyle}
+                  >
+                    <option value="">Sin asignar</option>
+                    {orgMembers.filter(m => m.role === 'client').length > 0
+                      ? orgMembers.filter(m => m.role === 'client').map(m => (
+                          <option key={m.user_id} value={m.user_id}>
+                            {m.profiles?.full_name ?? m.user_id}
+                          </option>
+                        ))
+                      : orgMembers.map(m => (
+                          <option key={m.user_id} value={m.user_id}>
+                            {m.profiles?.full_name ?? m.user_id} ({m.role})
+                          </option>
+                        ))
+                    }
                   </select>
                 </div>
 
