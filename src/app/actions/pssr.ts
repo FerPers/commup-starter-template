@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 
 // ── Default 22-item checklist seed ───────────────────────────
 
-const DEFAULT_ITEMS = [
+export const DEFAULT_PSSR_ITEMS = [
   { category: 'Ingeniería y Diseño', element: 'Análisis de Seguridad de Procesos (HAZOP)', requirement: '¿Se han completado y aprobado por la autoridad técnica (TA) todas las acciones de HAZOP requeridas para el arranque?', notes_hint: 'Verificar cierre de hallazgos críticos de diseño.' },
   { category: 'Ingeniería y Diseño', element: 'Información de Seguridad de Procesos (PSI)', requirement: '¿Están los P&ID, PFD y las hojas de especificaciones de equipos actualizados y disponibles en el cuarto de control?', notes_hint: 'Documentación as-built o red-lined debe estar accesible.' },
   { category: 'Ingeniería y Diseño', element: 'Gestión de Cambios (MOC)', requirement: '¿Se han documentado y revisado (ej. PHSER3) los cambios de diseño y límites operativos para asegurar que no se diluye la seguridad?', notes_hint: 'Validar recálculos y aprobaciones de ingeniería.' },
@@ -56,7 +56,7 @@ export async function createPssrTemplate(data: { name: string; description?: str
 
 export async function seedDefaultPssrTemplate(templateId: string) {
   const supabase = await createClient()
-  const items = DEFAULT_ITEMS.map((item, i) => ({
+  const items = DEFAULT_PSSR_ITEMS.map((item, i) => ({
     template_id: templateId,
     item_order: i + 1,
     ...item,

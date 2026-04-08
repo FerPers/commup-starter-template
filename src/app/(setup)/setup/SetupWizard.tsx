@@ -101,7 +101,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         setError(result.error)
         setLoading(false)
       } else {
-        router.push('/dashboard')
+        router.push(`/projects/${result.project_id}`)
       }
     } else {
       // Initial setup — all 4 steps (org + project + phases + disciplines)
@@ -115,7 +115,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         setError(result.error)
         setLoading(false)
       } else {
-        router.push('/dashboard')
+        router.push(`/projects/${result.project_id}`)
       }
     }
   }

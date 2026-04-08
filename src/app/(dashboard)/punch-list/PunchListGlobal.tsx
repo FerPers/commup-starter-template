@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
 
 const PAGE_SIZE = 50
@@ -34,12 +35,14 @@ const CATEGORY_CFG = {
   C: { label: 'Cat C', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
 } as const
 
-const STATUS_CFG = {
-  open:        { label: 'Abierto',    color: '#ef4444', bg: '#fee2e2' },
-  in_progress: { label: 'En proceso', color: '#3b82f6', bg: '#eff6ff' },
-  closed:      { label: 'Cerrado',    color: '#10b981', bg: '#ecfdf5' },
-  cancelled:   { label: 'Cancelado',  color: '#64748b', bg: '#f1f5f9' },
-} as const
+const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
+  open:        { color: '#ef4444', bg: '#fee2e2' },
+  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
+  closed:      { color: '#10b981', bg: '#ecfdf5' },
+  cancelled:   { color: '#64748b', bg: '#f1f5f9' },
+}
+
+const PUNCH_STATUS_KEYS = ['open', 'in_progress', 'closed', 'cancelled'] as const
 
 const GRID = '36px 100px 70px 1fr 1fr 110px 90px 90px'
 
@@ -52,6 +55,16 @@ export default function PunchListGlobal({
   punches: Punch[]
   disciplines: Discipline[]
 }) {
+  const t  = useTranslations('PunchList')
+  const tc = useTranslations('Common')
+
+  const punchStatusLabels: Record<string, string> = {
+    open:        t('punchStatus.open'),
+    in_progress: t('punchStatus.in_progress'),
+    closed:      t('punchStatus.closed'),
+    cancelled:   t('punchStatus.cancelled'),
+  }
+
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [filterProject, setFilterProject] = useState('')
@@ -137,7 +150,12 @@ export default function PunchListGlobal({
   }
 
   function exportCsv() {
-    const headers = ['Proyecto', 'N° Punch', 'Categoría', 'Descripción', 'Tag', 'Disciplina', 'Subsistema', 'Levantado por', 'Asignado a', 'Fecha límite', 'Estado', 'Prioridad']
+    const headers = [
+      t('exportHeaders.project'), t('exportHeaders.punch'), t('exportHeaders.category'),
+      t('exportHeaders.description'), t('exportHeaders.tag'), t('exportHeaders.discipline'),
+      t('exportHeaders.subsystem'), t('exportHeaders.raisedBy'), t('exportHeaders.assignedTo'),
+      t('exportHeaders.targetDate'), t('exportHeaders.status'), t('exportHeaders.priority'),
+    ]
     const rows = filtered.map(p => [
       p.projects?.code ?? '',
       p.punch_number,
@@ -162,23 +180,25 @@ export default function PunchListGlobal({
     URL.revokeObjectURL(url)
   }
 
+  const summaryCards = [
+    { labelKey: 'summary.catAOpen' as const, count: catACnt, color: '#ef4444', bg: '#fee2e2', cat: 'A' as const },
+    { labelKey: 'summary.catBOpen' as const, count: catBCnt, color: '#f59e0b', bg: '#fffbeb', cat: 'B' as const },
+    { labelKey: 'summary.catCOpen' as const, count: catCCnt, color: '#64748b', bg: '#f8fafc', cat: 'C' as const },
+    { labelKey: 'summary.closed'   as const, count: closedCnt, color: '#10b981', bg: '#ecfdf5', cat: null },
+  ]
+
   return (
     <div style={{ padding: '32px', maxWidth: '1300px' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Punch List</h1>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>Todos los proyectos de la organización</p>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('title')}</h1>
+        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{tc('allOrg')}</p>
       </div>
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '24px' }}>
-        {[
-          { label: 'Cat A abiertos', count: catACnt, color: '#ef4444', bg: '#fee2e2', cat: 'A' as const },
-          { label: 'Cat B abiertos', count: catBCnt, color: '#f59e0b', bg: '#fffbeb', cat: 'B' as const },
-          { label: 'Cat C abiertos', count: catCCnt, color: '#64748b', bg: '#f8fafc', cat: 'C' as const },
-          { label: 'Cerrados', count: closedCnt, color: '#10b981', bg: '#ecfdf5', cat: null },
-        ].map(card => (
+        {summaryCards.map(card => (
           <div
-            key={card.label}
+            key={card.labelKey}
             onClick={() => card.cat && setFilterCat(filterCat === card.cat ? '' : card.cat)}
             style={{
               padding: '14px 16px', borderRadius: '10px', cursor: card.cat ? 'pointer' : 'default',
@@ -188,7 +208,7 @@ export default function PunchListGlobal({
             }}
           >
             <div style={{ fontSize: '22px', fontWeight: 700, color: card.color }}>{card.count}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{card.label}</div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{t(card.labelKey)}</div>
           </div>
         ))}
       </div>
@@ -198,19 +218,19 @@ export default function PunchListGlobal({
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar punch, tag, descripción..."
+          placeholder={t('filters.search')}
           style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '240px', fontFamily: 'inherit' }}
         />
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)} style={selStyle}>
-          <option value="">Todos los proyectos</option>
+          <option value="">{tc('allProjects')}</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
         </select>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={selStyle}>
-          <option value="">Todos los estados</option>
-          {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          <option value="">{t('filters.allStatuses')}</option>
+          {PUNCH_STATUS_KEYS.map(k => <option key={k} value={k}>{punchStatusLabels[k]}</option>)}
         </select>
         <select value={filterDisc} onChange={e => setFilterDisc(e.target.value)} style={selStyle}>
-          <option value="">Todas las disciplinas</option>
+          <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </select>
         {hasFilters && (
@@ -218,18 +238,18 @@ export default function PunchListGlobal({
             onClick={() => { setFilterProject(''); setFilterCat(''); setFilterStatus(''); setFilterDisc(''); setSearch(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
-            Limpiar filtros
+            {tc('clearFilters')}
           </button>
         )}
         <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
-          {filtered.length} de {punches.length} punches
+          {t('filters.count', { filtered: filtered.length, total: punches.length })}
         </span>
         {filtered.length > 0 && (
           <button
             onClick={exportCsv}
             style={{ padding: '7px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: '#374151', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            ↓ CSV
+            {tc('exportCsv')}
           </button>
         )}
       </div>
@@ -242,18 +262,18 @@ export default function PunchListGlobal({
           background: '#1e293b', borderRadius: '10px', color: 'white',
         }}>
           <span style={{ fontSize: '13px', fontWeight: 500 }}>
-            {selectedIds.size} punch{selectedIds.size !== 1 ? 'es' : ''} seleccionado{selectedIds.size !== 1 ? 's' : ''}
+            {t('bulk.selected', { count: selectedIds.size })}
           </span>
           <span style={{ color: '#475569' }}>|</span>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>Cambiar estado a:</span>
+          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{tc('changeStatusTo')}</span>
           <select
             value={bulkStatus}
             onChange={e => setBulkStatus(e.target.value)}
             style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white', fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer' }}
           >
-            <option value="">— elegir —</option>
-            {Object.entries(STATUS_CFG).map(([k, v]) => (
-              <option key={k} value={k}>{v.label}</option>
+            <option value="">{tc('choose')}</option>
+            {PUNCH_STATUS_KEYS.map(k => (
+              <option key={k} value={k}>{punchStatusLabels[k]}</option>
             ))}
           </select>
           <button
@@ -267,13 +287,13 @@ export default function PunchListGlobal({
               fontFamily: 'inherit',
             }}
           >
-            {bulkLoading ? 'Aplicando…' : 'Aplicar'}
+            {bulkLoading ? tc('applying') : tc('apply')}
           </button>
           {bulkError && <span style={{ fontSize: '12px', color: '#f87171' }}>{bulkError}</span>}
           <button
             onClick={() => { setSelectedIds(new Set()); setBulkStatus(''); setBulkError('') }}
             style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '0 4px' }}
-            title="Deseleccionar todo"
+            title={tc('deselectAll')}
           >
             ✕
           </button>
@@ -283,7 +303,7 @@ export default function PunchListGlobal({
       {/* Table */}
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>No hay punches que coincidan con los filtros.</p>
+          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{t('empty')}</p>
         </div>
       ) : (
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
@@ -294,21 +314,21 @@ export default function PunchListGlobal({
               ref={selectAllRef}
               checked={allFilteredSelected}
               onChange={toggleSelectAll}
-              title={allFilteredSelected ? 'Deseleccionar todo' : `Seleccionar ${filtered.length} punches`}
+              title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
               style={{ cursor: 'pointer', accentColor: '#3b82f6', width: '15px', height: '15px' }}
             />
-            <span>Proyecto</span>
-            <span>Cat</span>
-            <span>Punch / Tag</span>
-            <span>Descripción</span>
-            <span>Asignado a</span>
-            <span>Fecha límite</span>
-            <span>Estado</span>
+            <span>{t('table.colProject')}</span>
+            <span>{t('table.colCat')}</span>
+            <span>{t('table.colPunch')}</span>
+            <span>{t('table.colDesc')}</span>
+            <span>{t('table.colAssigned')}</span>
+            <span>{t('table.colDue')}</span>
+            <span>{t('table.colStatus')}</span>
           </div>
 
           {paginated.map(p => {
-            const cat = CATEGORY_CFG[p.category]
-            const st  = STATUS_CFG[p.status]
+            const cat  = CATEGORY_CFG[p.category]
+            const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
             const proj = p.projects
             const disc = p.tags?.disciplines
             const today = new Date().toISOString().slice(0, 10)
@@ -332,7 +352,7 @@ export default function PunchListGlobal({
                   style={{ cursor: 'pointer', accentColor: '#3b82f6', width: '15px', height: '15px' }}
                 />
 
-                {/* Proyecto */}
+                {/* Project */}
                 <div>
                   {proj && (
                     <a
@@ -345,7 +365,7 @@ export default function PunchListGlobal({
                   )}
                 </div>
 
-                {/* Categoría */}
+                {/* Category */}
                 <div>
                   <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>
                     {cat.label}
@@ -363,25 +383,25 @@ export default function PunchListGlobal({
                   )}
                 </div>
 
-                {/* Descripción */}
+                {/* Description */}
                 <div style={{ fontSize: '12px', color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.description}>
                   {p.description}
                 </div>
 
-                {/* Asignado */}
+                {/* Assigned */}
                 <div style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.assigned_to_profile?.full_name ?? '—'}
                 </div>
 
-                {/* Fecha límite */}
+                {/* Due date */}
                 <div style={{ fontSize: '11px', color: isOverdue ? '#ef4444' : '#64748b', fontWeight: isOverdue ? 600 : 400 }}>
                   {p.target_date ?? '—'}
-                  {isOverdue && <span style={{ display: 'block', fontSize: '9px', color: '#ef4444' }}>Vencido</span>}
+                  {isOverdue && <span style={{ display: 'block', fontSize: '9px', color: '#ef4444' }}>{t('overdue')}</span>}
                 </div>
 
-                {/* Estado */}
-                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
-                  {st.label}
+                {/* Status */}
+                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>
+                  {punchStatusLabels[p.status] ?? p.status}
                 </span>
               </div>
             )
@@ -392,9 +412,9 @@ export default function PunchListGlobal({
       {/* Pagination */}
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>← Anterior</button>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>Página {page} de {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>Siguiente →</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>{tc('prevPage')}</button>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>{tc('page', { page, total: totalPages })}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>{tc('nextPage')}</button>
         </div>
       )}
     </div>

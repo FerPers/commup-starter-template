@@ -1,14 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getTranslations, getLocale } from 'next-intl/server'
 
 // ── Shared config ─────────────────────────────────────────────────────
 
-const ITR_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  not_started: { label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9' },
-  in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { label: 'Completado',  color: '#10b981', bg: '#ecfdf5' },
-  approved:     { label: 'Aprobado',    color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:     { label: 'Rechazado',   color: '#ef4444', bg: '#fee2e2' },
+const ITR_STYLE: Record<string, { color: string; bg: string }> = {
+  not_started: { color: '#64748b', bg: '#f1f5f9' },
+  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
+  completed:    { color: '#10b981', bg: '#ecfdf5' },
+  approved:     { color: '#7c3aed', bg: '#f5f3ff' },
+  rejected:     { color: '#ef4444', bg: '#fee2e2' },
 }
 
 const CATEGORY_CFG = {
@@ -17,11 +18,11 @@ const CATEGORY_CFG = {
   C: { label: 'Cat C', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
 }
 
-const PUNCH_STATUS = {
-  open:        { label: 'Abierto',    color: '#ef4444', bg: '#fee2e2' },
-  in_progress: { label: 'En proceso', color: '#3b82f6', bg: '#eff6ff' },
-  closed:      { label: 'Cerrado',    color: '#10b981', bg: '#ecfdf5' },
-  cancelled:   { label: 'Cancelado',  color: '#64748b', bg: '#f1f5f9' },
+const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
+  open:        { color: '#ef4444', bg: '#fee2e2' },
+  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
+  closed:      { color: '#10b981', bg: '#ecfdf5' },
+  cancelled:   { color: '#64748b', bg: '#f1f5f9' },
 }
 
 const cardStyle: React.CSSProperties = {
@@ -46,6 +47,28 @@ export default async function DashboardPage() {
   if (!membership) redirect('/setup')
 
   const { role, org_id: orgId } = membership
+
+  const [t, locale] = await Promise.all([
+    getTranslations('Dashboard'),
+    getLocale(),
+  ])
+  const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
+
+  const itrLabels: Record<string, string> = {
+    not_started: t('itrStatus.not_started'),
+    in_progress: t('itrStatus.in_progress'),
+    completed:   t('itrStatus.completed'),
+    approved:    t('itrStatus.approved'),
+    rejected:    t('itrStatus.rejected'),
+  }
+  const punchLabels: Record<string, string> = {
+    open:        t('punchStatus.open'),
+    in_progress: t('punchStatus.in_progress'),
+    closed:      t('punchStatus.closed'),
+    cancelled:   t('punchStatus.cancelled'),
+  }
+  const itrLabel   = (s: string) => itrLabels[s]   ?? s
+  const punchLabel = (s: string) => punchLabels[s]  ?? s
 
   // ── Inspector ──────────────────────────────────────────────────────
   if (role === 'inspector') {
@@ -81,46 +104,50 @@ export default async function DashboardPage() {
 
     const todayStr = new Date().toISOString().slice(0, 10)
     const firstName = profile?.full_name?.split(' ')[0] ?? 'Inspector'
-    const todayLabel = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
     return (
       <div style={{ padding: '28px', maxWidth: '860px' }}>
         <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Hola, {firstName}</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('hello', { name: firstName })}</h1>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, textTransform: 'capitalize' }}>{todayLabel} · {org?.name ?? ''}</p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
-          <SummaryPill count={activeItrs.length} label="ITRs pendientes" color="#3b82f6" />
-          <SummaryPill count={(myPunches ?? []).length} label="Punches asignados" color="#ef4444" />
-          <SummaryPill count={activeItrs.filter(a => (a.itrs as any)?.status === 'in_progress').length} label="En progreso" color="#10b981" />
+          <SummaryPill count={activeItrs.length} label={t('inspector.pillItrs')} color="#3b82f6" />
+          <SummaryPill count={(myPunches ?? []).length} label={t('inspector.pillPunches')} color="#ef4444" />
+          <SummaryPill count={activeItrs.filter(a => (a.itrs as any)?.status === 'in_progress').length} label={t('inspector.pillProgress')} color="#10b981" />
         </div>
 
-        <TaskSection title="Mis ITRs asignadas" count={activeItrs.length} emptyText="No tienes ITRs pendientes de ejecución.">
+        <TaskSection title={t('inspector.myItrs')} count={activeItrs.length} emptyText={t('inspector.myItrsEmpty')}>
           {activeItrs.map(a => {
             const itr = a.itrs as any
-            const st = ITR_STATUS[itr.status] ?? ITR_STATUS.not_started
+            const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
             const phase = itr.project_phases
             const overdue = itr.scheduled_date && itr.scheduled_date < todayStr && itr.status === 'not_started'
             return (
               <a key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
-                <div style={{ padding: '14px 16px', background: 'white', border: `1px solid ${overdue ? '#fecaca' : '#e2e8f0'}`, borderLeft: `3px solid ${overdue ? '#ef4444' : st.color}`, borderRadius: '10px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center' }}>
+                <div style={{ padding: '14px 16px', background: 'white', border: `1px solid ${overdue ? '#fecaca' : '#e2e8f0'}`, borderLeft: `3px solid ${overdue ? '#ef4444' : style.color}`, borderRadius: '10px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                       {phase && <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>}
                       <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
                       <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>
-                        {a.role === 'executor' ? 'Ejecutor' : a.role === 'supervisor' ? 'Supervisor' : 'Cliente'}
+                        {a.role === 'executor' ? t('inspector.executor') : a.role === 'supervisor' ? t('inspector.supervisor') : t('inspector.roleClient')}
                       </span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#374151' }}>{itr.tags?.tag_number} — {itr.tags?.description}</div>
                     <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px', display: 'flex', gap: '10px' }}>
                       <span>{itr.projects?.code}</span>
-                      {itr.scheduled_date && <span style={{ color: overdue ? '#ef4444' : '#94a3b8', fontWeight: overdue ? 600 : 400 }}>{overdue ? '⚠ ' : ''}Programado: {itr.scheduled_date}</span>}
+                      {itr.scheduled_date && (
+                        <span style={{ color: overdue ? '#ef4444' : '#94a3b8', fontWeight: overdue ? 600 : 400 }}>
+                          {t(overdue ? 'inspector.schedOverdue' : 'inspector.scheduled', { date: itr.scheduled_date })}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>{st.label}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: style.bg, color: style.color, whiteSpace: 'nowrap' }}>{itrLabel(itr.status)}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <div style={{ width: '60px', height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '2px' }} />
@@ -134,10 +161,10 @@ export default async function DashboardPage() {
           })}
         </TaskSection>
 
-        <TaskSection title="Mis Punches asignados" count={(myPunches ?? []).length} emptyText="No tienes punches asignados." style={{ marginTop: '20px' }}>
+        <TaskSection title={t('inspector.myPunches')} count={(myPunches ?? []).length} emptyText={t('inspector.myPunchesEmpty')} style={{ marginTop: '20px' }}>
           {(myPunches ?? []).map((p: any) => {
             const cat = CATEGORY_CFG[p.category as 'A' | 'B' | 'C']
-            const st  = PUNCH_STATUS[p.status as keyof typeof PUNCH_STATUS]
+            const pStyle = PUNCH_STYLE[p.status as keyof typeof PUNCH_STYLE] ?? PUNCH_STYLE.open
             const overdue = p.target_date && p.target_date < todayStr
             return (
               <a key={p.id} href={`/projects/${p.project_id}/punches`} style={{ display: 'block', textDecoration: 'none' }}>
@@ -147,14 +174,10 @@ export default async function DashboardPage() {
                       <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>
                       <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '440px' }}>{p.description}</div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px', display: 'flex', gap: '10px' }}>
-                      <span>{p.projects?.code}</span>
-                      {p.tags?.tag_number && <span>{p.tags.tag_number}</span>}
-                      {p.target_date && <span style={{ color: overdue ? '#ef4444' : '#94a3b8', fontWeight: overdue ? 600 : 400 }}>{overdue ? '⚠ Vencido: ' : 'Límite: '}{p.target_date}</span>}
-                    </div>
+                    <div style={{ fontSize: '12px', color: '#374151' }}>{p.description}</div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>{(p.projects as any)?.code} · {(p.tags as any)?.tag_number}</div>
                   </div>
-                  <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>{st.label}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>{punchLabel(p.status)}</span>
                 </div>
               </a>
             )
@@ -183,18 +206,18 @@ export default async function DashboardPage() {
     })
 
     const firstName = profile?.full_name?.split(' ')[0] ?? 'Cliente'
-    const todayLabel = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
     return (
       <div style={{ padding: '28px', maxWidth: '860px' }}>
         <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Hola, {firstName}</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('hello', { name: firstName })}</h1>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, textTransform: 'capitalize' }}>{todayLabel} · {org?.name ?? ''}</p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
-          <SummaryPill count={(projects ?? []).length} label="Proyectos activos" color="#3b82f6" />
-          <SummaryPill count={pendingSignature.length} label="Pendientes de tu firma" color={pendingSignature.length > 0 ? '#f59e0b' : '#10b981'} />
+          <SummaryPill count={(projects ?? []).length} label={t('clientView.pillProjects')} color="#3b82f6" />
+          <SummaryPill count={pendingSignature.length} label={t('clientView.pillSignatures')} color={pendingSignature.length > 0 ? '#f59e0b' : '#10b981'} />
         </div>
 
         {/* Pending signatures */}
@@ -203,8 +226,8 @@ export default async function DashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <span style={{ fontSize: '20px' }}>✍</span>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>Pendientes de tu firma</div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>{pendingSignature.length} ITR{pendingSignature.length !== 1 ? 's' : ''} completado{pendingSignature.length !== 1 ? 's' : ''} esperan tu firma como Cliente</div>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>{t('clientView.signaturesTitle')}</div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>{t('clientView.signaturesDesc', { count: pendingSignature.length })}</div>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -218,7 +241,7 @@ export default async function DashboardPage() {
                       <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
                       <span style={{ fontSize: '12px', color: '#64748b', flex: 1 }}>{itr.tags?.tag_number} — {itr.tags?.description}</span>
                       <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 600 }}>{itr.projects?.code}</span>
-                      <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 600 }}>Firmar →</span>
+                      <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 600 }}>{t('clientView.sign')}</span>
                     </div>
                   </a>
                 )
@@ -229,9 +252,9 @@ export default async function DashboardPage() {
 
         {/* Active projects (read-only) */}
         <div style={cardStyle}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Proyectos activos</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>{t('clientView.projectsTitle')}</h3>
           {(projects ?? []).length === 0 ? (
-            <p style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', padding: '24px 0' }}>Sin proyectos activos.</p>
+            <p style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', padding: '24px 0' }}>{t('clientView.noProjects')}</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {(projects ?? []).map((p: any) => (
@@ -248,7 +271,9 @@ export default async function DashboardPage() {
         </div>
 
         <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '20px', textAlign: 'center' }}>
-          Accede a <a href="/itrs" style={{ color: '#3b82f6', textDecoration: 'none' }}>ITRs</a> para ver el estado detallado de cada inspección.
+          {t.rich('clientView.viewItrs', {
+            link: (chunks) => <a href="/itrs" style={{ color: '#3b82f6', textDecoration: 'none' }}>{chunks}</a>
+          })}
         </p>
       </div>
     )
@@ -308,14 +333,22 @@ export default async function DashboardPage() {
         const open = (orgPunches ?? []).filter((p: any) => p.status !== 'closed' && p.status !== 'cancelled')
         const catA = open.filter((p: any) => p.category === 'A').length
         const catB = open.filter((p: any) => p.category === 'B').length
-        return <KpiCard label="Punch List Abiertos" value={String(open.length)} color="#ef4444" sub={`Cat A: ${catA} · Cat B: ${catB}`} danger />
+        return <KpiCard label={t('kpi.punchesOpen')} value={String(open.length)} color="#ef4444" sub={t('kpi.punchesOpenSub', { catA, catB })} danger />
       })()}
       {(() => {
         const due = orgPreservationDue ?? []
         const today = new Date().toISOString().split('T')[0]
         const overdue  = (due as any[]).filter(p => p.next_due_date < today).length
         const upcoming = (due as any[]).filter(p => p.next_due_date >= today).length
-        return <KpiCard label="Preservación — próx. 7 días" value={String(due.length)} color={overdue > 0 ? '#f59e0b' : '#8b5cf6'} sub={overdue > 0 ? `${overdue} vencido(s) · ${upcoming} por vencer` : `${upcoming} por vencer`} danger={overdue > 0} />
+        return (
+          <KpiCard
+            label={t('kpi.preservation')}
+            value={String(due.length)}
+            color={overdue > 0 ? '#f59e0b' : '#8b5cf6'}
+            sub={overdue > 0 ? t('kpi.preservationOverdue', { overdue, upcoming }) : t('kpi.preservationUpcoming', { upcoming })}
+            danger={overdue > 0}
+          />
+        )
       })()}
     </div>
   )
@@ -324,23 +357,29 @@ export default async function DashboardPage() {
   const projectsSection = (
     <div style={cardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>Proyectos Activos</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>{t('projects.title')}</h3>
         {canCreateProject && (
           <a href="/setup?mode=project" style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>
-            + Nuevo Proyecto
+            {t('projects.newProject')}
           </a>
         )}
       </div>
       {activeProjects.length === 0 ? (
         <div style={{ padding: '48px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>⬡</div>
-          <p style={{ color: '#475569', fontWeight: 500, marginBottom: '6px' }}>No hay proyectos todavía</p>
-          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Crea tu primer proyecto para comenzar a gestionar el completamiento</p>
+          <p style={{ color: '#475569', fontWeight: 500, marginBottom: '6px' }}>{t('projects.empty')}</p>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>{t('projects.emptyDesc')}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {activeProjects.map(project => (
-            <ProjectRow key={project.id} project={project} phases={phases ?? []} />
+            <ProjectRow
+              key={project.id}
+              project={project}
+              phases={phases ?? []}
+              noMetaText={t('projects.noMeta')}
+              activeText={t('projects.active')}
+            />
           ))}
         </div>
       )}
@@ -355,7 +394,7 @@ export default async function DashboardPage() {
     return (
       <div style={{ padding: '32px' }}>
         <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>Hola, {firstName}</h1>
+          <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>{t('hello', { name: firstName })}</h1>
           <p style={{ color: '#64748b', marginTop: '4px', fontSize: '15px' }}>{org?.name ?? ''}</p>
         </div>
 
@@ -366,11 +405,11 @@ export default async function DashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '18px' }}>⚠</span>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#9a3412' }}>Punches Cat A sin asignar</div>
-                  <div style={{ fontSize: '12px', color: '#c2410c' }}>{unassignedCatA.length} punch{unassignedCatA.length !== 1 ? 'es' : ''} bloqueante{unassignedCatA.length !== 1 ? 's' : ''} sin responsable</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#9a3412' }}>{t('architect.catATitle')}</div>
+                  <div style={{ fontSize: '12px', color: '#c2410c' }}>{t('architect.catADesc', { count: unassignedCatA.length })}</div>
                 </div>
               </div>
-              <a href="/punch-list" style={{ fontSize: '12px', color: '#ea580c', fontWeight: 600, textDecoration: 'none' }}>Ver todos →</a>
+              <a href="/punch-list" style={{ fontSize: '12px', color: '#ea580c', fontWeight: 600, textDecoration: 'none' }}>{t('architect.catAViewAll')}</a>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {unassignedCatA.slice(0, 5).map((p: any) => (
@@ -382,7 +421,7 @@ export default async function DashboardPage() {
                 </div>
               ))}
               {unassignedCatA.length > 5 && (
-                <p style={{ fontSize: '11px', color: '#c2410c', margin: '4px 0 0', paddingLeft: '4px' }}>+ {unassignedCatA.length - 5} más</p>
+                <p style={{ fontSize: '11px', color: '#c2410c', margin: '4px 0 0', paddingLeft: '4px' }}>{t('architect.catAMore', { count: unassignedCatA.length - 5 })}</p>
               )}
             </div>
           </div>
@@ -393,7 +432,7 @@ export default async function DashboardPage() {
 
         {(disciplines ?? []).length > 0 && (
           <div style={{ ...cardStyle, marginTop: '16px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Disciplinas del Proyecto</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>{t('disciplines')}</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {(disciplines ?? []).map(d => (
                 <span key={d.id} style={{ padding: '4px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 500, background: `${d.color}18`, color: d.color, border: `1px solid ${d.color}40` }}>
@@ -411,14 +450,14 @@ export default async function DashboardPage() {
   return (
     <div style={{ padding: '32px' }}>
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>Dashboard</h1>
-        <p style={{ color: '#64748b', marginTop: '4px', fontSize: '15px' }}>{org?.name ?? 'Resumen general del estado de completamiento'}</p>
+        <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>{t('title')}</h1>
+        <p style={{ color: '#64748b', marginTop: '4px', fontSize: '15px' }}>{org?.name ?? t('subtitle')}</p>
       </div>
       {kpiCards}
       {projectsSection}
       {(disciplines ?? []).length > 0 && (
         <div style={{ ...cardStyle, marginTop: '16px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Disciplinas del Proyecto</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>{t('disciplines')}</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {(disciplines ?? []).map(d => (
               <span key={d.id} style={{ padding: '4px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 500, background: `${d.color}18`, color: d.color, border: `1px solid ${d.color}40` }}>
@@ -480,9 +519,11 @@ function KpiCard({ label, value, color, sub, danger = false, progress = 0 }: {
   )
 }
 
-function ProjectRow({ project, phases }: {
+function ProjectRow({ project, phases, noMetaText, activeText }: {
   project: { id: string; name: string; code: string; location: string | null; client: string | null; start_date: string | null; end_date: string | null; status: string }
   phases: { id: string; name: string; code: string; color: string; order_index: number }[]
+  noMetaText: string
+  activeText: string
 }) {
   return (
     <div style={{ padding: '16px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
@@ -493,7 +534,7 @@ function ProjectRow({ project, phases }: {
         <div>
           <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '15px' }}>{project.name}</div>
           <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-            {[project.client, project.location].filter(Boolean).join(' · ') || 'Sin cliente / ubicación'}
+            {[project.client, project.location].filter(Boolean).join(' · ') || noMetaText}
           </div>
         </div>
       </div>
@@ -504,7 +545,7 @@ function ProjectRow({ project, phases }: {
           </div>
         ))}
         <span style={{ marginLeft: '8px', padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600, background: '#10b98120', color: '#10b981', border: '1px solid #10b98130' }}>
-          Activo
+          {activeText}
         </span>
       </div>
     </div>

@@ -44,5 +44,219 @@
     "comingSoon": "Próximamente",
     "logout": "Cerrar sesión",
     "platform": "CMS Platform"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Resumen general del estado de completamiento",
+    "hello": "Hola, {name}",
+    "itrStatus": {
+      "not_started": "Sin iniciar",
+      "in_progress": "En progreso",
+      "completed": "Completado",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "punchStatus": {
+      "open": "Abierto",
+      "in_progress": "En proceso",
+      "closed": "Cerrado",
+      "cancelled": "Cancelado"
+    },
+    "kpi": {
+      "punchesOpen": "Punch List Abiertos",
+      "punchesOpenSub": "Cat A: {catA} · Cat B: {catB}",
+      "preservation": "Preservación — próx. 7 días",
+      "preservationOverdue": "{overdue} vencido(s) · {upcoming} por vencer",
+      "preservationUpcoming": "{upcoming} por vencer"
+    },
+    "projects": {
+      "title": "Proyectos Activos",
+      "newProject": "+ Nuevo Proyecto",
+      "empty": "No hay proyectos todavía",
+      "emptyDesc": "Crea tu primer proyecto para comenzar a gestionar el completamiento",
+      "noMeta": "Sin cliente / ubicación",
+      "active": "Activo"
+    },
+    "disciplines": "Disciplinas del Proyecto",
+    "inspector": {
+      "pillItrs": "ITRs pendientes",
+      "pillPunches": "Punches asignados",
+      "pillProgress": "En progreso",
+      "myItrs": "Mis ITRs asignadas",
+      "myItrsEmpty": "No tienes ITRs pendientes de ejecución.",
+      "myPunches": "Mis Punches asignados",
+      "myPunchesEmpty": "No tienes punches asignados.",
+      "executor": "Ejecutor",
+      "supervisor": "Supervisor",
+      "roleClient": "Cliente",
+      "scheduled": "Programado: {date}",
+      "schedOverdue": "⚠ Programado: {date}"
+    },
+    "clientView": {
+      "pillProjects": "Proyectos activos",
+      "pillSignatures": "Pendientes de tu firma",
+      "signaturesTitle": "Pendientes de tu firma",
+      "signaturesDesc": "{count, plural, one {# ITR completado espera tu firma como Cliente} other {# ITRs completados esperan tu firma como Cliente}}",
+      "sign": "Firmar →",
+      "projectsTitle": "Proyectos activos",
+      "noProjects": "Sin proyectos activos.",
+      "viewItrs": "Accede a <link>ITRs</link> para ver el estado detallado de cada inspección."
+    },
+    "architect": {
+      "catATitle": "Punches Cat A sin asignar",
+      "catADesc": "{count, plural, one {# punch bloqueante sin responsable} other {# punches bloqueantes sin responsable}}",
+      "catAViewAll": "Ver todos →",
+      "catAMore": "+ {count} más"
+    }
+  },
+  "Common": {
+    "prevPage": "← Anterior",
+    "nextPage": "Siguiente →",
+    "page": "Página {page} de {total}",
+    "allProjects": "Todos los proyectos",
+    "clearFilters": "Limpiar filtros",
+    "exportCsv": "↓ CSV",
+    "allOrg": "Todos los proyectos de la organización",
+    "deselectAll": "Deseleccionar todo",
+    "choose": "— elegir —",
+    "changeStatusTo": "Cambiar estado a:",
+    "apply": "Aplicar",
+    "applying": "Aplicando…"
+  },
+  "ItrList": {
+    "title": "ITRs",
+    "itrStatus": {
+      "not_started": "Sin iniciar",
+      "in_progress": "En progreso",
+      "completed": "Completado",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "filters": {
+      "search": "Buscar ITR, tag, template, proyecto...",
+      "allPhases": "Todas las fases",
+      "allDisciplines": "Todas las disciplinas",
+      "count": "{filtered} de {total} ITRs",
+      "selectAll": "Seleccionar {count} ITRs"
+    },
+    "bulk": {
+      "selected": "{count, plural, one {# ITR seleccionado} other {# ITRs seleccionados}}"
+    },
+    "table": {
+      "colProject": "Proyecto",
+      "colItr": "ITR / Tag",
+      "colTemplate": "Template",
+      "colInspector": "Inspector",
+      "colDate": "Fecha",
+      "colProgress": "Progreso",
+      "colStatus": "Estado",
+      "colSignature": "Firma"
+    },
+    "empty": "No hay ITRs que coincidan con los filtros.",
+    "exportHeaders": {
+      "project": "Proyecto",
+      "itr": "ITR",
+      "tag": "Tag",
+      "tagDesc": "Descripción Tag",
+      "template": "Template",
+      "phase": "Fase",
+      "discipline": "Disciplina",
+      "inspector": "Inspector",
+      "scheduledDate": "Fecha programada",
+      "progress": "Progreso %",
+      "status": "Estado",
+      "signE": "Firm.E",
+      "signS": "Firm.S",
+      "signC": "Firm.C"
+    }
+  },
+  "PunchList": {
+    "title": "Punch List",
+    "punchStatus": {
+      "open": "Abierto",
+      "in_progress": "En proceso",
+      "closed": "Cerrado",
+      "cancelled": "Cancelado"
+    },
+    "summary": {
+      "catAOpen": "Cat A abiertos",
+      "catBOpen": "Cat B abiertos",
+      "catCOpen": "Cat C abiertos",
+      "closed": "Cerrados"
+    },
+    "filters": {
+      "search": "Buscar punch, tag, descripción...",
+      "allStatuses": "Todos los estados",
+      "allDisciplines": "Todas las disciplinas",
+      "count": "{filtered} de {total} punches",
+      "selectAll": "Seleccionar {count} punches"
+    },
+    "bulk": {
+      "selected": "{count, plural, one {# punch seleccionado} other {# punches seleccionados}}"
+    },
+    "table": {
+      "colProject": "Proyecto",
+      "colCat": "Cat",
+      "colPunch": "Punch / Tag",
+      "colDesc": "Descripción",
+      "colAssigned": "Asignado a",
+      "colDue": "Fecha límite",
+      "colStatus": "Estado"
+    },
+    "overdue": "Vencido",
+    "empty": "No hay punches que coincidan con los filtros.",
+    "exportHeaders": {
+      "project": "Proyecto",
+      "punch": "N° Punch",
+      "category": "Categoría",
+      "description": "Descripción",
+      "tag": "Tag",
+      "discipline": "Disciplina",
+      "subsystem": "Subsistema",
+      "raisedBy": "Levantado por",
+      "assignedTo": "Asignado a",
+      "targetDate": "Fecha límite",
+      "status": "Estado",
+      "priority": "Prioridad"
+    }
+  },
+  "Preservation": {
+    "title": "Preservación",
+    "planStatus": {
+      "active": "Activo",
+      "suspended": "Suspendido",
+      "completed": "Completado"
+    },
+    "freq": {
+      "daily": "Diario",
+      "weekly": "Semanal",
+      "biweekly": "Quincenal",
+      "monthly": "Mensual",
+      "quarterly": "Trimestral"
+    },
+    "due": {
+      "overdue": "Vencido hace {days}d",
+      "soon": "Vence en {days}d"
+    },
+    "summary": {
+      "overdue": "Vencidos",
+      "dueSoon": "Vencen esta semana",
+      "active": "Planes activos"
+    },
+    "filters": {
+      "search": "Buscar tag, procedimiento, proyecto...",
+      "allStatuses": "Todos los estados",
+      "count": "{filtered} de {total} planes"
+    },
+    "table": {
+      "colProject": "Proyecto",
+      "colTag": "Tag",
+      "colProcedure": "Procedimiento",
+      "colFreq": "Frecuencia",
+      "colNextDue": "Próximo venc.",
+      "colLastRecord": "Último registro",
+      "colStatus": "Estado"
+    },
+    "empty": "No hay planes de preservación que coincidan."
   }
 }

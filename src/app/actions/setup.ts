@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { DEFAULT_PSSR_ITEMS } from '@/app/actions/pssr'
 
 interface PhaseInput {
   code: string
@@ -91,6 +92,19 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
     .insert(input.disciplines.map(d => ({ ...d, org_id: org.id })))
 
   if (disciplinesError) return { error: disciplinesError.message }
+
+  // 6. Seed default PSSR template
+  const { data: pssrTemplate } = await admin
+    .from('pssr_templates')
+    .insert({ org_id: org.id, name: 'PSSR Estándar O&G', description: 'Plantilla de Pre-Startup Safety Review con 22 ítems estándar de la industria', created_by: user.id, is_active: true })
+    .select('id')
+    .single()
+
+  if (pssrTemplate) {
+    await admin.from('pssr_template_items').insert(
+      DEFAULT_PSSR_ITEMS.map((item, i) => ({ template_id: pssrTemplate.id, item_order: i + 1, ...item }))
+    )
+  }
 
   return { org_id: org.id, project_id: project.id }
 }

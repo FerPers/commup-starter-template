@@ -44,5 +44,219 @@
     "comingSoon": "Coming soon",
     "logout": "Sign out",
     "platform": "CMS Platform"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "subtitle": "General completion status overview",
+    "hello": "Hello, {name}",
+    "itrStatus": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "punchStatus": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "closed": "Closed",
+      "cancelled": "Cancelled"
+    },
+    "kpi": {
+      "punchesOpen": "Open Punch List",
+      "punchesOpenSub": "Cat A: {catA} · Cat B: {catB}",
+      "preservation": "Preservation — next 7 days",
+      "preservationOverdue": "{overdue} overdue · {upcoming} upcoming",
+      "preservationUpcoming": "{upcoming} upcoming"
+    },
+    "projects": {
+      "title": "Active Projects",
+      "newProject": "+ New Project",
+      "empty": "No projects yet",
+      "emptyDesc": "Create your first project to start managing completion",
+      "noMeta": "No client / location",
+      "active": "Active"
+    },
+    "disciplines": "Project Disciplines",
+    "inspector": {
+      "pillItrs": "Pending ITRs",
+      "pillPunches": "Assigned Punches",
+      "pillProgress": "In progress",
+      "myItrs": "My assigned ITRs",
+      "myItrsEmpty": "You have no pending ITRs.",
+      "myPunches": "My assigned Punches",
+      "myPunchesEmpty": "You have no assigned punches.",
+      "executor": "Executor",
+      "supervisor": "Supervisor",
+      "roleClient": "Client",
+      "scheduled": "Scheduled: {date}",
+      "schedOverdue": "⚠ Scheduled: {date}"
+    },
+    "clientView": {
+      "pillProjects": "Active projects",
+      "pillSignatures": "Pending your signature",
+      "signaturesTitle": "Pending your signature",
+      "signaturesDesc": "{count, plural, one {# completed ITR awaits your Client signature} other {# completed ITRs await your Client signature}}",
+      "sign": "Sign →",
+      "projectsTitle": "Active projects",
+      "noProjects": "No active projects.",
+      "viewItrs": "Go to <link>ITRs</link> to see the detailed status of each inspection."
+    },
+    "architect": {
+      "catATitle": "Unassigned Cat A Punches",
+      "catADesc": "{count, plural, one {# blocking punch with no assignee} other {# blocking punches with no assignee}}",
+      "catAViewAll": "View all →",
+      "catAMore": "+ {count} more"
+    }
+  },
+  "Common": {
+    "prevPage": "← Previous",
+    "nextPage": "Next →",
+    "page": "Page {page} of {total}",
+    "allProjects": "All projects",
+    "clearFilters": "Clear filters",
+    "exportCsv": "↓ CSV",
+    "allOrg": "All organization projects",
+    "deselectAll": "Deselect all",
+    "choose": "— choose —",
+    "changeStatusTo": "Change status to:",
+    "apply": "Apply",
+    "applying": "Applying…"
+  },
+  "ItrList": {
+    "title": "ITRs",
+    "itrStatus": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "filters": {
+      "search": "Search ITR, tag, template, project...",
+      "allPhases": "All phases",
+      "allDisciplines": "All disciplines",
+      "count": "{filtered} of {total} ITRs",
+      "selectAll": "Select {count} ITRs"
+    },
+    "bulk": {
+      "selected": "{count, plural, one {# ITR selected} other {# ITRs selected}}"
+    },
+    "table": {
+      "colProject": "Project",
+      "colItr": "ITR / Tag",
+      "colTemplate": "Template",
+      "colInspector": "Inspector",
+      "colDate": "Date",
+      "colProgress": "Progress",
+      "colStatus": "Status",
+      "colSignature": "Sign."
+    },
+    "empty": "No ITRs match the current filters.",
+    "exportHeaders": {
+      "project": "Project",
+      "itr": "ITR",
+      "tag": "Tag",
+      "tagDesc": "Tag Description",
+      "template": "Template",
+      "phase": "Phase",
+      "discipline": "Discipline",
+      "inspector": "Inspector",
+      "scheduledDate": "Scheduled Date",
+      "progress": "Progress %",
+      "status": "Status",
+      "signE": "Sign.E",
+      "signS": "Sign.S",
+      "signC": "Sign.C"
+    }
+  },
+  "PunchList": {
+    "title": "Punch List",
+    "punchStatus": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "closed": "Closed",
+      "cancelled": "Cancelled"
+    },
+    "summary": {
+      "catAOpen": "Cat A open",
+      "catBOpen": "Cat B open",
+      "catCOpen": "Cat C open",
+      "closed": "Closed"
+    },
+    "filters": {
+      "search": "Search punch, tag, description...",
+      "allStatuses": "All statuses",
+      "allDisciplines": "All disciplines",
+      "count": "{filtered} of {total} punches",
+      "selectAll": "Select {count} punches"
+    },
+    "bulk": {
+      "selected": "{count, plural, one {# punch selected} other {# punches selected}}"
+    },
+    "table": {
+      "colProject": "Project",
+      "colCat": "Cat",
+      "colPunch": "Punch / Tag",
+      "colDesc": "Description",
+      "colAssigned": "Assigned to",
+      "colDue": "Due date",
+      "colStatus": "Status"
+    },
+    "overdue": "Overdue",
+    "empty": "No punches match the current filters.",
+    "exportHeaders": {
+      "project": "Project",
+      "punch": "Punch No.",
+      "category": "Category",
+      "description": "Description",
+      "tag": "Tag",
+      "discipline": "Discipline",
+      "subsystem": "Subsystem",
+      "raisedBy": "Raised by",
+      "assignedTo": "Assigned to",
+      "targetDate": "Due date",
+      "status": "Status",
+      "priority": "Priority"
+    }
+  },
+  "Preservation": {
+    "title": "Preservation",
+    "planStatus": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "completed": "Completed"
+    },
+    "freq": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "biweekly": "Biweekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly"
+    },
+    "due": {
+      "overdue": "Overdue by {days}d",
+      "soon": "Due in {days}d"
+    },
+    "summary": {
+      "overdue": "Overdue",
+      "dueSoon": "Due this week",
+      "active": "Active plans"
+    },
+    "filters": {
+      "search": "Search tag, procedure, project...",
+      "allStatuses": "All statuses",
+      "count": "{filtered} of {total} plans"
+    },
+    "table": {
+      "colProject": "Project",
+      "colTag": "Tag",
+      "colProcedure": "Procedure",
+      "colFreq": "Frequency",
+      "colNextDue": "Next due",
+      "colLastRecord": "Last record",
+      "colStatus": "Status"
+    },
+    "empty": "No preservation plans match the current filters."
   }
 }
