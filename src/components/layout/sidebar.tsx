@@ -1,39 +1,42 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import LocaleSwitcher from '@/components/LocaleSwitcher'
 
 const navItems = [
   {
-    group: 'Principal',
+    groupKey: 'main',
     items: [
-      { href: '/dashboard', label: 'Dashboard', icon: '◈' },
-      { href: '/projects', label: 'Proyectos', icon: '⬡' },
+      { href: '/dashboard', labelKey: 'dashboard', icon: '◈' },
+      { href: '/projects', labelKey: 'projects', icon: '⬡' },
     ],
   },
   {
-    group: 'Ejecución',
+    groupKey: 'execution',
     items: [
-      { href: '/itrs', label: 'ITRs', icon: '✓' },
-      { href: '/punch-list', label: 'Punch List', icon: '⚑' },
-      { href: '/preservation', label: 'Preservación', icon: '◉' },
-      { href: '/work-plans', label: 'Planes de Trabajo', icon: '▦' },
+      { href: '/itrs', labelKey: 'itrs', icon: '✓' },
+      { href: '/punch-list', labelKey: 'punchList', icon: '⚑' },
+      { href: '/preservation', labelKey: 'preservation', icon: '◉' },
+      { href: '/work-plans', labelKey: 'workPlans', icon: '▦' },
     ],
   },
   {
-    group: 'Control',
+    groupKey: 'control',
     items: [
-      { href: '/certificates', label: 'Certificados', icon: '◎' },
-      { href: '/kpis', label: 'KPIs', icon: '▲' },
+      { href: '/certificates', labelKey: 'certificates', icon: '◎' },
+      { href: '/kpis', labelKey: 'kpis', icon: '▲' },
     ],
   },
   {
-    group: 'Administración',
+    groupKey: 'admin',
     items: [
-      { href: '/admin/templates', label: 'Templates ITR', icon: '▤' },
-      { href: '/admin/templates/preservation', label: 'Templates Preserv.', icon: '◉' },
-      { href: '/admin/users', label: 'Usuarios', icon: '◯' },
-      { href: '/admin/config', label: 'Configuración', icon: '⚙' },
+      { href: '/admin/templates', labelKey: 'itrTemplates', icon: '▤' },
+      { href: '/admin/templates/preservation', labelKey: 'preservationTemplates', icon: '◉' },
+      { href: '/admin/templates/pssr', labelKey: 'pssrTemplates', icon: '🛡' },
+      { href: '/admin/users', labelKey: 'users', icon: '◯' },
+      { href: '/admin/config', labelKey: 'config', icon: '⚙' },
     ],
   },
 ]
@@ -46,6 +49,7 @@ interface NotifCounts {
 export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) {
   const pathname = usePathname()
   const router = useRouter()
+  const t = useTranslations('Sidebar')
 
   const projectMatch = pathname.match(/\/projects\/([^/]+)/)
   const currentProjectId = projectMatch ? projectMatch[1] : null
@@ -82,7 +86,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
           </div>
           <div>
             <div style={{ color: 'white', fontWeight: 700, fontSize: '16px', letterSpacing: '-0.3px' }}>CommUp</div>
-            <div style={{ color: '#475569', fontSize: '11px' }}>CMS Platform</div>
+            <div style={{ color: '#475569', fontSize: '11px' }}>{t('platform')}</div>
           </div>
         </div>
       </div>
@@ -97,10 +101,11 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
               fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em',
               color: '#334155', textTransform: 'uppercase',
             }}>
-              Proyecto
+              {t('groups.project')}
             </div>
             {[
-              { href: `/projects/${currentProjectId}/explorer`, label: 'Explorador', icon: '◧' },
+              { href: `/projects/${currentProjectId}/explorer`, labelKey: 'explorer', icon: '◧' },
+              { href: `/projects/${currentProjectId}/pssr`, labelKey: 'pssr', icon: '🛡' },
             ].map(item => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
@@ -131,7 +136,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
                   }}
                 >
                   <span style={{ fontSize: '16px', opacity: 0.8 }}>{item.icon}</span>
-                  {item.label}
+                  {t(`nav.${item.labelKey}`)}
                 </a>
               )
             })}
@@ -139,13 +144,13 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
         )}
 
         {navItems.map(group => (
-          <div key={group.group} style={{ marginBottom: '4px' }}>
+          <div key={group.groupKey} style={{ marginBottom: '4px' }}>
             <div style={{
               padding: '8px 20px 4px',
               fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em',
               color: '#334155', textTransform: 'uppercase',
             }}>
-              {group.group}
+              {t(`groups.${group.groupKey}`)}
             </div>
             {group.items.map(item => {
               const disabled = 'disabled' in item && item.disabled
@@ -158,7 +163,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
                 return (
                   <div
                     key={item.href}
-                    title="Próximamente"
+                    title={t('comingSoon')}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '10px',
                       padding: '9px 20px', margin: '1px 8px',
@@ -168,12 +173,12 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
                     }}
                   >
                     <span style={{ fontSize: '16px', opacity: 0.4 }}>{item.icon}</span>
-                    <span style={{ opacity: 0.45 }}>{item.label}</span>
+                    <span style={{ opacity: 0.45 }}>{t(`nav.${item.labelKey}`)}</span>
                     <span style={{
                       marginLeft: 'auto', fontSize: '9px', fontWeight: 600,
                       color: '#475569', background: 'rgba(255,255,255,0.06)',
                       padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.04em',
-                    }}>SOON</span>
+                    }}>{t('soon')}</span>
                   </div>
                 )
               }
@@ -205,7 +210,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
                   }}
                 >
                   <span style={{ fontSize: '16px', opacity: 0.8 }}>{item.icon}</span>
-                  {item.label}
+                  {t(`nav.${item.labelKey}`)}
                   {badge > 0 && (
                     <span style={{
                       marginLeft: 'auto', background: '#ef4444', color: 'white',
@@ -223,11 +228,15 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
         ))}
       </nav>
 
-      {/* User / Logout */}
+      {/* Footer: locale switcher + logout */}
       <div style={{
-        padding: '16px 20px',
+        padding: '12px 20px 16px',
         borderTop: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', flexDirection: 'column', gap: '10px',
       }}>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <LocaleSwitcher variant="dark" />
+        </div>
         <button
           onClick={handleLogout}
           style={{
@@ -240,7 +249,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
         >
-          Cerrar sesión
+          {t('logout')}
         </button>
       </div>
     </aside>

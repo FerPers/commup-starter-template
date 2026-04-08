@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 
 export const metadata: Metadata = {
   title: 'CommUp — Completion Management System',
@@ -13,15 +15,20 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
-    <html lang="es">
+    <html lang={locale}>
       <head>
         <meta name="theme-color" content="#7c3aed" />
         <link rel="apple-touch-icon" href="/icons/icon.svg" />
       </head>
       <body>
-        {children}
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         <ServiceWorkerRegistration />
       </body>
     </html>

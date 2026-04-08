@@ -496,6 +496,78 @@ export interface KpiSnapshot {
   snapshot_date: string
 }
 
+// ── Module 11: PSSR ─────────────────────────────────────────
+
+export type PssrReviewStatus = 'draft' | 'in_progress' | 'pending_approval' | 'approved' | 'rejected'
+export type PssrItemStatus   = 'pending' | 'si' | 'no' | 'na'
+
+export interface PssrTemplate {
+  id: string
+  org_id: string
+  name: string
+  description: string | null
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PssrTemplateItem {
+  id: string
+  template_id: string
+  item_order: number
+  category: string
+  element: string
+  requirement: string
+  notes_hint: string | null
+  is_required: boolean
+  created_at: string
+}
+
+export interface PssrReview {
+  id: string
+  org_id: string
+  project_id: string
+  system_id: string
+  template_id: string | null
+  review_number: string
+  title: string
+  status: PssrReviewStatus
+  rfsu_certificate_id: string | null
+  notes: string | null
+  created_by: string | null
+  approved_by: string | null
+  approved_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PssrReviewItem {
+  id: string
+  review_id: string
+  template_item_id: string | null
+  item_order: number
+  category: string
+  element: string
+  requirement: string
+  notes_hint: string | null
+  status: PssrItemStatus
+  responsible: string | null
+  actions: string | null
+  completion_date: string | null
+  updated_by: string | null
+  updated_at: string
+}
+
+export interface PssrSignature {
+  id: string
+  review_id: string
+  user_id: string
+  discipline: string | null
+  signature_data: string
+  signed_at: string
+}
+
 // ── Joined / View Types ──────────────────────────────────────
 
 export interface TagWithRelations extends Tag {

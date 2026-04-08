@@ -1,0 +1,48 @@
+{
+  "Login": {
+    "title": "CommUp",
+    "subtitle": "Completion Management System",
+    "heading": "Sign in",
+    "description": "Access your commissioning project",
+    "email": "Email address",
+    "emailPlaceholder": "you@company.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "error": "Invalid credentials. Check your email and password.",
+    "loading": "Signing in...",
+    "submit": "Sign in to project",
+    "footer": "CommUp v1.0 · Industrial Commissioning Platform"
+  },
+  "Sidebar": {
+    "groups": {
+      "main": "Main",
+      "execution": "Execution",
+      "control": "Control",
+      "admin": "Administration",
+      "project": "Project"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "projects": "Projects",
+      "itrs": "ITRs",
+      "punchList": "Punch List",
+      "preservation": "Preservation",
+      "workPlans": "Work Plans",
+      "certificates": "Certificates",
+      "kpis": "KPIs",
+      "itrTemplates": "ITR Templates",
+      "preservationTemplates": "Preserv. Templates",
+      "pssrTemplates": "PSSR Templates",
+      "users": "Users",
+      "config": "Configuration",
+      "explorer": "Explorer",
+      "pssr": "PSSR"
+    },
+    "soon": "SOON",
+    "comingSoon": "Coming soon",
+    "logout": "Sign out",
+    "platform": "CMS Platform"
+  }
+}

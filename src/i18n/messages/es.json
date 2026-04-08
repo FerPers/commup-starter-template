@@ -1,0 +1,48 @@
+{
+  "Login": {
+    "title": "CommUp",
+    "subtitle": "Completion Management System",
+    "heading": "Iniciar sesión",
+    "description": "Accede a tu proyecto de completamiento",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "tu@empresa.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "error": "Credenciales incorrectas. Verifica tu email y contraseña.",
+    "loading": "Ingresando...",
+    "submit": "Ingresar al proyecto",
+    "footer": "CommUp v1.0 · Industrial Commissioning Platform"
+  },
+  "Sidebar": {
+    "groups": {
+      "main": "Principal",
+      "execution": "Ejecución",
+      "control": "Control",
+      "admin": "Administración",
+      "project": "Proyecto"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "projects": "Proyectos",
+      "itrs": "ITRs",
+      "punchList": "Punch List",
+      "preservation": "Preservación",
+      "workPlans": "Planes de Trabajo",
+      "certificates": "Certificados",
+      "kpis": "KPIs",
+      "itrTemplates": "Templates ITR",
+      "preservationTemplates": "Templates Preserv.",
+      "pssrTemplates": "Templates PSSR",
+      "users": "Usuarios",
+      "config": "Configuración",
+      "explorer": "Explorador",
+      "pssr": "PSSR"
+    },
+    "soon": "SOON",
+    "comingSoon": "Próximamente",
+    "logout": "Cerrar sesión",
+    "platform": "CMS Platform"
+  }
+}

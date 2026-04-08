@@ -4,6 +4,19 @@
 -- Pegar en Supabase SQL Editor y ejecutar
 -- ============================================================
 
+-- ── PASO 0: Borrar TODAS las policies existentes (pizarra limpia) ────
+DO $$
+DECLARE r RECORD;
+BEGIN
+  FOR r IN
+    SELECT policyname, tablename
+    FROM pg_policies
+    WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', r.policyname, r.tablename);
+  END LOOP;
+END $$;
+
 -- ── NOTA IMPORTANTE ─────────────────────────────────────────
 -- Las policies existentes de tablas ya procesadas (projects, tags, itrs,
 -- punches) se limpian y re-crean aquí para tener un estado canónico.
@@ -71,7 +84,7 @@ CREATE POLICY "org_members_select" ON org_members
 
 CREATE POLICY "org_members_insert" ON org_members
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM org_members WHERE user_id = auth.uid() AND org_id = NEW.org_id AND role IN ('owner','admin'))
+    EXISTS (SELECT 1 FROM org_members WHERE user_id = auth.uid() AND org_id = org_id AND role IN ('owner','admin'))
   );
 
 CREATE POLICY "org_members_update" ON org_members
@@ -134,7 +147,7 @@ CREATE POLICY "projects_select" ON projects
 
 CREATE POLICY "projects_insert" ON projects
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM org_members WHERE user_id = auth.uid() AND org_id = NEW.org_id AND role IN ('owner','admin','architect'))
+    EXISTS (SELECT 1 FROM org_members WHERE user_id = auth.uid() AND org_id = org_id AND role IN ('owner','admin','architect'))
   );
 
 CREATE POLICY "projects_update" ON projects
@@ -286,7 +299,7 @@ CREATE POLICY "preservation_records_select" ON preservation_records
 -- Cualquier miembro puede registrar (inspectors también)
 CREATE POLICY "preservation_records_insert" ON preservation_records
   FOR INSERT WITH CHECK (is_project_member(
-    (SELECT project_id FROM preservation_plans WHERE id = NEW.plan_id)
+    (SELECT project_id FROM preservation_plans WHERE id = plan_id)
   ));
 CREATE POLICY "preservation_records_update" ON preservation_records
   FOR UPDATE USING (is_project_editor(
@@ -309,7 +322,7 @@ CREATE POLICY "preservation_attachments_select" ON preservation_attachments
   );
 CREATE POLICY "preservation_attachments_insert" ON preservation_attachments
   FOR INSERT WITH CHECK (
-    NEW.record_id IN (
+    record_id IN (
       SELECT pr.id FROM preservation_records pr
       JOIN preservation_plans pp ON pp.id = pr.plan_id
       WHERE is_project_member(pp.project_id)
@@ -390,7 +403,7 @@ CREATE POLICY "itr_assignments_select" ON itr_assignments
   );
 CREATE POLICY "itr_assignments_insert" ON itr_assignments
   FOR INSERT WITH CHECK (
-    NEW.itr_id IN (SELECT id FROM itrs WHERE is_project_editor(project_id))
+    itr_id IN (SELECT id FROM itrs WHERE is_project_editor(project_id))
   );
 CREATE POLICY "itr_assignments_update" ON itr_assignments
   FOR UPDATE USING (
@@ -409,7 +422,7 @@ CREATE POLICY "itr_responses_select" ON itr_responses
   );
 CREATE POLICY "itr_responses_insert" ON itr_responses
   FOR INSERT WITH CHECK (
-    NEW.itr_id IN (SELECT id FROM itrs WHERE is_project_member(project_id))
+    itr_id IN (SELECT id FROM itrs WHERE is_project_member(project_id))
   );
 CREATE POLICY "itr_responses_update" ON itr_responses
   FOR UPDATE USING (
@@ -428,7 +441,7 @@ CREATE POLICY "itr_signatures_select" ON itr_signatures
   );
 CREATE POLICY "itr_signatures_insert" ON itr_signatures
   FOR INSERT WITH CHECK (
-    NEW.itr_id IN (SELECT id FROM itrs WHERE is_project_member(project_id))
+    itr_id IN (SELECT id FROM itrs WHERE is_project_member(project_id))
   );
 CREATE POLICY "itr_signatures_delete" ON itr_signatures
   FOR DELETE USING (
@@ -443,7 +456,7 @@ CREATE POLICY "itr_attachments_select" ON itr_attachments
   );
 CREATE POLICY "itr_attachments_insert" ON itr_attachments
   FOR INSERT WITH CHECK (
-    NEW.itr_id IN (SELECT id FROM itrs WHERE is_project_member(project_id))
+    itr_id IN (SELECT id FROM itrs WHERE is_project_member(project_id))
   );
 CREATE POLICY "itr_attachments_delete" ON itr_attachments
   FOR DELETE USING (
@@ -478,7 +491,7 @@ CREATE POLICY "punch_comments_select" ON punch_comments
   );
 CREATE POLICY "punch_comments_insert" ON punch_comments
   FOR INSERT WITH CHECK (
-    NEW.punch_id IN (SELECT id FROM punches WHERE is_project_member(project_id))
+    punch_id IN (SELECT id FROM punches WHERE is_project_member(project_id))
   );
 CREATE POLICY "punch_comments_delete" ON punch_comments
   FOR DELETE USING (user_id = auth.uid());
@@ -491,7 +504,7 @@ CREATE POLICY "punch_attachments_select" ON punch_attachments
   );
 CREATE POLICY "punch_attachments_insert" ON punch_attachments
   FOR INSERT WITH CHECK (
-    NEW.punch_id IN (SELECT id FROM punches WHERE is_project_member(project_id))
+    punch_id IN (SELECT id FROM punches WHERE is_project_member(project_id))
   );
 CREATE POLICY "punch_attachments_delete" ON punch_attachments
   FOR DELETE USING (
@@ -520,7 +533,7 @@ CREATE POLICY "cert_punch_exceptions_select" ON certificate_punch_exceptions
   );
 CREATE POLICY "cert_punch_exceptions_insert" ON certificate_punch_exceptions
   FOR INSERT WITH CHECK (
-    NEW.certificate_id IN (SELECT id FROM certificates WHERE is_project_editor(project_id))
+    certificate_id IN (SELECT id FROM certificates WHERE is_project_editor(project_id))
   );
 CREATE POLICY "cert_punch_exceptions_delete" ON certificate_punch_exceptions
   FOR DELETE USING (
@@ -549,7 +562,7 @@ CREATE POLICY "work_plan_items_select" ON work_plan_items
   );
 CREATE POLICY "work_plan_items_insert" ON work_plan_items
   FOR INSERT WITH CHECK (
-    NEW.work_plan_id IN (SELECT id FROM work_plans WHERE is_project_editor(project_id))
+    work_plan_id IN (SELECT id FROM work_plans WHERE is_project_editor(project_id))
   );
 CREATE POLICY "work_plan_items_update" ON work_plan_items
   FOR UPDATE USING (

@@ -1,0 +1,76 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import PssrListView from './PssrListView'
+
+export default async function PssrListPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id: projectId } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: membership } = await supabase
+    .from('org_members').select('org_id, role').eq('user_id', user.id).limit(1).maybeSingle()
+  if (!membership) redirect('/setup')
+
+  const canEdit = ['owner','admin','architect','leader'].includes(membership.role)
+
+  const [
+    { data: project },
+    { data: systems },
+    { data: reviews },
+    { data: templates },
+  ] = await Promise.all([
+    supabase.from('projects').select('id, name, code').eq('id', projectId).single(),
+    supabase.from('systems').select('id, code, name').eq('project_id', projectId).order('code'),
+    supabase
+      .from('pssr_reviews')
+      .select('id, review_number, title, status, system_id, created_at, approved_at, rfsu_certificate_id, systems(code, name)')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('pssr_templates')
+      .select('id, name')
+      .eq('org_id', membership.org_id)
+      .eq('is_active', true)
+      .order('created_at'),
+  ])
+
+  if (!project) redirect('/projects')
+
+  return (
+    <div style={{ padding: '32px' }}>
+      <div style={{ marginBottom: '28px' }}>
+        <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}>
+          ← {project.name}
+        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+          <div style={{
+            width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
+          }}>🛡️</div>
+          <div>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.4px' }}>
+              Pre-Startup Safety Review
+            </h1>
+            <p style={{ fontSize: '14px', color: '#64748b', margin: '2px 0 0' }}>
+              Revisión de seguridad previa al arranque — {project.name}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <PssrListView
+        projectId={projectId}
+        systems={(systems ?? []) as any[]}
+        reviews={(reviews ?? []) as any[]}
+        templates={(templates ?? []) as any[]}
+        canEdit={canEdit}
+      />
+    </div>
+  )
+}
