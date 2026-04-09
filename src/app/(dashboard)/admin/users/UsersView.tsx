@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { inviteUser, updateMemberRole, removeMember } from '@/app/actions/users'
 
 type Member = {
@@ -15,23 +16,23 @@ type Member = {
 
 const ALL_ROLES = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client']
 
-const ROLE_META: Record<string, { label: string; color: string; bg: string }> = {
-  owner:     { label: 'Owner',      color: '#7c3aed', bg: '#f5f3ff' },
-  admin:     { label: 'Admin',      color: '#2563eb', bg: '#eff6ff' },
-  architect: { label: 'Architect',  color: '#0891b2', bg: '#ecfeff' },
-  leader:    { label: 'Leader',     color: '#059669', bg: '#ecfdf5' },
-  inspector: { label: 'Inspector',  color: '#d97706', bg: '#fffbeb' },
-  client:    { label: 'Client',     color: '#64748b', bg: '#f8fafc' },
+const ROLE_COLORS: Record<string, { color: string; bg: string }> = {
+  owner:     { color: '#7c3aed', bg: '#f5f3ff' },
+  admin:     { color: '#2563eb', bg: '#eff6ff' },
+  architect: { color: '#0891b2', bg: '#ecfeff' },
+  leader:    { color: '#059669', bg: '#ecfdf5' },
+  inspector: { color: '#d97706', bg: '#fffbeb' },
+  client:    { color: '#64748b', bg: '#f8fafc' },
 }
 
-function RoleBadge({ role }: { role: string }) {
-  const m = ROLE_META[role] ?? { label: role, color: '#64748b', bg: '#f8fafc' }
+function RoleBadge({ role, label }: { role: string; label: string }) {
+  const m = ROLE_COLORS[role] ?? { color: '#64748b', bg: '#f8fafc' }
   return (
     <span style={{
       padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
       background: m.bg, color: m.color, border: `1px solid ${m.color}30`,
     }}>
-      {m.label}
+      {label}
     </span>
   )
 }
@@ -60,6 +61,7 @@ export default function UsersView({
   currentUserId: string
   currentRole: string
 }) {
+  const t = useTranslations('Users')
   const [isPending, startTransition] = useTransition()
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('inspector')
@@ -69,6 +71,24 @@ export default function UsersView({
   const [tempPassword, setTempPassword] = useState<{ email: string; password: string } | null>(null)
 
   const isAdmin = ['owner', 'admin'].includes(currentRole)
+
+  const roleLabels: Record<string, string> = {
+    owner:     t('roles.owner'),
+    admin:     t('roles.admin'),
+    architect: t('roles.architect'),
+    leader:    t('roles.leader'),
+    inspector: t('roles.inspector'),
+    client:    t('roles.client'),
+  }
+
+  const roleDesc: Record<string, string> = {
+    owner:     t('roleDesc.owner'),
+    admin:     t('roleDesc.admin'),
+    architect: t('roleDesc.architect'),
+    leader:    t('roleDesc.leader'),
+    inspector: t('roleDesc.inspector'),
+    client:    t('roleDesc.client'),
+  }
 
   function notify(msg: string) {
     setSuccess(msg)
@@ -87,7 +107,7 @@ export default function UsersView({
       if (res.tempPassword) {
         setTempPassword({ email, password: res.tempPassword })
       } else {
-        notify('Invitación enviada por email')
+        notify(t('invite.successEmail'))
       }
     })
   }
@@ -101,7 +121,7 @@ export default function UsersView({
   }
 
   async function handleRemove(memberId: string, name: string) {
-    if (!confirm(`¿Remover a ${name} de la organización?`)) return
+    if (!confirm(t('confirmRemove', { name }))) return
     setError(null)
     startTransition(async () => {
       const res = await removeMember({ memberId })
@@ -116,10 +136,10 @@ export default function UsersView({
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
-            Usuarios
+            {t('title')}
           </h1>
           <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
-            {members.length} miembro{members.length !== 1 ? 's' : ''} en la organización
+            {t('subtitle', { count: members.length })}
           </p>
         </div>
         {isAdmin && (
@@ -131,7 +151,7 @@ export default function UsersView({
               cursor: 'pointer',
             }}
           >
-            + Invitar usuario
+            {t('inviteBtn')}
           </button>
         )}
       </div>
@@ -148,7 +168,7 @@ export default function UsersView({
         </div>
       )}
 
-      {/* Temp password box (email provider not configured) */}
+      {/* Temp password box */}
       {tempPassword && (
         <div style={{
           marginBottom: '16px', padding: '16px 20px', background: '#fffbeb',
@@ -157,7 +177,7 @@ export default function UsersView({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
             <div>
               <p style={{ margin: '0 0 6px', fontSize: '13px', fontWeight: 600, color: '#92400e' }}>
-                Usuario creado — comparte estas credenciales manualmente
+                {t('tempPassword.title')}
               </p>
               <p style={{ margin: '0 0 4px', fontSize: '13px', color: '#78350f' }}>
                 Email: <strong>{tempPassword.email}</strong>
@@ -166,7 +186,7 @@ export default function UsersView({
                 Contraseña temporal: <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{tempPassword.password}</strong>
               </p>
               <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#a16207' }}>
-                El usuario puede cambiar su contraseña desde su perfil después de ingresar.
+                {t('tempPassword.hint')}
               </p>
             </div>
             <button
@@ -186,18 +206,18 @@ export default function UsersView({
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
         }}>
           <p style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px' }}>
-            Invitar nuevo usuario
+            {t('invite.title')}
           </p>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 260px' }}>
               <label style={{ fontSize: '12px', fontWeight: 500, color: '#64748b', display: 'block', marginBottom: '6px' }}>
-                Email
+                {t('invite.email')}
               </label>
               <input
                 type="email"
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
-                placeholder="usuario@empresa.com"
+                placeholder={t('invite.emailPh')}
                 onKeyDown={e => e.key === 'Enter' && handleInvite()}
                 style={{
                   width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0',
@@ -208,7 +228,7 @@ export default function UsersView({
             </div>
             <div style={{ flex: '0 1 160px' }}>
               <label style={{ fontSize: '12px', fontWeight: 500, color: '#64748b', display: 'block', marginBottom: '6px' }}>
-                Rol
+                {t('invite.role')}
               </label>
               <select
                 value={inviteRole}
@@ -220,7 +240,7 @@ export default function UsersView({
                 }}
               >
                 {ALL_ROLES.filter(r => r !== 'owner').map(r => (
-                  <option key={r} value={r}>{ROLE_META[r]?.label ?? r}</option>
+                  <option key={r} value={r}>{roleLabels[r] ?? r}</option>
                 ))}
               </select>
             </div>
@@ -234,7 +254,7 @@ export default function UsersView({
                   cursor: isPending ? 'wait' : 'pointer', opacity: (!inviteEmail.trim() || isPending) ? 0.6 : 1,
                 }}
               >
-                {isPending ? 'Enviando…' : 'Enviar invitación'}
+                {isPending ? t('invite.sending') : t('invite.send')}
               </button>
               <button
                 onClick={() => { setShowInvite(false); setError(null) }}
@@ -243,7 +263,7 @@ export default function UsersView({
                   borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer',
                 }}
               >
-                Cancelar
+                {t('invite.cancel')}
               </button>
             </div>
           </div>
@@ -260,8 +280,8 @@ export default function UsersView({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                {['Usuario', 'Email', 'Rol', 'Miembro desde', ''].map(h => (
-                  <th key={h} style={{
+                {[t('table.colUser'), t('table.colEmail'), t('table.colRole'), t('table.colSince'), ''].map((h, i) => (
+                  <th key={i} style={{
                     padding: '12px 20px', textAlign: 'left',
                     fontSize: '11px', fontWeight: 600, color: '#94a3b8',
                     textTransform: 'uppercase', letterSpacing: '0.06em',
@@ -273,7 +293,7 @@ export default function UsersView({
             </thead>
             <tbody>
               {members.map((m, i) => {
-                const isSelf = m.userId === currentUserId
+                const isSelf  = m.userId === currentUserId
                 const isOwner = m.role === 'owner'
                 const canEdit = isAdmin && (!isOwner || currentRole === 'owner')
                 return (
@@ -289,7 +309,7 @@ export default function UsersView({
                             {m.fullName}
                             {isSelf && (
                               <span style={{ marginLeft: '8px', fontSize: '11px', color: '#94a3b8', fontWeight: 400 }}>
-                                (tú)
+                                {t('table.self')}
                               </span>
                             )}
                           </div>
@@ -308,17 +328,17 @@ export default function UsersView({
                           style={{
                             padding: '4px 8px', border: '1px solid #e2e8f0',
                             borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                            color: ROLE_META[m.role]?.color ?? '#64748b',
-                            background: ROLE_META[m.role]?.bg ?? '#f8fafc',
+                            color: ROLE_COLORS[m.role]?.color ?? '#64748b',
+                            background: ROLE_COLORS[m.role]?.bg ?? '#f8fafc',
                             cursor: 'pointer',
                           }}
                         >
                           {ALL_ROLES.map(r => (
-                            <option key={r} value={r}>{ROLE_META[r]?.label ?? r}</option>
+                            <option key={r} value={r}>{roleLabels[r] ?? r}</option>
                           ))}
                         </select>
                       ) : (
-                        <RoleBadge role={m.role} />
+                        <RoleBadge role={m.role} label={roleLabels[m.role] ?? m.role} />
                       )}
                     </td>
                     <td style={{ padding: '14px 20px', fontSize: '13px', color: '#94a3b8' }}>
@@ -335,7 +355,7 @@ export default function UsersView({
                             fontSize: '12px', color: '#ef4444', cursor: 'pointer',
                           }}
                         >
-                          Remover
+                          {t('table.remove')}
                         </button>
                       )}
                     </td>
@@ -350,20 +370,13 @@ export default function UsersView({
       {/* Role legend */}
       <div style={{ marginTop: '20px', padding: '16px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
         <p style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
-          Referencia de roles
+          {t('legend')}
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-          {[
-            { role: 'owner',     desc: 'Control total, billing' },
-            { role: 'admin',     desc: 'Gestión usuarios y config' },
-            { role: 'architect', desc: 'Templates, jerarquía, asignar ITRs' },
-            { role: 'leader',    desc: 'Asignar ITRs, cerrar punches' },
-            { role: 'inspector', desc: 'Ejecutar ITRs, crear punches' },
-            { role: 'client',    desc: 'Solo lectura + firma cliente' },
-          ].map(({ role, desc }) => (
+          {ALL_ROLES.map(role => (
             <div key={role} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <RoleBadge role={role} />
-              <span style={{ fontSize: '12px', color: '#64748b' }}>{desc}</span>
+              <RoleBadge role={role} label={roleLabels[role] ?? role} />
+              <span style={{ fontSize: '12px', color: '#64748b' }}>{roleDesc[role]}</span>
             </div>
           ))}
         </div>

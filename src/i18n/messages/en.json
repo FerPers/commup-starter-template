@@ -258,5 +258,233 @@
       "colStatus": "Status"
     },
     "empty": "No preservation plans match the current filters."
+  },
+  "Certificates": {
+    "title": "Certificates",
+    "subtitle": "All organization projects",
+    "status": {
+      "pending": "Pending",
+      "in_review": "In review",
+      "issued": "Issued",
+      "rejected": "Rejected"
+    },
+    "summary": {
+      "issued": "Issued",
+      "in_review": "In review",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    },
+    "filters": {
+      "search": "Search number, subsystem, project...",
+      "allProjects": "All projects",
+      "allPhases": "All phases",
+      "count": "{filtered} of {total} certificates"
+    },
+    "table": {
+      "colProject": "Project",
+      "colNumber": "Cert. No.",
+      "colTitle": "Title",
+      "colSubsystem": "Subsystem",
+      "colPhase": "Phase",
+      "colIssued": "Issued date",
+      "colStatus": "Status"
+    },
+    "empty": "No certificates match the current filters."
+  },
+  "WorkPlans": {
+    "title": "Work Plans",
+    "subtitle": "All organization projects",
+    "newPlan": "+ New plan",
+    "planStatus": {
+      "draft": "Draft",
+      "published": "Published",
+      "in_progress": "In progress",
+      "completed": "Completed"
+    },
+    "itemStatus": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "on_hold": "On hold"
+    },
+    "filters": {
+      "allProjects": "All projects",
+      "allDisciplines": "All disciplines",
+      "count": "{filtered} of {total} plans"
+    },
+    "table": {
+      "colProject": "Project",
+      "colDate": "Date",
+      "colDiscipline": "Discipline",
+      "colLeader": "Leader",
+      "colItems": "Items",
+      "colStatus": "Status"
+    },
+    "items": {
+      "colItr": "ITR",
+      "colTag": "Tag / Template",
+      "colAssigned": "Assigned to",
+      "colStatus": "Status",
+      "emptyCanAdd": "No items. Use the + button to add ITRs.",
+      "empty": "No items."
+    },
+    "emptyNoPlans": "No work plans yet. Create the first one.",
+    "emptyNoMatch": "No plans match the current filters.",
+    "createModal": {
+      "title": "New Work Plan",
+      "project": "Project *",
+      "projectPh": "Select project...",
+      "discipline": "Discipline *",
+      "disciplinePh": "Select discipline...",
+      "date": "Plan date *",
+      "notes": "Notes",
+      "notesOpt": "(optional)",
+      "notesPh": "Plan observations...",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "create": "Create plan →"
+    },
+    "addItemModal": {
+      "title": "Add ITR to plan",
+      "itr": "ITR *",
+      "itrPh": "Select ITR...",
+      "itrLoading": "Loading project ITRs...",
+      "assigned": "Assigned to *",
+      "assignedPh": "Select person...",
+      "cancel": "Cancel",
+      "adding": "Adding...",
+      "add": "Add →"
+    },
+    "confirmRemoveItem": "Remove this ITR from the plan?",
+    "confirmDeletePlan": "Delete this work plan and all its items?"
+  },
+  "Kpis": {
+    "title": "KPIs",
+    "subtitle": "Summary of all organization projects",
+    "org": {
+      "globalProgress": "Organization global progress",
+      "approvedItrs": "{approved} / {total} approved ITRs",
+      "catA": "Cat A Punches",
+      "catB": "Cat B Punches",
+      "issuedCerts": "Certificates issued",
+      "activeProjects": "Active projects"
+    },
+    "projectStatus": {
+      "planning": "Planning",
+      "active": "Active",
+      "on_hold": "On hold",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "card": {
+      "itrProgress": "ITR Progress",
+      "totalItrs": "Total ITRs",
+      "approved": "Approved",
+      "catA": "Cat A",
+      "catB": "Cat B",
+      "issuedOf": "{issued} certs issued of {total}",
+      "issuedOnly": "{issued} certs issued",
+      "viewDetail": "View detail →",
+      "noDates": "No dates"
+    },
+    "empty": "No projects in the organization."
+  },
+  "Projects": {
+    "title": "Projects",
+    "subtitle": "{count, plural, one {# project in the organization} other {# projects in the organization}}",
+    "newProject": "+ New Project",
+    "createFirst": "+ Create first project",
+    "empty": {
+      "title": "No projects yet",
+      "desc": "Create your first project to start managing completion"
+    },
+    "active": "Active",
+    "inactive": "Inactive",
+    "card": {
+      "noMeta": "No client / location",
+      "active": "Active",
+      "inactive": "Inactive",
+      "start": "Start",
+      "target": "Target"
+    }
+  },
+  "Users": {
+    "title": "Users",
+    "subtitle": "{count, plural, one {# member in the organization} other {# members in the organization}}",
+    "inviteBtn": "+ Invite user",
+    "invite": {
+      "title": "Invite new user",
+      "email": "Email",
+      "emailPh": "user@company.com",
+      "role": "Role",
+      "send": "Send invitation",
+      "sending": "Sending…",
+      "cancel": "Cancel",
+      "successEmail": "Invitation sent by email"
+    },
+    "tempPassword": {
+      "title": "User created — share these credentials manually",
+      "hint": "The user can change their password from their profile after signing in."
+    },
+    "table": {
+      "colUser": "User",
+      "colEmail": "Email",
+      "colRole": "Role",
+      "colSince": "Member since",
+      "self": "(you)",
+      "remove": "Remove"
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Architect",
+      "leader": "Leader",
+      "inspector": "Inspector",
+      "client": "Client"
+    },
+    "roleDesc": {
+      "owner": "Full control, billing",
+      "admin": "User & config management",
+      "architect": "Templates, hierarchy, assign ITRs",
+      "leader": "Assign ITRs, close punches",
+      "inspector": "Execute ITRs, create punches",
+      "client": "Read-only + client signature"
+    },
+    "legend": "Role reference",
+    "confirmRemove": "Remove {name} from the organization?"
+  },
+  "Config": {
+    "title": "Organization Configuration",
+    "subtitle": "Phases, disciplines and global parameters",
+    "phases": {
+      "title": "Project Phases",
+      "subtitle": "{count} phases configured",
+      "newBtn": "+ New phase",
+      "codePh": "Code (A, B...)",
+      "namePh": "Phase name",
+      "certPh": "Certificate name",
+      "certCol": "Certificate",
+      "save": "Save",
+      "saving": "Saving…",
+      "create": "Create phase",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "empty": "No phases. Add the first one."
+    },
+    "disciplines": {
+      "title": "Disciplines",
+      "subtitle": "{count} disciplines configured",
+      "newBtn": "+ New discipline",
+      "codePh": "Code (MECH, ELEC...)",
+      "namePh": "Name",
+      "save": "Save",
+      "saving": "Saving…",
+      "create": "Create discipline",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "empty": "No disciplines. Add the first one."
+    }
   }
 }

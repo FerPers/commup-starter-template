@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import {
   createWorkPlan,
   updateWorkPlanStatus,
@@ -43,20 +44,20 @@ type WorkPlan = {
   work_plan_items: WpItem[]
 }
 
-// ── Status configs ─────────────────────────────────────────────────
+// ── Status style (colors only — labels come from t()) ─────────────────
 
-const PLAN_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  draft:       { label: 'Borrador',    color: '#64748b', bg: '#f1f5f9' },
-  published:   { label: 'Publicado',   color: '#3b82f6', bg: '#eff6ff' },
-  in_progress: { label: 'En progreso', color: '#f59e0b', bg: '#fffbeb' },
-  completed:   { label: 'Completado',  color: '#10b981', bg: '#ecfdf5' },
+const PLAN_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  draft:       { color: '#64748b', bg: '#f1f5f9' },
+  published:   { color: '#3b82f6', bg: '#eff6ff' },
+  in_progress: { color: '#f59e0b', bg: '#fffbeb' },
+  completed:   { color: '#10b981', bg: '#ecfdf5' },
 }
 
-const ITEM_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  not_started: { label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9' },
-  in_progress: { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
-  completed:   { label: 'Completado',  color: '#10b981', bg: '#ecfdf5' },
-  on_hold:     { label: 'En pausa',    color: '#f59e0b', bg: '#fffbeb' },
+const ITEM_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  not_started: { color: '#64748b', bg: '#f1f5f9' },
+  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
+  completed:   { color: '#10b981', bg: '#ecfdf5' },
+  on_hold:     { color: '#f59e0b', bg: '#fffbeb' },
 }
 
 const PAGE_SIZE = 50
@@ -69,7 +70,7 @@ export default function WorkPlansGlobal({
   orgMembers,
   workPlans,
   canEdit,
-  currentUserId,
+  currentUserId: _currentUserId,
 }: {
   projects: Project[]
   disciplines: Discipline[]
@@ -78,6 +79,8 @@ export default function WorkPlansGlobal({
   canEdit: boolean
   currentUserId: string
 }) {
+  const t  = useTranslations('WorkPlans')
+  const tC = useTranslations('Common')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -109,6 +112,22 @@ export default function WorkPlansGlobal({
 
   // Available ITRs for selected plan
   const [availableItrs, setAvailableItrs]   = useState<Array<{ id: string; itr_number: string; tag_number: string; title: string }>>([])
+
+  // ── Label maps ────────────────────────────────────────────────────
+
+  const planStatusLabels: Record<string, string> = {
+    draft:       t('planStatus.draft'),
+    published:   t('planStatus.published'),
+    in_progress: t('planStatus.in_progress'),
+    completed:   t('planStatus.completed'),
+  }
+
+  const itemStatusLabels: Record<string, string> = {
+    not_started: t('itemStatus.not_started'),
+    in_progress: t('itemStatus.in_progress'),
+    completed:   t('itemStatus.completed'),
+    on_hold:     t('itemStatus.on_hold'),
+  }
 
   // ── Derived ───────────────────────────────────────────────────────
 
@@ -165,7 +184,6 @@ export default function WorkPlansGlobal({
     setAddItemItrId('')
     setAddItemUser('')
     setAddItemError(null)
-    // Fetch ITRs for this project
     const resp = await fetch(`/api/itrs-for-plan?project_id=${plan.project_id}`, { cache: 'no-store' })
       .catch(() => null)
     if (resp?.ok) {
@@ -190,7 +208,7 @@ export default function WorkPlansGlobal({
   }
 
   function handleRemoveItem(itemId: string) {
-    if (!confirm('¿Quitar este ITR del plan?')) return
+    if (!confirm(t('confirmRemoveItem'))) return
     startTransition(async () => {
       await removeWorkPlanItem(itemId)
       router.refresh()
@@ -198,7 +216,7 @@ export default function WorkPlansGlobal({
   }
 
   function handleDeletePlan(planId: string) {
-    if (!confirm('¿Eliminar este plan de trabajo y todos sus ítems?')) return
+    if (!confirm(t('confirmDeletePlan'))) return
     startTransition(async () => {
       await deleteWorkPlan(planId)
       router.refresh()
@@ -222,33 +240,33 @@ export default function WorkPlansGlobal({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Planes de Trabajo</h1>
-          <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>Todos los proyectos de la organización</p>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('title')}</h1>
+          <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{t('subtitle')}</p>
         </div>
         {canEdit && (
           <button
             onClick={() => setShowCreate(true)}
             style={{ padding: '9px 18px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
           >
-            + Nuevo plan
+            {t('newPlan')}
           </button>
         )}
       </div>
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '24px' }}>
-        {Object.entries(PLAN_STATUS).map(([key, cfg]) => (
+        {Object.entries(PLAN_STATUS_STYLE).map(([key, style]) => (
           <div
             key={key}
             onClick={() => { setFilterStatus(filterStatus === key ? '' : key); setPage(1) }}
             style={{
               padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s',
-              background: filterStatus === key ? cfg.bg : 'white',
-              border: `1px solid ${filterStatus === key ? cfg.color + '40' : '#e2e8f0'}`,
+              background: filterStatus === key ? style.bg : 'white',
+              border: `1px solid ${filterStatus === key ? style.color + '40' : '#e2e8f0'}`,
             }}
           >
-            <div style={{ fontSize: '22px', fontWeight: 700, color: cfg.color }}>{counts[key] ?? 0}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{cfg.label}</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: style.color }}>{counts[key] ?? 0}</div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{planStatusLabels[key]}</div>
           </div>
         ))}
       </div>
@@ -260,7 +278,7 @@ export default function WorkPlansGlobal({
           onChange={e => { setFilterProject(e.target.value); setPage(1) }}
           style={selStyle}
         >
-          <option value="">Todos los proyectos</option>
+          <option value="">{t('filters.allProjects')}</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
         </select>
         <select
@@ -268,7 +286,7 @@ export default function WorkPlansGlobal({
           onChange={e => { setFilterDisc(e.target.value); setPage(1) }}
           style={selStyle}
         >
-          <option value="">Todas las disciplinas</option>
+          <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}
         </select>
         <input
@@ -282,11 +300,11 @@ export default function WorkPlansGlobal({
             onClick={() => { setFilterProject(''); setFilterDisc(''); setFilterStatus(''); setFilterDate(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
-            Limpiar filtros
+            {tC('clearFilters')}
           </button>
         )}
         <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
-          {filtered.length} de {workPlans.length} planes
+          {t('filters.count', { filtered: filtered.length, total: workPlans.length })}
         </span>
       </div>
 
@@ -294,9 +312,7 @@ export default function WorkPlansGlobal({
       {paginated.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <p style={{ fontSize: '14px', color: '#94a3b8' }}>
-            {workPlans.length === 0
-              ? 'No hay planes de trabajo. Crea el primero.'
-              : 'No hay planes que coincidan con los filtros.'}
+            {workPlans.length === 0 ? t('emptyNoPlans') : t('emptyNoMatch')}
           </p>
         </div>
       ) : (
@@ -304,18 +320,18 @@ export default function WorkPlansGlobal({
 
           {/* Header row */}
           <div style={{ display: 'grid', gridTemplateColumns: '100px 90px 1fr 1fr 120px 110px 100px 32px', gap: '10px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            <span>Proyecto</span>
-            <span>Fecha</span>
-            <span>Disciplina</span>
-            <span>Líder</span>
-            <span>Ítems</span>
-            <span>Estado</span>
+            <span>{t('table.colProject')}</span>
+            <span>{t('table.colDate')}</span>
+            <span>{t('table.colDiscipline')}</span>
+            <span>{t('table.colLeader')}</span>
+            <span>{t('table.colItems')}</span>
+            <span>{t('table.colStatus')}</span>
             <span></span>
             <span></span>
           </div>
 
           {paginated.map(plan => {
-            const st        = PLAN_STATUS[plan.status] ?? PLAN_STATUS.draft
+            const st        = PLAN_STATUS_STYLE[plan.status] ?? PLAN_STATUS_STYLE.draft
             const disc      = plan.disciplines
             const isExp     = expanded.has(plan.id)
             const doneItems = plan.work_plan_items.filter(i => i.status === 'completed').length
@@ -387,13 +403,13 @@ export default function WorkPlansGlobal({
                         onChange={e => handleStatusChange(plan.id, e.target.value as WorkPlan['status'])}
                         style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: st.color, border: `1px solid ${st.color}30`, fontFamily: 'inherit', cursor: 'pointer' }}
                       >
-                        {Object.entries(PLAN_STATUS).map(([k, v]) => (
-                          <option key={k} value={k}>{v.label}</option>
+                        {Object.entries(PLAN_STATUS_STYLE).map(([k]) => (
+                          <option key={k} value={k}>{planStatusLabels[k]}</option>
                         ))}
                       </select>
                     ) : (
                       <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: st.color }}>
-                        {st.label}
+                        {planStatusLabels[plan.status]}
                       </span>
                     )}
                   </div>
@@ -403,7 +419,6 @@ export default function WorkPlansGlobal({
                     {canEdit && (
                       <button
                         onClick={() => openAddItem(plan)}
-                        title="Agregar ITR"
                         style={{ padding: '4px 8px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '5px', fontSize: '11px', color: '#16a34a', cursor: 'pointer' }}
                       >
                         +
@@ -413,7 +428,6 @@ export default function WorkPlansGlobal({
                       <button
                         onClick={() => handleDeletePlan(plan.id)}
                         disabled={isPending}
-                        title="Eliminar plan"
                         style={{ padding: '4px 8px', background: 'white', border: '1px solid #fecaca', borderRadius: '5px', fontSize: '11px', color: '#ef4444', cursor: 'pointer' }}
                       >
                         ✕
@@ -438,49 +452,40 @@ export default function WorkPlansGlobal({
 
                     {plan.work_plan_items.length === 0 ? (
                       <p style={{ fontSize: '12px', color: '#94a3b8', padding: '12px 0' }}>
-                        Sin ítems. {canEdit && 'Usa el botón + para agregar ITRs.'}
+                        {canEdit ? t('items.emptyCanAdd') : t('items.empty')}
                       </p>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
                         {/* Item header */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 90px 28px', gap: '10px', padding: '4px 10px', fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>
-                          <span>ITR</span>
-                          <span>Tag / Template</span>
-                          <span>Asignado a</span>
-                          <span>Estado</span>
+                          <span>{t('items.colItr')}</span>
+                          <span>{t('items.colTag')}</span>
+                          <span>{t('items.colAssigned')}</span>
+                          <span>{t('items.colStatus')}</span>
                           <span></span>
                         </div>
                         {plan.work_plan_items.map(item => {
-                          const ist = ITEM_STATUS[item.status] ?? ITEM_STATUS.not_started
+                          const ist = ITEM_STATUS_STYLE[item.status] ?? ITEM_STATUS_STYLE.not_started
                           return (
                             <div
                               key={item.id}
                               style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 90px 28px', gap: '10px', padding: '8px 10px', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', alignItems: 'center' }}
                             >
-                              {/* ITR number */}
                               <div style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', fontFamily: 'ui-monospace, monospace' }}>
                                 {item.itrs?.itr_number ?? '—'}
                               </div>
-
-                              {/* Tag + template */}
                               <div>
                                 {item.itrs?.tags && (
                                   <div style={{ fontSize: '11px', fontWeight: 600, color: '#0f172a' }}>{item.itrs.tags.tag_number}</div>
                                 )}
                                 <div style={{ fontSize: '11px', color: '#64748b' }}>{item.itrs?.itr_templates?.title ?? '—'}</div>
                               </div>
-
-                              {/* Assigned */}
                               <div style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {item.assigned?.full_name ?? '—'}
                               </div>
-
-                              {/* Status */}
                               <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: ist.bg, color: ist.color, whiteSpace: 'nowrap' }}>
-                                {ist.label}
+                                {itemStatusLabels[item.status]}
                               </span>
-
-                              {/* Remove */}
                               {canEdit && (
                                 <button
                                   onClick={() => handleRemoveItem(item.id)}
@@ -506,9 +511,9 @@ export default function WorkPlansGlobal({
       {/* Pagination */}
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={pageBtn(page === 1)}>← Anterior</button>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>Página {page} de {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={pageBtn(page === totalPages)}>Siguiente →</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={pageBtn(page === 1)}>{tC('prevPage')}</button>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>{tC('page', { page, total: totalPages })}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={pageBtn(page === totalPages)}>{tC('nextPage')}</button>
         </div>
       )}
 
@@ -520,39 +525,39 @@ export default function WorkPlansGlobal({
         >
           <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Nuevo Plan de Trabajo</h2>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('createModal.title')}</h2>
               <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={labelStyle}>Proyecto *</label>
+                <label style={labelStyle}>{t('createModal.project')}</label>
                 <select value={createProject} onChange={e => setCreateProject(e.target.value)} style={inputStyle}>
-                  <option value="">Seleccionar proyecto...</option>
+                  <option value="">{t('createModal.projectPh')}</option>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
                 </select>
               </div>
 
               <div>
-                <label style={labelStyle}>Disciplina *</label>
+                <label style={labelStyle}>{t('createModal.discipline')}</label>
                 <select value={createDisc} onChange={e => setCreateDisc(e.target.value)} style={inputStyle}>
-                  <option value="">Seleccionar disciplina...</option>
+                  <option value="">{t('createModal.disciplinePh')}</option>
                   {disciplines.map(d => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}
                 </select>
               </div>
 
               <div>
-                <label style={labelStyle}>Fecha del plan *</label>
+                <label style={labelStyle}>{t('createModal.date')}</label>
                 <input type="date" value={createDate} onChange={e => setCreateDate(e.target.value)} style={inputStyle} />
               </div>
 
               <div>
-                <label style={labelStyle}>Notas <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional)</span></label>
+                <label style={labelStyle}>{t('createModal.notes')} <span style={{ fontWeight: 400, color: '#94a3b8' }}>{t('createModal.notesOpt')}</span></label>
                 <textarea
                   value={createNotes}
                   onChange={e => setCreateNotes(e.target.value)}
                   rows={3}
-                  placeholder="Observaciones del plan..."
+                  placeholder={t('createModal.notesPh')}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />
               </div>
@@ -568,14 +573,14 @@ export default function WorkPlansGlobal({
                   onClick={() => setShowCreate(false)}
                   style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
                 >
-                  Cancelar
+                  {t('createModal.cancel')}
                 </button>
                 <button
                   onClick={handleCreate}
                   disabled={!createProject || !createDisc || !createDate || createPending}
                   style={{ padding: '9px 20px', background: !createProject || !createDisc || !createDate || createPending ? '#93c5fd' : '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !createProject || !createDisc || !createDate || createPending ? 'not-allowed' : 'pointer' }}
                 >
-                  {createPending ? 'Creando...' : 'Crear plan →'}
+                  {createPending ? t('createModal.creating') : t('createModal.create')}
                 </button>
               </div>
             </div>
@@ -591,30 +596,30 @@ export default function WorkPlansGlobal({
         >
           <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Agregar ITR al plan</h2>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('addItemModal.title')}</h2>
               <button onClick={() => setAddItemPlanId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={labelStyle}>ITR *</label>
+                <label style={labelStyle}>{t('addItemModal.itr')}</label>
                 <select value={addItemItrId} onChange={e => setAddItemItrId(e.target.value)} style={inputStyle}>
-                  <option value="">Seleccionar ITR...</option>
+                  <option value="">{t('addItemModal.itrPh')}</option>
                   {availableItrs.map(itr => (
                     <option key={itr.id} value={itr.id}>{itr.itr_number} — {itr.tag_number} — {itr.title}</option>
                   ))}
                 </select>
                 {availableItrs.length === 0 && (
                   <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                    Cargando ITRs del proyecto...
+                    {t('addItemModal.itrLoading')}
                   </p>
                 )}
               </div>
 
               <div>
-                <label style={labelStyle}>Asignado a *</label>
+                <label style={labelStyle}>{t('addItemModal.assigned')}</label>
                 <select value={addItemUser} onChange={e => setAddItemUser(e.target.value)} style={inputStyle}>
-                  <option value="">Seleccionar persona...</option>
+                  <option value="">{t('addItemModal.assignedPh')}</option>
                   {orgMembers.map(m => (
                     <option key={m.user_id} value={m.user_id}>
                       {m.profiles?.full_name ?? m.user_id} ({m.role})
@@ -634,14 +639,14 @@ export default function WorkPlansGlobal({
                   onClick={() => setAddItemPlanId(null)}
                   style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
                 >
-                  Cancelar
+                  {t('addItemModal.cancel')}
                 </button>
                 <button
                   onClick={handleAddItem}
                   disabled={!addItemItrId || !addItemUser || addItemPending}
                   style={{ padding: '9px 20px', background: !addItemItrId || !addItemUser || addItemPending ? '#93c5fd' : '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !addItemItrId || !addItemUser || addItemPending ? 'not-allowed' : 'pointer' }}
                 >
-                  {addItemPending ? 'Agregando...' : 'Agregar →'}
+                  {addItemPending ? t('addItemModal.adding') : t('addItemModal.add')}
                 </button>
               </div>
             </div>

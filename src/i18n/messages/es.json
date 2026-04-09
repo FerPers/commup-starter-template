@@ -40,7 +40,7 @@
       "explorer": "Explorador",
       "pssr": "PSSR"
     },
-    "soon": "SOON",
+    "soon": "PRONTO",
     "comingSoon": "Próximamente",
     "logout": "Cerrar sesión",
     "platform": "CMS Platform"
@@ -258,5 +258,233 @@
       "colStatus": "Estado"
     },
     "empty": "No hay planes de preservación que coincidan."
+  },
+  "Certificates": {
+    "title": "Certificados",
+    "subtitle": "Todos los proyectos de la organización",
+    "status": {
+      "pending": "Pendiente",
+      "in_review": "En revisión",
+      "issued": "Emitido",
+      "rejected": "Rechazado"
+    },
+    "summary": {
+      "issued": "Emitidos",
+      "in_review": "En revisión",
+      "pending": "Pendientes",
+      "rejected": "Rechazados"
+    },
+    "filters": {
+      "search": "Buscar número, subsistema, proyecto...",
+      "allProjects": "Todos los proyectos",
+      "allPhases": "Todas las fases",
+      "count": "{filtered} de {total} certificados"
+    },
+    "table": {
+      "colProject": "Proyecto",
+      "colNumber": "N° Certificado",
+      "colTitle": "Título",
+      "colSubsystem": "Subsistema",
+      "colPhase": "Fase",
+      "colIssued": "Fecha emisión",
+      "colStatus": "Estado"
+    },
+    "empty": "No hay certificados que coincidan con los filtros."
+  },
+  "WorkPlans": {
+    "title": "Planes de Trabajo",
+    "subtitle": "Todos los proyectos de la organización",
+    "newPlan": "+ Nuevo plan",
+    "planStatus": {
+      "draft": "Borrador",
+      "published": "Publicado",
+      "in_progress": "En progreso",
+      "completed": "Completado"
+    },
+    "itemStatus": {
+      "not_started": "Sin iniciar",
+      "in_progress": "En progreso",
+      "completed": "Completado",
+      "on_hold": "En pausa"
+    },
+    "filters": {
+      "allProjects": "Todos los proyectos",
+      "allDisciplines": "Todas las disciplinas",
+      "count": "{filtered} de {total} planes"
+    },
+    "table": {
+      "colProject": "Proyecto",
+      "colDate": "Fecha",
+      "colDiscipline": "Disciplina",
+      "colLeader": "Líder",
+      "colItems": "Ítems",
+      "colStatus": "Estado"
+    },
+    "items": {
+      "colItr": "ITR",
+      "colTag": "Tag / Template",
+      "colAssigned": "Asignado a",
+      "colStatus": "Estado",
+      "emptyCanAdd": "Sin ítems. Usa el botón + para agregar ITRs.",
+      "empty": "Sin ítems."
+    },
+    "emptyNoPlans": "No hay planes de trabajo. Crea el primero.",
+    "emptyNoMatch": "No hay planes que coincidan con los filtros.",
+    "createModal": {
+      "title": "Nuevo Plan de Trabajo",
+      "project": "Proyecto *",
+      "projectPh": "Seleccionar proyecto...",
+      "discipline": "Disciplina *",
+      "disciplinePh": "Seleccionar disciplina...",
+      "date": "Fecha del plan *",
+      "notes": "Notas",
+      "notesOpt": "(opcional)",
+      "notesPh": "Observaciones del plan...",
+      "cancel": "Cancelar",
+      "creating": "Creando...",
+      "create": "Crear plan →"
+    },
+    "addItemModal": {
+      "title": "Agregar ITR al plan",
+      "itr": "ITR *",
+      "itrPh": "Seleccionar ITR...",
+      "itrLoading": "Cargando ITRs del proyecto...",
+      "assigned": "Asignado a *",
+      "assignedPh": "Seleccionar persona...",
+      "cancel": "Cancelar",
+      "adding": "Agregando...",
+      "add": "Agregar →"
+    },
+    "confirmRemoveItem": "¿Quitar este ITR del plan?",
+    "confirmDeletePlan": "¿Eliminar este plan de trabajo y todos sus ítems?"
+  },
+  "Kpis": {
+    "title": "KPIs",
+    "subtitle": "Resumen de todos los proyectos de la organización",
+    "org": {
+      "globalProgress": "Avance global organización",
+      "approvedItrs": "{approved} / {total} ITRs aprobados",
+      "catA": "Punches Cat A",
+      "catB": "Punches Cat B",
+      "issuedCerts": "Certificados emitidos",
+      "activeProjects": "Proyectos activos"
+    },
+    "projectStatus": {
+      "planning": "Planificación",
+      "active": "Activo",
+      "on_hold": "En pausa",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    },
+    "card": {
+      "itrProgress": "Avance ITRs",
+      "totalItrs": "Total ITRs",
+      "approved": "Aprobados",
+      "catA": "Cat A",
+      "catB": "Cat B",
+      "issuedOf": "{issued} cert. emitidos de {total}",
+      "issuedOnly": "{issued} cert. emitidos",
+      "viewDetail": "Ver detalle →",
+      "noDates": "Sin fechas"
+    },
+    "empty": "No hay proyectos en la organización."
+  },
+  "Projects": {
+    "title": "Proyectos",
+    "subtitle": "{count, plural, one {# proyecto en la organización} other {# proyectos en la organización}}",
+    "newProject": "+ Nuevo Proyecto",
+    "createFirst": "+ Crear primer proyecto",
+    "empty": {
+      "title": "No hay proyectos todavía",
+      "desc": "Crea tu primer proyecto para comenzar a gestionar el completamiento"
+    },
+    "active": "Activos",
+    "inactive": "Inactivos",
+    "card": {
+      "noMeta": "Sin cliente / ubicación",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "start": "Inicio",
+      "target": "Objetivo"
+    }
+  },
+  "Users": {
+    "title": "Usuarios",
+    "subtitle": "{count, plural, one {# miembro en la organización} other {# miembros en la organización}}",
+    "inviteBtn": "+ Invitar usuario",
+    "invite": {
+      "title": "Invitar nuevo usuario",
+      "email": "Email",
+      "emailPh": "usuario@empresa.com",
+      "role": "Rol",
+      "send": "Enviar invitación",
+      "sending": "Enviando…",
+      "cancel": "Cancelar",
+      "successEmail": "Invitación enviada por email"
+    },
+    "tempPassword": {
+      "title": "Usuario creado — comparte estas credenciales manualmente",
+      "hint": "El usuario puede cambiar su contraseña desde su perfil después de ingresar."
+    },
+    "table": {
+      "colUser": "Usuario",
+      "colEmail": "Email",
+      "colRole": "Rol",
+      "colSince": "Miembro desde",
+      "self": "(tú)",
+      "remove": "Remover"
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Architect",
+      "leader": "Leader",
+      "inspector": "Inspector",
+      "client": "Client"
+    },
+    "roleDesc": {
+      "owner": "Control total, billing",
+      "admin": "Gestión usuarios y config",
+      "architect": "Templates, jerarquía, asignar ITRs",
+      "leader": "Asignar ITRs, cerrar punches",
+      "inspector": "Ejecutar ITRs, crear punches",
+      "client": "Solo lectura + firma cliente"
+    },
+    "legend": "Referencia de roles",
+    "confirmRemove": "¿Remover a {name} de la organización?"
+  },
+  "Config": {
+    "title": "Configuración de Organización",
+    "subtitle": "Fases, disciplinas y parámetros globales",
+    "phases": {
+      "title": "Fases del Proyecto",
+      "subtitle": "{count} fases configuradas",
+      "newBtn": "+ Nueva fase",
+      "codePh": "Código (A, B...)",
+      "namePh": "Nombre de la fase",
+      "certPh": "Nombre del certificado",
+      "certCol": "Certificado",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "create": "Crear fase",
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "empty": "No hay fases. Agrega la primera."
+    },
+    "disciplines": {
+      "title": "Disciplinas",
+      "subtitle": "{count} disciplinas configuradas",
+      "newBtn": "+ Nueva disciplina",
+      "codePh": "Código (MECH, ELEC...)",
+      "namePh": "Nombre",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "create": "Crear disciplina",
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "empty": "No hay disciplinas. Agrega la primera."
+    }
   }
 }

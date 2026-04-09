@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations, useLocale } from 'next-intl'
+
 export interface ProjectCardData {
   id: string; name: string; code: string
   location: string | null; client: string | null
@@ -15,11 +17,14 @@ export default function ProjectCard({ project, phases, inactive = false }: {
   phases: PhaseData[]
   inactive?: boolean
 }) {
+  const t      = useTranslations('Projects')
+  const locale = useLocale()
+
   const meta = [project.client, project.location].filter(Boolean).join(' · ')
 
   function formatDate(d: string | null) {
     if (!d) return null
-    return new Date(d).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })
+    return new Date(d).toLocaleDateString(locale === 'es' ? 'es-CO' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })
   }
 
   return (
@@ -57,7 +62,7 @@ export default function ProjectCard({ project, phases, inactive = false }: {
                 {project.name}
               </div>
               <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                {meta || 'Sin cliente / ubicación'}
+                {meta || t('card.noMeta')}
               </div>
             </div>
           </div>
@@ -67,7 +72,7 @@ export default function ProjectCard({ project, phases, inactive = false }: {
             color: inactive ? '#94a3b8' : '#10b981',
             border: `1px solid ${inactive ? '#e2e8f0' : '#10b98130'}`,
           }}>
-            {inactive ? 'Inactivo' : 'Activo'}
+            {inactive ? t('card.inactive') : t('card.active')}
           </span>
         </div>
 
@@ -89,13 +94,13 @@ export default function ProjectCard({ project, phases, inactive = false }: {
           <div style={{ display: 'flex', gap: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
             {project.start_date && (
               <div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Inicio</div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.start')}</div>
                 <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>{formatDate(project.start_date)}</div>
               </div>
             )}
             {project.end_date && (
               <div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Objetivo</div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.target')}</div>
                 <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>{formatDate(project.end_date)}</div>
               </div>
             )}

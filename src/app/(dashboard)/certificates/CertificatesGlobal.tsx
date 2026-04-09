@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 
 const PAGE_SIZE = 50
 
@@ -19,11 +20,11 @@ type Certificate = {
   subsystems: { id: string; code: string; name: string; systems: { code: string; name: string } } | null
 }
 
-const STATUS_CFG = {
-  pending:   { label: 'Pendiente',   color: '#64748b', bg: '#f1f5f9' },
-  in_review: { label: 'En revisión', color: '#3b82f6', bg: '#eff6ff' },
-  issued:    { label: 'Emitido',     color: '#10b981', bg: '#ecfdf5' },
-  rejected:  { label: 'Rechazado',   color: '#ef4444', bg: '#fee2e2' },
+const STATUS_STYLE = {
+  pending:   { color: '#64748b', bg: '#f1f5f9' },
+  in_review: { color: '#3b82f6', bg: '#eff6ff' },
+  issued:    { color: '#10b981', bg: '#ecfdf5' },
+  rejected:  { color: '#ef4444', bg: '#fee2e2' },
 } as const
 
 export default function CertificatesGlobal({
@@ -35,6 +36,9 @@ export default function CertificatesGlobal({
   certificates: Certificate[]
   phases: Phase[]
 }) {
+  const t  = useTranslations('Certificates')
+  const tC = useTranslations('Common')
+
   const [search, setSearch]               = useState('')
   const [filterProject, setFilterProject] = useState('')
   const [filterPhase, setFilterPhase]     = useState('')
@@ -67,34 +71,53 @@ export default function CertificatesGlobal({
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  const summaryCards: { key: 'issued' | 'in_review' | 'pending' | 'rejected'; count: number }[] = [
+    { key: 'issued',    count: issuedCnt   },
+    { key: 'in_review', count: reviewCnt   },
+    { key: 'pending',   count: pendingCnt  },
+    { key: 'rejected',  count: rejectedCnt },
+  ]
+
+  const statusLabels: Record<string, string> = {
+    pending:   t('status.pending'),
+    in_review: t('status.in_review'),
+    issued:    t('status.issued'),
+    rejected:  t('status.rejected'),
+  }
+
+  const summaryLabels: Record<string, string> = {
+    issued:    t('summary.issued'),
+    in_review: t('summary.in_review'),
+    pending:   t('summary.pending'),
+    rejected:  t('summary.rejected'),
+  }
+
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Certificados</h1>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>Todos los proyectos de la organización</p>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('title')}</h1>
+        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{t('subtitle')}</p>
       </div>
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '24px' }}>
-        {[
-          { ...STATUS_CFG.issued,    label: 'Emitidos',    count: issuedCnt,   key: 'issued' },
-          { ...STATUS_CFG.in_review, label: 'En revisión', count: reviewCnt,   key: 'in_review' },
-          { ...STATUS_CFG.pending,   label: 'Pendientes',  count: pendingCnt,  key: 'pending' },
-          { ...STATUS_CFG.rejected,  label: 'Rechazados',  count: rejectedCnt, key: 'rejected' },
-        ].map(card => (
-          <div
-            key={card.key}
-            onClick={() => setFilterStatus(filterStatus === card.key ? '' : card.key)}
-            style={{
-              padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s',
-              background: filterStatus === card.key ? card.bg : 'white',
-              border: `1px solid ${filterStatus === card.key ? card.color + '40' : '#e2e8f0'}`,
-            }}
-          >
-            <div style={{ fontSize: '22px', fontWeight: 700, color: card.color }}>{card.count}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{card.label}</div>
-          </div>
-        ))}
+        {summaryCards.map(({ key, count }) => {
+          const style = STATUS_STYLE[key]
+          return (
+            <div
+              key={key}
+              onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
+              style={{
+                padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s',
+                background: filterStatus === key ? style.bg : 'white',
+                border: `1px solid ${filterStatus === key ? style.color + '40' : '#e2e8f0'}`,
+              }}
+            >
+              <div style={{ fontSize: '22px', fontWeight: 700, color: style.color }}>{count}</div>
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{summaryLabels[key]}</div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Filters */}
@@ -102,15 +125,15 @@ export default function CertificatesGlobal({
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar número, subsistema, proyecto..."
+          placeholder={t('filters.search')}
           style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '240px', fontFamily: 'inherit' }}
         />
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)} style={selStyle}>
-          <option value="">Todos los proyectos</option>
+          <option value="">{t('filters.allProjects')}</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
         </select>
         <select value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={selStyle}>
-          <option value="">Todas las fases</option>
+          <option value="">{t('filters.allPhases')}</option>
           {phases.map(ph => <option key={ph.id} value={ph.code}>{ph.code} — {ph.certificate_name ?? ph.name}</option>)}
         </select>
         {hasFilters && (
@@ -118,33 +141,33 @@ export default function CertificatesGlobal({
             onClick={() => { setFilterProject(''); setFilterPhase(''); setFilterStatus(''); setSearch(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
-            Limpiar filtros
+            {tC('clearFilters')}
           </button>
         )}
         <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
-          {filtered.length} de {certificates.length} certificados
+          {t('filters.count', { filtered: filtered.length, total: certificates.length })}
         </span>
       </div>
 
       {/* Table */}
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>No hay certificados que coincidan con los filtros.</p>
+          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{t('empty')}</p>
         </div>
       ) : (
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '100px 130px 1fr 1fr 80px 100px 90px', gap: '12px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            <span>Proyecto</span>
-            <span>N° Certificado</span>
-            <span>Título</span>
-            <span>Subsistema</span>
-            <span>Fase</span>
-            <span>Fecha emisión</span>
-            <span>Estado</span>
+            <span>{t('table.colProject')}</span>
+            <span>{t('table.colNumber')}</span>
+            <span>{t('table.colTitle')}</span>
+            <span>{t('table.colSubsystem')}</span>
+            <span>{t('table.colPhase')}</span>
+            <span>{t('table.colIssued')}</span>
+            <span>{t('table.colStatus')}</span>
           </div>
 
           {paginated.map(cert => {
-            const st    = STATUS_CFG[cert.status]
+            const st    = STATUS_STYLE[cert.status]
             const proj  = cert.projects
             const phase = cert.project_phases
             const ss    = cert.subsystems
@@ -203,7 +226,7 @@ export default function CertificatesGlobal({
 
                 {/* Estado */}
                 <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
-                  {st.label}
+                  {statusLabels[cert.status]}
                 </span>
               </div>
             )
@@ -214,9 +237,9 @@ export default function CertificatesGlobal({
       {/* Pagination */}
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>← Anterior</button>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>Página {page} de {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>Siguiente →</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>{tC('prevPage')}</button>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>{tC('page', { page, total: totalPages })}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>{tC('nextPage')}</button>
         </div>
       )}
     </div>
