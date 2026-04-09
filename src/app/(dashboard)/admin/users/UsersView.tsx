@@ -66,6 +66,7 @@ export default function UsersView({
   const [showInvite, setShowInvite] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [tempPassword, setTempPassword] = useState<{ email: string; password: string } | null>(null)
 
   const isAdmin = ['owner', 'admin'].includes(currentRole)
 
@@ -78,11 +79,16 @@ export default function UsersView({
     if (!inviteEmail.trim()) return
     setError(null)
     startTransition(async () => {
-      const res = await inviteUser({ email: inviteEmail.trim(), role: inviteRole })
+      const email = inviteEmail.trim()
+      const res = await inviteUser({ email, role: inviteRole })
       if (res.error) { setError(res.error); return }
       setInviteEmail('')
       setShowInvite(false)
-      notify('Invitación enviada')
+      if (res.tempPassword) {
+        setTempPassword({ email, password: res.tempPassword })
+      } else {
+        notify('Invitación enviada por email')
+      }
     })
   }
 
@@ -139,6 +145,36 @@ export default function UsersView({
       {success && (
         <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: '8px', color: '#059669', fontSize: '13px' }}>
           {success}
+        </div>
+      )}
+
+      {/* Temp password box (email provider not configured) */}
+      {tempPassword && (
+        <div style={{
+          marginBottom: '16px', padding: '16px 20px', background: '#fffbeb',
+          border: '1px solid #fcd34d', borderRadius: '10px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+            <div>
+              <p style={{ margin: '0 0 6px', fontSize: '13px', fontWeight: 600, color: '#92400e' }}>
+                Usuario creado — comparte estas credenciales manualmente
+              </p>
+              <p style={{ margin: '0 0 4px', fontSize: '13px', color: '#78350f' }}>
+                Email: <strong>{tempPassword.email}</strong>
+              </p>
+              <p style={{ margin: 0, fontSize: '13px', color: '#78350f' }}>
+                Contraseña temporal: <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{tempPassword.password}</strong>
+              </p>
+              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#a16207' }}>
+                El usuario puede cambiar su contraseña desde su perfil después de ingresar.
+              </p>
+            </div>
+            <button
+              onClick={() => setTempPassword(null)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a16207', fontSize: '18px', lineHeight: 1, padding: '2px' }}
+              aria-label="Cerrar"
+            >×</button>
+          </div>
         </div>
       )}
 

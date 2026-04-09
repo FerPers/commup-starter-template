@@ -59,7 +59,13 @@ export default function LoginPage() {
     }}>
 
       {/* Language selector — top right */}
-      <div style={{ position: 'absolute', top: '20px', right: '24px' }}>
+      <div style={{
+        position: 'absolute', top: '20px', right: '24px',
+        background: 'white', borderRadius: '999px',
+        border: '1px solid #e2e8f0',
+        padding: '4px 10px',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+      }}>
         <LocaleSwitcher variant="light" />
       </div>
 

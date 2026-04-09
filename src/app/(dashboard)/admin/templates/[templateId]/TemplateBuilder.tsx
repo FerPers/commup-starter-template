@@ -575,29 +575,41 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 v{template.version} · {totalItems} ítem{totalItems !== 1 ? 's' : ''} · {sections.length} sección{sections.length !== 1 ? 'es' : ''}
               </p>
             </div>
-            {canEdit && (
-              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                <button
-                  onClick={() => setShowImport(true)}
-                  style={{
-                    padding: '7px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0',
-                    borderRadius: '8px', fontSize: '12px', color: '#16a34a', cursor: 'pointer',
-                    fontWeight: 500,
-                  }}
-                >
-                  ↑ Importar Excel
-                </button>
-                <button
-                  onClick={() => setHeaderEditing(true)}
-                  style={{
-                    padding: '7px 14px', background: 'white', border: '1px solid #e2e8f0',
-                    borderRadius: '8px', fontSize: '12px', color: '#475569', cursor: 'pointer',
-                  }}
-                >
-                  Editar encabezado
-                </button>
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <a
+                href={`/admin/templates/${template.id}/preview`}
+                style={{
+                  padding: '7px 14px', background: '#f5f3ff', border: '1px solid #ddd6fe',
+                  borderRadius: '8px', fontSize: '12px', color: '#7c3aed', cursor: 'pointer',
+                  fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px',
+                }}
+              >
+                👁 Vista de campo
+              </a>
+              {canEdit && (
+                <>
+                  <button
+                    onClick={() => setShowImport(true)}
+                    style={{
+                      padding: '7px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0',
+                      borderRadius: '8px', fontSize: '12px', color: '#16a34a', cursor: 'pointer',
+                      fontWeight: 500,
+                    }}
+                  >
+                    ↑ Importar Excel
+                  </button>
+                  <button
+                    onClick={() => setHeaderEditing(true)}
+                    style={{
+                      padding: '7px 14px', background: 'white', border: '1px solid #e2e8f0',
+                      borderRadius: '8px', fontSize: '12px', color: '#475569', cursor: 'pointer',
+                    }}
+                  >
+                    Editar encabezado
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ) : (
           <div>

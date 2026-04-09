@@ -24,10 +24,15 @@ async function getCtx() {
 
 // ── inviteUser ─────────────────────────────────────────────────────────────
 
+function generateTempPassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$'
+  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+}
+
 export async function inviteUser(input: {
   email: string
   role: string
-}): Promise<{ error?: string }> {
+}): Promise<{ error?: string; tempPassword?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
   if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos para invitar usuarios' }
@@ -40,7 +45,6 @@ export async function inviteUser(input: {
   const existingUser = existingList?.users.find(u => u.email === email)
 
   if (existingUser) {
-    // User already exists in auth — check if already in this org
     const { data: existingMember } = await ctx.supabase
       .from('org_members')
       .select('id')
@@ -50,38 +54,53 @@ export async function inviteUser(input: {
 
     if (existingMember) return { error: 'Este usuario ya es miembro de la organización' }
 
-    // Add directly to org
     const { error } = await ctx.supabase
       .from('org_members')
       .insert({ org_id: ctx.orgId, user_id: existingUser.id, role })
 
     if (error) return { error: error.message }
-  } else {
-    // New user — send invitation email
-    const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: { org_id: ctx.orgId, invited_role: role },
-    })
-
-    if (inviteErr) return { error: inviteErr.message }
-    if (!invited?.user) return { error: 'Error al crear usuario invitado' }
-
-    // Create profile row
-    await admin.from('profiles').upsert({
-      id: invited.user.id,
-      email,
-      full_name: email.split('@')[0],
-    }, { onConflict: 'id' })
-
-    // Add to org
-    const { error: memberErr } = await admin
-      .from('org_members')
-      .insert({ org_id: ctx.orgId, user_id: invited.user.id, role })
-
-    if (memberErr) return { error: memberErr.message }
+    revalidatePath('/admin/users')
+    return {}
   }
 
+  // New user — try email invitation first
+  const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { org_id: ctx.orgId, invited_role: role },
+  })
+
+  if (!inviteErr && invited?.user) {
+    await admin.from('profiles').upsert(
+      { id: invited.user.id, email, full_name: email.split('@')[0] },
+      { onConflict: 'id' }
+    )
+    await admin.from('org_members').insert({ org_id: ctx.orgId, user_id: invited.user.id, role })
+    revalidatePath('/admin/users')
+    return {}
+  }
+
+  // Email invite failed (email provider not configured) — create with temp password
+  const tempPassword = generateTempPassword()
+  const { data: created, error: createErr } = await admin.auth.admin.createUser({
+    email,
+    password: tempPassword,
+    email_confirm: true,
+  })
+
+  if (createErr) return { error: createErr.message }
+  if (!created?.user) return { error: 'Error al crear usuario' }
+
+  await admin.from('profiles').upsert(
+    { id: created.user.id, email, full_name: email.split('@')[0] },
+    { onConflict: 'id' }
+  )
+  const { error: memberErr } = await admin
+    .from('org_members')
+    .insert({ org_id: ctx.orgId, user_id: created.user.id, role })
+
+  if (memberErr) return { error: memberErr.message }
+
   revalidatePath('/admin/users')
-  return {}
+  return { tempPassword }
 }
 
 // ── updateMemberRole ───────────────────────────────────────────────────────
