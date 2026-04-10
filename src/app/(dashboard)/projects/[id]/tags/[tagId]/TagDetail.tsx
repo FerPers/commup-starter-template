@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { updateTag, deleteTag } from '@/app/actions/tags'
 import TagItrTab from './TagItrTab'
 import TagPunchTab, { type TagPunch, type OrgMemberForPunch } from './TagPunchTab'
@@ -75,11 +76,11 @@ type Tab = 'overview' | 'itrs' | 'punches' | 'docs' | 'preservation'
 
 // ── Status config ────────────────────────────────────────────────
 
-const STATUS: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  not_started: { label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0' },
-  in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
-  completed:    { label: 'Completado',  color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
-  on_hold:      { label: 'En espera',   color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+const STATUS: Record<string, { color: string; bg: string; border: string }> = {
+  not_started: { color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0' },
+  in_progress:  { color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
+  completed:    { color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
+  on_hold:      { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
 }
 
 const SIGNAL_TYPES = ['4-20mA', 'HART', 'Discreta', 'Foundation Fieldbus', 'Profibus', 'Modbus', 'WirelessHART', 'Otra']
@@ -121,6 +122,7 @@ export default function TagDetail({
   preservationPlans: PreservationPlanRow[]
   preservationProcedures: PreservationProcedureOption[]
 }) {
+  const t = useTranslations('Tags')
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [editMode, setEditMode]   = useState(false)
 
@@ -132,12 +134,19 @@ export default function TagDetail({
 
   const hier = [area?.code, sys?.code, sub?.code].filter(Boolean).join(' › ')
 
+  const STATUS_LABELS: Record<string, string> = {
+    not_started: t('status.not_started'),
+    in_progress:  t('status.in_progress'),
+    completed:    t('status.completed'),
+    on_hold:      t('status.on_hold'),
+  }
+
   const tabs: { key: Tab; label: string; badge?: number }[] = [
-    { key: 'overview',     label: 'Resumen' },
-    { key: 'itrs',         label: 'ITRs',         badge: tagItrs.length },
-    { key: 'punches',      label: 'Punch List',   badge: tagPunches.length > 0 ? tagPunches.length : undefined },
-    { key: 'docs',         label: 'Documentos' },
-    { key: 'preservation', label: 'Preservación' },
+    { key: 'overview',     label: t('detail.tabs.overview') },
+    { key: 'itrs',         label: t('detail.tabs.itrs'),         badge: tagItrs.length },
+    { key: 'punches',      label: t('detail.tabs.punches'),      badge: tagPunches.length > 0 ? tagPunches.length : undefined },
+    { key: 'docs',         label: t('detail.tabs.docs') },
+    { key: 'preservation', label: t('detail.tabs.preservation') },
   ]
 
   return (
@@ -149,18 +158,18 @@ export default function TagDetail({
           href={`/projects/${projectId}/tags`}
           style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
         >
-          ← {projectName} / Tags
+          {t('detail.backLink', { project: projectName })}
         </a>
         <div style={{ display: 'flex', gap: '6px' }}>
           {prevTagId ? (
-            <a href={`/projects/${projectId}/tags/${prevTagId}`} style={navBtn}>← Anterior</a>
+            <a href={`/projects/${projectId}/tags/${prevTagId}`} style={navBtn}>{t('detail.prevTag')}</a>
           ) : (
-            <span style={{ ...navBtn, opacity: 0.3, pointerEvents: 'none', cursor: 'default' }}>← Anterior</span>
+            <span style={{ ...navBtn, opacity: 0.3, pointerEvents: 'none', cursor: 'default' }}>{t('detail.prevTag')}</span>
           )}
           {nextTagId ? (
-            <a href={`/projects/${projectId}/tags/${nextTagId}`} style={navBtn}>Siguiente →</a>
+            <a href={`/projects/${projectId}/tags/${nextTagId}`} style={navBtn}>{t('detail.nextTag')}</a>
           ) : (
-            <span style={{ ...navBtn, opacity: 0.3, pointerEvents: 'none', cursor: 'default' }}>Siguiente →</span>
+            <span style={{ ...navBtn, opacity: 0.3, pointerEvents: 'none', cursor: 'default' }}>{t('detail.nextTag')}</span>
           )}
         </div>
       </div>
@@ -219,7 +228,7 @@ export default function TagDetail({
             background: status.bg, color: status.color, border: `1px solid ${status.border}`,
             flexShrink: 0, whiteSpace: 'nowrap',
           }}>
-            {status.label}
+            {STATUS_LABELS[tag.status] ?? tag.status}
           </span>
         </div>
 
@@ -265,7 +274,7 @@ export default function TagDetail({
                 background: '#fffbeb', padding: '2px 8px', borderRadius: '5px',
                 border: '1px solid #fde68a',
               }}>
-                ◉ Preservación requerida
+                {t('detail.preservationRequired')}
               </span>
             )}
           </div>
@@ -277,7 +286,7 @@ export default function TagDetail({
               background: '#fffbeb', padding: '2px 8px', borderRadius: '5px',
               border: '1px solid #fde68a',
             }}>
-              ◉ Preservación requerida
+              {t('detail.preservationRequired')}
             </span>
           </div>
         )}
@@ -324,7 +333,7 @@ export default function TagDetail({
             padding: '12px 16px', fontSize: '13px', fontWeight: 600, color: '#3b82f6',
             borderBottom: '2px solid #3b82f6', marginBottom: '-1px',
           }}>
-            Editando tag
+            {t('detail.editing')}
           </span>
         )}
 
@@ -339,7 +348,7 @@ export default function TagDetail({
                   borderRadius: '7px', fontSize: '12px', color: '#475569', cursor: 'pointer',
                 }}
               >
-                Editar tag
+                {t('detail.editTag')}
               </button>
             ) : (
               <button
@@ -349,7 +358,7 @@ export default function TagDetail({
                   borderRadius: '7px', fontSize: '12px', color: '#94a3b8', cursor: 'pointer',
                 }}
               >
-                Cancelar
+                {t('detail.cancel')}
               </button>
             )}
           </div>
@@ -414,22 +423,30 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
   sub: Subsystem | undefined
   pidSignedUrl: string | null
 }) {
+  const t = useTranslations('Tags')
   const d = tag.disciplines
 
+  const STATUS_LABELS: Record<string, string> = {
+    not_started: t('status.not_started'),
+    in_progress:  t('status.in_progress'),
+    completed:    t('status.completed'),
+    on_hold:      t('status.on_hold'),
+  }
+
   const infoFields = [
-    { label: 'Estado',      value: (STATUS[tag.status] ?? STATUS.not_started).label },
-    { label: 'Disciplina',  value: `${d.code} — ${d.name}` },
-    { label: 'Fabricante',  value: tag.manufacturer || '—' },
-    { label: 'Modelo',      value: tag.model || '—' },
-    { label: 'Serie (S/N)', value: tag.serial_number || '—' },
-    { label: 'Preservación requerida', value: tag.preservation_required ? 'Sí' : 'No' },
+    { label: t('overview.fieldStatus'),       value: STATUS_LABELS[tag.status] ?? tag.status },
+    { label: t('overview.fieldDiscipline'),   value: `${d.code} — ${d.name}` },
+    { label: t('overview.fieldManufacturer'), value: tag.manufacturer || '—' },
+    { label: t('overview.fieldModel'),        value: tag.model || '—' },
+    { label: t('overview.fieldSerial'),       value: tag.serial_number || '—' },
+    { label: t('overview.fieldPreservation'), value: tag.preservation_required ? t('overview.yesPreservation') : t('overview.noPreservation') },
   ]
 
   const locFields = [
-    { label: 'Área',       value: area ? `${area.code} — ${area.name}` : '—' },
-    { label: 'Sistema',    value: sys  ? `${sys.code} — ${sys.name}`   : '—' },
-    { label: 'Subsistema', value: sub  ? `${sub.code} — ${sub.name}`   : '—' },
-    { label: 'P&ID',       value: tag.pid_drawing || '—', link: pidSignedUrl ?? undefined },
+    { label: t('overview.fieldArea'),       value: area ? `${area.code} — ${area.name}` : '—' },
+    { label: t('overview.fieldSystem'),     value: sys  ? `${sys.code} — ${sys.name}`   : '—' },
+    { label: t('overview.fieldSubsystem'),  value: sub  ? `${sub.code} — ${sub.name}`   : '—' },
+    { label: t('overview.fieldPid'),        value: tag.pid_drawing || '—', link: pidSignedUrl ?? undefined },
   ]
 
   const isInst = INST_DISCIPLINES.includes(tag.disciplines.code)
@@ -444,7 +461,7 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
 
       {/* Equipment info */}
       <div style={cardStyle}>
-        <p style={sectionLabel}>Información del equipo</p>
+        <p style={sectionLabel}>{t('overview.sectionEquipment')}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
           {infoFields.map((f, i) => (
             <div key={f.label} style={{
@@ -464,7 +481,7 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
 
         {/* Location */}
         <div style={cardStyle}>
-          <p style={sectionLabel}>Ubicación en jerarquía</p>
+          <p style={sectionLabel}>{t('overview.sectionLocation')}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
             {locFields.map((f, i) => (
               <div key={f.label} style={{
@@ -496,17 +513,17 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
 
         {/* Engineering parameters */}
         <div style={cardStyle}>
-          <p style={sectionLabel}>Parámetros de ingeniería</p>
+          <p style={sectionLabel}>{t('overview.sectionEngineering')}</p>
           {!hasEngParams ? (
             <div style={{ padding: '16px 0', textAlign: 'center', color: '#cbd5e1', fontSize: '13px' }}>
-              Sin parámetros — usa &quot;Editar tag&quot; para agregar
+              {t('overview.noEngParams')}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
 
               {/* Range */}
               {(tag.range_min != null || tag.range_max != null) && (
-                <EngRow label="Rango">
+                <EngRow label={t('overview.engRange')}>
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>
                     {fmt(tag.range_min)} – {fmt(tag.range_max)}
                     {tag.eng_unit && <span style={{ marginLeft: '6px', color: '#64748b' }}>{tag.eng_unit}</span>}
@@ -516,7 +533,7 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
 
               {/* Setpoints — instruments only */}
               {isInst && (tag.sp_hh != null || tag.sp_h != null || tag.sp_l != null || tag.sp_ll != null) && (
-                <EngRow label="Setpoints">
+                <EngRow label={t('overview.engSetpoints')}>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {tag.sp_hh != null && <SetpointPill label="HH" value={tag.sp_hh} unit={tag.eng_unit} color="#ef4444" />}
                     {tag.sp_h  != null && <SetpointPill label="H"  value={tag.sp_h}  unit={tag.eng_unit} color="#f97316" />}
@@ -527,13 +544,13 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
               )}
 
               {isInst && tag.signal_type && (
-                <EngRow label="Tipo de señal">
+                <EngRow label={t('overview.engSignalType')}>
                   <span style={{ fontSize: '13px', color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{tag.signal_type}</span>
                 </EngRow>
               )}
 
               {isInst && tag.sil_level && tag.sil_level !== 'None' && (
-                <EngRow label="Nivel SIL">
+                <EngRow label={t('overview.engSilLevel')}>
                   <span style={{
                     padding: '2px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 700,
                     background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a',
@@ -544,37 +561,37 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
               )}
 
               {isInst && tag.io_address && (
-                <EngRow label="Dir. I/O">
+                <EngRow label={t('overview.engIoAddress')}>
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.io_address}</span>
                 </EngRow>
               )}
 
               {isInst && tag.junction_box && (
-                <EngRow label="Caja de juntas">
+                <EngRow label={t('overview.engJunctionBox')}>
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.junction_box}</span>
                 </EngRow>
               )}
 
               {tag.fluid_type && (
-                <EngRow label="Tipo de fluido">
+                <EngRow label={t('overview.engFluidType')}>
                   <span style={{ fontSize: '13px', color: '#0f172a' }}>{tag.fluid_type}</span>
                 </EngRow>
               )}
 
               {tag.datasheet_number && (
-                <EngRow label="Datasheet">
+                <EngRow label={t('overview.engDatasheet')}>
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.datasheet_number}</span>
                 </EngRow>
               )}
 
               {isInst && tag.mounting_typical && (
-                <EngRow label="Típico de montaje">
+                <EngRow label={t('overview.engMounting')}>
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.mounting_typical}</span>
                 </EngRow>
               )}
 
               {tag.revision && (
-                <EngRow label="Revisión" last>
+                <EngRow label={t('overview.engRevision')} last>
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.revision}</span>
                 </EngRow>
               )}
@@ -625,6 +642,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
   onCancel: () => void
   canDelete: boolean
 }) {
+  const t = useTranslations('Tags')
   const isInst = INST_DISCIPLINES.includes(tag.disciplines.code)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -722,39 +740,39 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
 
       {/* Basic info */}
       <div style={cardStyle}>
-        <p style={sectionLabel}>Información básica</p>
+        <p style={sectionLabel}>{t('edit.sectionBasic')}</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '12px' }}>
 
-          <FormField label="Descripción" style={{ gridColumn: '1 / -1' }}>
+          <FormField label={t('edit.fieldDescription')} style={{ gridColumn: '1 / -1' }}>
             <input style={inputStyle} value={form.description} onChange={e => set('description', e.target.value)} />
           </FormField>
 
-          <FormField label="Fabricante">
+          <FormField label={t('edit.fieldManufacturer')}>
             <input style={inputStyle} value={form.manufacturer} onChange={e => set('manufacturer', e.target.value)} />
           </FormField>
 
-          <FormField label="Modelo">
+          <FormField label={t('edit.fieldModel')}>
             <input style={inputStyle} value={form.model} onChange={e => set('model', e.target.value)} />
           </FormField>
 
-          <FormField label="Serie (S/N)">
+          <FormField label={t('edit.fieldSerial')}>
             <input style={inputStyle} value={form.serial_number} onChange={e => set('serial_number', e.target.value)} />
           </FormField>
 
-          <FormField label="Número de P&ID">
+          <FormField label={t('edit.fieldPidNumber')}>
             <input style={inputStyle} placeholder="Ej: P-1001" value={form.pid_drawing} onChange={e => set('pid_drawing', e.target.value)} />
           </FormField>
 
-          <FormField label="Estado">
+          <FormField label={t('edit.fieldStatus')}>
             <select style={inputStyle} value={form.status} onChange={e => set('status', e.target.value)}>
-              <option value="not_started">Sin iniciar</option>
-              <option value="in_progress">En progreso</option>
-              <option value="completed">Completado</option>
-              <option value="on_hold">En espera</option>
+              <option value="not_started">{t('status.not_started')}</option>
+              <option value="in_progress">{t('status.in_progress')}</option>
+              <option value="completed">{t('status.completed')}</option>
+              <option value="on_hold">{t('status.on_hold')}</option>
             </select>
           </FormField>
 
-          <FormField label="Preservación requerida">
+          <FormField label={t('edit.fieldPreservation')}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '34px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
@@ -762,7 +780,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
                 onChange={e => set('preservation_required', e.target.checked)}
                 style={{ width: '16px', height: '16px', accentColor: '#3b82f6' }}
               />
-              <span style={{ fontSize: '13px', color: '#475569' }}>Sí, requiere preservación</span>
+              <span style={{ fontSize: '13px', color: '#475569' }}>{t('edit.preservationCheck')}</span>
             </label>
           </FormField>
 
@@ -771,32 +789,32 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
 
       {/* Engineering parameters */}
       <div style={cardStyle}>
-        <p style={sectionLabel}>Parámetros de ingeniería</p>
+        <p style={sectionLabel}>{t('edit.sectionEngineering')}</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginTop: '12px' }}>
 
-          <FormField label="Rango mínimo">
+          <FormField label={t('edit.fieldRangeMin')}>
             <input style={inputStyle} type="number" placeholder="0" value={form.range_min} onChange={e => set('range_min', e.target.value)} />
           </FormField>
 
-          <FormField label="Rango máximo">
+          <FormField label={t('edit.fieldRangeMax')}>
             <input style={inputStyle} type="number" placeholder="100" value={form.range_max} onChange={e => set('range_max', e.target.value)} />
           </FormField>
 
-          <FormField label="Unidad de ingeniería">
+          <FormField label={t('edit.fieldEngUnit')}>
             <input style={inputStyle} placeholder="Ej: mmH2O, bar, °C, kV" value={form.eng_unit} onChange={e => set('eng_unit', e.target.value)} />
           </FormField>
 
           {!isInst && (
-            <FormField label="Tipo de fluido">
+            <FormField label={t('edit.fieldFluidType')}>
               <input style={inputStyle} placeholder="Ej: Gas Natural, Crudo, Agua Producida" value={form.fluid_type} onChange={e => set('fluid_type', e.target.value)} />
             </FormField>
           )}
 
-          <FormField label="Datasheet (código)">
+          <FormField label={t('edit.fieldDatasheet')}>
             <input style={inputStyle} placeholder="Ej: DS-P-762802A" value={form.datasheet_number} onChange={e => set('datasheet_number', e.target.value)} />
           </FormField>
 
-          <FormField label="Revisión doc.">
+          <FormField label={t('edit.fieldRevision')}>
             <input style={inputStyle} placeholder="Ej: Rev. C" value={form.revision} onChange={e => set('revision', e.target.value)} />
           </FormField>
 
@@ -807,50 +825,50 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
           <>
             <div style={{ margin: '20px 0 14px', paddingTop: '16px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Instrumentación
+                {t('edit.sectionInstrumentation')}
               </span>
-              <span style={{ fontSize: '11px', color: '#cbd5e1' }}>Setpoints · Señal · SIL</span>
+              <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{t('edit.instrSubtitle')}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
 
-              <FormField label="Setpoint HH (Alta-Alta)">
+              <FormField label={t('edit.fieldSpHH')}>
                 <input style={inputStyle} type="number" placeholder="—" value={form.sp_hh} onChange={e => set('sp_hh', e.target.value)} />
               </FormField>
 
-              <FormField label="Setpoint H (Alta)">
+              <FormField label={t('edit.fieldSpH')}>
                 <input style={inputStyle} type="number" placeholder="—" value={form.sp_h} onChange={e => set('sp_h', e.target.value)} />
               </FormField>
 
-              <FormField label="Setpoint L (Baja)">
+              <FormField label={t('edit.fieldSpL')}>
                 <input style={inputStyle} type="number" placeholder="—" value={form.sp_l} onChange={e => set('sp_l', e.target.value)} />
               </FormField>
 
-              <FormField label="Setpoint LL (Baja-Baja)">
+              <FormField label={t('edit.fieldSpLL')}>
                 <input style={inputStyle} type="number" placeholder="—" value={form.sp_ll} onChange={e => set('sp_ll', e.target.value)} />
               </FormField>
 
-              <FormField label="Tipo de señal">
+              <FormField label={t('edit.fieldSignalType')}>
                 <select style={inputStyle} value={form.signal_type} onChange={e => set('signal_type', e.target.value)}>
-                  <option value="">— Sin definir —</option>
+                  <option value="">{t('edit.signalUndefined')}</option>
                   {SIGNAL_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </FormField>
 
-              <FormField label="Nivel SIL">
+              <FormField label={t('edit.fieldSilLevel')}>
                 <select style={inputStyle} value={form.sil_level} onChange={e => set('sil_level', e.target.value)}>
                   {SIL_LEVELS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </FormField>
 
-              <FormField label="Dirección I/O">
+              <FormField label={t('edit.fieldIoAddress')}>
                 <input style={inputStyle} placeholder="Ej: AI-100" value={form.io_address} onChange={e => set('io_address', e.target.value)} />
               </FormField>
 
-              <FormField label="Caja de juntas">
+              <FormField label={t('edit.fieldJunctionBox')}>
                 <input style={inputStyle} placeholder="Ej: JB-101A" value={form.junction_box} onChange={e => set('junction_box', e.target.value)} />
               </FormField>
 
-              <FormField label="Típico de montaje">
+              <FormField label={t('edit.fieldMounting')}>
                 <input style={inputStyle} placeholder="Ej: TYP-INST-001" value={form.mounting_typical} onChange={e => set('mounting_typical', e.target.value)} />
               </FormField>
 
@@ -869,7 +887,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
             borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer',
           }}
         >
-          Cancelar
+          {t('edit.cancel')}
         </button>
         <button
           onClick={handleSave}
@@ -880,7 +898,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
             cursor: isPending ? 'not-allowed' : 'pointer',
           }}
         >
-          {isPending ? 'Guardando…' : 'Guardar cambios'}
+          {isPending ? t('edit.saving') : t('edit.save')}
         </button>
       </div>
 
@@ -896,12 +914,12 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
                 fontSize: '12px', color: '#dc2626', cursor: 'pointer', textAlign: 'left',
               }}
             >
-              Eliminar tag…
+              {t('edit.deleteBtn')}
             </button>
           ) : (
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px' }}>
               <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#991b1b', fontWeight: 500 }}>
-                Esta acción eliminará el tag <strong>{tag.tag_number}</strong> y <strong>todos sus datos</strong> (ITRs, punches, preservación, hotspots). Es irreversible.
+                {t('edit.deleteConfirmMsg', { tagNumber: tag.tag_number })}
               </p>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
@@ -913,7 +931,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
                     fontWeight: 600, cursor: isPending ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {isPending ? 'Eliminando…' : 'Confirmar eliminación'}
+                  {isPending ? t('edit.deleting') : t('edit.confirmDelete')}
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
@@ -923,7 +941,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
                     border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                   }}
                 >
-                  Cancelar
+                  {t('edit.cancel')}
                 </button>
               </div>
             </div>
@@ -949,19 +967,21 @@ function FormField({ label, children, style }: { label: string; children: React.
 // ── Docs Tab ─────────────────────────────────────────────────────
 
 function DocsTab({ tag, pidSignedUrl, pidDocId, projectId }: { tag: Tag; pidSignedUrl: string | null; pidDocId: string | null; projectId: string }) {
+  const t = useTranslations('Tags')
+
   if (!tag.pid_drawing) {
     return (
       <EmptyTab
         icon="📄"
-        title="Sin documentos vinculados"
-        message="Este tag no tiene un P&ID de referencia asignado. Puedes editarlo para agregarlo."
+        title={t('docs.emptyTitle')}
+        message={t('docs.emptyMsg')}
       />
     )
   }
 
   return (
     <div>
-      <p style={sectionLabel}>Documentos P&amp;ID</p>
+      <p style={sectionLabel}>{t('docs.sectionTitle')}</p>
       <div style={{
         background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0',
         overflow: 'hidden', marginTop: '12px',
@@ -980,7 +1000,7 @@ function DocsTab({ tag, pidSignedUrl, pidDocId, projectId }: { tag: Tag; pidSign
                 {tag.pid_drawing}
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                {pidSignedUrl ? 'Documento disponible' : 'Documento aún no subido'}
+                {pidSignedUrl ? t('docs.docAvailable') : t('docs.docNotUploaded')}
               </div>
             </div>
           </div>
@@ -996,14 +1016,14 @@ function DocsTab({ tag, pidSignedUrl, pidDocId, projectId }: { tag: Tag; pidSign
                   fontSize: '12px', fontWeight: 500, textDecoration: 'none',
                 }}
               >
-                Ver PDF ↗
+                {t('docs.viewPdf')}
               </a>
             ) : (
               <span style={{
                 padding: '7px 16px', background: '#fef3c7', color: '#92400e',
                 border: '1px solid #fde68a', borderRadius: '7px', fontSize: '12px',
               }}>
-                PDF no subido
+                {t('docs.pdfNotUploaded')}
               </span>
             )}
             {pidDocId && (
@@ -1015,7 +1035,7 @@ function DocsTab({ tag, pidSignedUrl, pidDocId, projectId }: { tag: Tag; pidSign
                   fontSize: '12px', fontWeight: 500, textDecoration: 'none',
                 }}
               >
-                Ver en visor P&amp;ID →
+                {t('docs.viewInViewer')}
               </a>
             )}
           </div>

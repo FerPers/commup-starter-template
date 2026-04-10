@@ -486,5 +486,247 @@
       "delete": "Eliminar",
       "empty": "No hay disciplinas. Agrega la primera."
     }
+  },
+  "ItrTemplates": {
+    "all": "Todos",
+    "allCount": "Todos ({count})",
+    "importCatalog": "↑ Importar catálogo",
+    "newTemplate": "+ Nuevo template",
+    "empty": {
+      "noTemplates": "No hay templates aún",
+      "noTemplatesForDisc": "No hay templates para disciplina {disc}",
+      "hint": "Crea el primer template o cambia el filtro de disciplina.",
+      "createFirstBtn": "Crear primer template"
+    },
+    "table": {
+      "colCode": "Código",
+      "colTitle": "Título",
+      "colDiscipline": "Disciplina",
+      "colPhase": "Fase",
+      "colItems": "Ítems",
+      "colVersion": "Versión",
+      "colStatus": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "global": "Global",
+    "modal": {
+      "title": "Nuevo template ITR",
+      "subtitle": "Define el código, título, fase y disciplina del template.",
+      "labelPhase": "Fase",
+      "labelDiscipline": "Disciplina",
+      "labelCode": "Código",
+      "labelTitle": "Título",
+      "labelDesc": "Descripción",
+      "descOptional": "(opcional)",
+      "selectPlaceholder": "Seleccionar...",
+      "codePlaceholder": "ej: I01A",
+      "titlePlaceholder": "ej: Loop Check — Transmisor de Presión",
+      "descPlaceholder": "Alcance o notas del template",
+      "cancel": "Cancelar",
+      "creating": "Creando...",
+      "createBtn": "Crear y abrir builder →",
+      "errorRequired": "Código, título, fase y disciplina son requeridos"
+    },
+    "deleteConfirm": "¿Eliminar template \"{code}\"? Esta acción no se puede deshacer."
+  },
+  "ItrExecution": {
+    "status": {
+      "not_started": "Sin iniciar",
+      "in_progress": "En progreso",
+      "completed": "Completado",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "roles": {
+      "executor": "Ejecutor",
+      "supervisor": "Supervisor",
+      "client": "Cliente"
+    },
+    "header": {
+      "tagLabel": "Tag:",
+      "inspectorLabel": "Inspector:",
+      "dateLabel": "Fecha:",
+      "progress": "Progreso"
+    },
+    "criticalBlocked": "{count, plural, one {⚠ # ítem crítico fuera de criterio — firma bloqueada} other {⚠ # ítems críticos fuera de criterio — firma bloqueada}}",
+    "footer": {
+      "offlineWithPending": "🔴 Sin red — {count, plural, one {# pendiente} other {# pendientes}}",
+      "offline": "🔴 Sin red",
+      "syncing": "⚡ Sincronizando...",
+      "saving": "Guardando...",
+      "saved": "Guardado {time}",
+      "autoSave": "Auto-guardado activo",
+      "btnPunch": "⚑ Punch",
+      "btnPhoto": "Foto",
+      "btnPhotos": "Fotos ({count})",
+      "btnSign": "✍ Firmar"
+    },
+    "signModal": {
+      "title": "Firmar ITR",
+      "signAs": "Firmar como",
+      "signatureLabel": "Firma",
+      "clearCanvas": "Limpiar",
+      "placeholder": "Firme aquí con el dedo o cursor",
+      "blockedMsg": "{count, plural, one {No se puede firmar: # ítem crítico reprobado.} other {No se puede firmar: # ítems críticos reprobados.}}",
+      "cancel": "Cancelar",
+      "signing": "Firmando...",
+      "confirm": "Confirmar firma"
+    },
+    "punchModal": {
+      "title": "Registrar Punch",
+      "subtitle": "Se vinculará a este ITR y tag",
+      "labelCategory": "Categoría",
+      "labelDescription": "Descripción",
+      "descPlaceholder": "Describe la deficiencia o no-conformidad...",
+      "labelTargetDate": "Fecha límite (opcional)",
+      "errorRequired": "La descripción es requerida",
+      "cancel": "Cancelar",
+      "registering": "Registrando...",
+      "register": "⚑ Registrar Punch",
+      "catA": "Cat A — Bloqueante",
+      "catB": "Cat B — Transferible",
+      "catC": "Cat C — Menor"
+    },
+    "item": {
+      "titleCritical": "Crítico",
+      "titleRequired": "Requerido",
+      "titlePhoto": "Requiere foto",
+      "observationsPlaceholder": "Observaciones...",
+      "remarksPlaceholder": "Observaciones / comentarios...",
+      "criterionBoth": "Criterio: ≥ {min} y ≤ {max} {unit}",
+      "criterionMin": "Criterio: ≥ {min} {unit}",
+      "criterionMax": "Criterio: ≤ {max} {unit}",
+      "passed": "✓ OK",
+      "failed": "✗ Fuera de rango",
+      "selectPlaceholder": "Seleccionar...",
+      "yesBtn": "SÍ",
+      "noBtn": "NO",
+      "punchTooltip": "Registrar punch en este ítem"
+    },
+    "upload": {
+      "uploading": "⏳ Subiendo...",
+      "addPhoto": "📷 Agregar foto",
+      "photoAlt": "foto",
+      "photoFullAlt": "foto ampliada"
+    }
+  },
+  "Tags": {
+    "status": {
+      "not_started": "Sin iniciar",
+      "in_progress": "En progreso",
+      "complete": "Completo",
+      "completed": "Completado",
+      "on_hold": "En espera"
+    },
+    "list": {
+      "all": "Todos",
+      "importTags": "+ Importar tags",
+      "importDisc": "+ Importar {disc}",
+      "filterBanner": "Filtrando por subsistema: {name} · {count} tags",
+      "clearFilter": "Limpiar filtro ×",
+      "emptyDisc": "No hay tags en esta disciplina",
+      "colIndex": "#",
+      "colTag": "TAG",
+      "colDescription": "Descripción",
+      "colHierarchy": "Área / Sistema / Subsistema",
+      "colPid": "P&ID",
+      "colMaker": "Fabricante · Modelo",
+      "colStatus": "Estado",
+      "openPid": "Abrir P&ID"
+    },
+    "detail": {
+      "backLink": "← {project} / Tags",
+      "prevTag": "← Anterior",
+      "nextTag": "Siguiente →",
+      "preservationRequired": "◉ Preservación requerida",
+      "editTag": "Editar tag",
+      "editing": "Editando tag",
+      "cancel": "Cancelar",
+      "tabs": {
+        "overview": "Resumen",
+        "itrs": "ITRs",
+        "punches": "Punch List",
+        "docs": "Documentos",
+        "preservation": "Preservación"
+      }
+    },
+    "overview": {
+      "sectionEquipment": "Información del equipo",
+      "sectionLocation": "Ubicación en jerarquía",
+      "sectionEngineering": "Parámetros de ingeniería",
+      "fieldStatus": "Estado",
+      "fieldDiscipline": "Disciplina",
+      "fieldManufacturer": "Fabricante",
+      "fieldModel": "Modelo",
+      "fieldSerial": "Serie (S/N)",
+      "fieldPreservation": "Preservación requerida",
+      "fieldArea": "Área",
+      "fieldSystem": "Sistema",
+      "fieldSubsystem": "Subsistema",
+      "fieldPid": "P&ID",
+      "noEngParams": "Sin parámetros — usa «Editar tag» para agregar",
+      "engRange": "Rango",
+      "engSetpoints": "Setpoints",
+      "engSignalType": "Tipo de señal",
+      "engSilLevel": "Nivel SIL",
+      "engIoAddress": "Dir. I/O",
+      "engJunctionBox": "Caja de juntas",
+      "engFluidType": "Tipo de fluido",
+      "engDatasheet": "Datasheet",
+      "engMounting": "Típico de montaje",
+      "engRevision": "Revisión",
+      "yesPreservation": "Sí",
+      "noPreservation": "No"
+    },
+    "edit": {
+      "sectionBasic": "Información básica",
+      "sectionEngineering": "Parámetros de ingeniería",
+      "sectionInstrumentation": "Instrumentación",
+      "instrSubtitle": "Setpoints · Señal · SIL",
+      "fieldDescription": "Descripción",
+      "fieldManufacturer": "Fabricante",
+      "fieldModel": "Modelo",
+      "fieldSerial": "Serie (S/N)",
+      "fieldPidNumber": "Número de P&ID",
+      "fieldStatus": "Estado",
+      "fieldPreservation": "Preservación requerida",
+      "preservationCheck": "Sí, requiere preservación",
+      "signalUndefined": "— Sin definir —",
+      "fieldRangeMin": "Rango mínimo",
+      "fieldRangeMax": "Rango máximo",
+      "fieldEngUnit": "Unidad de ingeniería",
+      "fieldFluidType": "Tipo de fluido",
+      "fieldDatasheet": "Datasheet (código)",
+      "fieldRevision": "Revisión doc.",
+      "fieldSpHH": "Setpoint HH (Alta-Alta)",
+      "fieldSpH": "Setpoint H (Alta)",
+      "fieldSpL": "Setpoint L (Baja)",
+      "fieldSpLL": "Setpoint LL (Baja-Baja)",
+      "fieldSignalType": "Tipo de señal",
+      "fieldSilLevel": "Nivel SIL",
+      "fieldIoAddress": "Dirección I/O",
+      "fieldJunctionBox": "Caja de juntas",
+      "fieldMounting": "Típico de montaje",
+      "cancel": "Cancelar",
+      "saving": "Guardando…",
+      "save": "Guardar cambios",
+      "deleteBtn": "Eliminar tag…",
+      "deleteConfirmMsg": "Esta acción eliminará el tag {tagNumber} y todos sus datos (ITRs, punches, preservación, hotspots). Es irreversible.",
+      "deleting": "Eliminando…",
+      "confirmDelete": "Confirmar eliminación"
+    },
+    "docs": {
+      "sectionTitle": "Documentos P&ID",
+      "docAvailable": "Documento disponible",
+      "docNotUploaded": "Documento aún no subido",
+      "viewPdf": "Ver PDF ↗",
+      "pdfNotUploaded": "PDF no subido",
+      "viewInViewer": "Ver en visor P&ID →",
+      "emptyTitle": "Sin documentos vinculados",
+      "emptyMsg": "Este tag no tiene un P&ID de referencia asignado. Puedes editarlo para agregarlo."
+    }
   }
 }

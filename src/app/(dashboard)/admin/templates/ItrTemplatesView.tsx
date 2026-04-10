@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createTemplate, deleteTemplate } from '@/app/actions/itr-templates'
 import BulkImportCatalogModal from './BulkImportCatalogModal'
 
@@ -31,6 +32,7 @@ const DEFAULT_FORM = { code: '', title: '', phase_id: '', discipline_id: '', des
 
 export default function ItrTemplatesView({ templates, disciplines, phases, canEdit }: Props) {
   const router = useRouter()
+  const t = useTranslations('ItrTemplates')
   const [isPending, startTransition] = useTransition()
   const [activeDisc, setActiveDisc] = useState('all')
   const [showModal, setShowModal] = useState(false)
@@ -40,22 +42,22 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   // Compute item count per template
-  function itemCount(t: Template) {
-    return t.itr_template_sections.reduce((sum, s) => sum + s.itr_template_items.length, 0)
+  function itemCount(tmpl: Template) {
+    return tmpl.itr_template_sections.reduce((sum, s) => sum + s.itr_template_items.length, 0)
   }
 
   // Filter by discipline
   const filtered = activeDisc === 'all'
     ? templates
-    : templates.filter(t => t.disciplines?.code === activeDisc)
+    : templates.filter(tmpl => tmpl.disciplines?.code === activeDisc)
 
   // Unique disciplines present in templates (for filter tabs)
-  const discCodesInTemplates = [...new Set(templates.map(t => t.disciplines?.code).filter(Boolean))]
+  const discCodesInTemplates = [...new Set(templates.map(tmpl => tmpl.disciplines?.code).filter(Boolean))]
   const discTabs = disciplines.filter(d => discCodesInTemplates.includes(d.code))
 
   async function handleCreate() {
     if (!form.code.trim() || !form.title.trim() || !form.phase_id || !form.discipline_id) {
-      setFormError('Código, título, fase y disciplina son requeridos')
+      setFormError(t('modal.errorRequired'))
       return
     }
     setFormError(null)
@@ -75,7 +77,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
   }
 
   async function handleDelete(id: string, code: string) {
-    if (!confirm(`¿Eliminar template "${code}"? Esta acción no se puede deshacer.`)) return
+    if (!confirm(t('deleteConfirm', { code }))) return
     setDeletingId(id)
     startTransition(async () => {
       await deleteTemplate(id)
@@ -100,10 +102,10 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
               borderColor: activeDisc === 'all' ? '#0f172a' : '#e2e8f0',
             }}
           >
-            Todos ({templates.length})
+            {t('allCount', { count: templates.length })}
           </button>
           {discTabs.map(d => {
-            const count = templates.filter(t => t.disciplines?.code === d.code).length
+            const count = templates.filter(tmpl => tmpl.disciplines?.code === d.code).length
             const isActive = activeDisc === d.code
             return (
               <button
@@ -133,7 +135,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 border: '1px solid #bbf7d0', cursor: 'pointer',
               }}
             >
-              ↑ Importar catálogo
+              {t('importCatalog')}
             </button>
             <button
               onClick={() => setShowModal(true)}
@@ -143,7 +145,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 border: 'none', cursor: 'pointer',
               }}
             >
-              + Nuevo template
+              {t('newTemplate')}
             </button>
           </div>
         )}
@@ -157,10 +159,10 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
         }}>
           <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.3 }}>▤</div>
           <p style={{ fontSize: '15px', fontWeight: 500, color: '#475569', margin: '0 0 6px' }}>
-            {activeDisc === 'all' ? 'No hay templates aún' : `No hay templates para disciplina ${activeDisc}`}
+            {activeDisc === 'all' ? t('empty.noTemplates') : t('empty.noTemplatesForDisc', { disc: activeDisc })}
           </p>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>
-            Crea el primer template o cambia el filtro de disciplina.
+            {t('empty.hint')}
           </p>
           {canEdit && activeDisc === 'all' && (
             <button
@@ -170,7 +172,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer',
               }}
             >
-              Crear primer template
+              {t('empty.createFirstBtn')}
             </button>
           )}
         </div>
@@ -186,25 +188,25 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             padding: '10px 20px', borderBottom: '1px solid #f1f5f9',
             fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em',
           }}>
-            <span>Código</span>
-            <span>Título</span>
-            <span>Disciplina</span>
-            <span>Fase</span>
-            <span>Ítems</span>
-            <span>Versión</span>
-            <span>Estado</span>
+            <span>{t('table.colCode')}</span>
+            <span>{t('table.colTitle')}</span>
+            <span>{t('table.colDiscipline')}</span>
+            <span>{t('table.colPhase')}</span>
+            <span>{t('table.colItems')}</span>
+            <span>{t('table.colVersion')}</span>
+            <span>{t('table.colStatus')}</span>
           </div>
 
-          {filtered.map((t, i) => {
-            const disc = t.disciplines
-            const phase = t.project_phases
-            const items = itemCount(t)
-            const isDeleting = deletingId === t.id
+          {filtered.map((tmpl, i) => {
+            const disc = tmpl.disciplines
+            const phase = tmpl.project_phases
+            const items = itemCount(tmpl)
+            const isDeleting = deletingId === tmpl.id
 
             return (
               <div
-                key={t.id}
-                onClick={() => !isDeleting && router.push(`/admin/templates/${t.id}`)}
+                key={tmpl.id}
+                onClick={() => !isDeleting && router.push(`/admin/templates/${tmpl.id}`)}
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '90px 1fr 110px 80px 60px 80px 90px',
@@ -218,14 +220,14 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
               >
                 {/* Code */}
                 <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>
-                  {t.code}
+                  {tmpl.code}
                 </span>
 
                 {/* Title */}
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>{t.title}</div>
-                  {t.is_global && (
-                    <span style={{ fontSize: '10px', color: '#64748b' }}>Global</span>
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>{tmpl.title}</div>
+                  {tmpl.is_global && (
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>{t('global')}</span>
                   )}
                 </div>
 
@@ -256,22 +258,22 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 </span>
 
                 {/* Version */}
-                <span style={{ fontSize: '12px', color: '#64748b' }}>v{t.version}</span>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>v{tmpl.version}</span>
 
                 {/* Status + actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   onClick={e => e.stopPropagation()}>
                   <span style={{
                     padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
-                    background: t.is_active ? '#10b98115' : '#94a3b815',
-                    color: t.is_active ? '#10b981' : '#94a3b8',
-                    border: `1px solid ${t.is_active ? '#10b98130' : '#e2e8f0'}`,
+                    background: tmpl.is_active ? '#10b98115' : '#94a3b815',
+                    color: tmpl.is_active ? '#10b981' : '#94a3b8',
+                    border: `1px solid ${tmpl.is_active ? '#10b98130' : '#e2e8f0'}`,
                   }}>
-                    {t.is_active ? 'Activo' : 'Inactivo'}
+                    {tmpl.is_active ? t('status.active') : t('status.inactive')}
                   </span>
                   {canEdit && (
                     <button
-                      onClick={() => handleDelete(t.id, t.code)}
+                      onClick={() => handleDelete(tmpl.id, tmpl.code)}
                       disabled={isPending}
                       style={{
                         width: '28px', height: '28px', display: 'flex', alignItems: 'center',
@@ -305,36 +307,36 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }}>
             <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>
-              Nuevo template ITR
+              {t('modal.title')}
             </h2>
             <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 24px' }}>
-              Define el código, título, fase y disciplina del template.
+              {t('modal.subtitle')}
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Phase + Discipline row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <label style={labelStyle}>
-                  Fase <span style={{ color: '#ef4444' }}>*</span>
+                  {t('modal.labelPhase')} <span style={{ color: '#ef4444' }}>*</span>
                   <select
                     value={form.phase_id}
                     onChange={e => setForm(f => ({ ...f, phase_id: e.target.value }))}
                     style={inputStyle}
                   >
-                    <option value="">Seleccionar...</option>
+                    <option value="">{t('modal.selectPlaceholder')}</option>
                     {phases.sort((a, b) => a.order_index - b.order_index).map(p => (
                       <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
                     ))}
                   </select>
                 </label>
                 <label style={labelStyle}>
-                  Disciplina <span style={{ color: '#ef4444' }}>*</span>
+                  {t('modal.labelDiscipline')} <span style={{ color: '#ef4444' }}>*</span>
                   <select
                     value={form.discipline_id}
                     onChange={e => setForm(f => ({ ...f, discipline_id: e.target.value }))}
                     style={inputStyle}
                   >
-                    <option value="">Seleccionar...</option>
+                    <option value="">{t('modal.selectPlaceholder')}</option>
                     {disciplines.map(d => (
                       <option key={d.id} value={d.id}>{d.code} — {d.name}</option>
                     ))}
@@ -344,11 +346,11 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
               {/* Code */}
               <label style={labelStyle}>
-                Código <span style={{ color: '#ef4444' }}>*</span>
+                {t('modal.labelCode')} <span style={{ color: '#ef4444' }}>*</span>
                 <input
                   value={form.code}
                   onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                  placeholder="ej: I01A"
+                  placeholder={t('modal.codePlaceholder')}
                   maxLength={20}
                   style={inputStyle}
                 />
@@ -356,22 +358,22 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
               {/* Title */}
               <label style={labelStyle}>
-                Título <span style={{ color: '#ef4444' }}>*</span>
+                {t('modal.labelTitle')} <span style={{ color: '#ef4444' }}>*</span>
                 <input
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="ej: Loop Check — Transmisor de Presión"
+                  placeholder={t('modal.titlePlaceholder')}
                   style={inputStyle}
                 />
               </label>
 
               {/* Description (optional) */}
               <label style={labelStyle}>
-                Descripción <span style={{ color: '#94a3b8', fontWeight: 400 }}>(opcional)</span>
+                {t('modal.labelDesc')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>{t('modal.descOptional')}</span>
                 <input
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Alcance o notas del template"
+                  placeholder={t('modal.descPlaceholder')}
                   style={inputStyle}
                 />
               </label>
@@ -391,7 +393,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                   borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer',
                 }}
               >
-                Cancelar
+                {t('modal.cancel')}
               </button>
               <button
                 onClick={handleCreate}
@@ -402,7 +404,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                   cursor: isPending ? 'not-allowed' : 'pointer',
                 }}
               >
-                {isPending ? 'Creando...' : 'Crear y abrir builder →'}
+                {isPending ? t('modal.creating') : t('modal.createBtn')}
               </button>
             </div>
           </div>

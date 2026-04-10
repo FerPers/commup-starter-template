@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { signItr, saveItrAttachment, deleteItrAttachment } from '@/app/actions/itr-instances'
 import { createPunch } from '@/app/actions/punches'
 import { createClient } from '@/lib/supabase/client'
@@ -88,20 +89,14 @@ type ItrData = {
   itr_signatures: Signature[]
 }
 
-// ── Status config ─────────────────────────────────────────────────────
+// ── Status config (colors only) ───────────────────────────────────────
 
-const ITR_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  not_started: { label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9' },
-  in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { label: 'Completado',  color: '#10b981', bg: '#ecfdf5' },
-  approved:     { label: 'Aprobado',    color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:     { label: 'Rechazado',   color: '#ef4444', bg: '#fee2e2' },
-}
-
-const ROLE_LABELS: Record<string, string> = {
-  executor: 'Ejecutor',
-  supervisor: 'Supervisor',
-  client: 'Cliente',
+const ITR_STATUS: Record<string, { color: string; bg: string }> = {
+  not_started: { color: '#64748b', bg: '#f1f5f9' },
+  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
+  completed:    { color: '#10b981', bg: '#ecfdf5' },
+  approved:     { color: '#7c3aed', bg: '#f5f3ff' },
+  rejected:     { color: '#ef4444', bg: '#fee2e2' },
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -133,6 +128,8 @@ export default function ItrExecution({
   attachments?: Attachment[]
 }) {
   const router = useRouter()
+  const t = useTranslations('ItrExecution')
+  const locale = useLocale()
   const [isPending, startTransition] = useTransition()
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -174,6 +171,15 @@ export default function ItrExecution({
   const tag = itr.tags
   const phase = itr.project_phases
   const st = ITR_STATUS[itr.status] ?? ITR_STATUS.not_started
+
+  // Status + role labels (i18n)
+  const STATUS_LABELS: Record<string, string> = {
+    not_started: t('status.not_started'),
+    in_progress:  t('status.in_progress'),
+    completed:    t('status.completed'),
+    approved:     t('status.approved'),
+    rejected:     t('status.rejected'),
+  }
 
   // Build response lookup by item_id
   const [responses, setResponses] = useState<Record<string, Response>>(() => {
@@ -280,7 +286,7 @@ export default function ItrExecution({
             )}
           </div>
           <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
-            {st.label}
+            {STATUS_LABELS[itr.status] ?? itr.status}
           </span>
         </div>
 
@@ -288,15 +294,15 @@ export default function ItrExecution({
         {tag && (
           <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b', flexWrap: 'wrap' }}>
             <span>
-              <strong style={{ color: '#374151' }}>Tag:</strong>{' '}
+              <strong style={{ color: '#374151' }}>{t('header.tagLabel')}</strong>{' '}
               <span style={{ fontFamily: 'ui-monospace, monospace', color: tag.disciplines?.color ?? '#374151' }}>{tag.tag_number}</span>
               {' — '}{tag.description}
             </span>
             {executor?.profiles?.full_name && (
-              <span><strong style={{ color: '#374151' }}>Inspector:</strong> {executor.profiles.full_name}</span>
+              <span><strong style={{ color: '#374151' }}>{t('header.inspectorLabel')}</strong> {executor.profiles.full_name}</span>
             )}
             {itr.scheduled_date && (
-              <span><strong style={{ color: '#374151' }}>Fecha:</strong> {itr.scheduled_date}</span>
+              <span><strong style={{ color: '#374151' }}>{t('header.dateLabel')}</strong> {itr.scheduled_date}</span>
             )}
           </div>
         )}
@@ -304,7 +310,7 @@ export default function ItrExecution({
         {/* Progress bar */}
         <div style={{ marginTop: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginBottom: '5px' }}>
-            <span>Progreso</span>
+            <span>{t('header.progress')}</span>
             <span>{itr.progress_pct}%</span>
           </div>
           <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
@@ -323,7 +329,7 @@ export default function ItrExecution({
                 <div style={{ padding: '7px 10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: sig ? '4px' : 0 }}>
                     <span style={{ fontSize: '12px' }}>{sig ? '✓' : '○'}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : '#94a3b8' }}>{ROLE_LABELS[role]}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : '#94a3b8' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
                   </div>
                   {sig && (
                     <>
@@ -338,7 +344,7 @@ export default function ItrExecution({
                 </div>
                 {sig?.signature_image && (
                   <div style={{ borderTop: '1px solid #a7f3d0', padding: '4px 6px', background: '#f0fdf4' }}>
-                    <img src={sig.signature_image} alt={`Firma ${ROLE_LABELS[role]}`} style={{ height: '36px', maxWidth: '140px', objectFit: 'contain', display: 'block' }} />
+                    <img src={sig.signature_image} alt={t(`roles.${role}` as Parameters<typeof t>[0])} style={{ height: '36px', maxWidth: '140px', objectFit: 'contain', display: 'block' }} />
                   </div>
                 )}
               </div>
@@ -350,7 +356,7 @@ export default function ItrExecution({
         {criticalBlocked.length > 0 && (
           <div style={{ marginTop: '12px', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', border: '1px solid #fecaca' }}>
             <p style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444', margin: '0 0 4px' }}>
-              ⚠ {criticalBlocked.length} ítem{criticalBlocked.length > 1 ? 's' : ''} crítico{criticalBlocked.length > 1 ? 's' : ''} fuera de criterio — firma bloqueada
+              {t('criticalBlocked', { count: criticalBlocked.length })}
             </p>
             {criticalBlocked.map(item => (
               <p key={item.id} style={{ fontSize: '11px', color: '#7f1d1d', margin: '2px 0' }}>
@@ -423,40 +429,40 @@ export default function ItrExecution({
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #e2e8f0', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', zIndex: 100 }}>
         <div style={{ fontSize: '11px', color: isOffline ? '#f59e0b' : syncing ? '#3b82f6' : isPending ? '#3b82f6' : lastSaved ? '#10b981' : '#94a3b8' }}>
           {isOffline && pendingCount > 0
-            ? `🔴 Sin red — ${pendingCount} pendiente${pendingCount > 1 ? 's' : ''}`
+            ? t('footer.offlineWithPending', { count: pendingCount })
             : isOffline
-            ? '🔴 Sin red'
+            ? t('footer.offline')
             : syncing
-            ? '⚡ Sincronizando...'
+            ? t('footer.syncing')
             : isPending
-            ? 'Guardando...'
+            ? t('footer.saving')
             : saveError
             ? `⚠ ${saveError}`
             : lastSaved
-            ? `Guardado ${lastSaved.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}`
-            : 'Auto-guardado activo'}
+            ? t('footer.saved', { time: lastSaved.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) })
+            : t('footer.autoSave')}
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={() => openPunchModal('')}
             style={{ padding: '9px 16px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', fontSize: '13px', color: '#c2410c', cursor: 'pointer', fontWeight: 600 }}
           >
-            ⚑ Punch
+            {t('footer.btnPunch')}
           </button>
           <button
             onClick={() => generalPhotoInputRef.current?.click()}
             disabled={!canEdit || generalUploading}
-            title={generalUploadError ?? 'Agregar foto general al ITR'}
+            title={generalUploadError ?? t('upload.addPhoto')}
             style={{ padding: '9px 16px', background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, borderRadius: '8px', fontSize: '13px', color: generalUploading ? '#3b82f6' : '#15803d', cursor: canEdit && !generalUploading ? 'pointer' : 'not-allowed', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
           >
-            {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? `Fotos (${(attachmentMap['general'] ?? []).length})` : 'Foto'}
+            {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
           </button>
           <button
             onClick={() => setShowSignModal(true)}
             disabled={!canEdit || itr.status === 'approved'}
             style={{ padding: '9px 20px', background: !canEdit || itr.status === 'approved' ? '#f8fafc' : '#7c3aed', color: !canEdit || itr.status === 'approved' ? '#94a3b8' : 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !canEdit || itr.status === 'approved' ? 'not-allowed' : 'pointer' }}
           >
-            ✍ Firmar
+            {t('footer.btnSign')}
           </button>
         </div>
       </div>
@@ -509,6 +515,7 @@ function SignModal({
   onClose: () => void
   onSign: (role: 'executor' | 'supervisor' | 'client', signatureImage: string) => void
 }) {
+  const t = useTranslations('ItrExecution')
   const [signRole, setSignRole] = useState<'executor' | 'supervisor' | 'client'>(() => {
     const roles = ['executor', 'supervisor', 'client'] as const
     return roles.find(r => !itrSignatures.some(s => s.role === r)) ?? 'executor'
@@ -580,12 +587,12 @@ function SignModal({
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Firmar ITR</h2>
+        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('signModal.title')}</h2>
         <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 18px' }}>{itrNumber}</p>
 
         {/* Role selector */}
         <div style={{ marginBottom: '18px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>Firmar como</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>{t('signModal.signAs')}</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {(['executor', 'supervisor', 'client'] as const).map(role => {
               const alreadySigned = itrSignatures.some(s => s.role === role)
@@ -596,7 +603,7 @@ function SignModal({
                   disabled={alreadySigned}
                   style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? '#7c3aed' : '#e2e8f0', background: alreadySigned ? '#f8fafc' : signRole === role ? '#f5f3ff' : 'white', color: alreadySigned ? '#94a3b8' : signRole === role ? '#7c3aed' : '#374151', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
                 >
-                  {alreadySigned ? '✓ ' : ''}{ROLE_LABELS[role]}
+                  {alreadySigned ? '✓ ' : ''}{t(`roles.${role}` as Parameters<typeof t>[0])}
                 </button>
               )
             })}
@@ -606,9 +613,9 @@ function SignModal({
         {/* Canvas drawing pad */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Firma</label>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>{t('signModal.signatureLabel')}</label>
             <button onClick={clearCanvas} style={{ fontSize: '11px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
-              Limpiar
+              {t('signModal.clearCanvas')}
             </button>
           </div>
           <div style={{ position: 'relative', border: '1.5px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#fafafa' }}>
@@ -624,7 +631,7 @@ function SignModal({
             />
             {!hasDrawn && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Firme aquí con el dedo o cursor</span>
+                <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{t('signModal.placeholder')}</span>
               </div>
             )}
           </div>
@@ -634,7 +641,7 @@ function SignModal({
         {blocked && (
           <div style={{ padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', marginBottom: '16px' }}>
             <p style={{ fontSize: '12px', color: '#ef4444', margin: 0, fontWeight: 600 }}>
-              No se puede firmar: {criticalBlocked.length} ítem{criticalBlocked.length > 1 ? 's' : ''} crítico{criticalBlocked.length > 1 ? 's' : ''} reprobado{criticalBlocked.length > 1 ? 's' : ''}.
+              {t('signModal.blockedMsg', { count: criticalBlocked.length })}
             </p>
           </div>
         )}
@@ -650,14 +657,14 @@ function SignModal({
             onClick={onClose}
             style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
           >
-            Cancelar
+            {t('signModal.cancel')}
           </button>
           <button
             onClick={() => onSign(signRole, canvasRef.current!.toDataURL('image/png'))}
             disabled={isPending || blocked || !hasDrawn}
             style={{ padding: '9px 20px', background: isPending || blocked || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending || blocked || !hasDrawn ? 'not-allowed' : 'pointer' }}
           >
-            {isPending ? 'Firmando...' : 'Confirmar firma'}
+            {isPending ? t('signModal.signing') : t('signModal.confirm')}
           </button>
         </div>
       </div>
@@ -686,6 +693,7 @@ function PhotoUpload({
   onAdded: (att: Attachment) => void
   onRemoved: (attId: string) => void
 }) {
+  const t = useTranslations('ItrExecution')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -725,7 +733,7 @@ function PhotoUpload({
           {existingAttachments.map(att => (
             <div key={att.id} style={{ position: 'relative', width: '72px', height: '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', flexShrink: 0 }}>
               {att.signed_url
-                ? <img src={att.signed_url} alt="foto" style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setLightbox(att.signed_url)} />
+                ? <img src={att.signed_url} alt={t('upload.photoAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setLightbox(att.signed_url)} />
                 : <div style={{ width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📷</div>
               }
               {canEdit && (
@@ -748,7 +756,7 @@ function PhotoUpload({
           disabled={uploading}
           style={{ padding: '7px 14px', background: uploading ? '#eff6ff' : '#f0fdf4', border: '1px dashed #86efac', borderRadius: '7px', fontSize: '12px', color: uploading ? '#3b82f6' : '#15803d', cursor: uploading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
         >
-          {uploading ? '⏳ Subiendo...' : '📷 Agregar foto'}
+          {uploading ? t('upload.uploading') : t('upload.addPhoto')}
         </button>
       )}
 
@@ -762,7 +770,7 @@ function PhotoUpload({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}
           onClick={() => setLightbox(null)}
         >
-          <img src={lightbox} alt="foto ampliada" style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '10px', objectFit: 'contain' }} />
+          <img src={lightbox} alt={t('upload.photoFullAlt')} style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '10px', objectFit: 'contain' }} />
         </div>
       )}
     </div>
@@ -770,12 +778,6 @@ function PhotoUpload({
 }
 
 // ── Create Punch Modal ────────────────────────────────────────────────
-
-const CATEGORY_CONFIG = {
-  A: { label: 'Cat A — Bloqueante', color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
-  B: { label: 'Cat B — Transferible', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  C: { label: 'Cat C — Menor',        color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
-} as const
 
 function CreatePunchModal({
   itrId,
@@ -794,6 +796,13 @@ function CreatePunchModal({
   onClose: () => void
   onCreated: () => void
 }) {
+  const t = useTranslations('ItrExecution')
+  const CATEGORY_CONFIG = {
+    A: { label: t('punchModal.catA'), color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
+    B: { label: t('punchModal.catB'), color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+    C: { label: t('punchModal.catC'), color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+  } as const
+
   const [description, setDescription] = useState(initialDescription)
   const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
   const [targetDate, setTargetDate] = useState('')
@@ -801,7 +810,7 @@ function CreatePunchModal({
   const [error, setError] = useState<string | null>(null)
 
   function handleSubmit() {
-    if (!description.trim()) { setError('La descripción es requerida'); return }
+    if (!description.trim()) { setError(t('punchModal.errorRequired')); return }
     setError(null)
     startTransition(async () => {
       const res = await createPunch({
@@ -823,12 +832,12 @@ function CreatePunchModal({
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Registrar Punch</h2>
-        <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 20px' }}>Se vinculará a este ITR y tag</p>
+        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('punchModal.title')}</h2>
+        <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 20px' }}>{t('punchModal.subtitle')}</p>
 
         {/* Category */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>Categoría</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>{t('punchModal.labelCategory')}</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {(['A', 'B', 'C'] as const).map(cat => {
               const cfg = CATEGORY_CONFIG[cat]
@@ -848,19 +857,19 @@ function CreatePunchModal({
 
         {/* Description */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>Descripción</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelDescription')}</label>
           <textarea
             rows={3}
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Describe la deficiencia o no-conformidad..."
+            placeholder={t('punchModal.descPlaceholder')}
             style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
           />
         </div>
 
         {/* Target date */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>Fecha límite (opcional)</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelTargetDate')}</label>
           <input
             type="date"
             value={targetDate}
@@ -880,14 +889,14 @@ function CreatePunchModal({
             onClick={onClose}
             style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
           >
-            Cancelar
+            {t('punchModal.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={isPending}
             style={{ padding: '9px 20px', background: isPending ? '#fed7aa' : '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}
           >
-            {isPending ? 'Registrando...' : '⚑ Registrar Punch'}
+            {isPending ? t('punchModal.registering') : t('punchModal.register')}
           </button>
         </div>
       </div>
@@ -929,6 +938,7 @@ function ItemRow({
   onAttachmentAdded: (att: Attachment) => void
   onAttachmentRemoved: (attId: string) => void
 }) {
+  const t = useTranslations('ItrExecution')
   const isPassed = response?.is_passed
 
   return (
@@ -942,9 +952,9 @@ function ItemRow({
               <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: '#94a3b8', minWidth: '28px' }}>{item.item_number}</span>
             )}
             <div style={{ display: 'flex', gap: '4px' }}>
-              {item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title="Crítico" />}
-              {item.is_required && !item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title="Requerido" />}
-              {item.requires_photo && <span style={{ fontSize: '10px', color: '#3b82f6' }} title="Requiere foto">⊙</span>}
+              {item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleCritical')} />}
+              {item.is_required && !item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleRequired')} />}
+              {item.requires_photo && <span style={{ fontSize: '10px', color: '#3b82f6' }} title={t('item.titlePhoto')}>⊙</span>}
             </div>
           </div>
           <p style={{ fontSize: '13px', color: '#0f172a', margin: '2px 0 0', lineHeight: '1.4' }}>{item.description}</p>
@@ -956,7 +966,7 @@ function ItemRow({
         {/* Add punch button */}
         <button
           onClick={() => onAddPunch(item.description, item.id)}
-          title="Registrar punch en este ítem"
+          title={t('item.punchTooltip')}
           style={{ flexShrink: 0, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, color: '#c2410c', background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer', marginTop: '2px' }}
         >
           ⚑
@@ -988,7 +998,7 @@ function ItemRow({
                 })}
                 style={{ padding: '6px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : '#e2e8f0', background: response?.value_bool === val ? (val ? '#ecfdf5' : '#fee2e2') : 'white', color: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : '#64748b', cursor: canEdit ? 'pointer' : 'default' }}
               >
-                {val ? 'SÍ' : 'NO'}
+                {val ? t('item.yesBtn') : t('item.noBtn')}
               </button>
             ))}
           </div>
@@ -1001,7 +1011,7 @@ function ItemRow({
           rows={2}
           defaultValue={response?.value_text ?? ''}
           disabled={!canEdit}
-          placeholder="Observaciones..."
+          placeholder={t('item.observationsPlaceholder')}
           onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
           style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
         />
@@ -1038,11 +1048,15 @@ function ItemRow({
           </div>
           {(item.acceptance_min !== null || item.acceptance_max !== null) && (
             <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-              Criterio: {item.acceptance_min !== null ? `≥ ${item.acceptance_min}` : ''}{item.acceptance_min !== null && item.acceptance_max !== null ? ' y ' : ''}{item.acceptance_max !== null ? `≤ ${item.acceptance_max}` : ''} {item.unit ?? ''}
+              {item.acceptance_min !== null && item.acceptance_max !== null
+                ? t('item.criterionBoth', { min: item.acceptance_min, max: item.acceptance_max, unit: item.unit ?? '' })
+                : item.acceptance_min !== null
+                ? t('item.criterionMin', { min: item.acceptance_min, unit: item.unit ?? '' })
+                : t('item.criterionMax', { max: item.acceptance_max!, unit: item.unit ?? '' })}
             </span>
           )}
-          {isPassed === true && <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>✓ OK</span>}
-          {isPassed === false && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600 }}>✗ Fuera de rango</span>}
+          {isPassed === true && <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>{t('item.passed')}</span>}
+          {isPassed === false && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600 }}>{t('item.failed')}</span>}
         </div>
       )}
 
@@ -1054,7 +1068,7 @@ function ItemRow({
           onChange={e => onSave(item.id, { valueOption: e.target.value || null })}
           style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', background: 'white', fontFamily: 'inherit', minWidth: '200px' }}
         >
-          <option value="">Seleccionar...</option>
+          <option value="">{t('item.selectPlaceholder')}</option>
           {(item.options ?? (item.acceptance_text ? item.acceptance_text.split(',').map(s => s.trim()) : [])).map((opt: string) => (
             <option key={opt} value={opt}>{opt}</option>
           ))}
@@ -1093,7 +1107,7 @@ function ItemRow({
             rows={1}
             defaultValue={response?.remarks ?? ''}
             disabled={!canEdit}
-            placeholder="Observaciones / comentarios..."
+            placeholder={t('item.remarksPlaceholder')}
             onBlur={e => {
               onSave(item.id, {
                 valueBool: response?.value_bool ?? null,

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 type Discipline = { id: string; code: string; name: string; color: string }
 type Area       = { id: string; code: string; name: string }
@@ -21,10 +22,10 @@ type Tag = {
   subsystems: Subsystem
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  not_started: { label: 'Sin iniciar', color: '#94a3b8', bg: '#f1f5f9' },
-  in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
-  complete:     { label: 'Completo',    color: '#10b981', bg: '#ecfdf5' },
+const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
+  not_started: { color: '#94a3b8', bg: '#f1f5f9' },
+  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
+  complete:     { color: '#10b981', bg: '#ecfdf5' },
 }
 
 export default function TagsView({
@@ -38,6 +39,7 @@ export default function TagsView({
   canEdit: boolean
   pidUrlMap?: Record<string, string>
 }) {
+  const t = useTranslations('Tags')
   const [activeDiscipline, setActiveDiscipline] = useState<string>('ALL')
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -51,7 +53,7 @@ export default function TagsView({
   // Build discipline summary with counts (respects subsystem filter)
   const disciplineMap = new Map<string, { code: string; name: string; color: string; count: number }>()
   const subsystemFilteredTags = subsystemFilter
-    ? tags.filter(t => t.subsystems?.id === subsystemFilter)
+    ? tags.filter(tag => tag.subsystems?.id === subsystemFilter)
     : tags
 
   for (const tag of subsystemFilteredTags) {
@@ -63,21 +65,27 @@ export default function TagsView({
   }
   const disciplines = [...disciplineMap.values()].sort((a, b) => a.code.localeCompare(b.code))
 
-  const filtered = subsystemFilteredTags.filter(t =>
-    activeDiscipline === 'ALL' || t.disciplines.code === activeDiscipline
+  const filtered = subsystemFilteredTags.filter(tag =>
+    activeDiscipline === 'ALL' || tag.disciplines.code === activeDiscipline
   )
 
   // Subsystem name for banner
   const subsystemName = subsystemFilter
-    ? tags.find(t => t.subsystems?.id === subsystemFilter)?.subsystems?.name ?? subsystemFilter
+    ? tags.find(tag => tag.subsystems?.id === subsystemFilter)?.subsystems?.name ?? subsystemFilter
     : null
 
   // Show P&ID column only if at least one tag in the filtered set has a P&ID value
-  const showPid = filtered.some(t => t.pid_drawing)
+  const showPid = filtered.some(tag => tag.pid_drawing)
 
   const activeDisc = activeDiscipline !== 'ALL'
     ? disciplines.find(d => d.code === activeDiscipline)
     : undefined
+
+  const STATUS_LABELS: Record<string, string> = {
+    not_started: t('status.not_started'),
+    in_progress:  t('status.in_progress'),
+    complete:     t('status.complete'),
+  }
 
   return (
     <div>
@@ -85,7 +93,7 @@ export default function TagsView({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <FilterTab
-            label="Todos"
+            label={t('list.all')}
             count={tags.length}
             active={activeDiscipline === 'ALL'}
             color="#3b82f6"
@@ -119,7 +127,7 @@ export default function TagsView({
               border: `1px solid ${activeDisc ? `${activeDisc.color}40` : '#bfdbfe'}`,
             }}
           >
-            + Importar{activeDiscipline !== 'ALL' ? ` ${activeDiscipline}` : ' tags'}
+            {activeDiscipline !== 'ALL' ? t('list.importDisc', { disc: activeDiscipline }) : t('list.importTags')}
           </a>
         )}
       </div>
@@ -133,38 +141,39 @@ export default function TagsView({
           fontSize: '13px', color: '#1d4ed8',
         }}>
           <span>
-            Filtrando por subsistema: <strong>{subsystemName}</strong> · {subsystemFilteredTags.length} tags
+            {t('list.filterBanner', { name: subsystemName, count: subsystemFilteredTags.length })}
           </span>
           <a
             href={`/projects/${projectId}/tags`}
             style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}
           >
-            Limpiar filtro ×
+            {t('list.clearFilter')}
           </a>
         </div>
       )}
 
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px', color: '#94a3b8', fontSize: '14px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          No hay tags en esta disciplina
+          {t('list.emptyDisc')}
         </div>
       ) : (
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <Th>#</Th>
-                <Th>TAG</Th>
-                <Th>Descripción</Th>
-                <Th>Área / Sistema / Subsistema</Th>
-                {showPid && <Th>P&ID</Th>}
-                <Th>Fabricante · Modelo</Th>
-                <Th>Estado</Th>
+                <Th>{t('list.colIndex')}</Th>
+                <Th>{t('list.colTag')}</Th>
+                <Th>{t('list.colDescription')}</Th>
+                <Th>{t('list.colHierarchy')}</Th>
+                {showPid && <Th>{t('list.colPid')}</Th>}
+                <Th>{t('list.colMaker')}</Th>
+                <Th>{t('list.colStatus')}</Th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((tag, i) => {
-                const status = STATUS_CONFIG[tag.status] ?? STATUS_CONFIG.not_started
+                const statusStyle = STATUS_COLORS[tag.status] ?? STATUS_COLORS.not_started
+                const statusLabel = STATUS_LABELS[tag.status] ?? tag.status
                 const area   = tag.subsystems?.systems?.areas
                 const sys    = tag.subsystems?.systems
                 const sub    = tag.subsystems
@@ -209,7 +218,7 @@ export default function TagsView({
                               href={pidUrlMap[tag.pid_drawing]}
                               target="_blank"
                               rel="noopener noreferrer"
-                              title="Abrir P&ID"
+                              title={t('list.openPid')}
                               style={{
                                 fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace',
                                 background: '#eff6ff', padding: '2px 8px', borderRadius: '5px',
@@ -233,8 +242,8 @@ export default function TagsView({
                       <span style={{ fontSize: '12px', color: '#64748b' }}>{maker || '—'}</span>
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 500, background: status.bg, color: status.color }}>
-                        {status.label}
+                      <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 500, background: statusStyle.bg, color: statusStyle.color }}>
+                        {statusLabel}
                       </span>
                     </td>
                   </tr>

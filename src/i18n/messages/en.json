@@ -486,5 +486,247 @@
       "delete": "Delete",
       "empty": "No disciplines. Add the first one."
     }
+  },
+  "ItrTemplates": {
+    "all": "All",
+    "allCount": "All ({count})",
+    "importCatalog": "↑ Import catalog",
+    "newTemplate": "+ New template",
+    "empty": {
+      "noTemplates": "No templates yet",
+      "noTemplatesForDisc": "No templates for discipline {disc}",
+      "hint": "Create the first template or change the discipline filter.",
+      "createFirstBtn": "Create first template"
+    },
+    "table": {
+      "colCode": "Code",
+      "colTitle": "Title",
+      "colDiscipline": "Discipline",
+      "colPhase": "Phase",
+      "colItems": "Items",
+      "colVersion": "Version",
+      "colStatus": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "global": "Global",
+    "modal": {
+      "title": "New ITR template",
+      "subtitle": "Define the code, title, phase, and discipline of the template.",
+      "labelPhase": "Phase",
+      "labelDiscipline": "Discipline",
+      "labelCode": "Code",
+      "labelTitle": "Title",
+      "labelDesc": "Description",
+      "descOptional": "(optional)",
+      "selectPlaceholder": "Select...",
+      "codePlaceholder": "e.g. I01A",
+      "titlePlaceholder": "e.g. Loop Check — Pressure Transmitter",
+      "descPlaceholder": "Scope or notes for this template",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "createBtn": "Create and open builder →",
+      "errorRequired": "Code, title, phase, and discipline are required"
+    },
+    "deleteConfirm": "Delete template \"{code}\"? This action cannot be undone."
+  },
+  "ItrExecution": {
+    "status": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "roles": {
+      "executor": "Executor",
+      "supervisor": "Supervisor",
+      "client": "Client"
+    },
+    "header": {
+      "tagLabel": "Tag:",
+      "inspectorLabel": "Inspector:",
+      "dateLabel": "Date:",
+      "progress": "Progress"
+    },
+    "criticalBlocked": "{count, plural, one {⚠ # critical item out of criterion — signature blocked} other {⚠ # critical items out of criterion — signature blocked}}",
+    "footer": {
+      "offlineWithPending": "🔴 No network — {count, plural, one {# pending} other {# pending}}",
+      "offline": "🔴 No network",
+      "syncing": "⚡ Syncing...",
+      "saving": "Saving...",
+      "saved": "Saved {time}",
+      "autoSave": "Auto-save active",
+      "btnPunch": "⚑ Punch",
+      "btnPhoto": "Photo",
+      "btnPhotos": "Photos ({count})",
+      "btnSign": "✍ Sign"
+    },
+    "signModal": {
+      "title": "Sign ITR",
+      "signAs": "Sign as",
+      "signatureLabel": "Signature",
+      "clearCanvas": "Clear",
+      "placeholder": "Sign here with your finger or cursor",
+      "blockedMsg": "{count, plural, one {Cannot sign: # critical item failed.} other {Cannot sign: # critical items failed.}}",
+      "cancel": "Cancel",
+      "signing": "Signing...",
+      "confirm": "Confirm signature"
+    },
+    "punchModal": {
+      "title": "Register Punch",
+      "subtitle": "Will be linked to this ITR and tag",
+      "labelCategory": "Category",
+      "labelDescription": "Description",
+      "descPlaceholder": "Describe the deficiency or non-conformity...",
+      "labelTargetDate": "Due date (optional)",
+      "errorRequired": "Description is required",
+      "cancel": "Cancel",
+      "registering": "Registering...",
+      "register": "⚑ Register Punch",
+      "catA": "Cat A — Blocking",
+      "catB": "Cat B — Transferable",
+      "catC": "Cat C — Minor"
+    },
+    "item": {
+      "titleCritical": "Critical",
+      "titleRequired": "Required",
+      "titlePhoto": "Requires photo",
+      "observationsPlaceholder": "Observations...",
+      "remarksPlaceholder": "Observations / comments...",
+      "criterionBoth": "Criterion: ≥ {min} and ≤ {max} {unit}",
+      "criterionMin": "Criterion: ≥ {min} {unit}",
+      "criterionMax": "Criterion: ≤ {max} {unit}",
+      "passed": "✓ OK",
+      "failed": "✗ Out of range",
+      "selectPlaceholder": "Select...",
+      "yesBtn": "YES",
+      "noBtn": "NO",
+      "punchTooltip": "Register punch for this item"
+    },
+    "upload": {
+      "uploading": "⏳ Uploading...",
+      "addPhoto": "📷 Add photo",
+      "photoAlt": "photo",
+      "photoFullAlt": "enlarged photo"
+    }
+  },
+  "Tags": {
+    "status": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "complete": "Complete",
+      "completed": "Completed",
+      "on_hold": "On hold"
+    },
+    "list": {
+      "all": "All",
+      "importTags": "+ Import tags",
+      "importDisc": "+ Import {disc}",
+      "filterBanner": "Filtering by subsystem: {name} · {count} tags",
+      "clearFilter": "Clear filter ×",
+      "emptyDisc": "No tags in this discipline",
+      "colIndex": "#",
+      "colTag": "TAG",
+      "colDescription": "Description",
+      "colHierarchy": "Area / System / Subsystem",
+      "colPid": "P&ID",
+      "colMaker": "Manufacturer · Model",
+      "colStatus": "Status",
+      "openPid": "Open P&ID"
+    },
+    "detail": {
+      "backLink": "← {project} / Tags",
+      "prevTag": "← Previous",
+      "nextTag": "Next →",
+      "preservationRequired": "◉ Preservation required",
+      "editTag": "Edit tag",
+      "editing": "Editing tag",
+      "cancel": "Cancel",
+      "tabs": {
+        "overview": "Overview",
+        "itrs": "ITRs",
+        "punches": "Punch List",
+        "docs": "Documents",
+        "preservation": "Preservation"
+      }
+    },
+    "overview": {
+      "sectionEquipment": "Equipment information",
+      "sectionLocation": "Hierarchy location",
+      "sectionEngineering": "Engineering parameters",
+      "fieldStatus": "Status",
+      "fieldDiscipline": "Discipline",
+      "fieldManufacturer": "Manufacturer",
+      "fieldModel": "Model",
+      "fieldSerial": "Serial (S/N)",
+      "fieldPreservation": "Preservation required",
+      "fieldArea": "Area",
+      "fieldSystem": "System",
+      "fieldSubsystem": "Subsystem",
+      "fieldPid": "P&ID",
+      "noEngParams": "No parameters — use «Edit tag» to add",
+      "engRange": "Range",
+      "engSetpoints": "Setpoints",
+      "engSignalType": "Signal type",
+      "engSilLevel": "SIL level",
+      "engIoAddress": "I/O address",
+      "engJunctionBox": "Junction box",
+      "engFluidType": "Fluid type",
+      "engDatasheet": "Datasheet",
+      "engMounting": "Mounting typical",
+      "engRevision": "Revision",
+      "yesPreservation": "Yes",
+      "noPreservation": "No"
+    },
+    "edit": {
+      "sectionBasic": "Basic information",
+      "sectionEngineering": "Engineering parameters",
+      "sectionInstrumentation": "Instrumentation",
+      "instrSubtitle": "Setpoints · Signal · SIL",
+      "fieldDescription": "Description",
+      "fieldManufacturer": "Manufacturer",
+      "fieldModel": "Model",
+      "fieldSerial": "Serial (S/N)",
+      "fieldPidNumber": "P&ID number",
+      "fieldStatus": "Status",
+      "fieldPreservation": "Preservation required",
+      "preservationCheck": "Yes, preservation required",
+      "signalUndefined": "— Undefined —",
+      "fieldRangeMin": "Minimum range",
+      "fieldRangeMax": "Maximum range",
+      "fieldEngUnit": "Engineering unit",
+      "fieldFluidType": "Fluid type",
+      "fieldDatasheet": "Datasheet (code)",
+      "fieldRevision": "Doc. revision",
+      "fieldSpHH": "Setpoint HH (High-High)",
+      "fieldSpH": "Setpoint H (High)",
+      "fieldSpL": "Setpoint L (Low)",
+      "fieldSpLL": "Setpoint LL (Low-Low)",
+      "fieldSignalType": "Signal type",
+      "fieldSilLevel": "SIL level",
+      "fieldIoAddress": "I/O address",
+      "fieldJunctionBox": "Junction box",
+      "fieldMounting": "Mounting typical",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "save": "Save changes",
+      "deleteBtn": "Delete tag…",
+      "deleteConfirmMsg": "This action will delete tag {tagNumber} and all its data (ITRs, punches, preservation, hotspots). It is irreversible.",
+      "deleting": "Deleting…",
+      "confirmDelete": "Confirm deletion"
+    },
+    "docs": {
+      "sectionTitle": "P&ID Documents",
+      "docAvailable": "Document available",
+      "docNotUploaded": "Document not yet uploaded",
+      "viewPdf": "View PDF ↗",
+      "pdfNotUploaded": "PDF not uploaded",
+      "viewInViewer": "View in P&ID viewer →",
+      "emptyTitle": "No linked documents",
+      "emptyMsg": "This tag has no P&ID reference assigned. You can edit it to add one."
+    }
   }
 }
