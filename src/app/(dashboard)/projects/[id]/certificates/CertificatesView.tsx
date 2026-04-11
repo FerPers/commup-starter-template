@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { issueCertificate } from '@/app/actions/certificates'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -40,19 +41,19 @@ type SubsystemRow = {
   phaseData: PhaseEligibility[]
 }
 
-// ── Config ────────────────────────────────────────────────────────────────
+// ── Config (colors only) ──────────────────────────────────────────────────
 
-const SEMAPHORE = {
-  green:  { label: 'Elegible',     color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
-  yellow: { label: 'Cat B abier.', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  red:    { label: 'Bloqueado',    color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
+const SEMAPHORE_COLORS = {
+  green:  { color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
+  yellow: { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  red:    { color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
 } as const
 
-const CERT_STATUS = {
-  pending:   { label: 'Pendiente',   color: '#64748b', bg: '#f1f5f9' },
-  in_review: { label: 'En revisión', color: '#3b82f6', bg: '#eff6ff' },
-  issued:    { label: 'Emitido',     color: '#10b981', bg: '#ecfdf5' },
-  rejected:  { label: 'Rechazado',   color: '#ef4444', bg: '#fee2e2' },
+const CERT_STATUS_COLORS = {
+  pending:   { color: '#64748b', bg: '#f1f5f9' },
+  in_review: { color: '#3b82f6', bg: '#eff6ff' },
+  issued:    { color: '#10b981', bg: '#ecfdf5' },
+  rejected:  { color: '#ef4444', bg: '#fee2e2' },
 } as const
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -70,6 +71,8 @@ export default function CertificatesView({
   subsystemRows: SubsystemRow[]
   canEdit: boolean
 }) {
+  const t      = useTranslations('Certificates')
+  const locale = useLocale()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -85,12 +88,20 @@ export default function CertificatesView({
 
   const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? phases[0]
 
-  // Filter subsystems that have at least 1 ITR in the selected phase (hide empty ones)
-  const visibleSubsystems = subsystemRows.filter(ss => {
-    const pd = ss.phaseData.find(p => p.phaseId === selectedPhaseId)
-    return pd && pd.totalItrs > 0
-  })
+  const certStatusLabels: Record<string, string> = {
+    pending:   t('status.pending'),
+    in_review: t('status.in_review'),
+    issued:    t('status.issued'),
+    rejected:  t('status.rejected'),
+  }
 
+  const semLabels: Record<string, string> = {
+    green:  t('view.semaphore.green'),
+    yellow: t('view.semaphore.yellow'),
+    red:    t('view.semaphore.red'),
+  }
+
+  // Filter subsystems that have at least 1 ITR in the selected phase
   const allSubsystems = subsystemRows.filter(ss => {
     const pd = ss.phaseData.find(p => p.phaseId === selectedPhaseId)
     return pd !== undefined
@@ -149,13 +160,13 @@ export default function CertificatesView({
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '16px',
         }}>
-          ← {projectName}
+          {t('view.backLink', { projectName })}
         </a>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
-          Certificados de Completación
+          {t('view.title')}
         </h1>
         <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
-          MC · RFPC · RFC · RFSU por subsistema
+          {t('view.subtitle')}
         </p>
       </div>
 
@@ -183,20 +194,20 @@ export default function CertificatesView({
 
       {/* Summary strip */}
       {selectedPhase && (
-        <div style={{
-          display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap',
-        }}>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
           {[
-            { label: 'Elegibles sin bloqueo', value: greenCount, color: '#10b981', bg: '#ecfdf5' },
-            { label: 'Con Cat B abiertos', value: yellowCount, color: '#f59e0b', bg: '#fffbeb' },
-            { label: 'Certificados emitidos', value: issuedCount, color: '#7c3aed', bg: '#f5f3ff' },
+            { labelKey: 'view.summary.greenLabel',  value: greenCount,  color: '#10b981', bg: '#ecfdf5' },
+            { labelKey: 'view.summary.yellowLabel', value: yellowCount, color: '#f59e0b', bg: '#fffbeb' },
+            { labelKey: 'view.summary.issuedLabel', value: issuedCount, color: '#7c3aed', bg: '#f5f3ff' },
           ].map(s => (
-            <div key={s.label} style={{
+            <div key={s.labelKey} style={{
               background: s.bg, borderRadius: '10px', padding: '12px 18px',
               display: 'flex', alignItems: 'center', gap: '10px', minWidth: '160px',
             }}>
               <span style={{ fontSize: '22px', fontWeight: 700, color: s.color }}>{s.value}</span>
-              <span style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.3' }}>{s.label}</span>
+              <span style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.3' }}>
+                {t(s.labelKey as Parameters<typeof t>[0])}
+              </span>
             </div>
           ))}
         </div>
@@ -208,12 +219,8 @@ export default function CertificatesView({
           background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
           padding: '48px', textAlign: 'center',
         }}>
-          <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
-            No hay subsistemas con ITRs asignados en esta fase.
-          </p>
-          <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '6px' }}>
-            Asigna ITRs a los tags del subsistema para que aparezca aquí.
-          </p>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>{t('view.empty')}</p>
+          <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '6px' }}>{t('view.emptyHint')}</p>
         </div>
       ) : (
         <div style={{
@@ -223,7 +230,7 @@ export default function CertificatesView({
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                {['Subsistema', 'Sistema', 'ITRs', 'Cat A', 'Cat B', 'Estado', 'Certificado', ''].map((h, i) => (
+                {[t('view.colSubsystem'), t('view.colSystem'), t('view.colItrs'), t('view.colCatA'), t('view.colCatB'), t('view.colStatus'), t('view.colCert'), ''].map((h, i) => (
                   <th key={i} style={{
                     padding: '11px 16px', textAlign: 'left',
                     fontSize: '11px', fontWeight: 600, color: '#64748b',
@@ -239,9 +246,15 @@ export default function CertificatesView({
               {allSubsystems.map((ss, idx) => {
                 const pd = ss.phaseData.find(p => p.phaseId === selectedPhaseId)
                 if (!pd) return null
-                const sem = SEMAPHORE[pd.eligible]
-                const certStatus = pd.certificate ? CERT_STATUS[pd.certificate.status as keyof typeof CERT_STATUS] : null
-                const canIssue = canEdit && !pd.certificate && (pd.eligible === 'green' || pd.eligible === 'yellow')
+                const semColors = SEMAPHORE_COLORS[pd.eligible]
+                const semLabel  = pd.eligible === 'red' && pd.totalItrs === 0
+                  ? t('view.semaphore.noItrs')
+                  : semLabels[pd.eligible]
+                const certColors = pd.certificate
+                  ? (CERT_STATUS_COLORS[pd.certificate.status as keyof typeof CERT_STATUS_COLORS] ?? CERT_STATUS_COLORS.pending)
+                  : null
+                const certLabel = pd.certificate ? (certStatusLabels[pd.certificate.status] ?? pd.certificate.status) : null
+                const canIssue  = canEdit && !pd.certificate && (pd.eligible === 'green' || pd.eligible === 'yellow')
 
                 return (
                   <tr key={ss.id} style={{
@@ -256,7 +269,7 @@ export default function CertificatesView({
                       <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{ss.name}</div>
                     </td>
                     <td style={{ padding: '12px 16px', color: '#475569' }}>
-                      {ss.system ? `${ss.system.code}` : '—'}
+                      {ss.system ? ss.system.code : '—'}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -287,31 +300,28 @@ export default function CertificatesView({
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{
                         padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                        background: sem.bg, color: sem.color, border: `1px solid ${sem.border}`,
+                        background: semColors.bg, color: semColors.color, border: `1px solid ${semColors.border}`,
                         whiteSpace: 'nowrap',
                       }}>
-                        {pd.eligible === 'red' && pd.totalItrs === 0 ? 'Sin ITRs' : sem.label}
+                        {semLabel}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      {pd.certificate && certStatus ? (
-                        <a
-                          href={`/projects/${projectId}/certificates/${pd.certificate.id}`}
-                          style={{ textDecoration: 'none' }}
-                        >
+                      {pd.certificate && certColors && certLabel ? (
+                        <a href={`/projects/${projectId}/certificates/${pd.certificate.id}`} style={{ textDecoration: 'none' }}>
                           <div style={{ fontWeight: 500, color: '#3b82f6', fontSize: '12px' }}>
                             {pd.certificate.certificate_number}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
                             <span style={{
                               padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
-                              background: certStatus.bg, color: certStatus.color,
+                              background: certColors.bg, color: certColors.color,
                             }}>
-                              {certStatus.label}
+                              {certLabel}
                             </span>
                             {pd.certificate.issued_date && (
                               <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                                {new Date(pd.certificate.issued_date).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                {new Date(pd.certificate.issued_date).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                               </span>
                             )}
                           </div>
@@ -331,7 +341,7 @@ export default function CertificatesView({
                             color: 'white',
                           }}
                         >
-                          Emitir {selectedPhase.certificate_name ?? selectedPhase.code}
+                          {t('view.issueBtn', { certName: selectedPhase.certificate_name ?? selectedPhase.code })}
                         </button>
                       )}
                       {pd.certificate && (
@@ -343,7 +353,7 @@ export default function CertificatesView({
                             color: '#475569', textDecoration: 'none', display: 'inline-block',
                           }}
                         >
-                          Ver →
+                          {t('view.viewBtn')}
                         </a>
                       )}
                     </td>
@@ -375,7 +385,7 @@ export default function CertificatesView({
             }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                  Emitir {issueModal.phase.certificate_name ?? issueModal.phase.code}
+                  {t('view.modal.title', { certName: issueModal.phase.certificate_name ?? issueModal.phase.code })}
                 </h3>
                 <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>
                   {issueModal.subsystem.code} — {issueModal.subsystem.name}
@@ -396,17 +406,17 @@ export default function CertificatesView({
                 display: 'flex', gap: '24px',
               }}>
                 <div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>ITRs aprobados</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.itrsApproved')}</div>
                   <div style={{ fontSize: '18px', fontWeight: 700, color: '#10b981', marginTop: '2px' }}>
                     {issueModal.phaseEl.approvedItrs} / {issueModal.phaseEl.totalItrs}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Punches Cat A</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.catAPunches')}</div>
                   <div style={{ fontSize: '18px', fontWeight: 700, color: '#10b981', marginTop: '2px' }}>0</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Punches Cat B</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.catBPunches')}</div>
                   <div style={{ fontSize: '18px', fontWeight: 700, color: issueModal.phaseEl.openCatBPunches.length > 0 ? '#f59e0b' : '#10b981', marginTop: '2px' }}>
                     {issueModal.phaseEl.openCatBPunches.length}
                   </div>
@@ -417,8 +427,8 @@ export default function CertificatesView({
               {issueModal.phaseEl.openCatBPunches.length > 0 && (
                 <div style={{ marginBottom: '16px' }}>
                   <p style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: '0 0 10px' }}>
-                    Justificación para punches Cat B abiertos
-                    <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 400, marginLeft: '6px' }}>* requerida</span>
+                    {t('view.modal.catBTitle')}
+                    <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 400, marginLeft: '6px' }}>{t('view.modal.catBRequired')}</span>
                   </p>
                   {issueModal.phaseEl.openCatBPunches.map(punch => (
                     <div key={punch.id} style={{
@@ -435,7 +445,7 @@ export default function CertificatesView({
                         <span style={{ fontSize: '12px', color: '#78350f' }}>{punch.description}</span>
                       </div>
                       <textarea
-                        placeholder="Justificación para exceptuar este punch Cat B..."
+                        placeholder={t('view.modal.catBPlaceholder')}
                         value={catBJustifications[punch.id] ?? ''}
                         onChange={e => setCatBJustifications(prev => ({ ...prev, [punch.id]: e.target.value }))}
                         style={{
@@ -453,10 +463,10 @@ export default function CertificatesView({
               {/* Notes */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 500, color: '#374151', display: 'block', marginBottom: '6px' }}>
-                  Notas adicionales
+                  {t('view.modal.notesLabel')}
                 </label>
                 <textarea
-                  placeholder="Observaciones del certificado (opcional)..."
+                  placeholder={t('view.modal.notesPlaceholder')}
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   style={{
@@ -486,7 +496,7 @@ export default function CertificatesView({
                     background: 'white', color: '#475569', fontSize: '13px', cursor: 'pointer',
                   }}
                 >
-                  Cancelar
+                  {t('view.modal.cancel')}
                 </button>
                 <button
                   onClick={handleIssue}
@@ -498,7 +508,9 @@ export default function CertificatesView({
                     cursor: isPending ? 'wait' : 'pointer',
                   }}
                 >
-                  {isPending ? 'Emitiendo...' : `Emitir ${issueModal.phase.certificate_name ?? issueModal.phase.code}`}
+                  {isPending
+                    ? t('view.modal.submitting')
+                    : t('view.modal.submit', { certName: issueModal.phase.certificate_name ?? issueModal.phase.code })}
                 </button>
               </div>
             </div>

@@ -315,7 +315,98 @@
       "colIssued": "Issued date",
       "colStatus": "Status"
     },
-    "empty": "No certificates match the current filters."
+    "empty": "No certificates match the current filters.",
+    "view": {
+      "title": "Completion Certificates",
+      "subtitle": "MC · RFPC · RFC · RFSU by subsystem",
+      "backLink": "← {projectName}",
+      "summary": {
+        "greenLabel": "Eligible, no blockers",
+        "yellowLabel": "With open Cat B",
+        "issuedLabel": "Issued certificates"
+      },
+      "empty": "No subsystems with ITRs assigned to this phase.",
+      "emptyHint": "Assign ITRs to tags in the subsystem for it to appear here.",
+      "colSubsystem": "Subsystem",
+      "colSystem": "System",
+      "colItrs": "ITRs",
+      "colCatA": "Cat A",
+      "colCatB": "Cat B",
+      "colStatus": "Status",
+      "colCert": "Certificate",
+      "semaphore": {
+        "green": "Eligible",
+        "yellow": "Cat B open",
+        "red": "Blocked",
+        "noItrs": "No ITRs"
+      },
+      "issueBtn": "Issue {certName}",
+      "viewBtn": "View →",
+      "modal": {
+        "title": "Issue {certName}",
+        "itrsApproved": "ITRs approved",
+        "catAPunches": "Cat A punches",
+        "catBPunches": "Cat B punches",
+        "catBRequired": "* required",
+        "catBTitle": "Justification for open Cat B punches",
+        "catBPlaceholder": "Justification for excepting this Cat B punch...",
+        "notesLabel": "Additional notes",
+        "notesPlaceholder": "Certificate observations (optional)...",
+        "cancel": "Cancel",
+        "submitting": "Issuing...",
+        "submit": "Issue {certName}"
+      }
+    },
+    "detail": {
+      "backLink": "← Certificates — {projectName}",
+      "printBtn": "Print / PDF",
+      "revokeBtn": "Revoke",
+      "infoProject": "Project",
+      "infoClient": "Client",
+      "infoSystem": "System",
+      "infoSubsystem": "Subsystem",
+      "infoPhase": "Phase",
+      "infoIssuedDate": "Issue date",
+      "infoIssuedBy": "Issued by",
+      "notesLabel": "Notes",
+      "itrsTitle": "Subsystem ITRs — Phase {certName}",
+      "itrsApproved": "{approved} / {total} approved",
+      "itrsEmpty": "No ITRs registered.",
+      "itrColNumber": "ITR No.",
+      "itrColTag": "Tag",
+      "itrColTemplate": "Template",
+      "itrColStatus": "Status",
+      "itrStatus": {
+        "not_started": "Not started",
+        "in_progress": "In progress",
+        "completed": "Completed",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "certStatus": {
+        "pending": "Pending",
+        "in_review": "In review",
+        "issued": "Issued",
+        "rejected": "Revoked"
+      },
+      "exceptionsTitle": "Cat B Punch Exceptions",
+      "justificationLabel": "Justification:",
+      "approvedBy": "Approved by {name}",
+      "signaturesTitle": "Approval signatures",
+      "sigName": "Name and signature",
+      "sigRoles": {
+        "completion": "Completion Manager",
+        "client": "Client Representative",
+        "authority": "Authority"
+      },
+      "revokeModal": {
+        "title": "Revoke certificate?",
+        "body": "Certificate {certNumber} will be set to Revoked status. This action is auditable.",
+        "cancel": "Cancel",
+        "submitting": "Revoking...",
+        "confirm": "Yes, revoke"
+      }
+    }
   },
   "WorkPlans": {
     "title": "Work Plans",

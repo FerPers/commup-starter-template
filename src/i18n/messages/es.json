@@ -315,7 +315,98 @@
       "colIssued": "Fecha emisión",
       "colStatus": "Estado"
     },
-    "empty": "No hay certificados que coincidan con los filtros."
+    "empty": "No hay certificados que coincidan con los filtros.",
+    "view": {
+      "title": "Certificados de Completación",
+      "subtitle": "MC · RFPC · RFC · RFSU por subsistema",
+      "backLink": "← {projectName}",
+      "summary": {
+        "greenLabel": "Elegibles sin bloqueo",
+        "yellowLabel": "Con Cat B abiertos",
+        "issuedLabel": "Certificados emitidos"
+      },
+      "empty": "No hay subsistemas con ITRs asignados en esta fase.",
+      "emptyHint": "Asigna ITRs a los tags del subsistema para que aparezca aquí.",
+      "colSubsystem": "Subsistema",
+      "colSystem": "Sistema",
+      "colItrs": "ITRs",
+      "colCatA": "Cat A",
+      "colCatB": "Cat B",
+      "colStatus": "Estado",
+      "colCert": "Certificado",
+      "semaphore": {
+        "green": "Elegible",
+        "yellow": "Cat B abier.",
+        "red": "Bloqueado",
+        "noItrs": "Sin ITRs"
+      },
+      "issueBtn": "Emitir {certName}",
+      "viewBtn": "Ver →",
+      "modal": {
+        "title": "Emitir {certName}",
+        "itrsApproved": "ITRs aprobados",
+        "catAPunches": "Punches Cat A",
+        "catBPunches": "Punches Cat B",
+        "catBRequired": "* requerida",
+        "catBTitle": "Justificación para punches Cat B abiertos",
+        "catBPlaceholder": "Justificación para exceptuar este punch Cat B...",
+        "notesLabel": "Notas adicionales",
+        "notesPlaceholder": "Observaciones del certificado (opcional)...",
+        "cancel": "Cancelar",
+        "submitting": "Emitiendo...",
+        "submit": "Emitir {certName}"
+      }
+    },
+    "detail": {
+      "backLink": "← Certificados — {projectName}",
+      "printBtn": "Imprimir / PDF",
+      "revokeBtn": "Revocar",
+      "infoProject": "Proyecto",
+      "infoClient": "Cliente",
+      "infoSystem": "Sistema",
+      "infoSubsystem": "Subsistema",
+      "infoPhase": "Fase",
+      "infoIssuedDate": "Fecha emisión",
+      "infoIssuedBy": "Emitido por",
+      "notesLabel": "Notas",
+      "itrsTitle": "ITRs del Subsistema — Fase {certName}",
+      "itrsApproved": "{approved} / {total} aprobados",
+      "itrsEmpty": "Sin ITRs registrados.",
+      "itrColNumber": "N° ITR",
+      "itrColTag": "Tag",
+      "itrColTemplate": "Template",
+      "itrColStatus": "Estado",
+      "itrStatus": {
+        "not_started": "Sin iniciar",
+        "in_progress": "En progreso",
+        "completed": "Completado",
+        "approved": "Aprobado",
+        "rejected": "Rechazado"
+      },
+      "certStatus": {
+        "pending": "Pendiente",
+        "in_review": "En revisión",
+        "issued": "Emitido",
+        "rejected": "Revocado"
+      },
+      "exceptionsTitle": "Excepciones Punches Cat B",
+      "justificationLabel": "Justificación:",
+      "approvedBy": "Aprobado por {name}",
+      "signaturesTitle": "Firmas de aprobación",
+      "sigName": "Nombre y firma",
+      "sigRoles": {
+        "completion": "Responsable Completación",
+        "client": "Representante Cliente",
+        "authority": "Autoridad"
+      },
+      "revokeModal": {
+        "title": "¿Revocar certificado?",
+        "body": "El certificado {certNumber} quedará en estado Revocado. Esta acción es auditable.",
+        "cancel": "Cancelar",
+        "submitting": "Revocando...",
+        "confirm": "Sí, revocar"
+      }
+    }
   },
   "WorkPlans": {
     "title": "Planes de Trabajo",

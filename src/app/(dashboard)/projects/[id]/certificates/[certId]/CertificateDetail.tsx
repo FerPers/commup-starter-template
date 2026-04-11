@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { revokeCertificate } from '@/app/actions/certificates'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -37,21 +38,21 @@ type ItrRow = {
   tags: { tag_number: string; description: string } | null
 }
 
-// ── Config ─────────────────────────────────────────────────────────────────
+// ── Config (colors only) ───────────────────────────────────────────────────
 
-const ITR_STATUS = {
-  not_started: { label: 'Sin iniciar',  color: '#64748b', bg: '#f1f5f9' },
-  in_progress: { label: 'En progreso',  color: '#3b82f6', bg: '#eff6ff' },
-  completed:   { label: 'Completado',   color: '#10b981', bg: '#ecfdf5' },
-  approved:    { label: 'Aprobado',     color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:    { label: 'Rechazado',    color: '#ef4444', bg: '#fee2e2' },
+const ITR_STATUS_COLORS = {
+  not_started: { color: '#64748b', bg: '#f1f5f9' },
+  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
+  completed:   { color: '#10b981', bg: '#ecfdf5' },
+  approved:    { color: '#7c3aed', bg: '#f5f3ff' },
+  rejected:    { color: '#ef4444', bg: '#fee2e2' },
 } as const
 
-const CERT_STATUS = {
-  pending:   { label: 'Pendiente',   color: '#64748b', bg: '#f1f5f9' },
-  in_review: { label: 'En revisión', color: '#3b82f6', bg: '#eff6ff' },
-  issued:    { label: 'Emitido',     color: '#10b981', bg: '#ecfdf5' },
-  rejected:  { label: 'Revocado',    color: '#ef4444', bg: '#fee2e2' },
+const CERT_STATUS_COLORS = {
+  pending:   { color: '#64748b', bg: '#f1f5f9' },
+  in_review: { color: '#3b82f6', bg: '#eff6ff' },
+  issued:    { color: '#10b981', bg: '#ecfdf5' },
+  rejected:  { color: '#ef4444', bg: '#fee2e2' },
 } as const
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -64,7 +65,7 @@ export default function CertificateDetail({
   cert,
   exceptions,
   itrs,
-  canEdit,
+  canEdit: _canEdit,
   isAdmin,
 }: {
   projectId: string
@@ -77,14 +78,29 @@ export default function CertificateDetail({
   canEdit: boolean
   isAdmin: boolean
 }) {
+  const t      = useTranslations('Certificates')
+  const locale = useLocale()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [revokeConfirm, setRevokeConfirm] = useState(false)
-  const [revokeError, setRevokeError] = useState('')
+  const [revokeError, setRevokeError]     = useState('')
 
-  const phase = cert.project_phases
+  const phase     = cert.project_phases
   const subsystem = cert.subsystems
-  const certSt = CERT_STATUS[cert.status] ?? CERT_STATUS.pending
+  const certColors = CERT_STATUS_COLORS[cert.status] ?? CERT_STATUS_COLORS.pending
+  const certStatusLabels: Record<string, string> = {
+    pending:   t('detail.certStatus.pending'),
+    in_review: t('detail.certStatus.in_review'),
+    issued:    t('detail.certStatus.issued'),
+    rejected:  t('detail.certStatus.rejected'),
+  }
+  const itrStatusLabels: Record<string, string> = {
+    not_started: t('detail.itrStatus.not_started'),
+    in_progress: t('detail.itrStatus.in_progress'),
+    completed:   t('detail.itrStatus.completed'),
+    approved:    t('detail.itrStatus.approved'),
+    rejected:    t('detail.itrStatus.rejected'),
+  }
 
   const approvedItrs = itrs.filter(i => i.status === 'approved').length
 
@@ -101,14 +117,10 @@ export default function CertificateDetail({
     })
   }
 
-  function handlePrint() {
-    window.print()
-  }
-
   return (
     <div style={{ padding: '32px' }}>
 
-      {/* Print styles injected */}
+      {/* Print styles */}
       <style>{`
         @media print {
           aside, nav, button, .no-print { display: none !important; }
@@ -124,11 +136,11 @@ export default function CertificateDetail({
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           fontSize: '13px', color: '#64748b', textDecoration: 'none',
         }}>
-          ← Certificados — {projectName}
+          {t('detail.backLink', { projectName })}
         </a>
       </div>
 
-      {/* Certificate Header (printable) */}
+      {/* Certificate Header */}
       <div className="print-card" style={{
         background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
         padding: '28px 32px', marginBottom: '20px',
@@ -156,19 +168,19 @@ export default function CertificateDetail({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{
               padding: '5px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-              background: certSt.bg, color: certSt.color,
+              background: certColors.bg, color: certColors.color,
             }}>
-              {certSt.label}
+              {certStatusLabels[cert.status] ?? cert.status}
             </span>
             <button
               className="no-print"
-              onClick={handlePrint}
+              onClick={() => window.print()}
               style={{
                 padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 cursor: 'pointer', border: '1px solid #e2e8f0', background: 'white', color: '#475569',
               }}
             >
-              Imprimir / PDF
+              {t('detail.printBtn')}
             </button>
             {isAdmin && cert.status === 'issued' && (
               <button
@@ -179,7 +191,7 @@ export default function CertificateDetail({
                   cursor: 'pointer', border: '1px solid #fecaca', background: '#fee2e2', color: '#ef4444',
                 }}
               >
-                Revocar
+                {t('detail.revokeBtn')}
               </button>
             )}
           </div>
@@ -188,13 +200,13 @@ export default function CertificateDetail({
         {/* Info grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0', borderTop: '1px solid #f1f5f9', paddingTop: '20px' }}>
           {[
-            { label: 'Proyecto', value: `${projectCode} — ${projectName}` },
-            { label: 'Cliente', value: projectClient ?? '—' },
-            { label: 'Sistema', value: subsystem?.systems ? `${subsystem.systems.code}` : '—' },
-            { label: 'Subsistema', value: subsystem ? `${subsystem.code} — ${subsystem.name}` : '—' },
-            { label: 'Fase', value: phase ? `${phase.code} — ${phase.name}` : '—' },
-            { label: 'Fecha emisión', value: cert.issued_date ? new Date(cert.issued_date).toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' },
-            { label: 'Emitido por', value: cert.issued_by_profile?.full_name ?? '—' },
+            { label: t('detail.infoProject'),    value: `${projectCode} — ${projectName}` },
+            { label: t('detail.infoClient'),     value: projectClient ?? '—' },
+            { label: t('detail.infoSystem'),     value: subsystem?.systems ? subsystem.systems.code : '—' },
+            { label: t('detail.infoSubsystem'),  value: subsystem ? `${subsystem.code} — ${subsystem.name}` : '—' },
+            { label: t('detail.infoPhase'),      value: phase ? `${phase.code} — ${phase.name}` : '—' },
+            { label: t('detail.infoIssuedDate'), value: cert.issued_date ? new Date(cert.issued_date).toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' }) : '—' },
+            { label: t('detail.infoIssuedBy'),   value: cert.issued_by_profile?.full_name ?? '—' },
           ].map((item, i) => (
             <div key={i} style={{ padding: '10px 0', paddingRight: '20px' }}>
               <div style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>
@@ -207,7 +219,9 @@ export default function CertificateDetail({
 
         {cert.notes && (
           <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Notas</div>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+              {t('detail.notesLabel')}
+            </div>
             <p style={{ fontSize: '13px', color: '#475569', margin: 0, lineHeight: '1.5' }}>{cert.notes}</p>
           </div>
         )}
@@ -221,24 +235,24 @@ export default function CertificateDetail({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-            ITRs del Subsistema — Fase {phase?.certificate_name ?? phase?.code}
+            {t('detail.itrsTitle', { certName: phase?.certificate_name ?? phase?.code ?? '—' })}
           </h3>
           <span style={{
             padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
             background: approvedItrs === itrs.length && itrs.length > 0 ? '#ecfdf5' : '#eff6ff',
             color: approvedItrs === itrs.length && itrs.length > 0 ? '#10b981' : '#3b82f6',
           }}>
-            {approvedItrs} / {itrs.length} aprobados
+            {t('detail.itrsApproved', { approved: approvedItrs, total: itrs.length })}
           </span>
         </div>
 
         {itrs.length === 0 ? (
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Sin ITRs registrados.</p>
+          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{t('detail.itrsEmpty')}</p>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                {['N° ITR', 'Tag', 'Template', 'Estado'].map((h, i) => (
+                {[t('detail.itrColNumber'), t('detail.itrColTag'), t('detail.itrColTemplate'), t('detail.itrColStatus')].map((h, i) => (
                   <th key={i} style={{
                     padding: '8px 12px', textAlign: 'left',
                     fontSize: '11px', fontWeight: 600, color: '#94a3b8',
@@ -251,7 +265,8 @@ export default function CertificateDetail({
             </thead>
             <tbody>
               {itrs.map((itr, idx) => {
-                const st = ITR_STATUS[itr.status as keyof typeof ITR_STATUS] ?? ITR_STATUS.not_started
+                const colors = ITR_STATUS_COLORS[itr.status as keyof typeof ITR_STATUS_COLORS] ?? ITR_STATUS_COLORS.not_started
+                const label  = itrStatusLabels[itr.status] ?? itr.status
                 return (
                   <tr key={itr.id} style={{ borderBottom: idx < itrs.length - 1 ? '1px solid #f8fafc' : 'none' }}>
                     <td style={{ padding: '9px 12px', fontWeight: 500, color: '#0f172a' }}>
@@ -266,9 +281,9 @@ export default function CertificateDetail({
                     <td style={{ padding: '9px 12px' }}>
                       <span style={{
                         padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                        background: st.bg, color: st.color,
+                        background: colors.bg, color: colors.color,
                       }}>
-                        {st.label}
+                        {label}
                       </span>
                     </td>
                   </tr>
@@ -287,7 +302,7 @@ export default function CertificateDetail({
           boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}>
           <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px' }}>
-            Excepciones Punches Cat B
+            {t('detail.exceptionsTitle')}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {exceptions.map(exc => (
@@ -306,11 +321,12 @@ export default function CertificateDetail({
                   </span>
                 </div>
                 <p style={{ fontSize: '12px', color: '#92400e', margin: '0 0 8px', lineHeight: '1.5' }}>
-                  <strong>Justificación:</strong> {exc.justification}
+                  <strong>{t('detail.justificationLabel')}</strong> {exc.justification}
                 </p>
                 <div style={{ fontSize: '11px', color: '#d97706' }}>
-                  Aprobado por {exc.approved_by_profile?.full_name ?? '—'} ·{' '}
-                  {new Date(exc.approved_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  {t('detail.approvedBy', { name: exc.approved_by_profile?.full_name ?? '—' })}
+                  {' · '}
+                  {new Date(exc.approved_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                 </div>
               </div>
             ))}
@@ -318,21 +334,25 @@ export default function CertificateDetail({
         </div>
       )}
 
-      {/* Signature area (printable) */}
+      {/* Signature area */}
       <div className="print-card print-page" style={{
         background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
         padding: '24px 32px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
         <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 24px' }}>
-          Firmas de aprobación
+          {t('detail.signaturesTitle')}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '32px' }}>
-          {['Responsable Completación', 'Representante Cliente', 'Autoridad'].map(role => (
+          {([
+            t('detail.sigRoles.completion'),
+            t('detail.sigRoles.client'),
+            t('detail.sigRoles.authority'),
+          ] as const).map(role => (
             <div key={role}>
               <div style={{ borderBottom: '1px solid #0f172a', marginBottom: '8px', height: '50px' }} />
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>{role}</div>
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>Nombre y firma</div>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>{t('detail.sigName')}</div>
             </div>
           ))}
         </div>
@@ -349,12 +369,11 @@ export default function CertificateDetail({
             maxWidth: '400px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
           }}>
             <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: '0 0 10px' }}>
-              ¿Revocar certificado?
+              {t('detail.revokeModal.title')}
             </h3>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 20px', lineHeight: '1.5' }}>
-              El certificado <strong>{cert.certificate_number}</strong> quedará en estado Revocado.
-              Esta acción es auditable.
-            </p>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 20px', lineHeight: '1.5' }}
+               dangerouslySetInnerHTML={{ __html: t('detail.revokeModal.body', { certNumber: `<strong>${cert.certificate_number}</strong>` }) }}
+            />
             {revokeError && (
               <p style={{ fontSize: '13px', color: '#ef4444', margin: '0 0 14px' }}>{revokeError}</p>
             )}
@@ -363,14 +382,14 @@ export default function CertificateDetail({
                 onClick={() => setRevokeConfirm(false)}
                 style={{ padding: '8px 18px', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', color: '#475569', fontSize: '13px', cursor: 'pointer' }}
               >
-                Cancelar
+                {t('detail.revokeModal.cancel')}
               </button>
               <button
                 onClick={handleRevoke}
                 disabled={isPending}
                 style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: '#ef4444', color: 'white', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'wait' : 'pointer' }}
               >
-                {isPending ? 'Revocando...' : 'Sí, revocar'}
+                {isPending ? t('detail.revokeModal.submitting') : t('detail.revokeModal.confirm')}
               </button>
             </div>
           </div>
