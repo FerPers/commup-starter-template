@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
@@ -73,12 +74,6 @@ function buildChartData(
   return [...map.values()].sort((a, b) => a.date.localeCompare(b.date))
 }
 
-function formatDateTick(value: string) {
-  if (!value) return ''
-  const d = new Date(value + 'T00:00:00')
-  return d.toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })
-}
-
 // ── Sub-components ─────────────────────────────────────────────────────────
 
 function StatusDot({ pct, hasPunches }: { pct: number; hasPunches: boolean }) {
@@ -93,18 +88,30 @@ export default function KpiDashboard({
   phaseKpis, subsystemKpis, snapshots, canEdit,
 }: Props) {
   const router = useRouter()
+  const locale = useLocale()
+  const t = useTranslations('Kpis.project')
   const [isPending, startTransition] = useTransition()
   const [snapshotMsg, setSnapshotMsg] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [sortCol, setSortCol] = useState<keyof SubsystemKpi>('code')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
+  // Pre-compute chart labels (can't use hooks inside recharts callbacks)
+  const plannedLabel = t('scurvePlanned')
+  const actualLabel = t('scurveActual')
+
+  function formatDateTick(value: string) {
+    if (!value) return ''
+    const d = new Date(value + 'T00:00:00')
+    return d.toLocaleDateString(locale, { month: 'short', year: '2-digit' })
+  }
+
   function handleSnapshot() {
     setSnapshotMsg(null)
     startTransition(async () => {
       const res = await takeProjectSnapshot(projectId)
       if (res.success) {
-        setSnapshotMsg('Snapshot guardado — abriendo reporte...')
+        setSnapshotMsg(t('snapshotSaved'))
         router.refresh()
         window.open(`/projects/${projectId}/kpis/report`, '_blank')
       } else {
@@ -150,6 +157,16 @@ export default function KpiDashboard({
     textAlign: 'left',
   })
 
+  const tableCols: { key: keyof SubsystemKpi; label: string }[] = [
+    { key: 'systemCode', label: t('colSystem') },
+    { key: 'code', label: t('colSubsystem') },
+    { key: 'totalItrs', label: t('colItrs') },
+    { key: 'approvedItrs', label: t('colApproved') },
+    { key: 'completionPct', label: t('colPct') },
+    { key: 'openCatA', label: t('colPunchA') },
+    { key: 'openCatB', label: t('colPunchB') },
+  ]
+
   return (
     <div style={{ padding: '32px' }}>
 
@@ -157,13 +174,13 @@ export default function KpiDashboard({
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px', gap: '16px', flexWrap: 'wrap' }}>
         <div>
           <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none', display: 'inline-block', marginBottom: '8px' }}>
-            ← {projectName}
+            {t('backLink', { name: projectName })}
           </a>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
             KPIs — {projectCode}
           </h1>
           <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
-            {totalApproved} / {totalItrs} ITRs aprobados · {overallPct}% completado
+            {t('subtitle', { approved: totalApproved, total: totalItrs, pct: overallPct })}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -178,7 +195,7 @@ export default function KpiDashboard({
                 fontWeight: 500, whiteSpace: 'nowrap',
               }}
             >
-              {isPending ? 'Generando...' : '◎ Snapshot + Reporte'}
+              {isPending ? t('snapshotGenerating') : t('snapshotBtn')}
             </button>
           )}
           {snapshots.length > 0 && (
@@ -191,7 +208,7 @@ export default function KpiDashboard({
                 textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
               }}
             >
-              Ver reporte
+              {t('viewReport')}
             </a>
           )}
           <a
@@ -202,7 +219,7 @@ export default function KpiDashboard({
               textDecoration: 'none', whiteSpace: 'nowrap',
             }}
           >
-            ↓ Exportar Excel
+            {t('exportExcel')}
           </a>
         </div>
       </div>
@@ -249,13 +266,13 @@ export default function KpiDashboard({
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0 }}>S-curve — Avance del Proyecto</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0 }}>{t('sCurveTitle')}</h3>
             <p style={{ fontSize: '12px', color: '#94a3b8', margin: '3px 0 0' }}>
               {snapshots.length > 0
-                ? `${snapshots.length} snapshot${snapshots.length > 1 ? 's' : ''} · Último: ${lastSnapshot?.snapshot_date}`
+                ? t('snapshotCount', { count: snapshots.length, date: lastSnapshot?.snapshot_date ?? '' })
                 : canEdit
-                  ? 'Sin snapshots — usa "Tomar Snapshot" para registrar el avance de hoy'
-                  : 'Sin snapshots registrados todavía'
+                  ? t('noSnapshotsEdit')
+                  : t('noSnapshotsView')
               }
             </p>
           </div>
@@ -264,7 +281,7 @@ export default function KpiDashboard({
               <div style={{ fontSize: '28px', fontWeight: 700, color: '#3b82f6', letterSpacing: '-1px' }}>
                 {lastSnapshot.completion_pct}%
               </div>
-              <div style={{ fontSize: '11px', color: '#94a3b8' }}>último registro</div>
+              <div style={{ fontSize: '11px', color: '#94a3b8' }}>{t('lastRecord')}</div>
             </div>
           )}
         </div>
@@ -282,7 +299,7 @@ export default function KpiDashboard({
               />
               <YAxis
                 domain={[0, 100]}
-                tickFormatter={v => `${v}%`}
+                tickFormatter={(v: number) => `${v}%`}
                 tick={{ fontSize: 11, fill: '#94a3b8' }}
                 tickLine={false}
                 axisLine={false}
@@ -290,13 +307,13 @@ export default function KpiDashboard({
               />
               <Tooltip
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(value: any, name: any) => [`${value}%`, name === 'planned' ? 'Planificado' : 'Real']}
+                formatter={(value: any, name: any) => [`${value}%`, name === 'planned' ? plannedLabel : actualLabel]}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 labelFormatter={(value: any) => formatDateTick(value as string)}
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
               />
               <Legend
-                formatter={(value) => value === 'planned' ? 'Planificado' : 'Real'}
+                formatter={(value: string) => value === 'planned' ? plannedLabel : actualLabel}
                 wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
               />
               {plannedPoints.length > 0 && (
@@ -327,12 +344,9 @@ export default function KpiDashboard({
             alignItems: 'center', justifyContent: 'center',
             background: '#f8fafc', borderRadius: '10px', border: '2px dashed #e2e8f0',
           }}>
-            <p style={{ fontSize: '14px', color: '#475569', fontWeight: 500, margin: '0 0 6px' }}>Sin datos para la S-curve</p>
+            <p style={{ fontSize: '14px', color: '#475569', fontWeight: 500, margin: '0 0 6px' }}>{t('noChartEmpty')}</p>
             <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, textAlign: 'center' }}>
-              {canEdit
-                ? 'Usa "Tomar Snapshot" para registrar el primer punto de avance'
-                : 'Agrega fechas de inicio/fin al proyecto para ver la línea planificada'
-              }
+              {canEdit ? t('noChartEdit') : t('noChartView')}
             </p>
           </div>
         )}
@@ -349,12 +363,12 @@ export default function KpiDashboard({
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap',
         }}>
           <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-            Completamiento por Subsistema
+            {t('tableTitle')}
           </h3>
           {subsystemKpis.length > 0 && (
             <input
               type="text"
-              placeholder="Buscar subsistema..."
+              placeholder={t('searchPlaceholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{
@@ -367,27 +381,21 @@ export default function KpiDashboard({
 
         {subsystemKpis.length === 0 ? (
           <div style={{ padding: '48px', textAlign: 'center' }}>
-            <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>No hay subsistemas registrados en este proyecto.</p>
+            <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>{t('noSubsystems')}</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                  {([
-                    { key: 'systemCode', label: 'Sistema' },
-                    { key: 'code', label: 'Subsistema' },
-                    { key: 'totalItrs', label: 'ITRs' },
-                    { key: 'approvedItrs', label: 'Aprobados' },
-                    { key: 'completionPct', label: '% Completado' },
-                    { key: 'openCatA', label: 'Punch A' },
-                    { key: 'openCatB', label: 'Punch B' },
-                  ] as { key: keyof SubsystemKpi; label: string }[]).map(col => (
+                  {tableCols.map(col => (
                     <th key={col.key} onClick={() => handleSort(col.key)} style={thStyle(col.key)}>
                       {col.label}{sortCol === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
                     </th>
                   ))}
-                  <th style={{ padding: '10px 12px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Estado</th>
+                  <th style={{ padding: '10px 12px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>
+                    {t('colStatus')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -429,7 +437,7 @@ export default function KpiDashboard({
                 {filteredSubsystems.length === 0 && search && (
                   <tr>
                     <td colSpan={8} style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
-                      No se encontraron subsistemas con &ldquo;{search}&rdquo;
+                      {t('noResults', { search })}
                     </td>
                   </tr>
                 )}
@@ -441,16 +449,16 @@ export default function KpiDashboard({
         {subsystemKpis.length > 0 && (
           <div style={{ padding: '12px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '12px', color: '#64748b' }}>
-              <strong style={{ color: '#0f172a' }}>{subsystemKpis.length}</strong> subsistemas
+              <strong style={{ color: '#0f172a' }}>{t('footerSubsystems', { count: subsystemKpis.length })}</strong>
             </span>
             <span style={{ fontSize: '12px', color: '#64748b' }}>
-              <strong style={{ color: '#10b981' }}>{subsystemKpis.filter(ss => ss.completionPct === 100).length}</strong> completados al 100%
+              <strong style={{ color: '#10b981' }}>{t('footerComplete', { count: subsystemKpis.filter(ss => ss.completionPct === 100).length })}</strong>
             </span>
             <span style={{ fontSize: '12px', color: '#64748b' }}>
-              <strong style={{ color: '#ef4444' }}>{subsystemKpis.reduce((s, ss) => s + ss.openCatA, 0)}</strong> Punch A abiertos
+              <strong style={{ color: '#ef4444' }}>{t('footerPunchA', { count: subsystemKpis.reduce((s, ss) => s + ss.openCatA, 0) })}</strong>
             </span>
             <span style={{ fontSize: '12px', color: '#64748b' }}>
-              <strong style={{ color: '#f59e0b' }}>{subsystemKpis.reduce((s, ss) => s + ss.openCatB, 0)}</strong> Punch B abiertos
+              <strong style={{ color: '#f59e0b' }}>{t('footerPunchB', { count: subsystemKpis.reduce((s, ss) => s + ss.openCatB, 0) })}</strong>
             </span>
           </div>
         )}
