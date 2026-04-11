@@ -188,20 +188,46 @@
       "search": "Buscar punch, tag, descripción...",
       "allStatuses": "Todos los estados",
       "allDisciplines": "Todas las disciplinas",
+      "allCategories": "Todas las categorías",
+      "allSystems": "Todos los sistemas",
+      "clear": "Limpiar",
       "count": "{filtered} de {total} punches",
       "selectAll": "Seleccionar {count} punches"
     },
     "bulk": {
       "selected": "{count, plural, one {# punch seleccionado} other {# punches seleccionados}}"
     },
+    "catLabels": {
+      "A": "Cat A — Bloqueante",
+      "B": "Cat B — Transferible",
+      "C": "Cat C — Menor"
+    },
     "table": {
       "colProject": "Proyecto",
       "colCat": "Cat",
+      "colTag": "Tag",
       "colPunch": "Punch / Tag",
       "colDesc": "Descripción",
       "colAssigned": "Asignado a",
       "colDue": "Fecha límite",
       "colStatus": "Estado"
+    },
+    "noAssignee": "Sin asignar",
+    "noResultsFiltered": "Sin resultados para estos filtros",
+    "noResultsEmpty": "Sin punches registrados en este proyecto",
+    "backLink": "← {projectName}",
+    "detail": {
+      "raisedBy": "Levantado por:",
+      "assignedTo": "Asignado a:",
+      "targetDate": "Fecha límite:",
+      "closedDate": "Cerrado:",
+      "changeStatus": "Cambiar estado",
+      "toInProgress": "→ En proceso",
+      "close": "✓ Cerrar punch",
+      "cancel": "Cancelar",
+      "labelComment": "Comentario / Resolución",
+      "commentPlaceholder": "Añade un comentario...",
+      "addComment": "Agregar comentario"
     },
     "overdue": "Vencido",
     "empty": "No hay punches que coincidan con los filtros.",
@@ -727,6 +753,46 @@
       "viewInViewer": "Ver en visor P&ID →",
       "emptyTitle": "Sin documentos vinculados",
       "emptyMsg": "Este tag no tiene un P&ID de referencia asignado. Puedes editarlo para agregarlo."
+    },
+    "punches": {
+      "emptyTitle": "Sin punches registrados",
+      "emptyMsg": "Los punches se generan durante la ejecución de ITRs o manualmente.",
+      "newPunch": "+ Nuevo Punch",
+      "status": {
+        "open": "Abierto",
+        "in_progress": "En proceso",
+        "closed": "Cerrado",
+        "cancelled": "Cancelado"
+      },
+      "create": {
+        "title": "Nuevo Punch",
+        "labelCategory": "Categoría",
+        "catA": "Cat A — Bloqueante",
+        "catB": "Cat B — Transferible",
+        "catC": "Cat C — Menor",
+        "labelDescription": "Descripción",
+        "descPlaceholder": "Describe la deficiencia o no-conformidad...",
+        "labelAssigned": "Asignar a (opcional)",
+        "noAssignee": "Sin asignar",
+        "labelTargetDate": "Fecha límite (opcional)",
+        "errorRequired": "La descripción es requerida",
+        "cancel": "Cancelar",
+        "submitting": "Registrando...",
+        "submit": "⚑ Registrar"
+      },
+      "detail": {
+        "raisedBy": "Levantado por:",
+        "assignedTo": "Asignado a:",
+        "targetDate": "Fecha límite:",
+        "closedDate": "Cerrado:",
+        "changeStatus": "Cambiar estado",
+        "toInProgress": "→ En proceso",
+        "close": "✓ Cerrar punch",
+        "cancel": "Cancelar",
+        "labelComment": "Comentario / Resolución",
+        "commentPlaceholder": "Añade un comentario...",
+        "addComment": "Agregar comentario"
+      }
     }
   }
 }

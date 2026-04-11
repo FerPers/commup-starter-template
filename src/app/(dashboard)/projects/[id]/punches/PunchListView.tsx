@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { updatePunchStatus, closePunch, addPunchComment } from '@/app/actions/punches'
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -34,11 +36,11 @@ const CATEGORY_CFG = {
   C: { label: 'Cat C', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
 } as const
 
-const STATUS_CFG = {
-  open:        { label: 'Abierto',    color: '#ef4444', bg: '#fee2e2' },
-  in_progress: { label: 'En proceso', color: '#3b82f6', bg: '#eff6ff' },
-  closed:      { label: 'Cerrado',    color: '#10b981', bg: '#ecfdf5' },
-  cancelled:   { label: 'Cancelado',  color: '#64748b', bg: '#f1f5f9' },
+const STATUS_COLORS = {
+  open:        { color: '#ef4444', bg: '#fee2e2' },
+  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
+  closed:      { color: '#10b981', bg: '#ecfdf5' },
+  cancelled:   { color: '#64748b', bg: '#f1f5f9' },
 } as const
 
 // ── Main component ──────────────────────────────────────────────────────
@@ -58,19 +60,28 @@ export default function PunchListView({
   disciplines: Discipline[]
   systems: System[]
 }) {
+  const t = useTranslations('PunchList')
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState<'A' | 'B' | 'C' | ''>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterDisc, setFilterDisc] = useState('')
   const [filterSystem, setFilterSystem] = useState('')
+  const [selectedPunch, setSelectedPunch] = useState<Punch | null>(null)
+
+  const punchStatusLabels: Record<string, string> = {
+    open:        t('punchStatus.open'),
+    in_progress: t('punchStatus.in_progress'),
+    closed:      t('punchStatus.closed'),
+    cancelled:   t('punchStatus.cancelled'),
+  }
 
   // ── Summary counts ───────────────────────────────────────────────────
 
-  const catACnt    = punches.filter(p => p.category === 'A' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const catBCnt    = punches.filter(p => p.category === 'B' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const catCCnt    = punches.filter(p => p.category === 'C' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const closedCnt  = punches.filter(p => p.status === 'closed').length
+  const catACnt   = punches.filter(p => p.category === 'A' && p.status !== 'closed' && p.status !== 'cancelled').length
+  const catBCnt   = punches.filter(p => p.category === 'B' && p.status !== 'closed' && p.status !== 'cancelled').length
+  const catCCnt   = punches.filter(p => p.category === 'C' && p.status !== 'closed' && p.status !== 'cancelled').length
+  const closedCnt = punches.filter(p => p.status === 'closed').length
 
   // ── Filter ───────────────────────────────────────────────────────────
 
@@ -93,35 +104,42 @@ export default function PunchListView({
 
   const hasFilters = !!(search || filterCat || filterStatus || filterDisc || filterSystem)
 
+  function refresh() { router.refresh() }
+
   return (
     <div style={{ padding: '28px 32px', maxWidth: '1200px' }}>
 
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '6px' }}>
         <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}>
-          ← {projectName}
+          {t('backLink', { projectName })}
         </a>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Punch List</h1>
-        <span style={{ fontSize: '13px', color: '#94a3b8' }}>{filtered.length} de {punches.length} punches</span>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('title')}</h1>
+        <span style={{ fontSize: '13px', color: '#94a3b8' }}>{t('filters.count', { filtered: filtered.length, total: punches.length })}</span>
       </div>
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-        {[
-          { label: 'Cat A — Abiertos', count: catACnt, color: '#ef4444', bg: '#fee2e2', border: '#fecaca', filterVal: 'A' as const },
-          { label: 'Cat B — Abiertos', count: catBCnt, color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', filterVal: 'B' as const },
-          { label: 'Cat C — Abiertos', count: catCCnt, color: '#64748b', bg: '#f8fafc', border: '#e2e8f0', filterVal: 'C' as const },
-          { label: 'Cerrados', count: closedCnt, color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', filterVal: null },
-        ].map(card => (
+        {([
+          { labelKey: 'summary.catAOpen' as const, count: catACnt, color: '#ef4444', bg: '#fee2e2', border: '#fecaca', filterVal: 'A' as const },
+          { labelKey: 'summary.catBOpen' as const, count: catBCnt, color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', filterVal: 'B' as const },
+          { labelKey: 'summary.catCOpen' as const, count: catCCnt, color: '#64748b', bg: '#f8fafc', border: '#e2e8f0', filterVal: 'C' as const },
+          { labelKey: 'summary.closed'   as const, count: closedCnt, color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', filterVal: null },
+        ]).map(card => (
           <div
-            key={card.label}
+            key={card.labelKey}
             onClick={() => card.filterVal && setFilterCat(prev => prev === card.filterVal ? '' : card.filterVal!)}
-            style={{ padding: '16px 18px', borderRadius: '12px', background: card.bg, border: `1px solid ${card.border}`, cursor: card.filterVal ? 'pointer' : 'default' }}
+            style={{
+              padding: '16px 18px', borderRadius: '12px',
+              background: filterCat === card.filterVal && card.filterVal ? card.bg : 'white',
+              border: `1px solid ${filterCat === card.filterVal && card.filterVal ? card.color + '40' : card.border}`,
+              cursor: card.filterVal ? 'pointer' : 'default',
+            }}
           >
             <div style={{ fontSize: '24px', fontWeight: 800, color: card.color }}>{card.count}</div>
-            <div style={{ fontSize: '11px', color: card.color, fontWeight: 600, marginTop: '2px' }}>{card.label}</div>
+            <div style={{ fontSize: '11px', color: card.color, fontWeight: 600, marginTop: '2px' }}>{t(card.labelKey)}</div>
           </div>
         ))}
       </div>
@@ -132,35 +150,34 @@ export default function PunchListView({
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar por # punch, descripción, tag..."
+          placeholder={t('filters.search')}
           style={{ flex: '1 1 220px', minWidth: '180px', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px' }}
         />
 
-        <select value={filterCat} onChange={e => setFilterCat(e.target.value as 'A' | 'B' | 'C' | '')} style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', background: 'white' }}>
-          <option value="">Todas las categorías</option>
-          <option value="A">Cat A — Bloqueante</option>
-          <option value="B">Cat B — Transferible</option>
-          <option value="C">Cat C — Menor</option>
+        <select value={filterCat} onChange={e => setFilterCat(e.target.value as 'A' | 'B' | 'C' | '')} style={selStyle}>
+          <option value="">{t('filters.allCategories')}</option>
+          <option value="A">{t('catLabels.A')}</option>
+          <option value="B">{t('catLabels.B')}</option>
+          <option value="C">{t('catLabels.C')}</option>
         </select>
 
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', background: 'white' }}>
-          <option value="">Todos los estados</option>
-          <option value="open">Abierto</option>
-          <option value="in_progress">En proceso</option>
-          <option value="closed">Cerrado</option>
-          <option value="cancelled">Cancelado</option>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={selStyle}>
+          <option value="">{t('filters.allStatuses')}</option>
+          {(['open', 'in_progress', 'closed', 'cancelled'] as const).map(k => (
+            <option key={k} value={k}>{punchStatusLabels[k]}</option>
+          ))}
         </select>
 
         {disciplines.length > 0 && (
-          <select value={filterDisc} onChange={e => setFilterDisc(e.target.value)} style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', background: 'white' }}>
-            <option value="">Todas las disciplinas</option>
+          <select value={filterDisc} onChange={e => setFilterDisc(e.target.value)} style={selStyle}>
+            <option value="">{t('filters.allDisciplines')}</option>
             {disciplines.map(d => <option key={d.id} value={d.code}>{d.code} — {d.name}</option>)}
           </select>
         )}
 
         {systems.length > 0 && (
-          <select value={filterSystem} onChange={e => setFilterSystem(e.target.value)} style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', background: 'white' }}>
-            <option value="">Todos los sistemas</option>
+          <select value={filterSystem} onChange={e => setFilterSystem(e.target.value)} style={selStyle}>
+            <option value="">{t('filters.allSystems')}</option>
             {systems.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
           </select>
         )}
@@ -170,7 +187,7 @@ export default function PunchListView({
             onClick={() => { setSearch(''); setFilterCat(''); setFilterStatus(''); setFilterDisc(''); setFilterSystem('') }}
             style={{ padding: '8px 12px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
-            Limpiar
+            {t('filters.clear')}
           </button>
         )}
       </div>
@@ -179,14 +196,14 @@ export default function PunchListView({
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
           <div style={{ fontSize: '28px', marginBottom: '10px' }}>⚑</div>
-          <p style={{ fontSize: '14px' }}>{hasFilters ? 'Sin resultados para estos filtros' : 'Sin punches registrados en este proyecto'}</p>
+          <p style={{ fontSize: '14px' }}>{hasFilters ? t('noResultsFiltered') : t('noResultsEmpty')}</p>
         </div>
       ) : (
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Punch #', 'Tag', 'Categoría', 'Descripción', 'Estado', 'Asignado', 'Fecha límite'].map(h => (
+                {[t('table.colPunch'), t('table.colTag'), t('table.colCat'), t('table.colDesc'), t('table.colStatus'), t('table.colAssigned'), t('table.colDue')].map(h => (
                   <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #e2e8f0' }}>
                     {h}
                   </th>
@@ -196,12 +213,12 @@ export default function PunchListView({
             <tbody>
               {filtered.map((punch, i) => {
                 const catCfg = CATEGORY_CFG[punch.category]
-                const stCfg = STATUS_CFG[punch.status] ?? STATUS_CFG.open
+                const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
                 return (
                   <tr
                     key={punch.id}
-                    onClick={() => punch.tags && router.push(`/projects/${projectId}/tags/${punch.tags.id}?tab=punches`)}
-                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: punch.tags ? 'pointer' : 'default', transition: 'background 0.1s' }}
+                    onClick={() => setSelectedPunch(punch)}
+                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
@@ -229,12 +246,12 @@ export default function PunchListView({
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px' }}>
-                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stCfg.bg, color: stCfg.color, whiteSpace: 'nowrap' }}>
-                        {stCfg.label}
+                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color, whiteSpace: 'nowrap' }}>
+                        {punchStatusLabels[punch.status] ?? punch.status}
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', color: '#475569', whiteSpace: 'nowrap' }}>
-                      {punch.assigned_to_profile?.full_name ?? <span style={{ color: '#cbd5e1' }}>Sin asignar</span>}
+                      {punch.assigned_to_profile?.full_name ?? <span style={{ color: '#cbd5e1' }}>{t('noAssignee')}</span>}
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', color: punch.target_date ? '#475569' : '#cbd5e1', whiteSpace: 'nowrap' }}>
                       {punch.target_date ?? '—'}
@@ -246,6 +263,160 @@ export default function PunchListView({
           </table>
         </div>
       )}
+
+      {/* Detail modal */}
+      {selectedPunch && (
+        <PunchDetailModal
+          punch={selectedPunch}
+          projectId={projectId}
+          onClose={() => setSelectedPunch(null)}
+          onUpdated={() => { setSelectedPunch(null); refresh() }}
+        />
+      )}
+    </div>
+  )
+}
+
+const selStyle: React.CSSProperties = {
+  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
+  fontSize: '13px', color: '#374151', background: 'white', fontFamily: 'inherit', cursor: 'pointer',
+}
+
+// ── Punch Detail Modal ──────────────────────────────────────────────────
+
+function PunchDetailModal({
+  punch,
+  projectId,
+  onClose,
+  onUpdated,
+}: {
+  punch: Punch
+  projectId: string
+  onClose: () => void
+  onUpdated: () => void
+}) {
+  const t = useTranslations('PunchList')
+  const [comment, setComment] = useState('')
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  const catCfg = CATEGORY_CFG[punch.category]
+  const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
+  const punchStatusLabels: Record<string, string> = {
+    open:        t('punchStatus.open'),
+    in_progress: t('punchStatus.in_progress'),
+    closed:      t('punchStatus.closed'),
+    cancelled:   t('punchStatus.cancelled'),
+  }
+  const isClosed = punch.status === 'closed' || punch.status === 'cancelled'
+
+  function handleStatusChange(newStatus: 'open' | 'in_progress' | 'closed' | 'cancelled') {
+    startTransition(async () => {
+      let res: { error?: string }
+      if (newStatus === 'closed') {
+        res = await closePunch({ punchId: punch.id, projectId, tagId: punch.tags?.id ?? null, resolutionComment: comment || undefined })
+      } else {
+        res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId: punch.tags?.id ?? null })
+      }
+      if (res.error) { setError(res.error); return }
+      onUpdated()
+    })
+  }
+
+  function handleAddComment() {
+    if (!comment.trim()) return
+    startTransition(async () => {
+      const res = await addPunchComment({ punchId: punch.id, comment: comment.trim(), projectId, tagId: punch.tags?.id ?? null })
+      if (res.error) { setError(res.error); return }
+      setComment('')
+      onUpdated()
+    })
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: '#475569' }}>{punch.punch_number}</span>
+              <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
+              <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{punchStatusLabels[punch.status] ?? punch.status}</span>
+            </div>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0, lineHeight: '1.4' }}>{punch.description}</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#94a3b8', cursor: 'pointer', padding: '0 0 0 12px' }}>✕</button>
+        </div>
+
+        {/* Tag link */}
+        {punch.tags && (
+          <div style={{ marginBottom: '12px' }}>
+            <a
+              href={`/projects/${projectId}/tags/${punch.tags.id}?tab=punches`}
+              onClick={e => e.stopPropagation()}
+              style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+            >
+              <span style={{ fontFamily: 'ui-monospace, monospace' }}>{punch.tags.tag_number}</span>
+              <span style={{ color: '#94a3b8' }}>↗</span>
+            </a>
+          </div>
+        )}
+
+        {/* Meta */}
+        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b', marginBottom: '20px', flexWrap: 'wrap' }}>
+          {punch.raised_by_profile && <span><strong>{t('detail.raisedBy')}</strong> {punch.raised_by_profile.full_name}</span>}
+          {punch.assigned_to_profile && <span><strong>{t('detail.assignedTo')}</strong> {punch.assigned_to_profile.full_name}</span>}
+          {punch.target_date && <span><strong>{t('detail.targetDate')}</strong> {punch.target_date}</span>}
+          {punch.closed_date && <span><strong>{t('detail.closedDate')}</strong> {punch.closed_date}</span>}
+        </div>
+
+        {/* Status actions */}
+        {!isClosed && (
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>{t('detail.changeStatus')}</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {punch.status !== 'in_progress' && (
+                <button onClick={() => handleStatusChange('in_progress')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#eff6ff', color: '#3b82f6', border: '1px solid #bfdbfe', cursor: 'pointer' }}>
+                  {t('detail.toInProgress')}
+                </button>
+              )}
+              <button onClick={() => handleStatusChange('closed')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', cursor: 'pointer' }}>
+                {t('detail.close')}
+              </button>
+              <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+                {t('detail.cancel')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Comment */}
+        {!isClosed && (
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+              {t('detail.labelComment')}
+            </label>
+            <textarea
+              rows={2}
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              placeholder={t('detail.commentPlaceholder')}
+              style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', marginBottom: '8px' }}
+            />
+            <button onClick={handleAddComment} disabled={isPending || !comment.trim()} style={{ padding: '7px 14px', background: comment.trim() ? '#0f172a' : '#f1f5f9', color: comment.trim() ? 'white' : '#94a3b8', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: comment.trim() ? 'pointer' : 'default' }}>
+              {t('detail.addComment')}
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '12px 0 0' }}>{error}</p>
+        )}
+      </div>
     </div>
   )
 }

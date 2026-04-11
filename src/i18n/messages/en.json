@@ -188,20 +188,46 @@
       "search": "Search punch, tag, description...",
       "allStatuses": "All statuses",
       "allDisciplines": "All disciplines",
+      "allCategories": "All categories",
+      "allSystems": "All systems",
+      "clear": "Clear",
       "count": "{filtered} of {total} punches",
       "selectAll": "Select {count} punches"
     },
     "bulk": {
       "selected": "{count, plural, one {# punch selected} other {# punches selected}}"
     },
+    "catLabels": {
+      "A": "Cat A — Blocking",
+      "B": "Cat B — Transferable",
+      "C": "Cat C — Minor"
+    },
     "table": {
       "colProject": "Project",
       "colCat": "Cat",
+      "colTag": "Tag",
       "colPunch": "Punch / Tag",
       "colDesc": "Description",
       "colAssigned": "Assigned to",
       "colDue": "Due date",
       "colStatus": "Status"
+    },
+    "noAssignee": "Unassigned",
+    "noResultsFiltered": "No results for these filters",
+    "noResultsEmpty": "No punches registered in this project",
+    "backLink": "← {projectName}",
+    "detail": {
+      "raisedBy": "Raised by:",
+      "assignedTo": "Assigned to:",
+      "targetDate": "Due date:",
+      "closedDate": "Closed:",
+      "changeStatus": "Change status",
+      "toInProgress": "→ In progress",
+      "close": "✓ Close punch",
+      "cancel": "Cancel",
+      "labelComment": "Comment / Resolution",
+      "commentPlaceholder": "Add a comment...",
+      "addComment": "Add comment"
     },
     "overdue": "Overdue",
     "empty": "No punches match the current filters.",
@@ -727,6 +753,46 @@
       "viewInViewer": "View in P&ID viewer →",
       "emptyTitle": "No linked documents",
       "emptyMsg": "This tag has no P&ID reference assigned. You can edit it to add one."
+    },
+    "punches": {
+      "emptyTitle": "No punches registered",
+      "emptyMsg": "Punches are generated during ITR execution or manually.",
+      "newPunch": "+ New Punch",
+      "status": {
+        "open": "Open",
+        "in_progress": "In progress",
+        "closed": "Closed",
+        "cancelled": "Cancelled"
+      },
+      "create": {
+        "title": "New Punch",
+        "labelCategory": "Category",
+        "catA": "Cat A — Blocking",
+        "catB": "Cat B — Transferable",
+        "catC": "Cat C — Minor",
+        "labelDescription": "Description",
+        "descPlaceholder": "Describe the deficiency or non-conformity...",
+        "labelAssigned": "Assign to (optional)",
+        "noAssignee": "Unassigned",
+        "labelTargetDate": "Due date (optional)",
+        "errorRequired": "Description is required",
+        "cancel": "Cancel",
+        "submitting": "Registering...",
+        "submit": "⚑ Register"
+      },
+      "detail": {
+        "raisedBy": "Raised by:",
+        "assignedTo": "Assigned to:",
+        "targetDate": "Due date:",
+        "closedDate": "Closed:",
+        "changeStatus": "Change status",
+        "toInProgress": "→ In progress",
+        "close": "✓ Close punch",
+        "cancel": "Cancel",
+        "labelComment": "Comment / Resolution",
+        "commentPlaceholder": "Add a comment...",
+        "addComment": "Add comment"
+      }
     }
   }
 }
