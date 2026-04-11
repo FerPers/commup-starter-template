@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useTransition } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { registerPidDocument, deletePidDocument } from '@/app/actions/pid-documents'
 
@@ -22,10 +23,6 @@ function formatBytes(bytes: number | null) {
   return `${(bytes / 1048576).toFixed(1)} MB`
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
 export default function PidDocumentsView({
   projectId,
   documents,
@@ -37,9 +34,15 @@ export default function PidDocumentsView({
   missingPids: string[]
   canEdit: boolean
 }) {
+  const t = useTranslations('PidDocuments')
+  const locale = useLocale()
   const [showUpload, setShowUpload] = useState(false)
   const [docs, setDocs] = useState<PidDoc[]>(documents)
   const [missing, setMissing] = useState<string[]>(missingPids)
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })
+  }
 
   function handleUploaded(doc: PidDoc) {
     setDocs(prev => {
@@ -57,8 +60,6 @@ export default function PidDocumentsView({
 
   function handleDeleted(id: string, drawingNumber: string) {
     setDocs(prev => prev.filter(d => d.id !== id))
-    // Re-add to missing if it was a tag drawing number (can't know from client, just remove from list)
-    // The server will revalidate anyway
     void drawingNumber
   }
 
@@ -74,7 +75,7 @@ export default function PidDocumentsView({
           <span style={{ fontSize: '16px', flexShrink: 0 }}>⚠</span>
           <div>
             <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#92400e' }}>
-              {missing.length} P&ID{missing.length !== 1 ? 's' : ''} referenciado{missing.length !== 1 ? 's' : ''} en tags sin documento:
+              {t('list.missingAlert', { count: missing.length })}
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
               {missing.map(p => (
@@ -102,7 +103,7 @@ export default function PidDocumentsView({
                 cursor: 'pointer',
               }}
             >
-              + Subir P&ID (PDF)
+              {t('list.uploadBtn')}
             </button>
           ) : (
             <UploadForm
@@ -123,10 +124,10 @@ export default function PidDocumentsView({
         }}>
           <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.3 }}>📄</div>
           <p style={{ fontSize: '15px', fontWeight: 500, color: '#475569', margin: '0 0 6px' }}>
-            Sin documentos P&ID subidos
+            {t('list.emptyTitle')}
           </p>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
-            Sube los PDFs para acceder a ellos durante las caminatas de verificación.
+            {t('list.emptyDesc')}
           </p>
         </div>
       ) : (
@@ -134,11 +135,11 @@ export default function PidDocumentsView({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <Th>N° Plano</Th>
-                <Th>Título</Th>
-                <Th>Archivo</Th>
-                <Th>Tamaño</Th>
-                <Th>Subido</Th>
+                <Th>{t('list.colDrawingNum')}</Th>
+                <Th>{t('list.colTitle')}</Th>
+                <Th>{t('list.colFile')}</Th>
+                <Th>{t('list.colSize')}</Th>
+                <Th>{t('list.colUploaded')}</Th>
                 <Th></Th>
               </tr>
             </thead>
@@ -149,6 +150,7 @@ export default function PidDocumentsView({
                   doc={doc}
                   canEdit={canEdit}
                   projectId={projectId}
+                  formatDate={formatDate}
                   onDeleted={handleDeleted}
                 />
               ))}
@@ -164,13 +166,16 @@ function DocRow({
   doc,
   canEdit,
   projectId,
+  formatDate,
   onDeleted,
 }: {
   doc: PidDoc
   canEdit: boolean
   projectId: string
+  formatDate: (iso: string) => string
   onDeleted: (id: string, drawingNumber: string) => void
 }) {
+  const t = useTranslations('PidDocuments')
   const [isPending, startTransition] = useTransition()
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -217,7 +222,7 @@ function DocRow({
             display: 'inline-block',
           }}
         >
-          Abrir Visor
+          {t('list.openViewer')}
         </a>
         {doc.signed_url && (
           <a
@@ -230,7 +235,7 @@ function DocRow({
               border: '1px solid #bbf7d0', textDecoration: 'none', marginRight: '8px',
             }}
           >
-            Ver PDF
+            {t('list.viewPdf')}
           </a>
         )}
         {canEdit && !confirmDelete && (
@@ -241,12 +246,12 @@ function DocRow({
               color: '#ef4444', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer',
             }}
           >
-            Eliminar
+            {t('list.deleteBtn')}
           </button>
         )}
         {canEdit && confirmDelete && (
           <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: '#ef4444' }}>¿Confirmar?</span>
+            <span style={{ fontSize: '12px', color: '#ef4444' }}>{t('list.confirmQ')}</span>
             <button
               onClick={handleDelete}
               disabled={isPending}
@@ -255,7 +260,7 @@ function DocRow({
                 color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer',
               }}
             >
-              {isPending ? '...' : 'Sí'}
+              {isPending ? '...' : t('list.confirmYes')}
             </button>
             <button
               onClick={() => setConfirmDelete(false)}
@@ -264,7 +269,7 @@ function DocRow({
                 color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '5px', cursor: 'pointer',
               }}
             >
-              No
+              {t('list.confirmNo')}
             </button>
           </span>
         )}
@@ -284,6 +289,7 @@ function UploadForm({
   onUploaded: (doc: PidDoc) => void
   onCancel: () => void
 }) {
+  const t = useTranslations('PidDocuments')
   const [file, setFile] = useState<File | null>(null)
   const [drawingNumber, setDrawingNumber] = useState('')
   const [title, setTitle] = useState('')
@@ -294,12 +300,11 @@ function UploadForm({
 
   function handleFile(f: File) {
     if (f.type !== 'application/pdf') {
-      setError('Solo se aceptan archivos PDF.')
+      setError(t('upload.errPdfOnly'))
       return
     }
     setFile(f)
     setError(null)
-    // Pre-fill drawing number from filename (strip .pdf extension)
     if (!drawingNumber) {
       setDrawingNumber(f.name.replace(/\.pdf$/i, ''))
     }
@@ -307,8 +312,8 @@ function UploadForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!file) { setError('Selecciona un archivo PDF.'); return }
-    if (!drawingNumber.trim()) { setError('El número de plano es requerido.'); return }
+    if (!file) { setError(t('upload.errNoFile')); return }
+    if (!drawingNumber.trim()) { setError(t('upload.errNoDrawingNum')); return }
 
     setUploading(true)
     setError(null)
@@ -316,7 +321,6 @@ function UploadForm({
     try {
       const supabase = createClient()
 
-      // Build unique storage path: project_id/uuid-filename
       const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
       const filePath = `${projectId}/${crypto.randomUUID()}-${safeFileName}`
 
@@ -326,7 +330,6 @@ function UploadForm({
 
       if (uploadError) throw new Error(uploadError.message)
 
-      // Get signed URL for immediate display
       const { data: signed } = await supabase.storage
         .from('pid-documents')
         .createSignedUrl(filePath, 3600)
@@ -341,7 +344,7 @@ function UploadForm({
       })
 
       onUploaded({
-        id: crypto.randomUUID(), // temp, will refresh on next load
+        id: crypto.randomUUID(),
         drawing_number: drawingNumber.trim(),
         title: title.trim() || null,
         file_path: filePath,
@@ -351,7 +354,7 @@ function UploadForm({
         signed_url: signed?.signedUrl ?? null,
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al subir el archivo.')
+      setError(err instanceof Error ? err.message : t('upload.errUpload'))
       setUploading(false)
     }
   }
@@ -361,7 +364,7 @@ function UploadForm({
       background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px',
     }}>
       <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
-        Subir documento P&ID
+        {t('upload.formTitle')}
       </h3>
 
       {/* Drop zone */}
@@ -399,9 +402,10 @@ function UploadForm({
           <>
             <div style={{ fontSize: '24px', marginBottom: '8px', opacity: 0.4 }}>📂</div>
             <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-              Arrastra un PDF aquí o <span style={{ color: '#3b82f6', fontWeight: 500 }}>selecciona archivo</span>
+              {t('upload.dropBefore')}{' '}
+              <span style={{ color: '#3b82f6', fontWeight: 500 }}>{t('upload.dropSelect')}</span>
             </p>
-            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#94a3b8' }}>Solo PDF · Máx. 50 MB</p>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#94a3b8' }}>{t('upload.dropHint')}</p>
           </>
         )}
       </div>
@@ -410,9 +414,8 @@ function UploadForm({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
         <div>
           <label style={{ fontSize: '12px', fontWeight: 500, color: '#374151', display: 'block', marginBottom: '4px' }}>
-            N° de Plano <span style={{ color: '#ef4444' }}>*</span>
+            {t('upload.fieldDrawingNum')} <span style={{ color: '#ef4444' }}>*</span>
           </label>
-          {/* Quick-fill from missing PIDs */}
           {missingPids.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
               {missingPids.slice(0, 6).map(p => (
@@ -442,7 +445,7 @@ function UploadForm({
         </div>
         <div>
           <label style={{ fontSize: '12px', fontWeight: 500, color: '#374151', display: 'block', marginBottom: '4px' }}>
-            Título (opcional)
+            {t('upload.fieldTitle')}
           </label>
           <input
             value={title}
@@ -469,7 +472,7 @@ function UploadForm({
             fontSize: '13px', fontWeight: 500, cursor: uploading ? 'wait' : 'pointer',
           }}
         >
-          {uploading ? 'Subiendo...' : 'Subir PDF'}
+          {uploading ? t('upload.submitting') : t('upload.submit')}
         </button>
         <button
           type="button"
@@ -480,7 +483,7 @@ function UploadForm({
             border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer',
           }}
         >
-          Cancelar
+          {t('upload.cancel')}
         </button>
       </div>
     </form>

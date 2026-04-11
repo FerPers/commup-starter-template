@@ -502,6 +502,53 @@ CREATE TABLE kpi_snapshots (
 );
 
 -- ══════════════════════════════════════════════════════════════
+-- P&ID DOCUMENTS & HOTSPOTS
+-- ══════════════════════════════════════════════════════════════
+
+CREATE TABLE pid_documents (
+  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id         UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  project_id     UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  drawing_number TEXT NOT NULL,
+  title          TEXT,
+  file_path      TEXT NOT NULL,
+  file_name      TEXT NOT NULL,
+  file_size      BIGINT,
+  uploaded_by    UUID REFERENCES profiles(id),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (project_id, drawing_number)
+);
+
+CREATE TABLE pid_hotspots (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id            UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  project_id        UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  pid_document_id   UUID NOT NULL REFERENCES pid_documents(id) ON DELETE CASCADE,
+  tag_id            UUID NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  page_num          INTEGER NOT NULL DEFAULT 1,
+  x_pct             NUMERIC(6,3) NOT NULL,   -- 0–100 % from left
+  y_pct             NUMERIC(6,3) NOT NULL,   -- 0–100 % from top
+  created_by        UUID REFERENCES profiles(id),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (pid_document_id, tag_id, page_num)
+);
+
+ALTER TABLE pid_documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pid_hotspots  ENABLE ROW LEVEL SECURITY;
+
+-- pid_documents policies (editor = owner/admin/architect/leader)
+CREATE POLICY "pid_documents_select" ON pid_documents FOR SELECT USING (is_project_member(project_id));
+CREATE POLICY "pid_documents_insert" ON pid_documents FOR INSERT WITH CHECK (is_project_editor(project_id));
+CREATE POLICY "pid_documents_update" ON pid_documents FOR UPDATE USING (is_project_editor(project_id));
+CREATE POLICY "pid_documents_delete" ON pid_documents FOR DELETE USING (is_project_editor(project_id));
+
+-- pid_hotspots policies (creator can delete their own; editors can delete any)
+CREATE POLICY "pid_hotspots_select" ON pid_hotspots FOR SELECT USING (is_project_member(project_id));
+CREATE POLICY "pid_hotspots_insert" ON pid_hotspots FOR INSERT WITH CHECK (is_project_editor(project_id));
+CREATE POLICY "pid_hotspots_update" ON pid_hotspots FOR UPDATE USING (is_project_editor(project_id));
+CREATE POLICY "pid_hotspots_delete" ON pid_hotspots FOR DELETE USING (is_project_editor(project_id) OR created_by = auth.uid());
+
+-- ══════════════════════════════════════════════════════════════
 -- INDEXES (performance)
 -- ══════════════════════════════════════════════════════════════
 
@@ -520,6 +567,9 @@ CREATE INDEX idx_preservation_plans_tag ON preservation_plans(tag_id);
 CREATE INDEX idx_preservation_plans_next_due ON preservation_plans(next_due_date);
 CREATE INDEX idx_kpi_snapshots_project ON kpi_snapshots(project_id);
 CREATE INDEX idx_kpi_snapshots_date ON kpi_snapshots(snapshot_date);
+CREATE INDEX idx_pid_documents_project ON pid_documents(project_id);
+CREATE INDEX idx_pid_hotspots_document ON pid_hotspots(pid_document_id);
+CREATE INDEX idx_pid_hotspots_tag ON pid_hotspots(tag_id);
 
 -- ══════════════════════════════════════════════════════════════
 -- ROW LEVEL SECURITY (multi-tenant isolation)

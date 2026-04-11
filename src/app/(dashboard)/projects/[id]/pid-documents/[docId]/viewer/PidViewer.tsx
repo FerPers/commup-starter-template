@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition, useCallback } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -53,6 +54,7 @@ function TagSelector({
   value: string | null
   onChange: (id: string | null) => void
 }) {
+  const t = useTranslations('PidDocuments')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -99,7 +101,7 @@ function TagSelector({
             >×</button>
           </>
         ) : (
-          <span>Seleccionar tag para marcar…</span>
+          <span>{t('viewer.tagSelectorPlaceholder')}</span>
         )}
       </div>
 
@@ -114,7 +116,7 @@ function TagSelector({
               autoFocus
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Buscar tag…"
+              placeholder={t('viewer.tagSearchPlaceholder')}
               style={{
                 width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0',
                 borderRadius: '6px', fontSize: '12px', outline: 'none', boxSizing: 'border-box',
@@ -123,11 +125,13 @@ function TagSelector({
           </div>
           <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
             {filtered.length === 0 ? (
-              <div style={{ padding: '12px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>Sin resultados</div>
-            ) : filtered.map(t => (
+              <div style={{ padding: '12px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                {t('viewer.tagSearchEmpty')}
+              </div>
+            ) : filtered.map(item => (
               <div
-                key={t.id}
-                onClick={() => { onChange(t.id); setOpen(false); setQuery('') }}
+                key={item.id}
+                onClick={() => { onChange(item.id); setOpen(false); setQuery('') }}
                 style={{
                   padding: '7px 12px', cursor: 'pointer', fontSize: '12px',
                   display: 'flex', alignItems: 'center', gap: '6px',
@@ -138,12 +142,12 @@ function TagSelector({
               >
                 <span style={{
                   padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
-                  background: `${t.discipline.color}18`, color: t.discipline.color, flexShrink: 0,
+                  background: `${item.discipline.color}18`, color: item.discipline.color, flexShrink: 0,
                 }}>
-                  {t.discipline.code}
+                  {item.discipline.code}
                 </span>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: '#0f172a' }}>{t.tag_number}</span>
-                <span style={{ color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.description}</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: '#0f172a' }}>{item.tag_number}</span>
+                <span style={{ color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description}</span>
               </div>
             ))}
           </div>
@@ -156,6 +160,7 @@ function TagSelector({
 // ── Main Component ───────────────────────────────────────────
 
 export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, projectId, docId, canEdit }: Props) {
+  const t = useTranslations('PidDocuments')
   const searchParams = useSearchParams()
   const highlightTagId = searchParams.get('tag')
 
@@ -261,7 +266,6 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
       itr_completion_pct: 0,
     }
 
-    // Remove any existing hotspot for same tag on this page, add new
     setHotspots(prev => [...prev.filter(h => !(h.tag_id === placingTag && h.page_num === currentPage)), optimistic])
     setPendingPos(null)
     setPlacingTag(null)
@@ -276,7 +280,6 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
         y_pct: pendingPos.y,
       })
       if (result.id) {
-        // Replace temp id with real id
         setHotspots(prev => prev.map(h => h.id === optimistic.id ? { ...h, id: result.id! } : h))
       }
     })
@@ -314,7 +317,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
         {numPages > 1 && (
           <div>
             <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-              Página
+              {t('viewer.pageLabel')}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
@@ -337,7 +340,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
         {/* Zoom */}
         <div>
           <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-            Zoom
+            {t('viewer.zoomLabel')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
@@ -358,7 +361,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
         {canEdit && (
           <div>
             <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-              Marcar tag
+              {t('viewer.editSectionLabel')}
             </div>
             <button
               onClick={() => { setEditMode(e => !e); setPlacingTag(null); setPendingPos(null) }}
@@ -370,17 +373,17 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                 border: `1px solid ${editMode ? '#bfdbfe' : '#e2e8f0'}`,
               }}
             >
-              {editMode ? '✓ Modo edición activo' : 'Activar modo edición'}
+              {editMode ? t('viewer.editModeOn') : t('viewer.editModeOff')}
             </button>
             {editMode && (
               <>
                 <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
-                  1. Selecciona un tag:
+                  {t('viewer.editStep1')}
                 </div>
                 <TagSelector tags={tags} value={placingTag} onChange={setPlacingTag} />
                 {placingTag && (
                   <div style={{ marginTop: '8px', fontSize: '12px', color: '#2563eb', padding: '8px 10px', background: '#eff6ff', borderRadius: '7px', border: '1px solid #bfdbfe' }}>
-                    2. Haz click en el P&ID para marcar la posición del tag
+                    {t('viewer.editStep2')}
                   </div>
                 )}
               </>
@@ -392,7 +395,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
         {pageHotspots.length > 0 && (
           <div>
             <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-              Tags en esta página ({pageHotspots.length})
+              {t('viewer.tagListLabel', { count: pageHotspots.length })}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {pageHotspots.map(h => (
@@ -432,12 +435,12 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
             loading={
               <div style={{ width: `${pageWidth * scale}px`, height: '600px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                Cargando PDF…
+                {t('viewer.pdfLoading')}
               </div>
             }
             error={
               <div style={{ width: `${pageWidth}px`, padding: '40px', background: 'white', color: '#ef4444', borderRadius: '8px' }}>
-                Error al cargar el PDF. Verifica que el archivo esté disponible.
+                {t('viewer.pdfError')}
               </div>
             }
           >
@@ -525,7 +528,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                     border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 500,
                   }}
                 >
-                  {isPending ? '…' : 'Confirmar'}
+                  {isPending ? '…' : t('viewer.confirm')}
                 </button>
                 <button
                   onClick={e => { e.stopPropagation(); setPendingPos(null) }}
@@ -534,7 +537,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                     border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                   }}
                 >
-                  Cancelar
+                  {t('viewer.cancel')}
                 </button>
               </div>
             </div>
@@ -563,7 +566,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                   border: '1px solid #fecaca', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontWeight: 500,
                 }}
               >
-                Quitar hotspot
+                {t('viewer.removeHotspot')}
               </button>
             </div>
           )}

@@ -920,5 +920,58 @@
         "addComment": "Add comment"
       }
     }
+  },
+  "PidDocuments": {
+    "list": {
+      "missingAlert": "{count, plural, one {# P&ID referenced in tags without document:} other {# P&IDs referenced in tags without document:}}",
+      "emptyTitle": "No P&ID documents uploaded",
+      "emptyDesc": "Upload PDFs to access them during walkdown inspections.",
+      "uploadBtn": "+ Upload P&ID (PDF)",
+      "colDrawingNum": "Drawing No.",
+      "colTitle": "Title",
+      "colFile": "File",
+      "colSize": "Size",
+      "colUploaded": "Uploaded",
+      "openViewer": "Open Viewer",
+      "viewPdf": "View PDF",
+      "deleteBtn": "Delete",
+      "confirmQ": "Confirm?",
+      "confirmYes": "Yes",
+      "confirmNo": "No"
+    },
+    "upload": {
+      "formTitle": "Upload P&ID document",
+      "dropBefore": "Drag a PDF here or",
+      "dropSelect": "select file",
+      "dropHint": "PDF only · Max. 50 MB",
+      "fieldDrawingNum": "Drawing No.",
+      "fieldDrawingNumRequired": "Drawing No. *",
+      "fieldTitle": "Title (optional)",
+      "submit": "Upload PDF",
+      "submitting": "Uploading...",
+      "cancel": "Cancel",
+      "errPdfOnly": "Only PDF files are accepted.",
+      "errNoFile": "Select a PDF file.",
+      "errNoDrawingNum": "Drawing number is required.",
+      "errUpload": "Error uploading the file."
+    },
+    "viewer": {
+      "pageLabel": "Page",
+      "zoomLabel": "Zoom",
+      "editSectionLabel": "Mark tag",
+      "editModeOn": "✓ Edit mode active",
+      "editModeOff": "Activate edit mode",
+      "editStep1": "1. Select a tag:",
+      "editStep2": "2. Click on the P&ID to mark the tag position",
+      "tagListLabel": "Tags on this page ({count})",
+      "tagSelectorPlaceholder": "Select tag to mark…",
+      "tagSearchPlaceholder": "Search tag…",
+      "tagSearchEmpty": "No results",
+      "pdfLoading": "Loading PDF…",
+      "pdfError": "Error loading PDF. Verify the file is available.",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "removeHotspot": "Remove hotspot"
+    }
   }
 }

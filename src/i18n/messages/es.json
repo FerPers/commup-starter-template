@@ -920,5 +920,58 @@
         "addComment": "Agregar comentario"
       }
     }
+  },
+  "PidDocuments": {
+    "list": {
+      "missingAlert": "{count, plural, one {# P&ID referenciado en tags sin documento:} other {# P&IDs referenciados en tags sin documento:}}",
+      "emptyTitle": "Sin documentos P&ID subidos",
+      "emptyDesc": "Sube los PDFs para acceder a ellos durante las caminatas de verificación.",
+      "uploadBtn": "+ Subir P&ID (PDF)",
+      "colDrawingNum": "N° Plano",
+      "colTitle": "Título",
+      "colFile": "Archivo",
+      "colSize": "Tamaño",
+      "colUploaded": "Subido",
+      "openViewer": "Abrir Visor",
+      "viewPdf": "Ver PDF",
+      "deleteBtn": "Eliminar",
+      "confirmQ": "¿Confirmar?",
+      "confirmYes": "Sí",
+      "confirmNo": "No"
+    },
+    "upload": {
+      "formTitle": "Subir documento P&ID",
+      "dropBefore": "Arrastra un PDF aquí o",
+      "dropSelect": "selecciona archivo",
+      "dropHint": "Solo PDF · Máx. 50 MB",
+      "fieldDrawingNum": "N° de Plano",
+      "fieldDrawingNumRequired": "N° de Plano *",
+      "fieldTitle": "Título (opcional)",
+      "submit": "Subir PDF",
+      "submitting": "Subiendo...",
+      "cancel": "Cancelar",
+      "errPdfOnly": "Solo se aceptan archivos PDF.",
+      "errNoFile": "Selecciona un archivo PDF.",
+      "errNoDrawingNum": "El número de plano es requerido.",
+      "errUpload": "Error al subir el archivo."
+    },
+    "viewer": {
+      "pageLabel": "Página",
+      "zoomLabel": "Zoom",
+      "editSectionLabel": "Marcar tag",
+      "editModeOn": "✓ Modo edición activo",
+      "editModeOff": "Activar modo edición",
+      "editStep1": "1. Selecciona un tag:",
+      "editStep2": "2. Haz click en el P&ID para marcar la posición del tag",
+      "tagListLabel": "Tags en esta página ({count})",
+      "tagSelectorPlaceholder": "Seleccionar tag para marcar…",
+      "tagSearchPlaceholder": "Buscar tag…",
+      "tagSearchEmpty": "Sin resultados",
+      "pdfLoading": "Cargando PDF…",
+      "pdfError": "Error al cargar el PDF. Verifica que el archivo esté disponible.",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "removeHotspot": "Quitar hotspot"
+    }
   }
 }
