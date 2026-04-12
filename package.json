@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@opennextjs/cloudflare": "^1.18.0",
+		"@react-pdf/renderer": "^4.4.1",
 		"@supabase/ssr": "^0.9.0",
 		"@supabase/supabase-js": "^2.100.1",
 		"class-variance-authority": "^0.7.1",
