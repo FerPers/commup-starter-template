@@ -3,7 +3,8 @@
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { bulkUpdateItrStatus, bulkAssignItrs } from '@/app/actions/bulk'
+import { bulkUpdateItrStatus } from '@/app/actions/bulk'
+import { bulkAssignItrs } from '@/app/actions/itr-assign'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 
 // ── Types ─────────────────────────────────────────────────────────────
