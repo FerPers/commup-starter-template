@@ -60,6 +60,7 @@ export async function createWorkPlan(input: {
 
   revalidatePath('/work-plans')
   revalidatePath(`/projects/${projectId}`)
+  revalidatePath(`/projects/${projectId}/work-plans`)
   return { id: data.id }
 }
 
@@ -170,4 +171,124 @@ export async function deleteWorkPlan(planId: string): Promise<{ error?: string }
 
   revalidatePath('/work-plans')
   return {}
+}
+
+// ── Get Project Plan Context (for AddToWorkPlanModal) ─────────────────
+
+export async function getProjectPlanContext(projectId: string): Promise<{
+  plans: Array<{ id: string; plan_date: string; status: string; disciplines: { code: string; name: string; color: string } | null }>
+  disciplines: Array<{ id: string; code: string; name: string; color: string }>
+  error?: string
+}> {
+  const ctx = await getCtx()
+  if (!ctx) return { plans: [], disciplines: [], error: 'No autenticado' }
+
+  const [plansRes, discRes] = await Promise.all([
+    ctx.supabase
+      .from('work_plans')
+      .select('id, plan_date, status, disciplines(code, name, color)')
+      .eq('project_id', projectId)
+      .in('status', ['draft', 'published', 'in_progress'])
+      .order('plan_date', { ascending: false })
+      .limit(50),
+    ctx.supabase
+      .from('disciplines')
+      .select('id, code, name, color')
+      .eq('org_id', ctx.orgId)
+      .order('code'),
+  ])
+
+  // Supabase returns disciplines as array from the join; normalize to object|null
+  const plans = (plansRes.data ?? []).map(row => {
+    const disc = Array.isArray(row.disciplines)
+      ? (row.disciplines[0] ?? null)
+      : (row.disciplines ?? null)
+    return {
+      id: row.id as string,
+      plan_date: row.plan_date as string,
+      status: row.status as string,
+      disciplines: disc as { code: string; name: string; color: string } | null,
+    }
+  })
+
+  return { plans, disciplines: discRes.data ?? [] }
+}
+
+// ── Bulk Add ITRs to Work Plan ────────────────────────────────────────
+
+export async function addItrsToWorkPlan(
+  planId: string,
+  items: { itrId: string; assignedTo: string }[],
+): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+
+  const { error } = await ctx.supabase
+    .from('work_plan_items')
+    .insert(items.map(item => ({
+      work_plan_id: planId,
+      itr_id: item.itrId,
+      assigned_to: item.assignedTo,
+      status: 'not_started',
+    })))
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/work-plans')
+  return {}
+}
+
+// ── Create Work Plan and Add ITRs ─────────────────────────────────────
+
+export async function createWorkPlanAndAddItrs(input: {
+  projectId: string
+  disciplineId: string
+  planDate: string
+  notes?: string
+  items: { itrId: string; assignedTo: string }[]
+}): Promise<{ id?: string; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+
+  const { projectId, disciplineId, planDate, notes, items } = input
+
+  const { data: project } = await ctx.supabase
+    .from('projects')
+    .select('org_id')
+    .eq('id', projectId)
+    .single()
+  if (!project || project.org_id !== ctx.orgId) return { error: 'Proyecto no encontrado' }
+
+  const { data, error } = await ctx.supabase
+    .from('work_plans')
+    .insert({
+      project_id: projectId,
+      discipline_id: disciplineId,
+      leader_id: ctx.userId,
+      plan_date: planDate,
+      status: 'draft',
+      notes: notes ?? null,
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  if (items.length > 0) {
+    const { error: itemsError } = await ctx.supabase
+      .from('work_plan_items')
+      .insert(items.map(item => ({
+        work_plan_id: data.id,
+        itr_id: item.itrId,
+        assigned_to: item.assignedTo,
+        status: 'not_started',
+      })))
+    if (itemsError) return { error: itemsError.message }
+  }
+
+  revalidatePath('/work-plans')
+  revalidatePath(`/projects/${projectId}/work-plans`)
+  return { id: data.id }
 }

@@ -140,7 +140,14 @@
       "selectAll": "Select {count} ITRs"
     },
     "bulk": {
-      "selected": "{count, plural, one {# ITR selected} other {# ITRs selected}}"
+      "selected": "{count, plural, one {# ITR selected} other {# ITRs selected}}",
+      "changeStatus": "Change status",
+      "assign": "Assign inspector",
+      "apply": "Apply",
+      "addToPlan": "▦ Add to plan",
+      "deselect": "Deselect all",
+      "statusPlaceholder": "Select status...",
+      "assignPlaceholder": "Select inspector..."
     },
     "table": {
       "colProject": "Project",
@@ -195,7 +202,10 @@
       "selectAll": "Select {count} punches"
     },
     "bulk": {
-      "selected": "{count, plural, one {# punch selected} other {# punches selected}}"
+      "selected": "{count, plural, one {# punch selected} other {# punches selected}}",
+      "close": "Close",
+      "cancelSelected": "Cancel",
+      "deselect": "Deselect all"
     },
     "catLabels": {
       "A": "Cat A — Blocking",
@@ -436,6 +446,7 @@
   "WorkPlans": {
     "title": "Work Plans",
     "subtitle": "All organization projects",
+    "subtitleProject": "Work plans for this project",
     "newPlan": "+ New plan",
     "planStatus": {
       "draft": "Draft",
@@ -498,7 +509,24 @@
       "add": "Add →"
     },
     "confirmRemoveItem": "Remove this ITR from the plan?",
-    "confirmDeletePlan": "Delete this work plan and all its items?"
+    "confirmDeletePlan": "Delete this work plan and all its items?",
+    "addToPlanModal": {
+      "title": "Add to Work Plan",
+      "loading": "Loading plans...",
+      "modeExisting": "Add to existing plan",
+      "modeNew": "Create new plan",
+      "noPlans": "none active",
+      "selectPlanLabel": "Select plan *",
+      "selectPlanPh": "Select plan...",
+      "itrsToAdd": "{count, plural, one {# ITR to add} other {# ITRs to add}}",
+      "colItr": "ITR / Tag",
+      "colAssigned": "Assigned to",
+      "assignPh": "Select person...",
+      "cancel": "Cancel",
+      "submit": "Add to plan →",
+      "submitNew": "Create & add →",
+      "submitting": "Adding..."
+    }
   },
   "Kpis": {
     "title": "KPIs",
@@ -879,7 +907,12 @@
       "colPid": "P&ID",
       "colMaker": "Manufacturer · Model",
       "colStatus": "Status",
-      "openPid": "Open P&ID"
+      "openPid": "Open P&ID",
+      "search": "Search tag or description...",
+      "bulkSelected": "{count, plural, one {# tag selected} other {# tags selected}}",
+      "bulkChangeStatus": "Change status",
+      "bulkDeselect": "Deselect all",
+      "bulkApply": "Apply"
     },
     "detail": {
       "backLink": "← {project} / Tags",

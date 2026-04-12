@@ -105,6 +105,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
             </div>
             {[
               { href: `/projects/${currentProjectId}/explorer`, labelKey: 'explorer', icon: '◧' },
+              { href: `/projects/${currentProjectId}/work-plans`, labelKey: 'workPlans', icon: '▦' },
               { href: `/projects/${currentProjectId}/pssr`, labelKey: 'pssr', icon: '🛡' },
             ].map(item => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
 import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
+import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
 
 // ── Status config ────────────────────────────────────────────────────
@@ -58,6 +59,13 @@ export default function TagItrTab({
   const [selectedSupervisor, setSelectedSupervisor] = useState('')
   const [selectedClient, setSelectedClient] = useState('')
   const [scheduledDate, setScheduledDate] = useState('')
+
+  // Add to plan modal state
+  const [planModalItr, setPlanModalItr] = useState<ModalItr | null>(null)
+  const planModalMembers = orgMembers.map(m => ({
+    user_id: m.user_id,
+    full_name: m.profiles?.full_name ?? m.user_id,
+  }))
 
   // Tag type detection for ITR recommendations
   const tagType = detectTagType(tagNumber)
@@ -193,6 +201,20 @@ export default function TagItrTab({
                   </a>
                   {canEdit && (
                     <button
+                      onClick={() => setPlanModalItr({
+                        id: itr.id,
+                        itrNumber: itr.itr_number,
+                        tagNumber: tagNumber,
+                        defaultAssignedTo: executor?.user_id,
+                      })}
+                      style={{ padding: '6px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '11px', color: '#16a34a', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      title="Agregar a plan de trabajo"
+                    >
+                      + Plan
+                    </button>
+                  )}
+                  {canEdit && (
+                    <button
                       onClick={() => handleDelete(itr.id)}
                       disabled={isPending}
                       style={{ padding: '6px 10px', background: 'white', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', color: '#ef4444', cursor: 'pointer' }}
@@ -205,6 +227,17 @@ export default function TagItrTab({
             )
           })}
         </div>
+      )}
+
+      {/* ── Add to Plan Modal ─────────────────────────────────────── */}
+      {planModalItr && (
+        <AddToWorkPlanModal
+          projectId={projectId}
+          itrs={[planModalItr]}
+          members={planModalMembers}
+          onClose={() => setPlanModalItr(null)}
+          onSuccess={() => { setPlanModalItr(null); router.refresh() }}
+        />
       )}
 
       {/* ── Assign Modal ──────────────────────────────────────────── */}

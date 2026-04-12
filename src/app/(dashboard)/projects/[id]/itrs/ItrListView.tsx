@@ -1,6 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { bulkUpdateItrStatus, bulkAssignItrs } from '@/app/actions/bulk'
+import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -18,19 +22,25 @@ type ItrRow = {
   itr_signatures: Array<{ role: string; signed_at: string }>
 }
 
-type Phase = { id: string; code: string; name: string; color: string; order_index: number }
+type Phase    = { id: string; code: string; name: string; color: string; order_index: number }
+type OrgUser  = { user_id: string; full_name: string }
+
+type SortKey = 'itr_number' | 'scheduled_date' | 'progress_pct' | 'status'
+type SortDir = 'asc' | 'desc'
 
 // ── Status config ─────────────────────────────────────────────────────
 
-const ITR_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  not_started: { label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9' },
-  in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { label: 'Completado',  color: '#10b981', bg: '#ecfdf5' },
-  approved:     { label: 'Aprobado',    color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:     { label: 'Rechazado',   color: '#ef4444', bg: '#fee2e2' },
+const ITR_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  not_started: { color: '#64748b', bg: '#f1f5f9' },
+  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
+  completed:    { color: '#10b981', bg: '#ecfdf5' },
+  approved:     { color: '#7c3aed', bg: '#f5f3ff' },
+  rejected:     { color: '#ef4444', bg: '#fee2e2' },
 }
 
 const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', client: 'C' }
+
+const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 // ── Component ─────────────────────────────────────────────────────────
 
@@ -39,138 +49,380 @@ export default function ItrListView({
   projectName,
   itrs,
   phases,
+  users = [],
+  userRole = '',
 }: {
   projectId: string
   projectName: string
   itrs: ItrRow[]
   phases: Phase[]
+  users?: OrgUser[]
+  userRole?: string
 }) {
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterPhase, setFilterPhase] = useState('')
-  const [filterDisc, setFilterDisc] = useState('')
-  const [search, setSearch] = useState('')
+  const t = useTranslations('ItrList')
+  const canEdit = EDITOR_ROLES.includes(userRole)
+  const router = useRouter()
 
-  // Unique disciplines from the ITR list
+  // ── Filters ──────────────────────────────────────────────────────────
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterPhase, setFilterPhase]   = useState('')
+  const [filterDisc, setFilterDisc]     = useState('')
+  const [search, setSearch]             = useState('')
+
+  // ── Sorting ───────────────────────────────────────────────────────────
+  const [sortKey, setSortKey]   = useState<SortKey>('itr_number')
+  const [sortDir, setSortDir]   = useState<SortDir>('asc')
+
+  // ── Bulk selection ────────────────────────────────────────────────────
+  const [selected, setSelected]           = useState<Set<string>>(new Set())
+  const [bulkStatus, setBulkStatus]       = useState('')
+  const [bulkUserId, setBulkUserId]       = useState('')
+  const [isPending, startTransition]      = useTransition()
+  const [bulkError, setBulkError]         = useState<string | null>(null)
+
+  // ── Add to plan modal ─────────────────────────────────────────────────
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const planModalMembers = useMemo(
+    () => users.map(u => ({ user_id: u.user_id, full_name: u.full_name })),
+    [users],
+  )
+
+  // ── Derived data ──────────────────────────────────────────────────────
   const disciplines = useMemo(() => {
     const seen = new Set<string>()
     const list: { code: string; name: string; color: string }[] = []
     for (const itr of itrs) {
       const d = itr.itr_templates?.disciplines
-      if (d && !seen.has(d.code)) {
-        seen.add(d.code)
-        list.push(d)
-      }
+      if (d && !seen.has(d.code)) { seen.add(d.code); list.push(d) }
     }
     return list.sort((a, b) => a.code.localeCompare(b.code))
   }, [itrs])
 
   const filtered = useMemo(() => {
-    return itrs.filter(itr => {
+    const list = itrs.filter(itr => {
       if (filterStatus && itr.status !== filterStatus) return false
       if (filterPhase && itr.project_phases?.code !== filterPhase) return false
       if (filterDisc && itr.itr_templates?.disciplines?.code !== filterDisc) return false
       if (search) {
         const q = search.toLowerCase()
-        const matchItr = itr.itr_number.toLowerCase().includes(q)
-        const matchTag = (itr.tags?.tag_number ?? '').toLowerCase().includes(q)
-        const matchTitle = (itr.itr_templates?.title ?? '').toLowerCase().includes(q)
-        if (!matchItr && !matchTag && !matchTitle) return false
+        if (
+          !itr.itr_number.toLowerCase().includes(q) &&
+          !(itr.tags?.tag_number ?? '').toLowerCase().includes(q) &&
+          !(itr.itr_templates?.title ?? '').toLowerCase().includes(q)
+        ) return false
       }
       return true
     })
-  }, [itrs, filterStatus, filterPhase, filterDisc, search])
 
-  // Summary counts by status
+    list.sort((a, b) => {
+      let av: string | number = ''
+      let bv: string | number = ''
+      if (sortKey === 'itr_number')     { av = a.itr_number;     bv = b.itr_number }
+      if (sortKey === 'scheduled_date') { av = a.scheduled_date ?? ''; bv = b.scheduled_date ?? '' }
+      if (sortKey === 'progress_pct')   { av = a.progress_pct;   bv = b.progress_pct }
+      if (sortKey === 'status')         { av = a.status;         bv = b.status }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1
+      if (av > bv) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+
+    return list
+  }, [itrs, filterStatus, filterPhase, filterDisc, search, sortKey, sortDir])
+
   const counts = useMemo(() => {
     const c: Record<string, number> = {}
     for (const itr of itrs) c[itr.status] = (c[itr.status] ?? 0) + 1
     return c
   }, [itrs])
 
+  const filteredIds = useMemo(() => new Set(filtered.map(i => i.id)), [filtered])
+  const allFilteredSelected = filtered.length > 0 && filtered.every(i => selected.has(i.id))
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('asc') }
+  }
+
+  function toggleRow(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleAll() {
+    if (allFilteredSelected) {
+      setSelected(prev => { const next = new Set(prev); filteredIds.forEach(id => next.delete(id)); return next })
+    } else {
+      setSelected(prev => { const next = new Set(prev); filteredIds.forEach(id => next.add(id)); return next })
+    }
+  }
+
+  function clearSelection() {
+    setSelected(new Set())
+    setBulkStatus('')
+    setBulkUserId('')
+    setBulkError(null)
+  }
+
+  function applyBulkStatus() {
+    if (!bulkStatus || !selected.size) return
+    setBulkError(null)
+    startTransition(async () => {
+      const res = await bulkUpdateItrStatus([...selected], bulkStatus)
+      if (res.error) { setBulkError(res.error); return }
+      clearSelection()
+    })
+  }
+
+  function applyBulkAssign() {
+    if (!bulkUserId || !selected.size) return
+    setBulkError(null)
+    startTransition(async () => {
+      const res = await bulkAssignItrs([...selected], bulkUserId, 'executor')
+      if (res.error) { setBulkError(res.error); return }
+      clearSelection()
+    })
+  }
+
+  const hasFilters = !!(filterStatus || filterPhase || filterDisc || search)
+
+  const itrStatusKeys = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
+
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
 
-      {/* Page header */}
+      {/* Breadcrumb + title */}
       <div style={{ marginBottom: '24px' }}>
         <a href={`/projects/${projectId}`} style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>
           ← {projectName}
         </a>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0' }}>ITRs del Proyecto</h1>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0' }}>ITRs</h1>
       </div>
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '24px' }}>
-        {Object.entries(ITR_STATUS).map(([key, cfg]) => (
-          <div
-            key={key}
-            onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
-            style={{ padding: '14px 16px', background: filterStatus === key ? cfg.bg : 'white', border: `1px solid ${filterStatus === key ? cfg.color + '40' : '#e2e8f0'}`, borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s' }}
-          >
-            <div style={{ fontSize: '22px', fontWeight: 700, color: cfg.color }}>{counts[key] ?? 0}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{cfg.label}</div>
-          </div>
-        ))}
+        {itrStatusKeys.map(key => {
+          const cfg = ITR_STATUS_STYLE[key]
+          return (
+            <div
+              key={key}
+              onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
+              style={{
+                padding: '14px 16px', borderRadius: '10px', cursor: 'pointer',
+                background: filterStatus === key ? cfg.bg : 'white',
+                border: `1px solid ${filterStatus === key ? cfg.color + '40' : '#e2e8f0'}`,
+                transition: 'all 0.15s',
+              }}
+            >
+              <div style={{ fontSize: '22px', fontWeight: 700, color: cfg.color }}>{counts[key] ?? 0}</div>
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{t(`itrStatus.${key}`)}</div>
+            </div>
+          )
+        })}
       </div>
+
+      {/* Bulk toolbar */}
+      {selected.size > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+          padding: '12px 16px', marginBottom: '12px',
+          background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px',
+        }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', flexShrink: 0 }}>
+            {t('bulk.selected', { count: selected.size })}
+          </span>
+
+          {/* Change status */}
+          <select
+            value={bulkStatus}
+            onChange={e => setBulkStatus(e.target.value)}
+            disabled={isPending}
+            style={{ padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'white' }}
+          >
+            <option value="">{t('bulk.statusPlaceholder')}</option>
+            {itrStatusKeys.map(k => (
+              <option key={k} value={k}>{t(`itrStatus.${k}`)}</option>
+            ))}
+          </select>
+          <button
+            onClick={applyBulkStatus}
+            disabled={!bulkStatus || isPending}
+            style={{
+              padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
+              background: bulkStatus && !isPending ? '#0369a1' : '#e2e8f0',
+              color: bulkStatus && !isPending ? 'white' : '#94a3b8',
+              cursor: bulkStatus && !isPending ? 'pointer' : 'default',
+            }}
+          >
+            {t('bulk.changeStatus')}
+          </button>
+
+          {/* Assign inspector */}
+          {canEdit && users.length > 0 && (
+            <>
+              <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
+              <select
+                value={bulkUserId}
+                onChange={e => setBulkUserId(e.target.value)}
+                disabled={isPending}
+                style={{ padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'white' }}
+              >
+                <option value="">{t('bulk.assignPlaceholder')}</option>
+                {users.map(u => (
+                  <option key={u.user_id} value={u.user_id}>{u.full_name}</option>
+                ))}
+              </select>
+              <button
+                onClick={applyBulkAssign}
+                disabled={!bulkUserId || isPending}
+                style={{
+                  padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
+                  background: bulkUserId && !isPending ? '#7c3aed' : '#e2e8f0',
+                  color: bulkUserId && !isPending ? 'white' : '#94a3b8',
+                  cursor: bulkUserId && !isPending ? 'pointer' : 'default',
+                }}
+              >
+                {t('bulk.assign')}
+              </button>
+            </>
+          )}
+
+          {/* Add to work plan */}
+          {canEdit && (
+            <>
+              <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
+              <button
+                onClick={() => setShowPlanModal(true)}
+                disabled={isPending}
+                style={{
+                  padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
+                  background: '#f0fdf4', color: '#16a34a', cursor: isPending ? 'not-allowed' : 'pointer',
+                  border: '1px solid #bbf7d0',
+                }}
+              >
+                {t('bulk.addToPlan')}
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={clearSelection}
+            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: '#64748b', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+          >
+            {t('bulk.deselect')}
+          </button>
+
+          {bulkError && (
+            <span style={{ fontSize: '12px', color: '#ef4444', background: '#fee2e2', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
+          )}
+        </div>
+      )}
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar ITR, tag, template..."
+          placeholder={t('filters.search')}
           style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '220px', fontFamily: 'inherit' }}
         />
         <select value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={selStyle}>
-          <option value="">Todas las fases</option>
+          <option value="">{t('filters.allPhases')}</option>
           {phases.map(p => <option key={p.id} value={p.code}>{p.code} — {p.name}</option>)}
         </select>
         <select value={filterDisc} onChange={e => setFilterDisc(e.target.value)} style={selStyle}>
-          <option value="">Todas las disciplinas</option>
+          <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </select>
-        {(filterStatus || filterPhase || filterDisc || search) && (
+        {hasFilters && (
           <button
             onClick={() => { setFilterStatus(''); setFilterPhase(''); setFilterDisc(''); setSearch('') }}
             style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
-            Limpiar filtros
+            {t('filters.allPhases').replace('All ', '')} ×
           </button>
         )}
         <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
-          {filtered.length} de {itrs.length} ITRs
+          {t('filters.count', { filtered: filtered.length, total: itrs.length })}
         </span>
       </div>
 
       {/* Table */}
+      {/* Add to plan modal */}
+      {showPlanModal && (() => {
+        const selectedItrs: ModalItr[] = filtered
+          .filter(itr => selected.has(itr.id))
+          .map(itr => ({
+            id: itr.id,
+            itrNumber: itr.itr_number,
+            tagNumber: itr.tags?.tag_number,
+            defaultAssignedTo: itr.itr_assignments.find(a => a.role === 'executor')?.user_id,
+          }))
+        return (
+          <AddToWorkPlanModal
+            projectId={projectId}
+            itrs={selectedItrs}
+            members={planModalMembers}
+            onClose={() => setShowPlanModal(false)}
+            onSuccess={() => { setShowPlanModal(false); clearSelection(); router.refresh() }}
+          />
+        )
+      })()}
+
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>No hay ITRs que coincidan con los filtros.</p>
+          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{t('empty')}</p>
         </div>
       ) : (
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          {/* Table header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 140px 90px 80px 90px 60px', gap: '12px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            <span>ITR / Tag</span>
-            <span>Template</span>
-            <span>Inspector</span>
-            <span>Fecha</span>
-            <span>Progreso</span>
-            <span>Estado</span>
-            <span>Firma</span>
+          {/* Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', gap: '4px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={allFilteredSelected}
+              onChange={toggleAll}
+              style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+            />
+            <SortHeader label={t('table.colItr')} sortKey="itr_number" current={sortKey} dir={sortDir} onSort={toggleSort} />
+            <span style={thStyle}>{t('table.colTemplate')}</span>
+            <span style={thStyle}>{t('table.colInspector')}</span>
+            <SortHeader label={t('table.colDate')} sortKey="scheduled_date" current={sortKey} dir={sortDir} onSort={toggleSort} />
+            <SortHeader label={t('table.colProgress')} sortKey="progress_pct" current={sortKey} dir={sortDir} onSort={toggleSort} />
+            <SortHeader label={t('table.colStatus')} sortKey="status" current={sortKey} dir={sortDir} onSort={toggleSort} />
+            <span style={thStyle}>{t('table.colSignature')}</span>
           </div>
 
           {/* Rows */}
           {filtered.map(itr => {
-            const st = ITR_STATUS[itr.status] ?? ITR_STATUS.not_started
+            const st = ITR_STATUS_STYLE[itr.status] ?? ITR_STATUS_STYLE.not_started
             const executor = itr.itr_assignments.find(a => a.role === 'executor')
             const disc = itr.itr_templates?.disciplines
             const phase = itr.project_phases
+            const isChecked = selected.has(itr.id)
 
             return (
               <div
                 key={itr.id}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 140px 90px 80px 90px 60px', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center' }}
+                style={{
+                  display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', gap: '4px',
+                  padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center',
+                  background: isChecked ? '#eff6ff' : 'transparent',
+                  transition: 'background 0.1s',
+                }}
+                onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8fafc' }}
+                onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = 'transparent' }}
               >
+                {/* Checkbox */}
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => toggleRow(itr.id)}
+                  onClick={e => e.stopPropagation()}
+                  style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                />
+
                 {/* ITR + Tag */}
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -179,6 +431,7 @@ export default function ItrListView({
                     )}
                     <a
                       href={itr.tags ? `/projects/${projectId}/tags/${itr.tags.id}/itrs/${itr.id}` : '#'}
+                      onClick={e => e.stopPropagation()}
                       style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
                     >
                       {itr.itr_number}
@@ -204,7 +457,7 @@ export default function ItrListView({
                   {executor?.profiles?.full_name ?? '—'}
                 </div>
 
-                {/* Scheduled date */}
+                {/* Date */}
                 <div style={{ fontSize: '11px', color: '#64748b' }}>
                   {itr.scheduled_date ?? '—'}
                 </div>
@@ -219,7 +472,7 @@ export default function ItrListView({
 
                 {/* Status */}
                 <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap', textAlign: 'center' }}>
-                  {st.label}
+                  {t(`itrStatus.${itr.status}` as Parameters<typeof t>[0])}
                 </span>
 
                 {/* Signatures */}
@@ -242,7 +495,40 @@ export default function ItrListView({
   )
 }
 
+// ── Sub-components ─────────────────────────────────────────────────────
+
+function SortHeader({ label, sortKey, current, dir, onSort }: {
+  label: string
+  sortKey: SortKey
+  current: SortKey
+  dir: SortDir
+  onSort: (k: SortKey) => void
+}) {
+  const active = current === sortKey
+  return (
+    <button
+      onClick={() => onSort(sortKey)}
+      style={{
+        all: 'unset', display: 'flex', alignItems: 'center', gap: '4px',
+        fontSize: '11px', fontWeight: 700, color: active ? '#3b82f6' : '#94a3b8',
+        textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer',
+        userSelect: 'none',
+      }}
+    >
+      {label}
+      <span style={{ fontSize: '10px', opacity: active ? 1 : 0.4 }}>
+        {active ? (dir === 'asc' ? '↑' : '↓') : '↕'}
+      </span>
+    </button>
+  )
+}
+
 const selStyle: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
   fontSize: '13px', color: '#374151', background: 'white', fontFamily: 'inherit', cursor: 'pointer',
+}
+
+const thStyle: React.CSSProperties = {
+  fontSize: '11px', fontWeight: 700, color: '#94a3b8',
+  textTransform: 'uppercase', letterSpacing: '0.06em',
 }

@@ -140,7 +140,14 @@
       "selectAll": "Seleccionar {count} ITRs"
     },
     "bulk": {
-      "selected": "{count, plural, one {# ITR seleccionado} other {# ITRs seleccionados}}"
+      "selected": "{count, plural, one {# ITR seleccionado} other {# ITRs seleccionados}}",
+      "changeStatus": "Cambiar estado",
+      "assign": "Asignar inspector",
+      "apply": "Aplicar",
+      "addToPlan": "▦ Agregar a plan",
+      "deselect": "Deseleccionar todo",
+      "statusPlaceholder": "Seleccionar estado...",
+      "assignPlaceholder": "Seleccionar inspector..."
     },
     "table": {
       "colProject": "Proyecto",
@@ -195,7 +202,10 @@
       "selectAll": "Seleccionar {count} punches"
     },
     "bulk": {
-      "selected": "{count, plural, one {# punch seleccionado} other {# punches seleccionados}}"
+      "selected": "{count, plural, one {# punch seleccionado} other {# punches seleccionados}}",
+      "close": "Cerrar",
+      "cancelSelected": "Cancelar",
+      "deselect": "Deseleccionar todo"
     },
     "catLabels": {
       "A": "Cat A — Bloqueante",
@@ -436,6 +446,7 @@
   "WorkPlans": {
     "title": "Planes de Trabajo",
     "subtitle": "Todos los proyectos de la organización",
+    "subtitleProject": "Planes de trabajo de este proyecto",
     "newPlan": "+ Nuevo plan",
     "planStatus": {
       "draft": "Borrador",
@@ -498,7 +509,24 @@
       "add": "Agregar →"
     },
     "confirmRemoveItem": "¿Quitar este ITR del plan?",
-    "confirmDeletePlan": "¿Eliminar este plan de trabajo y todos sus ítems?"
+    "confirmDeletePlan": "¿Eliminar este plan de trabajo y todos sus ítems?",
+    "addToPlanModal": {
+      "title": "Agregar a Plan de Trabajo",
+      "loading": "Cargando planes...",
+      "modeExisting": "Agregar a plan existente",
+      "modeNew": "Crear nuevo plan",
+      "noPlans": "sin activos",
+      "selectPlanLabel": "Seleccionar plan *",
+      "selectPlanPh": "Seleccionar plan...",
+      "itrsToAdd": "{count, plural, one {# ITR a agregar} other {# ITRs a agregar}}",
+      "colItr": "ITR / Tag",
+      "colAssigned": "Asignado a",
+      "assignPh": "Seleccionar persona...",
+      "cancel": "Cancelar",
+      "submit": "Agregar al plan →",
+      "submitNew": "Crear y agregar →",
+      "submitting": "Agregando..."
+    }
   },
   "Kpis": {
     "title": "KPIs",
@@ -879,7 +907,12 @@
       "colPid": "P&ID",
       "colMaker": "Fabricante · Modelo",
       "colStatus": "Estado",
-      "openPid": "Abrir P&ID"
+      "openPid": "Abrir P&ID",
+      "search": "Buscar tag o descripción...",
+      "bulkSelected": "{count, plural, one {# tag seleccionado} other {# tags seleccionados}}",
+      "bulkChangeStatus": "Cambiar estado",
+      "bulkDeselect": "Deseleccionar todo",
+      "bulkApply": "Aplicar"
     },
     "detail": {
       "backLink": "← {project} / Tags",
