@@ -286,6 +286,12 @@ export async function signItr(
 
   if ((count ?? 0) >= 3) {
     await ctx.supabase.from('itrs').update({ status: 'approved' }).eq('id', itrId)
+    // Auto-complete any work plan items that reference this ITR
+    await ctx.supabase
+      .from('work_plan_items')
+      .update({ status: 'completed' })
+      .eq('itr_id', itrId)
+      .in('status', ['not_started', 'in_progress'])
   }
 
   revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import KpiDashboard from './KpiDashboard'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
+import { getProjectAlerts } from '@/app/actions/alerts'
 
 export default async function KpiPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: projectId } = await params
@@ -25,6 +26,7 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
     { data: itrs },
     subsystemKpis,
     snapshots,
+    alerts,
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -43,6 +45,7 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
       .eq('project_id', projectId),
     getSubsystemKpis(projectId),
     getProjectSnapshots(projectId),
+    getProjectAlerts(projectId),
   ])
 
   if (!project) notFound()
@@ -71,6 +74,7 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       snapshots={snapshots as any}
       canEdit={canEdit}
+      alerts={alerts}
     />
   )
 }

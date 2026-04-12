@@ -8,6 +8,8 @@ import {
 } from 'recharts'
 import { takeProjectSnapshot } from '@/app/actions/kpi-snapshots'
 import type { SubsystemKpi, SnapshotRow } from '@/app/actions/kpi-snapshots'
+import type { ProjectAlert } from '@/app/actions/alerts'
+import AlertsPanel from './AlertsPanel'
 
 type PhaseKpi = {
   id: string
@@ -29,6 +31,7 @@ interface Props {
   subsystemKpis: SubsystemKpi[]
   snapshots: SnapshotRow[]
   canEdit: boolean
+  alerts: ProjectAlert[]
 }
 
 // ── S-curve helpers ────────────────────────────────────────────────────────
@@ -85,7 +88,7 @@ function StatusDot({ pct, hasPunches }: { pct: number; hasPunches: boolean }) {
 
 export default function KpiDashboard({
   projectId, projectName, projectCode, startDate, endDate,
-  phaseKpis, subsystemKpis, snapshots, canEdit,
+  phaseKpis, subsystemKpis, snapshots, canEdit, alerts,
 }: Props) {
   const router = useRouter()
   const locale = useLocale()
@@ -234,6 +237,9 @@ export default function KpiDashboard({
           {snapshotMsg}
         </div>
       )}
+
+      {/* Alerts */}
+      <AlertsPanel alerts={alerts} />
 
       {/* Phase KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>

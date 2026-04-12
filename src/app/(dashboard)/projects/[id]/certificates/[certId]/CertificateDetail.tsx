@@ -182,6 +182,22 @@ export default function CertificateDetail({
             >
               {t('detail.printBtn')}
             </button>
+            {cert.status === 'issued' && (
+              <a
+                href={`/projects/${projectId}/certificates/${cert.id}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="no-print"
+                style={{
+                  padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                  cursor: 'pointer', border: '1px solid #bbf7d0', background: '#f0fdf4',
+                  color: '#15803d', textDecoration: 'none', display: 'inline-flex',
+                  alignItems: 'center', gap: '5px',
+                }}
+              >
+                ⬇ {t('detail.pdfBtn')}
+              </a>
+            )}
             {isAdmin && cert.status === 'issued' && (
               <button
                 className="no-print"

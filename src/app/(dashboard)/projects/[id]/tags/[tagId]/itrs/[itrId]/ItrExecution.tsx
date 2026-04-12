@@ -464,6 +464,16 @@ export default function ItrExecution({
           >
             {t('footer.btnSign')}
           </button>
+          {itr.status === 'approved' && (
+            <a
+              href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ padding: '9px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '13px', color: '#15803d', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              ⬇ {t('footer.btnPdf')}
+            </a>
+          )}
         </div>
       </div>
 

@@ -345,16 +345,33 @@ export default function CertificatesView({
                         </button>
                       )}
                       {pd.certificate && (
-                        <a
-                          href={`/projects/${projectId}/certificates/${pd.certificate.id}`}
-                          style={{
-                            padding: '6px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 500,
-                            cursor: 'pointer', border: '1px solid #e2e8f0', background: 'white',
-                            color: '#475569', textDecoration: 'none', display: 'inline-block',
-                          }}
-                        >
-                          {t('view.viewBtn')}
-                        </a>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          <a
+                            href={`/projects/${projectId}/certificates/${pd.certificate.id}`}
+                            style={{
+                              padding: '6px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 500,
+                              cursor: 'pointer', border: '1px solid #e2e8f0', background: 'white',
+                              color: '#475569', textDecoration: 'none', display: 'inline-block',
+                            }}
+                          >
+                            {t('view.viewBtn')}
+                          </a>
+                          {pd.certificate.status === 'issued' && (
+                            <a
+                              href={`/projects/${projectId}/certificates/${pd.certificate.id}/pdf`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                padding: '6px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 500,
+                                cursor: 'pointer', border: '1px solid #bbf7d0', background: '#f0fdf4',
+                                color: '#15803d', textDecoration: 'none', display: 'inline-block',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              ⬇ {t('view.pdfBtn')}
+                            </a>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>

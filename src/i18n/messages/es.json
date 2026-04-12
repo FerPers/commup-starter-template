@@ -355,7 +355,8 @@
         "cancel": "Cancelar",
         "submitting": "Emitiendo...",
         "submit": "Emitir {certName}"
-      }
+      },
+      "pdfBtn": "PDF"
     },
     "detail": {
       "backLink": "← Certificados — {projectName}",
@@ -405,7 +406,31 @@
         "cancel": "Cancelar",
         "submitting": "Revocando...",
         "confirm": "Sí, revocar"
-      }
+      },
+      "pdfBtn": "Descargar PDF"
+    }
+  },
+  "Alerts": {
+    "severity": {
+      "critical": "Crítico",
+      "warning": "Advertencia",
+      "info": "Info"
+    },
+    "behind_schedule": {
+      "title": "Proyecto retrasado respecto al plan",
+      "desc": "El avance real está un {value}% por debajo de la curva S planificada. Se requiere acción inmediata."
+    },
+    "high_cat_a": {
+      "title": "Alto número de punches Cat A",
+      "desc": "{value} punch(es) Cat A abiertos están bloqueando los certificados de terminación."
+    },
+    "overdue_preservation": {
+      "title": "Tareas de preservación vencidas",
+      "desc": "{value} plan(es) de preservación activo(s) con fecha vencida."
+    },
+    "overdue_work_plans": {
+      "title": "Planes de trabajo vencidos",
+      "desc": "{value} plan(es) de trabajo pasaron su fecha planificada sin completarse."
     }
   },
   "WorkPlans": {
@@ -682,7 +707,73 @@
       "createBtn": "Crear y abrir builder →",
       "errorRequired": "Código, título, fase y disciplina son requeridos"
     },
-    "deleteConfirm": "¿Eliminar template \"{code}\"? Esta acción no se puede deshacer."
+    "deleteConfirm": "¿Eliminar template \"{code}\"? Esta acción no se puede deshacer.",
+    "builder": {
+      "itemTypeCheckbox": "Verificación",
+      "itemTypeYesNo": "Sí / No",
+      "itemTypeNumber": "Número",
+      "itemTypeMeasurement": "Medición",
+      "itemTypeText": "Texto libre",
+      "itemTypeSelect": "Selección",
+      "itemTypePhoto": "Foto",
+      "itemTypeSignature": "Firma",
+      "itemTypeDate": "Fecha",
+      "breadcrumb": "← Templates ITR",
+      "headerPhaseLabel": "Fase {code}",
+      "statusActive": "Activo",
+      "statusInactive": "Inactivo",
+      "versionMeta": "v{version} · {items} ítem{itemsPlural} · {sections} sección{sectionsPlural}",
+      "btnFieldView": "👁 Vista de campo",
+      "btnImportExcel": "↑ Importar Excel",
+      "btnEditHeader": "Editar encabezado",
+      "headerEditTitle": "Editar encabezado",
+      "fieldCode": "Código",
+      "fieldTitle": "Título",
+      "fieldDescription": "Descripción",
+      "placeholderDescription": "Alcance o notas del template",
+      "flagActiveLabel": "Template activo (disponible para asignación)",
+      "btnSaving": "Guardando…",
+      "btnSave": "Guardar",
+      "btnCancel": "Cancelar",
+      "emptyTitle": "Template sin secciones",
+      "emptyDesc": "Agrega la primera sección para empezar a construir el ITR.",
+      "sectionItemCount": "{count} ítem{plural}",
+      "tooltipMoveUp": "Mover arriba",
+      "tooltipMoveDown": "Mover abajo",
+      "tooltipRename": "Renombrar",
+      "tooltipDeleteSection": "Eliminar sección",
+      "emptySectionHint": "Sección vacía — agrega ítems con el botón de abajo.",
+      "tooltipCritical": "Crítico",
+      "tooltipRequired": "Requerido",
+      "tooltipPhoto": "Foto",
+      "btnAddItem": "+ Agregar ítem",
+      "placeholderSectionName": "Nombre de la sección (ej: DATOS GENERALES)",
+      "btnAddSection": "Agregar",
+      "btnAddSectionMain": "+ Agregar sección",
+      "legendCritical": "Crítico — bloquea firma si falla",
+      "legendRequired": "Requerido",
+      "legendRequiresPhoto": "Requiere foto",
+      "legendNotApplicable": "No aplica",
+      "fieldItemNumber": "N° Ítem",
+      "fieldType": "Tipo",
+      "fieldDescriptionEn": "Descripción (EN)",
+      "fieldDescriptionEs": "Descripción (ES)",
+      "fieldUnit": "Unidad",
+      "fieldMinAcceptable": "Mín aceptable",
+      "fieldMaxAcceptable": "Máx aceptable",
+      "fieldAcceptanceCriteria": "Criterio de aceptación (texto)",
+      "flagCritical": "Crítico (bloquea firma)",
+      "flagRequired": "Requerido",
+      "flagRequiresPhoto": "Requiere foto",
+      "flagRequiresMeasurement": "Requiere medición",
+      "btnSavingItem": "Guardando…",
+      "btnAddItemSave": "Agregar ítem",
+      "btnSaveChanges": "Guardar cambios",
+      "errCodeTitleRequired": "Código y título son requeridos",
+      "errDescriptionRequired": "La descripción en inglés es requerida",
+      "confirmDeleteSection": "¿Eliminar sección \"{title}\" y todos sus ítems?",
+      "confirmDeleteItem": "¿Eliminar este ítem?"
+    }
   },
   "ItrExecution": {
     "status": {
@@ -714,7 +805,8 @@
       "btnPunch": "⚑ Punch",
       "btnPhoto": "Foto",
       "btnPhotos": "Fotos ({count})",
-      "btnSign": "✍ Firmar"
+      "btnSign": "✍ Firmar",
+      "btnPdf": "Descargar PDF"
     },
     "signModal": {
       "title": "Firmar ITR",
@@ -947,6 +1039,7 @@
       "fieldDrawingNum": "N° de Plano",
       "fieldDrawingNumRequired": "N° de Plano *",
       "fieldTitle": "Título (opcional)",
+      "fieldTitlePlaceholder": "Sistema de Crudo – General",
       "submit": "Subir PDF",
       "submitting": "Subiendo...",
       "cancel": "Cancelar",
@@ -973,5 +1066,46 @@
       "cancel": "Cancelar",
       "removeHotspot": "Quitar hotspot"
     }
+  },
+  "PreservationExecution": {
+    "freqDaily": "Diario",
+    "freqWeekly": "Semanal",
+    "freqBiweekly": "Quincenal",
+    "freqMonthly": "Mensual",
+    "freqQuarterly": "Trimestral",
+    "resultOkLabel": "OK — Conforme",
+    "resultNokLabel": "NOK — No conforme",
+    "resultNaLabel": "N/A — No aplica",
+    "savedTitle": "Registro guardado correctamente",
+    "savedRedirect": "Redirigiendo al tag…",
+    "breadcrumbPreservation": "Preservación",
+    "labelNextDue": "Próximo vencimiento",
+    "progressLabel": "Progreso del check sheet",
+    "progressItems": "{completed}/{total} ítems",
+    "sectionChecksheet": "Check Sheet",
+    "tagCritical": "CRÍTICO",
+    "tagOptional": "Opcional",
+    "btnConform": "✓ Conforme",
+    "btnNonConform": "✕ No conforme",
+    "btnYes": "Sí",
+    "btnNo": "No",
+    "placeholderValue": "Ingresar valor",
+    "labelMin": "Min:",
+    "labelMax": "Máx:",
+    "passInRange": "✓ En rango",
+    "failOutRange": "✕ Fuera de rango",
+    "placeholderObservation": "Ingresar observación…",
+    "sectionResult": "Resultado de la ejecución",
+    "labelRemarks": "Observaciones / Notas",
+    "placeholderRemarks": "Notas del técnico, condiciones encontradas, acciones tomadas…",
+    "raisePunchLabel": "Levantar Punch por anomalía",
+    "raisePunchDesc": "Crea un punch Cat A/B en el Punch List de este tag",
+    "btnCancel": "Cancelar",
+    "btnSaving": "Guardando…",
+    "btnConfirm": "Confirmar ejecución",
+    "sectionHistory": "Historial reciente",
+    "punchRaised": "Punch levantado",
+    "errCreateRecord": "Error al crear el registro",
+    "errMissingItems": "{count, plural, one {Falta # ítem requerido: {labels}…} other {Faltan # ítems requeridos: {labels}…}}"
   }
 }

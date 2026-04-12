@@ -355,7 +355,8 @@
         "cancel": "Cancel",
         "submitting": "Issuing...",
         "submit": "Issue {certName}"
-      }
+      },
+      "pdfBtn": "PDF"
     },
     "detail": {
       "backLink": "← Certificates — {projectName}",
@@ -405,7 +406,31 @@
         "cancel": "Cancel",
         "submitting": "Revoking...",
         "confirm": "Yes, revoke"
-      }
+      },
+      "pdfBtn": "Download PDF"
+    }
+  },
+  "Alerts": {
+    "severity": {
+      "critical": "Critical",
+      "warning": "Warning",
+      "info": "Info"
+    },
+    "behind_schedule": {
+      "title": "Project behind schedule",
+      "desc": "Actual progress is {value}% below the planned S-curve. Immediate action required."
+    },
+    "high_cat_a": {
+      "title": "High Cat A punch count",
+      "desc": "{value} open Cat A punches are blocking completion certificates."
+    },
+    "overdue_preservation": {
+      "title": "Overdue preservation tasks",
+      "desc": "{value} active preservation {value, plural, one {plan is} other {plans are}} past their due date."
+    },
+    "overdue_work_plans": {
+      "title": "Overdue work plans",
+      "desc": "{value} work {value, plural, one {plan} other {plans}} past its planned date without completion."
     }
   },
   "WorkPlans": {
@@ -682,7 +707,73 @@
       "createBtn": "Create and open builder →",
       "errorRequired": "Code, title, phase, and discipline are required"
     },
-    "deleteConfirm": "Delete template \"{code}\"? This action cannot be undone."
+    "deleteConfirm": "Delete template \"{code}\"? This action cannot be undone.",
+    "builder": {
+      "itemTypeCheckbox": "Verification",
+      "itemTypeYesNo": "Yes / No",
+      "itemTypeNumber": "Number",
+      "itemTypeMeasurement": "Measurement",
+      "itemTypeText": "Free text",
+      "itemTypeSelect": "Selection",
+      "itemTypePhoto": "Photo",
+      "itemTypeSignature": "Signature",
+      "itemTypeDate": "Date",
+      "breadcrumb": "← ITR Templates",
+      "headerPhaseLabel": "Phase {code}",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "versionMeta": "v{version} · {items} item{itemsPlural} · {sections} section{sectionsPlural}",
+      "btnFieldView": "👁 Field view",
+      "btnImportExcel": "↑ Import Excel",
+      "btnEditHeader": "Edit header",
+      "headerEditTitle": "Edit header",
+      "fieldCode": "Code",
+      "fieldTitle": "Title",
+      "fieldDescription": "Description",
+      "placeholderDescription": "Scope or template notes",
+      "flagActiveLabel": "Active template (available for assignment)",
+      "btnSaving": "Saving…",
+      "btnSave": "Save",
+      "btnCancel": "Cancel",
+      "emptyTitle": "Template has no sections",
+      "emptyDesc": "Add the first section to start building the ITR.",
+      "sectionItemCount": "{count} item{plural}",
+      "tooltipMoveUp": "Move up",
+      "tooltipMoveDown": "Move down",
+      "tooltipRename": "Rename",
+      "tooltipDeleteSection": "Delete section",
+      "emptySectionHint": "Empty section — add items with the button below.",
+      "tooltipCritical": "Critical",
+      "tooltipRequired": "Required",
+      "tooltipPhoto": "Photo",
+      "btnAddItem": "+ Add item",
+      "placeholderSectionName": "Section name (e.g. GENERAL DATA)",
+      "btnAddSection": "Add section",
+      "btnAddSectionMain": "+ Add section",
+      "legendCritical": "Critical — blocks signature on failure",
+      "legendRequired": "Required",
+      "legendRequiresPhoto": "Requires photo",
+      "legendNotApplicable": "Not applicable",
+      "fieldItemNumber": "Item No.",
+      "fieldType": "Type",
+      "fieldDescriptionEn": "Description (EN)",
+      "fieldDescriptionEs": "Description (ES)",
+      "fieldUnit": "Unit",
+      "fieldMinAcceptable": "Min acceptable",
+      "fieldMaxAcceptable": "Max acceptable",
+      "fieldAcceptanceCriteria": "Acceptance criteria (text)",
+      "flagCritical": "Critical (blocks signature)",
+      "flagRequired": "Required",
+      "flagRequiresPhoto": "Requires photo",
+      "flagRequiresMeasurement": "Requires measurement",
+      "btnSavingItem": "Saving…",
+      "btnAddItemSave": "Add item",
+      "btnSaveChanges": "Save changes",
+      "errCodeTitleRequired": "Code and title are required",
+      "errDescriptionRequired": "English description is required",
+      "confirmDeleteSection": "Delete section \"{title}\" and all its items?",
+      "confirmDeleteItem": "Delete this item?"
+    }
   },
   "ItrExecution": {
     "status": {
@@ -714,7 +805,8 @@
       "btnPunch": "⚑ Punch",
       "btnPhoto": "Photo",
       "btnPhotos": "Photos ({count})",
-      "btnSign": "✍ Sign"
+      "btnSign": "✍ Sign",
+      "btnPdf": "Download PDF"
     },
     "signModal": {
       "title": "Sign ITR",
@@ -947,6 +1039,7 @@
       "fieldDrawingNum": "Drawing No.",
       "fieldDrawingNumRequired": "Drawing No. *",
       "fieldTitle": "Title (optional)",
+      "fieldTitlePlaceholder": "Crude System – General",
       "submit": "Upload PDF",
       "submitting": "Uploading...",
       "cancel": "Cancel",
@@ -973,5 +1066,46 @@
       "cancel": "Cancel",
       "removeHotspot": "Remove hotspot"
     }
+  },
+  "PreservationExecution": {
+    "freqDaily": "Daily",
+    "freqWeekly": "Weekly",
+    "freqBiweekly": "Biweekly",
+    "freqMonthly": "Monthly",
+    "freqQuarterly": "Quarterly",
+    "resultOkLabel": "OK — Conforming",
+    "resultNokLabel": "NOK — Non-conforming",
+    "resultNaLabel": "N/A — Not applicable",
+    "savedTitle": "Record saved successfully",
+    "savedRedirect": "Redirecting to tag…",
+    "breadcrumbPreservation": "Preservation",
+    "labelNextDue": "Next due date",
+    "progressLabel": "Check sheet progress",
+    "progressItems": "{completed}/{total} items",
+    "sectionChecksheet": "Check Sheet",
+    "tagCritical": "CRITICAL",
+    "tagOptional": "Optional",
+    "btnConform": "✓ Conforming",
+    "btnNonConform": "✕ Non-conforming",
+    "btnYes": "Yes",
+    "btnNo": "No",
+    "placeholderValue": "Enter value",
+    "labelMin": "Min:",
+    "labelMax": "Max:",
+    "passInRange": "✓ In range",
+    "failOutRange": "✕ Out of range",
+    "placeholderObservation": "Enter observation…",
+    "sectionResult": "Execution result",
+    "labelRemarks": "Observations / Notes",
+    "placeholderRemarks": "Technician notes, conditions found, actions taken…",
+    "raisePunchLabel": "Raise Punch for anomaly",
+    "raisePunchDesc": "Creates a Cat A/B punch in this tag’s Punch List",
+    "btnCancel": "Cancel",
+    "btnSaving": "Saving…",
+    "btnConfirm": "Confirm execution",
+    "sectionHistory": "Recent history",
+    "punchRaised": "Punch raised",
+    "errCreateRecord": "Error creating record",
+    "errMissingItems": "{count, plural, one {# required item missing: {labels}…} other {# required items missing: {labels}…}}"
   }
 }
