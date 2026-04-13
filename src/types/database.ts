@@ -181,6 +181,14 @@ export interface Signal {
   eng_unit: string | null
   range_min: number | null
   range_max: number | null
+  service: string | null
+  alarm_setpoints: string | null
+  origin: string | null
+  destination: string | null
+  pid_drawing: string | null
+  loop_diagram: string | null
+  wiring_diagram: string | null
+  notes: string | null
 }
 
 export interface Loop {
@@ -327,6 +335,8 @@ export interface ItrTemplateItem {
   acceptance_max: number | null
   acceptance_text: string | null
   order_index: number
+  condition_item_id: string | null  // if set, item is only visible when referenced item has condition_value
+  condition_value: string | null    // 'true'/'false' for yes_no/checkbox; exact value for select/text
 }
 
 // ── Module 7: ITR Instances ──────────────────────────────────
@@ -645,3 +655,17 @@ export interface ExplorerArea {
   name: string
   systems: ExplorerSystem[]
 }
+
+// ── Module 11: Audit Log ─────────────────────────────────────
+
+export interface ActivityLog {
+  id: string
+  org_id: string
+  user_id: string
+  entity_type: 'certificate' | 'itr' | 'punch' | 'user' | 'pssr' | string
+  entity_id: string | null
+  action: 'issued' | 'approved' | 'rejected' | 'revoked' | 'closed' | 'invited' | 'removed' | 'role_updated' | string
+  payload: Json | null
+  created_at: string
+}
+

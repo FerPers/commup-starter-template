@@ -19,7 +19,12 @@ export default async function AdminConfigPage() {
 
   const orgId = membership.org_id
 
-  const [{ data: phases }, { data: disciplines }] = await Promise.all([
+  const [{ data: org }, { data: phases }, { data: disciplines }, { data: projects }] = await Promise.all([
+    supabase
+      .from('organizations')
+      .select('id, name, logo_url')
+      .eq('id', orgId)
+      .single(),
     supabase
       .from('project_phases')
       .select('id, code, name, color, order_index, certificate_name')
@@ -30,12 +35,19 @@ export default async function AdminConfigPage() {
       .select('id, code, name, color')
       .eq('org_id', orgId)
       .order('code'),
+    supabase
+      .from('projects')
+      .select('id, name')
+      .eq('org_id', orgId)
+      .order('name'),
   ])
 
   return (
     <OrgConfigView
+      org={org ?? { id: orgId, name: '', logo_url: null }}
       phases={phases ?? []}
       disciplines={disciplines ?? []}
+      projects={projects ?? []}
     />
   )
 }

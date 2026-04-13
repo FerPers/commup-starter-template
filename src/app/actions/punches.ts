@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logActivity } from '@/lib/log-activity'
 
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
@@ -156,6 +157,15 @@ export async function closePunch(input: {
       comment: input.resolutionComment,
     })
   }
+
+  await logActivity(supabase, {
+    orgId: ctx.orgId,
+    userId,
+    entityType: 'punch',
+    entityId: input.punchId,
+    action: 'closed',
+    payload: { projectId: input.projectId, tagId: input.tagId ?? null },
+  })
 
   revalidatePath(`/projects/${input.projectId}/punches`)
   if (input.tagId) {

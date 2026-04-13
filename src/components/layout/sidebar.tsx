@@ -37,6 +37,7 @@ const navItems = [
       { href: '/admin/templates/pssr', labelKey: 'pssrTemplates', icon: '🛡' },
       { href: '/admin/users', labelKey: 'users', icon: '◯' },
       { href: '/admin/config', labelKey: 'config', icon: '⚙' },
+      { href: '/admin/audit', labelKey: 'auditLog', icon: '◑' },
     ],
   },
 ]

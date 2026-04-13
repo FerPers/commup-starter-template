@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { logActivity } from '@/lib/log-activity'
 
 const ADMIN_ROLES = ['owner', 'admin']
 
@@ -59,6 +60,13 @@ export async function inviteUser(input: {
       .insert({ org_id: ctx.orgId, user_id: existingUser.id, role })
 
     if (error) return { error: error.message }
+
+    await logActivity(ctx.supabase, {
+      orgId: ctx.orgId, userId: ctx.userId,
+      entityType: 'user', entityId: existingUser.id,
+      action: 'invited', payload: { email, role },
+    })
+
     revalidatePath('/admin/users')
     return {}
   }
@@ -74,6 +82,13 @@ export async function inviteUser(input: {
       { onConflict: 'id' }
     )
     await admin.from('org_members').insert({ org_id: ctx.orgId, user_id: invited.user.id, role })
+
+    await logActivity(ctx.supabase, {
+      orgId: ctx.orgId, userId: ctx.userId,
+      entityType: 'user', entityId: invited.user.id,
+      action: 'invited', payload: { email, role },
+    })
+
     revalidatePath('/admin/users')
     return {}
   }
@@ -98,6 +113,12 @@ export async function inviteUser(input: {
     .insert({ org_id: ctx.orgId, user_id: created.user.id, role })
 
   if (memberErr) return { error: memberErr.message }
+
+  await logActivity(ctx.supabase, {
+    orgId: ctx.orgId, userId: ctx.userId,
+    entityType: 'user', entityId: created.user.id,
+    action: 'invited', payload: { email, role },
+  })
 
   revalidatePath('/admin/users')
   return { tempPassword }
@@ -134,6 +155,12 @@ export async function updateMemberRole(input: {
 
   if (error) return { error: error.message }
 
+  await logActivity(ctx.supabase, {
+    orgId: ctx.orgId, userId: ctx.userId,
+    entityType: 'user', entityId: member.user_id,
+    action: 'role_updated', payload: { memberId: input.memberId, newRole: input.role },
+  })
+
   revalidatePath('/admin/users')
   return {}
 }
@@ -165,6 +192,12 @@ export async function removeMember(input: {
     .eq('org_id', ctx.orgId)
 
   if (error) return { error: error.message }
+
+  await logActivity(ctx.supabase, {
+    orgId: ctx.orgId, userId: ctx.userId,
+    entityType: 'user', entityId: member.user_id,
+    action: 'removed', payload: { memberId: input.memberId },
+  })
 
   revalidatePath('/admin/users')
   return {}

@@ -1,14 +1,17 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   createPhase, updatePhase, deletePhase,
   createDiscipline, updateDiscipline, deleteDiscipline,
+  updateOrgProfile, uploadOrgLogo,
 } from '@/app/actions/config'
 
+type Org = { id: string; name: string; logo_url: string | null }
 type Phase = { id: string; code: string; name: string; color: string; order_index: number; certificate_name: string | null }
 type Discipline = { id: string; code: string; name: string; color: string }
+type Project = { id: string; name: string }
 
 const PRESET_COLORS = [
   '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
@@ -155,15 +158,25 @@ function DisciplineRow({ disc, onSave, onDelete, isPending }: {
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export default function OrgConfigView({
+  org: initialOrg,
   phases: initialPhases,
   disciplines: initialDisciplines,
+  projects,
 }: {
+  org: Org
   phases: Phase[]
   disciplines: Discipline[]
+  projects: Project[]
 }) {
   const t = useTranslations('Config')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+
+  // Org profile state
+  const [orgName, setOrgName] = useState(initialOrg.name)
+  const [orgLogoUrl, setOrgLogoUrl] = useState(initialOrg.logo_url)
+  const [orgSaveMsg, setOrgSaveMsg] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const [newPhase, setNewPhase] = useState({ code: '', name: '', color: '#3b82f6', certName: '' })
   const [showNewPhase, setShowNewPhase] = useState(false)
@@ -176,6 +189,29 @@ export default function OrgConfigView({
     startTransition(async () => {
       const res = await fn()
       if (res.error) setError(res.error)
+    })
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const fd = new FormData()
+    fd.append('file', file)
+    startTransition(async () => {
+      const res = await uploadOrgLogo(initialOrg.id, fd)
+      if (res.error) setError(res.error)
+      else if (res.url) setOrgLogoUrl(res.url)
+    })
+  }
+
+  async function handleSaveOrgProfile(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setOrgSaveMsg(null)
+    startTransition(async () => {
+      const res = await updateOrgProfile({ orgId: initialOrg.id, name: orgName, logoUrl: orgLogoUrl })
+      if (res.error) setError(res.error)
+      else setOrgSaveMsg(t('org.saved'))
     })
   }
 
@@ -197,6 +233,66 @@ export default function OrgConfigView({
           {error}
         </div>
       )}
+
+      {/* ── Org Profile ─────────────────────────────────────────── */}
+      <div style={{ ...cardStyle, marginBottom: '24px' }}>
+        <h2 style={{ ...cardTitle, marginBottom: '16px' }}>{t('org.title')}</h2>
+        <form onSubmit={handleSaveOrgProfile}>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+
+            {/* Logo */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+              <div style={{
+                width: 72, height: 72, borderRadius: '12px',
+                border: '2px dashed #e2e8f0', background: '#f8fafc',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden', flexShrink: 0,
+              }}>
+                {orgLogoUrl
+                  ? <img src={orgLogoUrl} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  : <span style={{ fontSize: '24px', color: '#cbd5e1' }}>◈</span>
+                }
+              </div>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={isPending}
+                style={btnOutline}
+              >
+                {t('org.uploadLogo')}
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleLogoUpload}
+              />
+            </div>
+
+            {/* Name */}
+            <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
+                {t('org.namePh')}
+              </label>
+              <input
+                value={orgName}
+                onChange={e => setOrgName(e.target.value)}
+                placeholder={t('org.namePh')}
+                style={{ ...inputStyle, width: '100%' }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                <button type="submit" disabled={isPending || !orgName.trim()} style={btnPrimary}>
+                  {isPending ? t('org.saving') : t('org.save')}
+                </button>
+                {orgSaveMsg && (
+                  <span style={{ fontSize: '12px', color: '#10b981' }}>{orgSaveMsg}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
 
@@ -320,6 +416,67 @@ export default function OrgConfigView({
           </div>
         </div>
 
+      </div>
+
+      {/* ── Data Export ─────────────────────────────────────────── */}
+      <ExportSection projects={projects} t={t} />
+
+    </div>
+  )
+}
+
+// ── Export Section ─────────────────────────────────────────────────────────
+
+function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) => string }) {
+  const [selectedProject, setSelectedProject] = useState(projects[0]?.id ?? '')
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport() {
+    if (!selectedProject) return
+    setExporting(true)
+    try {
+      const res = await fetch(`/api/admin/export?projectId=${selectedProject}`)
+      if (!res.ok) {
+        const err = await res.json()
+        alert(err.error ?? 'Export failed')
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = res.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] ?? 'export.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  return (
+    <div style={{ ...cardStyle, marginTop: '24px' }}>
+      <h2 style={{ ...cardTitle, marginBottom: '4px' }}>{t('export.title')}</h2>
+      <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px' }}>
+        {t('export.subtitle')}
+      </p>
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <select
+          value={selectedProject}
+          onChange={e => setSelectedProject(e.target.value)}
+          style={{ padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#0f172a', background: 'white', minWidth: '200px' }}
+        >
+          {projects.length === 0 && <option value="">{t('export.noProjects')}</option>}
+          {projects.map(p => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+        <button
+          onClick={handleExport}
+          disabled={exporting || !selectedProject}
+          style={{ ...btnPrimary, background: '#10b981', opacity: exporting || !selectedProject ? 0.6 : 1 }}
+        >
+          {exporting ? t('export.exporting') : t('export.btn')}
+        </button>
       </div>
     </div>
   )

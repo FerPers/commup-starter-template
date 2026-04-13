@@ -37,6 +37,7 @@
       "pssrTemplates": "PSSR Templates",
       "users": "Users",
       "config": "Configuration",
+      "auditLog": "Audit Log",
       "explorer": "Explorer",
       "pssr": "PSSR"
     },
@@ -147,7 +148,11 @@
       "addToPlan": "▦ Add to plan",
       "deselect": "Deselect all",
       "statusPlaceholder": "Select status...",
-      "assignPlaceholder": "Select inspector..."
+      "assignPlaceholder": "Select inspector...",
+      "approveSelected": "✓ Approve selected",
+      "approveConfirmTitle": "Approve ITRs",
+      "approveConfirmDesc": "Approve {count} completed ITR(s)? This action cannot be undone.",
+      "approveNoneCompleted": "No selected ITRs are in 'Completed' status."
     },
     "table": {
       "colProject": "Project",
@@ -690,6 +695,46 @@
       "edit": "Edit",
       "delete": "Delete",
       "empty": "No disciplines. Add the first one."
+    },
+    "org": {
+      "title": "Organization Profile",
+      "namePh": "Organization name",
+      "uploadLogo": "Upload logo",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved!"
+    },
+    "export": {
+      "title": "Data Export",
+      "subtitle": "Download all project data as an Excel workbook (Tags, ITRs, Punches, Preservation, Certificates).",
+      "btn": "↓ Export project",
+      "exporting": "Exporting…",
+      "noProjects": "No projects"
+    }
+  },
+  "AuditLog": {
+    "title": "Audit Log",
+    "subtitle": "{total} events",
+    "cols": {
+      "date": "Date",
+      "user": "User",
+      "entity": "Entity",
+      "action": "Action"
+    },
+    "filters": {
+      "entityType": "Entity type",
+      "user": "User",
+      "from": "From",
+      "to": "To",
+      "all": "All",
+      "apply": "Apply",
+      "clear": "Clear"
+    },
+    "empty": "No events found.",
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next",
+      "info": "Page {page} of {total}"
     }
   },
   "ItrTemplates": {
@@ -800,7 +845,21 @@
       "errCodeTitleRequired": "Code and title are required",
       "errDescriptionRequired": "English description is required",
       "confirmDeleteSection": "Delete section \"{title}\" and all its items?",
-      "confirmDeleteItem": "Delete this item?"
+      "confirmDeleteItem": "Delete this item?",
+      "btnPublishVersion": "↑ Publish new version",
+      "publishVersionTitle": "Publish new version",
+      "publishVersionDesc": "This will create version v{version} of the template. If the template has ITRs already assigned, the current version will become inactive and a new copy will be created.",
+      "publishVersionNote": "Existing ITRs will continue to reference the previous version.",
+      "btnPublishVersionConfirm": "Publish v{version}",
+      "publishBumpedInPlace": "Version bumped — no ITRs were assigned to this template.",
+      "conditionSectionLabel": "Conditional logic",
+      "conditionItemLabel": "Show only if item",
+      "conditionItemNone": "— No condition —",
+      "conditionValueLabel": "Has value",
+      "conditionValueTrue": "Yes / True",
+      "conditionValueFalse": "No / False",
+      "conditionValuePlaceholder": "Expected value...",
+      "conditionBadgePrefix": "if"
     }
   },
   "ItrExecution": {
@@ -1140,5 +1199,79 @@
     "punchRaised": "Punch raised",
     "errCreateRecord": "Error creating record",
     "errMissingItems": "{count, plural, one {# required item missing: {labels}…} other {# required items missing: {labels}…}}"
+  },
+  "Signals": {
+    "title": "Signal List (I&C)",
+    "subtitle": "{count} signals in this project",
+    "importBtn": "Import signals",
+    "all": "All",
+    "allSubsystems": "All subsystems",
+    "allStatuses": "All statuses",
+    "searchPlaceholder": "Search by signal tag, instrument or service…",
+    "noResults": "No signals match the current filters.",
+    "showing": "Showing {filtered} of {total}",
+    "emptyTitle": "No signals imported yet",
+    "emptyDesc": "Import your I&C signal list from Excel to get started.",
+    "col": {
+      "signalTag": "Signal Tag",
+      "type": "Type",
+      "instrument": "Instrument",
+      "subsystem": "Subsystem",
+      "range": "Range",
+      "service": "Service",
+      "pid": "P&ID",
+      "status": "Status"
+    },
+    "detail": {
+      "description": "Description",
+      "instrument": "Instrument Tag",
+      "subsystem": "Subsystem",
+      "service": "Service",
+      "range": "Range / Unit",
+      "alarms": "Alarms / Set Points",
+      "origin": "Origin",
+      "destination": "Destination",
+      "pid": "P&ID Drawing",
+      "loopDiagram": "Loop Diagram",
+      "wiringDiagram": "Wiring Diagram",
+      "notes": "Notes"
+    },
+    "status": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "approved": "Approved"
+    },
+    "loops": {
+      "title": "Control Loops",
+      "subtitle": "{count} loops in this project",
+      "searchPlaceholder": "Search by loop number or description…",
+      "emptyTitle": "No loops defined yet",
+      "emptyDesc": "Loops are created during signal import or can be added manually.",
+      "tagsInLoop": "Tags in loop",
+      "col": {
+        "loopNumber": "Loop Number",
+        "description": "Description",
+        "subsystem": "Subsystem",
+        "discipline": "Discipline",
+        "tags": "Tags"
+      }
+    },
+    "interlocks": {
+      "title": "Interlocks / SIS",
+      "subtitle": "{count} interlocks in this project",
+      "searchPlaceholder": "Search by number, description or tag…",
+      "emptyTitle": "No interlocks defined yet",
+      "emptyDesc": "Interlocks represent cause-effect safety logic (SIL/SIS). They can be imported or added manually.",
+      "col": {
+        "number": "Interlock No.",
+        "description": "Description",
+        "subsystem": "Subsystem",
+        "cause": "Cause Tag",
+        "effect": "Effect Tag",
+        "setPoint": "Set Point",
+        "action": "Action"
+      }
+    }
   }
 }

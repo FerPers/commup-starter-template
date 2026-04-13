@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logActivity } from '@/lib/log-activity'
 
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
@@ -160,6 +161,20 @@ export async function issueCertificate(input: {
     )
   }
 
+  await logActivity(supabase, {
+    orgId: ctx.orgId,
+    userId,
+    entityType: 'certificate',
+    entityId: cert.id,
+    action: 'issued',
+    payload: {
+      certNumber: cert.certificate_number,
+      subsystemId,
+      phaseId,
+      catBExceptions: validExceptions.length,
+    },
+  })
+
   revalidatePath(`/projects/${projectId}/certificates`)
   return { certId: cert.id, certNumber: cert.certificate_number }
 }
@@ -233,6 +248,16 @@ export async function revokeCertificate(input: {
     .eq('id', input.certId)
 
   if (error) return { error: error.message }
+
+  await logActivity(supabase, {
+    orgId: ctx.orgId,
+    userId: ctx.userId,
+    entityType: 'certificate',
+    entityId: input.certId,
+    action: 'revoked',
+    payload: { projectId: input.projectId },
+  })
+
   revalidatePath(`/projects/${input.projectId}/certificates`)
   revalidatePath(`/projects/${input.projectId}/certificates/${input.certId}`)
   return {}

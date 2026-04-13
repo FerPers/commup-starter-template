@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logActivity } from '@/lib/log-activity'
 
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
@@ -292,6 +293,15 @@ export async function signItr(
       .update({ status: 'completed' })
       .eq('itr_id', itrId)
       .in('status', ['not_started', 'in_progress'])
+
+    await logActivity(ctx.supabase, {
+      orgId: ctx.orgId,
+      userId: ctx.userId,
+      entityType: 'itr',
+      entityId: itrId,
+      action: 'approved',
+      payload: { projectId, tagId, signingRole: role },
+    })
   }
 
   revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)

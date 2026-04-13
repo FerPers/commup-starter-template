@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/log-activity'
 
 // ── Default 22-item checklist seed ───────────────────────────
 
@@ -332,6 +333,19 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
   }).eq('id', reviewId)
   if (error) throw new Error(error.message)
 
+  // Get orgId for logActivity
+  const { data: member } = await supabase
+    .from('org_members').select('org_id').eq('user_id', user.id).limit(1).maybeSingle()
+
+  await logActivity(supabase, {
+    orgId: (member?.org_id ?? (review.projects as { org_id: string }).org_id) as string,
+    userId: user.id,
+    entityType: 'pssr',
+    entityId: reviewId,
+    action: 'approved',
+    payload: { projectId, certNumber: cert.certificate_number, certId: cert.id },
+  })
+
   revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
   revalidatePath(`/projects/${projectId}/pssr`)
   revalidatePath(`/certificates`)
@@ -340,10 +354,28 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
 
 export async function rejectPssrReview(reviewId: string, projectId: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   const { error } = await supabase
     .from('pssr_reviews')
     .update({ status: 'rejected', updated_at: new Date().toISOString() })
     .eq('id', reviewId)
   if (error) throw new Error(error.message)
+
+  if (user) {
+    const { data: member } = await supabase
+      .from('org_members').select('org_id').eq('user_id', user.id).limit(1).maybeSingle()
+    if (member) {
+      await logActivity(supabase, {
+        orgId: member.org_id as string,
+        userId: user.id,
+        entityType: 'pssr',
+        entityId: reviewId,
+        action: 'rejected',
+        payload: { projectId },
+      })
+    }
+  }
+
   revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
 }

@@ -188,3 +188,54 @@ export async function deleteDiscipline(disciplineId: string): Promise<{ error?: 
   revalidatePath('/admin/config')
   return {}
 }
+
+// ═══════════════════════════════════════════════════════════
+// ORG PROFILE
+// ═══════════════════════════════════════════════════════════
+
+export async function updateOrgProfile(input: {
+  orgId: string
+  name: string
+  logoUrl: string | null
+}): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (ctx.orgId !== input.orgId) return { error: 'Organización no válida' }
+
+  const { error } = await ctx.supabase
+    .from('organizations')
+    .update({ name: input.name.trim(), logo_url: input.logoUrl })
+    .eq('id', input.orgId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/config')
+  revalidatePath('/')
+  return {}
+}
+
+export async function uploadOrgLogo(
+  orgId: string,
+  formData: FormData,
+): Promise<{ url?: string; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (ctx.orgId !== orgId) return { error: 'Organización no válida' }
+
+  const file = formData.get('file') as File | null
+  if (!file) return { error: 'No se adjuntó archivo' }
+  if (file.size > 2 * 1024 * 1024) return { error: 'El archivo supera 2 MB' }
+
+  const ext = file.name.split('.').pop() ?? 'png'
+  const path = `${orgId}/logo.${ext}`
+
+  const { error: upErr } = await ctx.supabase.storage
+    .from('org-assets')
+    .upload(path, file, { upsert: true, contentType: file.type })
+
+  if (upErr) return { error: upErr.message }
+
+  const { data } = ctx.supabase.storage.from('org-assets').getPublicUrl(path)
+  return { url: data.publicUrl }
+}

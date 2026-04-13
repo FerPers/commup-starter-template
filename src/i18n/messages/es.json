@@ -37,6 +37,7 @@
       "pssrTemplates": "Templates PSSR",
       "users": "Usuarios",
       "config": "Configuración",
+      "auditLog": "Log de Auditoría",
       "explorer": "Explorador",
       "pssr": "PSSR"
     },
@@ -147,7 +148,11 @@
       "addToPlan": "▦ Agregar a plan",
       "deselect": "Deseleccionar todo",
       "statusPlaceholder": "Seleccionar estado...",
-      "assignPlaceholder": "Seleccionar inspector..."
+      "assignPlaceholder": "Seleccionar inspector...",
+      "approveSelected": "✓ Aprobar seleccionados",
+      "approveConfirmTitle": "Aprobar ITRs",
+      "approveConfirmDesc": "¿Aprobar {count} ITR(s) completado(s)? Esta acción no se puede deshacer.",
+      "approveNoneCompleted": "Ningún ITR seleccionado está en estado 'Completado'."
     },
     "table": {
       "colProject": "Proyecto",
@@ -690,6 +695,46 @@
       "edit": "Editar",
       "delete": "Eliminar",
       "empty": "No hay disciplinas. Agrega la primera."
+    },
+    "org": {
+      "title": "Perfil de la Organización",
+      "namePh": "Nombre de la organización",
+      "uploadLogo": "Subir logo",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "saved": "¡Guardado!"
+    },
+    "export": {
+      "title": "Exportar Datos",
+      "subtitle": "Descarga todos los datos del proyecto como archivo Excel (Tags, ITRs, Punches, Preservación, Certificados).",
+      "btn": "↓ Exportar proyecto",
+      "exporting": "Exportando…",
+      "noProjects": "Sin proyectos"
+    }
+  },
+  "AuditLog": {
+    "title": "Log de Auditoría",
+    "subtitle": "{total} eventos",
+    "cols": {
+      "date": "Fecha",
+      "user": "Usuario",
+      "entity": "Entidad",
+      "action": "Acción"
+    },
+    "filters": {
+      "entityType": "Tipo de entidad",
+      "user": "Usuario",
+      "from": "Desde",
+      "to": "Hasta",
+      "all": "Todos",
+      "apply": "Aplicar",
+      "clear": "Limpiar"
+    },
+    "empty": "No se encontraron eventos.",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Siguiente",
+      "info": "Página {page} de {total}"
     }
   },
   "ItrTemplates": {
@@ -800,7 +845,21 @@
       "errCodeTitleRequired": "Código y título son requeridos",
       "errDescriptionRequired": "La descripción en inglés es requerida",
       "confirmDeleteSection": "¿Eliminar sección \"{title}\" y todos sus ítems?",
-      "confirmDeleteItem": "¿Eliminar este ítem?"
+      "confirmDeleteItem": "¿Eliminar este ítem?",
+      "btnPublishVersion": "↑ Publicar nueva versión",
+      "publishVersionTitle": "Publicar nueva versión",
+      "publishVersionDesc": "Se creará la versión v{version} del template. Si el template tiene ITRs asignados, la versión actual quedará inactiva y se creará una copia nueva.",
+      "publishVersionNote": "Los ITRs existentes seguirán referenciando la versión anterior.",
+      "btnPublishVersionConfirm": "Publicar v{version}",
+      "publishBumpedInPlace": "Versión actualizada — no había ITRs asignados a este template.",
+      "conditionSectionLabel": "Lógica condicional",
+      "conditionItemLabel": "Mostrar solo si el ítem",
+      "conditionItemNone": "— Sin condición —",
+      "conditionValueLabel": "Tiene valor",
+      "conditionValueTrue": "Sí / Verdadero",
+      "conditionValueFalse": "No / Falso",
+      "conditionValuePlaceholder": "Valor esperado...",
+      "conditionBadgePrefix": "si"
     }
   },
   "ItrExecution": {
@@ -1140,5 +1199,79 @@
     "punchRaised": "Punch levantado",
     "errCreateRecord": "Error al crear el registro",
     "errMissingItems": "{count, plural, one {Falta # ítem requerido: {labels}…} other {Faltan # ítems requeridos: {labels}…}}"
+  },
+  "Signals": {
+    "title": "Lista de Señales (I&C)",
+    "subtitle": "{count} señales en este proyecto",
+    "importBtn": "Importar señales",
+    "all": "Todas",
+    "allSubsystems": "Todos los subsistemas",
+    "allStatuses": "Todos los estados",
+    "searchPlaceholder": "Buscar por tag de señal, instrumento o servicio…",
+    "noResults": "Ninguna señal coincide con los filtros actuales.",
+    "showing": "Mostrando {filtered} de {total}",
+    "emptyTitle": "Sin señales importadas",
+    "emptyDesc": "Importa tu Signal List I&C desde Excel para comenzar.",
+    "col": {
+      "signalTag": "Tag Señal",
+      "type": "Tipo",
+      "instrument": "Instrumento",
+      "subsystem": "Subsistema",
+      "range": "Rango",
+      "service": "Servicio",
+      "pid": "P&ID",
+      "status": "Estado"
+    },
+    "detail": {
+      "description": "Descripción",
+      "instrument": "Tag Instrumento",
+      "subsystem": "Subsistema",
+      "service": "Servicio",
+      "range": "Rango / Unidad",
+      "alarms": "Alarmas / Set Points",
+      "origin": "Origen",
+      "destination": "Destino",
+      "pid": "Plano P&ID",
+      "loopDiagram": "Diagrama de Lazo",
+      "wiringDiagram": "Diagrama de Cableado",
+      "notes": "Notas"
+    },
+    "status": {
+      "not_started": "Sin iniciar",
+      "in_progress": "En progreso",
+      "completed": "Completado",
+      "approved": "Aprobado"
+    },
+    "loops": {
+      "title": "Loops de Control",
+      "subtitle": "{count} loops en este proyecto",
+      "searchPlaceholder": "Buscar por número de loop o descripción…",
+      "emptyTitle": "Sin loops definidos",
+      "emptyDesc": "Los loops se crean durante la importación de señales o se pueden agregar manualmente.",
+      "tagsInLoop": "Tags en el loop",
+      "col": {
+        "loopNumber": "Número de Loop",
+        "description": "Descripción",
+        "subsystem": "Subsistema",
+        "discipline": "Disciplina",
+        "tags": "Tags"
+      }
+    },
+    "interlocks": {
+      "title": "Interlocks / SIS",
+      "subtitle": "{count} interlocks en este proyecto",
+      "searchPlaceholder": "Buscar por número, descripción o tag…",
+      "emptyTitle": "Sin interlocks definidos",
+      "emptyDesc": "Los interlocks representan la lógica de seguridad causa-efecto (SIL/SIS). Se pueden importar o agregar manualmente.",
+      "col": {
+        "number": "No. Interlock",
+        "description": "Descripción",
+        "subsystem": "Subsistema",
+        "cause": "Tag Causa",
+        "effect": "Tag Efecto",
+        "setPoint": "Set Point",
+        "action": "Acción"
+      }
+    }
   }
 }
