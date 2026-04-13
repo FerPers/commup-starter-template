@@ -22,7 +22,7 @@ export default async function ProjectItrsPage({
 
   if (!membership) redirect('/setup')
 
-  const [{ data: project }, { data: itrs }, { data: phases }] = await Promise.all([
+  const [{ data: project }, { data: itrs }, { data: phases }, { data: members }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name')
@@ -46,9 +46,16 @@ export default async function ProjectItrsPage({
       .select('id, code, name, color, order_index')
       .eq('project_id', projectId)
       .order('order_index'),
+    supabase
+      .from('org_members')
+      .select('user_id, profiles(full_name)')
+      .eq('org_id', membership.org_id),
   ])
 
   if (!project) notFound()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const users = (members ?? []).map(m => ({ user_id: m.user_id, full_name: (m as any).profiles?.full_name as string ?? '' })).filter(u => u.full_name)
 
   return (
     <ItrListView
@@ -58,6 +65,8 @@ export default async function ProjectItrsPage({
       itrs={(itrs ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       phases={(phases ?? []) as any}
+      users={users}
+      userRole={membership.role}
     />
   )
 }

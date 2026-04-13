@@ -3,7 +3,7 @@
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { bulkUpdateItrStatus } from '@/app/actions/bulk'
+import { bulkUpdateItrStatus, bulkApproveItrs } from '@/app/actions/bulk'
 import { bulkAssignItrs } from '@/app/actions/itr-assign'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 
@@ -80,6 +80,9 @@ export default function ItrListView({
   const [bulkUserId, setBulkUserId]       = useState('')
   const [isPending, startTransition]      = useTransition()
   const [bulkError, setBulkError]         = useState<string | null>(null)
+
+  // ── Approve confirm modal ─────────────────────────────────────────────
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false)
 
   // ── Add to plan modal ─────────────────────────────────────────────────
   const [showPlanModal, setShowPlanModal] = useState(false)
@@ -186,6 +189,26 @@ export default function ItrListView({
       clearSelection()
     })
   }
+
+  function applyBulkApprove() {
+    if (!selected.size) return
+    setBulkError(null)
+    startTransition(async () => {
+      const res = await bulkApproveItrs([...selected], projectId)
+      if (res.error) { setBulkError(res.error); return }
+      if (res.approved === 0) { setBulkError(t('bulk.approveNoneCompleted')); return }
+      setShowApproveConfirm(false)
+      clearSelection()
+      router.refresh()
+    })
+  }
+
+  // Are all selected ITRs in 'completed' status?
+  const allSelectedCompleted = selected.size > 0 &&
+    [...selected].every(id => {
+      const itr = itrs.find(i => i.id === id)
+      return itr?.status === 'completed'
+    })
 
   const hasFilters = !!(filterStatus || filterPhase || filterDisc || search)
 
@@ -308,6 +331,24 @@ export default function ItrListView({
             </>
           )}
 
+          {/* Bulk approve */}
+          {canEdit && allSelectedCompleted && (
+            <>
+              <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
+              <button
+                onClick={() => setShowApproveConfirm(true)}
+                disabled={isPending}
+                style={{
+                  padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
+                  background: '#7c3aed', color: 'white', cursor: isPending ? 'not-allowed' : 'pointer',
+                  border: 'none', opacity: isPending ? 0.7 : 1,
+                }}
+              >
+                {t('bulk.approveSelected')}
+              </button>
+            </>
+          )}
+
           <button
             onClick={clearSelection}
             style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: '#64748b', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}
@@ -349,6 +390,38 @@ export default function ItrListView({
           {t('filters.count', { filtered: filtered.length, total: itrs.length })}
         </span>
       </div>
+
+      {/* Approve confirm modal */}
+      {showApproveConfirm && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowApproveConfirm(false) }}
+        >
+          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+            <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 10px' }}>
+              {t('bulk.approveConfirmTitle')}
+            </h2>
+            <p style={{ fontSize: '13px', color: '#475569', margin: '0 0 22px' }}>
+              {t('bulk.approveConfirmDesc', { count: selected.size })}
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowApproveConfirm(false)}
+                style={{ padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+              >
+                {t('bulk.deselect')}
+              </button>
+              <button
+                onClick={applyBulkApprove}
+                disabled={isPending}
+                style={{ padding: '8px 20px', background: '#7c3aed', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'white', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
+              >
+                {isPending ? '...' : t('bulk.approveSelected')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       {/* Add to plan modal */}

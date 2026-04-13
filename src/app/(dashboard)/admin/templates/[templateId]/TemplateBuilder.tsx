@@ -2,8 +2,10 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import {
   updateTemplateHeader,
+  publishTemplateVersion,
   createSection, updateSection, deleteSection, reorderSections,
   createItem, updateItem, deleteItem, reorderItems,
   type ItemPayload,
@@ -28,6 +30,8 @@ interface BuilderItem {
   acceptance_max: number | null
   acceptance_text: string | null
   order_index: number
+  condition_item_id: string | null
+  condition_value: string | null
 }
 
 interface BuilderSection {
@@ -62,33 +66,6 @@ interface Props {
   canEdit: boolean
 }
 
-// ── Item type config ───────────────────────────────────────────
-
-const ITEM_TYPES: { value: ItrItemType; label: string; color: string }[] = [
-  { value: 'checkbox',    label: 'Verificación',  color: '#3b82f6' },
-  { value: 'yes_no',      label: 'Sí / No',        color: '#10b981' },
-  { value: 'number',      label: 'Número',         color: '#f59e0b' },
-  { value: 'measurement', label: 'Medición',        color: '#8b5cf6' },
-  { value: 'text',        label: 'Texto libre',     color: '#64748b' },
-  { value: 'select',      label: 'Selección',       color: '#14b8a6' },
-  { value: 'photo',       label: 'Foto',            color: '#ec4899' },
-  { value: 'signature',   label: 'Firma',           color: '#6366f1' },
-  { value: 'date',        label: 'Fecha',           color: '#f97316' },
-]
-
-function TypeBadge({ type }: { type: string }) {
-  const cfg = ITEM_TYPES.find(t => t.value === type) ?? { label: type, color: '#94a3b8' }
-  return (
-    <span style={{
-      padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
-      background: `${cfg.color}18`, color: cfg.color, border: `1px solid ${cfg.color}30`,
-      whiteSpace: 'nowrap',
-    }}>
-      {cfg.label}
-    </span>
-  )
-}
-
 // ── Default item form ──────────────────────────────────────────
 
 const DEFAULT_ITEM: Omit<ItemPayload, 'order_index'> = {
@@ -104,6 +81,8 @@ const DEFAULT_ITEM: Omit<ItemPayload, 'order_index'> = {
   acceptance_min: null,
   acceptance_max: null,
   acceptance_text: '',
+  condition_item_id: null,
+  condition_value: null,
 }
 
 // ── Helpers (outside component to avoid dep array issues) ────────
@@ -121,7 +100,34 @@ function buildSections(raw: TemplateData['itr_template_sections']): BuilderSecti
 
 export default function TemplateBuilder({ template, canEdit }: Props) {
   const router = useRouter()
+  const t = useTranslations('ItrTemplates.builder')
   const [isPending, startTransition] = useTransition()
+
+  // Item type config — labels resolved via i18n
+  const ITEM_TYPES: { value: ItrItemType; label: string; color: string }[] = [
+    { value: 'checkbox',    label: t('itemTypeCheckbox'),    color: '#3b82f6' },
+    { value: 'yes_no',      label: t('itemTypeYesNo'),       color: '#10b981' },
+    { value: 'number',      label: t('itemTypeNumber'),      color: '#f59e0b' },
+    { value: 'measurement', label: t('itemTypeMeasurement'), color: '#8b5cf6' },
+    { value: 'text',        label: t('itemTypeText'),        color: '#64748b' },
+    { value: 'select',      label: t('itemTypeSelect'),      color: '#14b8a6' },
+    { value: 'photo',       label: t('itemTypePhoto'),       color: '#ec4899' },
+    { value: 'signature',   label: t('itemTypeSignature'),   color: '#6366f1' },
+    { value: 'date',        label: t('itemTypeDate'),        color: '#f97316' },
+  ]
+
+  function TypeBadge({ type }: { type: string }) {
+    const cfg = ITEM_TYPES.find(it => it.value === type) ?? { label: type, color: '#94a3b8' }
+    return (
+      <span style={{
+        padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
+        background: `${cfg.color}18`, color: cfg.color, border: `1px solid ${cfg.color}30`,
+        whiteSpace: 'nowrap',
+      }}>
+        {cfg.label}
+      </span>
+    )
+  }
 
   // ── Template data state
   const [sections, setSections] = useState<BuilderSection[]>(() => buildSections(template.itr_template_sections))
@@ -133,6 +139,10 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
   // ── Import modal state
   const [showImport, setShowImport] = useState(false)
+
+  // ── Publish version state
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false)
+  const [publishResult, setPublishResult] = useState<string | null>(null)
 
   // ── Header state
   const [headerEditing, setHeaderEditing] = useState(false)
@@ -161,7 +171,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
   function saveHeader() {
     if (!headerForm.code.trim() || !headerForm.title.trim()) {
-      setHeaderError('Código y título son requeridos')
+      setHeaderError(t('errCodeTitleRequired'))
       return
     }
     setHeaderError(null)
@@ -175,6 +185,24 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       if (res.error) { setHeaderError(res.error); return }
       setHeaderEditing(false)
       router.refresh()
+    })
+  }
+
+  // ── Publish version ───────────────────────────────────────────
+
+  function handlePublishVersion() {
+    setPublishResult(null)
+    startTransition(async () => {
+      const res = await publishTemplateVersion(template.id)
+      if (res.error) { setPublishResult(`error:${res.error}`); return }
+      setShowPublishConfirm(false)
+      if (res.bumpedInPlace) {
+        setPublishResult(`ok:${t('publishBumpedInPlace')}`)
+        router.refresh()
+      } else {
+        // Redirect to new template
+        router.push(`/admin/templates/${res.newTemplateId}`)
+      }
     })
   }
 
@@ -210,7 +238,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
   }
 
   function handleDeleteSection(sectionId: string, title: string) {
-    if (!confirm(`¿Eliminar sección "${title}" y todos sus ítems?`)) return
+    if (!confirm(t('confirmDeleteSection', { title }))) return
     startTransition(async () => {
       const res = await deleteSection(sectionId)
       if (res.error) { setActionError(res.error); return }
@@ -231,7 +259,6 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       const next = [...prev]
       ;[next[idx], next[newIdx]] = [next[newIdx], next[idx]]
       const reindexed = next.map((s, i) => ({ ...s, order_index: i }))
-      // Persist in background
       startTransition(async () => {
         await reorderSections(reindexed.map(s => ({ id: s.id, order_index: s.order_index })))
       })
@@ -264,13 +291,15 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       acceptance_min: item.acceptance_min,
       acceptance_max: item.acceptance_max,
       acceptance_text: item.acceptance_text ?? '',
+      condition_item_id: item.condition_item_id,
+      condition_value: item.condition_value,
     })
     setEditingItemId(item.id)
   }
 
   function handleSaveNewItem(sectionId: string) {
     if (!itemForm.description.trim()) {
-      setItemError('La descripción en inglés es requerida')
+      setItemError(t('errDescriptionRequired'))
       return
     }
     setItemError(null)
@@ -301,7 +330,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
   function handleSaveEditItem() {
     if (!editingItemId) return
     if (!itemForm.description.trim()) {
-      setItemError('La descripción en inglés es requerida')
+      setItemError(t('errDescriptionRequired'))
       return
     }
     setItemError(null)
@@ -327,7 +356,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
   }
 
   function handleDeleteItem(itemId: string, sectionId: string) {
-    if (!confirm('¿Eliminar este ítem?')) return
+    if (!confirm(t('confirmDeleteItem'))) return
     startTransition(async () => {
       const res = await deleteItem(itemId)
       if (res.error) { setActionError(res.error); return }
@@ -349,7 +378,6 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       const next = [...s.items]
       ;[next[idx], next[newIdx]] = [next[newIdx], next[idx]]
       const reindexed = next.map((it, i) => ({ ...it, order_index: i }))
-      // Persist in background
       startTransition(async () => {
         await reorderItems(reindexed.map(it => ({ id: it.id, order_index: it.order_index })))
       })
@@ -359,12 +387,29 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
   // ── Item form component (shared for add/edit) ─────────────────
 
-  function ItemForm({ onSave, onCancel, sectionId }: {
+  function ItemForm({ onSave, onCancel, sectionId, currentItemId }: {
     onSave: () => void
     onCancel: () => void
     sectionId?: string
+    currentItemId?: string
   }) {
     const isMeasurement = itemForm.item_type === 'measurement'
+
+    // All items in this template (for condition dropdown), excluding the item being edited
+    const allTemplateItems = sections.flatMap(s => s.items).filter(it => it.id !== currentItemId)
+
+    // Determine appropriate condition_value UI based on the condition item's type
+    const condItem = allTemplateItems.find(it => it.id === itemForm.condition_item_id)
+    const condType = condItem?.item_type ?? null
+    const useBooleanValues = condType === 'yes_no' || condType === 'checkbox'
+
+    const FLAGS = [
+      { key: 'is_critical',          label: t('flagCritical'),          color: '#ef4444' },
+      { key: 'is_required',          label: t('flagRequired'),          color: '#f59e0b' },
+      { key: 'requires_photo',       label: t('flagRequiresPhoto'),     color: '#3b82f6' },
+      { key: 'requires_measurement', label: t('flagRequiresMeasurement'), color: '#8b5cf6' },
+    ] as const
+
     return (
       <div style={{
         margin: '0 0 2px', padding: '16px 18px',
@@ -372,7 +417,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '10px', marginBottom: '10px' }}>
           <label style={fieldLabel}>
-            N° Ítem
+            {t('fieldItemNumber')}
             <input
               value={itemForm.item_number as string ?? ''}
               onChange={e => setItemForm(f => ({ ...f, item_number: e.target.value }))}
@@ -381,21 +426,21 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
             />
           </label>
           <label style={fieldLabel}>
-            Tipo
+            {t('fieldType')}
             <select
               value={itemForm.item_type as string}
               onChange={e => setItemForm(f => ({ ...f, item_type: e.target.value as ItrItemType }))}
               style={fieldInput}
             >
-              {ITEM_TYPES.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
+              {ITEM_TYPES.map(tp => (
+                <option key={tp.value} value={tp.value}>{tp.label}</option>
               ))}
             </select>
           </label>
         </div>
 
         <label style={{ ...fieldLabel, marginBottom: '10px' }}>
-          Descripción (EN) <span style={{ color: '#ef4444' }}>*</span>
+          {t('fieldDescriptionEn')} <span style={{ color: '#ef4444' }}>*</span>
           <input
             value={itemForm.description as string}
             onChange={e => setItemForm(f => ({ ...f, description: e.target.value }))}
@@ -405,7 +450,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         </label>
 
         <label style={{ ...fieldLabel, marginBottom: '10px' }}>
-          Descripción (ES)
+          {t('fieldDescriptionEs')}
           <input
             value={itemForm.description_es as string ?? ''}
             onChange={e => setItemForm(f => ({ ...f, description_es: e.target.value }))}
@@ -417,7 +462,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         {isMeasurement && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', gap: '10px', marginBottom: '10px' }}>
             <label style={fieldLabel}>
-              Unidad
+              {t('fieldUnit')}
               <input
                 value={itemForm.unit as string ?? ''}
                 onChange={e => setItemForm(f => ({ ...f, unit: e.target.value }))}
@@ -426,7 +471,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               />
             </label>
             <label style={fieldLabel}>
-              Mín aceptable
+              {t('fieldMinAcceptable')}
               <input
                 type="number"
                 value={itemForm.acceptance_min ?? ''}
@@ -435,7 +480,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               />
             </label>
             <label style={fieldLabel}>
-              Máx aceptable
+              {t('fieldMaxAcceptable')}
               <input
                 type="number"
                 value={itemForm.acceptance_max ?? ''}
@@ -447,7 +492,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         )}
 
         <label style={{ ...fieldLabel, marginBottom: '12px' }}>
-          Criterio de aceptación (texto)
+          {t('fieldAcceptanceCriteria')}
           <input
             value={itemForm.acceptance_text as string ?? ''}
             onChange={e => setItemForm(f => ({ ...f, acceptance_text: e.target.value }))}
@@ -458,12 +503,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
         {/* Flags */}
         <div style={{ display: 'flex', gap: '16px', marginBottom: '14px', flexWrap: 'wrap' }}>
-          {([
-            { key: 'is_critical', label: 'Crítico (bloquea firma)', color: '#ef4444' },
-            { key: 'is_required', label: 'Requerido', color: '#f59e0b' },
-            { key: 'requires_photo', label: 'Requiere foto', color: '#3b82f6' },
-            { key: 'requires_measurement', label: 'Requiere medición', color: '#8b5cf6' },
-          ] as const).map(flag => (
+          {FLAGS.map(flag => (
             <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: '#374151' }}>
               <input
                 type="checkbox"
@@ -475,6 +515,62 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
             </label>
           ))}
         </div>
+
+        {/* Conditional logic */}
+        {allTemplateItems.length > 0 && (
+          <div style={{
+            padding: '12px 14px', background: '#fffbeb', border: '1px solid #fef3c7',
+            borderRadius: '8px', marginBottom: '12px',
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+              {t('conditionSectionLabel')}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: '8px' }}>
+              <label style={fieldLabel}>
+                {t('conditionItemLabel')}
+                <select
+                  value={itemForm.condition_item_id ?? ''}
+                  onChange={e => setItemForm(f => ({
+                    ...f,
+                    condition_item_id: e.target.value || null,
+                    condition_value: null,
+                  }))}
+                  style={fieldInput}
+                >
+                  <option value="">{t('conditionItemNone')}</option>
+                  {allTemplateItems.map(it => (
+                    <option key={it.id} value={it.id}>
+                      {it.item_number ? `${it.item_number} — ` : ''}{it.description.slice(0, 60)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {itemForm.condition_item_id && (
+                <label style={fieldLabel}>
+                  {t('conditionValueLabel')}
+                  {useBooleanValues ? (
+                    <select
+                      value={itemForm.condition_value ?? ''}
+                      onChange={e => setItemForm(f => ({ ...f, condition_value: e.target.value || null }))}
+                      style={fieldInput}
+                    >
+                      <option value="">{t('conditionItemNone')}</option>
+                      <option value="true">{t('conditionValueTrue')}</option>
+                      <option value="false">{t('conditionValueFalse')}</option>
+                    </select>
+                  ) : (
+                    <input
+                      value={itemForm.condition_value ?? ''}
+                      onChange={e => setItemForm(f => ({ ...f, condition_value: e.target.value || null }))}
+                      placeholder={t('conditionValuePlaceholder')}
+                      style={fieldInput}
+                    />
+                  )}
+                </label>
+              )}
+            </div>
+          </div>
+        )}
 
         {itemError && (
           <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 10px', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px' }}>
@@ -493,7 +589,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               opacity: isPending ? 0.6 : 1,
             }}
           >
-            {isPending ? 'Guardando...' : sectionId ? 'Agregar ítem' : 'Guardar cambios'}
+            {isPending ? t('btnSavingItem') : sectionId ? t('btnAddItemSave') : t('btnSaveChanges')}
           </button>
           <button
             onClick={onCancel}
@@ -502,7 +598,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               borderRadius: '7px', fontSize: '12px', color: '#64748b', cursor: 'pointer',
             }}
           >
-            Cancelar
+            {t('btnCancel')}
           </button>
         </div>
       </div>
@@ -523,7 +619,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         display: 'inline-flex', alignItems: 'center', gap: '6px',
         fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '20px',
       }}>
-        ← Templates ITR
+        {t('breadcrumb')}
       </a>
 
       {/* Header card */}
@@ -555,16 +651,23 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                     padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
                     background: `${phase.color}18`, color: phase.color,
                   }}>
-                    Fase {phase.code}
+                    {t('headerPhaseLabel', { code: phase.code })}
                   </span>
                 )}
+                <span style={{
+                  padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
+                  background: '#eff6ff', color: '#3b82f6',
+                  border: '1px solid #bfdbfe',
+                }}>
+                  v{template.version}
+                </span>
                 <span style={{
                   padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                   background: template.is_active ? '#10b98115' : '#94a3b815',
                   color: template.is_active ? '#10b981' : '#94a3b8',
                   border: `1px solid ${template.is_active ? '#10b98130' : '#e2e8f0'}`,
                 }}>
-                  {template.is_active ? 'Activo' : 'Inactivo'}
+                  {template.is_active ? t('statusActive') : t('statusInactive')}
                 </span>
               </div>
               <p style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', margin: '0 0 4px' }}>{template.title}</p>
@@ -572,10 +675,25 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{template.description}</p>
               )}
               <p style={{ fontSize: '12px', color: '#94a3b8', margin: '8px 0 0' }}>
-                v{template.version} · {totalItems} ítem{totalItems !== 1 ? 's' : ''} · {sections.length} sección{sections.length !== 1 ? 'es' : ''}
+                {t('versionMeta', {
+                  version: template.version,
+                  items: totalItems,
+                  itemsPlural: totalItems !== 1 ? 's' : '',
+                  sections: sections.length,
+                  sectionsPlural: sections.length !== 1 ? 'es' : '',
+                })}
               </p>
+              {publishResult && (() => {
+                const isErr = publishResult.startsWith('error:')
+                return (
+                  <p style={{ fontSize: '12px', margin: '8px 0 0', padding: '6px 10px', borderRadius: '5px',
+                    background: isErr ? '#fee2e2' : '#ecfdf5', color: isErr ? '#dc2626' : '#16a34a' }}>
+                    {publishResult.slice(6)}
+                  </p>
+                )
+              })()}
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               <a
                 href={`/admin/templates/${template.id}/preview`}
                 style={{
@@ -584,7 +702,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                   fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px',
                 }}
               >
-                👁 Vista de campo
+                {t('btnFieldView')}
               </a>
               {canEdit && (
                 <>
@@ -596,7 +714,18 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                       fontWeight: 500,
                     }}
                   >
-                    ↑ Importar Excel
+                    {t('btnImportExcel')}
+                  </button>
+                  <button
+                    onClick={() => setShowPublishConfirm(true)}
+                    disabled={isPending}
+                    style={{
+                      padding: '7px 14px', background: '#1e40af', border: 'none',
+                      borderRadius: '8px', fontSize: '12px', color: 'white', cursor: isPending ? 'not-allowed' : 'pointer',
+                      fontWeight: 600, opacity: isPending ? 0.7 : 1,
+                    }}
+                  >
+                    {t('btnPublishVersion')}
                   </button>
                   <button
                     onClick={() => setHeaderEditing(true)}
@@ -605,7 +734,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                       borderRadius: '8px', fontSize: '12px', color: '#475569', cursor: 'pointer',
                     }}
                   >
-                    Editar encabezado
+                    {t('btnEditHeader')}
                   </button>
                 </>
               )}
@@ -614,11 +743,11 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         ) : (
           <div>
             <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px' }}>
-              Editar encabezado
+              {t('headerEditTitle')}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px', marginBottom: '12px' }}>
               <label style={fieldLabel}>
-                Código <span style={{ color: '#ef4444' }}>*</span>
+                {t('fieldCode')} <span style={{ color: '#ef4444' }}>*</span>
                 <input
                   value={headerForm.code}
                   onChange={e => setHeaderForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
@@ -627,7 +756,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 />
               </label>
               <label style={fieldLabel}>
-                Título <span style={{ color: '#ef4444' }}>*</span>
+                {t('fieldTitle')} <span style={{ color: '#ef4444' }}>*</span>
                 <input
                   value={headerForm.title}
                   onChange={e => setHeaderForm(f => ({ ...f, title: e.target.value }))}
@@ -636,11 +765,11 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               </label>
             </div>
             <label style={{ ...fieldLabel, marginBottom: '12px' }}>
-              Descripción
+              {t('fieldDescription')}
               <input
                 value={headerForm.description}
                 onChange={e => setHeaderForm(f => ({ ...f, description: e.target.value }))}
-                placeholder="Alcance o notas del template"
+                placeholder={t('placeholderDescription')}
                 style={fieldInput}
               />
             </label>
@@ -651,7 +780,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 onChange={e => setHeaderForm(f => ({ ...f, is_active: e.target.checked }))}
                 style={{ accentColor: '#10b981', width: '14px', height: '14px' }}
               />
-              <span style={{ fontSize: '13px', color: '#374151' }}>Template activo (disponible para asignación)</span>
+              <span style={{ fontSize: '13px', color: '#374151' }}>{t('flagActiveLabel')}</span>
             </label>
             {headerError && (
               <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 12px', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px' }}>
@@ -664,13 +793,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 disabled={isPending}
                 style={{ padding: '8px 18px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
               >
-                {isPending ? 'Guardando...' : 'Guardar'}
+                {isPending ? t('btnSaving') : t('btnSave')}
               </button>
               <button
                 onClick={() => { setHeaderEditing(false); setHeaderError(null) }}
                 style={{ padding: '8px 14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
               >
-                Cancelar
+                {t('btnCancel')}
               </button>
             </div>
           </div>
@@ -693,10 +822,10 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         }}>
           <div style={{ fontSize: '28px', opacity: 0.3, marginBottom: '10px' }}>▤</div>
           <p style={{ fontSize: '14px', fontWeight: 500, color: '#475569', margin: '0 0 4px' }}>
-            Template sin secciones
+            {t('emptyTitle')}
           </p>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
-            Agrega la primera sección para empezar a construir el ITR.
+            {t('emptyDesc')}
           </p>
         </div>
       )}
@@ -729,7 +858,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                   {section.title}
                 </span>
                 <span style={{ fontSize: '11px', color: '#94a3b8', marginRight: '8px' }}>
-                  {section.items.length} ítem{section.items.length !== 1 ? 's' : ''}
+                  {t('sectionItemCount', { count: section.items.length, plural: section.items.length !== 1 ? 's' : '' })}
                 </span>
                 {canEdit && (
                   <>
@@ -737,23 +866,23 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                       onClick={() => handleMoveSection(section.id, 'up')}
                       disabled={sIdx === 0 || isPending}
                       style={{ ...iconBtn('#64748b'), opacity: sIdx === 0 ? 0.3 : 1 }}
-                      title="Mover arriba"
+                      title={t('tooltipMoveUp')}
                     >▲</button>
                     <button
                       onClick={() => handleMoveSection(section.id, 'down')}
                       disabled={sIdx === sections.length - 1 || isPending}
                       style={{ ...iconBtn('#64748b'), opacity: sIdx === sections.length - 1 ? 0.3 : 1 }}
-                      title="Mover abajo"
+                      title={t('tooltipMoveDown')}
                     >▼</button>
                     <button
                       onClick={() => { setEditingSectionId(section.id); setEditingSectionTitle(section.title) }}
                       style={iconBtn('#3b82f6')}
-                      title="Renombrar"
+                      title={t('tooltipRename')}
                     >✎</button>
                     <button
                       onClick={() => handleDeleteSection(section.id, section.title)}
                       style={iconBtn('#ef4444')}
-                      title="Eliminar sección"
+                      title={t('tooltipDeleteSection')}
                     >✕</button>
                   </>
                 )}
@@ -765,7 +894,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
           <div style={{ padding: '8px 0' }}>
             {section.items.length === 0 && addingItemSectionId !== section.id && (
               <p style={{ fontSize: '12px', color: '#94a3b8', padding: '12px 18px', margin: 0 }}>
-                Sección vacía — agrega ítems con el botón de abajo.
+                {t('emptySectionHint')}
               </p>
             )}
 
@@ -773,6 +902,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               editingItemId === item.id ? (
                 <div key={item.id} style={{ padding: '8px 12px' }}>
                   <ItemForm
+                    currentItemId={item.id}
                     onSave={handleSaveEditItem}
                     onCancel={() => { setEditingItemId(null); setItemError(null) }}
                   />
@@ -797,15 +927,25 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                     {item.description_es && (
                       <div style={{ color: '#64748b', fontSize: '11px', marginTop: '1px' }}>{item.description_es}</div>
                     )}
+                    {item.condition_item_id && (() => {
+                      const condItem = sections.flatMap(s => s.items).find(it => it.id === item.condition_item_id)
+                      return condItem ? (
+                        <div style={{ fontSize: '10px', color: '#92400e', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <span style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '3px', padding: '0 4px' }}>
+                            {t('conditionBadgePrefix')} &ldquo;{condItem.item_number ?? condItem.description.slice(0, 25)}&rdquo; = {item.condition_value}
+                          </span>
+                        </div>
+                      ) : null
+                    })()}
                   </div>
                   <TypeBadge type={item.item_type} />
-                  <span title="Crítico" style={{ textAlign: 'center', fontSize: '14px' }}>
+                  <span title={t('tooltipCritical')} style={{ textAlign: 'center', fontSize: '14px' }}>
                     {item.is_critical ? <span style={{ color: '#ef4444' }}>●</span> : <span style={{ color: '#e2e8f0' }}>○</span>}
                   </span>
-                  <span title="Requerido" style={{ textAlign: 'center', fontSize: '14px' }}>
+                  <span title={t('tooltipRequired')} style={{ textAlign: 'center', fontSize: '14px' }}>
                     {item.is_required ? <span style={{ color: '#f59e0b' }}>●</span> : <span style={{ color: '#e2e8f0' }}>○</span>}
                   </span>
-                  <span title="Foto" style={{ textAlign: 'center', fontSize: '14px' }}>
+                  <span title={t('tooltipPhoto')} style={{ textAlign: 'center', fontSize: '14px' }}>
                     {item.requires_photo ? <span style={{ color: '#3b82f6' }}>⊙</span> : <span style={{ color: '#e2e8f0' }}>○</span>}
                   </span>
                   {canEdit ? (
@@ -844,7 +984,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLElement).style.color = '#3b82f6' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#cbd5e1'; (e.currentTarget as HTMLElement).style.color = '#64748b' }}
                 >
-                  + Agregar ítem
+                  {t('btnAddItem')}
                 </button>
               </div>
             )}
@@ -861,7 +1001,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 value={newSectionTitle}
                 onChange={e => setNewSectionTitle(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleAddSection(); if (e.key === 'Escape') { setShowAddSection(false); setNewSectionTitle('') } }}
-                placeholder="Nombre de la sección (ej: DATOS GENERALES)"
+                placeholder={t('placeholderSectionName')}
                 autoFocus
                 style={{ ...fieldInput, flex: 1, fontSize: '13px' }}
               />
@@ -870,13 +1010,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 disabled={isPending || !newSectionTitle.trim()}
                 style={{ padding: '9px 18px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
               >
-                Agregar
+                {t('btnAddSection')}
               </button>
               <button
                 onClick={() => { setShowAddSection(false); setNewSectionTitle('') }}
                 style={{ padding: '9px 14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
               >
-                Cancelar
+                {t('btnCancel')}
               </button>
             </div>
           ) : (
@@ -890,7 +1030,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLElement).style.color = '#3b82f6' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#cbd5e1'; (e.currentTarget as HTMLElement).style.color = '#64748b' }}
             >
-              + Agregar sección
+              {t('btnAddSectionMain')}
             </button>
           )}
         </div>
@@ -899,10 +1039,10 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       {/* Legend */}
       <div style={{ marginTop: '28px', padding: '12px 16px', background: '#f8fafc', borderRadius: '8px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         {[
-          { icon: '●', color: '#ef4444', label: 'Crítico — bloquea firma si falla' },
-          { icon: '●', color: '#f59e0b', label: 'Requerido' },
-          { icon: '⊙', color: '#3b82f6', label: 'Requiere foto' },
-          { icon: '○', color: '#e2e8f0', label: 'No aplica' },
+          { icon: '●', color: '#ef4444', label: t('legendCritical') },
+          { icon: '●', color: '#f59e0b', label: t('legendRequired') },
+          { icon: '⊙', color: '#3b82f6', label: t('legendRequiresPhoto') },
+          { icon: '○', color: '#e2e8f0', label: t('legendNotApplicable') },
         ].map(l => (
           <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#64748b' }}>
             <span style={{ color: l.color, fontSize: '13px' }}>{l.icon}</span>
@@ -922,6 +1062,41 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
             router.refresh()
           }}
         />
+      )}
+
+      {/* Publish version confirm modal */}
+      {showPublishConfirm && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowPublishConfirm(false) }}
+        >
+          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+            <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 10px' }}>
+              {t('publishVersionTitle')}
+            </h2>
+            <p style={{ fontSize: '13px', color: '#475569', margin: '0 0 6px' }}>
+              {t('publishVersionDesc', { version: template.version + 1 })}
+            </p>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 22px' }}>
+              {t('publishVersionNote')}
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowPublishConfirm(false)}
+                style={{ padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+              >
+                {t('btnCancel')}
+              </button>
+              <button
+                onClick={handlePublishVersion}
+                disabled={isPending}
+                style={{ padding: '8px 20px', background: '#1e40af', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'white', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
+              >
+                {isPending ? t('btnSaving') : t('btnPublishVersionConfirm', { version: template.version + 1 })}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

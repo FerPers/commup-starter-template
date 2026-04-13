@@ -27,14 +27,15 @@ export default async function ItrExecutionPage({
     .select(`
       id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id,
       itr_templates(
-        id, code, title,
+        id, code, title, version,
         itr_template_sections(
           id, title, order_index,
           itr_template_items(
             id, item_number, description, description_es, item_type,
             is_critical, is_required, requires_photo, requires_measurement,
             acceptance_min, acceptance_max, acceptance_text,
-            unit, options, order_index
+            unit, options, order_index,
+            condition_item_id, condition_value
           )
         )
       ),

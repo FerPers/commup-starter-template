@@ -4,6 +4,31 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import LocaleSwitcher from '@/components/LocaleSwitcher'
+import { useOfflineSync } from '@/hooks/useOfflineSync'
+
+function SyncIndicator() {
+  const { isOnline, pendingCount } = useOfflineSync()
+  const dotColor = isOnline
+    ? pendingCount > 0 ? '#f59e0b' : '#10b981'
+    : '#ef4444'
+  const label = isOnline
+    ? pendingCount > 0 ? `Syncing ${pendingCount}…` : 'Online'
+    : `Offline · ${pendingCount} pending`
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '6px',
+      padding: '6px 10px', borderRadius: '6px',
+      background: 'rgba(255,255,255,0.04)',
+    }}>
+      <span style={{
+        width: 8, height: 8, borderRadius: '50%',
+        background: dotColor, flexShrink: 0,
+        boxShadow: isOnline && pendingCount === 0 ? `0 0 4px ${dotColor}` : 'none',
+      }} />
+      <span style={{ fontSize: 11, color: '#64748b' }}>{label}</span>
+    </div>
+  )
+}
 
 const navItems = [
   {
@@ -230,12 +255,13 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
         ))}
       </nav>
 
-      {/* Footer: locale switcher + logout */}
+      {/* Footer: sync indicator + locale switcher + logout */}
       <div style={{
         padding: '12px 20px 16px',
         borderTop: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', flexDirection: 'column', gap: '10px',
       }}>
+        <SyncIndicator />
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <LocaleSwitcher variant="dark" />
         </div>

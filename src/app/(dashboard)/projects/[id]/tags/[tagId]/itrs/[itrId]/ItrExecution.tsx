@@ -28,6 +28,8 @@ type Item = {
   unit: string | null
   options: string[] | null
   order_index: number
+  condition_item_id: string | null
+  condition_value: string | null
 }
 
 type Section = {
@@ -80,6 +82,7 @@ type ItrData = {
     id: string
     code: string
     title: string
+    version: number
     itr_template_sections: Section[]
   } | null
   tags: { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } } | null
@@ -106,6 +109,20 @@ function computeIsPassed(value: number, min: number | null, max: number | null):
   if (min !== null && value < min) return false
   if (max !== null && value > max) return false
   return true
+}
+
+function isItemVisible(item: Item, responses: Record<string, Response>): boolean {
+  if (!item.condition_item_id) return true
+  const condResp = responses[item.condition_item_id]
+  if (!condResp) return false
+  const actual = String(
+    condResp.value_bool !== null ? condResp.value_bool
+    : condResp.value_option !== null ? condResp.value_option
+    : condResp.value_text !== null ? condResp.value_text
+    : condResp.value_numeric !== null ? condResp.value_numeric
+    : '',
+  )
+  return actual === item.condition_value
 }
 
 // ── Main component ────────────────────────────────────────────────────
@@ -166,6 +183,15 @@ export default function ItrExecution({
 
   // ── Offline sync ─────────────────────────────────────────────────────
   const { isOffline, pendingCount, syncing, saveWithQueue } = useOfflineSync(itr.id, itr.template_id)
+
+  // Persist a full snapshot to IndexedDB so the ITR can be viewed offline
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('@/lib/offline-queue').then(({ saveItrSnapshot }) => {
+        saveItrSnapshot(itr.id, itr).catch(() => {})
+      })
+    }
+  }, [itr])
 
   const template = itr.itr_templates
   const tag = itr.tags
@@ -282,7 +308,12 @@ export default function ItrExecution({
               </span>
             </div>
             {template && (
-              <div style={{ fontSize: '13px', color: '#475569' }}>{template.title}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', color: '#475569' }}>{template.title}</span>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '999px', padding: '1px 6px' }}>
+                  v{template.version}
+                </span>
+              </div>
             )}
           </div>
           <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
@@ -378,7 +409,7 @@ export default function ItrExecution({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {section.itr_template_items.map(item => (
+              {section.itr_template_items.filter(item => isItemVisible(item, responses)).map(item => (
                 <ItemRow
                   key={item.id}
                   item={item}

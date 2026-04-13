@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updatePunchStatus, closePunch, addPunchComment } from '@/app/actions/punches'
+import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -69,6 +70,11 @@ export default function PunchListView({
   const [filterSystem, setFilterSystem] = useState('')
   const [selectedPunch, setSelectedPunch] = useState<Punch | null>(null)
 
+  // ── Bulk selection ───────────────────────────────────────────────────
+  const [selected, setSelected]      = useState<Set<string>>(new Set())
+  const [isBulkPending, startBulkTransition] = useTransition()
+  const [bulkError, setBulkError]    = useState<string | null>(null)
+
   const punchStatusLabels: Record<string, string> = {
     open:        t('punchStatus.open'),
     in_progress: t('punchStatus.in_progress'),
@@ -103,6 +109,33 @@ export default function PunchListView({
   })
 
   const hasFilters = !!(search || filterCat || filterStatus || filterDisc || filterSystem)
+
+  const filteredIds = useMemo(() => new Set(filtered.map(p => p.id)), [filtered])
+  const allFilteredSelected = filtered.length > 0 && filtered.every(p => selected.has(p.id))
+
+  function toggleRow(id: string) {
+    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  function toggleAll() {
+    if (allFilteredSelected) {
+      setSelected(prev => { const n = new Set(prev); filteredIds.forEach(id => n.delete(id)); return n })
+    } else {
+      setSelected(prev => { const n = new Set(prev); filteredIds.forEach(id => n.add(id)); return n })
+    }
+  }
+
+  function clearSelection() { setSelected(new Set()); setBulkError(null) }
+
+  function applyBulk(status: string) {
+    setBulkError(null)
+    startBulkTransition(async () => {
+      const res = await bulkUpdatePunchStatus([...selected], status)
+      if (res.error) { setBulkError(res.error); return }
+      clearSelection()
+      router.refresh()
+    })
+  }
 
   function refresh() { router.refresh() }
 
@@ -143,6 +176,38 @@ export default function PunchListView({
           </div>
         ))}
       </div>
+
+      {/* Bulk toolbar */}
+      {selected.size > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '12px 16px', marginBottom: '12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', flexShrink: 0 }}>
+            {t('bulk.selected', { count: selected.size })}
+          </span>
+          <button
+            onClick={() => applyBulk('closed')}
+            disabled={isBulkPending}
+            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', cursor: 'pointer' }}
+          >
+            {t('bulk.close')}
+          </button>
+          <button
+            onClick={() => applyBulk('cancelled')}
+            disabled={isBulkPending}
+            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+          >
+            {t('bulk.cancelSelected')}
+          </button>
+          <button
+            onClick={clearSelection}
+            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: '#64748b', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+          >
+            {t('bulk.deselect')}
+          </button>
+          {bulkError && (
+            <span style={{ fontSize: '12px', color: '#ef4444', background: '#fee2e2', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
+          )}
+        </div>
+      )}
 
       {/* Filter bar */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
@@ -203,6 +268,14 @@ export default function PunchListView({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
+                <th style={{ padding: '10px 14px', width: '36px', borderBottom: '1px solid #e2e8f0' }}>
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleAll}
+                    style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                  />
+                </th>
                 {[t('table.colPunch'), t('table.colTag'), t('table.colCat'), t('table.colDesc'), t('table.colStatus'), t('table.colAssigned'), t('table.colDue')].map(h => (
                   <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #e2e8f0' }}>
                     {h}
@@ -214,14 +287,24 @@ export default function PunchListView({
               {filtered.map((punch, i) => {
                 const catCfg = CATEGORY_CFG[punch.category]
                 const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
+                const isChecked = selected.has(punch.id)
                 return (
                   <tr
                     key={punch.id}
                     onClick={() => setSelectedPunch(punch)}
-                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', transition: 'background 0.1s', background: isChecked ? '#eff6ff' : 'transparent' }}
+                    onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8fafc' }}
+                    onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = isChecked ? '#eff6ff' : 'transparent' }}
                   >
+                    <td style={{ padding: '12px 14px', width: '36px' }} onClick={e => { e.stopPropagation(); toggleRow(punch.id) }}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleRow(punch.id)}
+                        onClick={e => e.stopPropagation()}
+                        style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                      />
+                    </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', fontFamily: 'ui-monospace, monospace', color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {punch.punch_number}
                     </td>

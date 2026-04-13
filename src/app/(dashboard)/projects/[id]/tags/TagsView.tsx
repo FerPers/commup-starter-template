@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { bulkUpdateTagStatus } from '@/app/actions/bulk'
 
 type Discipline = { id: string; code: string; name: string; color: string }
 type Area       = { id: string; code: string; name: string }
@@ -26,7 +27,11 @@ const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
   not_started: { color: '#94a3b8', bg: '#f1f5f9' },
   in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
   complete:     { color: '#10b981', bg: '#ecfdf5' },
+  completed:    { color: '#10b981', bg: '#ecfdf5' },
+  on_hold:      { color: '#f59e0b', bg: '#fffbeb' },
 }
+
+const TAG_STATUS_KEYS = ['not_started', 'in_progress', 'complete', 'on_hold'] as const
 
 export default function TagsView({
   projectId,
@@ -40,57 +45,103 @@ export default function TagsView({
   pidUrlMap?: Record<string, string>
 }) {
   const t = useTranslations('Tags')
-  const [activeDiscipline, setActiveDiscipline] = useState<string>('ALL')
   const router = useRouter()
   const searchParams = useSearchParams()
   const subsystemFilter = searchParams.get('subsystem')
 
-  // When subsystem filter changes from URL, reset discipline filter
-  useEffect(() => {
+  const [activeDiscipline, setActiveDiscipline] = useState<string>('ALL')
+  const [search, setSearch] = useState('')
+
+  // ── Bulk ─────────────────────────────────────────────────────────────
+  const [selected, setSelected]       = useState<Set<string>>(new Set())
+  const [bulkStatus, setBulkStatus]   = useState('')
+  const [isPending, startTransition]  = useTransition()
+  const [bulkError, setBulkError]     = useState<string | null>(null)
+
+  // Reset discipline when subsystem filter changes
+  useMemo(() => {
     if (subsystemFilter) setActiveDiscipline('ALL')
   }, [subsystemFilter])
 
-  // Build discipline summary with counts (respects subsystem filter)
-  const disciplineMap = new Map<string, { code: string; name: string; color: string; count: number }>()
-  const subsystemFilteredTags = subsystemFilter
-    ? tags.filter(tag => tag.subsystems?.id === subsystemFilter)
-    : tags
+  // Build discipline summary
+  const subsystemFilteredTags = useMemo(() =>
+    subsystemFilter ? tags.filter(tag => tag.subsystems?.id === subsystemFilter) : tags,
+  [tags, subsystemFilter])
 
-  for (const tag of subsystemFilteredTags) {
-    const d = tag.disciplines
-    if (!disciplineMap.has(d.code)) {
-      disciplineMap.set(d.code, { code: d.code, name: d.name, color: d.color, count: 0 })
+  const disciplineMap = useMemo(() => {
+    const m = new Map<string, { code: string; name: string; color: string; count: number }>()
+    for (const tag of subsystemFilteredTags) {
+      const d = tag.disciplines
+      if (!m.has(d.code)) m.set(d.code, { code: d.code, name: d.name, color: d.color, count: 0 })
+      m.get(d.code)!.count++
     }
-    disciplineMap.get(d.code)!.count++
-  }
+    return m
+  }, [subsystemFilteredTags])
+
   const disciplines = [...disciplineMap.values()].sort((a, b) => a.code.localeCompare(b.code))
 
-  const filtered = subsystemFilteredTags.filter(tag =>
-    activeDiscipline === 'ALL' || tag.disciplines.code === activeDiscipline
-  )
+  const filtered = useMemo(() => {
+    return subsystemFilteredTags.filter(tag => {
+      if (activeDiscipline !== 'ALL' && tag.disciplines.code !== activeDiscipline) return false
+      if (search) {
+        const q = search.toLowerCase()
+        if (!tag.tag_number.toLowerCase().includes(q) && !(tag.description ?? '').toLowerCase().includes(q)) return false
+      }
+      return true
+    })
+  }, [subsystemFilteredTags, activeDiscipline, search])
 
-  // Subsystem name for banner
+  const filteredIds = useMemo(() => new Set(filtered.map(t => t.id)), [filtered])
+  const allFilteredSelected = filtered.length > 0 && filtered.every(t => selected.has(t.id))
+
   const subsystemName = subsystemFilter
     ? tags.find(tag => tag.subsystems?.id === subsystemFilter)?.subsystems?.name ?? subsystemFilter
     : null
 
-  // Show P&ID column only if at least one tag in the filtered set has a P&ID value
   const showPid = filtered.some(tag => tag.pid_drawing)
 
   const activeDisc = activeDiscipline !== 'ALL'
     ? disciplines.find(d => d.code === activeDiscipline)
     : undefined
 
+  // ── Bulk helpers ──────────────────────────────────────────────────────
+  function toggleRow(id: string) {
+    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  function toggleAll() {
+    if (allFilteredSelected) {
+      setSelected(prev => { const n = new Set(prev); filteredIds.forEach(id => n.delete(id)); return n })
+    } else {
+      setSelected(prev => { const n = new Set(prev); filteredIds.forEach(id => n.add(id)); return n })
+    }
+  }
+
+  function clearSelection() { setSelected(new Set()); setBulkStatus(''); setBulkError(null) }
+
+  function applyBulk() {
+    if (!bulkStatus || !selected.size) return
+    setBulkError(null)
+    startTransition(async () => {
+      const res = await bulkUpdateTagStatus([...selected], bulkStatus)
+      if (res.error) { setBulkError(res.error); return }
+      clearSelection()
+      router.refresh()
+    })
+  }
+
   const STATUS_LABELS: Record<string, string> = {
     not_started: t('status.not_started'),
     in_progress:  t('status.in_progress'),
     complete:     t('status.complete'),
+    completed:    t('status.completed'),
+    on_hold:      t('status.on_hold'),
   }
 
   return (
     <div>
       {/* Discipline filter tabs + import button */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <FilterTab
             label={t('list.all')}
@@ -111,7 +162,6 @@ export default function TagsView({
           ))}
         </div>
 
-        {/* Per-discipline import button */}
         {canEdit && (
           <a
             href={
@@ -132,23 +182,65 @@ export default function TagsView({
         )}
       </div>
 
-      {/* Subsystem filter banner */}
+      {/* Search bar */}
+      <div style={{ marginBottom: '12px' }}>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder={t('list.search')}
+          style={{ width: '280px', maxWidth: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+        />
+      </div>
+
+      {/* Subsystem banner */}
       {subsystemName && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 14px', marginBottom: '12px',
-          background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px',
-          fontSize: '13px', color: '#1d4ed8',
-        }}>
-          <span>
-            {t('list.filterBanner', { name: subsystemName, count: subsystemFilteredTags.length })}
-          </span>
-          <a
-            href={`/projects/${projectId}/tags`}
-            style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}
-          >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', marginBottom: '12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', fontSize: '13px', color: '#1d4ed8' }}>
+          <span>{t('list.filterBanner', { name: subsystemName, count: subsystemFilteredTags.length })}</span>
+          <a href={`/projects/${projectId}/tags`} style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
             {t('list.clearFilter')}
           </a>
+        </div>
+      )}
+
+      {/* Bulk toolbar */}
+      {selected.size > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '12px 16px', marginBottom: '12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', flexShrink: 0 }}>
+            {t('list.bulkSelected', { count: selected.size })}
+          </span>
+          <select
+            value={bulkStatus}
+            onChange={e => setBulkStatus(e.target.value)}
+            disabled={isPending}
+            style={{ padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'white' }}
+          >
+            <option value="">{t('list.bulkChangeStatus')}</option>
+            {TAG_STATUS_KEYS.map(k => (
+              <option key={k} value={k}>{STATUS_LABELS[k]}</option>
+            ))}
+          </select>
+          <button
+            onClick={applyBulk}
+            disabled={!bulkStatus || isPending}
+            style={{
+              padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
+              background: bulkStatus && !isPending ? '#0369a1' : '#e2e8f0',
+              color: bulkStatus && !isPending ? 'white' : '#94a3b8',
+              cursor: bulkStatus && !isPending ? 'pointer' : 'default',
+            }}
+          >
+            {t('list.bulkApply')}
+          </button>
+          <button
+            onClick={clearSelection}
+            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: '#64748b', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+          >
+            {t('list.bulkDeselect')}
+          </button>
+          {bulkError && (
+            <span style={{ fontSize: '12px', color: '#ef4444', background: '#fee2e2', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
+          )}
         </div>
       )}
 
@@ -161,6 +253,14 @@ export default function TagsView({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                <th style={{ padding: '10px 16px', width: '36px' }}>
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleAll}
+                    style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                  />
+                </th>
                 <Th>{t('list.colIndex')}</Th>
                 <Th>{t('list.colTag')}</Th>
                 <Th>{t('list.colDescription')}</Th>
@@ -180,15 +280,25 @@ export default function TagsView({
                 const hier   = [area?.code, sys?.code, sub?.code].filter(Boolean).join(' › ')
                 const d      = tag.disciplines
                 const maker  = [tag.manufacturer, tag.model].filter(Boolean).join(' · ')
+                const isChecked = selected.has(tag.id)
 
                 return (
                   <tr
                     key={tag.id}
                     onClick={() => router.push(`/projects/${projectId}/tags/${tag.id}`)}
-                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.1s', cursor: 'pointer' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#f8faff')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.1s', cursor: 'pointer', background: isChecked ? '#eff6ff' : 'transparent' }}
+                    onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8faff' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isChecked ? '#eff6ff' : 'transparent' }}
                   >
+                    <td style={{ padding: '12px 16px', width: '36px' }} onClick={e => { e.stopPropagation(); toggleRow(tag.id) }}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleRow(tag.id)}
+                        onClick={e => e.stopPropagation()}
+                        style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                      />
+                    </td>
                     <td style={tdStyle}>
                       <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{i + 1}</span>
                     </td>
@@ -219,11 +329,8 @@ export default function TagsView({
                               target="_blank"
                               rel="noopener noreferrer"
                               title={t('list.openPid')}
-                              style={{
-                                fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace',
-                                background: '#eff6ff', padding: '2px 8px', borderRadius: '5px',
-                                textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px',
-                              }}
+                              onClick={e => e.stopPropagation()}
+                              style={{ fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace', background: '#eff6ff', padding: '2px 8px', borderRadius: '5px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                             >
                               {tag.pid_drawing}
                               <span style={{ opacity: 0.6, fontSize: '10px' }}>↗</span>

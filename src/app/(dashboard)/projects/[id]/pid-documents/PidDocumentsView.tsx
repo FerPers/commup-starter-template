@@ -450,7 +450,7 @@ function UploadForm({
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="Sistema de Crudo - General"
+            placeholder={t('upload.fieldTitlePlaceholder')}
             style={inputStyle}
           />
         </div>

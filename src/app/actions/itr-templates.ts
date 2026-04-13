@@ -158,6 +158,8 @@ export interface ItemPayload {
   acceptance_max?: number | null
   acceptance_text?: string | null
   order_index: number
+  condition_item_id?: string | null
+  condition_value?: string | null
 }
 
 export async function createItem(
@@ -217,6 +219,152 @@ export async function reorderItems(
     ctx.supabase.from('itr_template_items').update({ order_index: u.order_index }).eq('id', u.id)
   ))
   return {}
+}
+
+// ── Publish new template version ─────────────────────────────────
+
+export async function publishTemplateVersion(
+  templateId: string,
+): Promise<{ newTemplateId?: string; bumpedInPlace?: boolean; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'Sin permisos' }
+
+  // Load current template (org check)
+  const { data: tpl } = await ctx.supabase
+    .from('itr_templates')
+    .select(`
+      id, org_id, code, title, description, phase_id, discipline_id,
+      version, is_active, is_global,
+      itr_template_sections(
+        id, title, order_index,
+        itr_template_items(
+          id, item_number, description, description_es, item_type,
+          is_required, is_critical, requires_photo, requires_measurement,
+          unit, acceptance_min, acceptance_max, acceptance_text, options, order_index,
+          condition_item_id, condition_value
+        )
+      )
+    `)
+    .eq('id', templateId)
+    .eq('org_id', ctx.orgId)
+    .single()
+
+  if (!tpl) return { error: 'Template no encontrado' }
+
+  // Check if any ITRs are already assigned to this template
+  const { count: itrCount } = await ctx.supabase
+    .from('itrs')
+    .select('*', { count: 'exact', head: true })
+    .eq('template_id', templateId)
+
+  // No ITRs assigned → bump version in place (no copy needed)
+  if (!itrCount) {
+    const { error } = await ctx.supabase
+      .from('itr_templates')
+      .update({ version: tpl.version + 1 })
+      .eq('id', templateId)
+    if (error) return { error: error.message }
+    revalidatePath(`/admin/templates/${templateId}`)
+    return { newTemplateId: templateId, bumpedInPlace: true }
+  }
+
+  // ITRs exist → create a new template copy with version+1
+  const { data: newTpl, error: tplErr } = await ctx.supabase
+    .from('itr_templates')
+    .insert({
+      org_id: ctx.orgId,
+      code: tpl.code,
+      title: tpl.title,
+      description: tpl.description,
+      phase_id: tpl.phase_id,
+      discipline_id: tpl.discipline_id,
+      version: tpl.version + 1,
+      is_active: true,
+      is_global: tpl.is_global,
+    })
+    .select('id')
+    .single()
+
+  if (tplErr || !newTpl) return { error: tplErr?.message ?? 'Error al crear versión' }
+
+  // Mark old template inactive
+  await ctx.supabase
+    .from('itr_templates')
+    .update({ is_active: false })
+    .eq('id', templateId)
+
+  // Sort sections by order_index
+  const sections = [...tpl.itr_template_sections].sort((a, b) => a.order_index - b.order_index)
+
+  // Copy sections + items; build old→new item id map for condition_item_id remapping
+  const itemIdMap = new Map<string, string>()
+
+  for (const sec of sections) {
+    const { data: newSec, error: secErr } = await ctx.supabase
+      .from('itr_template_sections')
+      .insert({ template_id: newTpl.id, title: sec.title, order_index: sec.order_index })
+      .select('id')
+      .single()
+
+    if (secErr || !newSec) continue
+
+    const items = [...sec.itr_template_items].sort((a, b) => a.order_index - b.order_index)
+    if (items.length === 0) continue
+
+    // Insert items without condition_item_id first (to get new IDs)
+    const rows = items.map(it => ({
+      section_id: newSec.id,
+      template_id: newTpl.id,
+      item_number: it.item_number,
+      description: it.description,
+      description_es: it.description_es,
+      item_type: it.item_type,
+      is_required: it.is_required,
+      is_critical: it.is_critical,
+      requires_photo: it.requires_photo,
+      requires_measurement: it.requires_measurement,
+      unit: it.unit,
+      acceptance_min: it.acceptance_min,
+      acceptance_max: it.acceptance_max,
+      acceptance_text: it.acceptance_text,
+      options: it.options,
+      order_index: it.order_index,
+      condition_value: it.condition_value,
+      // condition_item_id will be patched after all items are inserted
+    }))
+
+    const { data: newItems } = await ctx.supabase
+      .from('itr_template_items')
+      .insert(rows)
+      .select('id, order_index')
+
+    if (newItems) {
+      items.forEach((oldItem, idx) => {
+        const newItem = newItems.find(ni => ni.order_index === idx)
+        if (newItem) itemIdMap.set(oldItem.id, newItem.id)
+      })
+    }
+  }
+
+  // Patch condition_item_id using the id map
+  for (const sec of sections) {
+    for (const oldItem of sec.itr_template_items) {
+      if (!oldItem.condition_item_id) continue
+      const newItemId = itemIdMap.get(oldItem.id)
+      const newCondId = itemIdMap.get(oldItem.condition_item_id)
+      if (newItemId && newCondId) {
+        await ctx.supabase
+          .from('itr_template_items')
+          .update({ condition_item_id: newCondId })
+          .eq('id', newItemId)
+      }
+    }
+  }
+
+  revalidatePath('/admin/templates')
+  revalidatePath(`/admin/templates/${templateId}`)
+  revalidatePath(`/admin/templates/${newTpl.id}`)
+  return { newTemplateId: newTpl.id }
 }
 
 // ── Bulk import from Excel ─────────────────────────────────────

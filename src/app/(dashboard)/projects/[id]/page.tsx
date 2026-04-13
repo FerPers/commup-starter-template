@@ -21,7 +21,18 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
   const canDelete = membership.role === 'owner'
 
-  const [{ data: project }, { data: phases }, { data: disciplines }, { count: tagCount }, { data: itrCounts }, { data: punchCounts }, { data: certCounts }] = await Promise.all([
+  const [
+    { data: project },
+    { data: phases },
+    { data: disciplines },
+    { count: tagCount },
+    { data: itrCounts },
+    { data: punchCounts },
+    { data: certCounts },
+    { count: signalCount },
+    { count: loopCount },
+    { count: interlockCount },
+  ] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name, code, location, client, start_date, end_date, status, created_at')
@@ -52,6 +63,18 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     supabase
       .from('certificates')
       .select('id, status')
+      .eq('project_id', id),
+    supabase
+      .from('signals')
+      .select('id', { count: 'exact', head: true })
+      .eq('tags.project_id', id),
+    supabase
+      .from('loops')
+      .select('id', { count: 'exact', head: true })
+      .eq('project_id', id),
+    supabase
+      .from('interlocks')
+      .select('id', { count: 'exact', head: true })
       .eq('project_id', id),
   ])
 
@@ -204,13 +227,54 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Lista de Señales I&C</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>AI/AO/DI/DO con rango, alarmas, P&IDs (Fases B/C)</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                  {(signalCount ?? 0) > 0
+                    ? <span style={{ color: '#10b981', fontWeight: 500 }}>{signalCount} señales importadas</span>
+                    : 'AI/AO/DI/DO con rango, alarmas, P&IDs (Fases B/C)'}
+                </div>
               </div>
-              {canEdit && (
-                <a href={`/projects/${project.id}/import-signals`} style={{ padding: '6px 14px', background: '#10b981', color: 'white', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                  Importar
-                </a>
-              )}
+              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                {(signalCount ?? 0) > 0 && (
+                  <a href={`/projects/${project.id}/signals`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    Ver señales →
+                  </a>
+                )}
+                {canEdit && (
+                  <a href={`/projects/${project.id}/import-signals`} style={{ padding: '6px 14px', background: '#10b981', color: 'white', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    {(signalCount ?? 0) > 0 ? 'Importar más' : 'Importar'}
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Loops */}
+            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Loops de Control</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                  {(loopCount ?? 0) > 0
+                    ? <span style={{ color: '#8b5cf6', fontWeight: 500 }}>{loopCount} loops</span>
+                    : 'Lazos de control agrupados por subsistema'}
+                </div>
+              </div>
+              <a href={`/projects/${project.id}/loops`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Ver →
+              </a>
+            </div>
+
+            {/* Interlocks */}
+            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Interlocks / SIS</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                  {(interlockCount ?? 0) > 0
+                    ? <span style={{ color: '#ef4444', fontWeight: 500 }}>{interlockCount} interlocks</span>
+                    : 'Causa → efecto, set point y acción de seguridad'}
+                </div>
+              </div>
+              <a href={`/projects/${project.id}/interlocks`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Ver →
+              </a>
             </div>
 
           </div>
