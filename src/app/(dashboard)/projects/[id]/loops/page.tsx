@@ -48,7 +48,8 @@ export default async function LoopsPage({ params }: { params: Promise<{ id: stri
     <LoopsView
       projectId={project.id}
       projectName={project.name}
-      loops={loops ?? []}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      loops={(loops ?? []) as any}
     />
   )
 }
