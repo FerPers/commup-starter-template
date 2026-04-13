@@ -437,7 +437,7 @@ function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) 
     try {
       const res = await fetch(`/api/admin/export?projectId=${selectedProject}`)
       if (!res.ok) {
-        const err = await res.json()
+        const err = await res.json() as { error?: string }
         alert(err.error ?? 'Export failed')
         return
       }
