@@ -48,7 +48,7 @@ export default async function AuditLogPage({
     .eq('org_id', orgId)
 
   const users = (members ?? []).flatMap(m => {
-    const p = m.profiles as { id: string; full_name: string } | null
+    const p = m.profiles as unknown as { id: string; full_name: string } | null
     return p ? [{ id: p.id, full_name: p.full_name }] : []
   })
 
