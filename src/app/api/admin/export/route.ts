@@ -64,23 +64,28 @@ export async function GET(req: NextRequest) {
 
   const wb = XLSX.utils.book_new()
 
+  type WithCode = { code: string } | null
+  type WithName = { name: string } | null
+  type WithTagNumber = { tag_number: string } | null
+  type WithCodeTitle = { code: string; title: string } | null
+
   // ── Tags sheet ──────────────────────────────────────────────
   const tagsRows = (tags ?? []).map(t => ({
     'Tag Number': t.tag_number,
     Description: t.description ?? '',
     Status: t.status,
-    Subsystem: (t.subsystems as { code: string } | null)?.code ?? '',
-    Discipline: (t.disciplines as { code: string } | null)?.code ?? '',
-    'Equipment Type': (t.equipment_types as { name: string } | null)?.name ?? '',
+    Subsystem: (t.subsystems as unknown as WithCode)?.code ?? '',
+    Discipline: (t.disciplines as unknown as WithCode)?.code ?? '',
+    'Equipment Type': (t.equipment_types as unknown as WithName)?.name ?? '',
   }))
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tagsRows), 'Tags')
 
   // ── ITRs sheet ──────────────────────────────────────────────
   const itrsRows = (itrs ?? []).map(i => ({
     'ITR Number': i.itr_number,
-    Template: (i.itr_templates as { code: string; title: string } | null)?.code ?? '',
-    'Template Title': (i.itr_templates as { code: string; title: string } | null)?.title ?? '',
-    Tag: (i.tags as { tag_number: string } | null)?.tag_number ?? '',
+    Template: (i.itr_templates as unknown as WithCodeTitle)?.code ?? '',
+    'Template Title': (i.itr_templates as unknown as WithCodeTitle)?.title ?? '',
+    Tag: (i.tags as unknown as WithTagNumber)?.tag_number ?? '',
     Status: i.status,
     'Progress %': i.progress_pct,
     'Scheduled Date': i.scheduled_date ?? '',
@@ -94,7 +99,7 @@ export async function GET(req: NextRequest) {
     Description: p.description,
     Status: p.status,
     Priority: p.priority ?? '',
-    Tag: (p.tags as { tag_number: string } | null)?.tag_number ?? '',
+    Tag: (p.tags as unknown as WithTagNumber)?.tag_number ?? '',
     'Raised At': p.raised_at ? new Date(p.raised_at).toLocaleDateString() : '',
     'Closed Date': p.closed_date ?? '',
   }))
@@ -102,8 +107,8 @@ export async function GET(req: NextRequest) {
 
   // ── Preservation sheet ──────────────────────────────────────
   const preservRows = (preservation ?? []).map(p => ({
-    Tag: (p.tags as { tag_number: string } | null)?.tag_number ?? '',
-    Procedure: (p.procedures as { name: string } | null)?.name ?? '',
+    Tag: (p.tags as unknown as WithTagNumber)?.tag_number ?? '',
+    Procedure: (p.procedures as unknown as WithName)?.name ?? '',
     Status: p.status,
     Frequency: p.frequency,
     'Next Due Date': p.next_due_date ?? '',
@@ -116,7 +121,7 @@ export async function GET(req: NextRequest) {
     Title: c.title,
     Status: c.status,
     'Issued Date': c.issued_date ?? '',
-    Subsystem: (c.subsystems as { code: string } | null)?.code ?? '',
+    Subsystem: (c.subsystems as unknown as WithCode)?.code ?? '',
   }))
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(certRows), 'Certificates')
 
