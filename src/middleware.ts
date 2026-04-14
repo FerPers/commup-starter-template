@@ -8,7 +8,7 @@ const PUBLIC_EXACT = ['/']
 // Static asset extensions — bypass entirely
 const STATIC_RE = /\.(?:ico|png|jpg|jpeg|svg|webp|woff2?|mjs|js|css|map)$/i
 
-export async function proxy(request: NextRequest): Promise<NextResponse> {
+export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
 
   // Let static assets through without touching cookies
@@ -36,7 +36,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // Write cookies to both the mutated request and the final response
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
@@ -71,7 +70,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   return response
 }
 
-// Next.js picks this up as the middleware matcher
 export const config = {
   matcher: [
     /*
