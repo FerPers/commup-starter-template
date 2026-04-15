@@ -45,7 +45,7 @@ interface PushNotificationManagerProps {
 
 // ─── VAPID public key (generada en Cloudflare Dashboard) ──────────────────
 // En producción: cargar desde env o config endpoint
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BExample-VAPID-Public-Key-Replace-In-Production';
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BExample-VAPID-Public-Key-Replace-In-Production';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -101,11 +101,11 @@ export function usePushNotifications(userId: string) {
       // 3. Crear subscription con VAPID
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
       });
 
       // 4. Construir record
-      const subJSON = subscription.toJSON();
+      void subscription.toJSON();
       const record: PushSubscriptionRecord = {
         user_id: userId,
         endpoint: subscription.endpoint,

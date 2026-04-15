@@ -336,7 +336,7 @@ export function useSyncConflictResolution({
         });
 
         if (response.ok) {
-          const result = await response.json();
+          const result = await response.json() as { server_version: number; server_updated_at: string };
 
           // 4. Actualizar caché de versión
           await dbPut(db, 'version_cache', {

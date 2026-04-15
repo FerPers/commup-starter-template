@@ -9,7 +9,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 interface ScanResult {
@@ -205,7 +205,7 @@ function useQRScan(
 
 // ─── Componente Principal ──────────────────────────────────────────────────
 export default function QRNFCScanner() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const QR_CONTAINER_ID = 'commup-qr-container';
 
   const [mode, setMode] = useState<ScanMode>('QR');
@@ -241,8 +241,8 @@ export default function QRNFCScanner() {
     });
 
     // Navegar a tag_360 después de 300ms (feedback visual primero)
-    setTimeout(() => navigate(`/tag_360/${result.tag_id}`), 300);
-  }, [navigate]);
+    setTimeout(() => router.push(`/tag_360/${result.tag_id}`), 300);
+  }, [router]);
 
   const handleError = useCallback((err: string) => {
     setError(err);
@@ -284,7 +284,7 @@ export default function QRNFCScanner() {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => router.back()}
           className="p-2 rounded-lg hover:bg-slate-800 transition"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -470,7 +470,7 @@ export default function QRNFCScanner() {
                     key={i}
                     onClick={() => {
                       setShowHistory(false);
-                      navigate(`/tag_360/${scan.tag_id}`);
+                      router.push(`/tag_360/${scan.tag_id}`);
                     }}
                     className="flex items-center gap-3 p-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition text-left"
                   >

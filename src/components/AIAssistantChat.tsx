@@ -82,11 +82,11 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
       });
 
       if (!response.ok) {
-        const err = await response.json();
+        const err = await response.json() as { error?: string };
         throw new Error(err.error || `HTTP ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as { answer: string };
 
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== 'loading'),
@@ -254,7 +254,7 @@ function markdownToHTML(text: string): string {
     .replace(/^## (.+)$/gm, '<h2 class="font-bold text-sky-300 mt-4 mb-2 text-base">$1</h2>')
     .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc text-slate-300">$1</li>')
     .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal text-slate-300">$1</li>')
-    .replace(/(<li.*<\/li>)+/gs, '<ul class="my-2 space-y-1">$&</ul>')
+    .replace(/(<li[\s\S]*?<\/li>)+/gm, '<ul class="my-2 space-y-1">$&</ul>')
     .replace(/\n{2,}/g, '</p><p class="mt-2">')
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>').replace(/$/, '</p>');
