@@ -30,6 +30,7 @@
       "punchList": "Punch List",
       "preservation": "Preservation",
       "workPlans": "Work Plans",
+      "controlTower": "Control Tower",
       "certificates": "Certificates",
       "kpis": "KPIs",
       "itrTemplates": "ITR Templates",
@@ -37,7 +38,9 @@
       "pssrTemplates": "PSSR Templates",
       "users": "Users",
       "config": "Configuration",
+      "workflows": "Workflows",
       "auditLog": "Audit Log",
+      "twin": "Digital Twin",
       "explorer": "Explorer",
       "pssr": "PSSR"
     },
@@ -1272,6 +1275,33 @@
         "setPoint": "Set Point",
         "action": "Action"
       }
+    }
+  },
+  "ControlTower": {
+    "title": "Control Tower",
+    "subtitle": "System readiness for completion milestones",
+    "project": "Project",
+    "load": "Load",
+    "empty": "No systems found for this project",
+    "selectProject": "Select a project to view readiness",
+    "approved": "approved",
+    "noBlockers": "Ready",
+    "kpi": {
+      "systems": "Systems",
+      "avgItr": "Avg ITR {pct}%",
+      "readyMc": "Ready for MC",
+      "readyRfsu": "Ready for RFSU",
+      "punchesOpen": "Open Punches"
+    },
+    "col": {
+      "area": "Area",
+      "system": "System",
+      "itrs": "ITR Progress",
+      "punchA": "Cat A",
+      "punchB": "Cat B",
+      "punchC": "Cat C",
+      "gates": "Gates",
+      "topBlocker": "Top Blocker"
     }
   }
 }

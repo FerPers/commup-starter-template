@@ -30,6 +30,7 @@
       "punchList": "Punch List",
       "preservation": "Preservación",
       "workPlans": "Planes de Trabajo",
+      "controlTower": "Control Tower",
       "certificates": "Certificados",
       "kpis": "KPIs",
       "itrTemplates": "Templates ITR",
@@ -37,7 +38,9 @@
       "pssrTemplates": "Templates PSSR",
       "users": "Usuarios",
       "config": "Configuración",
+      "workflows": "Workflows",
       "auditLog": "Log de Auditoría",
+      "twin": "Digital Twin",
       "explorer": "Explorador",
       "pssr": "PSSR"
     },
@@ -1272,6 +1275,33 @@
         "setPoint": "Set Point",
         "action": "Acción"
       }
+    }
+  },
+  "ControlTower": {
+    "title": "Torre de Control",
+    "subtitle": "Preparación de sistemas para hitos de completion",
+    "project": "Proyecto",
+    "load": "Cargar",
+    "empty": "No hay sistemas para este proyecto",
+    "selectProject": "Selecciona un proyecto para ver readiness",
+    "approved": "aprobados",
+    "noBlockers": "Listo",
+    "kpi": {
+      "systems": "Sistemas",
+      "avgItr": "ITR promedio {pct}%",
+      "readyMc": "Listos para MC",
+      "readyRfsu": "Listos para RFSU",
+      "punchesOpen": "Punches Abiertos"
+    },
+    "col": {
+      "area": "Área",
+      "system": "Sistema",
+      "itrs": "Progreso ITR",
+      "punchA": "Cat A",
+      "punchB": "Cat B",
+      "punchC": "Cat C",
+      "gates": "Gates",
+      "topBlocker": "Blocker Principal"
     }
   }
 }

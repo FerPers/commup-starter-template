@@ -1,0 +1,49 @@
+[
+  {
+    "ActivityId":       "A1000",
+    "ActivityName":     "Install & Check PSV-7621001",
+    "WBSCode":          "PROC.INST.SV",
+    "PlannedStartDate": "2024-03-01",
+    "PlannedFinishDate":"2024-03-15",
+    "ActualStartDate":  "2024-03-02",
+    "ActualFinishDate": null,
+    "DurationHours":    80,
+    "Status":           "In Progress",
+    "TagNumber":        "PSV-7621001"
+  },
+  {
+    "ActivityId":       "A1010",
+    "ActivityName":     "ITR IW-01 Execution — ESDV-7621001",
+    "WBSCode":          "PROC.INST.ESD",
+    "PlannedStartDate": "2024-03-05",
+    "PlannedFinishDate":"2024-03-20",
+    "ActualStartDate":  null,
+    "ActualFinishDate": null,
+    "DurationHours":    48,
+    "Status":           "Not Started",
+    "TagNumber":        "ESDV-7621001"
+  },
+  {
+    "ActivityId":       "A1020",
+    "ActivityName":     "Loop Check — ZSO-7621001",
+    "WBSCode":          "PROC.INST.LOOP",
+    "PlannedStartDate": "2024-03-10",
+    "PlannedFinishDate":"2024-03-12",
+    "ActualStartDate":  "2024-03-10",
+    "ActualFinishDate": "2024-03-12",
+    "DurationHours":    16,
+    "Status":           "Completed",
+    "TagNumber":        "ZSO-7621001"
+  },
+  {
+    "ActivityId":       "A1030",
+    "ActivityName":     "Pre-commissioning — Separator Package",
+    "WBSCode":          "PROC.PRECOM.SEP",
+    "PlannedStartDate": "2024-04-01",
+    "PlannedFinishDate":"2024-04-30",
+    "ActualStartDate":  null,
+    "ActualFinishDate": null,
+    "DurationHours":    320,
+    "Status":           "Not Started"
+  }
+]

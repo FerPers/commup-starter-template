@@ -50,6 +50,7 @@ const navItems = [
   {
     groupKey: 'control',
     items: [
+      { href: '/control-tower', labelKey: 'controlTower', icon: '◍' },
       { href: '/certificates', labelKey: 'certificates', icon: '◎' },
       { href: '/kpis', labelKey: 'kpis', icon: '▲' },
     ],
@@ -62,6 +63,7 @@ const navItems = [
       { href: '/admin/templates/pssr', labelKey: 'pssrTemplates', icon: '🛡' },
       { href: '/admin/users', labelKey: 'users', icon: '◯' },
       { href: '/admin/config', labelKey: 'config', icon: '⚙' },
+      { href: '/admin/workflows', labelKey: 'workflows', icon: '⚡' },
       { href: '/admin/audit', labelKey: 'auditLog', icon: '◑' },
     ],
   },
@@ -130,6 +132,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
               {t('groups.project')}
             </div>
             {[
+              { href: `/projects/${currentProjectId}/twin`, labelKey: 'twin', icon: '🔷' },
               { href: `/projects/${currentProjectId}/explorer`, labelKey: 'explorer', icon: '◧' },
               { href: `/projects/${currentProjectId}/work-plans`, labelKey: 'workPlans', icon: '▦' },
               { href: `/projects/${currentProjectId}/pssr`, labelKey: 'pssr', icon: '🛡' },

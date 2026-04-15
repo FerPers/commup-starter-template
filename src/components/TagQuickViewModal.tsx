@@ -139,18 +139,32 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
           </div>
 
           {/* CTA */}
-          <a
-            href={`/projects/${projectId}/tags/${tag.id}`}
-            style={{
-              display: 'block', textAlign: 'center',
-              padding: '9px 16px',
-              background: '#0f172a', color: 'white',
-              borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-              textDecoration: 'none',
-            }}
-          >
-            Ver detalle completo →
-          </a>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <a
+              href={`/projects/${projectId}/twin?tag=${tag.id}`}
+              style={{
+                flex: 1, textAlign: 'center',
+                padding: '9px 12px',
+                background: '#eff6ff', color: '#2563eb',
+                borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                textDecoration: 'none', border: '1px solid #bfdbfe',
+              }}
+            >
+              🔷 Digital Twin
+            </a>
+            <a
+              href={`/projects/${projectId}/tags/${tag.id}`}
+              style={{
+                flex: 1, textAlign: 'center',
+                padding: '9px 12px',
+                background: '#0f172a', color: 'white',
+                borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                textDecoration: 'none',
+              }}
+            >
+              Ver detalle →
+            </a>
+          </div>
         </div>
       </div>
     </div>
