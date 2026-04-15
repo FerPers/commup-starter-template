@@ -28,18 +28,39 @@ export default async function AuditLogPage({
   const offset = page * PAGE_SIZE
 
   let query = supabase
-    .from('activity_log')
-    .select('*, profiles(full_name)', { count: 'exact' })
+    .from('domain_events')
+    .select('id, aggregate_type, aggregate_id, event_type, payload, occurred_at, actor_id, profiles:actor_id(full_name)', { count: 'exact' })
     .eq('org_id', orgId)
-    .order('created_at', { ascending: false })
+    .order('occurred_at', { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1)
 
-  if (params.entityType) query = query.eq('entity_type', params.entityType)
-  if (params.userId) query = query.eq('user_id', params.userId)
-  if (params.from) query = query.gte('created_at', params.from)
-  if (params.to) query = query.lte('created_at', params.to + 'T23:59:59Z')
+  if (params.entityType) query = query.eq('aggregate_type', params.entityType)
+  if (params.userId) query = query.eq('actor_id', params.userId)
+  if (params.from) query = query.gte('occurred_at', params.from)
+  if (params.to) query = query.lte('occurred_at', params.to + 'T23:59:59Z')
 
-  const { data: logs, count } = await query
+  const { data: events, count } = await query
+
+  type DomainEventRow = {
+    id: string
+    aggregate_type: string
+    aggregate_id: string | null
+    event_type: string
+    payload: Record<string, unknown> | null
+    occurred_at: string
+    actor_id: string | null
+    profiles: { full_name: string } | null
+  }
+
+  const logs = ((events ?? []) as unknown as DomainEventRow[]).map(e => ({
+    id: e.id,
+    entity_type: e.aggregate_type,
+    entity_id: e.aggregate_id,
+    action: e.event_type.includes('.') ? e.event_type.split('.').slice(1).join('.') : e.event_type,
+    payload: e.payload,
+    created_at: e.occurred_at,
+    profiles: e.profiles,
+  }))
 
   // Fetch distinct users for filter dropdown
   const { data: members } = await supabase
@@ -54,7 +75,7 @@ export default async function AuditLogPage({
 
   return (
     <AuditLogView
-      logs={logs ?? []}
+      logs={logs}
       total={count ?? 0}
       page={page}
       pageSize={PAGE_SIZE}

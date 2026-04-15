@@ -226,7 +226,8 @@ export default function ItrExecution({
     })) ?? []
 
   const allItems = sections.flatMap(s => s.itr_template_items)
-  const criticalBlocked = allItems.filter(
+  const visibleItems = allItems.filter(item => isItemVisible(item, responses))
+  const criticalBlocked = visibleItems.filter(
     item => item.is_critical && responses[item.id]?.is_passed === false,
   )
   const executor = itr.itr_assignments.find(a => a.role === 'executor')

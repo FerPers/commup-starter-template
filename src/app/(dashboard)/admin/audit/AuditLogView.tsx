@@ -16,17 +16,15 @@ type LogEntry = {
 
 type User = { id: string; full_name: string }
 
-const ENTITY_TYPES = ['certificate', 'itr', 'punch', 'user', 'pssr']
+const ENTITY_TYPES = [
+  'tags', 'itrs', 'punches', 'certificates',
+  'systems', 'subsystems', 'loops', 'interlocks', 'signals',
+]
 
 const ACTION_COLORS: Record<string, string> = {
-  issued: '#10b981',
-  approved: '#3b82f6',
-  closed: '#10b981',
-  invited: '#8b5cf6',
-  role_updated: '#f59e0b',
-  removed: '#ef4444',
-  revoked: '#ef4444',
-  rejected: '#ef4444',
+  created: '#10b981',
+  updated: '#3b82f6',
+  deleted: '#ef4444',
 }
 
 export default function AuditLogView({

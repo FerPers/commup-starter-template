@@ -1,39 +1,127 @@
 {
-  "name": "CommUp",
-  "short_name": "CommUp",
-  "description": "Commissioning & Completion Management System",
-  "start_url": "/dashboard",
+  "name": "CommUP — Execution Backbone",
+  "short_name": "CommUP",
+  "description": "Commissioning & Completions Management — Field Execution PWA",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#0f172a",
-  "theme_color": "#7c3aed",
+  "theme_color": "#0ea5e9",
   "lang": "es",
-  "categories": ["productivity", "utilities"],
+  "dir": "ltr",
+  "categories": ["business", "utilities", "productivity"],
   "icons": [
     {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-maskable.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
     }
   ],
-  "screenshots": [],
-  "shortcuts": [
+  "screenshots": [
     {
-      "name": "Dashboard",
-      "url": "/dashboard",
-      "description": "Panel principal"
+      "src": "/screenshots/field-capture.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Campo: Captura ITR con QR"
     },
     {
-      "name": "Proyectos",
-      "url": "/projects",
-      "description": "Lista de proyectos"
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard de Completions"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Escanear Tag",
+      "short_name": "Scan QR",
+      "description": "Escanear tag QR/NFC de equipo",
+      "url": "/scan",
+      "icons": [{ "src": "/icons/qr-shortcut.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Mis ITRs",
+      "short_name": "ITRs",
+      "description": "Ver ITRs asignados",
+      "url": "/itrs/assigned",
+      "icons": [{ "src": "/icons/itr-shortcut.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Punch List",
+      "short_name": "Punches",
+      "description": "Punch List activo",
+      "url": "/punches",
+      "icons": [{ "src": "/icons/punch-shortcut.png", "sizes": "96x96" }]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": ["image/*", "application/pdf"]
+        }
+      ]
+    }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "commup",
+      "url": "/handle?url=%s"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CommUP — Sin conexión</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a; color: #f8fafc; font-family: -apple-system, sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px;
+    }
+    .icon { font-size: 64px; }
+    h1 { font-size: 24px; font-weight: 700; text-align: center; }
+    p { color: #94a3b8; text-align: center; max-width: 320px; line-height: 1.6; }
+    .badge {
+      background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+      padding: 12px 20px; font-size: 14px; color: #64748b; text-align: center;
+    }
+    button {
+      background: #0ea5e9; color: white; border: none; border-radius: 12px;
+      padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer;
+    }
+    button:active { opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div class="icon">📡</div>
+  <h1>Sin conexión</h1>
+  <p>CommUP no puede conectarse al servidor. Sus datos de campo están guardados localmente y se sincronizarán automáticamente cuando vuelva la conexión.</p>
+  <div class="badge">
+    🔄 Datos pendientes de sync: <span id="pending">calculando...</span>
+  </div>
+  <button onclick="location.reload()">Reintentar conexión</button>
+  <script>
+    // Leer pending de IndexedDB
+    const req = indexedDB.open('commup-sync-v2', 2);
+    req.onsuccess = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('sync_queue')) { document.getElementById('pending').textContent = '0 items'; return; }
+      const tx = db.transaction('sync_queue', 'readonly');
+      const store = tx.objectStore('sync_queue');
+      const countReq = store.count();
+      countReq.onsuccess = () => {
+        const n = countReq.result;
+        document.getElementById('pending').textContent = n === 0 ? '0 items (todo sync)' : `${n} item${n > 1 ? 's' : ''} pendiente${n > 1 ? 's' : ''}`;
+      };
+    };
+  </script>
+</body>
+</html>
