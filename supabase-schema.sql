@@ -317,7 +317,9 @@ CREATE TABLE itr_template_items (
   acceptance_min        NUMERIC,
   acceptance_max        NUMERIC,
   acceptance_text       TEXT,
-  order_index           INTEGER NOT NULL
+  order_index           INTEGER NOT NULL,
+  condition_item_id     UUID REFERENCES itr_template_items(id) ON DELETE SET NULL,
+  condition_value       TEXT
 );
 
 -- ══════════════════════════════════════════════════════════════
@@ -408,6 +410,7 @@ CREATE TABLE punches (
   priority                punch_priority NOT NULL DEFAULT 'major',
   target_date             DATE,
   closed_date             DATE,
+  created_via             TEXT DEFAULT 'manual',            -- manual | workflow | import
   created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(project_id, punch_number)
 );
@@ -445,6 +448,8 @@ CREATE TABLE certificates (
   issued_by           UUID REFERENCES profiles(id),
   approved_by         UUID REFERENCES profiles(id),
   document_url        TEXT,
+  is_blocked          BOOLEAN NOT NULL DEFAULT FALSE,
+  block_reason        TEXT,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(project_id, certificate_number)
 );
@@ -621,6 +626,122 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_preservation_next_due
   AFTER INSERT ON preservation_records
   FOR EACH ROW EXECUTE FUNCTION update_preservation_next_due();
+
+-- ══════════════════════════════════════════════════════════════
+-- MODULE 11 — WORKFLOW ENGINE
+-- ══════════════════════════════════════════════════════════════
+
+CREATE TYPE workflow_action_type AS ENUM (
+  'block_certificate', 'notify_user', 'create_punch',
+  'change_system_state', 'webhook_call'
+);
+
+CREATE TABLE workflow_rules (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id              UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name                TEXT NOT NULL,
+  description         TEXT,
+  trigger_event       TEXT NOT NULL,
+  condition_jsonlogic JSONB NOT NULL DEFAULT '{}',
+  action_type         workflow_action_type NOT NULL,
+  action_payload      JSONB NOT NULL DEFAULT '{}',
+  priority            SMALLINT NOT NULL DEFAULT 100,
+  enabled             BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by          UUID REFERENCES profiles(id),
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_workflow_rules_org ON workflow_rules(org_id);
+CREATE INDEX idx_workflow_rules_trigger ON workflow_rules(org_id, trigger_event) WHERE enabled = TRUE;
+
+CREATE TABLE workflow_executions (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  rule_id         UUID NOT NULL REFERENCES workflow_rules(id) ON DELETE CASCADE,
+  event_id        UUID NOT NULL REFERENCES domain_events(id) ON DELETE CASCADE,
+  org_id          UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  matched         BOOLEAN NOT NULL,
+  action_result   JSONB,
+  error_message   TEXT,
+  executed_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_workflow_executions_rule ON workflow_executions(rule_id);
+CREATE INDEX idx_workflow_executions_org ON workflow_executions(org_id, executed_at DESC);
+
+-- RLS
+ALTER TABLE workflow_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workflow_executions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY workflow_rules_select ON workflow_rules FOR SELECT
+  USING (org_id IN (SELECT get_my_org_ids()));
+CREATE POLICY workflow_rules_insert ON workflow_rules FOR INSERT
+  WITH CHECK (is_org_editor(org_id));
+CREATE POLICY workflow_rules_update ON workflow_rules FOR UPDATE
+  USING (is_org_editor(org_id));
+CREATE POLICY workflow_rules_delete ON workflow_rules FOR DELETE
+  USING (is_org_editor(org_id));
+
+CREATE POLICY workflow_executions_select ON workflow_executions FOR SELECT
+  USING (org_id IN (SELECT get_my_org_ids()));
+
+-- Auto-update updated_at
+CREATE OR REPLACE FUNCTION tg_workflow_rules_updated_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN NEW.updated_at := NOW(); RETURN NEW; END; $$;
+
+CREATE TRIGGER trg_workflow_rules_updated_at
+  BEFORE UPDATE ON workflow_rules
+  FOR EACH ROW EXECUTE FUNCTION tg_workflow_rules_updated_at();
+
+-- ══════════════════════════════════════════════════════════════
+-- MODULE 11b — ALERTS (in-app notifications)
+-- ══════════════════════════════════════════════════════════════
+
+CREATE TYPE alert_severity AS ENUM ('info', 'warning', 'critical');
+
+CREATE TABLE alerts (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id          UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  project_id      UUID REFERENCES projects(id) ON DELETE CASCADE,
+  user_id         UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  role            TEXT,
+  severity        alert_severity NOT NULL DEFAULT 'info',
+  title           TEXT NOT NULL,
+  message         TEXT,
+  source_event_id UUID REFERENCES domain_events(id) ON DELETE SET NULL,
+  read            BOOLEAN NOT NULL DEFAULT FALSE,
+  read_at         TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_alerts_org ON alerts(org_id);
+CREATE INDEX idx_alerts_user ON alerts(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX idx_alerts_unread ON alerts(org_id, user_id) WHERE read = FALSE;
+
+ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY alerts_select ON alerts FOR SELECT
+  USING (org_id IN (SELECT get_my_org_ids()));
+CREATE POLICY alerts_update ON alerts FOR UPDATE
+  USING (user_id = auth.uid() OR org_id IN (SELECT get_my_org_ids()));
+CREATE POLICY alerts_delete ON alerts FOR DELETE
+  USING (is_org_editor(org_id));
+
+-- ══════════════════════════════════════════════════════════════
+-- HELPER — auto-generate punch_number
+-- ══════════════════════════════════════════════════════════════
+
+CREATE OR REPLACE FUNCTION generate_punch_number(p_project_id UUID)
+RETURNS TEXT LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $$
+DECLARE v_next INT;
+BEGIN
+  SELECT COALESCE(MAX(
+    CASE WHEN punch_number ~ '^\d+$' THEN punch_number::int ELSE 0 END
+  ), 0) + 1 INTO v_next
+  FROM punches WHERE project_id = p_project_id;
+  RETURN LPAD(v_next::text, 5, '0');
+END; $$;
 
 -- ══════════════════════════════════════════════════════════════
 -- SEED DATA — Default phases and disciplines for new orgs

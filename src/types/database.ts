@@ -419,6 +419,7 @@ export interface Punch {
   priority: PunchPriority
   target_date: string | null
   closed_date: string | null
+  created_via: string | null  // manual | workflow | import
   created_at: string
 }
 
@@ -453,6 +454,8 @@ export interface Certificate {
   issued_by: string | null
   approved_by: string | null
   document_url: string | null
+  is_blocked: boolean
+  block_reason: string | null
   created_at: string
 }
 
@@ -666,6 +669,61 @@ export interface ActivityLog {
   entity_id: string | null
   action: 'issued' | 'approved' | 'rejected' | 'revoked' | 'closed' | 'invited' | 'removed' | 'role_updated' | string
   payload: Json | null
+  created_at: string
+}
+
+// ── Module 12: Workflow Engine ──────────────────────���───────
+
+export type WorkflowActionType =
+  | 'block_certificate'
+  | 'notify_user'
+  | 'create_punch'
+  | 'change_system_state'
+  | 'webhook_call'
+
+export interface WorkflowRule {
+  id: string
+  org_id: string
+  name: string
+  description: string | null
+  trigger_event: string
+  condition_jsonlogic: Json
+  action_type: WorkflowActionType
+  action_payload: Json
+  priority: number
+  enabled: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface WorkflowExecution {
+  id: string
+  rule_id: string
+  event_id: string
+  org_id: string
+  matched: boolean
+  action_result: Json | null
+  error_message: string | null
+  executed_at: string
+}
+
+// ── Module 13: Alerts ───────────────────────────────────────
+
+export type AlertSeverity = 'info' | 'warning' | 'critical'
+
+export interface Alert {
+  id: string
+  org_id: string
+  project_id: string | null
+  user_id: string | null
+  role: string | null
+  severity: AlertSeverity
+  title: string
+  message: string | null
+  source_event_id: string | null
+  read: boolean
+  read_at: string | null
   created_at: string
 }
 
