@@ -114,6 +114,51 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         ))}
       </div>
 
+      {/* Digital Twin — hero entry */}
+      <a
+        href={`/projects/${project.id}/twin`}
+        style={{ textDecoration: 'none', display: 'block', marginBottom: '24px' }}
+      >
+        <div style={{
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #2563eb 100%)',
+          borderRadius: '14px', padding: '22px 26px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '20px', color: 'white',
+          boxShadow: '0 4px 14px rgba(37,99,235,0.25)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '18px', minWidth: 0 }}>
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '14px',
+              background: 'rgba(255,255,255,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '26px', flexShrink: 0,
+            }}>
+              🔷
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.2px' }}>
+                Digital Twin · Vista 360°
+              </div>
+              <div style={{ fontSize: '12.5px', color: '#cbd5e1', marginTop: '3px' }}>
+                Semáforo en tiempo real por tag — ITRs, punches, certs, preservation y P&ID
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+            <span style={{
+              marginLeft: '10px', padding: '7px 14px',
+              background: 'rgba(255,255,255,0.15)', borderRadius: '8px',
+              fontSize: '12.5px', fontWeight: 600, whiteSpace: 'nowrap',
+            }}>
+              Abrir Twin →
+            </span>
+          </div>
+        </div>
+      </a>
+
       {/* Phase KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
         {(phases ?? []).map(phase => {
