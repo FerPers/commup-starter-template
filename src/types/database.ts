@@ -727,3 +727,59 @@ export interface Alert {
   created_at: string
 }
 
+// ── Module 13: Public API + Webhooks ────────────────────────
+
+export type ApiScope =
+  | 'tags:read'        | 'tags:write'
+  | 'itrs:read'        | 'itrs:write'
+  | 'punches:read'     | 'punches:write'
+  | 'certificates:read'
+  | 'systems:read'
+  | 'events:read'
+  | '*'
+
+export interface ApiKey {
+  id: string
+  org_id: string
+  name: string
+  key_prefix: string
+  key_hash: string
+  scopes: ApiScope[]
+  created_at: string
+  created_by: string | null
+  last_used_at: string | null
+  expires_at: string | null
+  revoked_at: string | null
+}
+
+export interface WebhookSubscription {
+  id: string
+  org_id: string
+  project_id: string | null
+  name: string
+  endpoint_url: string
+  secret: string
+  event_types: string[]
+  enabled: boolean
+  created_at: string
+  created_by: string | null
+  last_success_at: string | null
+  last_error_at: string | null
+  failure_count: number
+}
+
+export type WebhookDeliveryStatus = 'pending' | 'delivered' | 'abandoned'
+
+export interface WebhookDelivery {
+  id: string
+  subscription_id: string
+  domain_event_id: string
+  status: WebhookDeliveryStatus
+  attempts: number
+  next_retry_at: string
+  last_response_code: number | null
+  last_response_body: string | null
+  delivered_at: string | null
+  created_at: string
+}
+

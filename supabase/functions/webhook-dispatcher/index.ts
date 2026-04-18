@@ -5,7 +5,9 @@
 // Two execution modes:
 //   A) Called by a pg_net trigger on domain_events INSERT:
 //      POST { event_id: "<uuid>" }
-//      → Creates pending webhook_deliveries for matching subscriptions
+//      → Creates webhook_deliveries for matching subscriptions AND
+//        immediately dispatches the first attempt in parallel.
+//        Failed deliveries stay `pending` with next_retry_at set.
 //
 //   B) Called by a cron-like scheduler to retry pending deliveries:
 //      POST { mode: "retry" }
@@ -110,6 +112,74 @@ function nextRetryAt(attempts: number): string {
   return new Date(Date.now() + delaySec * 1000).toISOString()
 }
 
+// ── processDelivery: dispatch + persist result (used by Mode A and Mode B) ────
+
+type DeliveryOutcome = 'delivered' | 'failed' | 'abandoned'
+
+async function processDelivery(
+  supabase: ReturnType<typeof createClient>,
+  args: {
+    deliveryId:     string
+    subscriptionId: string
+    endpointUrl:    string
+    secret:         string
+    eventType:      string
+    payload:        Record<string, unknown>
+    occurredAt:     string
+    currentAttempts: number
+  },
+): Promise<DeliveryOutcome> {
+  const newAttempts = args.currentAttempts + 1
+  const result = await dispatchDelivery(supabase, {
+    id:              args.deliveryId,
+    subscription_id: args.subscriptionId,
+    endpoint_url:    args.endpointUrl,
+    secret:          args.secret,
+    event_type:      args.eventType,
+    event_payload:   args.payload,
+    occurred_at:     args.occurredAt,
+    attempts:        newAttempts,
+  })
+
+  if (result.success) {
+    await supabase.from('webhook_deliveries').update({
+      status:             'delivered',
+      attempts:           newAttempts,
+      last_response_code: result.code,
+      last_response_body: result.body,
+      delivered_at:       new Date().toISOString(),
+    }).eq('id', args.deliveryId)
+
+    await supabase.from('webhook_subscriptions').update({
+      last_success_at: new Date().toISOString(),
+      failure_count:   0,
+    }).eq('id', args.subscriptionId)
+
+    return 'delivered'
+  }
+
+  const status: 'pending' | 'abandoned' = newAttempts >= MAX_ATTEMPTS ? 'abandoned' : 'pending'
+
+  await supabase.from('webhook_deliveries').update({
+    status,
+    attempts:           newAttempts,
+    next_retry_at:      nextRetryAt(newAttempts),
+    last_response_code: result.code,
+    last_response_body: result.body,
+  }).eq('id', args.deliveryId)
+
+  await supabase.rpc('increment_webhook_failure_count', { sub_id: args.subscriptionId }).then(() => {})
+  await supabase.from('webhook_subscriptions').update({
+    last_error_at: new Date().toISOString(),
+  }).eq('id', args.subscriptionId)
+
+  if (status === 'abandoned') {
+    console.warn(`Delivery ${args.deliveryId} abandoned after ${newAttempts} attempts`)
+    return 'abandoned'
+  }
+  return 'failed'
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -144,27 +214,25 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Event not found' }), { status: 404 })
     }
 
-    // Find matching enabled subscriptions
+    // Find matching enabled subscriptions (incl. endpoint/secret for inline dispatch)
     const { data: subs } = await supabase
       .from('webhook_subscriptions')
-      .select('id, event_types, project_id')
+      .select('id, event_types, project_id, endpoint_url, secret')
       .eq('org_id', event.org_id)
       .eq('enabled', true)
 
     const matching = (subs ?? []).filter(sub => {
-      // project filter
       if (sub.project_id && sub.project_id !== event.project_id) return false
-      // event type filter
       const types = sub.event_types as string[]
       return types.includes('*') || types.includes(event.event_type)
     })
 
     if (matching.length === 0) {
-      return new Response(JSON.stringify({ created: 0 }), { status: 200 })
+      return new Response(JSON.stringify({ created: 0, delivered: 0, failed: 0 }), { status: 200 })
     }
 
-    // Create pending deliveries
-    const { error: insErr } = await supabase
+    // Create pending deliveries, return their IDs
+    const { data: inserted, error: insErr } = await supabase
       .from('webhook_deliveries')
       .insert(
         matching.map(sub => ({
@@ -175,17 +243,42 @@ Deno.serve(async (req: Request) => {
           next_retry_at:   new Date().toISOString(),
         }))
       )
+      .select('id, subscription_id')
 
-    if (insErr) {
-      return new Response(JSON.stringify({ error: insErr.message }), { status: 500 })
+    if (insErr || !inserted) {
+      return new Response(JSON.stringify({ error: insErr?.message ?? 'insert failed' }), { status: 500 })
     }
 
-    // Fire-and-forget: immediately dispatch in background
-    // (edge function has 150 s budget — we can do it synchronously for low-volume)
-    const created = matching.length
-    console.log(`Created ${created} deliveries for event ${event.id} (${event.event_type})`)
+    // Dispatch inline, in parallel — first attempt for each matching sub
+    const subMap = new Map(matching.map(s => [s.id, s]))
+    const outcomes = await Promise.all(
+      inserted.map(del => {
+        const sub = subMap.get(del.subscription_id)!
+        return processDelivery(supabase, {
+          deliveryId:      del.id,
+          subscriptionId:  del.subscription_id,
+          endpointUrl:     sub.endpoint_url,
+          secret:          sub.secret,
+          eventType:       event.event_type,
+          payload:         event.payload,
+          occurredAt:      event.occurred_at,
+          currentAttempts: 0,
+        })
+      })
+    )
 
-    return new Response(JSON.stringify({ created }), { status: 200 })
+    const tally = outcomes.reduce<Record<DeliveryOutcome, number>>(
+      (acc, o) => { acc[o]++; return acc },
+      { delivered: 0, failed: 0, abandoned: 0 },
+    )
+
+    console.log(`Event ${event.id} (${event.event_type}): created=${inserted.length} ` +
+                `delivered=${tally.delivered} failed=${tally.failed} abandoned=${tally.abandoned}`)
+
+    return new Response(
+      JSON.stringify({ created: inserted.length, ...tally }),
+      { status: 200 },
+    )
   }
 
   // ── Mode B: retry pending deliveries ─────────────────────────────────────
@@ -222,60 +315,17 @@ Deno.serve(async (req: Request) => {
         continue
       }
 
-      const newAttempts = delivery.attempts + 1
-      const result = await dispatchDelivery(supabase, {
-        id:             delivery.id,
-        subscription_id: delivery.subscription_id,
-        endpoint_url:   sub.endpoint_url,
-        secret:         sub.secret,
-        event_type:     event.event_type,
-        event_payload:  event.payload,
-        occurred_at:    event.occurred_at,
-        attempts:       newAttempts,
+      const outcome = await processDelivery(supabase, {
+        deliveryId:      delivery.id,
+        subscriptionId:  delivery.subscription_id,
+        endpointUrl:     sub.endpoint_url,
+        secret:          sub.secret,
+        eventType:       event.event_type,
+        payload:         event.payload,
+        occurredAt:      event.occurred_at,
+        currentAttempts: delivery.attempts,
       })
-
-      if (result.success) {
-        await supabase.from('webhook_deliveries').update({
-          status:              'delivered',
-          attempts:            newAttempts,
-          last_response_code:  result.code,
-          last_response_body:  result.body,
-          delivered_at:        new Date().toISOString(),
-        }).eq('id', delivery.id)
-
-        // Update subscription last_success_at, reset failure_count
-        await supabase.from('webhook_subscriptions').update({
-          last_success_at: new Date().toISOString(),
-          failure_count:   0,
-        }).eq('id', delivery.subscription_id)
-
-        results.delivered++
-      } else {
-        const status = newAttempts >= MAX_ATTEMPTS ? 'abandoned' : 'pending'
-
-        await supabase.from('webhook_deliveries').update({
-          status,
-          attempts:           newAttempts,
-          next_retry_at:      nextRetryAt(newAttempts),
-          last_response_code: result.code,
-          last_response_body: result.body,
-        }).eq('id', delivery.id)
-
-        // Update subscription failure tracking (increment via SQL)
-        await supabase.rpc('increment_webhook_failure_count', {
-          sub_id: delivery.subscription_id,
-        }).then(() => {})
-        await supabase.from('webhook_subscriptions').update({
-          last_error_at: new Date().toISOString(),
-        }).eq('id', delivery.subscription_id)
-
-        if (status === 'abandoned') {
-          results.abandoned++
-          console.warn(`Delivery ${delivery.id} abandoned after ${newAttempts} attempts`)
-        } else {
-          results.failed++
-        }
-      }
+      results[outcome]++
     }
 
     return new Response(JSON.stringify(results), { status: 200 })
