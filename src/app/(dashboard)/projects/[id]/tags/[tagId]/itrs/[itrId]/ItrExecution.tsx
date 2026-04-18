@@ -946,6 +946,96 @@ function CreatePunchModal({
   )
 }
 
+// ── Voice append helper (Stage 14.3) ──────────────────────────────────
+// Web Speech API directo. Sin tipos oficiales en lib.dom.d.ts para
+// SpeechRecognition (solo *Result), tipamos como unknown.
+type WebSpeechRecognizer = {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  maxAlternatives: number
+  onstart: (() => void) | null
+  onend: (() => void) | null
+  onerror: (() => void) | null
+  onresult: ((event: { results: SpeechRecognitionResultList }) => void) | null
+  start: () => void
+  stop: () => void
+}
+
+function MicAppend({
+  targetRef,
+  onCommit,
+  language = 'es-ES',
+  disabled,
+}: {
+  targetRef: React.RefObject<HTMLTextAreaElement | null>
+  onCommit: (text: string) => void
+  language?: string
+  disabled?: boolean
+}) {
+  const recognitionRef = useRef<WebSpeechRecognizer | null>(null)
+  const [supported, setSupported] = useState(false)
+  const [active, setActive] = useState(false)
+
+  useEffect(() => {
+    const w = window as unknown as {
+      SpeechRecognition?: new () => WebSpeechRecognizer
+      webkitSpeechRecognition?: new () => WebSpeechRecognizer
+    }
+    setSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition))
+  }, [])
+
+  if (!supported || disabled) return null
+
+  const start = () => {
+    const w = window as unknown as {
+      SpeechRecognition?: new () => WebSpeechRecognizer
+      webkitSpeechRecognition?: new () => WebSpeechRecognizer
+    }
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition
+    if (!Ctor) return
+    const rec = new Ctor()
+    rec.lang = language
+    rec.continuous = false
+    rec.interimResults = false
+    rec.maxAlternatives = 1
+    rec.onstart = () => setActive(true)
+    rec.onend = () => { setActive(false); recognitionRef.current = null }
+    rec.onerror = () => { setActive(false); recognitionRef.current = null }
+    rec.onresult = (event) => {
+      const text = event.results[0]?.[0]?.transcript?.trim()
+      if (!text || !targetRef.current) return
+      const cur = targetRef.current.value
+      const sep = cur && !cur.endsWith(' ') ? ' ' : ''
+      const next = cur + sep + text
+      targetRef.current.value = next
+      onCommit(next)
+    }
+    recognitionRef.current = rec
+    rec.start()
+  }
+
+  const stop = () => recognitionRef.current?.stop()
+
+  return (
+    <button
+      type="button"
+      onClick={active ? stop : start}
+      title={active ? 'Detener dictado' : 'Dictar'}
+      style={{
+        padding: '4px 8px', borderRadius: '6px', fontSize: '11px',
+        border: '1px solid', borderColor: active ? '#ef4444' : '#cbd5e1',
+        background: active ? '#fee2e2' : 'white',
+        color: active ? '#ef4444' : '#475569',
+        cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
+      }}
+    >
+      <span>{active ? '■' : '🎤'}</span>
+      <span>{active ? 'Detener' : 'Dictar'}</span>
+    </button>
+  )
+}
+
 // ── Item Row ──────────────────────────────────────────────────────────
 
 function ItemRow({
@@ -982,6 +1072,8 @@ function ItemRow({
 }) {
   const t = useTranslations('ItrExecution')
   const isPassed = response?.is_passed
+  const textRef = useRef<HTMLTextAreaElement | null>(null)
+  const remarksRef = useRef<HTMLTextAreaElement | null>(null)
 
   return (
     <div style={{ background: 'white', border: `1px solid ${isPassed === false ? '#fecaca' : '#e2e8f0'}`, borderRadius: '10px', padding: '14px 16px' }}>
@@ -1049,14 +1141,24 @@ function ItemRow({
 
       {/* Text input */}
       {item.item_type === 'text' && (
-        <textarea
-          rows={2}
-          defaultValue={response?.value_text ?? ''}
-          disabled={!canEdit}
-          placeholder={t('item.observationsPlaceholder')}
-          onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
-          style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <textarea
+            ref={textRef}
+            rows={2}
+            defaultValue={response?.value_text ?? ''}
+            disabled={!canEdit}
+            placeholder={t('item.observationsPlaceholder')}
+            onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+          />
+          <div style={{ alignSelf: 'flex-end' }}>
+            <MicAppend
+              targetRef={textRef}
+              disabled={!canEdit}
+              onCommit={(value) => onSave(item.id, { valueText: value || null })}
+            />
+          </div>
+        </div>
       )}
 
       {/* Number input */}
@@ -1144,8 +1246,9 @@ function ItemRow({
 
       {/* Remarks (for measurement + critical items) */}
       {(item.is_critical || item.item_type === 'measurement') && (
-        <div style={{ marginTop: '8px' }}>
+        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <textarea
+            ref={remarksRef}
             rows={1}
             defaultValue={response?.remarks ?? ''}
             disabled={!canEdit}
@@ -1162,6 +1265,20 @@ function ItemRow({
             }}
             style={{ width: '100%', padding: '6px 10px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: '#64748b' }}
           />
+          <div style={{ alignSelf: 'flex-end' }}>
+            <MicAppend
+              targetRef={remarksRef}
+              disabled={!canEdit}
+              onCommit={(value) => onSave(item.id, {
+                valueBool: response?.value_bool ?? null,
+                valueNumeric: response?.value_numeric ?? null,
+                valueText: response?.value_text ?? null,
+                valueOption: response?.value_option ?? null,
+                isPassed: response?.is_passed ?? null,
+                remarks: value || null,
+              })}
+            />
+          </div>
         </div>
       )}
     </div>

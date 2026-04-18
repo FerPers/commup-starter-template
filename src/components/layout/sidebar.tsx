@@ -41,6 +41,7 @@ const navItems = [
   {
     groupKey: 'execution',
     items: [
+      { href: '/scan', labelKey: 'scan', icon: '⊟' },
       { href: '/itrs', labelKey: 'itrs', icon: '✓' },
       { href: '/punch-list', labelKey: 'punchList', icon: '⚑' },
       { href: '/preservation', labelKey: 'preservation', icon: '◉' },
@@ -64,6 +65,9 @@ const navItems = [
       { href: '/admin/users', labelKey: 'users', icon: '◯' },
       { href: '/admin/config', labelKey: 'config', icon: '⚙' },
       { href: '/admin/workflows', labelKey: 'workflows', icon: '⚡' },
+      { href: '/admin/api-keys', labelKey: 'apiKeys', icon: '🔑' },
+      { href: '/admin/webhooks', labelKey: 'webhooks', icon: '🪝' },
+      { href: '/admin/notifications', labelKey: 'notifications', icon: '🔔' },
       { href: '/admin/audit', labelKey: 'auditLog', icon: '◑' },
     ],
   },

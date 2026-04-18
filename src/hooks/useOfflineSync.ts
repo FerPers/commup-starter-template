@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { enqueueResponse, getAllQueued, removeFromQueue } from '@/lib/offline-queue'
-import { createClient } from '@/lib/supabase/client'
+import { enqueueResponse, getAllQueued } from '@/lib/offline-queue'
 import { upsertResponse } from '@/app/actions/itr-instances'
+import { replayQueueOnce } from '@/lib/sync/replay'
 
 type ResponseData = {
   valueText?: string | null
@@ -36,56 +36,13 @@ export function useOfflineSync(itrId = '', templateId = '') {
       .catch(() => {})
   }, [itrId])
 
-  // Process the queue
+  // Drain the queue using last-write-wins; conflicts are logged server-side
   const sync = useCallback(async () => {
     if (syncingRef.current) return
     syncingRef.current = true
     setSyncing(true)
     try {
-      const supabase = createClient()
-      const items = await getAllQueued()
-      const toSync = itrId ? items.filter(i => i.itrId === itrId) : items
-      for (const item of toSync) {
-        try {
-          // Conflict resolution: check if server has a newer version
-          if (item.updatedAt) {
-            const { data: serverRow } = await supabase
-              .from('itr_responses')
-              .select('updated_at')
-              .eq('itr_id', item.itrId)
-              .eq('item_id', item.itemId)
-              .maybeSingle()
-
-            if (serverRow?.updated_at && serverRow.updated_at > item.updatedAt) {
-              const useLocal = window.confirm(
-                `Conflict detected for item ${item.itemId}. Use your offline version?`,
-              )
-              if (!useLocal) {
-                if (item.id !== undefined) await removeFromQueue(item.id)
-                continue
-              }
-            }
-          }
-
-          const res = await upsertResponse({
-            itrId: item.itrId,
-            itemId: item.itemId,
-            templateId: item.templateId,
-            valueText: item.valueText,
-            valueNumeric: item.valueNumeric,
-            valueBool: item.valueBool,
-            valueOption: item.valueOption,
-            remarks: item.remarks,
-            isPassed: item.isPassed,
-          })
-          if (!res.error && item.id !== undefined) {
-            await removeFromQueue(item.id)
-          }
-        } catch {
-          // Network still unavailable — leave item in queue
-          break
-        }
-      }
+      await replayQueueOnce()
       const remaining = await getAllQueued()
       const count = itrId
         ? remaining.filter(i => i.itrId === itrId).length

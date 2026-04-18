@@ -26,6 +26,7 @@
     "nav": {
       "dashboard": "Dashboard",
       "projects": "Proyectos",
+      "scan": "Escanear QR/NFC",
       "itrs": "ITRs",
       "punchList": "Punch List",
       "preservation": "Preservación",
@@ -39,6 +40,9 @@
       "users": "Usuarios",
       "config": "Configuración",
       "workflows": "Workflows",
+      "apiKeys": "API Keys",
+      "webhooks": "Webhooks",
+      "notifications": "Notificaciones",
       "auditLog": "Log de Auditoría",
       "twin": "Digital Twin",
       "explorer": "Explorador",
