@@ -125,7 +125,10 @@ export function usePushNotifications(userId: string) {
         body: JSON.stringify(record),
       });
 
-      if (!response.ok) throw new Error('Error registrando subscription en servidor');
+      if (!response.ok) {
+        const detail = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(detail.error || `HTTP ${response.status} registrando subscription`);
+      }
 
       setIsSubscribed(true);
       return true;
@@ -180,12 +183,31 @@ export function usePushNotifications(userId: string) {
     } catch { }
   }, [userId, isSubscribed]);
 
+  const [testStatus, setTestStatus] = useState<{ kind: 'idle' | 'loading' | 'ok' | 'error'; msg?: string }>({ kind: 'idle' });
+
   const sendTestNotification = useCallback(async () => {
-    await fetch('/api/push/test', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId }),
-    });
+    setTestStatus({ kind: 'loading' });
+    try {
+      const res = await fetch('/api/push/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { sent?: number; total?: number; error?: string };
+      if (!res.ok) {
+        setTestStatus({ kind: 'error', msg: json.error || `HTTP ${res.status}` });
+        return;
+      }
+      const sent = json.sent ?? 0;
+      const total = json.total ?? 0;
+      if (sent === 0) {
+        setTestStatus({ kind: 'error', msg: `0/${total} enviadas — revisa Cloudflare logs` });
+      } else {
+        setTestStatus({ kind: 'ok', msg: `${sent}/${total} enviada${sent !== 1 ? 's' : ''}` });
+      }
+    } catch (err) {
+      setTestStatus({ kind: 'error', msg: (err as Error).message });
+    }
   }, [userId]);
 
   const isSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -201,6 +223,7 @@ export function usePushNotifications(userId: string) {
     unsubscribe,
     updateTopics,
     sendTestNotification,
+    testStatus,
   };
 }
 
@@ -248,10 +271,11 @@ const TOPIC_CONFIG: Record<NotificationTopic, { label: string; icon: string; des
 export default function PushNotificationManager({ userId, onSubscriptionChange }: PushNotificationManagerProps) {
   const {
     isSupported, permission, isSubscribed, isLoading, error,
-    topics, subscribe, unsubscribe, updateTopics, sendTestNotification,
+    topics, subscribe, unsubscribe, updateTopics, sendTestNotification, testStatus,
   } = usePushNotifications(userId);
 
-  const [showSettings, setShowSettings] = useState(false);
+  // Surface test-send status from the hook
+  // (ya viene de usePushNotifications a través de testStatus en el hook)
 
   useEffect(() => {
     onSubscriptionChange?.(isSubscribed);
@@ -282,10 +306,10 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
               {isSubscribed ? '🔔' : '🔕'}
             </div>
             <div>
-              <div className="font-semibold">
+              <div className="font-semibold text-white">
                 {isSubscribed ? 'Notificaciones Activas' : 'Notificaciones Inactivas'}
               </div>
-              <div className="text-sm text-slate-400">
+              <div className="text-sm text-slate-200">
                 {isSubscribed
                   ? `${topics.length} categorías activas`
                   : 'Active para recibir alertas de campo'}
@@ -323,13 +347,22 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
       {isSubscribed && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-300">Alertas configuradas</span>
-            <button
-              onClick={sendTestNotification}
-              className="text-xs text-sky-400 hover:text-sky-300 transition"
-            >
-              Enviar prueba →
-            </button>
+            <span className="text-sm font-semibold text-slate-200">Alertas configuradas</span>
+            <div className="flex items-center gap-2">
+              {testStatus.kind === 'ok' && (
+                <span className="text-xs text-emerald-400">✓ {testStatus.msg}</span>
+              )}
+              {testStatus.kind === 'error' && (
+                <span className="text-xs text-red-400">✗ {testStatus.msg}</span>
+              )}
+              <button
+                onClick={sendTestNotification}
+                disabled={testStatus.kind === 'loading'}
+                className="text-xs text-sky-400 hover:text-sky-300 disabled:opacity-50 transition"
+              >
+                {testStatus.kind === 'loading' ? 'Enviando…' : 'Enviar prueba →'}
+              </button>
+            </div>
           </div>
 
           {(Object.entries(TOPIC_CONFIG) as [NotificationTopic, typeof TOPIC_CONFIG[NotificationTopic]][]).map(
@@ -341,12 +374,12 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
                 <span className="text-xl mt-0.5">{config.icon}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{config.label}</span>
+                    <span className="font-medium text-sm text-white">{config.label}</span>
                     {config.priority === 'high' && (
                       <span className="text-xs bg-red-900/50 text-red-400 px-1.5 py-0.5 rounded">ALTA</span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{config.description}</p>
+                  <p className="text-xs text-slate-200 mt-1">{config.description}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer mt-0.5">
                   <input
