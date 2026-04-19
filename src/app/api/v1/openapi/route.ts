@@ -5,8 +5,6 @@
 
 import { NextResponse } from 'next/server'
 
-export const runtime = 'edge'
-
 // Scopes that match src/lib/api/auth.ts and the api_keys_scopes_valid CHECK constraint.
 const SCOPE_ENUM = [
   'tags:read',        'tags:write',

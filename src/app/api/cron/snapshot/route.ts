@@ -16,8 +16,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
  * The route calls: POST https://commup.app/api/cron/snapshot
  */
 
-export const runtime = 'edge'
-
 export async function POST(req: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────────────────
   const secret = process.env.CRON_SECRET

@@ -93,7 +93,7 @@ BEGIN
   SELECT org_id INTO v_org_id
   FROM org_members
   WHERE user_id = v_user_id
-  ORDER BY created_at
+  ORDER BY joined_at
   LIMIT 1;
 
   IF v_org_id IS NULL THEN

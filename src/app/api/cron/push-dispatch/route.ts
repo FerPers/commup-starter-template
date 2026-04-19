@@ -23,8 +23,6 @@ import { sendWebPush } from '@/lib/push/web-push'
  * no reprocesar. Si la tabla no existe, procesa los últimos 5 minutos.
  */
 
-export const runtime = 'edge'
-
 type DomainEvent = {
   id: string
   org_id: string

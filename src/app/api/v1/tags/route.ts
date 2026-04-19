@@ -10,8 +10,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, parsePagination, apiHeaders } from '@/lib/api/auth'
 
-export const runtime = 'edge'
-
 // ── CORS preflight ────────────────────────────────────────────────────────────
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
