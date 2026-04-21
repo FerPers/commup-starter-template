@@ -202,4 +202,6 @@ dist
 .open-next/
 next-env.d.ts
 .agents/
-.agents/
+
+### Claude Code / skills ###
+skills-lock.json
