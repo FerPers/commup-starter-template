@@ -46,7 +46,8 @@
       "auditLog": "Log de Auditoría",
       "twin": "Digital Twin",
       "explorer": "Explorador",
-      "pssr": "PSSR"
+      "pssr": "PSSR",
+      "dataQuality": "Calidad de Datos"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -1306,6 +1307,57 @@
       "punchC": "Cat C",
       "gates": "Gates",
       "topBlocker": "Blocker Principal"
+    }
+  },
+  "DataQuality": {
+    "title": "Calidad de Datos & Cuellos de Botella",
+    "subtitle": "Detección de inconsistencias, datos huérfanos y puntos críticos de progreso.",
+    "total": "Issues totales",
+    "severity": {
+      "critical": "Crítico",
+      "error": "Error",
+      "warning": "Advertencia"
+    },
+    "category": {
+      "itr_integrity": "Integridad ITR",
+      "punch_orphans": "Punches huérfanos",
+      "loop_coverage": "Cobertura de loops",
+      "certificate_prereqs": "Prereqs certificados",
+      "date_logic": "Lógica de fechas",
+      "system_completeness": "Completitud de sistemas"
+    },
+    "reason": {
+      "punch_a_open": "Punches Cat A abiertos",
+      "no_velocity_14d": "Sin progreso 14d",
+      "punch_ratio_high": "Ratio punch/ITR alto",
+      "cert_blocked": "Certificado bloqueado",
+      "recent_rejections": "Rechazos recientes"
+    },
+    "bottlenecks": {
+      "title": "Cuellos de botella detectados",
+      "hint": "Ranking por bottleneck_score (score ≥ 20)",
+      "empty": "Sin cuellos de botella detectados.",
+      "score": "Score",
+      "subsystem": "Subsistema",
+      "system": "Sistema",
+      "itrs": "ITRs",
+      "punches": "Punches",
+      "reasons": "Razones"
+    },
+    "issues": {
+      "title": "Issues de calidad",
+      "shown": "mostrados",
+      "severity": "Severidad",
+      "category": "Categoría",
+      "entity": "Entidad",
+      "description": "Descripción",
+      "fix": "Sugerencia",
+      "empty": "No hay issues detectados con los filtros actuales."
+    },
+    "filter": {
+      "allProjects": "Todos los proyectos",
+      "allCategories": "Todas las categorías",
+      "clear": "Limpiar filtros"
     }
   }
 }

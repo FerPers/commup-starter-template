@@ -68,6 +68,7 @@ const navItems = [
       { href: '/admin/api-keys', labelKey: 'apiKeys', icon: '🔑' },
       { href: '/admin/webhooks', labelKey: 'webhooks', icon: '🪝' },
       { href: '/admin/notifications', labelKey: 'notifications', icon: '🔔' },
+      { href: '/admin/data-quality', labelKey: 'dataQuality', icon: '◰' },
       { href: '/admin/audit', labelKey: 'auditLog', icon: '◑' },
     ],
   },

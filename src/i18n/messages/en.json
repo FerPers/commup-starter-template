@@ -46,7 +46,8 @@
       "auditLog": "Audit Log",
       "twin": "Digital Twin",
       "explorer": "Explorer",
-      "pssr": "PSSR"
+      "pssr": "PSSR",
+      "dataQuality": "Data Quality"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -1306,6 +1307,57 @@
       "punchC": "Cat C",
       "gates": "Gates",
       "topBlocker": "Top Blocker"
+    }
+  },
+  "DataQuality": {
+    "title": "Data Quality & Bottlenecks",
+    "subtitle": "Detect inconsistencies, orphan records and critical progress choke points.",
+    "total": "Total issues",
+    "severity": {
+      "critical": "Critical",
+      "error": "Error",
+      "warning": "Warning"
+    },
+    "category": {
+      "itr_integrity": "ITR integrity",
+      "punch_orphans": "Orphan punches",
+      "loop_coverage": "Loop coverage",
+      "certificate_prereqs": "Certificate prereqs",
+      "date_logic": "Date logic",
+      "system_completeness": "System completeness"
+    },
+    "reason": {
+      "punch_a_open": "Open Cat A punches",
+      "no_velocity_14d": "No progress in 14d",
+      "punch_ratio_high": "High punch/ITR ratio",
+      "cert_blocked": "Blocked certificate",
+      "recent_rejections": "Recent rejections"
+    },
+    "bottlenecks": {
+      "title": "Detected bottlenecks",
+      "hint": "Ranked by bottleneck_score (score ≥ 20)",
+      "empty": "No bottlenecks detected.",
+      "score": "Score",
+      "subsystem": "Subsystem",
+      "system": "System",
+      "itrs": "ITRs",
+      "punches": "Punches",
+      "reasons": "Reasons"
+    },
+    "issues": {
+      "title": "Quality issues",
+      "shown": "shown",
+      "severity": "Severity",
+      "category": "Category",
+      "entity": "Entity",
+      "description": "Description",
+      "fix": "Suggestion",
+      "empty": "No issues detected with the current filters."
+    },
+    "filter": {
+      "allProjects": "All projects",
+      "allCategories": "All categories",
+      "clear": "Clear filters"
     }
   }
 }
