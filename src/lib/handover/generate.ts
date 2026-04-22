@@ -6,7 +6,6 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { hmacSha256 } from '@/lib/api/auth'
-import { renderHandoverPdf } from './pdf'
 import type { HandoverPackageData } from './types'
 
 export type GenerateInput = {
@@ -78,6 +77,7 @@ export async function generateHandoverPackage(
     }
 
     if (formats.includes('pdf')) {
+      const { renderHandoverPdf } = await import('./pdf')
       const pdfBytes = await renderHandoverPdf(handoverData, signatureHash)
       pdfPath = `${basePath}.pdf`
       const { error: upErr } = await admin.storage
