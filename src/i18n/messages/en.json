@@ -47,7 +47,9 @@
       "twin": "Digital Twin",
       "explorer": "Explorer",
       "pssr": "PSSR",
-      "dataQuality": "Data Quality"
+      "dataQuality": "Data Quality",
+      "handover": "Handover",
+      "opsPunches": "Ops Punch Tracking"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -1358,6 +1360,98 @@
       "allProjects": "All projects",
       "allCategories": "All categories",
       "clear": "Clear filters"
+    }
+  },
+  "ItrSuggestions": {
+    "title": "Auto-commissioning suggestion",
+    "defaultMessage": "Signal {tag} responded within range ({value} {unit}). Close this ITR?",
+    "expiresAt": "Expires",
+    "accept": "Accept & prefill",
+    "reject": "Dismiss"
+  },
+  "OpsPunches": {
+    "title": "Operations Punch Tracking",
+    "subtitle": "Cat B punches transferred to Operations post-MC — ownership, deadlines, and audit trail.",
+    "filter": {
+      "project": "Project",
+      "selectProject": "Select a project…",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "selectHint": "Select a project to see its Operations punch tracking."
+    },
+    "status": {
+      "active": "Active",
+      "transferred_to_ops": "Transferred",
+      "in_progress_ops": "In progress (Ops)",
+      "deferred": "Deferred",
+      "resolved_ops": "Resolved",
+      "verified_ops": "Verified",
+      "closed_final": "Closed",
+      "cancelled_ops": "Cancelled"
+    },
+    "kpi": {
+      "total": "Total tracked",
+      "inProgress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed",
+      "overdue": "Overdue"
+    },
+    "pending": {
+      "title": "Pending transfer (Cat B open)",
+      "empty": "No Cat B punches waiting for transfer."
+    },
+    "tracking": {
+      "title": "Tracked in Operations",
+      "empty": "No punches transferred yet.",
+      "owner": "Owner",
+      "transferred": "Transferred",
+      "targetDate": "Target"
+    },
+    "actions": {
+      "transfer": "Transfer to Ops",
+      "confirmTransfer": "Confirm transfer",
+      "cancel": "Cancel",
+      "updateStatus": "Update status",
+      "save": "Save"
+    },
+    "form": {
+      "selectUser": "Assign to…",
+      "targetDate": "Target date",
+      "notes": "Notes (optional)"
+    },
+    "errors": {
+      "pickUser": "Pick a user to assign the punch to."
+    }
+  },
+  "AdminHandover": {
+    "title": "Handover Packages",
+    "subtitle": "Export the digital life-book of a project as a signed JSON + PDF package, ready for CMMS import.",
+    "generator": {
+      "title": "Generate new package",
+      "project": "Project",
+      "formats": "Formats",
+      "systems": "Systems to include",
+      "noSystems": "No systems in this project yet.",
+      "allSystemsHint": "No systems selected → the full project will be included.",
+      "selectedCount": "{n} system(s) selected",
+      "generate": "Generate package",
+      "generating": "Generating…",
+      "done": "Package generated successfully. Download links are valid for 1 hour."
+    },
+    "history": {
+      "title": "History",
+      "empty": "No packages generated yet.",
+      "project": "Project",
+      "generated": "Generated",
+      "status": "Status",
+      "files": "Files",
+      "signature": "Signature",
+      "actions": "Actions",
+      "download": "Get links"
+    },
+    "errors": {
+      "selectProject": "Pick a project first.",
+      "selectFormat": "Select at least one format (JSON or PDF)."
     }
   }
 }

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import ItrExecution from './ItrExecution'
+import SuggestionsBar, { type ItrSuggestion } from '@/components/itr/SuggestionsBar'
 
 export default async function ItrExecutionPage({
   params,
@@ -69,17 +70,29 @@ export default async function ItrExecutionPage({
 
   const canEdit = ['owner', 'admin', 'architect', 'leader', 'inspector'].includes(membership.role)
 
+  const { data: suggestions } = await supabase
+    .from('itr_suggestions')
+    .select('id, signal_tag, signal_value, signal_unit, sampled_at, message, suggested_at, expires_at, pre_filled_data')
+    .eq('itr_id', itrId)
+    .eq('status', 'pending')
+    .order('suggested_at', { ascending: false })
+
   return (
-    <ItrExecution
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      itr={itr as any}
-      projectId={projectId}
-      tagId={tagId}
-      currentUserId={user.id}
-      currentUserRole={membership.role}
-      canEdit={canEdit}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      attachments={attachments as any}
-    />
+    <>
+      <div style={{ padding: '16px 32px 0' }}>
+        <SuggestionsBar suggestions={(suggestions ?? []) as ItrSuggestion[]} />
+      </div>
+      <ItrExecution
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        itr={itr as any}
+        projectId={projectId}
+        tagId={tagId}
+        currentUserId={user.id}
+        currentUserRole={membership.role}
+        canEdit={canEdit}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        attachments={attachments as any}
+      />
+    </>
   )
 }

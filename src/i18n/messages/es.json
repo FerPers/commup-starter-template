@@ -47,7 +47,9 @@
       "twin": "Digital Twin",
       "explorer": "Explorador",
       "pssr": "PSSR",
-      "dataQuality": "Calidad de Datos"
+      "dataQuality": "Calidad de Datos",
+      "handover": "Handover",
+      "opsPunches": "Tracking de Ops"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -1358,6 +1360,98 @@
       "allProjects": "Todos los proyectos",
       "allCategories": "Todas las categorías",
       "clear": "Limpiar filtros"
+    }
+  },
+  "ItrSuggestions": {
+    "title": "Sugerencia de auto-comisionamiento",
+    "defaultMessage": "La señal {tag} respondió en rango ({value} {unit}). ¿Cerrar este ITR?",
+    "expiresAt": "Vence",
+    "accept": "Aceptar y pre-rellenar",
+    "reject": "Descartar"
+  },
+  "OpsPunches": {
+    "title": "Tracking de Punches en Operaciones",
+    "subtitle": "Punches Cat B transferidos a Operaciones tras MC — ownership, deadlines y auditoría.",
+    "filter": {
+      "project": "Proyecto",
+      "selectProject": "Seleccioná un proyecto…",
+      "status": "Estado",
+      "allStatuses": "Todos los estados",
+      "selectHint": "Seleccioná un proyecto para ver el tracking de Operaciones."
+    },
+    "status": {
+      "active": "Activo",
+      "transferred_to_ops": "Transferido",
+      "in_progress_ops": "En progreso (Ops)",
+      "deferred": "Diferido",
+      "resolved_ops": "Resuelto",
+      "verified_ops": "Verificado",
+      "closed_final": "Cerrado",
+      "cancelled_ops": "Cancelado"
+    },
+    "kpi": {
+      "total": "Total trackeados",
+      "inProgress": "En progreso",
+      "resolved": "Resueltos",
+      "closed": "Cerrados",
+      "overdue": "Vencidos"
+    },
+    "pending": {
+      "title": "Pendientes de transferir (Cat B abiertos)",
+      "empty": "No hay Cat B esperando transferencia."
+    },
+    "tracking": {
+      "title": "En seguimiento de Operaciones",
+      "empty": "Aún no se transfirió ningún punch.",
+      "owner": "Owner",
+      "transferred": "Transferido",
+      "targetDate": "Target"
+    },
+    "actions": {
+      "transfer": "Transferir a Ops",
+      "confirmTransfer": "Confirmar transferencia",
+      "cancel": "Cancelar",
+      "updateStatus": "Actualizar estado",
+      "save": "Guardar"
+    },
+    "form": {
+      "selectUser": "Asignar a…",
+      "targetDate": "Fecha objetivo",
+      "notes": "Notas (opcional)"
+    },
+    "errors": {
+      "pickUser": "Seleccioná un usuario al que asignarle el punch."
+    }
+  },
+  "AdminHandover": {
+    "title": "Paquetes de Handover",
+    "subtitle": "Exportá el libro de vida digital del proyecto como paquete firmado JSON + PDF, listo para importar a un CMMS.",
+    "generator": {
+      "title": "Generar nuevo paquete",
+      "project": "Proyecto",
+      "formats": "Formatos",
+      "systems": "Sistemas a incluir",
+      "noSystems": "Este proyecto no tiene sistemas aún.",
+      "allSystemsHint": "Sin sistemas seleccionados → se incluye el proyecto completo.",
+      "selectedCount": "{n} sistema(s) seleccionado(s)",
+      "generate": "Generar paquete",
+      "generating": "Generando…",
+      "done": "Paquete generado con éxito. Los links de descarga son válidos 1 hora."
+    },
+    "history": {
+      "title": "Historial",
+      "empty": "Aún no hay paquetes generados.",
+      "project": "Proyecto",
+      "generated": "Generado",
+      "status": "Estado",
+      "files": "Archivos",
+      "signature": "Firma",
+      "actions": "Acciones",
+      "download": "Obtener links"
+    },
+    "errors": {
+      "selectProject": "Seleccioná un proyecto primero.",
+      "selectFormat": "Seleccioná al menos un formato (JSON o PDF)."
     }
   }
 }

@@ -20,6 +20,8 @@ export type ApiScope =
   | 'certificates:read'
   | 'systems:read'
   | 'events:read'
+  | 'handover:read' | 'handover:write'
+  | 'signals:read'  | 'signals:write'
   | '*'           // superscope — grants everything
 
 export type AuthOk = {

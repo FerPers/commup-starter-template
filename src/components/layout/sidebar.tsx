@@ -54,6 +54,7 @@ const navItems = [
       { href: '/control-tower', labelKey: 'controlTower', icon: '◍' },
       { href: '/certificates', labelKey: 'certificates', icon: '◎' },
       { href: '/kpis', labelKey: 'kpis', icon: '▲' },
+      { href: '/ops/punches', labelKey: 'opsPunches', icon: '⚓' },
     ],
   },
   {
@@ -69,6 +70,7 @@ const navItems = [
       { href: '/admin/webhooks', labelKey: 'webhooks', icon: '🪝' },
       { href: '/admin/notifications', labelKey: 'notifications', icon: '🔔' },
       { href: '/admin/data-quality', labelKey: 'dataQuality', icon: '◰' },
+      { href: '/admin/handover', labelKey: 'handover', icon: '⇄' },
       { href: '/admin/audit', labelKey: 'auditLog', icon: '◑' },
     ],
   },
