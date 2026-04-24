@@ -28,6 +28,18 @@ export type GenerateResult = {
   expiresIn:     number
 }
 
+function errMsg(e: unknown): string {
+  if (e instanceof Error) return e.message
+  if (typeof e === 'string') return e
+  if (e && typeof e === 'object') {
+    const o = e as Record<string, unknown>
+    if (typeof o.message === 'string') return o.message
+    if (typeof o.error === 'string') return o.error
+    try { return JSON.stringify(e) } catch { /* ignore */ }
+  }
+  return String(e)
+}
+
 export async function generateHandoverPackage(
   admin: SupabaseClient,
   input: GenerateInput,
@@ -54,7 +66,7 @@ export async function generateHandoverPackage(
       p_project_id: projectId,
       p_system_ids: systemIds,
     })
-    if (rpcErr) throw rpcErr
+    if (rpcErr) throw new Error(`RPC generate_handover_package failed: ${errMsg(rpcErr)}`)
     const handoverData = payload as unknown as HandoverPackageData
 
     const signingSecret = process.env.HANDOVER_SIGNING_SECRET ?? process.env.CRON_SECRET ?? 'commup-dev-handover-secret'
@@ -73,7 +85,7 @@ export async function generateHandoverPackage(
           contentType: 'application/json',
           upsert: true,
         })
-      if (upErr) throw upErr
+      if (upErr) throw new Error(`JSON upload failed: ${errMsg(upErr)}`)
     }
 
     if (formats.includes('pdf')) {
@@ -83,7 +95,7 @@ export async function generateHandoverPackage(
       const { error: upErr } = await admin.storage
         .from('handover-packages')
         .upload(pdfPath, pdfBytes, { contentType: 'application/pdf', upsert: true })
-      if (upErr) throw upErr
+      if (upErr) throw new Error(`PDF upload failed: ${errMsg(upErr)}`)
     }
 
     if (systemIds && systemIds.length > 0) {
@@ -101,7 +113,7 @@ export async function generateHandoverPackage(
         signature_hash: signatureHash,
       })
       .eq('id', packageId)
-    if (updErr) throw updErr
+    if (updErr) throw new Error(`Package update failed: ${errMsg(updErr)}`)
 
     const [jsonSigned, pdfSigned] = await Promise.all([
       jsonPath ? admin.storage.from('handover-packages').createSignedUrl(jsonPath, 3600) : null,
@@ -134,8 +146,8 @@ export async function generateHandoverPackage(
       expiresIn: 3600,
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+    const message = errMsg(err)
     await admin.from('handover_packages').update({ status: 'FAILED', error_message: message }).eq('id', packageId)
-    throw err
+    throw err instanceof Error ? err : new Error(message)
   }
 }

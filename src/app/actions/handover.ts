@@ -71,7 +71,15 @@ export async function generateHandoverPackageAction(
       pdfUrl:        result.pdfUrl,
     }
   } catch (err) {
-    return { error: err instanceof Error ? err.message : String(err) }
+    let message: string
+    if (err instanceof Error) message = err.message
+    else if (typeof err === 'string') message = err
+    else if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+      message = (err as { message: string }).message
+    } else {
+      try { message = JSON.stringify(err) } catch { message = String(err) }
+    }
+    return { error: message }
   }
 }
 
