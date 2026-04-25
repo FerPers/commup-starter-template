@@ -28,6 +28,7 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   ariaLabel?: string;
   style?: CSSProperties;
+  rowStyle?: (row: T) => CSSProperties | undefined;
 }
 
 function useViewportWidth(): number {
@@ -51,6 +52,7 @@ export function DataTable<T>({
   onRowClick,
   ariaLabel,
   style,
+  rowStyle,
 }: DataTableProps<T>) {
   const vw = useViewportWidth();
   const useStack = responsive === 'stack' && vw < stackBreakpoint;
@@ -89,6 +91,7 @@ export function DataTable<T>({
               display: 'flex',
               flexDirection: 'column',
               gap: 6,
+              ...(rowStyle?.(row) ?? {}),
             }}
           >
             {columns.filter(c => !c.hideBelow || vw >= c.hideBelow).map((c) => (
@@ -136,13 +139,18 @@ export function DataTable<T>({
               <TR
                 key={rowKey(row)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                style={onRowClick ? { cursor: 'pointer' } : undefined}
+                style={{
+                  ...(onRowClick ? { cursor: 'pointer' } : {}),
+                  ...(rowStyle?.(row) ?? {}),
+                }}
               >
                 {columns.map((c, i) => {
+                  const rs = rowStyle?.(row);
+                  const rowBg = (rs?.background as string | undefined) ?? 'var(--card-bg)';
                   const stickyStyle: CSSProperties = c.sticky === 'left'
-                    ? { position: 'sticky', left: 0, background: 'var(--card-bg)', zIndex: stickyZ }
+                    ? { position: 'sticky', left: 0, background: rowBg, zIndex: stickyZ }
                     : c.sticky === 'right'
-                    ? { position: 'sticky', right: 0, background: 'var(--card-bg)', zIndex: stickyZ }
+                    ? { position: 'sticky', right: 0, background: rowBg, zIndex: stickyZ }
                     : {};
                   return (
                     <TD key={c.key ?? i} style={{

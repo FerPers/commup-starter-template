@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X, Download } from 'lucide-react'
-import { Button, Input, Select, EmptyState } from '@/components/ui'
+import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } from '@/components/ui'
 import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
 
 const PAGE_SIZE = 50
@@ -45,8 +45,6 @@ const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
 }
 
 const PUNCH_STATUS_KEYS = ['open', 'in_progress', 'closed', 'cancelled'] as const
-
-const GRID = '36px 100px 70px 1fr 1fr 110px 90px 90px'
 
 export default function PunchListGlobal({
   projects,
@@ -312,78 +310,71 @@ export default function PunchListGlobal({
       )}
 
       {/* Table */}
-      {filtered.length === 0 ? (
-        <div style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-          <EmptyState title={t('empty')} />
-        </div>
-      ) : (
-        <div style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 12, padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              ref={selectAllRef}
-              checked={allFilteredSelected}
-              onChange={toggleSelectAll}
-              title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
-              style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
-            />
-            <span>{t('table.colProject')}</span>
-            <span>{t('table.colCat')}</span>
-            <span>{t('table.colPunch')}</span>
-            <span>{t('table.colDesc')}</span>
-            <span>{t('table.colAssigned')}</span>
-            <span>{t('table.colDue')}</span>
-            <span>{t('table.colStatus')}</span>
-          </div>
-
-          {paginated.map(p => {
-            const cat  = CATEGORY_CFG[p.category]
-            const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
-            const proj = p.projects
-            const disc = p.tags?.disciplines
-            const today = new Date().toISOString().slice(0, 10)
-            const isOverdue = p.target_date && p.target_date < today && p.status !== 'closed' && p.status !== 'cancelled'
-            const isSelected = selectedIds.has(p.id)
-
-            return (
-              <div
-                key={p.id}
-                style={{
-                  display: 'grid', gridTemplateColumns: GRID, gap: 12,
-                  padding: '12px 16px', borderBottom: '1px solid var(--gray-50)', alignItems: 'center',
-                  background: isSelected ? 'var(--primary-50)' : undefined,
-                  transition: 'background 0.1s',
-                }}
+      <DataTable<Punch>
+        rows={paginated}
+        rowKey={(p) => p.id}
+        responsive="stack"
+        ariaLabel={t('title')}
+        empty={<EmptyState title={t('empty')} />}
+        rowStyle={(p) => selectedIds.has(p.id) ? { background: 'var(--primary-50)' } : undefined}
+        columns={[
+          {
+            key: 'select',
+            width: 36,
+            sticky: 'left',
+            hideBelow: 768,
+            header: (
+              <input
+                type="checkbox"
+                ref={selectAllRef}
+                checked={allFilteredSelected}
+                onChange={toggleSelectAll}
+                title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+              />
+            ),
+            cell: (p) => (
+              <input
+                type="checkbox"
+                checked={selectedIds.has(p.id)}
+                onChange={() => toggleRow(p.id)}
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+              />
+            ),
+          },
+          {
+            key: 'project',
+            width: 100,
+            header: t('table.colProject'),
+            cell: (p) => p.projects ? (
+              <a
+                href={`/projects/${p.projects.id}/punches`}
+                title={p.projects.name}
+                style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => toggleRow(p.id)}
-                  style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
-                />
-
-                {/* Project */}
-                <div>
-                  {proj && (
-                    <a
-                      href={`/projects/${proj.id}/punches`}
-                      title={proj.name}
-                      style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >
-                      {proj.code}
-                    </a>
-                  )}
-                </div>
-
-                {/* Category */}
-                <div>
-                  <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontWeight: 700, background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>
-                    {cat.label}
-                  </span>
-                </div>
-
-                {/* Punch + Tag */}
+                {p.projects.code}
+              </a>
+            ) : null,
+          },
+          {
+            key: 'category',
+            width: 70,
+            header: t('table.colCat'),
+            cell: (p) => {
+              const cat = CATEGORY_CFG[p.category]
+              return (
+                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontWeight: 700, background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>
+                  {cat.label}
+                </span>
+              )
+            },
+          },
+          {
+            key: 'punch',
+            header: t('table.colPunch'),
+            cell: (p) => {
+              const disc = p.tags?.disciplines
+              return (
                 <div>
                   <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</div>
                   {p.tags && (
@@ -393,32 +384,59 @@ export default function PunchListGlobal({
                     </div>
                   )}
                 </div>
-
-                {/* Description */}
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.description}>
-                  {p.description}
-                </div>
-
-                {/* Assigned */}
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {p.assigned_to_profile?.full_name ?? '—'}
-                </div>
-
-                {/* Due date */}
+              )
+            },
+          },
+          {
+            key: 'desc',
+            header: t('table.colDesc'),
+            cell: (p) => (
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 320 }} title={p.description}>
+                {p.description}
+              </div>
+            ),
+          },
+          {
+            key: 'assigned',
+            width: 130,
+            hideBelow: 1024,
+            header: t('table.colAssigned'),
+            cell: (p) => (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {p.assigned_to_profile?.full_name ?? '—'}
+              </div>
+            ),
+          },
+          {
+            key: 'due',
+            width: 100,
+            header: t('table.colDue'),
+            cell: (p) => {
+              const today = new Date().toISOString().slice(0, 10)
+              const isOverdue = !!(p.target_date && p.target_date < today && p.status !== 'closed' && p.status !== 'cancelled')
+              return (
                 <div style={{ fontSize: 'var(--text-xs)', color: isOverdue ? 'var(--danger-500)' : 'var(--text-muted)', fontWeight: isOverdue ? 600 : 400 }}>
                   {p.target_date ?? '—'}
                   {isOverdue && <span style={{ display: 'block', fontSize: 9, color: 'var(--danger-500)' }}>{t('overdue')}</span>}
                 </div>
-
-                {/* Status */}
+              )
+            },
+          },
+          {
+            key: 'status',
+            width: 100,
+            header: t('table.colStatus'),
+            cell: (p) => {
+              const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
+              return (
                 <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>
                   {punchStatusLabels[p.status] ?? p.status}
                 </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
+              )
+            },
+          },
+        ] satisfies DataTableColumn<Punch>[]}
+      />
 
       {/* Pagination */}
       {totalPages > 1 && (

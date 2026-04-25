@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X, Download } from 'lucide-react'
-import { Button, Input, Select, EmptyState } from '@/components/ui'
+import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } from '@/components/ui'
 import { bulkUpdateItrStatus } from '@/app/actions/bulk'
 
 const PAGE_SIZE = 50
@@ -40,8 +40,6 @@ const ITR_STYLE: Record<string, { color: string; bg: string }> = {
 const ITR_STATUS_KEYS = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
 
 const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', client: 'C' }
-
-const GRID = '36px 110px 1fr 1fr 130px 80px 80px 90px 60px'
 
 export default function ItrListGlobal({
   projects,
@@ -319,71 +317,58 @@ export default function ItrListGlobal({
       )}
 
       {/* Table */}
-      {filtered.length === 0 ? (
-        <div style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-          <EmptyState title={t('empty')} />
-        </div>
-      ) : (
-        <div style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 12, padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              ref={selectAllRef}
-              checked={allFilteredSelected}
-              onChange={toggleSelectAll}
-              title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
-              style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
-            />
-            <span>{t('table.colProject')}</span>
-            <span>{t('table.colItr')}</span>
-            <span>{t('table.colTemplate')}</span>
-            <span>{t('table.colInspector')}</span>
-            <span>{t('table.colDate')}</span>
-            <span>{t('table.colProgress')}</span>
-            <span>{t('table.colStatus')}</span>
-            <span>{t('table.colSignature')}</span>
-          </div>
-
-          {paginated.map(itr => {
-            const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
-            const executor = itr.itr_assignments.find(a => a.role === 'executor')
-            const disc = itr.itr_templates?.disciplines
-            const phase = itr.project_phases
-            const proj = itr.projects
-            const isSelected = selectedIds.has(itr.id)
-
-            return (
-              <div
-                key={itr.id}
-                style={{
-                  display: 'grid', gridTemplateColumns: GRID, gap: 12,
-                  padding: '12px 16px', borderBottom: '1px solid var(--gray-50)', alignItems: 'center',
-                  background: isSelected ? 'var(--primary-50)' : undefined,
-                  transition: 'background 0.1s',
-                }}
+      <DataTable<ItrRow>
+        rows={paginated}
+        rowKey={(itr) => itr.id}
+        responsive="stack"
+        ariaLabel={t('title')}
+        empty={<EmptyState title={t('empty')} />}
+        rowStyle={(itr) => selectedIds.has(itr.id) ? { background: 'var(--primary-50)' } : undefined}
+        columns={[
+          {
+            key: 'select',
+            width: 36,
+            sticky: 'left',
+            hideBelow: 768,
+            header: (
+              <input
+                type="checkbox"
+                ref={selectAllRef}
+                checked={allFilteredSelected}
+                onChange={toggleSelectAll}
+                title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+              />
+            ),
+            cell: (itr) => (
+              <input
+                type="checkbox"
+                checked={selectedIds.has(itr.id)}
+                onChange={() => toggleRow(itr.id)}
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+              />
+            ),
+          },
+          {
+            key: 'project',
+            width: 110,
+            header: t('table.colProject'),
+            cell: (itr) => itr.projects ? (
+              <a
+                href={`/projects/${itr.projects.id}`}
+                title={itr.projects.name}
+                style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => toggleRow(itr.id)}
-                  style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
-                />
-
-                {/* Project */}
-                <div>
-                  {proj && (
-                    <a
-                      href={`/projects/${proj.id}`}
-                      style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                      title={proj.name}
-                    >
-                      {proj.code}
-                    </a>
-                  )}
-                </div>
-
-                {/* ITR + Tag */}
+                {itr.projects.code}
+              </a>
+            ) : null,
+          },
+          {
+            key: 'itr',
+            header: t('table.colItr'),
+            cell: (itr) => {
+              const phase = itr.project_phases
+              return (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {phase && (
@@ -402,54 +387,94 @@ export default function ItrListGlobal({
                     </div>
                   )}
                 </div>
-
-                {/* Template */}
+              )
+            },
+          },
+          {
+            key: 'template',
+            header: t('table.colTemplate'),
+            cell: (itr) => {
+              const disc = itr.itr_templates?.disciplines
+              return (
                 <div>
                   {disc && (
                     <span style={{ fontSize: 10, fontWeight: 600, color: disc.color, marginRight: 6, padding: '1px 5px', background: `${disc.color}15`, borderRadius: 'var(--radius-sm)' }}>{disc.code}</span>
                   )}
                   <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)' }}>{itr.itr_templates?.title ?? '—'}</span>
                 </div>
-
-                {/* Inspector */}
+              )
+            },
+          },
+          {
+            key: 'inspector',
+            width: 140,
+            header: t('table.colInspector'),
+            cell: (itr) => {
+              const executor = itr.itr_assignments.find(a => a.role === 'executor')
+              return (
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {executor?.profiles?.full_name ?? '—'}
                 </div>
-
-                {/* Scheduled date */}
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                  {itr.scheduled_date ?? '—'}
-                </div>
-
-                {/* Progress */}
-                <div>
-                  <div style={{ fontSize: 10, color: 'var(--gray-400)', textAlign: 'right', marginBottom: 3 }}>{itr.progress_pct}%</div>
-                  <div style={{ height: 4, background: 'var(--gray-100)', borderRadius: 2, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: 2 }} />
-                  </div>
-                </div>
-
-                {/* Status */}
-                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: style.bg, color: style.color, whiteSpace: 'nowrap', textAlign: 'center' }}>
-                  {itrStatusLabels[itr.status] ?? itr.status}
-                </span>
-
-                {/* Signatures */}
-                <div style={{ display: 'flex', gap: 2 }}>
-                  {(['executor', 'supervisor', 'client'] as const).map(role => {
-                    const signed = itr.itr_signatures.some(s => s.role === role)
-                    return (
-                      <span key={role} style={{ width: 18, height: 18, borderRadius: 'var(--radius-sm)', background: signed ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: signed ? 'var(--success-500)' : 'var(--gray-300)' }}>
-                        {SIGN_LABELS[role]}
-                      </span>
-                    )
-                  })}
+              )
+            },
+          },
+          {
+            key: 'date',
+            width: 100,
+            hideBelow: 1024,
+            header: t('table.colDate'),
+            cell: (itr) => (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                {itr.scheduled_date ?? '—'}
+              </div>
+            ),
+          },
+          {
+            key: 'progress',
+            width: 110,
+            header: t('table.colProgress'),
+            cell: (itr) => (
+              <div>
+                <div style={{ fontSize: 10, color: 'var(--gray-400)', textAlign: 'right', marginBottom: 3 }}>{itr.progress_pct}%</div>
+                <div style={{ height: 4, background: 'var(--gray-100)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: 2 }} />
                 </div>
               </div>
-            )
-          })}
-        </div>
-      )}
+            ),
+          },
+          {
+            key: 'status',
+            width: 110,
+            header: t('table.colStatus'),
+            cell: (itr) => {
+              const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
+              return (
+                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: style.bg, color: style.color, whiteSpace: 'nowrap' }}>
+                  {itrStatusLabels[itr.status] ?? itr.status}
+                </span>
+              )
+            },
+          },
+          {
+            key: 'signatures',
+            width: 80,
+            hideBelow: 1024,
+            header: t('table.colSignature'),
+            cell: (itr) => (
+              <div style={{ display: 'flex', gap: 2 }}>
+                {(['executor', 'supervisor', 'client'] as const).map(role => {
+                  const signed = itr.itr_signatures.some(s => s.role === role)
+                  return (
+                    <span key={role} style={{ width: 18, height: 18, borderRadius: 'var(--radius-sm)', background: signed ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: signed ? 'var(--success-500)' : 'var(--gray-300)' }}>
+                      {SIGN_LABELS[role]}
+                    </span>
+                  )
+                })}
+              </div>
+            ),
+          },
+        ] satisfies DataTableColumn<ItrRow>[]}
+      />
 
       {/* Pagination */}
       {totalPages > 1 && (

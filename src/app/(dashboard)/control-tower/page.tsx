@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { Card, Button, Select } from '@/components/ui'
+import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
 
 type Readiness = {
   system_id: string
@@ -171,66 +171,66 @@ export default async function ControlTowerPage({
           {projectId ? t('empty') : t('selectProject')}
         </Card>
       ) : (
-        <Card padding="none" style={{ overflow: 'hidden' }}>
+        <TableWrapper>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
-              <thead>
-                <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
-                  <th style={thStyle}>{t('col.area')}</th>
-                  <th style={thStyle}>{t('col.system')}</th>
-                  <th style={{ ...thStyle, width: 220 }}>{t('col.itrs')}</th>
-                  <th style={{ ...thStyle, width: 90, textAlign: 'center' }}>{t('col.punchA')}</th>
-                  <th style={{ ...thStyle, width: 90, textAlign: 'center' }}>{t('col.punchB')}</th>
-                  <th style={{ ...thStyle, width: 90, textAlign: 'center' }}>{t('col.punchC')}</th>
-                  <th style={{ ...thStyle, width: 280 }}>{t('col.gates')}</th>
-                  <th style={thStyle}>{t('col.topBlocker')}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table aria-label={t('title')}>
+              <THead>
+                <TR>
+                  <TH style={{ position: 'sticky', left: 0, background: 'var(--gray-50)', zIndex: 2, minWidth: 140 }}>{t('col.area')}</TH>
+                  <TH style={{ minWidth: 160 }}>{t('col.system')}</TH>
+                  <TH style={{ width: 220 }}>{t('col.itrs')}</TH>
+                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchA')}</TH>
+                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchB')}</TH>
+                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchC')}</TH>
+                  <TH style={{ width: 240 }}>{t('col.gates')}</TH>
+                  <TH style={{ minWidth: 220 }}>{t('col.topBlocker')}</TH>
+                </TR>
+              </THead>
+              <TBody>
                 {rows.map(r => {
                   const topBlocker = r.blockers[0]
                   return (
-                    <tr key={r.system_id} style={{ borderBottom: '1px solid var(--gray-100)' }}>
-                      <td style={tdStyle}>
+                    <TR key={r.system_id}>
+                      <TD style={{ position: 'sticky', left: 0, background: 'var(--card-bg)', zIndex: 1 }}>
                         <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{r.area_code}</div>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.area_name}</div>
-                      </td>
-                      <td style={tdStyle}>
+                      </TD>
+                      <TD>
                         <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{r.system_code}</div>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.system_name}</div>
-                      </td>
-                      <td style={tdStyle}>
+                      </TD>
+                      <TD>
                         <Bar pct={Number(r.itr_pct)} />
                         <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
                           {r.itr_approved}/{r.itr_total} {t('approved')}
                         </div>
-                      </td>
-                      <td style={{ ...tdStyle, textAlign: 'center', color: r.open_punches_a > 0 ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: 600 }}>
+                      </TD>
+                      <TD style={{ textAlign: 'center', color: r.open_punches_a > 0 ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: 600 }}>
                         {r.open_punches_a}
-                      </td>
-                      <td style={{ ...tdStyle, textAlign: 'center', color: r.open_punches_b > 0 ? 'var(--warning-500)' : 'var(--gray-400)', fontWeight: 600 }}>
+                      </TD>
+                      <TD style={{ textAlign: 'center', color: r.open_punches_b > 0 ? 'var(--warning-500)' : 'var(--gray-400)', fontWeight: 600 }}>
                         {r.open_punches_b}
-                      </td>
-                      <td style={{ ...tdStyle, textAlign: 'center', color: r.open_punches_c > 0 ? 'var(--gray-500)' : 'var(--gray-300)', fontWeight: 600 }}>
+                      </TD>
+                      <TD style={{ textAlign: 'center', color: r.open_punches_c > 0 ? 'var(--gray-500)' : 'var(--gray-300)', fontWeight: 600 }}>
                         {r.open_punches_c}
-                      </td>
-                      <td style={tdStyle}>
+                      </TD>
+                      <TD>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                           <GateBadge ok={r.ready_mc}   label="MC" />
                           <GateBadge ok={r.ready_rfsu} label="RFSU" />
                           <GateBadge ok={r.ready_rfc}  label="RFC" />
                         </div>
-                      </td>
-                      <td style={{ ...tdStyle, fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+                      </TD>
+                      <TD style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
                         {topBlocker ? topBlocker.message : <span style={{ color: 'var(--success-500)', fontWeight: 600 }}>{t('noBlockers')}</span>}
-                      </td>
-                    </tr>
+                      </TD>
+                    </TR>
                   )
                 })}
-              </tbody>
-            </table>
+              </TBody>
+            </Table>
           </div>
-        </Card>
+        </TableWrapper>
       )}
     </div>
   )
@@ -242,14 +242,4 @@ const kpiLabel: React.CSSProperties = {
 }
 const kpiValue: React.CSSProperties = {
   fontSize: 28, fontWeight: 700, marginTop: 4,
-}
-
-const thStyle: React.CSSProperties = {
-  padding: '12px 16px', textAlign: 'left',
-  fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)',
-  textTransform: 'uppercase', letterSpacing: '.05em',
-}
-
-const tdStyle: React.CSSProperties = {
-  padding: '14px 16px', verticalAlign: 'middle', color: 'var(--text-strong)',
 }
