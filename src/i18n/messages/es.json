@@ -18,14 +18,21 @@
   "Sidebar": {
     "groups": {
       "main": "Principal",
+      "setup": "Configuración",
       "execution": "Ejecución",
       "control": "Control",
-      "admin": "Administración",
+      "closure": "Cierre",
+      "ops": "Operaciones",
+      "integrations": "Integraciones",
+      "system": "Sistema",
       "project": "Proyecto"
     },
     "nav": {
       "dashboard": "Dashboard",
       "projects": "Proyectos",
+      "projectOverview": "Resumen",
+      "tags": "Tags",
+      "signals": "Señales",
       "scan": "Escanear QR/NFC",
       "itrs": "ITRs",
       "punchList": "Punch List",
