@@ -1,33 +1,30 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getTranslations, getLocale } from 'next-intl/server'
+import { AlertTriangle, FileSignature, FolderKanban } from 'lucide-react'
+import { Card, EmptyState } from '@/components/ui'
 
 // ── Shared config ─────────────────────────────────────────────────────
 
 const ITR_STYLE: Record<string, { color: string; bg: string }> = {
-  not_started: { color: '#64748b', bg: '#f1f5f9' },
-  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { color: '#10b981', bg: '#ecfdf5' },
-  approved:     { color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:     { color: '#ef4444', bg: '#fee2e2' },
+  not_started: { color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
+  in_progress: { color: 'var(--primary-500)', bg: 'var(--primary-50)' },
+  completed:   { color: 'var(--success-500)', bg: 'var(--success-50)' },
+  approved:    { color: '#7c3aed',            bg: '#f5f3ff' },
+  rejected:    { color: 'var(--danger-500)',  bg: 'var(--danger-50)' },
 }
 
 const CATEGORY_CFG = {
-  A: { label: 'Cat A', color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
-  B: { label: 'Cat B', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  C: { label: 'Cat C', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+  A: { label: 'Cat A', color: 'var(--danger-500)',  bg: 'var(--danger-50)',  border: '#fecaca' },
+  B: { label: 'Cat B', color: 'var(--warning-500)', bg: 'var(--warning-50)', border: '#fde68a' },
+  C: { label: 'Cat C', color: 'var(--gray-500)',    bg: 'var(--gray-50)',    border: 'var(--border)' },
 }
 
 const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
-  open:        { color: '#ef4444', bg: '#fee2e2' },
-  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
-  closed:      { color: '#10b981', bg: '#ecfdf5' },
-  cancelled:   { color: '#64748b', bg: '#f1f5f9' },
-}
-
-const cardStyle: React.CSSProperties = {
-  background: 'white', borderRadius: '14px', padding: '24px',
-  border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+  open:        { color: 'var(--danger-500)',  bg: 'var(--danger-50)' },
+  in_progress: { color: 'var(--primary-500)', bg: 'var(--primary-50)' },
+  closed:      { color: 'var(--success-500)', bg: 'var(--success-50)' },
+  cancelled:   { color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -107,16 +104,16 @@ export default async function DashboardPage() {
     const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
     return (
-      <div style={{ padding: '28px', maxWidth: '860px' }}>
-        <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('hello', { name: firstName })}</h1>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, textTransform: 'capitalize' }}>{todayLabel} · {org?.name ?? ''}</p>
+      <div style={{ padding: 28, maxWidth: 860 }}>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('hello', { name: firstName })}</h1>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0, textTransform: 'capitalize' }}>{todayLabel} · {org?.name ?? ''}</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
-          <SummaryPill count={activeItrs.length} label={t('inspector.pillItrs')} color="#3b82f6" />
-          <SummaryPill count={(myPunches ?? []).length} label={t('inspector.pillPunches')} color="#ef4444" />
-          <SummaryPill count={activeItrs.filter(a => (a.itrs as any)?.status === 'in_progress').length} label={t('inspector.pillProgress')} color="#10b981" />
+        <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap' }}>
+          <SummaryPill count={activeItrs.length} label={t('inspector.pillItrs')} color="var(--primary-500)" />
+          <SummaryPill count={(myPunches ?? []).length} label={t('inspector.pillPunches')} color="var(--danger-500)" />
+          <SummaryPill count={activeItrs.filter(a => (a.itrs as any)?.status === 'in_progress').length} label={t('inspector.pillProgress')} color="var(--success-500)" />
         </div>
 
         <TaskSection title={t('inspector.myItrs')} count={activeItrs.length} emptyText={t('inspector.myItrsEmpty')}>
@@ -127,32 +124,32 @@ export default async function DashboardPage() {
             const overdue = itr.scheduled_date && itr.scheduled_date < todayStr && itr.status === 'not_started'
             return (
               <a key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
-                <div style={{ padding: '14px 16px', background: 'white', border: `1px solid ${overdue ? '#fecaca' : '#e2e8f0'}`, borderLeft: `3px solid ${overdue ? '#ef4444' : style.color}`, borderRadius: '10px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center' }}>
+                <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? '#fecaca' : 'var(--border)'}`, borderLeft: `3px solid ${overdue ? 'var(--danger-500)' : style.color}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      {phase && <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>}
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
-                      <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>}
+                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-400)', background: 'var(--gray-100)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
                         {a.role === 'executor' ? t('inspector.executor') : a.role === 'supervisor' ? t('inspector.supervisor') : t('inspector.roleClient')}
                       </span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#374151' }}>{itr.tags?.tag_number} — {itr.tags?.description}</div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px', display: 'flex', gap: '10px' }}>
+                    <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)' }}>{itr.tags?.tag_number} — {itr.tags?.description}</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', marginTop: 3, display: 'flex', gap: 10 }}>
                       <span>{itr.projects?.code}</span>
                       {itr.scheduled_date && (
-                        <span style={{ color: overdue ? '#ef4444' : '#94a3b8', fontWeight: overdue ? 600 : 400 }}>
+                        <span style={{ color: overdue ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: overdue ? 600 : 400 }}>
                           {t(overdue ? 'inspector.schedOverdue' : 'inspector.scheduled', { date: itr.scheduled_date })}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: style.bg, color: style.color, whiteSpace: 'nowrap' }}>{itrLabel(itr.status)}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '60px', height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '2px' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                    <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, padding: '3px 10px', borderRadius: 'var(--radius-pill)', background: style.bg, color: style.color, whiteSpace: 'nowrap' }}>{itrLabel(itr.status)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 60, height: 4, background: 'var(--gray-100)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: 2 }} />
                       </div>
-                      <span style={{ fontSize: '10px', color: '#94a3b8' }}>{itr.progress_pct}%</span>
+                      <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>{itr.progress_pct}%</span>
                     </div>
                   </div>
                 </div>
@@ -161,23 +158,23 @@ export default async function DashboardPage() {
           })}
         </TaskSection>
 
-        <TaskSection title={t('inspector.myPunches')} count={(myPunches ?? []).length} emptyText={t('inspector.myPunchesEmpty')} style={{ marginTop: '20px' }}>
+        <TaskSection title={t('inspector.myPunches')} count={(myPunches ?? []).length} emptyText={t('inspector.myPunchesEmpty')} style={{ marginTop: 20 }}>
           {(myPunches ?? []).map((p: any) => {
             const cat = CATEGORY_CFG[p.category as 'A' | 'B' | 'C']
             const pStyle = PUNCH_STYLE[p.status as keyof typeof PUNCH_STYLE] ?? PUNCH_STYLE.open
             const overdue = p.target_date && p.target_date < todayStr
             return (
               <a key={p.id} href={`/projects/${p.project_id}/punches`} style={{ display: 'block', textDecoration: 'none' }}>
-                <div style={{ padding: '14px 16px', background: 'white', border: `1px solid ${overdue ? '#fecaca' : '#e2e8f0'}`, borderLeft: `3px solid ${cat.color}`, borderRadius: '10px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center' }}>
+                <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? '#fecaca' : 'var(--border)'}`, borderLeft: `3px solid ${cat.color}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>
+                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#374151' }}>{p.description}</div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>{(p.projects as any)?.code} · {(p.tags as any)?.tag_number}</div>
+                    <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)' }}>{p.description}</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', marginTop: 3 }}>{(p.projects as any)?.code} · {(p.tags as any)?.tag_number}</div>
                   </div>
-                  <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>{punchLabel(p.status)}</span>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, padding: '3px 10px', borderRadius: 'var(--radius-pill)', background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>{punchLabel(p.status)}</span>
                 </div>
               </a>
             )
@@ -209,70 +206,70 @@ export default async function DashboardPage() {
     const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
     return (
-      <div style={{ padding: '28px', maxWidth: '860px' }}>
-        <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('hello', { name: firstName })}</h1>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, textTransform: 'capitalize' }}>{todayLabel} · {org?.name ?? ''}</p>
+      <div style={{ padding: 28, maxWidth: 860 }}>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('hello', { name: firstName })}</h1>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0, textTransform: 'capitalize' }}>{todayLabel} · {org?.name ?? ''}</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
-          <SummaryPill count={(projects ?? []).length} label={t('clientView.pillProjects')} color="#3b82f6" />
-          <SummaryPill count={pendingSignature.length} label={t('clientView.pillSignatures')} color={pendingSignature.length > 0 ? '#f59e0b' : '#10b981'} />
+        <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap' }}>
+          <SummaryPill count={(projects ?? []).length} label={t('clientView.pillProjects')} color="var(--primary-500)" />
+          <SummaryPill count={pendingSignature.length} label={t('clientView.pillSignatures')} color={pendingSignature.length > 0 ? 'var(--warning-500)' : 'var(--success-500)'} />
         </div>
 
         {/* Pending signatures */}
         {pendingSignature.length > 0 && (
-          <div style={{ ...cardStyle, marginBottom: '20px', borderLeft: '3px solid #f59e0b' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '20px' }}>✍</span>
+          <Card padding="md" style={{ marginBottom: 20, borderLeft: '3px solid var(--warning-500)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <FileSignature size={20} color="var(--warning-700)" aria-hidden="true" />
               <div>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>{t('clientView.signaturesTitle')}</div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>{t('clientView.signaturesDesc', { count: pendingSignature.length })}</div>
+                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-strong)' }}>{t('clientView.signaturesTitle')}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{t('clientView.signaturesDesc', { count: pendingSignature.length })}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {pendingSignature.map(a => {
                 const itr = a.itrs as any
                 const phase = itr.project_phases
                 return (
                   <a key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
-                    <div style={{ padding: '12px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      {phase && <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: `${phase.color}18`, color: phase.color, whiteSpace: 'nowrap' }}>{phase.code}</span>}
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
-                      <span style={{ fontSize: '12px', color: '#64748b', flex: 1 }}>{itr.tags?.tag_number} — {itr.tags?.description}</span>
-                      <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 600 }}>{itr.projects?.code}</span>
-                      <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 600 }}>{t('clientView.sign')}</span>
+                    <div style={{ padding: '12px 14px', background: 'var(--warning-50)', border: '1px solid #fde68a', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: `${phase.color}18`, color: phase.color, whiteSpace: 'nowrap' }}>{phase.code}</span>}
+                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
+                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', flex: 1 }}>{itr.tags?.tag_number} — {itr.tags?.description}</span>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-500)', fontWeight: 600 }}>{itr.projects?.code}</span>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--warning-500)', fontWeight: 600 }}>{t('clientView.sign')}</span>
                     </div>
                   </a>
                 )
               })}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Active projects (read-only) */}
-        <div style={cardStyle}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>{t('clientView.projectsTitle')}</h3>
+        <Card padding="md">
+          <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)', marginBottom: 16 }}>{t('clientView.projectsTitle')}</h3>
           {(projects ?? []).length === 0 ? (
-            <p style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', padding: '24px 0' }}>{t('clientView.noProjects')}</p>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', textAlign: 'center', padding: '24px 0' }}>{t('clientView.noProjects')}</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {(projects ?? []).map((p: any) => (
-                <div key={p.id} style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#3b82f620', border: '1px solid #3b82f630', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#3b82f6' }}>{p.code}</div>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{p.name}</span>
+                <div key={p.id} style={{ padding: '14px 16px', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 'var(--radius-md)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary-500)' }}>{p.code}</div>
+                    <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-strong)' }}>{p.name}</span>
                   </div>
-                  <a href={`/projects/${p.id}`} style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}>Ver detalle →</a>
+                  <a href={`/projects/${p.id}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', textDecoration: 'none', fontWeight: 500 }}>Ver detalle →</a>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
-        <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '20px', textAlign: 'center' }}>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginTop: 20, textAlign: 'center' }}>
           {t.rich('clientView.viewItrs', {
-            link: (chunks) => <a href="/itrs" style={{ color: '#3b82f6', textDecoration: 'none' }}>{chunks}</a>
+            link: (chunks) => <a href="/itrs" style={{ color: 'var(--primary-500)', textDecoration: 'none' }}>{chunks}</a>
           })}
         </p>
       </div>
@@ -321,7 +318,7 @@ export default async function DashboardPage() {
 
   // ── KPIs ──────────────────────────────────────────────────────────
   const kpiCards = (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
       {(phases ?? []).slice(0, 3).map(phase => {
         const phaseItrs = (orgItrs ?? []).filter((i: any) => i.phase_id === phase.id)
         const total = phaseItrs.length
@@ -333,7 +330,7 @@ export default async function DashboardPage() {
         const open = (orgPunches ?? []).filter((p: any) => p.status !== 'closed' && p.status !== 'cancelled')
         const catA = open.filter((p: any) => p.category === 'A').length
         const catB = open.filter((p: any) => p.category === 'B').length
-        return <KpiCard label={t('kpi.punchesOpen')} value={String(open.length)} color="#ef4444" sub={t('kpi.punchesOpenSub', { catA, catB })} danger />
+        return <KpiCard label={t('kpi.punchesOpen')} value={String(open.length)} color="var(--danger-500)" sub={t('kpi.punchesOpenSub', { catA, catB })} danger />
       })()}
       {(() => {
         const due = orgPreservationDue ?? []
@@ -344,7 +341,7 @@ export default async function DashboardPage() {
           <KpiCard
             label={t('kpi.preservation')}
             value={String(due.length)}
-            color={overdue > 0 ? '#f59e0b' : '#8b5cf6'}
+            color={overdue > 0 ? 'var(--warning-500)' : '#8b5cf6'}
             sub={overdue > 0 ? t('kpi.preservationOverdue', { overdue, upcoming }) : t('kpi.preservationUpcoming', { upcoming })}
             danger={overdue > 0}
           />
@@ -355,23 +352,23 @@ export default async function DashboardPage() {
 
   // ── Projects section ──────────────────────────────────────────────
   const projectsSection = (
-    <div style={cardStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>{t('projects.title')}</h3>
+    <Card padding="md">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)' }}>{t('projects.title')}</h3>
         {canCreateProject && (
-          <a href="/setup?mode=project" style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>
+          <a href="/setup?mode=project" style={{ padding: '8px 16px', background: 'var(--primary-500)', color: '#fff', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none' }}>
             {t('projects.newProject')}
           </a>
         )}
       </div>
       {activeProjects.length === 0 ? (
-        <div style={{ padding: '48px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
-          <div style={{ fontSize: '40px', marginBottom: '12px' }}>⬡</div>
-          <p style={{ color: '#475569', fontWeight: 500, marginBottom: '6px' }}>{t('projects.empty')}</p>
-          <p style={{ color: '#94a3b8', fontSize: '14px' }}>{t('projects.emptyDesc')}</p>
-        </div>
+        <EmptyState
+          icon={<FolderKanban size={24} aria-hidden="true" />}
+          title={t('projects.empty')}
+          description={t('projects.emptyDesc')}
+        />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {activeProjects.map(project => (
             <ProjectRow
               key={project.id}
@@ -383,7 +380,7 @@ export default async function DashboardPage() {
           ))}
         </div>
       )}
-    </div>
+    </Card>
   )
 
   // ── Architect / Leader ─────────────────────────────────────────────
@@ -392,36 +389,36 @@ export default async function DashboardPage() {
     const firstName = (profile as any)?.full_name?.split(' ')[0] ?? role
 
     return (
-      <div style={{ padding: '32px' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>{t('hello', { name: firstName })}</h1>
-          <p style={{ color: '#64748b', marginTop: '4px', fontSize: '15px' }}>{org?.name ?? ''}</p>
+      <div style={{ padding: 32 }}>
+        <div style={{ marginBottom: 32 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px' }}>{t('hello', { name: firstName })}</h1>
+          <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: 'var(--text-base)' }}>{org?.name ?? ''}</p>
         </div>
 
         {/* Operational alert panel */}
         {unassignedCatA.length > 0 && (
-          <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderLeft: '4px solid #f97316', borderRadius: '12px', padding: '20px 24px', marginBottom: '28px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '18px' }}>⚠</span>
+          <div role="alert" style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderLeft: '4px solid #f97316', borderRadius: 'var(--radius-lg)', padding: '20px 24px', marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <AlertTriangle size={18} color="#9a3412" aria-hidden="true" />
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#9a3412' }}>{t('architect.catATitle')}</div>
-                  <div style={{ fontSize: '12px', color: '#c2410c' }}>{t('architect.catADesc', { count: unassignedCatA.length })}</div>
+                  <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: '#9a3412' }}>{t('architect.catATitle')}</div>
+                  <div style={{ fontSize: 'var(--text-sm)', color: '#c2410c' }}>{t('architect.catADesc', { count: unassignedCatA.length })}</div>
                 </div>
               </div>
-              <a href="/punch-list" style={{ fontSize: '12px', color: '#ea580c', fontWeight: 600, textDecoration: 'none' }}>{t('architect.catAViewAll')}</a>
+              <a href="/punch-list" style={{ fontSize: 'var(--text-sm)', color: '#ea580c', fontWeight: 600, textDecoration: 'none' }}>{t('architect.catAViewAll')}</a>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {unassignedCatA.slice(0, 5).map((p: any) => (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: 'white', borderRadius: '7px', border: '1px solid #fed7aa' }}>
-                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#9a3412', background: '#fee2e2', padding: '1px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>Cat A</span>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</span>
-                  <span style={{ fontSize: '12px', color: '#64748b', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</span>
-                  <span style={{ fontSize: '10px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{(p.projects as any)?.code}</span>
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--card-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid #fed7aa' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#9a3412', background: 'var(--danger-50)', padding: '1px 6px', borderRadius: 'var(--radius-sm)', whiteSpace: 'nowrap' }}>Cat A</span>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-700)', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</span>
+                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</span>
+                  <span style={{ fontSize: 10, color: 'var(--gray-400)', whiteSpace: 'nowrap' }}>{(p.projects as any)?.code}</span>
                 </div>
               ))}
               {unassignedCatA.length > 5 && (
-                <p style={{ fontSize: '11px', color: '#c2410c', margin: '4px 0 0', paddingLeft: '4px' }}>{t('architect.catAMore', { count: unassignedCatA.length - 5 })}</p>
+                <p style={{ fontSize: 'var(--text-xs)', color: '#c2410c', margin: '4px 0 0', paddingLeft: 4 }}>{t('architect.catAMore', { count: unassignedCatA.length - 5 })}</p>
               )}
             </div>
           </div>
@@ -431,16 +428,16 @@ export default async function DashboardPage() {
         {projectsSection}
 
         {(disciplines ?? []).length > 0 && (
-          <div style={{ ...cardStyle, marginTop: '16px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>{t('disciplines')}</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <Card padding="md" style={{ marginTop: 16 }}>
+            <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)', marginBottom: 16 }}>{t('disciplines')}</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {(disciplines ?? []).map(d => (
-                <span key={d.id} style={{ padding: '4px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 500, background: `${d.color}18`, color: d.color, border: `1px solid ${d.color}40` }}>
+                <span key={d.id} style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-sm)', fontWeight: 500, background: `${d.color}18`, color: d.color, border: `1px solid ${d.color}40` }}>
                   {d.code} — {d.name}
                 </span>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </div>
     )
@@ -448,24 +445,24 @@ export default async function DashboardPage() {
 
   // ── Owner / Admin (strategic) ─────────────────────────────────────
   return (
-    <div style={{ padding: '32px' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>{t('title')}</h1>
-        <p style={{ color: '#64748b', marginTop: '4px', fontSize: '15px' }}>{org?.name ?? t('subtitle')}</p>
+    <div style={{ padding: 32 }}>
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px' }}>{t('title')}</h1>
+        <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: 'var(--text-base)' }}>{org?.name ?? t('subtitle')}</p>
       </div>
       {kpiCards}
       {projectsSection}
       {(disciplines ?? []).length > 0 && (
-        <div style={{ ...cardStyle, marginTop: '16px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>{t('disciplines')}</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+        <Card padding="md" style={{ marginTop: 16 }}>
+          <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)', marginBottom: 16 }}>{t('disciplines')}</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {(disciplines ?? []).map(d => (
-              <span key={d.id} style={{ padding: '4px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 500, background: `${d.color}18`, color: d.color, border: `1px solid ${d.color}40` }}>
+              <span key={d.id} style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-sm)', fontWeight: 500, background: `${d.color}18`, color: d.color, border: `1px solid ${d.color}40` }}>
                 {d.code} — {d.name}
               </span>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   )
@@ -475,9 +472,9 @@ export default async function DashboardPage() {
 
 function SummaryPill({ count, label, color }: { count: number; label: string; color: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: 'white', borderRadius: '999px', border: `1px solid ${color}30`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-      <span style={{ fontSize: '18px', fontWeight: 700, color }}>{count}</span>
-      <span style={{ fontSize: '12px', color: '#64748b' }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'var(--card-bg)', borderRadius: 'var(--radius-pill)', border: `1px solid ${color}30`, boxShadow: 'var(--shadow-sm)' }}>
+      <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color }}>{count}</span>
+      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{label}</span>
     </div>
   )
 }
@@ -486,17 +483,17 @@ function TaskSection({ title, count, children, emptyText, style }: {
   title: string; count: number; children: React.ReactNode; emptyText: string; style?: React.CSSProperties
 }) {
   return (
-    <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden', ...style }}>
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>{title}</span>
-        {count > 0 && <span style={{ fontSize: '11px', fontWeight: 700, background: '#f1f5f9', color: '#64748b', padding: '2px 8px', borderRadius: '999px' }}>{count}</span>}
+    <div style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden', ...style }}>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)' }}>{title}</span>
+        {count > 0 && <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, background: 'var(--gray-100)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>{count}</span>}
       </div>
       {count === 0 ? (
         <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{emptyText}</p>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0 }}>{emptyText}</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px' }}>
           {children}
         </div>
       )}
@@ -508,14 +505,14 @@ function KpiCard({ label, value, color, sub, danger = false, progress = 0 }: {
   label: string; value: string; color: string; sub: string; danger?: boolean; progress?: number
 }) {
   return (
-    <div style={{ ...cardStyle, borderTop: `3px solid ${color}` }}>
-      <p style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>{label}</p>
-      <p style={{ fontSize: '36px', fontWeight: 700, color: danger ? color : '#0f172a', margin: '8px 0 4px', letterSpacing: '-1px' }}>{value}</p>
-      <p style={{ fontSize: '12px', color: '#94a3b8' }}>{sub}</p>
-      <div style={{ marginTop: '12px', height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-        <div style={{ width: `${progress}%`, height: '100%', background: color, borderRadius: '3px' }} />
+    <Card padding="md" style={{ borderTop: `3px solid ${color}` }}>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 500 }}>{label}</p>
+      <p style={{ fontSize: 36, fontWeight: 700, color: danger ? color : 'var(--text-strong)', margin: '8px 0 4px', letterSpacing: '-1px' }}>{value}</p>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)' }}>{sub}</p>
+      <div style={{ marginTop: 12, height: 6, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ width: `${progress}%`, height: '100%', background: color, borderRadius: 3 }} />
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -526,25 +523,25 @@ function ProjectRow({ project, phases, noMetaText, activeText }: {
   activeText: string
 }) {
   return (
-    <div style={{ padding: '16px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#3b82f620', border: '1px solid #3b82f630', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#3b82f6' }}>
+    <div style={{ padding: '16px 20px', background: 'var(--gray-50)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--primary-500)' }}>
           {project.code}
         </div>
         <div>
-          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '15px' }}>{project.name}</div>
-          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+          <div style={{ fontWeight: 600, color: 'var(--text-strong)', fontSize: 'var(--text-base)' }}>{project.name}</div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>
             {[project.client, project.location].filter(Boolean).join(' · ') || noMetaText}
           </div>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         {phases.slice(0, 4).map(phase => (
-          <div key={phase.id} title={phase.name} style={{ width: '28px', height: '28px', borderRadius: '50%', background: `${phase.color}20`, border: `2px solid ${phase.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: phase.color }}>
+          <div key={phase.id} title={phase.name} style={{ width: 28, height: 28, borderRadius: '50%', background: `${phase.color}20`, border: `2px solid ${phase.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: phase.color }}>
             {phase.code}
           </div>
         ))}
-        <span style={{ marginLeft: '8px', padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600, background: '#10b98120', color: '#10b981', border: '1px solid #10b98130' }}>
+        <span style={{ marginLeft: 8, padding: '3px 10px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600, background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-500)' }}>
           {activeText}
         </span>
       </div>
