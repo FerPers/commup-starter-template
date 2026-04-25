@@ -280,98 +280,119 @@ export default function QRNFCScanner() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+    <div style={{ minHeight: '100vh', background: 'var(--gray-900)', color: '#fff', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-700">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottom: '1px solid var(--gray-700)' }}>
         <button
           onClick={() => router.back()}
-          className="p-2 rounded-lg hover:bg-slate-800 transition"
+          style={{ padding: 8, borderRadius: 'var(--radius-md)', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', transition: 'background 0.15s' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--gray-800)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
         >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg style={{ width: 24, height: 24 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-lg font-bold">Escanear Tag</h1>
+        <h1 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, margin: 0 }}>Escanear Tag</h1>
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="p-2 rounded-lg hover:bg-slate-800 transition relative"
+          style={{ padding: 8, borderRadius: 'var(--radius-md)', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', transition: 'background 0.15s', position: 'relative' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--gray-800)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
         >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg style={{ width: 24, height: 24 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           {recentScans.length > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 bg-sky-500 rounded-full" />
+            <span style={{ position: 'absolute', top: 4, right: 4, width: 8, height: 8, background: 'var(--primary-500)', borderRadius: 'var(--radius-pill)' }} />
           )}
         </button>
       </div>
 
       {/* Mode Selector */}
-      <div className="flex gap-1 p-3 bg-slate-800">
-        {(['QR', 'NFC', 'MANUAL'] as ScanMode[]).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            disabled={m === 'NFC' && !nfcAvailable}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition ${
-              mode === m
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
-            } ${m === 'NFC' && !nfcAvailable ? 'opacity-40 cursor-not-allowed' : ''}`}
-          >
-            {m === 'QR' && '📷 QR'}
-            {m === 'NFC' && `📡 NFC${!nfcAvailable ? ' (N/D)' : ''}`}
-            {m === 'MANUAL' && '⌨️ Manual'}
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: 4, padding: 12, background: 'var(--gray-800)' }}>
+        {(['QR', 'NFC', 'MANUAL'] as ScanMode[]).map((m) => {
+          const isActive = mode === m
+          const isDisabled = m === 'NFC' && !nfcAvailable
+          return (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              disabled={isDisabled}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: 600,
+                transition: 'background 0.15s',
+                border: 'none',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                background: isActive ? 'var(--primary-600)' : 'var(--gray-700)',
+                color: isActive ? '#fff' : 'var(--gray-400)',
+                opacity: isDisabled ? 0.4 : 1,
+              }}
+            >
+              {m === 'QR' && '📷 QR'}
+              {m === 'NFC' && `📡 NFC${!nfcAvailable ? ' (N/D)' : ''}`}
+              {m === 'MANUAL' && '⌨️ Manual'}
+            </button>
+          )
+        })}
       </div>
 
       {/* Error Banner */}
       {(error || cameraError) && (
-        <div className="mx-4 mt-3 p-3 bg-red-900/50 border border-red-500 rounded-lg text-sm text-red-200">
+        <div style={{ margin: '12px 16px 0', padding: 12, background: 'rgba(127, 29, 29, 0.5)', border: '1px solid var(--danger-500)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }}>
           ⚠️ {error || cameraError}
         </div>
       )}
 
       {/* QR Viewfinder */}
       {mode === 'QR' && (
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <div className="relative w-full max-w-sm">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: 384 }}>
             {/* Container html5-qrcode */}
             <div
               id={QR_CONTAINER_ID}
-              className="w-full rounded-2xl overflow-hidden bg-black"
-              style={{ minHeight: 320 }}
+              style={{ width: '100%', borderRadius: 16, overflow: 'hidden', background: '#000', minHeight: 320 }}
             />
             {/* Overlay con crosshair */}
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-64 h-64 relative">
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 256, height: 256, position: 'relative' }}>
                   {/* Esquinas del viewfinder */}
                   {[
-                    'top-0 left-0 border-t-4 border-l-4 rounded-tl-lg',
-                    'top-0 right-0 border-t-4 border-r-4 rounded-tr-lg',
-                    'bottom-0 left-0 border-b-4 border-l-4 rounded-bl-lg',
-                    'bottom-0 right-0 border-b-4 border-r-4 rounded-br-lg',
-                  ].map((cls, i) => (
-                    <div key={i} className={`absolute w-8 h-8 border-sky-400 ${cls}`} />
+                    { top: 0, left: 0, borderTop: '4px solid var(--primary-400)', borderLeft: '4px solid var(--primary-400)', borderTopLeftRadius: 8 },
+                    { top: 0, right: 0, borderTop: '4px solid var(--primary-400)', borderRight: '4px solid var(--primary-400)', borderTopRightRadius: 8 },
+                    { bottom: 0, left: 0, borderBottom: '4px solid var(--primary-400)', borderLeft: '4px solid var(--primary-400)', borderBottomLeftRadius: 8 },
+                    { bottom: 0, right: 0, borderBottom: '4px solid var(--primary-400)', borderRight: '4px solid var(--primary-400)', borderBottomRightRadius: 8 },
+                  ].map((corner, i) => (
+                    <div key={i} style={{ position: 'absolute', width: 32, height: 32, ...corner }} />
                   ))}
                   {/* Scan line animada */}
                   {qrActive && (
-                    <div className="absolute left-2 right-2 h-0.5 bg-sky-400 opacity-80 animate-scan-line" />
+                    <div className="animate-scan-line" style={{ position: 'absolute', left: 8, right: 8, height: 2, background: 'var(--primary-400)', opacity: 0.8 }} />
                   )}
                 </div>
               </div>
             </div>
             {/* Status indicator */}
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-              <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                qrActive ? 'bg-sky-600/80 text-sky-100' : 'bg-slate-700/80 text-slate-400'
-              }`}>
+            <div style={{ position: 'absolute', bottom: 12, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+              <span style={{
+                fontSize: 'var(--text-xs)',
+                padding: '4px 12px',
+                borderRadius: 'var(--radius-pill)',
+                fontWeight: 500,
+                background: qrActive ? 'rgba(37, 99, 235, 0.8)' : 'rgba(51, 65, 85, 0.8)',
+                color: qrActive ? 'var(--primary-100)' : 'var(--gray-400)',
+              }}>
                 {qrActive ? '● Escaneando...' : '⊘ Cámara inactiva'}
               </span>
             </div>
           </div>
-          <p className="text-slate-400 text-sm text-center mt-4">
+          <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-sm)', textAlign: 'center', marginTop: 16 }}>
             Apunte al código QR o código de barras del tag del equipo
           </p>
         </div>
@@ -379,15 +400,21 @@ export default function QRNFCScanner() {
 
       {/* NFC Mode */}
       {mode === 'NFC' && (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6">
-          <div className={`w-48 h-48 rounded-full border-4 flex items-center justify-center transition-all duration-500 ${
-            nfcActive
-              ? 'border-sky-400 bg-sky-900/30 animate-pulse'
-              : 'border-slate-600 bg-slate-800'
-          }`}>
-            <div className="text-center">
-              <div className="text-6xl mb-2">📡</div>
-              <div className="text-sm font-semibold text-sky-400">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 24 }}>
+          <div
+            className={nfcActive ? 'animate-pulse' : ''}
+            style={{
+              width: 192, height: 192,
+              borderRadius: '50%',
+              border: `4px solid ${nfcActive ? 'var(--primary-400)' : 'var(--gray-600)'}`,
+              background: nfcActive ? 'rgba(30, 58, 138, 0.3)' : 'var(--gray-800)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.5s',
+            }}
+          >
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 64, marginBottom: 8 }}>📡</div>
+              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-400)' }}>
                 {nfcActive ? 'Listo' : 'Inactivo'}
               </div>
             </div>
@@ -395,19 +422,19 @@ export default function QRNFCScanner() {
           {!nfcActive && (
             <button
               onClick={startNFC}
-              className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-8 rounded-xl transition"
+              style={{ background: 'var(--primary-600)', color: '#fff', fontWeight: 700, padding: '12px 32px', borderRadius: 'var(--radius-lg)', transition: 'background 0.15s', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Activar NFC
             </button>
           )}
           {nfcActive && (
             <>
-              <p className="text-slate-300 text-center text-lg font-medium">
+              <p style={{ color: 'var(--gray-300)', textAlign: 'center', fontSize: 'var(--text-lg)', fontWeight: 500 }}>
                 Acerque el dispositivo al tag NFC del equipo
               </p>
               <button
                 onClick={stopNFC}
-                className="bg-slate-700 hover:bg-slate-600 text-white py-2 px-6 rounded-lg text-sm transition"
+                style={{ background: 'var(--gray-700)', color: '#fff', padding: '8px 24px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', transition: 'background 0.15s', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Detener
               </button>
@@ -418,18 +445,28 @@ export default function QRNFCScanner() {
 
       {/* Manual Input */}
       {mode === 'MANUAL' && (
-        <div className="flex-1 flex flex-col p-4 gap-4">
-          <p className="text-slate-400 text-sm">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 16, gap: 16 }}>
+          <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-sm)' }}>
             Ingrese el ID del tag o escanee/pegue la URL del equipo
           </p>
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <input
               type="text"
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === 'Enter' && handleManualSubmit()}
               placeholder="EJ: PMP-001-P-001A"
-              className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-4 text-white text-lg font-mono placeholder-slate-600 focus:outline-none focus:border-sky-500"
+              style={{
+                width: '100%',
+                background: 'var(--gray-800)',
+                border: '1px solid var(--gray-600)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '16px',
+                color: '#fff',
+                fontSize: 'var(--text-lg)',
+                fontFamily: 'ui-monospace, monospace',
+                outline: 'none',
+              }}
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -438,33 +475,44 @@ export default function QRNFCScanner() {
           <button
             onClick={handleManualSubmit}
             disabled={!manualInput}
-            className="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold py-4 rounded-xl transition text-lg"
+            style={{
+              background: !manualInput ? 'var(--gray-700)' : 'var(--primary-600)',
+              color: !manualInput ? 'var(--gray-500)' : '#fff',
+              fontWeight: 700,
+              padding: '16px',
+              borderRadius: 'var(--radius-lg)',
+              transition: 'background 0.15s',
+              fontSize: 'var(--text-lg)',
+              border: 'none',
+              cursor: !manualInput ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+            }}
           >
             Ir a Tag →
           </button>
-          <div className="mt-2 p-3 bg-slate-800 rounded-lg">
-            <p className="text-slate-500 text-xs font-mono">Formatos válidos:</p>
-            <p className="text-slate-400 text-xs font-mono mt-1">PMP-001-P-001A</p>
-            <p className="text-slate-400 text-xs font-mono">https://app.commup.io/tag_360/XXX</p>
-            <p className="text-slate-400 text-xs font-mono">commup://tag/XXX</p>
+          <div style={{ marginTop: 8, padding: 12, background: 'var(--gray-800)', borderRadius: 'var(--radius-md)' }}>
+            <p style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>Formatos válidos:</p>
+            <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', marginTop: 4, marginBottom: 0 }}>PMP-001-P-001A</p>
+            <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>https://app.commup.io/tag_360/XXX</p>
+            <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>commup://tag/XXX</p>
           </div>
         </div>
       )}
 
       {/* Recent Scans Drawer */}
       {showHistory && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div
-            className="flex-1 bg-black/50"
+            style={{ flex: 1, background: 'rgba(0, 0, 0, 0.5)' }}
             onClick={() => setShowHistory(false)}
           />
-          <div className="bg-slate-800 rounded-t-2xl p-4 max-h-[60vh] overflow-y-auto">
-            <div className="w-12 h-1 bg-slate-600 rounded-full mx-auto mb-4" />
-            <h2 className="font-bold text-lg mb-4">Escaneados Recientes</h2>
+          <div style={{ background: 'var(--gray-800)', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, maxHeight: '60vh', overflowY: 'auto' }}>
+            <div style={{ width: 48, height: 4, background: 'var(--gray-600)', borderRadius: 'var(--radius-pill)', margin: '0 auto 16px' }} />
+            <h2 style={{ fontWeight: 700, fontSize: 'var(--text-lg)', marginBottom: 16, marginTop: 0 }}>Escaneados Recientes</h2>
             {recentScans.length === 0 ? (
-              <p className="text-slate-500 text-center py-8">Sin historial aún</p>
+              <p style={{ color: 'var(--gray-500)', textAlign: 'center', padding: '32px 0' }}>Sin historial aún</p>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {recentScans.map((scan, i) => (
                   <button
                     key={i}
@@ -472,19 +520,19 @@ export default function QRNFCScanner() {
                       setShowHistory(false);
                       router.push(`/tag_360/${scan.tag_id}`);
                     }}
-                    className="flex items-center gap-3 p-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition text-left"
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'var(--gray-700)', borderRadius: 'var(--radius-lg)', transition: 'background 0.15s', textAlign: 'left', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    <span className="text-xl">{scan.tag_type === 'QR' ? '📷' : scan.tag_type === 'NFC' ? '📡' : '⌨️'}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-mono font-semibold text-sky-300 truncate">{scan.tag_id}</div>
+                    <span style={{ fontSize: 'var(--text-lg)' }}>{scan.tag_type === 'QR' ? '📷' : scan.tag_type === 'NFC' ? '📡' : '⌨️'}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--primary-300)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scan.tag_id}</div>
                       {scan.equipment_name && (
-                        <div className="text-slate-400 text-sm truncate">{scan.equipment_name}</div>
+                        <div style={{ color: 'var(--gray-400)', fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scan.equipment_name}</div>
                       )}
-                      <div className="text-slate-500 text-xs">
+                      <div style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)' }}>
                         {new Date(scan.scanned_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })}
                       </div>
                     </div>
-                    <svg className="w-5 h-5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg style={{ width: 20, height: 20, color: 'var(--gray-500)', flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -497,12 +545,12 @@ export default function QRNFCScanner() {
 
       {/* Scan Success Flash */}
       {lastScan && (
-        <div className="fixed bottom-6 left-4 right-4 z-40 bg-green-600 text-white p-4 rounded-2xl shadow-2xl animate-slide-up">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">✓</span>
+        <div className="animate-slide-up" style={{ position: 'fixed', bottom: 24, left: 16, right: 16, zIndex: 40, background: 'var(--success-500)', color: '#fff', padding: 16, borderRadius: 16, boxShadow: 'var(--shadow-lg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 'var(--text-xl)' }}>✓</span>
             <div>
-              <div className="font-bold">{lastScan.tag_id}</div>
-              <div className="text-green-200 text-sm">Navegando a Tag 360°...</div>
+              <div style={{ fontWeight: 700 }}>{lastScan.tag_id}</div>
+              <div style={{ fontSize: 'var(--text-sm)', opacity: 0.85 }}>Navegando a Tag 360°...</div>
             </div>
           </div>
         </div>
