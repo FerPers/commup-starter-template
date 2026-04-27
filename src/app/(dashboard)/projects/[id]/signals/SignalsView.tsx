@@ -120,16 +120,16 @@ export default function SignalsView({
       <div style={{ marginBottom: '24px' }}>
         <a href={`/projects/${projectId}`} style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '14px',
+          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '14px',
         }}>
           ← {projectName}
         </a>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
               {t('title')}
             </h1>
-            <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
               {t('subtitle', { count: signals.length })}
             </p>
           </div>
@@ -149,9 +149,9 @@ export default function SignalsView({
           style={{
             padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
             border: '1px solid',
-            background: typeFilter === 'all' ? '#0f172a' : 'white',
-            color: typeFilter === 'all' ? 'white' : '#475569',
-            borderColor: typeFilter === 'all' ? '#0f172a' : '#e2e8f0',
+            background: typeFilter === 'all' ? 'var(--primary-500)' : 'var(--card-bg)',
+            color: typeFilter === 'all' ? '#fff' : 'var(--text-muted)',
+            borderColor: typeFilter === 'all' ? 'var(--primary-500)' : 'var(--border)',
             cursor: 'pointer',
           }}
         >
@@ -190,16 +190,16 @@ export default function SignalsView({
           onChange={e => setSearch(e.target.value)}
           style={{
             flex: '1', minWidth: '220px', padding: '8px 12px',
-            border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px',
-            outline: 'none', color: '#0f172a',
+            border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px',
+            outline: 'none', color: 'var(--text-strong)',
           }}
         />
         <select
           value={subFilter}
           onChange={e => setSubFilter(e.target.value)}
           style={{
-            padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
-            fontSize: '13px', color: '#475569', background: 'white', cursor: 'pointer',
+            padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px',
+            fontSize: '13px', color: 'var(--text-muted)', background: 'var(--card-bg)', cursor: 'pointer',
           }}
         >
           <option value="all">{t('allSubsystems')}</option>
@@ -212,11 +212,11 @@ export default function SignalsView({
       {/* Table */}
       {signals.length === 0 ? (
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           padding: '64px 32px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>📋</div>
-          <p style={{ fontSize: '15px', fontWeight: 500, color: '#0f172a', margin: '0 0 6px' }}>{t('emptyTitle')}</p>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>{t('emptyTitle')}</p>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>{t('emptyDesc')}</p>
           <a href={`/projects/${projectId}/import-signals`} style={{
             padding: '9px 20px', background: '#10b981', color: 'white',
@@ -226,15 +226,15 @@ export default function SignalsView({
           </a>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                <tr style={{ background: 'var(--gray-50)', borderBottom: '2px solid var(--border)' }}>
                   {[t('col.signalTag'), t('col.type'), t('col.instrument'), t('col.subsystem'), t('col.range'), t('col.service'), t('col.pid'), ''].map(h => (
                     <th key={h} style={{
                       padding: '10px 12px', textAlign: 'left',
-                      fontWeight: 600, color: '#64748b', fontSize: '11px',
+                      fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px',
                       textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap',
                     }}>{h}</th>
                   ))}
@@ -255,13 +255,13 @@ export default function SignalsView({
                       key={sig.id}
                       style={{
                         borderBottom: '1px solid #f1f5f9',
-                        background: i % 2 === 0 ? 'white' : '#fafafa',
+                        background: i % 2 === 0 ? 'var(--card-bg)' : 'var(--gray-50)',
                         cursor: 'pointer',
                       }}
                       onClick={() => setSelected(selected?.id === sig.id ? null : sig)}
                     >
                       {/* Signal Tag */}
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                         {sig.signal_tag}
                       </td>
 
@@ -277,18 +277,18 @@ export default function SignalsView({
                       </td>
 
                       {/* Instrument tag */}
-                      <td style={{ padding: '10px 12px', color: '#475569', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                         {sig.tags.tag_number}
                       </td>
 
                       {/* Subsystem */}
                       <td style={{ padding: '10px 12px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a' }}>{sub.code}</div>
+                        <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-strong)' }}>{sub.code}</div>
                         <div style={{ fontSize: '11px', color: '#94a3b8' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
                       </td>
 
                       {/* Range */}
-                      <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                         {sig.range_min !== null && sig.range_max !== null
                           ? `${sig.range_min} – ${sig.range_max} ${sig.eng_unit ?? ''}`
                           : sig.eng_unit ? `— ${sig.eng_unit}` : '—'
@@ -296,12 +296,12 @@ export default function SignalsView({
                       </td>
 
                       {/* Service */}
-                      <td style={{ padding: '10px 12px', color: '#64748b', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {sig.service || '—'}
                       </td>
 
                       {/* P&ID */}
-                      <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: '12px', fontFamily: 'monospace' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: '12px', fontFamily: 'monospace' }}>
                         {sig.pid_drawing || '—'}
                       </td>
 
@@ -319,12 +319,12 @@ export default function SignalsView({
           {/* Detail panel */}
           {selected && (
             <div style={{
-              borderTop: '2px solid #e2e8f0', padding: '20px 24px',
-              background: '#f8fafc',
+              borderTop: '2px solid var(--border)', padding: '20px 24px',
+              background: 'var(--gray-50)',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div>
-                  <span style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>{selected.signal_tag}</span>
+                  <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace' }}>{selected.signal_tag}</span>
                   <span style={{
                     marginLeft: '10px', padding: '2px 9px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
                     background: typeColor(selected.signal_type) + '18', color: typeColor(selected.signal_type),
@@ -350,9 +350,9 @@ export default function SignalsView({
                   { label: t('detail.wiringDiagram'), value: selected.wiring_diagram || '—' },
                   { label: t('detail.notes'),       value: selected.notes || '—' },
                 ].map(item => (
-                  <div key={item.label} style={{ background: 'white', borderRadius: '8px', padding: '10px 12px', border: '1px solid #e2e8f0' }}>
+                  <div key={item.label} style={{ background: 'var(--card-bg)', borderRadius: '8px', padding: '10px 12px', border: '1px solid var(--border)' }}>
                     <div style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>{item.label}</div>
-                    <div style={{ fontSize: '13px', color: '#0f172a', wordBreak: 'break-word' }}>{item.value}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-strong)', wordBreak: 'break-word' }}>{item.value}</div>
                   </div>
                 ))}
               </div>
@@ -360,7 +360,7 @@ export default function SignalsView({
           )}
 
           {filtered.length > 0 && (
-            <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', fontSize: '12px', color: '#94a3b8' }}>
+            <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', background: 'var(--gray-50)', fontSize: '12px', color: '#94a3b8' }}>
               {t('showing', { filtered: filtered.length, total: signals.length })}
             </div>
           )}

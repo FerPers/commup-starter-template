@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { ShieldCheck } from 'lucide-react'
 import { createPssrTemplate, seedDefaultPssrTemplate, deletePssrTemplate } from '@/app/actions/pssr'
 
 interface Template {
@@ -69,7 +70,9 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
           background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px dashed var(--border)',
           padding: '48px', textAlign: 'center',
         }}>
-          <div style={{ fontSize: '32px', marginBottom: '12px' }}>🛡️</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <ShieldCheck size={32} color="var(--warning-500)" aria-hidden="true" />
+          </div>
           <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
             No hay templates PSSR
           </p>
@@ -82,7 +85,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 onClick={() => setShowModal(true)}
                 style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: 'var(--gray-900)', color: '#fff', border: 'none', cursor: 'pointer',
+                  background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
                 }}
               >
                 + Nuevo template
@@ -101,7 +104,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 onClick={() => setShowModal(true)}
                 style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: 'var(--gray-900)', color: '#fff', border: 'none', cursor: 'pointer',
+                  background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
                 }}
               >
                 + Nuevo template
@@ -113,10 +116,11 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
               {/* Icon */}
               <div style={{
                 width: '42px', height: '42px', borderRadius: '10px', flexShrink: 0,
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                background: 'var(--warning-50)', border: '1px solid var(--warning-500)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '18px',
-              }}>🛡️</div>
+              }}>
+                <ShieldCheck size={20} color="var(--warning-700)" aria-hidden="true" />
+              </div>
 
               {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>

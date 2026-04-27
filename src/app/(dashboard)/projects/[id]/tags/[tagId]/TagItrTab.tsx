@@ -10,7 +10,7 @@ import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
 // ── Status config ────────────────────────────────────────────────────
 
 const ITR_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  not_started: { label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9' },
+  not_started: { label: 'Sin iniciar', color: 'var(--text-muted)', bg: 'var(--gray-100)' },
   in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
   completed:    { label: 'Completado',  color: '#10b981', bg: '#ecfdf5' },
   approved:     { label: 'Aprobado',    color: '#7c3aed', bg: '#f5f3ff' },
@@ -113,13 +113,13 @@ export default function TagItrTab({
 
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
           {tagItrs.length === 0 ? 'No hay ITRs asignados a este tag.' : `${tagItrs.length} ITR${tagItrs.length > 1 ? 's' : ''} asignados`}
         </p>
         {canEdit && (
           <button
             onClick={() => setShowAssign(true)}
-            style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+            style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
           >
             + Asignar ITR
           </button>
@@ -138,7 +138,7 @@ export default function TagItrTab({
             return (
               <div
                 key={itr.id}
-                style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}
+                style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}
               >
                 {/* Phase badge */}
                 {phase && (
@@ -149,11 +149,11 @@ export default function TagItrTab({
 
                 {/* Code + title */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>
                     {itr.itr_number}
                   </div>
                   {tmpl && (
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {tmpl.title}
                     </div>
                   )}
@@ -161,8 +161,8 @@ export default function TagItrTab({
 
                 {/* Progress bar */}
                 <div style={{ width: '80px' }}>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '3px', textAlign: 'right' }}>{itr.progress_pct}%</div>
-                  <div style={{ height: '5px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginBottom: '3px', textAlign: 'right' }}>{itr.progress_pct}%</div>
+                  <div style={{ height: '5px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '3px', transition: 'width 0.3s' }} />
                   </div>
                 </div>
@@ -177,7 +177,7 @@ export default function TagItrTab({
                   {(['executor', 'supervisor', 'client'] as const).map(role => {
                     const signed = itr.itr_signatures.some(s => s.role === role)
                     return (
-                      <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? '#ecfdf5' : '#f8fafc', color: signed ? '#10b981' : '#cbd5e1', border: `1px solid ${signed ? '#a7f3d0' : '#e2e8f0'}`, fontWeight: 600 }}>
+                      <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? '#ecfdf5' : 'var(--gray-50)', color: signed ? '#10b981' : 'var(--gray-300)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, fontWeight: 600 }}>
                         {SIGN_LABELS[role]}
                       </span>
                     )
@@ -186,7 +186,7 @@ export default function TagItrTab({
 
                 {/* Inspector */}
                 {executor?.profiles?.full_name && (
-                  <div style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {executor.profiles.full_name}
                   </div>
                 )}
@@ -195,7 +195,7 @@ export default function TagItrTab({
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <a
                     href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}`}
-                    style={{ padding: '6px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', color: '#374151', textDecoration: 'none', fontWeight: 500, whiteSpace: 'nowrap' }}
+                    style={{ padding: '6px 12px', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', color: 'var(--gray-700)', textDecoration: 'none', fontWeight: 500, whiteSpace: 'nowrap' }}
                   >
                     Abrir →
                   </a>
@@ -217,7 +217,7 @@ export default function TagItrTab({
                     <button
                       onClick={() => handleDelete(itr.id)}
                       disabled={isPending}
-                      style={{ padding: '6px 10px', background: 'white', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', color: '#ef4444', cursor: 'pointer' }}
+                      style={{ padding: '6px 10px', background: 'var(--card-bg)', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', color: '#ef4444', cursor: 'pointer' }}
                     >
                       ✕
                     </button>
@@ -246,14 +246,14 @@ export default function TagItrTab({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setShowAssign(false) }}
         >
-          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Asignar ITR</h2>
-              <button onClick={() => setShowAssign(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>Asignar ITR</h2>
+              <button onClick={() => setShowAssign(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px' }}>✕</button>
             </div>
 
             {templates.length === 0 ? (
-              <p style={{ fontSize: '13px', color: '#64748b', padding: '20px 0', textAlign: 'center' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', padding: '20px 0', textAlign: 'center' }}>
                 No hay templates activos para la disciplina de este tag.
               </p>
             ) : (
@@ -293,7 +293,7 @@ export default function TagItrTab({
                     </optgroup>
                   </select>
                   {templateObj?.project_phases && (
-                    <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0' }}>
+                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
                       Fase: <strong>{templateObj.project_phases.name}</strong>
                     </p>
                   )}
@@ -318,7 +318,7 @@ export default function TagItrTab({
 
                 {/* Supervisor selector */}
                 <div>
-                  <label style={labelStyle}>Supervisor <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional)</span></label>
+                  <label style={labelStyle}>Supervisor <span style={{ fontWeight: 400, color: 'var(--gray-400)' }}>(opcional)</span></label>
                   <select
                     value={selectedSupervisor}
                     onChange={e => setSelectedSupervisor(e.target.value)}
@@ -335,7 +335,7 @@ export default function TagItrTab({
 
                 {/* Client selector */}
                 <div>
-                  <label style={labelStyle}>Cliente <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional)</span></label>
+                  <label style={labelStyle}>Cliente <span style={{ fontWeight: 400, color: 'var(--gray-400)' }}>(opcional)</span></label>
                   <select
                     value={selectedClient}
                     onChange={e => setSelectedClient(e.target.value)}
@@ -377,14 +377,14 @@ export default function TagItrTab({
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
                   <button
                     onClick={() => setShowAssign(false)}
-                    style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                    style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={handleAssign}
                     disabled={!selectedTemplate || !selectedInspector || isPending}
-                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || isPending ? '#93c5fd' : '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || isPending ? 'not-allowed' : 'pointer' }}
+                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || isPending ? '#93c5fd' : '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || isPending ? 'not-allowed' : 'pointer' }}
                   >
                     {isPending ? 'Asignando...' : 'Asignar →'}
                   </button>
@@ -399,9 +399,9 @@ export default function TagItrTab({
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px',
+  display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '6px',
 }
 const selStyle: React.CSSProperties = {
-  width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#0f172a', background: 'white', fontFamily: 'inherit',
+  width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', fontFamily: 'inherit',
 }

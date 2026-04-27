@@ -61,17 +61,17 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <a href={`/projects/${id}`} style={{
-          fontSize: '13px', color: '#64748b', textDecoration: 'none',
+          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none',
           display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px',
         }}>
           ← {project.name}
         </a>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
           <div>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.4px' }}>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>
               Tags / Equipos
             </h1>
-            <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
               {tagCount === 0 ? 'Sin tags importados' : `${tagCount} tags importados`}
             </p>
           </div>
@@ -79,10 +79,10 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
             <a
               href={`/projects/${id}/pid-documents`}
               style={{
-                padding: '9px 18px', background: 'white', color: '#475569',
+                padding: '9px 18px', background: 'var(--card-bg)', color: 'var(--text-muted)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 textDecoration: 'none', whiteSpace: 'nowrap',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--border)',
               }}
             >
               Documentos P&ID
@@ -91,7 +91,7 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
               <a
                 href={`/projects/${id}/import`}
                 style={{
-                  padding: '9px 18px', background: '#3b82f6', color: 'white',
+                  padding: '9px 18px', background: '#3b82f6', color: '#fff',
                   borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                   textDecoration: 'none', whiteSpace: 'nowrap',
                 }}
@@ -105,11 +105,11 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
 
       {tagCount === 0 ? (
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           padding: '64px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.3 }}>⊟</div>
-          <p style={{ fontSize: '15px', fontWeight: 500, color: '#475569', margin: '0 0 6px' }}>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>
             Aún no hay tags importados
           </p>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>
@@ -120,7 +120,7 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
               href={`/projects/${id}/import`}
               style={{
                 display: 'inline-block', padding: '10px 22px',
-                background: '#3b82f6', color: 'white', borderRadius: '8px',
+                background: '#3b82f6', color: '#fff', borderRadius: '8px',
                 fontSize: '13px', fontWeight: 500, textDecoration: 'none',
               }}
             >

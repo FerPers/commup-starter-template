@@ -17,7 +17,7 @@ const STATUS_STYLE: Record<string, { color: string }> = {
   active:    { color: '#10b981' },
   on_hold:   { color: '#f59e0b' },
   completed: { color: '#3b82f6' },
-  cancelled: { color: '#94a3b8' },
+  cancelled: { color: 'var(--gray-400)' },
 }
 
 interface ProjectData {
@@ -108,7 +108,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
       <div style={{ marginBottom: '28px' }}>
         <a href="/projects" style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '16px',
+          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '16px',
         }}>
           ← Proyectos
         </a>
@@ -125,7 +125,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+                <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
                   {project.name}
                 </h1>
                 <span style={{
@@ -136,7 +136,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                   {statusLabel}
                 </span>
               </div>
-              <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
                 {[project.client, project.location].filter(Boolean).join(' · ') || 'Sin cliente / ubicación'}
               </p>
             </div>
@@ -146,8 +146,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
             <button
               onClick={handleOpen}
               style={{
-                padding: '9px 18px', background: 'white', border: '1px solid #e2e8f0',
-                borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer',
+                padding: '9px 18px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
                 flexShrink: 0,
               }}
             >
@@ -169,14 +169,14 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: 'white', borderRadius: '14px', width: '100%', maxWidth: '480px',
+              background: 'var(--card-bg)', borderRadius: '14px', width: '100%', maxWidth: '480px',
               boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
             }}
           >
             {/* Modal header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>Editar proyecto</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Cerrar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px', padding: 0 }}>×</button>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)' }}>Editar proyecto</h2>
+              <button onClick={() => setShowModal(false)} aria-label="Cerrar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '20px', padding: 0 }}>×</button>
             </div>
 
             {/* Form */}
@@ -227,7 +227,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     style={{
-                      width: '100%', padding: '8px 12px', background: 'white',
+                      width: '100%', padding: '8px 12px', background: 'var(--card-bg)',
                       border: '1px solid #fecaca', borderRadius: '7px',
                       fontSize: '12px', color: '#dc2626', cursor: 'pointer', textAlign: 'left',
                     }}
@@ -244,7 +244,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                         onClick={handleDelete}
                         disabled={isPending}
                         style={{
-                          padding: '7px 14px', background: '#dc2626', color: 'white',
+                          padding: '7px 14px', background: '#dc2626', color: '#fff',
                           border: 'none', borderRadius: '6px', fontSize: '12px',
                           fontWeight: 600, cursor: isPending ? 'not-allowed' : 'pointer',
                         }}
@@ -255,8 +255,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                         onClick={() => setShowDeleteConfirm(false)}
                         disabled={isPending}
                         style={{
-                          padding: '7px 12px', background: 'white', color: '#64748b',
-                          border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                          padding: '7px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
+                          border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                         }}
                       >
                         Cancelar
@@ -271,7 +271,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
             <div style={{ padding: '12px 24px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button
                 onClick={() => setShowModal(false)}
-                style={{ padding: '9px 18px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer' }}
+                style={{ padding: '9px 18px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 Cancelar
               </button>
@@ -280,7 +280,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                 disabled={isPending || !name.trim() || !code.trim()}
                 style={{
                   padding: '9px 18px', background: isPending ? '#93c5fd' : '#3b82f6',
-                  border: 'none', borderRadius: '8px', fontSize: '13px', color: 'white',
+                  border: 'none', borderRadius: '8px', fontSize: '13px', color: '#fff',
                   cursor: isPending ? 'not-allowed' : 'pointer', fontWeight: 500,
                 }}
               >
@@ -295,15 +295,15 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0',
-  borderRadius: '7px', fontSize: '13px', color: '#0f172a', outline: 'none',
-  boxSizing: 'border-box', background: 'white',
+  width: '100%', padding: '8px 12px', border: '1px solid var(--border)',
+  borderRadius: '7px', fontSize: '13px', color: 'var(--text-strong)', outline: 'none',
+  boxSizing: 'border-box', background: 'var(--card-bg)',
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-      <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>{label}</label>
+      <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{label}</label>
       {children}
     </div>
   )

@@ -22,11 +22,11 @@ const ROLE_COLORS: Record<string, { color: string; bg: string }> = {
   architect: { color: '#0891b2', bg: '#ecfeff' },
   leader:    { color: '#059669', bg: '#ecfdf5' },
   inspector: { color: '#d97706', bg: '#fffbeb' },
-  client:    { color: '#64748b', bg: '#f8fafc' },
+  client:    { color: 'var(--text-muted)', bg: 'var(--gray-50)' },
 }
 
 function RoleBadge({ role, label }: { role: string; label: string }) {
-  const m = ROLE_COLORS[role] ?? { color: '#64748b', bg: '#f8fafc' }
+  const m = ROLE_COLORS[role] ?? { color: 'var(--text-muted)', bg: 'var(--gray-50)' }
   return (
     <span style={{
       padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
@@ -135,10 +135,10 @@ export default function UsersView({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
             {t('title')}
           </h1>
-          <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
             {t('subtitle', { count: members.length })}
           </p>
         </div>
@@ -146,7 +146,7 @@ export default function UsersView({
           <button
             onClick={() => { setShowInvite(true); setError(null) }}
             style={{
-              padding: '9px 18px', background: '#3b82f6', color: 'white',
+              padding: '9px 18px', background: '#3b82f6', color: '#fff',
               border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
               cursor: 'pointer',
             }}
@@ -201,16 +201,16 @@ export default function UsersView({
       {/* Invite form */}
       {showInvite && (
         <div style={{
-          marginBottom: '24px', padding: '20px 24px', background: 'white',
-          borderRadius: '12px', border: '1px solid #e2e8f0',
+          marginBottom: '24px', padding: '20px 24px', background: 'var(--card-bg)',
+          borderRadius: '12px', border: '1px solid var(--border)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
         }}>
-          <p style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px' }}>
+          <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 16px' }}>
             {t('invite.title')}
           </p>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 260px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 500, color: '#64748b', display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
                 {t('invite.email')}
               </label>
               <input
@@ -220,23 +220,23 @@ export default function UsersView({
                 placeholder={t('invite.emailPh')}
                 onKeyDown={e => e.key === 'Enter' && handleInvite()}
                 style={{
-                  width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0',
-                  borderRadius: '8px', fontSize: '14px', color: '#0f172a',
-                  background: 'white', boxSizing: 'border-box',
+                  width: '100%', padding: '9px 12px', border: '1px solid var(--border)',
+                  borderRadius: '8px', fontSize: '14px', color: 'var(--text-strong)',
+                  background: 'var(--card-bg)', boxSizing: 'border-box',
                 }}
               />
             </div>
             <div style={{ flex: '0 1 160px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 500, color: '#64748b', display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
                 {t('invite.role')}
               </label>
               <select
                 value={inviteRole}
                 onChange={e => setInviteRole(e.target.value)}
                 style={{
-                  width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0',
-                  borderRadius: '8px', fontSize: '14px', color: '#0f172a',
-                  background: 'white', cursor: 'pointer',
+                  width: '100%', padding: '9px 12px', border: '1px solid var(--border)',
+                  borderRadius: '8px', fontSize: '14px', color: 'var(--text-strong)',
+                  background: 'var(--card-bg)', cursor: 'pointer',
                 }}
               >
                 {ALL_ROLES.filter(r => r !== 'owner').map(r => (
@@ -249,7 +249,7 @@ export default function UsersView({
                 onClick={handleInvite}
                 disabled={isPending || !inviteEmail.trim()}
                 style={{
-                  padding: '9px 18px', background: '#3b82f6', color: 'white',
+                  padding: '9px 18px', background: '#3b82f6', color: '#fff',
                   border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                   cursor: isPending ? 'wait' : 'pointer', opacity: (!inviteEmail.trim() || isPending) ? 0.6 : 1,
                 }}
@@ -259,8 +259,8 @@ export default function UsersView({
               <button
                 onClick={() => { setShowInvite(false); setError(null) }}
                 style={{
-                  padding: '9px 14px', background: 'white', border: '1px solid #e2e8f0',
-                  borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer',
+                  padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                  borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
                 }}
               >
                 {t('invite.cancel')}
@@ -271,19 +271,19 @@ export default function UsersView({
       )}
 
       {/* Members table */}
-      <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
         {members.length === 0 ? (
-          <div style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+          <div style={{ padding: '48px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px' }}>
             No hay miembros
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+              <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid #f1f5f9' }}>
                 {[t('table.colUser'), t('table.colEmail'), t('table.colRole'), t('table.colSince'), ''].map((h, i) => (
                   <th key={i} style={{
                     padding: '12px 20px', textAlign: 'left',
-                    fontSize: '11px', fontWeight: 600, color: '#94a3b8',
+                    fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)',
                     textTransform: 'uppercase', letterSpacing: '0.06em',
                   }}>
                     {h}
@@ -305,10 +305,10 @@ export default function UsersView({
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <Avatar name={m.fullName} url={m.avatarUrl} />
                         <div>
-                          <div style={{ fontSize: '14px', fontWeight: 500, color: '#0f172a' }}>
+                          <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-strong)' }}>
                             {m.fullName}
                             {isSelf && (
-                              <span style={{ marginLeft: '8px', fontSize: '11px', color: '#94a3b8', fontWeight: 400 }}>
+                              <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--gray-400)', fontWeight: 400 }}>
                                 {t('table.self')}
                               </span>
                             )}
@@ -316,7 +316,7 @@ export default function UsersView({
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: '14px 20px', fontSize: '13px', color: '#64748b' }}>
+                    <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-muted)' }}>
                       {m.email}
                     </td>
                     <td style={{ padding: '14px 20px' }}>
@@ -326,10 +326,10 @@ export default function UsersView({
                           onChange={e => handleRoleChange(m.id, e.target.value)}
                           disabled={isPending}
                           style={{
-                            padding: '4px 8px', border: '1px solid #e2e8f0',
+                            padding: '4px 8px', border: '1px solid var(--border)',
                             borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                            color: ROLE_COLORS[m.role]?.color ?? '#64748b',
-                            background: ROLE_COLORS[m.role]?.bg ?? '#f8fafc',
+                            color: ROLE_COLORS[m.role]?.color ?? 'var(--text-muted)',
+                            background: ROLE_COLORS[m.role]?.bg ?? 'var(--gray-50)',
                             cursor: 'pointer',
                           }}
                         >
@@ -341,7 +341,7 @@ export default function UsersView({
                         <RoleBadge role={m.role} label={roleLabels[m.role] ?? m.role} />
                       )}
                     </td>
-                    <td style={{ padding: '14px 20px', fontSize: '13px', color: '#94a3b8' }}>
+                    <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--gray-400)' }}>
                       {new Date(m.joinedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </td>
                     <td style={{ padding: '14px 20px', textAlign: 'right' }}>
@@ -368,15 +368,15 @@ export default function UsersView({
       </div>
 
       {/* Role legend */}
-      <div style={{ marginTop: '20px', padding: '16px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-        <p style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
+      <div style={{ marginTop: '20px', padding: '16px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+        <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
           {t('legend')}
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
           {ALL_ROLES.map(role => (
             <div key={role} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <RoleBadge role={role} label={roleLabels[role] ?? role} />
-              <span style={{ fontSize: '12px', color: '#64748b' }}>{roleDesc[role]}</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{roleDesc[role]}</span>
             </div>
           ))}
         </div>

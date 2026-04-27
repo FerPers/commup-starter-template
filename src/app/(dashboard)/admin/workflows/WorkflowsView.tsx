@@ -105,11 +105,11 @@ function jsonLogicToRows(logic: Record<string, unknown>): ConditionRow[] {
 
 // ── Styles ───────────────────────────────────────────────────
 const btnPrimary: React.CSSProperties = {
-  padding: '8px 14px', background: '#3b82f6', color: 'white',
+  padding: '8px 14px', background: '#3b82f6', color: '#fff',
   border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnOutline: React.CSSProperties = {
-  padding: '6px 12px', background: 'white', color: '#475569',
+  padding: '6px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
   border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const btnDanger: React.CSSProperties = {
@@ -118,10 +118,10 @@ const btnDanger: React.CSSProperties = {
 }
 const input: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13,
-  fontFamily: 'inherit', width: '100%', background: 'white',
+  fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const label: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: '#475569',
+  fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
@@ -176,10 +176,10 @@ export default function WorkflowsView({
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
             Workflow Engine
           </h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
             Reglas declarativas que reaccionan a eventos de dominio. Evaluadas por <code>evaluate-workflow</code>.
           </p>
         </div>
@@ -193,18 +193,18 @@ export default function WorkflowsView({
       )}
 
       {rules.length === 0 && !creating && (
-        <div style={{ padding: 40, background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
           No hay reglas configuradas. Crea la primera para automatizar respuestas a eventos.
         </div>
       )}
 
       {Object.keys(rulesByEvent).sort().map(event => (
         <div key={event} style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, padding: '0 4px' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, padding: '0 4px' }}>
             {TRIGGER_EVENTS.find(t => t.value === event)?.label ?? event}
-            <span style={{ marginLeft: 6, color: '#94a3b8', fontWeight: 500 }}>({event})</span>
+            <span style={{ marginLeft: 6, color: 'var(--gray-400)', fontWeight: 500 }}>({event})</span>
           </div>
-          <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
             {rulesByEvent[event].map(rule => (
               <RuleRow
                 key={rule.id}
@@ -263,27 +263,27 @@ function RuleRow({
           title={rule.enabled ? 'Desactivar' : 'Activar'}
           style={{
             width: 32, height: 18, borderRadius: 9, border: 'none', cursor: 'pointer', flexShrink: 0,
-            background: rule.enabled ? '#10b981' : '#cbd5e1', position: 'relative', padding: 0,
+            background: rule.enabled ? '#10b981' : 'var(--gray-300)', position: 'relative', padding: 0,
           }}
         >
           <div style={{
             position: 'absolute', top: 2, left: rule.enabled ? 16 : 2,
-            width: 14, height: 14, borderRadius: '50%', background: 'white',
+            width: 14, height: 14, borderRadius: '50%', background: 'var(--card-bg)',
             transition: 'left 0.15s',
           }} />
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-strong)' }}>
             {rule.name}
-            <span style={{ marginLeft: 8, fontSize: 11, color: '#64748b', fontWeight: 500 }}>
+            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
               prioridad {rule.priority}
             </span>
           </div>
           {rule.description && (
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{rule.description}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{rule.description}</div>
           )}
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-            → <strong style={{ color: '#475569' }}>{actionLabel}</strong>
+          <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
+            → <strong style={{ color: 'var(--text-muted)' }}>{actionLabel}</strong>
             {executions.length > 0 && (
               <span style={{ marginLeft: 10 }}>
                 {matches}/{executions.length} matches recientes
@@ -297,13 +297,13 @@ function RuleRow({
         <button onClick={onDelete} disabled={isPending} style={btnDanger}>Eliminar</button>
       </div>
       {expanded && (
-        <div style={{ padding: '0 16px 14px', fontSize: 11, fontFamily: 'ui-monospace, monospace', color: '#475569' }}>
-          <div style={{ marginBottom: 4, fontWeight: 700, color: '#64748b' }}>condition_jsonlogic</div>
-          <pre style={{ background: '#f8fafc', padding: 10, borderRadius: 6, overflow: 'auto', margin: 0 }}>
+        <div style={{ padding: '0 16px 14px', fontSize: 11, fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)' }}>
+          <div style={{ marginBottom: 4, fontWeight: 700, color: 'var(--text-muted)' }}>condition_jsonlogic</div>
+          <pre style={{ background: 'var(--gray-50)', padding: 10, borderRadius: 6, overflow: 'auto', margin: 0 }}>
             {JSON.stringify(rule.condition_jsonlogic, null, 2)}
           </pre>
-          <div style={{ marginTop: 10, marginBottom: 4, fontWeight: 700, color: '#64748b' }}>action_payload</div>
-          <pre style={{ background: '#f8fafc', padding: 10, borderRadius: 6, overflow: 'auto', margin: 0 }}>
+          <div style={{ marginTop: 10, marginBottom: 4, fontWeight: 700, color: 'var(--text-muted)' }}>action_payload</div>
+          <pre style={{ background: 'var(--gray-50)', padding: 10, borderRadius: 6, overflow: 'auto', margin: 0 }}>
             {JSON.stringify(rule.action_payload, null, 2)}
           </pre>
         </div>
@@ -386,12 +386,12 @@ function RuleEditorModal({
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       padding: 40, zIndex: 100, overflow: 'auto',
     }}>
-      <div style={{ background: 'white', borderRadius: 10, width: '100%', maxWidth: 720, padding: 24 }}>
+      <div style={{ background: 'var(--card-bg)', borderRadius: 10, width: '100%', maxWidth: 720, padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
             {rule ? 'Editar regla' : 'Nueva regla'}
           </h2>
-          <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b' }}>×</button>
+          <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
         </div>
 
         {err && (
@@ -428,7 +428,7 @@ function RuleEditorModal({
             <select style={input} value={actionType} onChange={e => setActionType(e.target.value as WorkflowActionType)}>
               {ACTION_TYPES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
             </select>
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
               {ACTION_TYPES.find(a => a.value === actionType)?.description}
             </div>
           </div>
@@ -456,7 +456,7 @@ function RuleEditorModal({
           {!advancedMode ? (
             <>
               {conditionRows.length === 0 && (
-                <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>
+                <div style={{ fontSize: 12, color: 'var(--gray-400)', padding: '8px 0' }}>
                   Sin condiciones — la regla se ejecuta en cada evento.
                 </div>
               )}
@@ -502,7 +502,7 @@ function RuleEditorModal({
               placeholder='{"==": [{"var": "new.category"}, "A"]}'
             />
           )}
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
             Campos disponibles: <code>new.*</code>, <code>old.*</code> (payload del evento).
           </div>
         </div>
@@ -518,7 +518,7 @@ function RuleEditorModal({
           />
         </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 13, color: '#475569' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 13, color: 'var(--text-muted)' }}>
           <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} />
           Regla activa
         </label>

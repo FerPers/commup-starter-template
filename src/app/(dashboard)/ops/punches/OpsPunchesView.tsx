@@ -41,24 +41,24 @@ const OPS_STATES = [
 ] as const
 
 const btnPrimary: React.CSSProperties = {
-  padding: '8px 14px', background: '#3b82f6', color: 'white',
+  padding: '8px 14px', background: '#3b82f6', color: '#fff',
   border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnOutline: React.CSSProperties = {
-  padding: '6px 10px', background: 'white', color: '#475569',
+  padding: '6px 10px', background: 'var(--card-bg)', color: 'var(--text-muted)',
   border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const input: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13,
-  fontFamily: 'inherit', background: 'white',
+  fontFamily: 'inherit', background: 'var(--card-bg)',
 }
 const card: React.CSSProperties = {
-  background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: 20, marginBottom: 20,
+  background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 20, marginBottom: 20,
 }
 
 function statusPill(st: string | null): React.CSSProperties {
   const base = { padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }
-  if (!st) return { ...base, background: '#f1f5f9', color: '#475569' }
+  if (!st) return { ...base, background: 'var(--gray-100)', color: 'var(--text-muted)' }
   if (st === 'closed_final')          return { ...base, background: '#dcfce7', color: '#166534' }
   if (st === 'verified_ops')          return { ...base, background: '#dbeafe', color: '#1e40af' }
   if (st === 'resolved_ops')          return { ...base, background: '#e0e7ff', color: '#3730a3' }
@@ -66,7 +66,7 @@ function statusPill(st: string | null): React.CSSProperties {
   if (st === 'deferred')              return { ...base, background: '#fef9c3', color: '#854d0e' }
   if (st === 'cancelled_ops')         return { ...base, background: '#fee2e2', color: '#991b1b' }
   if (st === 'transferred_to_ops')    return { ...base, background: '#ede9fe', color: '#5b21b6' }
-  return { ...base, background: '#f1f5f9', color: '#475569' }
+  return { ...base, background: 'var(--gray-100)', color: 'var(--text-muted)' }
 }
 
 function fmt(s: string | null | undefined): string {
@@ -154,12 +154,12 @@ export default function OpsPunchesView({
   return (
     <div style={{ padding: 32, maxWidth: 1280, margin: '0 auto' }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>{t('title')}</h1>
-      <p style={{ color: '#64748b', marginBottom: 24 }}>{t('subtitle')}</p>
+      <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{t('subtitle')}</p>
 
       {/* Filters */}
       <div style={{ ...card, display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>{t('filter.project')}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{t('filter.project')}</div>
           <select
             style={{ ...input, minWidth: 260 }}
             value={selectedProjectId ?? ''}
@@ -170,7 +170,7 @@ export default function OpsPunchesView({
           </select>
         </div>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>{t('filter.status')}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{t('filter.status')}</div>
           <select
             style={{ ...input, minWidth: 200 }}
             value={selectedStatus ?? ''}
@@ -190,7 +190,7 @@ export default function OpsPunchesView({
           {/* KPIs */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
             {[
-              { label: t('kpi.total'),     value: kpi.total,    color: '#0f172a' },
+              { label: t('kpi.total'),     value: kpi.total,    color: 'var(--text-strong)' },
               { label: t('kpi.inProgress'),value: kpi.inProg,   color: '#92400e' },
               { label: t('kpi.resolved'),  value: kpi.resolved, color: '#3730a3' },
               { label: t('kpi.closed'),    value: kpi.closed,   color: '#166534' },
@@ -198,7 +198,7 @@ export default function OpsPunchesView({
             ].map(k => (
               <div key={k.label} style={{ ...card, marginBottom: 0, padding: 14 }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: k.color }}>{k.value}</div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{k.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{k.label}</div>
               </div>
             ))}
           </div>
@@ -213,17 +213,17 @@ export default function OpsPunchesView({
           {/* Pending to transfer */}
           <div style={card}>
             <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>
-              {t('pending.title')} <span style={{ color: '#64748b', fontWeight: 400 }}>({pendingTransfer.length})</span>
+              {t('pending.title')} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({pendingTransfer.length})</span>
             </h2>
             {pendingTransfer.length === 0 && (
-              <div style={{ color: '#94a3b8', fontSize: 13 }}>{t('pending.empty')}</div>
+              <div style={{ color: 'var(--gray-400)', fontSize: 13 }}>{t('pending.empty')}</div>
             )}
             {pendingTransfer.map(p => (
               <div key={p.id} style={{ borderTop: '1px solid #f1f5f9', padding: '10px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                   <div>
                     <div style={{ fontFamily: 'monospace', fontSize: 13 }}>{p.punch_number}</div>
-                    <div style={{ fontSize: 12, color: '#475569' }}>{p.description}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.description}</div>
                   </div>
                   <button style={btnOutline} onClick={() => {
                     setTransferringId(transferringId === p.id ? null : p.id)
@@ -233,7 +233,7 @@ export default function OpsPunchesView({
                   </button>
                 </div>
                 {transferringId === p.id && (
-                  <div style={{ marginTop: 10, padding: 10, background: '#f8fafc', borderRadius: 6, display: 'grid', gridTemplateColumns: '1fr 140px auto', gap: 8 }}>
+                  <div style={{ marginTop: 10, padding: 10, background: 'var(--gray-50)', borderRadius: 6, display: 'grid', gridTemplateColumns: '1fr 140px auto', gap: 8 }}>
                     <select style={input} value={transferTo} onChange={e => setTransferTo(e.target.value)}>
                       <option value="">{t('form.selectUser')}</option>
                       {team.map(u => <option key={u.id} value={u.id}>{u.full_name}</option>)}
@@ -257,10 +257,10 @@ export default function OpsPunchesView({
           {/* Ops dashboard */}
           <div style={card}>
             <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>
-              {t('tracking.title')} <span style={{ color: '#64748b', fontWeight: 400 }}>({opsPunches.length})</span>
+              {t('tracking.title')} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({opsPunches.length})</span>
             </h2>
             {opsPunches.length === 0 && (
-              <div style={{ color: '#94a3b8', fontSize: 13 }}>{t('tracking.empty')}</div>
+              <div style={{ color: 'var(--gray-400)', fontSize: 13 }}>{t('tracking.empty')}</div>
             )}
             {opsPunches.map(p => (
               <div key={p.punch_id} style={{ borderTop: '1px solid #f1f5f9', padding: '12px 0' }}>
@@ -269,14 +269,14 @@ export default function OpsPunchesView({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                       <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 600 }}>{p.punch_number}</span>
                       <span style={statusPill(p.post_handover_status)}>{t(`status.${p.post_handover_status ?? 'active'}`)}</span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>{p.system_code} · {p.subsystem_code}{p.tag_number ? ' · ' + p.tag_number : ''}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.system_code} · {p.subsystem_code}{p.tag_number ? ' · ' + p.tag_number : ''}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: '#475569', marginBottom: 4 }}>{p.description}</div>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{p.description}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                       {t('tracking.owner')}: {p.assigned_to_name ?? '—'} · {t('tracking.transferred')}: {fmt(p.transferred_at)} · {t('tracking.targetDate')}: {p.ops_target_date ?? '—'}
                     </div>
                     {p.ops_notes && (
-                      <div style={{ fontSize: 11, color: '#475569', marginTop: 4, padding: 6, background: '#f8fafc', borderRadius: 4 }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, padding: 6, background: 'var(--gray-50)', borderRadius: 4 }}>
                         {p.ops_notes}
                       </div>
                     )}
@@ -295,7 +295,7 @@ export default function OpsPunchesView({
                   </button>
                 </div>
                 {editingId === p.punch_id && (
-                  <div style={{ marginTop: 10, padding: 10, background: '#f8fafc', borderRadius: 6, display: 'grid', gridTemplateColumns: '1fr 140px auto', gap: 8 }}>
+                  <div style={{ marginTop: 10, padding: 10, background: 'var(--gray-50)', borderRadius: 6, display: 'grid', gridTemplateColumns: '1fr 140px auto', gap: 8 }}>
                     <select style={input} value={editStatus} onChange={e => setEditStatus(e.target.value)}>
                       {OPS_STATES.map(s => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
                     </select>
@@ -318,7 +318,7 @@ export default function OpsPunchesView({
       )}
 
       {!selectedProjectId && (
-        <div style={{ ...card, textAlign: 'center', color: '#94a3b8' }}>
+        <div style={{ ...card, textAlign: 'center', color: 'var(--gray-400)' }}>
           {t('filter.selectHint')}
         </div>
       )}

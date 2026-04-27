@@ -1,3 +1,4 @@
+import { Diamond, FolderTree } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -53,7 +54,7 @@ export default async function TwinPage({
         <Link
           href={`/projects/${id}`}
           style={{
-            fontSize: '13px', color: '#64748b', textDecoration: 'none',
+            fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none',
             display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: '12px',
           }}
         >
@@ -62,11 +63,11 @@ export default async function TwinPage({
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '20px' }}>🔷</span>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Diamond size={20} color="var(--primary-500)" aria-hidden="true" />
               Digital Twin — {project.code}
             </h1>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
               Vista 360° por tag · Sistema › Subsistema › Asset card · Semáforo en tiempo real
             </p>
           </div>
@@ -76,11 +77,13 @@ export default async function TwinPage({
               href={`/projects/${id}/explorer`}
               style={{
                 padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                textDecoration: 'none', background: '#f8fafc', color: '#475569',
-                border: '1px solid #e2e8f0',
+                textDecoration: 'none', background: 'var(--gray-50)', color: 'var(--text-muted)',
+                border: '1px solid var(--border)',
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
               }}
             >
-              🌳 Explorador
+              <FolderTree size={14} aria-hidden="true" />
+              Explorador
             </Link>
             <Link
               href={`/projects/${id}/pid-documents`}

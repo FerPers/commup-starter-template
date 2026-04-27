@@ -20,11 +20,11 @@ type ApiKey = {
 }
 
 const btnPrimary: React.CSSProperties = {
-  padding: '8px 14px', background: '#3b82f6', color: 'white',
+  padding: '8px 14px', background: '#3b82f6', color: '#fff',
   border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnOutline: React.CSSProperties = {
-  padding: '6px 12px', background: 'white', color: '#475569',
+  padding: '6px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
   border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const btnDanger: React.CSSProperties = {
@@ -33,10 +33,10 @@ const btnDanger: React.CSSProperties = {
 }
 const input: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13,
-  fontFamily: 'inherit', width: '100%', background: 'white',
+  fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: '#475569',
+  fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
@@ -74,10 +74,10 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
             API Keys
           </h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
             Credenciales para la{' '}
             <a href="/api/v1/openapi" style={{ color: '#3b82f6' }} target="_blank" rel="noreferrer">API pública v1</a>.
             Formato <code>sk_live_...</code> · el token solo se muestra una vez.
@@ -93,16 +93,16 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
       )}
 
       {keys.length === 0 && (
-        <div style={{ padding: 40, background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
           No hay API keys. Crea la primera para empezar a usar la API pública.
         </div>
       )}
 
       {keys.length > 0 && (
-        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
                 <th style={th}>Nombre</th>
                 <th style={th}>Prefijo</th>
                 <th style={th}>Scopes</th>
@@ -118,9 +118,9 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
                 const st = keyStatus(k)
                 return (
                   <tr key={k.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={td}><strong style={{ color: '#0f172a' }}>{k.name}</strong></td>
+                    <td style={td}><strong style={{ color: 'var(--text-strong)' }}>{k.name}</strong></td>
                     <td style={td}>
-                      <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+                      <code style={{ background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
                         {k.key_prefix}…
                       </code>
                     </td>
@@ -183,7 +183,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
 // ──────────────────────────────────────────────────────────────
 const th: React.CSSProperties = {
   padding: '10px 12px', textAlign: 'left', fontSize: 11,
-  fontWeight: 700, color: '#475569',
+  fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 const td: React.CSSProperties = {
@@ -268,8 +268,8 @@ function CreateKeyModal({
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 8,
                     padding: '8px 10px', borderRadius: 6, cursor: 'pointer',
-                    background: checked ? '#eff6ff' : '#f8fafc',
-                    border: checked ? '1px solid #93c5fd' : '1px solid #e2e8f0',
+                    background: checked ? '#eff6ff' : 'var(--gray-50)',
+                    border: checked ? '1px solid #93c5fd' : '1px solid var(--border)',
                   }}
                 >
                   <input
@@ -279,8 +279,8 @@ function CreateKeyModal({
                     style={{ marginTop: 2 }}
                   />
                   <div style={{ fontSize: 12 }}>
-                    <div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: '#0f172a' }}>{s.label}</div>
-                    <div style={{ color: '#64748b', marginTop: 1, fontSize: 11 }}>{s.description}</div>
+                    <div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--text-strong)' }}>{s.label}</div>
+                    <div style={{ color: 'var(--text-muted)', marginTop: 1, fontSize: 11 }}>{s.description}</div>
                   </div>
                 </label>
               )
@@ -338,10 +338,10 @@ function TokenRevealModal({
   return (
     <div style={modalBackdrop}>
       <div style={{ ...modalBox, maxWidth: 640 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: '#0f172a' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-strong)' }}>
           🔑 Tu API key está lista
         </h2>
-        <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px' }}>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 16px' }}>
           <strong>{name}</strong> · scopes: {scopes.join(', ')}
         </p>
 
@@ -358,7 +358,7 @@ function TokenRevealModal({
           <input
             readOnly
             value={token}
-            style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12, background: '#f8fafc' }}
+            style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12, background: 'var(--gray-50)' }}
             onFocus={e => e.currentTarget.select()}
           />
           <button
@@ -369,10 +369,10 @@ function TokenRevealModal({
           </button>
         </div>
 
-        <div style={{ fontSize: 12, color: '#475569', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>Uso:</div>
           <pre style={{
-            background: '#0f172a', color: '#e2e8f0', padding: 12, borderRadius: 6,
+            background: 'var(--gray-900)', color: 'var(--gray-200)', padding: 12, borderRadius: 6,
             fontSize: 11, overflow: 'auto', margin: 0,
           }}>
 {`curl https://commup.app/api/v1/tags?project_id=<uuid> \\
@@ -380,7 +380,7 @@ function TokenRevealModal({
           </pre>
         </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#475569', marginBottom: 16 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
           <input
             type="checkbox"
             checked={confirmed}
@@ -410,14 +410,14 @@ const modalBackdrop: React.CSSProperties = {
   padding: 40, zIndex: 100, overflow: 'auto',
 }
 const modalBox: React.CSSProperties = {
-  background: 'white', borderRadius: 10, width: '100%', padding: 24,
+  background: 'var(--card-bg)', borderRadius: 10, width: '100%', padding: 24,
 }
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#0f172a' }}>{title}</h2>
-      <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b' }}>×</button>
+      <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>{title}</h2>
+      <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
     </div>
   )
 }

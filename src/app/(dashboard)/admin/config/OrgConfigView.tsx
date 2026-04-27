@@ -65,7 +65,7 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
         <div style={{ width: 12, height: 12, borderRadius: '50%', background: phase.color, flexShrink: 0 }} />
         <span style={{ fontSize: '13px', fontWeight: 700, color: phase.color, minWidth: '32px' }}>{phase.code}</span>
-        <span style={{ fontSize: '14px', color: '#0f172a', flex: 1 }}>{phase.name}</span>
+        <span style={{ fontSize: '14px', color: 'var(--text-strong)', flex: 1 }}>{phase.name}</span>
         <span style={{ fontSize: '12px', color: '#94a3b8' }}>{phase.certificate_name ?? '—'}</span>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={() => setEditing(true)} disabled={isPending} style={btnOutline}>{t('phases.edit')}</button>
@@ -123,7 +123,7 @@ function DisciplineRow({ disc, onSave, onDelete, isPending }: {
         }}>
           {disc.code}
         </span>
-        <span style={{ fontSize: '14px', color: '#0f172a', flex: 1 }}>{disc.name}</span>
+        <span style={{ fontSize: '14px', color: 'var(--text-strong)', flex: 1 }}>{disc.name}</span>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={() => setEditing(true)} disabled={isPending} style={btnOutline}>{t('disciplines.edit')}</button>
           <button onClick={onDelete} disabled={isPending} style={btnDanger}>{t('disciplines.delete')}</button>
@@ -220,10 +220,10 @@ export default function OrgConfigView({
 
       {/* Header */}
       <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
           {t('title')}
         </h1>
-        <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
           {t('subtitle')}
         </p>
       </div>
@@ -244,7 +244,7 @@ export default function OrgConfigView({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
               <div style={{
                 width: 72, height: 72, borderRadius: '12px',
-                border: '2px dashed #e2e8f0', background: '#f8fafc',
+                border: '2px dashed #e2e8f0', background: 'var(--gray-50)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 overflow: 'hidden', flexShrink: 0,
               }}>
@@ -272,7 +272,7 @@ export default function OrgConfigView({
 
             {/* Name */}
             <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
                 {t('org.namePh')}
               </label>
               <input
@@ -463,7 +463,7 @@ function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) 
         <select
           value={selectedProject}
           onChange={e => setSelectedProject(e.target.value)}
-          style={{ padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#0f172a', background: 'white', minWidth: '200px' }}
+          style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', minWidth: '200px' }}
         >
           {projects.length === 0 && <option value="">{t('export.noProjects')}</option>}
           {projects.map(p => (
@@ -485,17 +485,17 @@ function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) 
 // ── Shared styles ──────────────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
-  background: 'white', borderRadius: '14px', padding: '22px',
-  border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+  background: 'var(--card-bg)', borderRadius: '14px', padding: '22px',
+  border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
 }
 
 const cardTitle: React.CSSProperties = {
-  fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0,
+  fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: 0,
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#0f172a', background: 'white', boxSizing: 'border-box',
+  padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', boxSizing: 'border-box',
 }
 
 const btnPrimary: React.CSSProperties = {
@@ -504,8 +504,8 @@ const btnPrimary: React.CSSProperties = {
 }
 
 const btnOutline: React.CSSProperties = {
-  padding: '7px 12px', background: 'white', border: '1px solid #e2e8f0',
-  borderRadius: '7px', fontSize: '12px', color: '#475569', cursor: 'pointer',
+  padding: '7px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+  borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
 }
 
 const btnDanger: React.CSSProperties = {

@@ -35,14 +35,14 @@ export default async function PssrTemplateEditorPage({
   return (
     <div style={{ padding: '32px' }}>
       <div style={{ marginBottom: '28px' }}>
-        <a href="/admin/templates/pssr" style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}>
+        <a href="/admin/templates/pssr" style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
           ← Templates PSSR
         </a>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0', letterSpacing: '-0.4px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0', letterSpacing: '-0.4px' }}>
           {template.name}
         </h1>
         {template.description && (
-          <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>{template.description}</p>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>{template.description}</p>
         )}
       </div>
       <PssrTemplateEditor

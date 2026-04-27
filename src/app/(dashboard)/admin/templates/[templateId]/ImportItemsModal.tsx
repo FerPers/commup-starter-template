@@ -205,7 +205,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div style={{
-        background: 'white', borderRadius: '16px', padding: '28px',
+        background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
         width: '100%', maxWidth: '560px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
         maxHeight: '85vh', display: 'flex', flexDirection: 'column',
       }}>
@@ -213,16 +213,16 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>
               Importar ítems desde Excel
             </h2>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
               {step === 'upload' && 'Sube tu archivo .xlsx con las secciones e ítems del ITR'}
               {step === 'preview' && `${parsed!.sections.length} secciones · ${totalItems} ítems detectados`}
               {step === 'done' && 'Importación completada'}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px', lineHeight: 1, padding: '2px' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px', lineHeight: 1, padding: '2px' }}>✕</button>
         </div>
 
         {/* Step: upload */}
@@ -246,17 +246,17 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
               style={{
-                border: `2px dashed ${dragOver ? '#3b82f6' : '#cbd5e1'}`,
+                border: `2px dashed ${dragOver ? '#3b82f6' : 'var(--gray-300)'}`,
                 borderRadius: '12px', padding: '40px 20px', textAlign: 'center',
-                cursor: 'pointer', background: dragOver ? '#eff6ff' : '#fafafa',
+                cursor: 'pointer', background: dragOver ? '#eff6ff' : 'var(--gray-50)',
                 transition: 'all 0.15s',
               }}
             >
               <div style={{ fontSize: '32px', marginBottom: '10px', opacity: 0.5 }}>📊</div>
-              <p style={{ fontSize: '14px', fontWeight: 500, color: '#475569', margin: '0 0 4px' }}>
+              <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 4px' }}>
                 Arrastra tu archivo Excel aquí
               </p>
-              <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
+              <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>
                 o haz clic para seleccionar (.xlsx, .xls)
               </p>
               <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} style={{ display: 'none' }} />
@@ -269,8 +269,8 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             )}
 
             {/* Column reference */}
-            <div style={{ marginTop: '16px', padding: '12px 14px', background: '#f8fafc', borderRadius: '8px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ marginTop: '16px', padding: '12px 14px', background: 'var(--gray-50)', borderRadius: '8px' }}>
+              <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Columnas esperadas (fila 1 = encabezado)
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px' }}>
@@ -282,11 +282,11 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 ].map(([col, label]) => (
                   <div key={col} style={{ display: 'flex', gap: '6px', fontSize: '11px' }}>
                     <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#3b82f6', minWidth: '14px' }}>{col}</span>
-                    <span style={{ color: '#475569' }}>{label}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{label}</span>
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: '11px', color: '#94a3b8', margin: '8px 0 0' }}>
+              <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '8px 0 0' }}>
                 Tipos válidos: verificacion · si_no · medicion · numero · texto · foto · firma · fecha · seleccion
               </p>
             </div>
@@ -309,26 +309,26 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             )}
 
             {/* Section list (scrollable) */}
-            <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '10px', marginBottom: '14px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '10px', marginBottom: '14px' }}>
               {parsed.sections.map((sec, sIdx) => (
                 <div key={sIdx} style={{ borderBottom: sIdx < parsed.sections.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                  <div style={{ padding: '10px 14px', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>{sec.title}</span>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>{sec.items.length} ítems</span>
+                  <div style={{ padding: '10px 14px', background: 'var(--gray-50)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{sec.title}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sec.items.length} ítems</span>
                   </div>
                   {sec.items.slice(0, 3).map((item, iIdx) => (
                     <div key={iIdx} style={{ padding: '7px 14px 7px 22px', display: 'flex', gap: '10px', alignItems: 'center', borderTop: '1px solid #f8fafc' }}>
-                      <span style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace', minWidth: '32px' }}>{item.item_number ?? '—'}</span>
-                      <span style={{ fontSize: '12px', color: '#475569', flex: 1 }}>{item.description}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--gray-400)', fontFamily: 'monospace', minWidth: '32px' }}>{item.item_number ?? '—'}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', flex: 1 }}>{item.description}</span>
                       <span style={{
                         fontSize: '10px', padding: '1px 6px', borderRadius: '999px',
-                        background: '#e2e8f0', color: '#475569',
+                        background: 'var(--border)', color: 'var(--text-muted)',
                       }}>{item.item_type}</span>
                       {item.is_critical && <span style={{ fontSize: '10px', color: '#ef4444' }}>●</span>}
                     </div>
                   ))}
                   {sec.items.length > 3 && (
-                    <p style={{ padding: '6px 22px', fontSize: '11px', color: '#94a3b8', margin: 0 }}>
+                    <p style={{ padding: '6px 22px', fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
                       + {sec.items.length - 3} más...
                     </p>
                   )}
@@ -338,7 +338,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
 
             {/* Replace option */}
             {hasExistingContent && (
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '14px', padding: '12px 14px', background: replace ? '#fff7ed' : '#f8fafc', borderRadius: '8px', border: `1px solid ${replace ? '#fed7aa' : '#e2e8f0'}` }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '14px', padding: '12px 14px', background: replace ? '#fff7ed' : 'var(--gray-50)', borderRadius: '8px', border: `1px solid ${replace ? '#fed7aa' : 'var(--border)'}` }}>
                 <input
                   type="checkbox"
                   checked={replace}
@@ -346,10 +346,10 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                   style={{ accentColor: '#f97316', marginTop: '1px', flexShrink: 0 }}
                 />
                 <div>
-                  <p style={{ fontSize: '13px', fontWeight: 500, color: replace ? '#c2410c' : '#475569', margin: '0 0 2px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 500, color: replace ? '#c2410c' : 'var(--text-muted)', margin: '0 0 2px' }}>
                     Reemplazar contenido existente
                   </p>
-                  <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>
+                  <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
                     {replace ? 'Se eliminarán todas las secciones e ítems actuales antes de importar.' : 'Los nuevos ítems se agregarán al final del template.'}
                   </p>
                 </div>
@@ -365,7 +365,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => { setStep('upload'); setParsed(null); setParseError(null) }}
-                style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 ← Volver
               </button>
@@ -374,7 +374,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 disabled={isPending}
                 style={{
                   padding: '9px 20px', background: isPending ? '#93c5fd' : '#3b82f6',
-                  color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                  color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                   border: 'none', cursor: isPending ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -388,17 +388,17 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
         {step === 'done' && importResult && (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ fontSize: '40px', marginBottom: '14px' }}>✅</div>
-            <p style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
+            <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
               Importación exitosa
             </p>
-            <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 24px' }}>
               {importResult.sectionsCreated} sección{importResult.sectionsCreated !== 1 ? 'es' : ''} y{' '}
               {importResult.itemsCreated} ítem{importResult.itemsCreated !== 1 ? 's' : ''} creados.
             </p>
             <button
               onClick={onSuccess}
               style={{
-                padding: '10px 24px', background: '#3b82f6', color: 'white',
+                padding: '10px 24px', background: '#3b82f6', color: '#fff',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer',
               }}
             >

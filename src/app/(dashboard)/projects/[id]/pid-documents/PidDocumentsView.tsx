@@ -98,7 +98,7 @@ export default function PidDocumentsView({
             <button
               onClick={() => setShowUpload(true)}
               style={{
-                padding: '9px 18px', background: '#3b82f6', color: 'white',
+                padding: '9px 18px', background: '#3b82f6', color: '#fff',
                 border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 cursor: 'pointer',
               }}
@@ -119,22 +119,22 @@ export default function PidDocumentsView({
       {/* Documents list */}
       {docs.length === 0 ? (
         <div style={{
-          background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
           padding: '64px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.3 }}>📄</div>
-          <p style={{ fontSize: '15px', fontWeight: 500, color: '#475569', margin: '0 0 6px' }}>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>
             {t('list.emptyTitle')}
           </p>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>
             {t('list.emptyDesc')}
           </p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'auto' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
                 <Th>{t('list.colDrawingNum')}</Th>
                 <Th>{t('list.colTitle')}</Th>
                 <Th>{t('list.colFile')}</Th>
@@ -189,7 +189,7 @@ function DocRow({
   return (
     <tr
       style={{ borderBottom: '1px solid #f1f5f9' }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--gray-50)')}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
     >
       <td style={tdStyle}>
@@ -201,16 +201,16 @@ function DocRow({
         </span>
       </td>
       <td style={tdStyle}>
-        <span style={{ fontSize: '13px', color: '#334155' }}>{doc.title || '—'}</span>
+        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{doc.title || '—'}</span>
       </td>
       <td style={tdStyle}>
-        <span style={{ fontSize: '12px', color: '#64748b' }}>{doc.file_name}</span>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{doc.file_name}</span>
       </td>
       <td style={tdStyle}>
-        <span style={{ fontSize: '12px', color: '#94a3b8' }}>{formatBytes(doc.file_size)}</span>
+        <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{formatBytes(doc.file_size)}</span>
       </td>
       <td style={tdStyle}>
-        <span style={{ fontSize: '12px', color: '#94a3b8' }}>{formatDate(doc.created_at)}</span>
+        <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{formatDate(doc.created_at)}</span>
       </td>
       <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
         <a
@@ -242,7 +242,7 @@ function DocRow({
           <button
             onClick={() => setConfirmDelete(true)}
             style={{
-              padding: '5px 10px', fontSize: '12px', background: 'white',
+              padding: '5px 10px', fontSize: '12px', background: 'var(--card-bg)',
               color: '#ef4444', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer',
             }}
           >
@@ -257,7 +257,7 @@ function DocRow({
               disabled={isPending}
               style={{
                 padding: '4px 10px', fontSize: '12px', background: '#ef4444',
-                color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer',
+                color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer',
               }}
             >
               {isPending ? '...' : t('list.confirmYes')}
@@ -265,8 +265,8 @@ function DocRow({
             <button
               onClick={() => setConfirmDelete(false)}
               style={{
-                padding: '4px 10px', fontSize: '12px', background: 'white',
-                color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '5px', cursor: 'pointer',
+                padding: '4px 10px', fontSize: '12px', background: 'var(--card-bg)',
+                color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: '5px', cursor: 'pointer',
               }}
             >
               {t('list.confirmNo')}
@@ -361,9 +361,9 @@ function UploadForm({
 
   return (
     <form onSubmit={handleSubmit} style={{
-      background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px',
+      background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px',
     }}>
-      <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+      <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)' }}>
         {t('upload.formTitle')}
       </h3>
 
@@ -379,9 +379,9 @@ function UploadForm({
           if (f) handleFile(f)
         }}
         style={{
-          border: `2px dashed ${dragging ? '#3b82f6' : file ? '#10b981' : '#e2e8f0'}`,
+          border: `2px dashed ${dragging ? '#3b82f6' : file ? '#10b981' : 'var(--border)'}`,
           borderRadius: '10px', padding: '32px', textAlign: 'center', cursor: 'pointer',
-          background: dragging ? '#eff6ff' : file ? '#f0fdf4' : '#f8fafc',
+          background: dragging ? '#eff6ff' : file ? '#f0fdf4' : 'var(--gray-50)',
           marginBottom: '16px', transition: 'all 0.15s',
         }}
       >
@@ -396,16 +396,16 @@ function UploadForm({
           <>
             <div style={{ fontSize: '20px', marginBottom: '6px' }}>📄</div>
             <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#16a34a' }}>{file.name}</p>
-            <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>{formatBytes(file.size)}</p>
+            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>{formatBytes(file.size)}</p>
           </>
         ) : (
           <>
             <div style={{ fontSize: '24px', marginBottom: '8px', opacity: 0.4 }}>📂</div>
-            <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>
               {t('upload.dropBefore')}{' '}
               <span style={{ color: '#3b82f6', fontWeight: 500 }}>{t('upload.dropSelect')}</span>
             </p>
-            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#94a3b8' }}>{t('upload.dropHint')}</p>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--gray-400)' }}>{t('upload.dropHint')}</p>
           </>
         )}
       </div>
@@ -413,7 +413,7 @@ function UploadForm({
       {/* Fields */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
         <div>
-          <label style={{ fontSize: '12px', fontWeight: 500, color: '#374151', display: 'block', marginBottom: '4px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>
             {t('upload.fieldDrawingNum')} <span style={{ color: '#ef4444' }}>*</span>
           </label>
           {missingPids.length > 0 && (
@@ -426,7 +426,7 @@ function UploadForm({
                   style={{
                     padding: '2px 7px', fontSize: '10px', fontWeight: 600,
                     background: drawingNumber === p ? '#3b82f6' : '#eff6ff',
-                    color: drawingNumber === p ? 'white' : '#3b82f6',
+                    color: drawingNumber === p ? '#fff' : 'var(--primary-500)',
                     border: '1px solid #bfdbfe', borderRadius: '4px', cursor: 'pointer',
                     fontFamily: 'ui-monospace, monospace',
                   }}
@@ -444,7 +444,7 @@ function UploadForm({
           />
         </div>
         <div>
-          <label style={{ fontSize: '12px', fontWeight: 500, color: '#374151', display: 'block', marginBottom: '4px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>
             {t('upload.fieldTitle')}
           </label>
           <input
@@ -468,7 +468,7 @@ function UploadForm({
           disabled={uploading || !file}
           style={{
             padding: '9px 20px', background: uploading ? '#93c5fd' : '#3b82f6',
-            color: 'white', border: 'none', borderRadius: '8px',
+            color: '#fff', border: 'none', borderRadius: '8px',
             fontSize: '13px', fontWeight: 500, cursor: uploading ? 'wait' : 'pointer',
           }}
         >
@@ -479,8 +479,8 @@ function UploadForm({
           onClick={onCancel}
           disabled={uploading}
           style={{
-            padding: '9px 16px', background: 'white', color: '#64748b',
-            border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer',
+            padding: '9px 16px', background: 'var(--card-bg)', color: 'var(--text-muted)',
+            border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer',
           }}
         >
           {t('upload.cancel')}
@@ -494,7 +494,7 @@ function Th({ children }: { children?: React.ReactNode }) {
   return (
     <th style={{
       padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600,
-      color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap',
+      color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap',
     }}>
       {children}
     </th>
@@ -503,7 +503,7 @@ function Th({ children }: { children?: React.ReactNode }) {
 
 const tdStyle: React.CSSProperties = { padding: '12px 16px', verticalAlign: 'middle' }
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 10px', fontSize: '13px', color: '#0f172a',
-  background: 'white', border: '1px solid #e2e8f0', borderRadius: '7px',
+  width: '100%', padding: '8px 10px', fontSize: '13px', color: 'var(--text-strong)',
+  background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '7px',
   outline: 'none', boxSizing: 'border-box',
 }

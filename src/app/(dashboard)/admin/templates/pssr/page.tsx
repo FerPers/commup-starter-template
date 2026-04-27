@@ -22,10 +22,10 @@ export default async function PssrTemplatesPage() {
   return (
     <div style={{ padding: '32px' }}>
       <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.4px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>
           Templates PSSR
         </h1>
-        <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
+        <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
           Checklist Pre-Startup Safety Review — define los ítems de verificación para el arranque
         </p>
       </div>

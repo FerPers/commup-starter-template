@@ -63,7 +63,7 @@ interface Props {
 // ── Config ─────────────────────────────────────────────────────────
 
 const STATUS_CFG: Record<ReviewStatus, { label: string; color: string; bg: string }> = {
-  draft:            { label: 'Borrador',         color: '#64748b', bg: '#f1f5f9' },
+  draft:            { label: 'Borrador',         color: 'var(--text-muted)', bg: 'var(--gray-100)' },
   in_progress:      { label: 'En progreso',       color: '#3b82f6', bg: '#eff6ff' },
   pending_approval: { label: 'Pend. aprobación',  color: '#f59e0b', bg: '#fffbeb' },
   approved:         { label: 'Aprobado ✓',        color: '#10b981', bg: '#ecfdf5' },
@@ -79,11 +79,11 @@ const CAT_COLORS: Record<string, string> = {
   'Seguridad de Procesos': '#f97316',
   'Seguridad / HSE': '#10b981',
   'Operaciones y Capacitación': '#6366f1',
-  'Mantenimiento': '#64748b',
+  'Mantenimiento': 'var(--text-muted)',
   'Medio Ambiente': '#22c55e',
   'Construcción y Comisionamiento': '#d97706',
 }
-function catColor(cat: string) { return CAT_COLORS[cat] ?? '#64748b' }
+function catColor(cat: string) { return CAT_COLORS[cat] ?? 'var(--text-muted)' }
 
 // ── Main Component ─────────────────────────────────────────────────
 
@@ -221,13 +221,13 @@ export default function PssrReviewForm({
     <>
       {/* Back + Header ───────────────────────────────────────── */}
       <div style={{ marginBottom: '24px' }}>
-        <a href={`/projects/${projectId}/pssr`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}>
+        <a href={`/projects/${projectId}/pssr`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
           ← PSSR · {project.name}
         </a>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginTop: '10px', flexWrap: 'wrap' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
                 {review.review_number}
               </h1>
               <span style={{
@@ -239,13 +239,13 @@ export default function PssrReviewForm({
               {system && (
                 <span style={{
                   padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                  background: '#f1f5f9', color: '#475569',
+                  background: 'var(--gray-100)', color: 'var(--text-muted)',
                 }}>
                   {system.code} — {system.name}
                 </span>
               )}
             </div>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>{review.title}</p>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>{review.title}</p>
           </div>
 
           {/* Action buttons */}
@@ -268,7 +268,7 @@ export default function PssrReviewForm({
                 disabled={isPending}
                 style={{
                   padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: '#f59e0b', color: 'white', border: 'none',
+                  background: '#f59e0b', color: '#fff', border: 'none',
                   cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                 }}
               >
@@ -294,7 +294,7 @@ export default function PssrReviewForm({
                   title={sigs.length === 0 ? 'Se requiere al menos una firma' : undefined}
                   style={{
                     padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                    background: sigs.length === 0 ? '#d1fae5' : '#10b981', color: 'white', border: 'none',
+                    background: sigs.length === 0 ? '#d1fae5' : '#10b981', color: '#fff', border: 'none',
                     cursor: isPending || sigs.length === 0 ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                   }}
                 >
@@ -308,18 +308,18 @@ export default function PssrReviewForm({
 
       {/* Progress bar ────────────────────────────────────────── */}
       <div style={{
-        background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+        background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
         padding: '16px 24px', marginBottom: '20px',
         display: 'flex', alignItems: 'center', gap: '16px',
       }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>PROGRESO</span>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: localPct === 100 ? '#10b981' : '#0f172a' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>PROGRESO</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: localPct === 100 ? 'var(--success-500)' : 'var(--text-strong)' }}>
               {localResolved}/{totalItems} ítems
             </span>
           </div>
-          <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ height: '8px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{
               height: '100%', borderRadius: '4px',
               background: localPct === 100 ? '#10b981' : '#f59e0b',
@@ -364,14 +364,14 @@ export default function PssrReviewForm({
 
           return (
             <div key={category} style={{
-              background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+              background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
               overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}>
               {/* Category header — click to collapse */}
               <button
                 onClick={() => toggleCat(category)}
                 style={{
-                  width: '100%', textAlign: 'left', background: '#f8fafc', border: 'none', cursor: 'pointer',
+                  width: '100%', textAlign: 'left', background: 'var(--gray-50)', border: 'none', cursor: 'pointer',
                   padding: '14px 20px', borderLeft: `4px solid ${catColor(category)}`,
                   display: 'flex', alignItems: 'center', gap: '10px',
                 }}
@@ -380,13 +380,13 @@ export default function PssrReviewForm({
                   display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%',
                   background: catDone ? '#10b981' : catColor(category), flexShrink: 0,
                 }} />
-                <span style={{ fontWeight: 700, fontSize: '12px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>
+                <span style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>
                   {category}
                 </span>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
                   {catResolved}/{catItems.length}
                 </span>
-                <span style={{ color: '#94a3b8', fontSize: '14px', marginLeft: '4px' }}>
+                <span style={{ color: 'var(--gray-400)', fontSize: '14px', marginLeft: '4px' }}>
                   {isExpanded ? '▾' : '▸'}
                 </span>
               </button>
@@ -395,10 +395,10 @@ export default function PssrReviewForm({
               {isExpanded && catItems.map(item => {
                 const isItemExpanded = expandedItems.has(item.id)
                 const statusColors = {
-                  pending: { bg: '#f1f5f9', color: '#64748b', border: '#e2e8f0' },
+                  pending: { bg: 'var(--gray-100)', color: 'var(--text-muted)', border: 'var(--border)' },
                   si:      { bg: '#ecfdf5', color: '#10b981', border: '#a7f3d0' },
                   no:      { bg: '#fee2e2', color: '#ef4444', border: '#fecaca' },
-                  na:      { bg: '#f8fafc', color: '#94a3b8', border: '#e2e8f0' },
+                  na:      { bg: 'var(--gray-50)', color: 'var(--gray-400)', border: 'var(--border)' },
                 }
                 const sc = statusColors[item.status]
 
@@ -406,25 +406,25 @@ export default function PssrReviewForm({
                   <div key={item.id} style={{
                     borderTop: '1px solid #f1f5f9',
                     borderLeft: `4px solid ${sc.border}`,
-                    background: item.status === 'si' ? '#fafffe' : item.status === 'no' ? '#fffafa' : 'white',
+                    background: item.status === 'si' ? '#fafffe' : item.status === 'no' ? '#fffafa' : 'var(--card-bg)',
                   }}>
                     {/* Item row */}
                     <div style={{ padding: '14px 20px', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                       {/* Order */}
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#cbd5e1', paddingTop: '2px', flexShrink: 0, minWidth: '22px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gray-300)', paddingTop: '2px', flexShrink: 0, minWidth: '22px' }}>
                         {item.item_order}
                       </span>
 
                       {/* Content */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: '13px', color: '#374151', marginBottom: '3px' }}>
+                        <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--gray-700)', marginBottom: '3px' }}>
                           {item.element}
                         </div>
-                        <div style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.5 }}>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                           {item.requirement}
                         </div>
                         {item.notes_hint && (
-                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px', fontStyle: 'italic' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '4px', fontStyle: 'italic' }}>
                             💡 {item.notes_hint}
                           </div>
                         )}
@@ -451,7 +451,7 @@ export default function PssrReviewForm({
                               placeholder="Responsable asignado"
                               style={{
                                 width: '100%', padding: '7px 10px', borderRadius: '6px',
-                                border: '1px solid #e2e8f0', fontSize: '12px', outline: 'none',
+                                border: '1px solid var(--border)', fontSize: '12px', outline: 'none',
                                 boxSizing: 'border-box', fontFamily: 'inherit',
                               }}
                             />
@@ -462,7 +462,7 @@ export default function PssrReviewForm({
                               rows={2}
                               style={{
                                 width: '100%', padding: '7px 10px', borderRadius: '6px',
-                                border: '1px solid #e2e8f0', fontSize: '12px', outline: 'none',
+                                border: '1px solid var(--border)', fontSize: '12px', outline: 'none',
                                 resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit',
                               }}
                             />
@@ -472,7 +472,7 @@ export default function PssrReviewForm({
                               onBlur={e => handleFieldSave(item, 'completion_date', e.target.value)}
                               style={{
                                 width: '160px', padding: '7px 10px', borderRadius: '6px',
-                                border: '1px solid #e2e8f0', fontSize: '12px', outline: 'none',
+                                border: '1px solid var(--border)', fontSize: '12px', outline: 'none',
                                 fontFamily: 'inherit',
                               }}
                             />
@@ -480,7 +480,7 @@ export default function PssrReviewForm({
                         )}
                         {/* Read-only details */}
                         {(readonly || !isItemExpanded) && (item.responsible || item.actions) && item.status !== 'pending' && (
-                          <div style={{ marginTop: '6px', fontSize: '11px', color: '#64748b' }}>
+                          <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
                             {item.responsible && <span>👤 {item.responsible}</span>}
                             {item.responsible && item.actions && <span> · </span>}
                             {item.actions && <span>{item.actions}</span>}
@@ -499,9 +499,9 @@ export default function PssrReviewForm({
                               style={{
                                 padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
                                 border: '1.5px solid',
-                                borderColor: item.status === s ? sc.border : '#e2e8f0',
-                                background: item.status === s ? sc.bg : 'white',
-                                color: item.status === s ? sc.color : '#94a3b8',
+                                borderColor: item.status === s ? sc.border : 'var(--border)',
+                                background: item.status === s ? sc.bg : 'var(--card-bg)',
+                                color: item.status === s ? sc.color : 'var(--gray-400)',
                                 cursor: 'pointer', transition: 'all 0.1s',
                                 textTransform: 'uppercase',
                               }}
@@ -533,10 +533,10 @@ export default function PssrReviewForm({
       {/* Notes ───────────────────────────────────────────────── */}
       {!readonly && (
         <div style={{
-          background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
           padding: '20px 24px', marginBottom: '20px',
         }}>
-          <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>
+          <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>
             Observaciones generales
           </label>
           <textarea
@@ -547,8 +547,8 @@ export default function PssrReviewForm({
             placeholder="Notas, condiciones especiales, observaciones del equipo..."
             style={{
               width: '100%', padding: '10px 12px', borderRadius: '8px',
-              border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none',
-              resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: '#0f172a',
+              border: '1.5px solid var(--border)', fontSize: '13px', outline: 'none',
+              resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: 'var(--text-strong)',
             }}
           />
         </div>
@@ -556,15 +556,15 @@ export default function PssrReviewForm({
 
       {/* Signatures ──────────────────────────────────────────── */}
       <div style={{
-        background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+        background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
         padding: '20px 24px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
               Firmas de aprobación
             </h3>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
               Los líderes responsables firman para certificar el cumplimiento
             </p>
           </div>
@@ -573,7 +573,7 @@ export default function PssrReviewForm({
               onClick={() => setShowSignModal(true)}
               style={{
                 padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                background: '#7c3aed', color: 'white', border: 'none', cursor: 'pointer',
+                background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer',
               }}
             >
               ✍ Firmar
@@ -583,10 +583,10 @@ export default function PssrReviewForm({
 
         {sigs.length === 0 ? (
           <div style={{
-            padding: '28px', textAlign: 'center', background: '#f8fafc',
+            padding: '28px', textAlign: 'center', background: 'var(--gray-50)',
             borderRadius: '8px', border: '1.5px dashed #e2e8f0',
           }}>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+            <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>
               {review.status === 'draft'
                 ? 'Completa todos los ítems antes de agregar firmas'
                 : 'Sin firmas aún — los responsables deben firmar antes de aprobar'}
@@ -596,22 +596,22 @@ export default function PssrReviewForm({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
             {sigs.map(sig => (
               <div key={sig.id} style={{
-                border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px',
-                background: '#fafafa',
+                border: '1px solid var(--border)', borderRadius: '10px', padding: '12px',
+                background: 'var(--gray-50)',
               }}>
                 <img
                   src={sig.signature_data}
                   alt="Firma"
-                  style={{ width: '100%', height: '80px', objectFit: 'contain', background: 'white', borderRadius: '6px', border: '1px solid #f1f5f9' }}
+                  style={{ width: '100%', height: '80px', objectFit: 'contain', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid #f1f5f9' }}
                 />
                 <div style={{ marginTop: '8px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>
                     {sig.profiles?.full_name ?? 'Usuario'}
                   </div>
                   {sig.discipline && (
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>{sig.discipline}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sig.discipline}</div>
                   )}
-                  <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginTop: '2px' }}>
                     {new Date(sig.signed_at).toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
@@ -723,15 +723,15 @@ function SignModal({
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
     }} onClick={onClose}>
       <div style={{
-        background: 'white', borderRadius: '16px', padding: '28px',
+        background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
         width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
       }} onClick={e => e.stopPropagation()}>
-        <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 16px' }}>
+        <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 16px' }}>
           Firma de aprobación
         </h3>
 
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
             Disciplina / Rol
           </label>
           <input
@@ -753,12 +753,12 @@ function SignModal({
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Firma</label>
-          <button onClick={clearCanvas} style={{ background: 'none', border: 'none', fontSize: '12px', color: '#94a3b8', cursor: 'pointer' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>Firma</label>
+          <button onClick={clearCanvas} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--gray-400)', cursor: 'pointer' }}>
             Limpiar
           </button>
         </div>
-        <div style={{ border: '1.5px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#fafafa', marginBottom: '20px' }}>
+        <div style={{ border: '1.5px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: 'var(--gray-50)', marginBottom: '20px' }}>
           <canvas
             ref={canvasRef}
             width={432}
@@ -774,7 +774,7 @@ function SignModal({
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={{
             padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-            background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#374151',
+            background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
           }}>
             Cancelar
           </button>
@@ -783,7 +783,7 @@ function SignModal({
             disabled={isPending || !hasDrawn}
             style={{
               padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: isPending || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: 'white', border: 'none',
+              background: isPending || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none',
               cursor: isPending || !hasDrawn ? 'not-allowed' : 'pointer',
             }}
           >

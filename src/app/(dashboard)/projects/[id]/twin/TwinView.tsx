@@ -66,7 +66,7 @@ const SEMAFORO: Record<string, { color: string; bg: string; border: string; labe
   green:  { color: '#059669', bg: '#ecfdf5', border: '#a7f3d0', label: 'Completo',    dot: '#10b981' },
   yellow: { color: '#b45309', bg: '#fffbeb', border: '#fde68a', label: 'En progreso', dot: '#f59e0b' },
   red:    { color: '#b91c1c', bg: '#fef2f2', border: '#fecaca', label: 'Bloqueado',   dot: '#ef4444' },
-  grey:   { color: '#64748b', bg: '#f8fafc', border: '#e2e8f0', label: 'Sin ITRs',    dot: '#94a3b8' },
+  grey:   { color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)', label: 'Sin ITRs',    dot: '#94a3b8' },
 }
 
 function SemaforoDot({ semaforo, size = 10 }: { semaforo: string; size?: number }) {
@@ -89,7 +89,7 @@ function ProgressMini({ pct, semaforo }: { pct: number; semaforo: string }) {
   const color = semaforo === 'green' ? '#10b981' : semaforo === 'yellow' ? '#f59e0b' : semaforo === 'red' ? '#ef4444' : '#cbd5e1'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-      <div style={{ flex: 1, height: '4px', background: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+      <div style={{ flex: 1, height: '4px', background: 'var(--gray-100)', borderRadius: '999px', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '999px', transition: 'width 0.3s' }} />
       </div>
       <span style={{ fontSize: '11px', fontWeight: 600, color, minWidth: '30px', textAlign: 'right' }}>
@@ -118,7 +118,7 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
       style={{
         borderRadius: '12px',
         border: `1.5px solid ${highlight ? s.dot : s.border}`,
-        background: highlight ? s.bg : 'white',
+        background: highlight ? s.bg : 'var(--card-bg)',
         padding: '14px',
         cursor: 'pointer',
         transition: 'all 0.15s',
@@ -136,7 +136,7 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             <span style={{
-              fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: '13px', color: '#0f172a',
+              fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: '13px', color: 'var(--text-strong)',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {tag.tag_number}
@@ -149,7 +149,7 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
             </span>
           </div>
           {tag.description && (
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {tag.description}
             </div>
           )}
@@ -240,15 +240,15 @@ function SubsystemPanel({
         onClick={() => setOpen(o => !o)}
         style={{
           width: '100%', textAlign: 'left', padding: '10px 14px',
-          background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: open ? '10px 10px 0 0' : '10px',
+          background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: open ? '10px 10px 0 0' : '10px',
           cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
           transition: 'background 0.1s',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc' }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--gray-100)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--gray-50)' }}
       >
         <SemaforoDot semaforo={subSemaforo} size={8} />
-        <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 700, color: '#475569', background: '#e2e8f0', padding: '2px 7px', borderRadius: '4px' }}>
+        <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', background: 'var(--border)', padding: '2px 7px', borderRadius: '4px' }}>
           {subsystemCode}
         </span>
         <span style={{ fontSize: '13px', color: '#334155', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -257,19 +257,19 @@ function SubsystemPanel({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <span style={{ fontSize: '11px', color: '#94a3b8' }}>{total} tags</span>
           {red > 0 && <span style={{ fontSize: '11px', fontWeight: 600, color: '#ef4444', background: '#fef2f2', padding: '1px 6px', borderRadius: '5px' }}>A:{red}</span>}
-          <span style={{ fontSize: '11px', color: '#64748b' }}>{pct}%</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pct}%</span>
           <span style={{ color: '#94a3b8', fontSize: '12px', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', display: 'inline-block' }}>›</span>
         </div>
       </button>
 
       {open && (
         <div style={{
-          border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 10px 10px',
+          border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 10px 10px',
           padding: '12px',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
           gap: '10px',
-          background: 'white',
+          background: 'var(--card-bg)',
         }}>
           {tags.map(tag => (
             <TagCard
@@ -317,13 +317,13 @@ function SystemBlock({
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px',
         padding: '12px 16px', marginBottom: '12px',
-        background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px',
+        background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px',
         borderLeft: `4px solid ${SEMAFORO[sysSema].dot}`,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <SemaforoDot semaforo={sysSema} size={10} />
-            <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+            <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '14px', fontWeight: 700, color: 'var(--text-strong)' }}>
               {systemCode}
             </span>
             <span style={{ fontSize: '14px', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -337,7 +337,7 @@ function SystemBlock({
               ⛔ {red} bloqueado{red > 1 ? 's' : ''}
             </span>
           )}
-          <span style={{ fontSize: '12px', color: '#64748b' }}>{total} tags · {pct}% ITR</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{total} tags · {pct}% ITR</span>
         </div>
       </div>
 
@@ -366,7 +366,7 @@ function SystemBlock({
 
 function Legend() {
   return (
-    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '11px', color: '#64748b' }}>
+    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '11px', color: 'var(--text-muted)' }}>
       {Object.entries(SEMAFORO).map(([k, v]) => (
         <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: v.dot, display: 'inline-block' }} />
@@ -406,8 +406,8 @@ function StatsBar({ tags }: { tags: Tag360[] }) {
   return (
     <div style={{
       display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-      gap: '12px', padding: '16px', background: 'white',
-      border: '1px solid #e2e8f0', borderRadius: '12px', marginBottom: '24px',
+      gap: '12px', padding: '16px', background: 'var(--card-bg)',
+      border: '1px solid var(--border)', borderRadius: '12px', marginBottom: '24px',
     }}>
       <Stat value={total} label="Tags totales" color="#334155" />
       <Stat value={`${itrPct}%`} label="Compl. ITR" color={itrPct === 100 ? '#059669' : '#3b82f6'} />
@@ -488,7 +488,7 @@ export default function TwinView({
   }, [systems, filteredTags])
 
   const semaOptions = [
-    { key: 'ALL',    label: 'Todos',       color: '#64748b' },
+    { key: 'ALL',    label: 'Todos',       color: 'var(--text-muted)' },
     { key: 'red',    label: 'Bloqueados',  color: '#ef4444' },
     { key: 'yellow', label: 'En progreso', color: '#f59e0b' },
     { key: 'green',  label: 'Completados', color: '#059669' },
@@ -513,9 +513,9 @@ export default function TwinView({
                 onClick={() => setSemaFilter(opt.key)}
                 style={{
                   padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: active ? 600 : 400,
-                  border: `1px solid ${active ? opt.color : '#e2e8f0'}`,
-                  background: active ? `${opt.color}15` : 'white',
-                  color: active ? opt.color : '#64748b',
+                  border: `1px solid ${active ? opt.color : 'var(--border)'}`,
+                  background: active ? `${opt.color}15` : 'var(--card-bg)',
+                  color: active ? opt.color : 'var(--text-muted)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
                 }}
               >
@@ -523,8 +523,8 @@ export default function TwinView({
                 {opt.label}
                 <span style={{
                   padding: '0 5px', borderRadius: '999px', fontSize: '10px', fontWeight: 700,
-                  background: active ? opt.color : '#f1f5f9',
-                  color: active ? 'white' : '#64748b',
+                  background: active ? opt.color : 'var(--gray-100)',
+                  color: active ? 'white' : 'var(--text-muted)',
                 }}>
                   {count}
                 </span>
@@ -541,7 +541,7 @@ export default function TwinView({
           placeholder="Buscar tag, descripción, sistema..."
           aria-label="Buscar tag, descripción, sistema"
           style={{
-            padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
+            padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px',
             fontSize: '13px', fontFamily: 'inherit', width: '240px', maxWidth: '100%',
             boxSizing: 'border-box',
           }}
@@ -555,7 +555,7 @@ export default function TwinView({
 
       {/* System blocks */}
       {filteredSystems.length === 0 ? (
-        <div style={{ padding: '64px', textAlign: 'center', color: '#94a3b8', fontSize: '14px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div style={{ padding: '64px', textAlign: 'center', color: '#94a3b8', fontSize: '14px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
           {search || semaFilter !== 'ALL' ? 'Sin resultados para los filtros aplicados' : 'No hay tags registrados en este proyecto'}
         </div>
       ) : (

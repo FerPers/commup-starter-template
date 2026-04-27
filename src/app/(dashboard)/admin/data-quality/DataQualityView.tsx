@@ -63,10 +63,10 @@ export default function DataQualityView({
   return (
     <div style={{ padding: '32px', maxWidth: '1400px' }}>
       <header style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, color: '#0f172a' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>
           {t('title')}
         </h1>
-        <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: '14px' }}>{t('subtitle')}</p>
+        <p style={{ color: 'var(--text-muted)', margin: '4px 0 0', fontSize: '14px' }}>{t('subtitle')}</p>
       </header>
 
       {error && (
@@ -116,7 +116,7 @@ export default function DataQualityView({
             fontSize: '16px',
             fontWeight: 600,
             margin: '0 0 12px',
-            color: '#0f172a',
+            color: 'var(--text-strong)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -124,7 +124,7 @@ export default function DataQualityView({
         >
           <span style={{ fontSize: '18px' }}>⛓</span>
           {t('bottlenecks.title')}
-          <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 400 }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 400 }}>
             {t('bottlenecks.hint')}
           </span>
         </h2>
@@ -133,15 +133,15 @@ export default function DataQualityView({
         ) : (
           <div
             style={{
-              background: 'white',
-              border: '1px solid #e2e8f0',
+              background: 'var(--card-bg)',
+              border: '1px solid var(--border)',
               borderRadius: '10px',
               overflow: 'hidden',
             }}
           >
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                <tr style={{ background: 'var(--gray-50)', textAlign: 'left' }}>
                   <th style={thStyle}>{t('bottlenecks.score')}</th>
                   <th style={thStyle}>{t('bottlenecks.subsystem')}</th>
                   <th style={thStyle}>{t('bottlenecks.system')}</th>
@@ -159,13 +159,13 @@ export default function DataQualityView({
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 500 }}>
                       {b.subsystem_code}
-                      <div style={{ color: '#64748b', fontSize: '11px' }}>{b.subsystem_name}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{b.subsystem_name}</div>
                     </td>
                     <td style={tdStyle}>{b.system_name}</td>
                     <td style={tdStyle}>
                       {b.itrs_approved}/{b.total_itrs}
                       {b.itrs_remaining > 0 && (
-                        <span style={{ color: '#64748b', marginLeft: '4px' }}>
+                        <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>
                           (−{b.itrs_remaining})
                         </span>
                       )}
@@ -178,7 +178,7 @@ export default function DataQualityView({
                         <span style={pillStyle('#ea580c')}>B: {b.punch_b_open}</span>
                       )}
                       {b.punch_c_open > 0 && (
-                        <span style={pillStyle('#64748b')}>C: {b.punch_c_open}</span>
+                        <span style={pillStyle('var(--text-muted)')}>C: {b.punch_c_open}</span>
                       )}
                     </td>
                     <td style={tdStyle}>
@@ -211,7 +211,7 @@ export default function DataQualityView({
             fontSize: '16px',
             fontWeight: 600,
             margin: '0 0 12px',
-            color: '#0f172a',
+            color: 'var(--text-strong)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -219,7 +219,7 @@ export default function DataQualityView({
         >
           <span style={{ fontSize: '18px' }}>⚠</span>
           {t('issues.title')}
-          <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 400 }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 400 }}>
             {issues.length} {t('issues.shown')}
           </span>
         </h2>
@@ -264,10 +264,10 @@ export default function DataQualityView({
               onClick={() => router.push('/admin/data-quality')}
               style={{
                 padding: '7px 12px',
-                border: '1px solid #e2e8f0',
-                background: 'white',
+                border: '1px solid var(--border)',
+                background: 'var(--card-bg)',
                 borderRadius: '8px',
-                color: '#475569',
+                color: 'var(--text-muted)',
                 fontSize: '12px',
                 cursor: 'pointer',
               }}
@@ -284,15 +284,15 @@ export default function DataQualityView({
       ) : (
         <div
           style={{
-            background: 'white',
-            border: '1px solid #e2e8f0',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border)',
             borderRadius: '10px',
             overflow: 'hidden',
           }}
         >
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+              <tr style={{ background: 'var(--gray-50)', textAlign: 'left' }}>
                 <th style={thStyle}>{t('issues.severity')}</th>
                 <th style={thStyle}>{t('issues.category')}</th>
                 <th style={thStyle}>{t('issues.entity')}</th>
@@ -318,10 +318,10 @@ export default function DataQualityView({
                   <td style={tdStyle}>{t(`category.${iss.category}`)}</td>
                   <td style={tdStyle}>
                     <div style={{ fontWeight: 500 }}>{iss.entity_label}</div>
-                    <div style={{ color: '#94a3b8', fontSize: '11px' }}>{iss.entity_type}</div>
+                    <div style={{ color: 'var(--gray-400)', fontSize: '11px' }}>{iss.entity_type}</div>
                   </td>
-                  <td style={{ ...tdStyle, color: '#334155' }}>{iss.description}</td>
-                  <td style={{ ...tdStyle, color: '#64748b', fontSize: '12px' }}>{iss.suggested_fix}</td>
+                  <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{iss.description}</td>
+                  <td style={{ ...tdStyle, color: 'var(--text-muted)', fontSize: '12px' }}>{iss.suggested_fix}</td>
                   <td style={tdStyle}>
                     <a href={iss.fix_url} style={linkStyle}>
                       →
@@ -356,15 +356,15 @@ function SummaryCard({
       disabled={!onClick}
       style={{
         textAlign: 'left',
-        background: active ? '#f1f5f9' : 'white',
-        border: `1px solid ${active ? color : '#e2e8f0'}`,
+        background: active ? 'var(--gray-100)' : 'var(--card-bg)',
+        border: `1px solid ${active ? color : 'var(--border)'}`,
         borderRadius: '10px',
         padding: '16px',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.15s',
       }}
     >
-      <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>{label}</div>
       <div style={{ fontSize: '28px', fontWeight: 700, color, marginTop: '4px' }}>{value}</div>
     </button>
   )
@@ -382,7 +382,7 @@ function ScorePill({ score }: { score: number }) {
         fontSize: '12px',
         fontWeight: 700,
         background: color,
-        color: 'white',
+        color: '#fff',
         borderRadius: '6px',
       }}
     >
@@ -397,8 +397,8 @@ function EmptyState({ children }: { children: React.ReactNode }) {
       style={{
         padding: '40px',
         textAlign: 'center',
-        color: '#64748b',
-        background: '#f8fafc',
+        color: 'var(--text-muted)',
+        background: 'var(--gray-50)',
         border: '1px dashed #cbd5e1',
         borderRadius: '10px',
         fontSize: '14px',
@@ -412,7 +412,7 @@ function EmptyState({ children }: { children: React.ReactNode }) {
 const thStyle: React.CSSProperties = {
   padding: '10px 12px',
   fontWeight: 600,
-  color: '#475569',
+  color: 'var(--text-muted)',
   fontSize: '12px',
   textTransform: 'uppercase',
   letterSpacing: '0.04em',
@@ -427,7 +427,7 @@ const pillStyle = (color: string): React.CSSProperties => ({
   display: 'inline-block',
   padding: '2px 7px',
   background: color,
-  color: 'white',
+  color: '#fff',
   borderRadius: '4px',
   fontSize: '11px',
   fontWeight: 600,
@@ -437,9 +437,9 @@ const pillStyle = (color: string): React.CSSProperties => ({
 const reasonStyle: React.CSSProperties = {
   display: 'inline-block',
   padding: '2px 7px',
-  background: '#f1f5f9',
-  color: '#475569',
-  border: '1px solid #e2e8f0',
+  background: 'var(--gray-100)',
+  color: 'var(--text-muted)',
+  border: '1px solid var(--border)',
   borderRadius: '4px',
   fontSize: '11px',
   marginRight: '4px',
@@ -448,11 +448,11 @@ const reasonStyle: React.CSSProperties = {
 
 const selectStyle: React.CSSProperties = {
   padding: '7px 10px',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--border)',
   borderRadius: '8px',
-  background: 'white',
+  background: 'var(--card-bg)',
   fontSize: '13px',
-  color: '#0f172a',
+  color: 'var(--text-strong)',
 }
 
 const linkStyle: React.CSSProperties = {

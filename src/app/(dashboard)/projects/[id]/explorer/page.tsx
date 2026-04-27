@@ -96,14 +96,14 @@ export default async function ExplorerPage({ params }: { params: Promise<{ id: s
       <div style={{ marginBottom: '24px' }}>
         <Link
           href={`/projects/${id}`}
-          style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}
+          style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}
         >
           ← {project.name}
         </Link>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
           Explorador de Sistema
         </h1>
-        <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
           Árbol jerárquico Área › Sistema › Subsistema
         </p>
       </div>

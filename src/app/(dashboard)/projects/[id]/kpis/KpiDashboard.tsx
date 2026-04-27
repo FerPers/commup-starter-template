@@ -154,7 +154,7 @@ export default function KpiDashboard({
 
   const thStyle = (col: keyof SubsystemKpi): React.CSSProperties => ({
     padding: '10px 12px', fontSize: '11px', fontWeight: 600,
-    color: sortCol === col ? '#3b82f6' : '#64748b',
+    color: sortCol === col ? '#3b82f6' : 'var(--text-muted)',
     textTransform: 'uppercase', letterSpacing: '0.04em',
     cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
     textAlign: 'left',
@@ -176,13 +176,13 @@ export default function KpiDashboard({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none', display: 'inline-block', marginBottom: '8px' }}>
+          <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-block', marginBottom: '8px' }}>
             {t('backLink', { name: projectName })}
           </a>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
             KPIs — {projectCode}
           </h1>
-          <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
             {t('subtitle', { approved: totalApproved, total: totalItrs, pct: overallPct })}
           </p>
         </div>
@@ -192,9 +192,9 @@ export default function KpiDashboard({
               onClick={handleSnapshot}
               disabled={isPending}
               style={{
-                padding: '9px 16px', background: isPending ? '#f1f5f9' : 'white',
-                border: '1px solid #e2e8f0', borderRadius: '8px',
-                fontSize: '13px', color: '#475569', cursor: isPending ? 'not-allowed' : 'pointer',
+                padding: '9px 16px', background: isPending ? 'var(--gray-100)' : 'var(--card-bg)',
+                border: '1px solid var(--border)', borderRadius: '8px',
+                fontSize: '13px', color: 'var(--text-muted)', cursor: isPending ? 'not-allowed' : 'pointer',
                 fontWeight: 500, whiteSpace: 'nowrap',
               }}
             >
@@ -206,8 +206,8 @@ export default function KpiDashboard({
               href={`/projects/${projectId}/kpis/report`}
               target="_blank"
               style={{
-                padding: '9px 14px', background: 'white', border: '1px solid #e2e8f0',
-                borderRadius: '8px', fontSize: '13px', color: '#475569',
+                padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
                 textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
               }}
             >
@@ -217,7 +217,7 @@ export default function KpiDashboard({
           <a
             href={`/projects/${projectId}/kpis/export`}
             style={{
-              padding: '9px 16px', background: '#3b82f6', color: 'white',
+              padding: '9px 16px', background: '#3b82f6', color: '#fff',
               borderRadius: '8px', fontSize: '13px', fontWeight: 500,
               textDecoration: 'none', whiteSpace: 'nowrap',
             }}
@@ -245,19 +245,19 @@ export default function KpiDashboard({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
         {phaseKpis.map(phase => (
           <div key={phase.id} style={{
-            background: 'white', borderRadius: '12px', padding: '18px 20px',
-            border: '1px solid #e2e8f0', borderTop: `3px solid ${phase.color}`,
+            background: 'var(--card-bg)', borderRadius: '12px', padding: '18px 20px',
+            border: '1px solid var(--border)', borderTop: `3px solid ${phase.color}`,
             boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-              <p style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, margin: 0 }}>{phase.name}</p>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, margin: 0 }}>{phase.name}</p>
               <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, background: `${phase.color}18`, color: phase.color }}>
                 {phase.code}
               </span>
             </div>
-            <p style={{ fontSize: '32px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-1px' }}>{phase.pct}%</p>
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 10px' }}>{phase.approved} / {phase.total} ITRs</p>
-            <div style={{ height: '5px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+            <p style={{ fontSize: '32px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px', letterSpacing: '-1px' }}>{phase.pct}%</p>
+            <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '0 0 10px' }}>{phase.approved} / {phase.total} ITRs</p>
+            <div style={{ height: '5px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{ width: `${phase.pct}%`, height: '100%', background: phase.color, borderRadius: '3px' }} />
             </div>
           </div>
@@ -266,14 +266,14 @@ export default function KpiDashboard({
 
       {/* S-curve */}
       <div style={{
-        background: 'white', borderRadius: '14px', padding: '24px',
-        border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        background: 'var(--card-bg)', borderRadius: '14px', padding: '24px',
+        border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         marginBottom: '24px',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0 }}>{t('sCurveTitle')}</h3>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '3px 0 0' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: 0 }}>{t('sCurveTitle')}</h3>
+            <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '3px 0 0' }}>
               {snapshots.length > 0
                 ? t('snapshotCount', { count: snapshots.length, date: lastSnapshot?.snapshot_date ?? '' })
                 : canEdit
@@ -287,7 +287,7 @@ export default function KpiDashboard({
               <div style={{ fontSize: '28px', fontWeight: 700, color: '#3b82f6', letterSpacing: '-1px' }}>
                 {lastSnapshot.completion_pct}%
               </div>
-              <div style={{ fontSize: '11px', color: '#94a3b8' }}>{t('lastRecord')}</div>
+              <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{t('lastRecord')}</div>
             </div>
           )}
         </div>
@@ -299,14 +299,14 @@ export default function KpiDashboard({
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDateTick}
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: 'var(--gray-400)' }}
                 tickLine={false}
-                axisLine={{ stroke: '#e2e8f0' }}
+                axisLine={{ stroke: 'var(--border)' }}
               />
               <YAxis
                 domain={[0, 100]}
                 tickFormatter={(v: number) => `${v}%`}
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: 'var(--gray-400)' }}
                 tickLine={false}
                 axisLine={false}
                 width={40}
@@ -316,7 +316,7 @@ export default function KpiDashboard({
                 formatter={(value: any, name: any) => [`${value}%`, name === 'planned' ? plannedLabel : actualLabel]}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 labelFormatter={(value: any) => formatDateTick(value as string)}
-                contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
               />
               <Legend
                 formatter={(value: string) => value === 'planned' ? plannedLabel : actualLabel}
@@ -348,10 +348,10 @@ export default function KpiDashboard({
           <div style={{
             height: '200px', display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            background: '#f8fafc', borderRadius: '10px', border: '2px dashed #e2e8f0',
+            background: 'var(--gray-50)', borderRadius: '10px', border: '2px dashed #e2e8f0',
           }}>
-            <p style={{ fontSize: '14px', color: '#475569', fontWeight: 500, margin: '0 0 6px' }}>{t('noChartEmpty')}</p>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, textAlign: 'center' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500, margin: '0 0 6px' }}>{t('noChartEmpty')}</p>
+            <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0, textAlign: 'center' }}>
               {canEdit ? t('noChartEdit') : t('noChartView')}
             </p>
           </div>
@@ -360,15 +360,15 @@ export default function KpiDashboard({
 
       {/* Subsystem completion table */}
       <div style={{
-        background: 'white', borderRadius: '14px',
-        border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        background: 'var(--card-bg)', borderRadius: '14px',
+        border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         overflow: 'hidden',
       }}>
         <div style={{
           padding: '18px 24px', borderBottom: '1px solid #f1f5f9',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap',
         }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: 0 }}>
             {t('tableTitle')}
           </h3>
           {subsystemKpis.length > 0 && (
@@ -379,8 +379,8 @@ export default function KpiDashboard({
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{
-                padding: '7px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
-                fontSize: '13px', color: '#0f172a', background: '#f8fafc', outline: 'none', width: '220px',
+                padding: '7px 12px', border: '1px solid var(--border)', borderRadius: '8px',
+                fontSize: '13px', color: 'var(--text-strong)', background: 'var(--gray-50)', outline: 'none', width: '220px',
               }}
             />
           )}
@@ -388,52 +388,52 @@ export default function KpiDashboard({
 
         {subsystemKpis.length === 0 ? (
           <div style={{ padding: '48px', textAlign: 'center' }}>
-            <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>{t('noSubsystems')}</p>
+            <p style={{ color: 'var(--gray-400)', fontSize: '14px', margin: 0 }}>{t('noSubsystems')}</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid #f1f5f9' }}>
                   {tableCols.map(col => (
                     <th key={col.key} onClick={() => handleSort(col.key)} style={thStyle(col.key)}>
                       {col.label}{sortCol === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
                     </th>
                   ))}
-                  <th style={{ padding: '10px 12px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>
+                  <th style={{ padding: '10px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>
                     {t('colStatus')}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredSubsystems.map((ss, i) => (
-                  <tr key={ss.id} style={{ borderBottom: '1px solid #f8fafc', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                    <td style={{ padding: '11px 12px', fontSize: '13px', color: '#475569', fontWeight: 500 }}>
+                  <tr key={ss.id} style={{ borderBottom: '1px solid #f8fafc', background: i % 2 === 0 ? 'var(--card-bg)' : 'var(--gray-50)' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>
                       {ss.systemCode}
                     </td>
                     <td style={{ padding: '11px 12px' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>{ss.code}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '1px' }}>{ss.name}</div>
+                      <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-strong)' }}>{ss.code}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '1px' }}>{ss.name}</div>
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '13px', color: '#475569', textAlign: 'center' }}>{ss.totalItrs}</td>
+                    <td style={{ padding: '11px 12px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>{ss.totalItrs}</td>
                     <td style={{ padding: '11px 12px', fontSize: '13px', color: '#10b981', fontWeight: 500, textAlign: 'center' }}>{ss.approvedItrs}</td>
                     <td style={{ padding: '11px 12px', minWidth: '130px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ flex: 1, height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ flex: 1, height: '6px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
                           <div style={{
                             width: `${ss.completionPct}%`, height: '100%', borderRadius: '3px',
-                            background: ss.completionPct === 100 ? '#10b981' : ss.completionPct > 0 ? '#3b82f6' : '#e2e8f0',
+                            background: ss.completionPct === 100 ? '#10b981' : ss.completionPct > 0 ? '#3b82f6' : 'var(--border)',
                           }} />
                         </div>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', minWidth: '32px', textAlign: 'right' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', minWidth: '32px', textAlign: 'right' }}>
                           {ss.completionPct}%
                         </span>
                       </div>
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '13px', textAlign: 'center', color: ss.openCatA > 0 ? '#ef4444' : '#94a3b8', fontWeight: ss.openCatA > 0 ? 600 : 400 }}>
+                    <td style={{ padding: '11px 12px', fontSize: '13px', textAlign: 'center', color: ss.openCatA > 0 ? '#ef4444' : 'var(--gray-400)', fontWeight: ss.openCatA > 0 ? 600 : 400 }}>
                       {ss.openCatA > 0 ? ss.openCatA : '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '13px', textAlign: 'center', color: ss.openCatB > 0 ? '#f59e0b' : '#94a3b8', fontWeight: ss.openCatB > 0 ? 600 : 400 }}>
+                    <td style={{ padding: '11px 12px', fontSize: '13px', textAlign: 'center', color: ss.openCatB > 0 ? '#f59e0b' : 'var(--gray-400)', fontWeight: ss.openCatB > 0 ? 600 : 400 }}>
                       {ss.openCatB > 0 ? ss.openCatB : '—'}
                     </td>
                     <td style={{ padding: '11px 12px', textAlign: 'center' }}>
@@ -443,7 +443,7 @@ export default function KpiDashboard({
                 ))}
                 {filteredSubsystems.length === 0 && search && (
                   <tr>
-                    <td colSpan={8} style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                    <td colSpan={8} style={{ padding: '30px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '13px' }}>
                       {t('noResults', { search })}
                     </td>
                   </tr>
@@ -454,17 +454,17 @@ export default function KpiDashboard({
         )}
 
         {subsystemKpis.length > 0 && (
-          <div style={{ padding: '12px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>
-              <strong style={{ color: '#0f172a' }}>{t('footerSubsystems', { count: subsystemKpis.length })}</strong>
+          <div style={{ padding: '12px 24px', borderTop: '1px solid #f1f5f9', background: 'var(--gray-50)', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              <strong style={{ color: 'var(--text-strong)' }}>{t('footerSubsystems', { count: subsystemKpis.length })}</strong>
             </span>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               <strong style={{ color: '#10b981' }}>{t('footerComplete', { count: subsystemKpis.filter(ss => ss.completionPct === 100).length })}</strong>
             </span>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               <strong style={{ color: '#ef4444' }}>{t('footerPunchA', { count: subsystemKpis.reduce((s, ss) => s + ss.openCatA, 0) })}</strong>
             </span>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               <strong style={{ color: '#f59e0b' }}>{t('footerPunchB', { count: subsystemKpis.reduce((s, ss) => s + ss.openCatB, 0) })}</strong>
             </span>
           </div>

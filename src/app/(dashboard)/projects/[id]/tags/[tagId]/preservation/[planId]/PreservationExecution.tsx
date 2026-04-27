@@ -109,7 +109,7 @@ export default function PreservationExecution({
   const RESULT_CFG = {
     ok:  { label: t('resultOkLabel'),  color: '#16a34a', bg: '#f0fdf4', border: '#86efac' },
     nok: { label: t('resultNokLabel'), color: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
-    na:  { label: t('resultNaLabel'),  color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+    na:  { label: t('resultNaLabel'),  color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
   }
 
   // Active record ID (created on first response)
@@ -244,7 +244,7 @@ export default function PreservationExecution({
         <div style={{ fontSize: '20px', fontWeight: 700, color: '#16a34a', marginBottom: '8px' }}>
           {t('savedTitle')}
         </div>
-        <div style={{ fontSize: '14px', color: '#64748b' }}>{t('savedRedirect')}</div>
+        <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{t('savedRedirect')}</div>
       </div>
     )
   }
@@ -260,29 +260,29 @@ export default function PreservationExecution({
         >
           {tag?.tag_number}
         </button>
-        <span style={{ color: '#94a3b8' }}>›</span>
-        <span style={{ fontSize: '14px', color: '#64748b' }}>{t('breadcrumbPreservation')}</span>
-        <span style={{ color: '#94a3b8' }}>›</span>
-        <span style={{ fontSize: '14px', color: '#374151', fontWeight: 600 }}>{procedure.code}</span>
+        <span style={{ color: 'var(--gray-400)' }}>›</span>
+        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{t('breadcrumbPreservation')}</span>
+        <span style={{ color: 'var(--gray-400)' }}>›</span>
+        <span style={{ fontSize: '14px', color: 'var(--gray-700)', fontWeight: 600 }}>{procedure.code}</span>
       </div>
 
       {/* Header */}
-      <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '3px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '3px' }}>
               {procedure.code} — {FREQ_LABELS[procedure.frequency] ?? procedure.frequency} · {procedure.interval_days}d
             </div>
-            <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>
+            <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 6px' }}>
               {procedure.title}
             </h1>
-            <div style={{ fontSize: '13px', color: '#64748b' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
               Tag: <strong>{tag?.tag_number}</strong>{tag?.description ? ` — ${tag.description}` : ''}
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>{t('labelNextDue')}</div>
-            <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{plan.next_due_date}</div>
+            <div style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{t('labelNextDue')}</div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-strong)' }}>{plan.next_due_date}</div>
           </div>
         </div>
 
@@ -290,12 +290,12 @@ export default function PreservationExecution({
         {items.length > 0 && (
           <div style={{ marginTop: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>{t('progressLabel')}</span>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#374151' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('progressLabel')}</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gray-700)' }}>
                 {t('progressItems', { completed: completedCount, total: items.length })}
               </span>
             </div>
-            <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ height: '6px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{ height: '100%', background: progressPct === 100 ? '#16a34a' : '#3b82f6', width: `${progressPct}%`, transition: 'width 0.3s', borderRadius: '3px' }} />
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function PreservationExecution({
       {/* Check sheet items */}
       {items.length > 0 && (
         <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>
+          <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', marginBottom: '12px' }}>
             {t('sectionChecksheet')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -319,26 +319,26 @@ export default function PreservationExecution({
                 <div
                   key={item.id}
                   style={{
-                    background: 'white', border: '1px solid',
+                    background: 'var(--card-bg)', border: '1px solid',
                     borderColor: item.is_critical && hasResponse && passed === false ? '#fca5a5'
-                      : hasResponse ? '#bbf7d0' : '#e2e8f0',
+                      : hasResponse ? '#bbf7d0' : 'var(--border)',
                     borderRadius: '10px', padding: '14px 16px',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#64748b', flexShrink: 0, marginTop: '1px' }}>
+                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0, marginTop: '1px' }}>
                       {idx + 1}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{item.label}</span>
+                        <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)' }}>{item.label}</span>
                         {item.is_critical && (
                           <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: '#fef2f2', color: '#dc2626' }}>
                             {t('tagCritical')}
                           </span>
                         )}
                         {!item.is_required && (
-                          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '10px', color: '#94a3b8', background: '#f1f5f9' }}>
+                          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '10px', color: 'var(--gray-400)', background: 'var(--gray-100)' }}>
                             {t('tagOptional')}
                           </span>
                         )}
@@ -349,11 +349,11 @@ export default function PreservationExecution({
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
                             onClick={() => handleResponse(item, { bool: true })}
-                            style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === true ? '#16a34a' : '#e2e8f0', background: r?.bool === true ? '#f0fdf4' : 'white', color: r?.bool === true ? '#16a34a' : '#64748b' }}
+                            style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === true ? '#16a34a' : 'var(--border)', background: r?.bool === true ? '#f0fdf4' : 'var(--card-bg)', color: r?.bool === true ? '#16a34a' : 'var(--text-muted)' }}
                           >{t('btnConform')}</button>
                           <button
                             onClick={() => handleResponse(item, { bool: false })}
-                            style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === false ? '#dc2626' : '#e2e8f0', background: r?.bool === false ? '#fef2f2' : 'white', color: r?.bool === false ? '#dc2626' : '#64748b' }}
+                            style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === false ? '#dc2626' : 'var(--border)', background: r?.bool === false ? '#fef2f2' : 'var(--card-bg)', color: r?.bool === false ? '#dc2626' : 'var(--text-muted)' }}
                           >{t('btnNonConform')}</button>
                         </div>
                       )}
@@ -363,11 +363,11 @@ export default function PreservationExecution({
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
                             onClick={() => handleResponse(item, { bool: true })}
-                            style={{ padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === true ? '#16a34a' : '#e2e8f0', background: r?.bool === true ? '#f0fdf4' : 'white', color: r?.bool === true ? '#16a34a' : '#64748b' }}
+                            style={{ padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === true ? '#16a34a' : 'var(--border)', background: r?.bool === true ? '#f0fdf4' : 'var(--card-bg)', color: r?.bool === true ? '#16a34a' : 'var(--text-muted)' }}
                           >{t('btnYes')}</button>
                           <button
                             onClick={() => handleResponse(item, { bool: false })}
-                            style={{ padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === false ? '#dc2626' : '#e2e8f0', background: r?.bool === false ? '#fef2f2' : 'white', color: r?.bool === false ? '#dc2626' : '#64748b' }}
+                            style={{ padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === false ? '#dc2626' : 'var(--border)', background: r?.bool === false ? '#fef2f2' : 'var(--card-bg)', color: r?.bool === false ? '#dc2626' : 'var(--text-muted)' }}
                           >{t('btnNo')}</button>
                         </div>
                       )}
@@ -382,9 +382,9 @@ export default function PreservationExecution({
                             placeholder={t('placeholderValue')}
                             style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', width: '140px' }}
                           />
-                          {item.unit && <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>{item.unit}</span>}
-                          {item.min_value != null && <span style={{ fontSize: '12px', color: '#94a3b8' }}>{t('labelMin')} {item.min_value}</span>}
-                          {item.max_value != null && <span style={{ fontSize: '12px', color: '#94a3b8' }}>{t('labelMax')} {item.max_value}</span>}
+                          {item.unit && <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>{item.unit}</span>}
+                          {item.min_value != null && <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{t('labelMin')} {item.min_value}</span>}
+                          {item.max_value != null && <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{t('labelMax')} {item.max_value}</span>}
                           {passed !== null && r?.numeric !== undefined && r.numeric !== '' && (
                             <span style={{ padding: '3px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, background: passed ? '#f0fdf4' : '#fef2f2', color: passed ? '#16a34a' : '#dc2626' }}>
                               {passed ? t('passInRange') : t('failOutRange')}
@@ -414,8 +414,8 @@ export default function PreservationExecution({
       )}
 
       {/* Result + finalize */}
-      <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '14px' }}>
+      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', marginBottom: '14px' }}>
           {t('sectionResult')}
         </h2>
 
@@ -429,9 +429,9 @@ export default function PreservationExecution({
                 style={{
                   padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '14px',
                   cursor: 'pointer', border: '2px solid',
-                  borderColor: result === r ? cfg.border : '#e2e8f0',
-                  background: result === r ? cfg.bg : 'white',
-                  color: result === r ? cfg.color : '#64748b',
+                  borderColor: result === r ? cfg.border : 'var(--border)',
+                  background: result === r ? cfg.bg : 'var(--card-bg)',
+                  color: result === r ? cfg.color : 'var(--text-muted)',
                 }}
               >
                 {cfg.label}
@@ -441,7 +441,7 @@ export default function PreservationExecution({
         </div>
 
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '5px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>
             {t('labelRemarks')}
           </label>
           <textarea
@@ -479,14 +479,14 @@ export default function PreservationExecution({
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
           <button
             onClick={() => router.push(`/projects/${projectId}/tags/${tagId}`)}
-            style={{ padding: '10px 20px', borderRadius: '9px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none' }}
+            style={{ padding: '10px 20px', borderRadius: '9px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none' }}
           >
             {t('btnCancel')}
           </button>
           <button
             onClick={handleFinalize}
             disabled={isPending}
-            style={{ padding: '10px 24px', borderRadius: '9px', background: result === 'nok' ? '#dc2626' : '#16a34a', color: 'white', fontWeight: 700, fontSize: '14px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
+            style={{ padding: '10px 24px', borderRadius: '9px', background: result === 'nok' ? '#dc2626' : '#16a34a', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
           >
             {isPending ? t('btnSaving') : t('btnConfirm')}
           </button>
@@ -496,25 +496,25 @@ export default function PreservationExecution({
       {/* History */}
       {history.length > 0 && (
         <div>
-          <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>
+          <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', marginBottom: '12px' }}>
             {t('sectionHistory')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {history.map(rec => {
               const cfg = RESULT_CFG[rec.result as keyof typeof RESULT_CFG] ?? RESULT_CFG.na
               return (
-                <div key={rec.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '9px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <div key={rec.id} style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '9px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                   <div>
-                    <span style={{ fontSize: '13px', color: '#374151', fontWeight: 600 }}>
+                    <span style={{ fontSize: '13px', color: 'var(--gray-700)', fontWeight: 600 }}>
                       {new Date(rec.performed_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                     </span>
                     {rec.profiles && (
-                      <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: '10px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: '10px' }}>
                         {rec.profiles.full_name}
                       </span>
                     )}
                     {rec.remarks && (
-                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '3px' }}>{rec.remarks}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>{rec.remarks}</div>
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>

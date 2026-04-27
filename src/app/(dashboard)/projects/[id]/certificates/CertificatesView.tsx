@@ -50,7 +50,7 @@ const SEMAPHORE_COLORS = {
 } as const
 
 const CERT_STATUS_COLORS = {
-  pending:   { color: '#64748b', bg: '#f1f5f9' },
+  pending:   { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
   in_review: { color: '#3b82f6', bg: '#eff6ff' },
   issued:    { color: '#10b981', bg: '#ecfdf5' },
   rejected:  { color: '#ef4444', bg: '#fee2e2' },
@@ -158,14 +158,14 @@ export default function CertificatesView({
       <div style={{ marginBottom: '28px' }}>
         <a href={`/projects/${projectId}`} style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '16px',
+          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '16px',
         }}>
           {t('view.backLink', { projectName })}
         </a>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
           {t('view.title')}
         </h1>
-        <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
+        <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
           {t('view.subtitle')}
         </p>
       </div>
@@ -180,9 +180,9 @@ export default function CertificatesView({
               style={{
                 padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 cursor: 'pointer', border: '1px solid',
-                background: selectedPhaseId === ph.id ? ph.color : 'white',
-                color: selectedPhaseId === ph.id ? 'white' : '#475569',
-                borderColor: selectedPhaseId === ph.id ? ph.color : '#e2e8f0',
+                background: selectedPhaseId === ph.id ? ph.color : 'var(--card-bg)',
+                color: selectedPhaseId === ph.id ? 'white' : 'var(--text-muted)',
+                borderColor: selectedPhaseId === ph.id ? ph.color : 'var(--border)',
                 transition: 'all 0.15s',
               }}
             >
@@ -205,7 +205,7 @@ export default function CertificatesView({
               display: 'flex', alignItems: 'center', gap: '10px', minWidth: '160px',
             }}>
               <span style={{ fontSize: '22px', fontWeight: 700, color: s.color }}>{s.value}</span>
-              <span style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.3' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.3' }}>
                 {t(s.labelKey as Parameters<typeof t>[0])}
               </span>
             </div>
@@ -216,24 +216,24 @@ export default function CertificatesView({
       {/* Table */}
       {allSubsystems.length === 0 ? (
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           padding: '48px', textAlign: 'center',
         }}>
-          <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>{t('view.empty')}</p>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>{t('view.empty')}</p>
           <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '6px' }}>{t('view.emptyHint')}</p>
         </div>
       ) : (
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
                 {[t('view.colSubsystem'), t('view.colSystem'), t('view.colItrs'), t('view.colCatA'), t('view.colCatB'), t('view.colStatus'), t('view.colCert'), ''].map((h, i) => (
                   <th key={i} style={{
                     padding: '11px 16px', textAlign: 'left',
-                    fontSize: '11px', fontWeight: 600, color: '#64748b',
+                    fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
                     textTransform: 'uppercase', letterSpacing: '0.06em',
                     whiteSpace: 'nowrap',
                   }}>
@@ -265,15 +265,15 @@ export default function CertificatesView({
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <td style={{ padding: '12px 16px' }}>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{ss.code}</div>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{ss.name}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{ss.code}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{ss.name}</div>
                     </td>
-                    <td style={{ padding: '12px 16px', color: '#475569' }}>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>
                       {ss.system ? ss.system.code : '—'}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ color: pd.approvedItrs === pd.totalItrs && pd.totalItrs > 0 ? '#10b981' : '#64748b', fontWeight: 600 }}>
+                        <span style={{ color: pd.approvedItrs === pd.totalItrs && pd.totalItrs > 0 ? '#10b981' : 'var(--text-muted)', fontWeight: 600 }}>
                           {pd.approvedItrs}
                         </span>
                         <span style={{ color: '#94a3b8' }}>/ {pd.totalItrs}</span>
@@ -291,8 +291,8 @@ export default function CertificatesView({
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{
                         padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                        background: pd.openCatBPunches.length > 0 ? '#fffbeb' : '#f1f5f9',
-                        color: pd.openCatBPunches.length > 0 ? '#f59e0b' : '#64748b',
+                        background: pd.openCatBPunches.length > 0 ? '#fffbeb' : 'var(--gray-100)',
+                        color: pd.openCatBPunches.length > 0 ? '#f59e0b' : 'var(--text-muted)',
                       }}>
                         {pd.openCatBPunches.length}
                       </span>
@@ -350,8 +350,8 @@ export default function CertificatesView({
                             href={`/projects/${projectId}/certificates/${pd.certificate.id}`}
                             style={{
                               padding: '6px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 500,
-                              cursor: 'pointer', border: '1px solid #e2e8f0', background: 'white',
-                              color: '#475569', textDecoration: 'none', display: 'inline-block',
+                              cursor: 'pointer', border: '1px solid var(--border)', background: 'var(--card-bg)',
+                              color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-block',
                             }}
                           >
                             {t('view.viewBtn')}
@@ -392,7 +392,7 @@ export default function CertificatesView({
           onClick={e => { if (e.target === e.currentTarget) setIssueModal(null) }}
         >
           <div style={{
-            background: 'white', borderRadius: '16px', width: '100%', maxWidth: '540px',
+            background: 'var(--card-bg)', borderRadius: '16px', width: '100%', maxWidth: '540px',
             maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
           }}>
             {/* Modal header */}
@@ -401,10 +401,10 @@ export default function CertificatesView({
               display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
             }}>
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
                   {t('view.modal.title', { certName: issueModal.phase.certificate_name ?? issueModal.phase.code })}
                 </h3>
-                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
                   {issueModal.subsystem.code} — {issueModal.subsystem.name}
                 </p>
               </div>
@@ -419,7 +419,7 @@ export default function CertificatesView({
             <div style={{ padding: '20px 24px' }}>
               {/* ITR summary */}
               <div style={{
-                background: '#f8fafc', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px',
+                background: 'var(--gray-50)', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px',
                 display: 'flex', gap: '24px',
               }}>
                 <div>
@@ -443,7 +443,7 @@ export default function CertificatesView({
               {/* Cat B exceptions */}
               {issueModal.phaseEl.openCatBPunches.length > 0 && (
                 <div style={{ marginBottom: '16px' }}>
-                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: '0 0 10px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 10px' }}>
                     {t('view.modal.catBTitle')}
                     <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 400, marginLeft: '6px' }}>{t('view.modal.catBRequired')}</span>
                   </p>
@@ -469,7 +469,7 @@ export default function CertificatesView({
                           width: '100%', minHeight: '56px', padding: '8px 10px',
                           border: '1px solid #fde68a', borderRadius: '6px',
                           fontSize: '12px', resize: 'vertical', fontFamily: 'inherit',
-                          background: 'white', boxSizing: 'border-box', outline: 'none',
+                          background: 'var(--card-bg)', boxSizing: 'border-box', outline: 'none',
                         }}
                       />
                     </div>
@@ -479,7 +479,7 @@ export default function CertificatesView({
 
               {/* Notes */}
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 500, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   {t('view.modal.notesLabel')}
                 </label>
                 <textarea
@@ -488,7 +488,7 @@ export default function CertificatesView({
                   onChange={e => setNotes(e.target.value)}
                   style={{
                     width: '100%', minHeight: '64px', padding: '10px 12px',
-                    border: '1px solid #e2e8f0', borderRadius: '8px',
+                    border: '1px solid var(--border)', borderRadius: '8px',
                     fontSize: '13px', resize: 'vertical', fontFamily: 'inherit',
                     outline: 'none', boxSizing: 'border-box',
                   }}
@@ -509,8 +509,8 @@ export default function CertificatesView({
                 <button
                   onClick={() => setIssueModal(null)}
                   style={{
-                    padding: '9px 20px', border: '1px solid #e2e8f0', borderRadius: '8px',
-                    background: 'white', color: '#475569', fontSize: '13px', cursor: 'pointer',
+                    padding: '9px 20px', border: '1px solid var(--border)', borderRadius: '8px',
+                    background: 'var(--card-bg)', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer',
                   }}
                 >
                   {t('view.modal.cancel')}

@@ -58,7 +58,7 @@ const FREQ_LABELS: Record<string, string> = {
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: '#f0fdf4' },
   suspended: { label: 'Suspendido', color: '#d97706', bg: '#fffbeb' },
-  completed: { label: 'Completado', color: '#64748b', bg: '#f8fafc' },
+  completed: { label: 'Completado', color: 'var(--text-muted)', bg: 'var(--gray-50)' },
 }
 
 function dueBadge(nextDue: string): { label: string; color: string; bg: string } {
@@ -116,23 +116,23 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)' }}>
             Planes de Preservación
           </div>
-          <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
             {plans.filter(p => p.status === 'active').length} activos
           </div>
         </div>
         {canEdit && procedures.length > 0 && (
           <button
             onClick={() => setShowModal(true)}
-            style={{ padding: '7px 16px', borderRadius: '8px', background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
+            style={{ padding: '7px 16px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
           >
             + Asignar plan
           </button>
         )}
         {canEdit && procedures.length === 0 && (
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+          <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
             Crea procedimientos en <a href="/admin/templates/preservation" style={{ color: '#3b82f6' }}>Admin › Templates</a>
           </span>
         )}
@@ -141,11 +141,11 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
       {/* Plans list */}
       {plans.length === 0 ? (
         <div style={{
-          background: '#f8fafc', border: '2px dashed #e2e8f0', borderRadius: '10px',
+          background: 'var(--gray-50)', border: '2px dashed #e2e8f0', borderRadius: '10px',
           padding: '36px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '28px', marginBottom: '10px' }}>◉</div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '6px' }}>
             Sin planes de preservación
           </div>
           <div style={{ fontSize: '13px', color: '#9ca3af' }}>
@@ -162,14 +162,14 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
               <div
                 key={plan.id}
                 style={{
-                  background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px',
+                  background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px',
                   padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-strong)' }}>
                         {proc?.code} — {proc?.title}
                       </span>
                       <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: st.bg, color: st.color }}>
@@ -182,11 +182,11 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                           {proc.disciplines.code}
                         </span>
                       )}
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         {FREQ_LABELS[proc?.frequency ?? ''] ?? proc?.frequency} · cada {proc?.interval_days}d
                       </span>
                       {plan.profiles && (
-                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                           Responsable: {plan.profiles.full_name}
                         </span>
                       )}
@@ -196,11 +196,11 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                     <div style={{ padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: due.bg, color: due.color, marginBottom: '4px' }}>
                       {due.label}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
                       Inicio: {plan.start_date}
                     </div>
                     {plan.last_performed_date && (
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
                         Último: {plan.last_performed_date}
                       </div>
                     )}
@@ -210,7 +210,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
                   <button
                     onClick={() => router.push(`/projects/${projectId}/tags/${tagId}/preservation/${plan.id}`)}
-                    style={{ padding: '6px 14px', borderRadius: '7px', background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                    style={{ padding: '6px 14px', borderRadius: '7px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
                   >
                     Ejecutar
                   </button>
@@ -236,7 +236,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                     <button
                       onClick={() => handleStatusChange(plan.id, 'completed')}
                       disabled={isPending}
-                      style={{ padding: '6px 14px', borderRadius: '7px', background: '#f8fafc', color: '#64748b', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                      style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--gray-50)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
                     >
                       Completar
                     </button>
@@ -251,10 +251,10 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
       {/* Assign Plan modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px' }}>
-          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Asignar plan de preservación</h2>
-              <button onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#94a3b8' }}>✕</button>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>Asignar plan de preservación</h2>
+              <button onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--gray-400)' }}>✕</button>
             </div>
 
             {formError && (
@@ -265,7 +265,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '5px' }}>Procedimiento *</label>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>Procedimiento *</label>
                 <select
                   value={form.procedureId}
                   onChange={e => setForm(f => ({ ...f, procedureId: e.target.value }))}
@@ -281,7 +281,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '5px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>
                   Fecha de inicio (recepción del equipo) *
                 </label>
                 <input
@@ -290,13 +290,13 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                   onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
                   style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                 />
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '4px' }}>
                   Determina el ciclo: primer vencimiento = inicio + intervalo días
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '5px' }}>Responsable (opcional)</label>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>Responsable (opcional)</label>
                 <select
                   value={form.responsibleUserId}
                   onChange={e => setForm(f => ({ ...f, responsibleUserId: e.target.value }))}
@@ -315,14 +315,14 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '22px' }}>
               <button
                 onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }}
-                style={{ padding: '8px 16px', borderRadius: '8px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
+                style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAssign}
                 disabled={isPending}
-                style={{ padding: '8px 18px', borderRadius: '8px', background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
+                style={{ padding: '8px 18px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
               >
                 {isPending ? 'Asignando...' : 'Asignar plan'}
               </button>

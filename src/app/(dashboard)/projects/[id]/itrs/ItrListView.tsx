@@ -32,7 +32,7 @@ type SortDir = 'asc' | 'desc'
 // ── Status config ─────────────────────────────────────────────────────
 
 const ITR_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-  not_started: { color: '#64748b', bg: '#f1f5f9' },
+  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
   in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
   completed:    { color: '#10b981', bg: '#ecfdf5' },
   approved:     { color: '#7c3aed', bg: '#f5f3ff' },
@@ -219,10 +219,10 @@ export default function ItrListView({
 
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '24px' }}>
-        <a href={`/projects/${projectId}`} style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>
+        <a href={`/projects/${projectId}`} style={{ fontSize: '12px', color: 'var(--gray-400)', textDecoration: 'none' }}>
           ← {projectName}
         </a>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0' }}>ITRs</h1>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>ITRs</h1>
       </div>
 
       {/* Summary cards */}
@@ -235,13 +235,13 @@ export default function ItrListView({
               onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
               style={{
                 padding: '14px 16px', borderRadius: '10px', cursor: 'pointer',
-                background: filterStatus === key ? cfg.bg : 'white',
-                border: `1px solid ${filterStatus === key ? cfg.color + '40' : '#e2e8f0'}`,
+                background: filterStatus === key ? cfg.bg : 'var(--card-bg)',
+                border: `1px solid ${filterStatus === key ? cfg.color + '40' : 'var(--border)'}`,
                 transition: 'all 0.15s',
               }}
             >
               <div style={{ fontSize: '22px', fontWeight: 700, color: cfg.color }}>{counts[key] ?? 0}</div>
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{t(`itrStatus.${key}`)}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t(`itrStatus.${key}`)}</div>
             </div>
           )
         })}
@@ -263,7 +263,7 @@ export default function ItrListView({
             value={bulkStatus}
             onChange={e => setBulkStatus(e.target.value)}
             disabled={isPending}
-            style={{ padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'white' }}
+            style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'var(--card-bg)' }}
           >
             <option value="">{t('bulk.statusPlaceholder')}</option>
             {itrStatusKeys.map(k => (
@@ -275,8 +275,8 @@ export default function ItrListView({
             disabled={!bulkStatus || isPending}
             style={{
               padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
-              background: bulkStatus && !isPending ? '#0369a1' : '#e2e8f0',
-              color: bulkStatus && !isPending ? 'white' : '#94a3b8',
+              background: bulkStatus && !isPending ? '#0369a1' : 'var(--border)',
+              color: bulkStatus && !isPending ? 'var(--card-bg)' : 'var(--gray-400)',
               cursor: bulkStatus && !isPending ? 'pointer' : 'default',
             }}
           >
@@ -291,7 +291,7 @@ export default function ItrListView({
                 value={bulkUserId}
                 onChange={e => setBulkUserId(e.target.value)}
                 disabled={isPending}
-                style={{ padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'white' }}
+                style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'var(--card-bg)' }}
               >
                 <option value="">{t('bulk.assignPlaceholder')}</option>
                 {users.map(u => (
@@ -303,8 +303,8 @@ export default function ItrListView({
                 disabled={!bulkUserId || isPending}
                 style={{
                   padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
-                  background: bulkUserId && !isPending ? '#7c3aed' : '#e2e8f0',
-                  color: bulkUserId && !isPending ? 'white' : '#94a3b8',
+                  background: bulkUserId && !isPending ? '#7c3aed' : 'var(--border)',
+                  color: bulkUserId && !isPending ? 'var(--card-bg)' : 'var(--gray-400)',
                   cursor: bulkUserId && !isPending ? 'pointer' : 'default',
                 }}
               >
@@ -340,7 +340,7 @@ export default function ItrListView({
                 disabled={isPending}
                 style={{
                   padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                  background: '#7c3aed', color: 'white', cursor: isPending ? 'not-allowed' : 'pointer',
+                  background: '#7c3aed', color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer',
                   border: 'none', opacity: isPending ? 0.7 : 1,
                 }}
               >
@@ -351,7 +351,7 @@ export default function ItrListView({
 
           <button
             onClick={clearSelection}
-            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: '#64748b', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', background: 'var(--card-bg)', border: '1px solid var(--border)', cursor: 'pointer' }}
           >
             {t('bulk.deselect')}
           </button>
@@ -369,7 +369,7 @@ export default function ItrListView({
           onChange={e => setSearch(e.target.value)}
           placeholder={t('filters.search')}
           aria-label={t('filters.search')}
-          style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '220px', fontFamily: 'inherit' }}
+          style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', width: '220px', fontFamily: 'inherit' }}
         />
         <select value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={selStyle}>
           <option value="">{t('filters.allPhases')}</option>
@@ -382,12 +382,12 @@ export default function ItrListView({
         {hasFilters && (
           <button
             onClick={() => { setFilterStatus(''); setFilterPhase(''); setFilterDisc(''); setSearch('') }}
-            style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
+            style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('filters.allPhases').replace('All ', '')} ×
           </button>
         )}
-        <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
+        <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
           {t('filters.count', { filtered: filtered.length, total: itrs.length })}
         </span>
       </div>
@@ -398,24 +398,24 @@ export default function ItrListView({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setShowApproveConfirm(false) }}
         >
-          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
-            <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 10px' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+            <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
               {t('bulk.approveConfirmTitle')}
             </h2>
-            <p style={{ fontSize: '13px', color: '#475569', margin: '0 0 22px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 22px' }}>
               {t('bulk.approveConfirmDesc', { count: selected.size })}
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowApproveConfirm(false)}
-                style={{ padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                style={{ padding: '8px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 {t('bulk.deselect')}
               </button>
               <button
                 onClick={applyBulkApprove}
                 disabled={isPending}
-                style={{ padding: '8px 20px', background: '#7c3aed', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'white', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
+                style={{ padding: '8px 20px', background: '#7c3aed', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
               >
                 {isPending ? '...' : t('bulk.approveSelected')}
               </button>
@@ -447,13 +447,13 @@ export default function ItrListView({
       })()}
 
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{t('empty')}</p>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{t('empty')}</p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', gap: '4px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', gap: '4px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
             <input
               type="checkbox"
               checked={allFilteredSelected}
@@ -486,7 +486,7 @@ export default function ItrListView({
                   background: isChecked ? '#eff6ff' : 'transparent',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8fafc' }}
+                onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = 'var(--gray-50)' }}
                 onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = 'transparent' }}
               >
                 {/* Checkbox */}
@@ -513,7 +513,7 @@ export default function ItrListView({
                     </a>
                   </div>
                   {itr.tags && (
-                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                       {itr.tags.tag_number} — {itr.tags.description}
                     </div>
                   )}
@@ -524,23 +524,23 @@ export default function ItrListView({
                   {disc && (
                     <span style={{ fontSize: '10px', fontWeight: 600, color: disc.color, marginRight: '6px', padding: '1px 5px', background: `${disc.color}15`, borderRadius: '4px' }}>{disc.code}</span>
                   )}
-                  <span style={{ fontSize: '12px', color: '#374151' }}>{itr.itr_templates?.title ?? '—'}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--gray-700)' }}>{itr.itr_templates?.title ?? '—'}</span>
                 </div>
 
                 {/* Inspector */}
-                <div style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {executor?.profiles?.full_name ?? '—'}
                 </div>
 
                 {/* Date */}
-                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   {itr.scheduled_date ?? '—'}
                 </div>
 
                 {/* Progress */}
                 <div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'right', marginBottom: '3px' }}>{itr.progress_pct}%</div>
-                  <div style={{ height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--gray-400)', textAlign: 'right', marginBottom: '3px' }}>{itr.progress_pct}%</div>
+                  <div style={{ height: '4px', background: 'var(--gray-100)', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '2px' }} />
                   </div>
                 </div>
@@ -555,7 +555,7 @@ export default function ItrListView({
                   {(['executor', 'supervisor', 'client'] as const).map(role => {
                     const signed = itr.itr_signatures.some(s => s.role === role)
                     return (
-                      <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? '#ecfdf5' : '#f8fafc', border: `1px solid ${signed ? '#a7f3d0' : '#e2e8f0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: signed ? '#10b981' : '#cbd5e1' }}>
+                      <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? '#ecfdf5' : 'var(--gray-50)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: signed ? '#10b981' : 'var(--gray-300)' }}>
                         {SIGN_LABELS[role]}
                       </span>
                     )
@@ -585,7 +585,7 @@ function SortHeader({ label, sortKey, current, dir, onSort }: {
       onClick={() => onSort(sortKey)}
       style={{
         all: 'unset', display: 'flex', alignItems: 'center', gap: '4px',
-        fontSize: '11px', fontWeight: 700, color: active ? '#3b82f6' : '#94a3b8',
+        fontSize: '11px', fontWeight: 700, color: active ? '#3b82f6' : 'var(--gray-400)',
         textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer',
         userSelect: 'none',
       }}
@@ -599,11 +599,11 @@ function SortHeader({ label, sortKey, current, dir, onSort }: {
 }
 
 const selStyle: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#374151', background: 'white', fontFamily: 'inherit', cursor: 'pointer',
+  padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
 }
 
 const thStyle: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 700, color: '#94a3b8',
+  fontSize: '11px', fontWeight: 700, color: 'var(--gray-400)',
   textTransform: 'uppercase', letterSpacing: '0.06em',
 }
