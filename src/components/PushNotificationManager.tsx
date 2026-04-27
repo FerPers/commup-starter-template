@@ -13,6 +13,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { Bell, BellOff } from 'lucide-react';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 export type NotificationTopic =
@@ -283,8 +284,8 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
 
   if (!isSupported) {
     return (
-      <div style={{ padding: 16, background: 'var(--gray-800)', borderRadius: 'var(--radius-lg)', color: 'var(--gray-400)', fontSize: 'var(--text-sm)' }}>
-        <span style={{ marginRight: 8 }}>🔔</span>
+      <div style={{ padding: 16, background: 'var(--gray-800)', borderRadius: 'var(--radius-lg)', color: 'var(--gray-400)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Bell size={16} aria-hidden="true" />
         Notificaciones push no disponibles en este dispositivo/navegador
       </div>
     );
@@ -305,10 +306,12 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
               width: 40, height: 40,
               borderRadius: 'var(--radius-lg)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 'var(--text-lg)',
               background: isSubscribed ? 'var(--primary-800)' : 'var(--gray-700)',
+              color: isSubscribed ? 'var(--primary-200)' : 'var(--gray-400)',
             }}>
-              {isSubscribed ? '🔔' : '🔕'}
+              {isSubscribed
+                ? <Bell size={20} aria-hidden="true" />
+                : <BellOff size={20} aria-hidden="true" />}
             </div>
             <div>
               <div style={{ fontWeight: 600, color: '#fff' }}>

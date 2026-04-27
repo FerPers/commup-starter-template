@@ -56,7 +56,10 @@
       "pssr": "PSSR",
       "dataQuality": "Calidad de Datos",
       "handover": "Handover",
-      "opsPunches": "Tracking de Ops"
+      "opsPunches": "Tracking de Ops",
+      "loops": "Loops",
+      "interlocks": "Interlocks",
+      "pidDocuments": "P&IDs"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -68,6 +71,20 @@
       "switchToLight": "Cambiar a modo claro",
       "switchToDark": "Cambiar a modo oscuro"
     }
+  },
+  "Topbar": {
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Arquitecto",
+      "leader": "Líder",
+      "inspector": "Inspector",
+      "client": "Cliente"
+    },
+    "roleAria": "Rol: {role} en {org}"
+  },
+  "Breadcrumbs": {
+    "label": "Migas de pan"
   },
   "Dashboard": {
     "title": "Dashboard",

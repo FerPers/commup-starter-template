@@ -56,7 +56,10 @@
       "pssr": "PSSR",
       "dataQuality": "Data Quality",
       "handover": "Handover",
-      "opsPunches": "Ops Punch Tracking"
+      "opsPunches": "Ops Punch Tracking",
+      "loops": "Loops",
+      "interlocks": "Interlocks",
+      "pidDocuments": "P&IDs"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -68,6 +71,20 @@
       "switchToLight": "Switch to light mode",
       "switchToDark": "Switch to dark mode"
     }
+  },
+  "Topbar": {
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Architect",
+      "leader": "Leader",
+      "inspector": "Inspector",
+      "client": "Client"
+    },
+    "roleAria": "Role: {role} in {org}"
+  },
+  "Breadcrumbs": {
+    "label": "Breadcrumbs"
   },
   "Dashboard": {
     "title": "Dashboard",
