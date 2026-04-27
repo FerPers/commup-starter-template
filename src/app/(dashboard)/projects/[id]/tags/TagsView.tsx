@@ -24,11 +24,11 @@ type Tag = {
 }
 
 const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
-  not_started: { color: '#94a3b8', bg: '#f1f5f9' },
-  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
-  complete:     { color: '#10b981', bg: '#ecfdf5' },
-  completed:    { color: '#10b981', bg: '#ecfdf5' },
-  on_hold:      { color: '#f59e0b', bg: '#fffbeb' },
+  not_started: { color: '#475569', bg: '#f1f5f9' },
+  in_progress:  { color: '#1d4ed8', bg: '#eff6ff' },
+  complete:     { color: '#047857', bg: '#ecfdf5' },
+  completed:    { color: '#047857', bg: '#ecfdf5' },
+  on_hold:      { color: '#b45309', bg: '#fffbeb' },
 }
 
 const TAG_STATUS_KEYS = ['not_started', 'in_progress', 'complete', 'on_hold'] as const
@@ -189,6 +189,7 @@ export default function TagsView({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('list.search')}
+          aria-label={t('list.search')}
           style={{ width: '280px', maxWidth: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', boxSizing: 'border-box' }}
         />
       </div>

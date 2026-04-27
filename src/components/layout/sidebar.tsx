@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
@@ -11,28 +12,41 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import LocaleSwitcher from '@/components/LocaleSwitcher'
+import ThemeToggle from '@/components/ThemeToggle'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 
 function SyncIndicator() {
+  const [mounted, setMounted] = useState(false)
   const { isOnline, pendingCount } = useOfflineSync()
-  const dotColor = isOnline
-    ? pendingCount > 0 ? 'var(--warning-500)' : 'var(--success-500)'
-    : 'var(--danger-500)'
-  const label = isOnline
-    ? pendingCount > 0 ? `Syncing ${pendingCount}…` : 'Online'
-    : `Offline · ${pendingCount} pending`
+  useEffect(() => { setMounted(true) }, [])
+
+  // Antes de hidratar mostramos un estado neutral para evitar mismatch
+  // (useOfflineSync depende de navigator.onLine, que difiere SSR vs client).
+  const dotColor = !mounted
+    ? '#94a3b8'
+    : isOnline
+      ? pendingCount > 0 ? '#f59e0b' : '#22c55e'
+      : '#ef4444'
+  const label = !mounted
+    ? '…'
+    : isOnline
+      ? pendingCount > 0 ? `Syncing ${pendingCount}…` : 'Online'
+      : `Offline · ${pendingCount} pending`
+
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 6,
+      display: 'flex', alignItems: 'center', gap: 8,
       padding: '6px 10px', borderRadius: 'var(--radius-sm)',
-      background: 'rgba(255,255,255,0.04)',
+      background: 'rgba(255,255,255,0.06)',
+      border: '1px solid rgba(255,255,255,0.08)',
     }}>
       <span style={{
-        width: 8, height: 8, borderRadius: '50%',
+        width: 10, height: 10, borderRadius: '50%',
         background: dotColor, flexShrink: 0,
-        boxShadow: isOnline && pendingCount === 0 ? `0 0 4px ${dotColor}` : 'none',
+        boxShadow: `0 0 8px ${dotColor}`,
+        border: '1px solid rgba(255,255,255,0.15)',
       }} />
-      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)' }}>{label}</span>
+      <span style={{ fontSize: 'var(--text-xs)', color: '#e2e8f0', fontWeight: 500 }}>{label}</span>
     </div>
   )
 }
@@ -229,8 +243,9 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
         display: 'flex', flexDirection: 'column', gap: 10,
       }}>
         <SyncIndicator />
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <LocaleSwitcher variant="dark" />
+          <ThemeToggle />
         </div>
         <button
           onClick={handleLogout}
@@ -327,8 +342,8 @@ function GroupHeader({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       padding: '8px 20px 4px',
-      fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
-      color: 'var(--gray-700)', textTransform: 'uppercase',
+      fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+      color: '#94a3b8', textTransform: 'uppercase',
     }}>
       {children}
     </div>

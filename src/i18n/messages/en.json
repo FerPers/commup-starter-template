@@ -61,7 +61,13 @@
     "soon": "SOON",
     "comingSoon": "Coming soon",
     "logout": "Sign out",
-    "platform": "CMS Platform"
+    "platform": "CMS Platform",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "switchToLight": "Switch to light mode",
+      "switchToDark": "Switch to dark mode"
+    }
   },
   "Dashboard": {
     "title": "Dashboard",

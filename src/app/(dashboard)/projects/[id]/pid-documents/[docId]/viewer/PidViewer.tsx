@@ -97,6 +97,7 @@ function TagSelector({
             <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}>{selected.tag_number}</span>
             <button
               onClick={e => { e.stopPropagation(); onChange(null); setQuery('') }}
+              aria-label="Limpiar selección"
               style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '14px', padding: 0 }}
             >×</button>
           </>
@@ -117,6 +118,7 @@ function TagSelector({
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder={t('viewer.tagSearchPlaceholder')}
+              aria-label={t('viewer.tagSearchPlaceholder')}
               style={{
                 width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0',
                 borderRadius: '6px', fontSize: '12px', outline: 'none', boxSizing: 'border-box',

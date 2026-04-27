@@ -100,16 +100,25 @@
 
 /* ==========================================================================
    Dark mode — Fase 7 lo activa con [data-theme="dark"] en <html>
-   Las escalas crudas (gray-*, primary-*, etc.) NO se invierten.
-   Solo se reasignan los aliases semánticos.
+   Estrategia: invertir solo los grises claros (50/100/200) que las páginas
+   usan como fondos/borders sutiles. Los grises medios+oscuros (300-900) se
+   mantienen para componentes "siempre oscuros" (PushNotificationManager,
+   AIAssistantChat, etc.) y para texto dim que ya se ve bien en ambos modos.
+   Los aliases semánticos cambian completamente.
    ========================================================================== */
 :root[data-theme="dark"] {
-  --background:     var(--gray-900);
-  --foreground:     var(--gray-50);
-  --card-bg:        var(--gray-800);
-  --border:         var(--gray-700);
+  /* Solo invertir grises claros (fondos/bordes/hovers que deben oscurecerse) */
+  --gray-50:  #0f172a;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+
+  /* Aliases semánticos en dark */
+  --background:     #0f172a;
+  --foreground:     #f8fafc;
+  --card-bg:        #1e293b;
+  --border:         #334155;
   --text-muted:     var(--gray-400);
-  --text-strong:    var(--gray-50);
+  --text-strong:    #f8fafc;
 
   --sidebar-bg:     #0a1224;
   --sidebar-text:   var(--gray-400);
@@ -149,3 +158,50 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: var(--radius-sm); }
 ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ==========================================================================
+   Form controls — defaults compatibles con dark mode
+   Las páginas usan inline styles para border/padding/width pero NO definen
+   background/color/placeholder, así que estos defaults aplican en ambos modos.
+   ========================================================================== */
+input, textarea, select {
+  background-color: var(--card-bg);
+  color: var(--text-strong);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select {
+  color-scheme: dark;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Focus rings — keyboard a11y (WCAG 2.4.7 Focus Visible)
+   Aplica en inputs/textarea/select/button/a sin focus ring propio.
+   Usa box-shadow porque varios componentes legacy ponen outline: none inline,
+   y box-shadow no se setea inline en esos casos, así que sí se ve.
+   ========================================================================== */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}

@@ -176,7 +176,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
             {/* Modal header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>Editar proyecto</h2>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px', padding: 0 }}>×</button>
+              <button onClick={() => setShowModal(false)} aria-label="Cerrar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px', padding: 0 }}>×</button>
             </div>
 
             {/* Form */}

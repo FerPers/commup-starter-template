@@ -368,6 +368,7 @@ export default function ItrListView({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('filters.search')}
+          aria-label={t('filters.search')}
           style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '220px', fontFamily: 'inherit' }}
         />
         <select value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={selStyle}>

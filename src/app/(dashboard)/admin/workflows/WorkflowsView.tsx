@@ -391,7 +391,7 @@ function RuleEditorModal({
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
             {rule ? 'Editar regla' : 'Nueva regla'}
           </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b' }}>×</button>
+          <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b' }}>×</button>
         </div>
 
         {err && (
@@ -483,6 +483,7 @@ function RuleEditorModal({
                   />
                   <button
                     onClick={() => setConditionRows(rs => rs.filter((_, j) => j !== i))}
+                    aria-label="Eliminar condición"
                     style={{ ...btnDanger, padding: '4px 0' }}
                   >×</button>
                 </div>

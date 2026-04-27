@@ -539,6 +539,7 @@ export default function TwinView({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Buscar tag, descripción, sistema..."
+          aria-label="Buscar tag, descripción, sistema"
           style={{
             padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
             fontSize: '13px', fontFamily: 'inherit', width: '240px', maxWidth: '100%',

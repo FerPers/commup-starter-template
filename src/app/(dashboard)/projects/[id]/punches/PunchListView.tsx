@@ -216,6 +216,7 @@ export default function PunchListView({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('filters.search')}
+          aria-label={t('filters.search')}
           style={{ flex: '1 1 220px', minWidth: '180px', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px' }}
         />
 

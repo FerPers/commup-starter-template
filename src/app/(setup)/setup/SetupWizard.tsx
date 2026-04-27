@@ -313,7 +313,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
                   <input style={inputSmall} value={phase.certificate_name} onChange={e => updatePhase(i, 'certificate_name', e.target.value)} placeholder="Certificado" />
                   <input type="color" value={phase.color} onChange={e => updatePhase(i, 'color', e.target.value)}
                     style={{ width: '32px', height: '30px', border: 'none', borderRadius: '6px', cursor: 'pointer', padding: 0 }} />
-                  <button onClick={() => removePhase(i)} style={removeBtn} title="Eliminar">×</button>
+                  <button onClick={() => removePhase(i)} aria-label="Eliminar fase" style={removeBtn} title="Eliminar">×</button>
                 </div>
               ))}
             </div>
@@ -386,7 +386,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
                     <input style={inputSmall} value={disc.name} onChange={e => updateDisc(i, 'name', e.target.value)} placeholder="Nombre" />
                     <input type="color" value={disc.color} onChange={e => updateDisc(i, 'color', e.target.value)}
                       style={{ width: '32px', height: '32px', border: 'none', borderRadius: '6px', cursor: 'pointer', padding: 0 }} />
-                    <button onClick={() => removeDisc(i)} style={removeBtn}>×</button>
+                    <button onClick={() => removeDisc(i)} aria-label="Eliminar disciplina" style={removeBtn}>×</button>
                   </div>
                 ))}
               </div>

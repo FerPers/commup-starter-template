@@ -84,6 +84,7 @@ export default function LoopsView({
         <input
           type="text"
           placeholder={t('loops.searchPlaceholder')}
+          aria-label={t('loops.searchPlaceholder')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{

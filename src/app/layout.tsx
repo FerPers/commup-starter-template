@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import './globals.css'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 import { NextIntlClientProvider } from 'next-intl'
@@ -18,9 +19,11 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale()
   const messages = await getMessages()
+  const cookieStore = await cookies()
+  const theme = cookieStore.get('theme')?.value === 'dark' ? 'dark' : 'light'
 
   return (
-    <html lang={locale}>
+    <html lang={locale} data-theme={theme} suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#7c3aed" />
         <link rel="apple-touch-icon" href="/icons/icon.svg" />

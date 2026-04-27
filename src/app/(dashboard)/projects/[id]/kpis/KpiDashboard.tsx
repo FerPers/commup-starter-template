@@ -375,6 +375,7 @@ export default function KpiDashboard({
             <input
               type="text"
               placeholder={t('searchPlaceholder')}
+              aria-label={t('searchPlaceholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{

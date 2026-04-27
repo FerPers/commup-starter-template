@@ -235,6 +235,7 @@ export default function ItrListGlobal({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('filters.search')}
+          aria-label={t('filters.search')}
           leftIcon={<Search size={14} />}
           wrapperStyle={{ width: 260 }}
         />

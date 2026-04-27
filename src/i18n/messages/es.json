@@ -61,7 +61,13 @@
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
     "logout": "Cerrar sesión",
-    "platform": "CMS Platform"
+    "platform": "CMS Platform",
+    "theme": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "switchToLight": "Cambiar a modo claro",
+      "switchToDark": "Cambiar a modo oscuro"
+    }
   },
   "Dashboard": {
     "title": "Dashboard",

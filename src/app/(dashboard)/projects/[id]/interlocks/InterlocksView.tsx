@@ -67,6 +67,7 @@ export default function InterlocksView({
         <input
           type="text"
           placeholder={t('interlocks.searchPlaceholder')}
+          aria-label={t('interlocks.searchPlaceholder')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
