@@ -30,7 +30,7 @@ export default async function ProjectsActiveWidget({ orgId, role }: { orgId: str
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)' }}>{t('projects.title')}</h3>
         {canCreateProject && (
-          <a href="/setup?mode=project" style={{ padding: '8px 16px', background: 'var(--primary-500)', color: '#fff', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none' }}>
+          <a href="/setup?mode=project" style={{ padding: '8px 16px', background: 'var(--primary-600)', color: '#fff', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none' }}>
             {t('projects.newProject')}
           </a>
         )}

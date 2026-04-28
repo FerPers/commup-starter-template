@@ -207,7 +207,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
           </div>
           <div>
             <div style={{ color: '#fff', fontWeight: 700, fontSize: 'var(--text-md)', letterSpacing: '-0.3px' }}>CommUp</div>
-            <div style={{ color: 'var(--gray-600)', fontSize: 'var(--text-xs)' }}>{t('platform')}</div>
+            <div style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)' }}>{t('platform')}</div>
           </div>
         </div>
       </div>

@@ -26,10 +26,10 @@ export default async function ClientProjectsWidget({ orgId }: { orgId: string })
             {items.map((p: any) => (
               <div key={p.id} style={{ padding: '14px 16px', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 'var(--radius-md)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary-500)' }}>{p.code}</div>
+                  <div style={{ width: 38, height: 38, borderRadius: 'var(--radius-md)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary-700)' }}>{p.code}</div>
                   <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-strong)' }}>{p.name}</span>
                 </div>
-                <a href={`/projects/${p.id}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', textDecoration: 'none', fontWeight: 500 }}>{t('clientView.viewDetail')}</a>
+                <a href={`/projects/${p.id}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }}>{t('clientView.viewDetail')}</a>
               </div>
             ))}
           </div>

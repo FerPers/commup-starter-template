@@ -99,7 +99,14 @@ export function usePushNotifications(userId: string) {
       // 2. Registrar / obtener SW
       const reg = await navigator.serviceWorker.ready;
 
-      // 3. Crear subscription con VAPID
+      // 3. Limpiar subscription stale (VAPID key cambiada o restos del browser)
+      //    Sin esto, pushManager.subscribe() puede fallar con "push service error".
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        try { await existing.unsubscribe(); } catch { }
+      }
+
+      // 4. Crear subscription con VAPID
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,

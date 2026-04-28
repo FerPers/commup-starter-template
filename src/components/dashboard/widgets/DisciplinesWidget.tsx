@@ -19,7 +19,22 @@ export default async function DisciplinesWidget({ orgId }: { orgId: string }) {
       <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)', marginBottom: 16 }}>{t('disciplines')}</h3>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {items.map(d => (
-          <span key={d.id} style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-sm)', fontWeight: 500, background: `${d.color}18`, color: d.color, border: `1px solid ${d.color}40` }}>
+          <span
+            key={d.id}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '4px 12px',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 500,
+              background: 'var(--gray-100)',
+              color: 'var(--text-strong)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
             {d.code} — {d.name}
           </span>
         ))}

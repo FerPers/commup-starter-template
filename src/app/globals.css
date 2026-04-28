@@ -33,23 +33,51 @@
 
   /* ---------- Color: Success (green) ---------- */
   --success-50:  #ecfdf5;
+  --success-300: #6ee7b7;
   --success-500: #10b981;
+  --success-600: #059669;
   --success-700: #047857;
 
   /* ---------- Color: Warning (amber) ---------- */
   --warning-50:  #fffbeb;
+  --warning-300: #fcd34d;
   --warning-500: #f59e0b;
+  --warning-600: #d97706;
   --warning-700: #b45309;
 
   /* ---------- Color: Danger (red) ---------- */
   --danger-50:  #fef2f2;
+  --danger-300: #fca5a5;
   --danger-500: #ef4444;
+  --danger-600: #dc2626;
   --danger-700: #b91c1c;
 
   /* ---------- Color: Accent (purple) ---------- */
   --accent-50:  #faf5ff;
+  --accent-300: #d8b4fe;
   --accent-500: #a855f7;
+  --accent-600: #9333ea;
   --accent-700: #7e22ce;
+
+  /* ---------- Role chips (Topbar) — duales light/dark ---------- */
+  --role-owner-fg:     var(--accent-700);
+  --role-owner-bg:     rgba(168, 85, 247, 0.12);
+  --role-owner-border: rgba(168, 85, 247, 0.30);
+  --role-admin-fg:     var(--primary-700);
+  --role-admin-bg:     rgba(59, 130, 246, 0.12);
+  --role-admin-border: rgba(59, 130, 246, 0.30);
+  --role-architect-fg:     var(--primary-700);
+  --role-architect-bg:     rgba(59, 130, 246, 0.10);
+  --role-architect-border: rgba(59, 130, 246, 0.25);
+  --role-leader-fg:     var(--warning-700);
+  --role-leader-bg:     rgba(245, 158, 11, 0.12);
+  --role-leader-border: rgba(245, 158, 11, 0.30);
+  --role-inspector-fg:     var(--success-700);
+  --role-inspector-bg:     rgba(16, 185, 129, 0.12);
+  --role-inspector-border: rgba(16, 185, 129, 0.30);
+  --role-client-fg:     var(--gray-700);
+  --role-client-bg:     rgba(100, 116, 139, 0.12);
+  --role-client-border: rgba(100, 116, 139, 0.30);
 
   /* ---------- Tipografía ---------- */
   --text-xs:   11px;
@@ -132,6 +160,26 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.50), 0 4px 6px -4px rgba(0, 0, 0, 0.30);
 
   --focus-ring:     0 0 0 3px rgba(96, 165, 250, 0.45);
+
+  /* Role chips override en dark — fg lighter + bg/border más opacos para AA */
+  --role-owner-fg:     var(--accent-300);
+  --role-owner-bg:     rgba(168, 85, 247, 0.22);
+  --role-owner-border: rgba(168, 85, 247, 0.45);
+  --role-admin-fg:     var(--primary-300);
+  --role-admin-bg:     rgba(59, 130, 246, 0.22);
+  --role-admin-border: rgba(59, 130, 246, 0.45);
+  --role-architect-fg:     var(--primary-300);
+  --role-architect-bg:     rgba(59, 130, 246, 0.20);
+  --role-architect-border: rgba(59, 130, 246, 0.40);
+  --role-leader-fg:     var(--warning-300);
+  --role-leader-bg:     rgba(245, 158, 11, 0.22);
+  --role-leader-border: rgba(245, 158, 11, 0.45);
+  --role-inspector-fg:     var(--success-300);
+  --role-inspector-bg:     rgba(16, 185, 129, 0.22);
+  --role-inspector-border: rgba(16, 185, 129, 0.45);
+  --role-client-fg:     var(--gray-300);
+  --role-client-bg:     rgba(148, 163, 184, 0.22);
+  --role-client-border: rgba(148, 163, 184, 0.45);
 }
 
 @theme inline {

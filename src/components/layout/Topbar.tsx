@@ -9,12 +9,12 @@ interface TopbarProps {
 }
 
 const ROLE_COLORS: Record<OrgMemberRole, { bg: string; fg: string; border: string }> = {
-  owner:     { bg: 'rgba(168,85,247,0.12)', fg: 'var(--accent-700)',  border: 'rgba(168,85,247,0.30)' },
-  admin:     { bg: 'rgba(59,130,246,0.12)', fg: 'var(--primary-700)', border: 'rgba(59,130,246,0.30)' },
-  architect: { bg: 'rgba(59,130,246,0.10)', fg: 'var(--primary-700)', border: 'rgba(59,130,246,0.25)' },
-  leader:    { bg: 'rgba(245,158,11,0.12)', fg: 'var(--warning-700)', border: 'rgba(245,158,11,0.30)' },
-  inspector: { bg: 'rgba(16,185,129,0.12)', fg: 'var(--success-700)', border: 'rgba(16,185,129,0.30)' },
-  client:    { bg: 'rgba(100,116,139,0.12)', fg: 'var(--gray-700)',   border: 'rgba(100,116,139,0.30)' },
+  owner:     { bg: 'var(--role-owner-bg)',     fg: 'var(--role-owner-fg)',     border: 'var(--role-owner-border)' },
+  admin:     { bg: 'var(--role-admin-bg)',     fg: 'var(--role-admin-fg)',     border: 'var(--role-admin-border)' },
+  architect: { bg: 'var(--role-architect-bg)', fg: 'var(--role-architect-fg)', border: 'var(--role-architect-border)' },
+  leader:    { bg: 'var(--role-leader-bg)',    fg: 'var(--role-leader-fg)',    border: 'var(--role-leader-border)' },
+  inspector: { bg: 'var(--role-inspector-bg)', fg: 'var(--role-inspector-fg)', border: 'var(--role-inspector-border)' },
+  client:    { bg: 'var(--role-client-bg)',    fg: 'var(--role-client-fg)',    border: 'var(--role-client-border)' },
 }
 
 export default async function Topbar({ role, orgName, userEmail }: TopbarProps) {

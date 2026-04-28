@@ -33,7 +33,7 @@ function variantStyles(variant: ButtonVariant, hover: boolean, disabled: boolean
   switch (variant) {
     case 'primary':
       return {
-        background: hover ? 'var(--primary-700)' : 'var(--primary-500)',
+        background: hover ? 'var(--primary-700)' : 'var(--primary-600)',
         color: '#ffffff',
         borderColor: 'transparent',
       };
@@ -51,7 +51,7 @@ function variantStyles(variant: ButtonVariant, hover: boolean, disabled: boolean
       };
     case 'danger':
       return {
-        background: hover ? 'var(--danger-700)' : 'var(--danger-500)',
+        background: hover ? 'var(--danger-700)' : 'var(--danger-600)',
         color: '#ffffff',
         borderColor: 'transparent',
       };
