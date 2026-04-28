@@ -107,6 +107,7 @@ export function usePushNotifications(userId: string) {
       }
 
       // 4. Crear subscription con VAPID
+      console.log('[Push] VAPID prefix:', VAPID_PUBLIC_KEY.slice(0, 12), 'len:', VAPID_PUBLIC_KEY.length);
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
@@ -141,6 +142,7 @@ export function usePushNotifications(userId: string) {
       setIsSubscribed(true);
       return true;
     } catch (err: any) {
+      console.error('[Push] subscribe failed:', err?.name, err?.message, err);
       setError(err.message || 'Error activando notificaciones');
       return false;
     } finally {
