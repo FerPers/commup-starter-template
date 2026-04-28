@@ -163,9 +163,9 @@ function YesNoField({ item, onChange }: { item: ITRItem; onChange: (s: ItemStatu
           className={`flex-1 py-5 rounded-2xl text-xl font-bold transition-all duration-200 ${
             item.status === s
               ? s === 'ok'
-                ? 'bg-green-600 text-white scale-105 shadow-lg shadow-green-900'
-                : 'bg-red-600 text-white scale-105 shadow-lg shadow-red-900'
-              : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                ? 'bg-[var(--success-500)] text-white scale-105 shadow-lg shadow-[var(--success-500)]'
+                : 'bg-[var(--danger-500)] text-white scale-105 shadow-lg shadow-[var(--danger-500)]'
+              : 'bg-[var(--gray-700)] text-[var(--gray-400)] hover:bg-[var(--gray-600)]'
           }`}
         >
           {s === 'ok' ? '✓ OK' : '✗ NOK'}
@@ -176,8 +176,8 @@ function YesNoField({ item, onChange }: { item: ITRItem; onChange: (s: ItemStatu
           onClick={() => onChange('na')}
           className={`px-4 py-5 rounded-2xl text-sm font-bold transition-all ${
             item.status === 'na'
-              ? 'bg-amber-600 text-white scale-105'
-              : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+              ? 'bg-[var(--warning-500)] text-white scale-105'
+              : 'bg-[var(--gray-700)] text-[var(--gray-400)] hover:bg-[var(--gray-600)]'
           }`}
         >
           N/A
@@ -212,28 +212,28 @@ function NumericField({
           value={item.value ?? ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder="0.0"
-          className={`w-full text-center text-4xl font-bold py-6 bg-slate-800 rounded-2xl border-2 transition focus:outline-none ${
+          className={`w-full text-center text-4xl font-bold py-6 bg-[var(--gray-800)] rounded-2xl border-2 transition focus:outline-none ${
             !hasValue
-              ? 'border-slate-600 text-slate-400'
+              ? 'border-[var(--gray-600)] text-[var(--gray-400)]'
               : inRange
-              ? 'border-green-500 text-green-400'
-              : 'border-red-500 text-red-400'
+              ? 'border-[var(--success-500)] text-[var(--success-500)]'
+              : 'border-[var(--danger-500)] text-[var(--danger-500)]'
           }`}
         />
         {item.unit && (
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--gray-500)] font-semibold">
             {item.unit}
           </span>
         )}
       </div>
       {(item.min_value !== undefined || item.max_value !== undefined) && (
-        <div className="flex justify-between text-xs text-slate-500 px-2">
+        <div className="flex justify-between text-xs text-[var(--gray-500)] px-2">
           <span>Mín: {item.min_value ?? '—'} {item.unit}</span>
           <span>Máx: {item.max_value ?? '—'} {item.unit}</span>
         </div>
       )}
       {hasValue && !inRange && (
-        <div className="text-red-400 text-sm text-center">
+        <div className="text-[var(--danger-500)] text-sm text-center">
           ⚠️ Valor fuera del rango especificado
         </div>
       )}
@@ -265,8 +265,8 @@ function MultiSelectField({
           onClick={() => toggle(opt)}
           className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
             selected.includes(opt)
-              ? 'bg-sky-600 text-white'
-              : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+              ? 'bg-[var(--primary-600)] text-white'
+              : 'bg-[var(--gray-700)] text-[var(--gray-400)] hover:bg-[var(--gray-600)]'
           }`}
         >
           {selected.includes(opt) ? '✓ ' : ''}{opt}
@@ -387,14 +387,14 @@ export default function SwipeCaptureFlow({
   if (!currentItem) return null;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col select-none">
+    <div className="min-h-screen bg-[var(--gray-900)] text-white flex flex-col select-none">
 
       {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 pt-safe">
+      <div className="sticky top-0 z-20 bg-[color:rgb(from_var(--gray-900)_r_g_b_/_95%)] backdrop-blur border-b border-[var(--gray-800)] px-4 pt-safe">
         <div className="flex items-center justify-between py-3">
           <div className="flex-1 min-w-0">
-            <div className="text-xs text-slate-500 truncate">{itrName}</div>
-            <div className="text-sm font-semibold text-slate-300">
+            <div className="text-xs text-[var(--gray-500)] truncate">{itrName}</div>
+            <div className="text-sm font-semibold text-[var(--gray-300)]">
               Item {currentIndex + 1} / {localItems.length}
             </div>
           </div>
@@ -402,22 +402,22 @@ export default function SwipeCaptureFlow({
           {/* Save state indicator */}
           <div className="flex items-center gap-2 mr-2">
             {saveState === 'pending' && (
-              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" title="Pendiente de guardar" />
+              <span className="w-2 h-2 bg-[var(--warning-500)] rounded-full animate-pulse" title="Pendiente de guardar" />
             )}
             {saveState === 'saving' && (
-              <span className="text-xs text-sky-400">Guardando...</span>
+              <span className="text-xs text-[var(--primary-400)]">Guardando...</span>
             )}
             {saveState === 'saved' && (
-              <span className="text-xs text-green-400">✓ Guardado</span>
+              <span className="text-xs text-[var(--success-500)]">✓ Guardado</span>
             )}
             {saveState === 'error' && (
-              <span className="text-xs text-red-400">✗ Error</span>
+              <span className="text-xs text-[var(--danger-500)]">✗ Error</span>
             )}
           </div>
 
           <button
             onClick={() => setShowQuickFill(!showQuickFill)}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-2 rounded-lg text-[var(--gray-400)] hover:text-white hover:bg-[var(--gray-800)] transition"
             title="Relleno rápido"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -427,13 +427,13 @@ export default function SwipeCaptureFlow({
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 bg-slate-800 rounded-full mb-1 overflow-hidden">
+        <div className="h-1 bg-[var(--gray-800)] rounded-full mb-1 overflow-hidden">
           <div
-            className="h-full bg-sky-500 rounded-full transition-all duration-500"
+            className="h-full bg-[var(--primary-500)] rounded-full transition-all duration-500"
             style={{ width: `${progress * 100}%` }}
           />
         </div>
-        <div className="flex justify-between text-xs text-slate-600 pb-2">
+        <div className="flex justify-between text-xs text-[var(--gray-600)] pb-2">
           <span>{completedCount} completados</span>
           <span>{localItems.length - completedCount} pendientes</span>
         </div>
@@ -449,15 +449,15 @@ export default function SwipeCaptureFlow({
         <div className="p-4 flex flex-col gap-5">
 
           {/* Item Header */}
-          <div className="bg-slate-800 rounded-2xl p-4">
+          <div className="bg-[var(--gray-800)] rounded-2xl p-4">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-sky-900/50 flex items-center justify-center">
-                <span className="text-sky-400 font-bold text-sm">{currentItem.item_no}</span>
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[var(--primary-900)]/50 flex items-center justify-center">
+                <span className="text-[var(--primary-400)] font-bold text-sm">{currentItem.item_no}</span>
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium leading-snug">{currentItem.description}</p>
                 {currentItem.required && (
-                  <span className="text-xs text-red-400 font-semibold">* Requerido</span>
+                  <span className="text-xs text-[var(--danger-500)] font-semibold">* Requerido</span>
                 )}
               </div>
             </div>
@@ -505,12 +505,12 @@ export default function SwipeCaptureFlow({
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handlePhotoCapture}
-                  className="flex flex-col items-center justify-center gap-2 p-8 bg-slate-800 border-2 border-dashed border-slate-600 rounded-2xl hover:border-sky-500 hover:bg-slate-800/80 transition active:scale-95"
+                  className="flex flex-col items-center justify-center gap-2 p-8 bg-[var(--gray-800)] border-2 border-dashed border-[var(--gray-600)] rounded-2xl hover:border-[var(--primary-500)] hover:bg-[color:rgb(from_var(--gray-800)_r_g_b_/_80%)] transition active:scale-95"
                 >
                   <span className="text-4xl">📷</span>
-                  <span className="text-slate-400 font-medium">Capturar foto</span>
+                  <span className="text-[var(--gray-400)] font-medium">Capturar foto</span>
                   {geoLocation && (
-                    <span className="text-xs text-green-400">
+                    <span className="text-xs text-[var(--success-500)]">
                       📍 GPS: {geoLocation.latitude.toFixed(5)}, {geoLocation.longitude.toFixed(5)}
                       {geoLocation.accuracy < 10 ? ' ✓' : ` (±${geoLocation.accuracy.toFixed(0)}m)`}
                     </span>
@@ -524,10 +524,10 @@ export default function SwipeCaptureFlow({
                         <img
                           src={photo.thumbnail_url || photo.url}
                           alt={`Foto ${i + 1}`}
-                          className="w-20 h-20 object-cover rounded-xl border border-slate-700"
+                          className="w-20 h-20 object-cover rounded-xl border border-[var(--gray-700)]"
                         />
                         {photo.geolocation && (
-                          <span className="absolute top-1 right-1 text-xs bg-green-600 rounded px-1">📍</span>
+                          <span className="absolute top-1 right-1 text-xs bg-[var(--success-500)] rounded px-1">📍</span>
                         )}
                       </div>
                     ))}
@@ -556,8 +556,8 @@ export default function SwipeCaptureFlow({
             }
             className={`flex items-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition ${
               currentItem.status === 'flagged'
-                ? 'bg-amber-900/50 border border-amber-500 text-amber-400'
-                : 'bg-slate-800 text-slate-500 hover:text-amber-400 hover:bg-slate-700'
+                ? 'bg-[color:rgb(from_var(--warning-500)_r_g_b_/_50%)] border border-[var(--warning-500)] text-[var(--warning-500)]'
+                : 'bg-[var(--gray-800)] text-[var(--gray-500)] hover:text-[var(--warning-500)] hover:bg-[var(--gray-700)]'
             }`}
           >
             🚩 {currentItem.status === 'flagged' ? 'Marcado para revisión' : 'Marcar para revisión'}
@@ -566,12 +566,12 @@ export default function SwipeCaptureFlow({
       </div>
 
       {/* ── Navigation Footer ─────────────────────────────────────────────── */}
-      <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 p-4 pb-safe">
+      <div className="sticky bottom-0 bg-[color:rgb(from_var(--gray-900)_r_g_b_/_95%)] backdrop-blur border-t border-[var(--gray-800)] p-4 pb-safe">
         <div className="flex gap-3">
           <button
             onClick={goPrev}
             disabled={currentIndex === 0}
-            className="flex-1 py-4 rounded-xl bg-slate-800 text-slate-400 disabled:opacity-30 hover:bg-slate-700 transition font-semibold text-lg"
+            className="flex-1 py-4 rounded-xl bg-[var(--gray-800)] text-[var(--gray-400)] disabled:opacity-30 hover:bg-[var(--gray-700)] transition font-semibold text-lg"
           >
             ← Anterior
           </button>
@@ -579,7 +579,7 @@ export default function SwipeCaptureFlow({
           {currentIndex < localItems.length - 1 ? (
             <button
               onClick={goNext}
-              className="flex-1 py-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white transition font-semibold text-lg active:scale-95"
+              className="flex-1 py-4 rounded-xl bg-[var(--primary-600)] hover:bg-[var(--primary-500)] text-white transition font-semibold text-lg active:scale-95"
             >
               Siguiente →
             </button>
@@ -587,7 +587,7 @@ export default function SwipeCaptureFlow({
             <button
               onClick={() => onComplete(localItems)}
               disabled={localItems.some((i) => i.required && i.status === 'pending')}
-              className="flex-1 py-4 rounded-xl bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:text-slate-500 text-white transition font-bold text-lg active:scale-95"
+              className="flex-1 py-4 rounded-xl bg-[var(--success-500)] hover:bg-[var(--success-500)] disabled:bg-[var(--gray-700)] disabled:text-[var(--gray-500)] text-white transition font-bold text-lg active:scale-95"
             >
               ✓ Completar ITR
             </button>
@@ -607,16 +607,16 @@ export default function SwipeCaptureFlow({
                 onClick={() => setCurrentIndex(realIdx)}
                 className={`rounded-full transition-all ${
                   realIdx === currentIndex
-                    ? 'w-4 h-2 bg-sky-500'
+                    ? 'w-4 h-2 bg-[var(--primary-500)]'
                     : item.status === 'ok'
-                    ? 'w-2 h-2 bg-green-600'
+                    ? 'w-2 h-2 bg-[var(--success-500)]'
                     : item.status === 'nok'
-                    ? 'w-2 h-2 bg-red-600'
+                    ? 'w-2 h-2 bg-[var(--danger-500)]'
                     : item.status === 'flagged'
-                    ? 'w-2 h-2 bg-amber-500'
+                    ? 'w-2 h-2 bg-[var(--warning-500)]'
                     : item.status === 'na'
-                    ? 'w-2 h-2 bg-slate-600'
-                    : 'w-2 h-2 bg-slate-700'
+                    ? 'w-2 h-2 bg-[var(--gray-600)]'
+                    : 'w-2 h-2 bg-[var(--gray-700)]'
                 }`}
               />
             );
@@ -628,9 +628,9 @@ export default function SwipeCaptureFlow({
       {showQuickFill && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div className="flex-1 bg-black/60" onClick={() => setShowQuickFill(false)} />
-          <div className="bg-slate-800 rounded-t-2xl p-5">
+          <div className="bg-[var(--gray-800)] rounded-t-2xl p-5">
             <h3 className="font-bold text-lg mb-4">Relleno Rápido</h3>
-            <p className="text-slate-400 text-sm mb-4">
+            <p className="text-[var(--gray-400)] text-sm mb-4">
               Aplica a todos los items de tipo Sí/No que estén pendientes
             </p>
             <div className="flex gap-3">
@@ -648,16 +648,16 @@ export default function SwipeCaptureFlow({
                     setShowQuickFill(false);
                   }}
                   className={`flex-1 py-3 rounded-xl font-bold transition ${
-                    s === 'ok' ? 'bg-green-600 hover:bg-green-500' :
-                    s === 'nok' ? 'bg-red-600 hover:bg-red-500' :
-                    'bg-amber-600 hover:bg-amber-500'
+                    s === 'ok' ? 'bg-[var(--success-500)] hover:bg-[var(--success-500)]' :
+                    s === 'nok' ? 'bg-[var(--danger-500)] hover:bg-[var(--danger-500)]' :
+                    'bg-[var(--warning-500)] hover:bg-[var(--warning-500)]'
                   } text-white`}
                 >
                   {s === 'ok' ? '✓ Todos OK' : s === 'nok' ? '✗ Todos NOK' : 'Todos N/A'}
                 </button>
               ))}
             </div>
-            <p className="text-slate-600 text-xs text-center mt-3">
+            <p className="text-[var(--gray-600)] text-xs text-center mt-3">
               ⚠️ Solo afecta items Sí/No sin respuesta
             </p>
           </div>

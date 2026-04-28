@@ -41,10 +41,11 @@ CREATE TABLE organizations (
 
 -- Extends Supabase auth.users
 CREATE TABLE profiles (
-  id            UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name     TEXT NOT NULL,
-  avatar_url    TEXT,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id                UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name         TEXT NOT NULL,
+  avatar_url        TEXT,
+  dashboard_layout  JSONB,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE org_members (

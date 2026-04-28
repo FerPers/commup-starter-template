@@ -97,9 +97,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             style={{
               padding: '6px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 500,
               border: '1px solid', cursor: 'pointer',
-              background: activeDisc === 'all' ? '#0f172a' : 'white',
-              color: activeDisc === 'all' ? 'white' : '#475569',
-              borderColor: activeDisc === 'all' ? '#0f172a' : '#e2e8f0',
+              background: activeDisc === 'all' ? 'var(--gray-900)' : 'var(--card-bg)',
+              color: activeDisc === 'all' ? '#fff' : 'var(--text-strong)',
+              borderColor: activeDisc === 'all' ? 'var(--gray-900)' : 'var(--border)',
             }}
           >
             {t('allCount', { count: templates.length })}
@@ -154,14 +154,14 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
       {/* Empty state */}
       {filtered.length === 0 && (
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           padding: '64px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.3 }}>▤</div>
-          <p style={{ fontSize: '15px', fontWeight: 500, color: '#475569', margin: '0 0 6px' }}>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>
             {activeDisc === 'all' ? t('empty.noTemplates') : t('empty.noTemplatesForDisc', { disc: activeDisc })}
           </p>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px' }}>
             {t('empty.hint')}
           </p>
           {canEdit && activeDisc === 'all' && (
@@ -180,13 +180,13 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
       {/* Template table */}
       {filtered.length > 0 && (
-        <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
           {/* Table header */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: '90px 1fr 110px 80px 60px 80px 90px',
-            padding: '10px 20px', borderBottom: '1px solid #f1f5f9',
-            fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em',
+            padding: '10px 20px', borderBottom: '1px solid var(--border)',
+            fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em',
           }}>
             <span>{t('table.colCode')}</span>
             <span>{t('table.colTitle')}</span>
@@ -211,23 +211,23 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                   display: 'grid',
                   gridTemplateColumns: '90px 1fr 110px 80px 60px 80px 90px',
                   padding: '14px 20px',
-                  borderBottom: i < filtered.length - 1 ? '1px solid #f8fafc' : 'none',
+                  borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none',
                   cursor: 'pointer', transition: 'background 0.1s', alignItems: 'center',
                   opacity: isDeleting ? 0.4 : 1,
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--gray-50)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 {/* Code */}
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace' }}>
                   {tmpl.code}
                 </span>
 
                 {/* Title */}
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>{tmpl.title}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-strong)' }}>{tmpl.title}</div>
                   {tmpl.is_global && (
-                    <span style={{ fontSize: '10px', color: '#64748b' }}>{t('global')}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{t('global')}</span>
                   )}
                 </div>
 
@@ -240,7 +240,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                   }}>
                     {disc.code}
                   </span>
-                ) : <span style={{ color: '#94a3b8', fontSize: '12px' }}>—</span>}
+                ) : <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>—</span>}
 
                 {/* Phase */}
                 {phase ? (
@@ -250,15 +250,15 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                   }}>
                     {phase.code}
                   </span>
-                ) : <span style={{ color: '#94a3b8', fontSize: '12px' }}>—</span>}
+                ) : <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>—</span>}
 
                 {/* Item count */}
-                <span style={{ fontSize: '13px', color: items > 0 ? '#0f172a' : '#94a3b8', fontWeight: items > 0 ? 500 : 400 }}>
+                <span style={{ fontSize: '13px', color: items > 0 ? 'var(--text-strong)' : 'var(--text-muted)', fontWeight: items > 0 ? 500 : 400 }}>
                   {items}
                 </span>
 
                 {/* Version */}
-                <span style={{ fontSize: '12px', color: '#64748b' }}>v{tmpl.version}</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>v{tmpl.version}</span>
 
                 {/* Status + actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
@@ -267,7 +267,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                     padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
                     background: tmpl.is_active ? '#10b98115' : '#94a3b815',
                     color: tmpl.is_active ? '#10b981' : '#94a3b8',
-                    border: `1px solid ${tmpl.is_active ? '#10b98130' : '#e2e8f0'}`,
+                    border: `1px solid ${tmpl.is_active ? '#10b98130' : 'var(--border)'}`,
                   }}>
                     {tmpl.is_active ? t('status.active') : t('status.inactive')}
                   </span>
@@ -278,10 +278,10 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                       style={{
                         width: '28px', height: '28px', display: 'flex', alignItems: 'center',
                         justifyContent: 'center', borderRadius: '6px', border: 'none',
-                        background: 'transparent', cursor: 'pointer', color: '#94a3b8', fontSize: '14px',
+                        background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '14px',
                       }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#fee2e2'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#94a3b8' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.12)'; (e.currentTarget as HTMLElement).style.color = 'var(--danger-500)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
                     >
                       ✕
                     </button>
@@ -303,13 +303,13 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
           onClick={e => { if (e.target === e.currentTarget) { setShowModal(false); setForm(DEFAULT_FORM); setFormError(null) } }}
         >
           <div style={{
-            background: 'white', borderRadius: '16px', padding: '28px',
+            background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
             width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 6px' }}>
               {t('modal.title')}
             </h2>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 24px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 24px' }}>
               {t('modal.subtitle')}
             </p>
 
@@ -369,7 +369,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
               {/* Description (optional) */}
               <label style={labelStyle}>
-                {t('modal.labelDesc')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>{t('modal.descOptional')}</span>
+                {t('modal.labelDesc')} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>{t('modal.descOptional')}</span>
                 <input
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -389,8 +389,8 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
               <button
                 onClick={() => { setShowModal(false); setForm(DEFAULT_FORM); setFormError(null) }}
                 style={{
-                  padding: '9px 18px', background: 'white', border: '1px solid #e2e8f0',
-                  borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer',
+                  padding: '9px 18px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                  borderRadius: '8px', fontSize: '13px', color: 'var(--text-strong)', cursor: 'pointer',
                 }}
               >
                 {t('modal.cancel')}
@@ -426,11 +426,11 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
 const labelStyle: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', gap: '6px',
-  fontSize: '12px', fontWeight: 600, color: '#374151',
+  fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)',
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#0f172a', background: 'white', outline: 'none',
+  padding: '9px 12px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', outline: 'none',
   fontFamily: 'inherit',
 }

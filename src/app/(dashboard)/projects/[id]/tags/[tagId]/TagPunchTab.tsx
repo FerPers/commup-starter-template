@@ -32,14 +32,14 @@ export type OrgMemberForPunch = {
 const CATEGORY_CFG = {
   A: { label: 'Cat A', color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
   B: { label: 'Cat B', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  C: { label: 'Cat C', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+  C: { label: 'Cat C', color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
 } as const
 
 const STATUS_COLORS = {
   open:        { color: '#ef4444', bg: '#fee2e2' },
   in_progress: { color: '#3b82f6', bg: '#eff6ff' },
   closed:      { color: '#10b981', bg: '#ecfdf5' },
-  cancelled:   { color: '#64748b', bg: '#f1f5f9' },
+  cancelled:   { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
 } as const
 
 // ── Main component ──────────────────────────────────────────────────────
@@ -69,11 +69,11 @@ export default function TagPunchTab({
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚑</div>
-        <p style={{ fontSize: '15px', fontWeight: 600, color: '#374151', margin: '0 0 6px' }}>{t('punches.emptyTitle')}</p>
-        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>{t('punches.emptyMsg')}</p>
+        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--gray-700)', margin: '0 0 6px' }}>{t('punches.emptyTitle')}</p>
+        <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: '0 0 20px' }}>{t('punches.emptyMsg')}</p>
         <button
           onClick={() => setShowCreateModal(true)}
-          style={{ padding: '9px 18px', background: '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+          style={{ padding: '9px 18px', background: '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
         >
           {t('punches.newPunch')}
         </button>
@@ -105,7 +105,7 @@ export default function TagPunchTab({
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px',
                 borderRadius: '8px', cursor: 'pointer',
-                background: active ? cfg.bg : 'white',
+                background: active ? cfg.bg : 'var(--card-bg)',
                 border: `1.5px solid ${active ? cfg.color : cfg.border}`,
                 transition: 'all 0.15s',
               }}
@@ -118,7 +118,7 @@ export default function TagPunchTab({
         <div style={{ marginLeft: 'auto' }}>
           <button
             onClick={() => setShowCreateModal(true)}
-            style={{ padding: '6px 14px', background: '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+            style={{ padding: '6px 14px', background: '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
           >
             {t('punches.newPunch')}
           </button>
@@ -135,23 +135,23 @@ export default function TagPunchTab({
             <div
               key={punch.id}
               onClick={() => setSelectedPunch(punch)}
-              style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px', cursor: 'pointer', borderLeft: `4px solid ${catCfg.color}` }}
+              style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px', cursor: 'pointer', borderLeft: `4px solid ${catCfg.color}` }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: '#64748b', fontWeight: 600 }}>{punch.punch_number}</span>
+                    <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', fontWeight: 600 }}>{punch.punch_number}</span>
                     <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
                     <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{stLabel}</span>
                   </div>
-                  <p style={{ fontSize: '13px', color: '#0f172a', margin: '0 0 4px', lineHeight: '1.4' }}>{punch.description}</p>
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#94a3b8', flexWrap: 'wrap' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '0 0 4px', lineHeight: '1.4' }}>{punch.description}</p>
+                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'var(--gray-400)', flexWrap: 'wrap' }}>
                     {punch.assigned_to_profile && <span>👤 {punch.assigned_to_profile.full_name}</span>}
                     {punch.target_date && <span>📅 {punch.target_date}</span>}
                     {punch.itr_id && <span>↗ ITR</span>}
                   </div>
                 </div>
-                <span style={{ fontSize: '11px', color: '#cbd5e1' }}>›</span>
+                <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>›</span>
               </div>
             </div>
           )
@@ -209,7 +209,7 @@ function CreatePunchModal({
   const CREATE_CATS = {
     A: { color: '#ef4444', bg: '#fee2e2', border: '#fecaca', fullLabel: t('punches.create.catA') },
     B: { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', fullLabel: t('punches.create.catB') },
-    C: { color: '#64748b', bg: '#f8fafc', border: '#e2e8f0', fullLabel: t('punches.create.catC') },
+    C: { color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)', fullLabel: t('punches.create.catC') },
   }
 
   function handleSubmit() {
@@ -234,18 +234,18 @@ function CreatePunchModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 20px' }}>{t('punches.create.title')}</h2>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>{t('punches.create.title')}</h2>
 
         {/* Category */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>{t('punches.create.labelCategory')}</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('punches.create.labelCategory')}</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {(['A', 'B', 'C'] as const).map(cat => {
               const cfg = CREATE_CATS[cat]
               const active = category === cat
               return (
-                <button key={cat} onClick={() => setCategory(cat)} style={{ flex: 1, padding: '10px 6px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, border: `2px solid ${active ? cfg.color : '#e2e8f0'}`, background: active ? cfg.bg : 'white', color: active ? cfg.color : '#64748b', cursor: 'pointer', textAlign: 'center' }}>
+                <button key={cat} onClick={() => setCategory(cat)} style={{ flex: 1, padding: '10px 6px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, border: `2px solid ${active ? cfg.color : 'var(--border)'}`, background: active ? cfg.bg : 'var(--card-bg)', color: active ? cfg.color : 'var(--text-muted)', cursor: 'pointer', textAlign: 'center' }}>
                   {cfg.fullLabel}
                 </button>
               )
@@ -255,23 +255,23 @@ function CreatePunchModal({
 
         {/* Description */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>{t('punches.create.labelDescription')}</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punches.create.labelDescription')}</label>
           <textarea
             rows={3}
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder={t('punches.create.descPlaceholder')}
-            style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
           />
         </div>
 
         {/* Assigned to */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>{t('punches.create.labelAssigned')}</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punches.create.labelAssigned')}</label>
           <select
             value={assignedTo}
             onChange={e => setAssignedTo(e.target.value)}
-            style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', background: 'white', fontFamily: 'inherit' }}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit' }}
           >
             <option value="">{t('punches.create.noAssignee')}</option>
             {orgMembers.map(m => (
@@ -282,12 +282,12 @@ function CreatePunchModal({
 
         {/* Target date */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>{t('punches.create.labelTargetDate')}</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punches.create.labelTargetDate')}</label>
           <input
             type="date"
             value={targetDate}
             onChange={e => setTargetDate(e.target.value)}
-            style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px' }}
+            style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px' }}
           />
         </div>
 
@@ -298,10 +298,10 @@ function CreatePunchModal({
         )}
 
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>
             {t('punches.create.cancel')}
           </button>
-          <button onClick={handleSubmit} disabled={isPending} style={{ padding: '9px 20px', background: isPending ? '#fed7aa' : '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}>
+          <button onClick={handleSubmit} disabled={isPending} style={{ padding: '9px 20px', background: isPending ? '#fed7aa' : '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}>
             {isPending ? t('punches.create.submitting') : t('punches.create.submit')}
           </button>
         </div>
@@ -363,22 +363,22 @@ function PunchDetailModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
           <div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: '#475569' }}>{punch.punch_number}</span>
+              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'var(--text-muted)' }}>{punch.punch_number}</span>
               <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
               <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{stLabel}</span>
             </div>
-            <p style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0, lineHeight: '1.4' }}>{punch.description}</p>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: 0, lineHeight: '1.4' }}>{punch.description}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#94a3b8', cursor: 'pointer', padding: '0 0 0 12px' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: 'var(--gray-400)', cursor: 'pointer', padding: '0 0 0 12px' }}>✕</button>
         </div>
 
         {/* Meta */}
-        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px', flexWrap: 'wrap' }}>
           {punch.raised_by_profile && <span><strong>{t('punches.detail.raisedBy')}</strong> {punch.raised_by_profile.full_name}</span>}
           {punch.assigned_to_profile && <span><strong>{t('punches.detail.assignedTo')}</strong> {punch.assigned_to_profile.full_name}</span>}
           {punch.target_date && <span><strong>{t('punches.detail.targetDate')}</strong> {punch.target_date}</span>}
@@ -388,7 +388,7 @@ function PunchDetailModal({
         {/* Status actions */}
         {!isClosed && (
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>{t('punches.detail.changeStatus')}</label>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('punches.detail.changeStatus')}</label>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {punch.status !== 'in_progress' && (
                 <button onClick={() => handleStatusChange('in_progress')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#eff6ff', color: '#3b82f6', border: '1px solid #bfdbfe', cursor: 'pointer' }}>
@@ -398,7 +398,7 @@ function PunchDetailModal({
               <button onClick={() => handleStatusChange('closed')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', cursor: 'pointer' }}>
                 {t('punches.detail.close')}
               </button>
-              <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+              <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}>
                 {t('punches.detail.cancel')}
               </button>
             </div>
@@ -408,7 +408,7 @@ function PunchDetailModal({
         {/* Comment */}
         {!isClosed && (
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
               {t('punches.detail.labelComment')}
             </label>
             <textarea
@@ -416,9 +416,9 @@ function PunchDetailModal({
               value={comment}
               onChange={e => setComment(e.target.value)}
               placeholder={t('punches.detail.commentPlaceholder')}
-              style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', marginBottom: '8px' }}
+              style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', marginBottom: '8px' }}
             />
-            <button onClick={handleAddComment} disabled={isPending || !comment.trim()} style={{ padding: '7px 14px', background: comment.trim() ? '#0f172a' : '#f1f5f9', color: comment.trim() ? 'white' : '#94a3b8', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: comment.trim() ? 'pointer' : 'default' }}>
+            <button onClick={handleAddComment} disabled={isPending || !comment.trim()} style={{ padding: '7px 14px', background: comment.trim() ? 'var(--primary-500)' : 'var(--gray-100)', color: comment.trim() ? '#fff' : 'var(--gray-400)', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: comment.trim() ? 'pointer' : 'default' }}>
               {t('punches.detail.addComment')}
             </button>
           </div>

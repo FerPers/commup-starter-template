@@ -45,14 +45,14 @@ type WorkPlan = {
 // ── Status styles ─────────────────────────────────────────────────────
 
 const PLAN_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-  draft:       { color: '#64748b', bg: '#f1f5f9' },
+  draft:       { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
   published:   { color: '#3b82f6', bg: '#eff6ff' },
   in_progress: { color: '#f59e0b', bg: '#fffbeb' },
   completed:   { color: '#10b981', bg: '#ecfdf5' },
 }
 
 const ITEM_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-  not_started: { color: '#64748b', bg: '#f1f5f9' },
+  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
   in_progress: { color: '#3b82f6', bg: '#eff6ff' },
   completed:   { color: '#10b981', bg: '#ecfdf5' },
   on_hold:     { color: '#f59e0b', bg: '#fffbeb' },
@@ -241,8 +241,8 @@ export default function WorkPlansView({
         </a>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: '8px' }}>
           <div>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('title')}</h1>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{t('subtitleProject')}</p>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{t('subtitleProject')}</p>
           </div>
           {canEdit && (
             <button
@@ -263,12 +263,12 @@ export default function WorkPlansView({
             onClick={() => { setFilterStatus(filterStatus === key ? '' : key); setPage(1) }}
             style={{
               padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s',
-              background: filterStatus === key ? style.bg : 'white',
-              border: `1px solid ${filterStatus === key ? style.color + '40' : '#e2e8f0'}`,
+              background: filterStatus === key ? style.bg : 'var(--card-bg)',
+              border: `1px solid ${filterStatus === key ? style.color + '40' : 'var(--border)'}`,
             }}
           >
             <div style={{ fontSize: '22px', fontWeight: 700, color: style.color }}>{counts[key] ?? 0}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{planStatusLabels[key]}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{planStatusLabels[key]}</div>
           </div>
         ))}
       </div>
@@ -292,7 +292,7 @@ export default function WorkPlansView({
         {hasFilters && (
           <button
             onClick={() => { setFilterDisc(''); setFilterStatus(''); setFilterDate(''); setPage(1) }}
-            style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
+            style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {tC('clearFilters')}
           </button>
@@ -304,16 +304,16 @@ export default function WorkPlansView({
 
       {/* Table */}
       {paginated.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
           <p style={{ fontSize: '14px', color: '#94a3b8' }}>
             {workPlans.length === 0 ? t('emptyNoPlans') : t('emptyNoMatch')}
           </p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
 
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 1fr 120px 110px 100px 32px', gap: '10px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 1fr 120px 110px 100px 32px', gap: '10px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <span>{t('table.colDate')}</span>
             <span>{t('table.colDiscipline')}</span>
             <span>{t('table.colLeader')}</span>
@@ -336,15 +336,15 @@ export default function WorkPlansView({
                 <div
                   style={{
                     display: 'grid', gridTemplateColumns: '90px 1fr 1fr 120px 110px 100px 32px',
-                    gap: '10px', padding: '12px 16px', borderBottom: isExp ? 'none' : '1px solid #f8fafc',
+                    gap: '10px', padding: '12px 16px', borderBottom: isExp ? 'none' : '1px solid var(--gray-100)',
                     alignItems: 'center', cursor: 'pointer',
-                    background: isExp ? '#fafbfc' : 'white',
+                    background: isExp ? 'var(--gray-50)' : 'var(--card-bg)',
                     transition: 'background 0.1s',
                   }}
                   onClick={() => toggleExpand(plan.id)}
                 >
                   {/* Fecha */}
-                  <div style={{ fontSize: '12px', color: '#374151', fontFamily: 'ui-monospace, monospace' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--gray-700)', fontFamily: 'ui-monospace, monospace' }}>
                     {plan.plan_date}
                   </div>
 
@@ -358,17 +358,17 @@ export default function WorkPlansView({
                   </div>
 
                   {/* Líder */}
-                  <div style={{ fontSize: '12px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {plan.leader?.full_name ?? '—'}
                   </div>
 
                   {/* Ítems */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', color: '#374151', fontWeight: 600 }}>
+                    <span style={{ fontSize: '12px', color: 'var(--gray-700)', fontWeight: 600 }}>
                       {doneItems}/{totalItems}
                     </span>
                     {totalItems > 0 && (
-                      <div style={{ flex: 1, height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden', minWidth: '40px' }}>
+                      <div style={{ flex: 1, height: '4px', background: 'var(--gray-100)', borderRadius: '2px', overflow: 'hidden', minWidth: '40px' }}>
                         <div style={{ height: '100%', width: `${Math.round((doneItems / totalItems) * 100)}%`, background: doneItems === totalItems ? '#10b981' : '#3b82f6', borderRadius: '2px' }} />
                       </div>
                     )}
@@ -407,7 +407,7 @@ export default function WorkPlansView({
                       <button
                         onClick={() => handleDeletePlan(plan.id)}
                         disabled={isPending}
-                        style={{ padding: '4px 8px', background: 'white', border: '1px solid #fecaca', borderRadius: '5px', fontSize: '11px', color: '#ef4444', cursor: 'pointer' }}
+                        style={{ padding: '4px 8px', background: 'var(--card-bg)', border: '1px solid #fecaca', borderRadius: '5px', fontSize: '11px', color: '#ef4444', cursor: 'pointer' }}
                       >
                         ✕
                       </button>
@@ -422,9 +422,9 @@ export default function WorkPlansView({
 
                 {/* Expanded items */}
                 {isExp && (
-                  <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '0 16px 12px 16px' }}>
+                  <div style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', padding: '0 16px 12px 16px' }}>
                     {plan.notes && (
-                      <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', margin: '8px 0 12px', paddingLeft: '8px', borderLeft: '3px solid #e2e8f0' }}>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', margin: '8px 0 12px', paddingLeft: '8px', borderLeft: '3px solid #e2e8f0' }}>
                         {plan.notes}
                       </p>
                     )}
@@ -448,7 +448,7 @@ export default function WorkPlansView({
                           return (
                             <div
                               key={item.id}
-                              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 90px 28px', gap: '10px', padding: '8px 10px', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', alignItems: 'center' }}
+                              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 90px 28px', gap: '10px', padding: '8px 10px', background: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--border)', alignItems: 'center' }}
                             >
                               <div>
                                 {itr ? (
@@ -462,11 +462,11 @@ export default function WorkPlansView({
                               </div>
                               <div>
                                 {itr?.tags && (
-                                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#0f172a' }}>{itr.tags.tag_number}</div>
+                                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)' }}>{itr.tags.tag_number}</div>
                                 )}
-                                <div style={{ fontSize: '11px', color: '#64748b' }}>{itr?.itr_templates?.title ?? '—'}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{itr?.itr_templates?.title ?? '—'}</div>
                               </div>
-                              <div style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {item.assigned?.full_name ?? '—'}
                               </div>
                               <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: ist.bg, color: ist.color, whiteSpace: 'nowrap' }}>
@@ -476,7 +476,7 @@ export default function WorkPlansView({
                                 <button
                                   onClick={() => handleRemoveItem(item.id)}
                                   disabled={isPending}
-                                  style={{ width: '22px', height: '22px', background: 'white', border: '1px solid #fecaca', borderRadius: '4px', color: '#ef4444', cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                                  style={{ width: '22px', height: '22px', background: 'var(--card-bg)', border: '1px solid #fecaca', borderRadius: '4px', color: '#ef4444', cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                                 >
                                   ✕
                                 </button>
@@ -498,7 +498,7 @@ export default function WorkPlansView({
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={pageBtn(page === 1)}>{tC('prevPage')}</button>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>{tC('page', { page, total: totalPages })}</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tC('page', { page, total: totalPages })}</span>
           <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={pageBtn(page === totalPages)}>{tC('nextPage')}</button>
         </div>
       )}
@@ -509,9 +509,9 @@ export default function WorkPlansView({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setShowCreate(false) }}
         >
-          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('createModal.title')}</h2>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('createModal.title')}</h2>
               <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
             </div>
 
@@ -549,7 +549,7 @@ export default function WorkPlansView({
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
                 <button
                   onClick={() => setShowCreate(false)}
-                  style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                  style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
                   {t('createModal.cancel')}
                 </button>
@@ -572,9 +572,9 @@ export default function WorkPlansView({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setAddItemPlanId(null) }}
         >
-          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('addItemModal.title')}</h2>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('addItemModal.title')}</h2>
               <button onClick={() => setAddItemPlanId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
             </div>
 
@@ -613,7 +613,7 @@ export default function WorkPlansView({
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
                 <button
                   onClick={() => setAddItemPlanId(null)}
-                  style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                  style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
                   {t('addItemModal.cancel')}
                 </button>
@@ -636,23 +636,23 @@ export default function WorkPlansView({
 // ── Styles ─────────────────────────────────────────────────────────────
 
 const selStyle: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#374151', background: 'white', fontFamily: 'inherit', cursor: 'pointer',
+  padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#0f172a', background: 'white', fontFamily: 'inherit',
+  width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', fontFamily: 'inherit',
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px',
+  display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '6px',
 }
 
 function pageBtn(disabled: boolean): React.CSSProperties {
   return {
-    padding: '7px 14px', background: disabled ? '#f8fafc' : 'white',
-    border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px',
-    color: disabled ? '#cbd5e1' : '#374151', cursor: disabled ? 'not-allowed' : 'pointer',
+    padding: '7px 14px', background: disabled ? 'var(--gray-50)' : 'var(--card-bg)',
+    border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px',
+    color: disabled ? 'var(--gray-300)' : 'var(--text-strong)', cursor: disabled ? 'not-allowed' : 'pointer',
   }
 }

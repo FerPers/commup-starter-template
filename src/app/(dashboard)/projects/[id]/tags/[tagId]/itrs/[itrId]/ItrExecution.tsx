@@ -95,7 +95,7 @@ type ItrData = {
 // ── Status config (colors only) ───────────────────────────────────────
 
 const ITR_STATUS: Record<string, { color: string; bg: string }> = {
-  not_started: { color: '#64748b', bg: '#f1f5f9' },
+  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
   in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
   completed:    { color: '#10b981', bg: '#ecfdf5' },
   approved:     { color: '#7c3aed', bg: '#f5f3ff' },
@@ -289,13 +289,13 @@ export default function ItrExecution({
 
       {/* Back nav */}
       <div style={{ padding: '20px 20px 0' }}>
-        <a href={`/projects/${projectId}/tags/${tagId}`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}>
+        <a href={`/projects/${projectId}/tags/${tagId}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
           ← {tag?.tag_number} / ITRs
         </a>
       </div>
 
       {/* Header card */}
-      <div style={{ margin: '16px 20px 0', background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '20px 22px' }}>
+      <div style={{ margin: '16px 20px 0', background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', padding: '20px 22px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
@@ -304,13 +304,13 @@ export default function ItrExecution({
                   {phase.code}
                 </span>
               )}
-              <span style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>
+              <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>
                 {itr.itr_number}
               </span>
             </div>
             {template && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '13px', color: '#475569' }}>{template.title}</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{template.title}</span>
                 <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '999px', padding: '1px 6px' }}>
                   v{template.version}
                 </span>
@@ -324,28 +324,28 @@ export default function ItrExecution({
 
         {/* Tag info row */}
         {tag && (
-          <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
             <span>
-              <strong style={{ color: '#374151' }}>{t('header.tagLabel')}</strong>{' '}
+              <strong style={{ color: 'var(--gray-700)' }}>{t('header.tagLabel')}</strong>{' '}
               <span style={{ fontFamily: 'ui-monospace, monospace', color: tag.disciplines?.color ?? '#374151' }}>{tag.tag_number}</span>
               {' — '}{tag.description}
             </span>
             {executor?.profiles?.full_name && (
-              <span><strong style={{ color: '#374151' }}>{t('header.inspectorLabel')}</strong> {executor.profiles.full_name}</span>
+              <span><strong style={{ color: 'var(--gray-700)' }}>{t('header.inspectorLabel')}</strong> {executor.profiles.full_name}</span>
             )}
             {itr.scheduled_date && (
-              <span><strong style={{ color: '#374151' }}>{t('header.dateLabel')}</strong> {itr.scheduled_date}</span>
+              <span><strong style={{ color: 'var(--gray-700)' }}>{t('header.dateLabel')}</strong> {itr.scheduled_date}</span>
             )}
           </div>
         )}
 
         {/* Progress bar */}
         <div style={{ marginTop: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginBottom: '5px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--gray-400)', marginBottom: '5px' }}>
             <span>{t('header.progress')}</span>
             <span>{itr.progress_pct}%</span>
           </div>
-          <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ height: '6px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '4px', transition: 'width 0.4s' }} />
           </div>
         </div>
@@ -357,18 +357,18 @@ export default function ItrExecution({
             const signedDate = sig ? sig.signed_at.slice(0, 10).split('-').reverse().join('/') : null
             const signedTime = sig ? sig.signed_at.slice(11, 16) : null
             return (
-              <div key={role} style={{ borderRadius: '7px', background: sig ? '#ecfdf5' : '#f8fafc', border: `1px solid ${sig ? '#a7f3d0' : '#e2e8f0'}`, overflow: 'hidden', minWidth: '130px' }}>
+              <div key={role} style={{ borderRadius: '7px', background: sig ? '#ecfdf5' : 'var(--gray-50)', border: `1px solid ${sig ? '#a7f3d0' : 'var(--border)'}`, overflow: 'hidden', minWidth: '130px' }}>
                 <div style={{ padding: '7px 10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: sig ? '4px' : 0 }}>
                     <span style={{ fontSize: '12px' }}>{sig ? '✓' : '○'}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : '#94a3b8' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : 'var(--gray-400)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
                   </div>
                   {sig && (
                     <>
-                      <div style={{ fontSize: '11px', color: '#374151', fontWeight: 500, marginLeft: '17px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--gray-700)', fontWeight: 500, marginLeft: '17px' }}>
                         {sig.profiles?.full_name ?? '—'}
                       </div>
-                      <div style={{ fontSize: '10px', color: '#94a3b8', marginLeft: '17px', marginTop: '1px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginLeft: '17px', marginTop: '1px' }}>
                         {signedDate} {signedTime}
                       </div>
                     </>
@@ -403,8 +403,8 @@ export default function ItrExecution({
       <div style={{ padding: '0 20px' }}>
         {sections.map(section => (
           <div key={section.id} style={{ marginTop: '20px' }}>
-            <div style={{ padding: '10px 16px', background: '#f8fafc', borderRadius: '8px', marginBottom: '8px', border: '1px solid #e2e8f0' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ padding: '10px 16px', background: 'var(--gray-50)', borderRadius: '8px', marginBottom: '8px', border: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gray-700)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {section.title}
               </span>
             </div>
@@ -458,8 +458,8 @@ export default function ItrExecution({
         }}
       />
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #e2e8f0', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', zIndex: 100 }}>
-        <div style={{ fontSize: '11px', color: isOffline ? '#f59e0b' : syncing ? '#3b82f6' : isPending ? '#3b82f6' : lastSaved ? '#10b981' : '#94a3b8' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--card-bg)', borderTop: '1px solid var(--border)', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', zIndex: 100 }}>
+        <div style={{ fontSize: '11px', color: isOffline ? '#f59e0b' : syncing ? '#3b82f6' : isPending ? '#3b82f6' : lastSaved ? '#10b981' : 'var(--gray-400)' }}>
           {isOffline && pendingCount > 0
             ? t('footer.offlineWithPending', { count: pendingCount })
             : isOffline
@@ -492,7 +492,7 @@ export default function ItrExecution({
           <button
             onClick={() => setShowSignModal(true)}
             disabled={!canEdit || itr.status === 'approved'}
-            style={{ padding: '9px 20px', background: !canEdit || itr.status === 'approved' ? '#f8fafc' : '#7c3aed', color: !canEdit || itr.status === 'approved' ? '#94a3b8' : 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !canEdit || itr.status === 'approved' ? 'not-allowed' : 'pointer' }}
+            style={{ padding: '9px 20px', background: !canEdit || itr.status === 'approved' ? 'var(--gray-50)' : '#7c3aed', color: !canEdit || itr.status === 'approved' ? 'var(--gray-400)' : 'var(--card-bg)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !canEdit || itr.status === 'approved' ? 'not-allowed' : 'pointer' }}
           >
             {t('footer.btnSign')}
           </button>
@@ -628,13 +628,13 @@ function SignModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('signModal.title')}</h2>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 18px' }}>{itrNumber}</p>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('signModal.title')}</h2>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 18px' }}>{itrNumber}</p>
 
         {/* Role selector */}
         <div style={{ marginBottom: '18px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>{t('signModal.signAs')}</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('signModal.signAs')}</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {(['executor', 'supervisor', 'client'] as const).map(role => {
               const alreadySigned = itrSignatures.some(s => s.role === role)
@@ -643,7 +643,7 @@ function SignModal({
                   key={role}
                   onClick={() => !alreadySigned && setSignRole(role)}
                   disabled={alreadySigned}
-                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? '#7c3aed' : '#e2e8f0', background: alreadySigned ? '#f8fafc' : signRole === role ? '#f5f3ff' : 'white', color: alreadySigned ? '#94a3b8' : signRole === role ? '#7c3aed' : '#374151', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
+                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? '#7c3aed' : 'var(--border)', background: alreadySigned ? 'var(--gray-50)' : signRole === role ? '#f5f3ff' : 'var(--card-bg)', color: alreadySigned ? 'var(--gray-400)' : signRole === role ? '#7c3aed' : '#374151', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
                 >
                   {alreadySigned ? '✓ ' : ''}{t(`roles.${role}` as Parameters<typeof t>[0])}
                 </button>
@@ -655,12 +655,12 @@ function SignModal({
         {/* Canvas drawing pad */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>{t('signModal.signatureLabel')}</label>
-            <button onClick={clearCanvas} style={{ fontSize: '11px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</label>
+            <button onClick={clearCanvas} style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
               {t('signModal.clearCanvas')}
             </button>
           </div>
-          <div style={{ position: 'relative', border: '1.5px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#fafafa' }}>
+          <div style={{ position: 'relative', border: '1.5px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: 'var(--gray-50)' }}>
             <canvas
               ref={canvasRef}
               width={392}
@@ -673,7 +673,7 @@ function SignModal({
             />
             {!hasDrawn && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{t('signModal.placeholder')}</span>
+                <span style={{ fontSize: '13px', color: 'var(--gray-300)' }}>{t('signModal.placeholder')}</span>
               </div>
             )}
           </div>
@@ -697,14 +697,14 @@ function SignModal({
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
           <button
             onClick={onClose}
-            style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+            style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('signModal.cancel')}
           </button>
           <button
             onClick={() => onSign(signRole, canvasRef.current!.toDataURL('image/png'))}
             disabled={isPending || blocked || !hasDrawn}
-            style={{ padding: '9px 20px', background: isPending || blocked || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending || blocked || !hasDrawn ? 'not-allowed' : 'pointer' }}
+            style={{ padding: '9px 20px', background: isPending || blocked || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending || blocked || !hasDrawn ? 'not-allowed' : 'pointer' }}
           >
             {isPending ? t('signModal.signing') : t('signModal.confirm')}
           </button>
@@ -773,15 +773,15 @@ function PhotoUpload({
       {existingAttachments.length > 0 && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
           {existingAttachments.map(att => (
-            <div key={att.id} style={{ position: 'relative', width: '72px', height: '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', flexShrink: 0 }}>
+            <div key={att.id} style={{ position: 'relative', width: '72px', height: '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0 }}>
               {att.signed_url
                 ? <img src={att.signed_url} alt={t('upload.photoAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setLightbox(att.signed_url)} />
-                : <div style={{ width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📷</div>
+                : <div style={{ width: '100%', height: '100%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📷</div>
               }
               {canEdit && (
                 <button
                   onClick={() => handleDelete(att)}
-                  style={{ position: 'absolute', top: '2px', right: '2px', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,0,0,0.55)', border: 'none', color: 'white', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                  style={{ position: 'absolute', top: '2px', right: '2px', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
                 >
                   ×
                 </button>
@@ -842,7 +842,7 @@ function CreatePunchModal({
   const CATEGORY_CONFIG = {
     A: { label: t('punchModal.catA'), color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
     B: { label: t('punchModal.catB'), color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-    C: { label: t('punchModal.catC'), color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+    C: { label: t('punchModal.catC'), color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
   } as const
 
   const [description, setDescription] = useState(initialDescription)
@@ -873,13 +873,13 @@ function CreatePunchModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('punchModal.title')}</h2>
-        <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 20px' }}>{t('punchModal.subtitle')}</p>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('punchModal.title')}</h2>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 20px' }}>{t('punchModal.subtitle')}</p>
 
         {/* Category */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>{t('punchModal.labelCategory')}</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('punchModal.labelCategory')}</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {(['A', 'B', 'C'] as const).map(cat => {
               const cfg = CATEGORY_CONFIG[cat]
@@ -888,7 +888,7 @@ function CreatePunchModal({
                 <button
                   key={cat}
                   onClick={() => setCategory(cat)}
-                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: `2px solid ${active ? cfg.color : '#e2e8f0'}`, background: active ? cfg.bg : 'white', color: active ? cfg.color : '#64748b', cursor: 'pointer', textAlign: 'center' }}
+                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: `2px solid ${active ? cfg.color : 'var(--border)'}`, background: active ? cfg.bg : 'var(--card-bg)', color: active ? cfg.color : 'var(--text-muted)', cursor: 'pointer', textAlign: 'center' }}
                 >
                   {cfg.label}
                 </button>
@@ -899,24 +899,24 @@ function CreatePunchModal({
 
         {/* Description */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelDescription')}</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelDescription')}</label>
           <textarea
             rows={3}
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder={t('punchModal.descPlaceholder')}
-            style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
           />
         </div>
 
         {/* Target date */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelTargetDate')}</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelTargetDate')}</label>
           <input
             type="date"
             value={targetDate}
             onChange={e => setTargetDate(e.target.value)}
-            style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px' }}
+            style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px' }}
           />
         </div>
 
@@ -929,14 +929,14 @@ function CreatePunchModal({
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
           <button
             onClick={onClose}
-            style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+            style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('punchModal.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={isPending}
-            style={{ padding: '9px 20px', background: isPending ? '#fed7aa' : '#ea580c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}
+            style={{ padding: '9px 20px', background: isPending ? '#fed7aa' : '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}
           >
             {isPending ? t('punchModal.registering') : t('punchModal.register')}
           </button>
@@ -1024,9 +1024,9 @@ function MicAppend({
       title={active ? 'Detener dictado' : 'Dictar'}
       style={{
         padding: '4px 8px', borderRadius: '6px', fontSize: '11px',
-        border: '1px solid', borderColor: active ? '#ef4444' : '#cbd5e1',
-        background: active ? '#fee2e2' : 'white',
-        color: active ? '#ef4444' : '#475569',
+        border: '1px solid', borderColor: active ? '#ef4444' : 'var(--gray-300)',
+        background: active ? '#fee2e2' : 'var(--card-bg)',
+        color: active ? '#ef4444' : 'var(--text-muted)',
         cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
       }}
     >
@@ -1076,14 +1076,14 @@ function ItemRow({
   const remarksRef = useRef<HTMLTextAreaElement | null>(null)
 
   return (
-    <div style={{ background: 'white', border: `1px solid ${isPassed === false ? '#fecaca' : '#e2e8f0'}`, borderRadius: '10px', padding: '14px 16px' }}>
+    <div style={{ background: 'var(--card-bg)', border: `1px solid ${isPassed === false ? '#fecaca' : 'var(--border)'}`, borderRadius: '10px', padding: '14px 16px' }}>
 
       {/* Item header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: item.item_type === 'checkbox' || item.item_type === 'yes_no' ? '0' : '12px' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {item.item_number && (
-              <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: '#94a3b8', minWidth: '28px' }}>{item.item_number}</span>
+              <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--gray-400)', minWidth: '28px' }}>{item.item_number}</span>
             )}
             <div style={{ display: 'flex', gap: '4px' }}>
               {item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleCritical')} />}
@@ -1091,9 +1091,9 @@ function ItemRow({
               {item.requires_photo && <span style={{ fontSize: '10px', color: '#3b82f6' }} title={t('item.titlePhoto')}>⊙</span>}
             </div>
           </div>
-          <p style={{ fontSize: '13px', color: '#0f172a', margin: '2px 0 0', lineHeight: '1.4' }}>{item.description}</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '2px 0 0', lineHeight: '1.4' }}>{item.description}</p>
           {item.description_es && (
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '1px 0 0' }}>{item.description_es}</p>
+            <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '1px 0 0' }}>{item.description_es}</p>
           )}
         </div>
 
@@ -1130,7 +1130,7 @@ function ItemRow({
                   valueBool: val,
                   isPassed: item.is_critical ? val : null,
                 })}
-                style={{ padding: '6px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : '#e2e8f0', background: response?.value_bool === val ? (val ? '#ecfdf5' : '#fee2e2') : 'white', color: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : '#64748b', cursor: canEdit ? 'pointer' : 'default' }}
+                style={{ padding: '6px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : 'var(--border)', background: response?.value_bool === val ? (val ? '#ecfdf5' : '#fee2e2') : 'var(--card-bg)', color: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : 'var(--text-muted)', cursor: canEdit ? 'pointer' : 'default' }}
               >
                 {val ? t('item.yesBtn') : t('item.noBtn')}
               </button>
@@ -1149,7 +1149,7 @@ function ItemRow({
             disabled={!canEdit}
             placeholder={t('item.observationsPlaceholder')}
             onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
-            style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
           />
           <div style={{ alignSelf: 'flex-end' }}>
             <MicAppend
@@ -1168,7 +1168,7 @@ function ItemRow({
           defaultValue={response?.value_numeric ?? ''}
           disabled={!canEdit}
           onBlur={e => onSave(item.id, { valueNumeric: e.target.value !== '' ? Number(e.target.value) : null })}
-          style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', width: '160px' }}
+          style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', width: '160px' }}
         />
       )}
 
@@ -1186,12 +1186,12 @@ function ItemRow({
                 const passed = val !== null ? computeIsPassed(val, item.acceptance_min, item.acceptance_max) : null
                 onSave(item.id, { valueNumeric: val, isPassed: passed })
               }}
-              style={{ padding: '8px 10px', border: `1px solid ${isPassed === false ? '#fca5a5' : '#e2e8f0'}`, borderRadius: '7px', fontSize: '13px', width: '140px' }}
+              style={{ padding: '8px 10px', border: `1px solid ${isPassed === false ? '#fca5a5' : 'var(--border)'}`, borderRadius: '7px', fontSize: '13px', width: '140px' }}
             />
-            {item.unit && <span style={{ fontSize: '12px', color: '#64748b' }}>{item.unit}</span>}
+            {item.unit && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.unit}</span>}
           </div>
           {(item.acceptance_min !== null || item.acceptance_max !== null) && (
-            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+            <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
               {item.acceptance_min !== null && item.acceptance_max !== null
                 ? t('item.criterionBoth', { min: item.acceptance_min, max: item.acceptance_max, unit: item.unit ?? '' })
                 : item.acceptance_min !== null
@@ -1210,7 +1210,7 @@ function ItemRow({
           value={response?.value_option ?? ''}
           disabled={!canEdit}
           onChange={e => onSave(item.id, { valueOption: e.target.value || null })}
-          style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px', background: 'white', fontFamily: 'inherit', minWidth: '200px' }}
+          style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit', minWidth: '200px' }}
         >
           <option value="">{t('item.selectPlaceholder')}</option>
           {(item.options ?? (item.acceptance_text ? item.acceptance_text.split(',').map(s => s.trim()) : [])).map((opt: string) => (
@@ -1226,7 +1226,7 @@ function ItemRow({
           defaultValue={response?.value_text ?? ''}
           disabled={!canEdit}
           onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
-          style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '13px' }}
+          style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px' }}
         />
       )}
 
@@ -1263,7 +1263,7 @@ function ItemRow({
                 remarks: e.target.value || null,
               })
             }}
-            style={{ width: '100%', padding: '6px 10px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: '#64748b' }}
+            style={{ width: '100%', padding: '6px 10px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
           />
           <div style={{ alignSelf: 'flex-end' }}>
             <MicAppend

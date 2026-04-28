@@ -120,8 +120,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             onClick={() => setActiveDisc('all')}
             style={{
               padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', border: 'none',
-              background: activeDisc === 'all' ? '#0f172a' : '#f1f5f9',
-              color: activeDisc === 'all' ? 'white' : '#64748b',
+              background: activeDisc === 'all' ? 'var(--gray-900)' : 'var(--gray-100)',
+              color: activeDisc === 'all' ? '#fff' : 'var(--text-muted)',
             }}
           >
             Todos ({procedures.length})
@@ -132,8 +132,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               onClick={() => setActiveDisc(d.code)}
               style={{
                 padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', border: 'none',
-                background: activeDisc === d.code ? d.color : '#f1f5f9',
-                color: activeDisc === d.code ? 'white' : '#64748b',
+                background: activeDisc === d.code ? d.color : 'var(--gray-100)',
+                color: activeDisc === d.code ? '#fff' : 'var(--text-muted)',
               }}
             >
               {d.code}
@@ -158,14 +158,14 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
       {/* Procedures grid */}
       {filtered.length === 0 ? (
         <div style={{
-          background: '#f8fafc', border: '2px dashed #e2e8f0', borderRadius: '12px',
+          background: 'var(--gray-50)', border: '2px dashed var(--border)', borderRadius: '12px',
           padding: '48px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>◉</div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '8px' }}>
             Sin procedimientos
           </div>
-          <div style={{ fontSize: '14px', color: '#9ca3af' }}>
+          <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
             Crea el primer procedimiento de preservación para esta disciplina
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                 key={proc.id}
                 onClick={() => router.push(`/admin/templates/preservation/${proc.id}`)}
                 style={{
-                  background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px',
+                  background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px',
                   padding: '20px', cursor: 'pointer', transition: 'box-shadow 0.15s',
                   display: 'flex', flexDirection: 'column', gap: '12px',
                 }}
@@ -188,10 +188,10 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '2px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '2px' }}>
                       {proc.code}
                     </div>
-                    <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.3 }}>
                       {proc.title}
                     </div>
                   </div>
@@ -199,7 +199,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                     <button
                       onClick={e => { e.stopPropagation(); handleDelete(proc.id) }}
                       disabled={deletingId === proc.id}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '16px', padding: '4px', flexShrink: 0 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px', padding: '4px', flexShrink: 0 }}
                       title="Eliminar"
                     >
                       ✕
@@ -208,7 +208,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                 </div>
 
                 {proc.description && (
-                  <div style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
                     {proc.description}
                   </div>
                 )}
@@ -237,14 +237,14 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
+                <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
                   {proc.requires_photo && (
-                    <span style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       📷 Foto requerida
                     </span>
                   )}
                   {proc.requires_signature && (
-                    <span style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       ✍ Firma requerida
                     </span>
                   )}
@@ -262,14 +262,14 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
           alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px',
         }}>
           <div style={{
-            background: 'white', borderRadius: '16px', padding: '28px',
+            background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
             width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
                 Nuevo procedimiento de preservación
               </h2>
-              <button onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#94a3b8' }}>✕</button>
+              <button onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--text-muted)' }}>✕</button>
             </div>
 
             {formError && (
@@ -281,43 +281,43 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Código *</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Código *</label>
                   <input
                     value={form.code}
                     onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
                     placeholder="P-MECH-01"
-                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Título *</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Título *</label>
                   <input
                     value={form.title}
                     onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                     placeholder="Ej: Rotación de eje mensual"
-                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Descripción</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Descripción</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2}
                   placeholder="Descripción opcional del procedimiento..."
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Disciplina</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Disciplina</label>
                   <select
                     value={form.disciplineId}
                     onChange={e => setForm(f => ({ ...f, disciplineId: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   >
                     <option value="">— Sin disciplina —</option>
                     {disciplines.map(d => (
@@ -326,11 +326,11 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Frecuencia *</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Frecuencia *</label>
                   <select
                     value={form.frequency}
                     onChange={e => handleFreqChange(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   >
                     <option value="daily">Diario</option>
                     <option value="weekly">Semanal</option>
@@ -342,7 +342,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>
                   Intervalo exacto (días) *
                 </label>
                 <input
@@ -350,15 +350,15 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   min="1"
                   value={form.intervalDays}
                   onChange={e => setForm(f => ({ ...f, intervalDays: e.target.value }))}
-                  style={{ width: '140px', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px' }}
+                  style={{ width: '140px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px' }}
                 />
-                <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: '10px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '10px' }}>
                   Define exactamente cada cuántos días aplica
                 </span>
               </div>
 
               <div style={{ display: 'flex', gap: '20px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#374151' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-strong)' }}>
                   <input
                     type="checkbox"
                     checked={form.requiresPhoto}
@@ -366,7 +366,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   />
                   Requiere foto
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#374151' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-strong)' }}>
                   <input
                     type="checkbox"
                     checked={form.requiresSignature}
@@ -380,7 +380,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '24px' }}>
               <button
                 onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }}
-                style={{ padding: '9px 18px', borderRadius: '8px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none' }}
+                style={{ padding: '9px 18px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none' }}
               >
                 Cancelar
               </button>

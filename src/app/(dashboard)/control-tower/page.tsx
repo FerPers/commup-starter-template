@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
 
 type Readiness = {
   system_id: string
@@ -20,34 +21,33 @@ type Readiness = {
   blockers: Array<{ code: string; severity: string; message: string; count?: number; pending?: number }>
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'white', borderRadius: '14px', padding: '24px',
-  border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-}
-
 function GateBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 600,
-      background: ok ? '#ecfdf5' : '#fef2f2',
-      color:      ok ? '#047857' : '#b91c1c',
+      padding: '3px 9px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600,
+      background: ok ? 'var(--success-50)' : 'var(--danger-50)',
+      color:      ok ? 'var(--success-700)' : 'var(--danger-700)',
       border: `1px solid ${ok ? '#a7f3d0' : '#fecaca'}`,
     }}>
-      <span style={{ fontSize: 10 }}>{ok ? '●' : '○'}</span>
+      <span style={{ fontSize: 10 }} aria-hidden="true">{ok ? '●' : '○'}</span>
       {label}
     </span>
   )
 }
 
 function Bar({ pct }: { pct: number }) {
-  const color = pct >= 100 ? '#10b981' : pct >= 70 ? '#3b82f6' : pct >= 30 ? '#f59e0b' : '#ef4444'
+  const color = pct >= 100
+    ? 'var(--success-500)'
+    : pct >= 70 ? 'var(--primary-500)'
+    : pct >= 30 ? 'var(--warning-500)'
+    : 'var(--danger-500)'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
+      <div style={{ flex: 1, height: 6, background: 'var(--gray-100)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }}>
         <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', background: color, transition: 'width .3s' }} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a', minWidth: 42, textAlign: 'right' }}>
+      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', minWidth: 42, textAlign: 'right' }}>
         {pct.toFixed(0)}%
       </span>
     </div>
@@ -111,139 +111,135 @@ export default async function ControlTowerPage({
   const avgItrPct = totals.systems > 0 ? totals.itrPctSum / totals.systems : 0
 
   return (
-    <div style={{ padding: '32px', maxWidth: 1400, margin: '0 auto' }}>
+    <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('title')}</h1>
-        <p style={{ fontSize: 14, color: '#64748b', margin: '4px 0 0' }}>{t('subtitle')}</p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
+        <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', margin: '4px 0 0' }}>{t('subtitle')}</p>
       </div>
 
       {/* Project picker */}
       {projects && projects.length > 0 && (
-        <form method="get" style={{ ...cardStyle, padding: 16, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, color: '#475569' }}>{t('project')}</label>
-          <select
-            name="projectId"
-            defaultValue={projectId ?? ''}
-            style={{
-              flex: 1, maxWidth: 360, padding: '8px 12px',
-              border: '1px solid #e2e8f0', borderRadius: 8,
-              fontSize: 14, background: 'white', color: '#0f172a',
-            }}
-          >
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
-            ))}
-          </select>
-          <button
-            type="submit"
-            style={{
-              padding: '8px 16px', background: '#3b82f6', color: 'white',
-              border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            }}
-          >
-            {t('load')}
-          </button>
-        </form>
+        <Card padding="sm" style={{ marginBottom: 16 }}>
+          <form method="get" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <label htmlFor="ct-project" style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-600)' }}>{t('project')}</label>
+            <Select
+              id="ct-project"
+              name="projectId"
+              defaultValue={projectId ?? ''}
+              fullWidth={false}
+              style={{ flex: 1, maxWidth: 360 }}
+            >
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
+              ))}
+            </Select>
+            <Button type="submit">{t('load')}</Button>
+          </form>
+        </Card>
       )}
 
       {/* KPI row */}
       {rows.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
-          <div style={cardStyle}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.05em' }}>{t('kpi.systems')}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>{totals.systems}</div>
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{t('kpi.avgItr', { pct: avgItrPct.toFixed(1) })}</div>
-          </div>
-          <div style={cardStyle}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.05em' }}>{t('kpi.readyMc')}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#10b981', marginTop: 4 }}>{totals.mc}/{totals.systems}</div>
-          </div>
-          <div style={cardStyle}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.05em' }}>{t('kpi.readyRfsu')}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#7c3aed', marginTop: 4 }}>{totals.rfsu}/{totals.systems}</div>
-          </div>
-          <div style={cardStyle}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.05em' }}>{t('kpi.punchesOpen')}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#ef4444', marginTop: 4 }}>{totals.punchesA}<span style={{ fontSize: 14, color: '#64748b', fontWeight: 500 }}> A</span> · {totals.punchesB}<span style={{ fontSize: 14, color: '#64748b', fontWeight: 500 }}> B</span></div>
-          </div>
+          <Card padding="md">
+            <div style={kpiLabel}>{t('kpi.systems')}</div>
+            <div style={{ ...kpiValue, color: 'var(--text-strong)' }}>{totals.systems}</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.avgItr', { pct: avgItrPct.toFixed(1) })}</div>
+          </Card>
+          <Card padding="md">
+            <div style={kpiLabel}>{t('kpi.readyMc')}</div>
+            <div style={{ ...kpiValue, color: 'var(--success-500)' }}>{totals.mc}/{totals.systems}</div>
+          </Card>
+          <Card padding="md">
+            <div style={kpiLabel}>{t('kpi.readyRfsu')}</div>
+            <div style={{ ...kpiValue, color: '#7c3aed' }}>{totals.rfsu}/{totals.systems}</div>
+          </Card>
+          <Card padding="md">
+            <div style={kpiLabel}>{t('kpi.punchesOpen')}</div>
+            <div style={{ ...kpiValue, color: 'var(--danger-500)' }}>
+              {totals.punchesA}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> A</span>
+              {' · '}
+              {totals.punchesB}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> B</span>
+            </div>
+          </Card>
         </div>
       )}
 
       {/* Systems table */}
       {rows.length === 0 ? (
-        <div style={{ ...cardStyle, textAlign: 'center', color: '#64748b', padding: 48 }}>
+        <Card padding="lg" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
           {projectId ? t('empty') : t('selectProject')}
-        </div>
+        </Card>
       ) : (
-        <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <th style={thStyle}>{t('col.area')}</th>
-                <th style={thStyle}>{t('col.system')}</th>
-                <th style={{ ...thStyle, width: 220 }}>{t('col.itrs')}</th>
-                <th style={{ ...thStyle, width: 90, textAlign: 'center' }}>{t('col.punchA')}</th>
-                <th style={{ ...thStyle, width: 90, textAlign: 'center' }}>{t('col.punchB')}</th>
-                <th style={{ ...thStyle, width: 90, textAlign: 'center' }}>{t('col.punchC')}</th>
-                <th style={{ ...thStyle, width: 280 }}>{t('col.gates')}</th>
-                <th style={thStyle}>{t('col.topBlocker')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(r => {
-                const topBlocker = r.blockers[0]
-                return (
-                  <tr key={r.system_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={tdStyle}>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{r.area_code}</div>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>{r.area_name}</div>
-                    </td>
-                    <td style={tdStyle}>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{r.system_code}</div>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>{r.system_name}</div>
-                    </td>
-                    <td style={tdStyle}>
-                      <Bar pct={Number(r.itr_pct)} />
-                      <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
-                        {r.itr_approved}/{r.itr_total} {t('approved')}
-                      </div>
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'center', color: r.open_punches_a > 0 ? '#ef4444' : '#94a3b8', fontWeight: 600 }}>
-                      {r.open_punches_a}
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'center', color: r.open_punches_b > 0 ? '#f59e0b' : '#94a3b8', fontWeight: 600 }}>
-                      {r.open_punches_b}
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'center', color: r.open_punches_c > 0 ? '#64748b' : '#cbd5e1', fontWeight: 600 }}>
-                      {r.open_punches_c}
-                    </td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        <GateBadge ok={r.ready_mc}   label="MC" />
-                        <GateBadge ok={r.ready_rfsu} label="RFSU" />
-                        <GateBadge ok={r.ready_rfc}  label="RFC" />
-                      </div>
-                    </td>
-                    <td style={{ ...tdStyle, fontSize: 12, color: '#64748b' }}>
-                      {topBlocker ? topBlocker.message : <span style={{ color: '#10b981', fontWeight: 600 }}>{t('noBlockers')}</span>}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        <TableWrapper>
+          <div style={{ overflowX: 'auto' }}>
+            <Table aria-label={t('title')}>
+              <THead>
+                <TR>
+                  <TH style={{ position: 'sticky', left: 0, background: 'var(--gray-50)', zIndex: 2, minWidth: 140 }}>{t('col.area')}</TH>
+                  <TH style={{ minWidth: 160 }}>{t('col.system')}</TH>
+                  <TH style={{ width: 220 }}>{t('col.itrs')}</TH>
+                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchA')}</TH>
+                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchB')}</TH>
+                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchC')}</TH>
+                  <TH style={{ width: 240 }}>{t('col.gates')}</TH>
+                  <TH style={{ minWidth: 220 }}>{t('col.topBlocker')}</TH>
+                </TR>
+              </THead>
+              <TBody>
+                {rows.map(r => {
+                  const topBlocker = r.blockers[0]
+                  return (
+                    <TR key={r.system_id}>
+                      <TD style={{ position: 'sticky', left: 0, background: 'var(--card-bg)', zIndex: 1 }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{r.area_code}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.area_name}</div>
+                      </TD>
+                      <TD>
+                        <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{r.system_code}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.system_name}</div>
+                      </TD>
+                      <TD>
+                        <Bar pct={Number(r.itr_pct)} />
+                        <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
+                          {r.itr_approved}/{r.itr_total} {t('approved')}
+                        </div>
+                      </TD>
+                      <TD style={{ textAlign: 'center', color: r.open_punches_a > 0 ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: 600 }}>
+                        {r.open_punches_a}
+                      </TD>
+                      <TD style={{ textAlign: 'center', color: r.open_punches_b > 0 ? 'var(--warning-500)' : 'var(--gray-400)', fontWeight: 600 }}>
+                        {r.open_punches_b}
+                      </TD>
+                      <TD style={{ textAlign: 'center', color: r.open_punches_c > 0 ? 'var(--gray-500)' : 'var(--gray-300)', fontWeight: 600 }}>
+                        {r.open_punches_c}
+                      </TD>
+                      <TD>
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          <GateBadge ok={r.ready_mc}   label="MC" />
+                          <GateBadge ok={r.ready_rfsu} label="RFSU" />
+                          <GateBadge ok={r.ready_rfc}  label="RFC" />
+                        </div>
+                      </TD>
+                      <TD style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+                        {topBlocker ? topBlocker.message : <span style={{ color: 'var(--success-500)', fontWeight: 600 }}>{t('noBlockers')}</span>}
+                      </TD>
+                    </TR>
+                  )
+                })}
+              </TBody>
+            </Table>
+          </div>
+        </TableWrapper>
       )}
     </div>
   )
 }
 
-const thStyle: React.CSSProperties = {
-  padding: '12px 16px', textAlign: 'left',
-  fontSize: 11, fontWeight: 600, color: '#64748b',
+const kpiLabel: React.CSSProperties = {
+  fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '.05em',
 }
-
-const tdStyle: React.CSSProperties = {
-  padding: '14px 16px', verticalAlign: 'middle', color: '#0f172a',
+const kpiValue: React.CSSProperties = {
+  fontSize: 28, fontWeight: 700, marginTop: 4,
 }

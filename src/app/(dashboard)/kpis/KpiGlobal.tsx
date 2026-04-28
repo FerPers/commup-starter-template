@@ -1,13 +1,14 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Card, EmptyState } from '@/components/ui'
 
 const PROJECT_STATUS_COLOR: Record<string, string> = {
   planning:  '#6366f1',
-  active:    '#10b981',
-  on_hold:   '#f59e0b',
-  completed: '#3b82f6',
-  cancelled: '#94a3b8',
+  active:    'var(--success-500)',
+  on_hold:   'var(--warning-500)',
+  completed: 'var(--primary-500)',
+  cancelled: 'var(--gray-400)',
 }
 
 type ProjectKpi = {
@@ -30,12 +31,12 @@ type ProjectKpi = {
 function ProgressBar({ pct, color, label }: { pct: number; color: string; label: string }) {
   return (
     <div style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-        <span style={{ fontSize: '11px', color: '#64748b' }}>{label}</span>
-        <span style={{ fontSize: '12px', fontWeight: 700, color }}>{pct}%</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{label}</span>
+        <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color }}>{pct}%</span>
       </div>
-      <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '3px', transition: 'width 0.4s ease' }} />
+      <div style={{ height: 6, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.4s ease' }} />
       </div>
     </div>
   )
@@ -60,81 +61,83 @@ export default function KpiGlobal({ projectKpis }: { projectKpis: ProjectKpi[] }
   }
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1200px' }}>
+    <div style={{ padding: 32, maxWidth: 1200 }}>
       {/* Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('title')}</h1>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{t('subtitle')}</p>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: 0 }}>{t('subtitle')}</p>
       </div>
 
       {/* Org-level summary bar */}
-      <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px 24px', marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
+      <Card padding="md" style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 200px' }}>
-            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
               {t('org.globalProgress')}
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '36px', fontWeight: 800, color: '#0f172a' }}>{globalPct}%</span>
-              <span style={{ fontSize: '13px', color: '#64748b' }}>{t('org.approvedItrs', { approved: totalApproved, total: totalItrs })}</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-strong)' }}>{globalPct}%</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{t('org.approvedItrs', { approved: totalApproved, total: totalItrs })}</span>
             </div>
-            <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${globalPct}%`, background: globalPct >= 80 ? '#10b981' : globalPct >= 50 ? '#3b82f6' : '#f59e0b', borderRadius: '4px', transition: 'width 0.4s ease' }} />
+            <div style={{ height: 8, background: 'var(--gray-100)', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', width: `${globalPct}%`,
+                background: globalPct >= 80 ? 'var(--success-500)' : globalPct >= 50 ? 'var(--primary-500)' : 'var(--warning-500)',
+                borderRadius: 4, transition: 'width 0.4s ease',
+              }} />
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '28px', flexWrap: 'wrap' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', fontWeight: 700, color: '#ef4444' }}>{totalCatA}</div>
-              <div style={{ fontSize: '11px', color: '#64748b' }}>{t('org.catA')}</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', fontWeight: 700, color: '#f59e0b' }}>{totalCatB}</div>
-              <div style={{ fontSize: '11px', color: '#64748b' }}>{t('org.catB')}</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', fontWeight: 700, color: '#10b981' }}>{totalCerts}</div>
-              <div style={{ fontSize: '11px', color: '#64748b' }}>{t('org.issuedCerts')}</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', fontWeight: 700, color: '#3b82f6' }}>{projectKpis.filter(p => p.status === 'active').length}</div>
-              <div style={{ fontSize: '11px', color: '#64748b' }}>{t('org.activeProjects')}</div>
-            </div>
+          <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap' }}>
+            <Stat value={totalCatA} color="var(--danger-500)"  label={t('org.catA')} />
+            <Stat value={totalCatB} color="var(--warning-500)" label={t('org.catB')} />
+            <Stat value={totalCerts} color="var(--success-500)" label={t('org.issuedCerts')} />
+            <Stat value={projectKpis.filter(p => p.status === 'active').length} color="var(--primary-500)" label={t('org.activeProjects')} />
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Project cards */}
       {projectKpis.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{t('empty')}</p>
-        </div>
+        <Card padding="lg">
+          <EmptyState title={t('empty')} />
+        </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
           {projectKpis.map(p => {
             const stColor  = PROJECT_STATUS_COLOR[p.status] ?? PROJECT_STATUS_COLOR.planning
-            const barColor = p.completionPct >= 80 ? '#10b981' : p.completionPct >= 50 ? '#3b82f6' : '#f59e0b'
+            const barColor = p.completionPct >= 80
+              ? 'var(--success-500)'
+              : p.completionPct >= 50 ? 'var(--primary-500)'
+              : 'var(--warning-500)'
             const dates = [p.start_date?.slice(0, 7), p.end_date?.slice(0, 7)].filter(Boolean).join(' → ')
 
             return (
-              <div
-                key={p.id}
-                style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}
-              >
+              <Card key={p.id} padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* Card header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#3b82f615', border: '1px solid #3b82f625', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: '#3b82f6', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 42, height: 42, borderRadius: 'var(--radius-md)',
+                      background: 'var(--primary-50)', border: '1px solid var(--primary-200)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', flexShrink: 0,
+                    }}>
                       {p.code.slice(0, 6)}
                     </div>
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{p.name}</div>
-                      <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
+                      <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text-strong)' }}>{p.name}</div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 1 }}>
                         {dates || t('card.noDates')}
                       </div>
                     </div>
                   </div>
-                  <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 600, background: `${stColor}18`, color: stColor, border: `1px solid ${stColor}30`, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <span style={{
+                    padding: '3px 9px', borderRadius: 'var(--radius-pill)',
+                    fontSize: 'var(--text-xs)', fontWeight: 600,
+                    background: `${stColor}18`, color: stColor, border: `1px solid ${stColor}30`,
+                    whiteSpace: 'nowrap', flexShrink: 0,
+                  }}>
                     {statusLabels[p.status] ?? p.status}
                   </span>
                 </div>
@@ -143,44 +146,50 @@ export default function KpiGlobal({ projectKpis }: { projectKpis: ProjectKpi[] }
                 <ProgressBar pct={p.completionPct} color={barColor} label={t('card.itrProgress')} />
 
                 {/* Stats row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                  <div style={{ textAlign: 'center', padding: '10px 4px', background: '#f8fafc', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>{p.totalItrs}</div>
-                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '1px' }}>{t('card.totalItrs')}</div>
-                  </div>
-                  <div style={{ textAlign: 'center', padding: '10px 4px', background: '#f0fdf4', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#10b981' }}>{p.approvedItrs}</div>
-                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '1px' }}>{t('card.approved')}</div>
-                  </div>
-                  <div style={{ textAlign: 'center', padding: '10px 4px', background: p.openCatA > 0 ? '#fee2e2' : '#f8fafc', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: p.openCatA > 0 ? '#ef4444' : '#64748b' }}>{p.openCatA}</div>
-                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '1px' }}>{t('card.catA')}</div>
-                  </div>
-                  <div style={{ textAlign: 'center', padding: '10px 4px', background: p.openCatB > 0 ? '#fffbeb' : '#f8fafc', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: p.openCatB > 0 ? '#f59e0b' : '#64748b' }}>{p.openCatB}</div>
-                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '1px' }}>{t('card.catB')}</div>
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                  <StatCell value={p.totalItrs}    color="var(--text-strong)"   bg="var(--gray-50)"    label={t('card.totalItrs')} />
+                  <StatCell value={p.approvedItrs} color="var(--success-500)"   bg="var(--success-50)" label={t('card.approved')} />
+                  <StatCell value={p.openCatA}     color={p.openCatA > 0 ? 'var(--danger-500)' : 'var(--text-muted)'}  bg={p.openCatA > 0 ? 'var(--danger-50)'  : 'var(--gray-50)'} label={t('card.catA')} />
+                  <StatCell value={p.openCatB}     color={p.openCatB > 0 ? 'var(--warning-500)' : 'var(--text-muted)'} bg={p.openCatB > 0 ? 'var(--warning-50)' : 'var(--gray-50)'} label={t('card.catB')} />
                 </div>
 
                 {/* Footer */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4, borderTop: '1px solid var(--gray-100)' }}>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                     {p.totalCerts > 0
                       ? t('card.issuedOf', { issued: p.issuedCerts, total: p.totalCerts })
                       : t('card.issuedOnly', { issued: p.issuedCerts })}
                   </span>
                   <a
                     href={`/projects/${p.id}/kpis`}
-                    style={{ fontSize: '11px', color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}
+                    style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-500)', textDecoration: 'none', fontWeight: 500 }}
                   >
                     {t('card.viewDetail')}
                   </a>
                 </div>
-              </div>
+              </Card>
             )
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+function Stat({ value, color, label }: { value: number; color: string; label: string }) {
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: 28, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{label}</div>
+    </div>
+  )
+}
+
+function StatCell({ value, color, bg, label }: { value: number; color: string; bg: string; label: string }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '10px 4px', background: bg, borderRadius: 'var(--radius-md)' }}>
+      <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{label}</div>
     </div>
   )
 }

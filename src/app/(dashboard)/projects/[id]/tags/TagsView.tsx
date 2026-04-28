@@ -24,11 +24,11 @@ type Tag = {
 }
 
 const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
-  not_started: { color: '#94a3b8', bg: '#f1f5f9' },
-  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
-  complete:     { color: '#10b981', bg: '#ecfdf5' },
-  completed:    { color: '#10b981', bg: '#ecfdf5' },
-  on_hold:      { color: '#f59e0b', bg: '#fffbeb' },
+  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
+  in_progress:  { color: '#1d4ed8', bg: '#eff6ff' },
+  complete:     { color: '#047857', bg: '#ecfdf5' },
+  completed:    { color: '#047857', bg: '#ecfdf5' },
+  on_hold:      { color: '#b45309', bg: '#fffbeb' },
 }
 
 const TAG_STATUS_KEYS = ['not_started', 'in_progress', 'complete', 'on_hold'] as const
@@ -189,7 +189,8 @@ export default function TagsView({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('list.search')}
-          style={{ width: '280px', maxWidth: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          aria-label={t('list.search')}
+          style={{ width: '280px', maxWidth: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', boxSizing: 'border-box' }}
         />
       </div>
 
@@ -213,7 +214,7 @@ export default function TagsView({
             value={bulkStatus}
             onChange={e => setBulkStatus(e.target.value)}
             disabled={isPending}
-            style={{ padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'white' }}
+            style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'var(--card-bg)' }}
           >
             <option value="">{t('list.bulkChangeStatus')}</option>
             {TAG_STATUS_KEYS.map(k => (
@@ -225,8 +226,8 @@ export default function TagsView({
             disabled={!bulkStatus || isPending}
             style={{
               padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
-              background: bulkStatus && !isPending ? '#0369a1' : '#e2e8f0',
-              color: bulkStatus && !isPending ? 'white' : '#94a3b8',
+              background: bulkStatus && !isPending ? '#0369a1' : 'var(--border)',
+              color: bulkStatus && !isPending ? '#fff' : 'var(--gray-400)',
               cursor: bulkStatus && !isPending ? 'pointer' : 'default',
             }}
           >
@@ -234,7 +235,7 @@ export default function TagsView({
           </button>
           <button
             onClick={clearSelection}
-            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: '#64748b', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', background: 'var(--card-bg)', border: '1px solid var(--border)', cursor: 'pointer' }}
           >
             {t('list.bulkDeselect')}
           </button>
@@ -245,14 +246,14 @@ export default function TagsView({
       )}
 
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px', color: '#94a3b8', fontSize: '14px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div style={{ textAlign: 'center', padding: '64px', color: 'var(--gray-400)', fontSize: '14px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
           {t('list.emptyDisc')}
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'auto' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '10px 16px', width: '36px' }}>
                   <input
                     type="checkbox"
@@ -300,23 +301,23 @@ export default function TagsView({
                       />
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{i + 1}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>{i + 1}</span>
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: `${d.color}18`, color: d.color, flexShrink: 0 }}>
                           {d.code}
                         </span>
-                        <span style={{ fontWeight: 600, fontSize: '13px', color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>
+                        <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>
                           {tag.tag_number}
                         </span>
                       </div>
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ fontSize: '13px', color: '#334155' }}>{tag.description || '—'}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{tag.description || '—'}</span>
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ fontSize: '12px', color: '#64748b', fontFamily: 'ui-monospace, monospace' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>
                         {hier || '—'}
                       </span>
                     </td>
@@ -341,12 +342,12 @@ export default function TagsView({
                             </span>
                           )
                         ) : (
-                          <span style={{ color: '#e2e8f0', fontSize: '12px' }}>—</span>
+                          <span style={{ color: 'var(--border)', fontSize: '12px' }}>—</span>
                         )}
                       </td>
                     )}
                     <td style={tdStyle}>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>{maker || '—'}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{maker || '—'}</span>
                     </td>
                     <td style={tdStyle}>
                       <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 500, background: statusStyle.bg, color: statusStyle.color }}>
@@ -370,15 +371,15 @@ function FilterTab({ label, count, active, color, onClick }: {
   return (
     <button onClick={onClick} style={{
       padding: '7px 14px', borderRadius: '8px', border: '1px solid',
-      borderColor: active ? color : '#e2e8f0',
-      background: active ? `${color}15` : 'white',
-      color: active ? color : '#64748b',
+      borderColor: active ? color : 'var(--border)',
+      background: active ? `${color}15` : 'var(--card-bg)',
+      color: active ? color : 'var(--text-muted)',
       fontSize: '13px', fontWeight: active ? 600 : 400,
       cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
       transition: 'all 0.15s',
     }}>
       {label}
-      <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, background: active ? color : '#f1f5f9', color: active ? 'white' : '#64748b' }}>
+      <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, background: active ? color : 'var(--gray-100)', color: active ? '#fff' : 'var(--text-muted)' }}>
         {count}
       </span>
     </button>
@@ -387,7 +388,7 @@ function FilterTab({ label, count, active, color, onClick }: {
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
       {children}
     </th>
   )

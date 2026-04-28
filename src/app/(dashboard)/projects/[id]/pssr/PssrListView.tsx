@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { ShieldCheck, AlertTriangle } from 'lucide-react'
 import { createPssrReview } from '@/app/actions/pssr'
 
 interface System { id: string; code: string; name: string }
@@ -19,7 +20,7 @@ interface Review {
 interface Template { id: string; name: string }
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  draft:             { label: 'Borrador',          color: '#64748b', bg: '#f1f5f9' },
+  draft:             { label: 'Borrador',          color: 'var(--text-muted)', bg: 'var(--gray-100)' },
   in_progress:       { label: 'En progreso',        color: '#3b82f6', bg: '#eff6ff' },
   pending_approval:  { label: 'Pend. aprobación',   color: '#f59e0b', bg: '#fffbeb' },
   approved:          { label: 'Aprobado',            color: '#10b981', bg: '#ecfdf5' },
@@ -69,14 +70,14 @@ export default function PssrListView({
   }
 
   const cardStyle: React.CSSProperties = {
-    background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+    background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
     padding: '20px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
   }
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '9px 12px', borderRadius: '8px',
     border: '1.5px solid #d1d5db', fontSize: '14px', outline: 'none',
-    boxSizing: 'border-box', fontFamily: 'inherit', color: '#0f172a', background: 'white',
+    boxSizing: 'border-box', fontFamily: 'inherit', color: 'var(--text-strong)', background: 'var(--card-bg)',
   }
 
   return (
@@ -88,20 +89,23 @@ export default function PssrListView({
             onClick={() => setShowModal(true)}
             style={{
               padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: '#f59e0b', color: 'white', border: 'none', cursor: 'pointer',
+              background: 'var(--warning-500)', color: '#fff', border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: '6px',
             }}
           >
-            🛡️ Iniciar PSSR
+            <ShieldCheck size={14} aria-hidden="true" />
+            Iniciar PSSR
           </button>
         )}
         {canEdit && templates.length === 0 && (
           <a href="/admin/templates/pssr" style={{
             padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-            background: '#fef3c7', color: '#92400e', textDecoration: 'none',
-            border: '1px solid #fde68a',
+            background: 'var(--warning-50)', color: 'var(--warning-700)', textDecoration: 'none',
+            border: '1px solid var(--warning-500)',
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
           }}>
-            ⚠ Configura un template PSSR primero
+            <AlertTriangle size={14} aria-hidden="true" />
+            Configura un template PSSR primero
           </a>
         )}
       </div>
@@ -110,13 +114,15 @@ export default function PssrListView({
       {reviews.length === 0 && (
         <div style={{
           ...cardStyle, textAlign: 'center', padding: '56px 32px',
-          border: '1.5px dashed #cbd5e1',
+          border: '1.5px dashed var(--gray-300)',
         }}>
-          <div style={{ fontSize: '40px', marginBottom: '14px' }}>🛡️</div>
-          <p style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+            <ShieldCheck size={40} color="var(--warning-500)" aria-hidden="true" />
+          </div>
+          <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
             Sin revisiones PSSR
           </p>
-          <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
             Inicia una revisión cuando el sistema tenga el certificado RFC emitido y esté listo para arrancar.
           </p>
         </div>
@@ -131,11 +137,11 @@ export default function PssrListView({
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <span style={{
                 padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-                background: '#f1f5f9', color: '#64748b', letterSpacing: '0.05em',
+                background: 'var(--gray-100)', color: 'var(--text-muted)', letterSpacing: '0.05em',
               }}>
                 {system?.code ?? '—'}
               </span>
-              <span style={{ fontWeight: 600, fontSize: '15px', color: '#0f172a' }}>
+              <span style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-strong)' }}>
                 {system?.name ?? 'Sistema'}
               </span>
             </div>
@@ -150,14 +156,14 @@ export default function PssrListView({
                     style={{
                       display: 'flex', alignItems: 'center', gap: '12px',
                       padding: '12px 16px', borderRadius: '8px',
-                      background: '#f8fafc', border: '1px solid #f1f5f9',
+                      background: 'var(--gray-50)', border: '1px solid #f1f5f9',
                       cursor: 'pointer',
                     }}
                     onClick={() => router.push(`/projects/${projectId}/pssr/${review.id}`)}
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-strong)' }}>
                           {review.review_number}
                         </span>
                         <span style={{
@@ -205,7 +211,7 @@ export default function PssrListView({
                 }}
                 style={{
                   padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                  background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b',
+                  background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-muted)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
                 }}
               >
@@ -223,15 +229,15 @@ export default function PssrListView({
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }} onClick={() => setShowModal(false)}>
           <div style={{
-            background: 'white', borderRadius: '16px', padding: '32px',
+            background: 'var(--card-bg)', borderRadius: '16px', padding: '32px',
             width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 20px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               Iniciar PSSR
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   Sistema *
                 </label>
                 <select
@@ -247,7 +253,7 @@ export default function PssrListView({
               </div>
               {templates.length > 1 && (
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                     Template
                   </label>
                   <select
@@ -262,7 +268,7 @@ export default function PssrListView({
                 </div>
               )}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   Título (opcional)
                 </label>
                 <input
@@ -276,7 +282,7 @@ export default function PssrListView({
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
                 <button onClick={() => setShowModal(false)} style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#374151',
+                  background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
                 }}>
                   Cancelar
                 </button>

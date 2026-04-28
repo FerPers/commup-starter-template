@@ -18,14 +18,21 @@
   "Sidebar": {
     "groups": {
       "main": "Main",
+      "setup": "Setup",
       "execution": "Execution",
       "control": "Control",
-      "admin": "Administration",
+      "closure": "Closure",
+      "ops": "Operations",
+      "integrations": "Integrations",
+      "system": "System",
       "project": "Project"
     },
     "nav": {
       "dashboard": "Dashboard",
       "projects": "Projects",
+      "projectOverview": "Overview",
+      "tags": "Tags",
+      "signals": "Signals",
       "scan": "Scan QR/NFC",
       "itrs": "ITRs",
       "punchList": "Punch List",
@@ -49,12 +56,35 @@
       "pssr": "PSSR",
       "dataQuality": "Data Quality",
       "handover": "Handover",
-      "opsPunches": "Ops Punch Tracking"
+      "opsPunches": "Ops Punch Tracking",
+      "loops": "Loops",
+      "interlocks": "Interlocks",
+      "pidDocuments": "P&IDs"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
     "logout": "Sign out",
-    "platform": "CMS Platform"
+    "platform": "CMS Platform",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "switchToLight": "Switch to light mode",
+      "switchToDark": "Switch to dark mode"
+    }
+  },
+  "Topbar": {
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Architect",
+      "leader": "Leader",
+      "inspector": "Inspector",
+      "client": "Client"
+    },
+    "roleAria": "Role: {role} in {org}"
+  },
+  "Breadcrumbs": {
+    "label": "Breadcrumbs"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -111,13 +141,43 @@
       "sign": "Sign →",
       "projectsTitle": "Active projects",
       "noProjects": "No active projects.",
-      "viewItrs": "Go to <link>ITRs</link> to see the detailed status of each inspection."
+      "viewItrs": "Go to <link>ITRs</link> to see the detailed status of each inspection.",
+      "viewDetail": "View detail →"
     },
     "architect": {
       "catATitle": "Unassigned Cat A Punches",
       "catADesc": "{count, plural, one {# blocking punch with no assignee} other {# blocking punches with no assignee}}",
       "catAViewAll": "View all →",
       "catAMore": "+ {count} more"
+    },
+    "widgets": {
+      "inspectorSummary": { "title": "Daily summary", "desc": "Quick indicators for your ITRs and punches" },
+      "myItrs": { "title": "My assigned ITRs", "desc": "ITRs pending execution assigned to you" },
+      "myPunches": { "title": "My assigned punches", "desc": "Open or in-progress punches under your responsibility" },
+      "clientSummary": { "title": "Project summary", "desc": "Active projects and pending signatures" },
+      "clientSignatures": { "title": "Pending signatures", "desc": "Completed ITRs awaiting your signature as Client" },
+      "clientProjects": { "title": "Active projects", "desc": "Read-only list of the organization's active projects" },
+      "catAAlerts": { "title": "Cat A alerts", "desc": "Blocking punches with no assignee" },
+      "kpiSummary": { "title": "Main KPIs", "desc": "Phase progress, open punches and preservation" },
+      "projectsActive": { "title": "Active projects", "desc": "Active projects in the organization" },
+      "disciplines": { "title": "Disciplines", "desc": "Disciplines configured for projects" }
+    },
+    "customizer": {
+      "customize": "Customize",
+      "title": "Customize dashboard",
+      "description": "Show, hide and reorder widgets to fit your needs. Your settings are saved on your profile.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "Dashboard updated",
+      "saveError": "Could not save",
+      "reset": "Layout restored to default",
+      "resetDefaults": "Reset to defaults",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "show": "Show widget",
+      "hide": "Hide widget",
+      "empty": "No widgets available for your role.",
+      "allHidden": "All widgets are hidden. Open Customize to show at least one."
     }
   },
   "Common": {

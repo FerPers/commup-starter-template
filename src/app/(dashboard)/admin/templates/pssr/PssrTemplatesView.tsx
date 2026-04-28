@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { ShieldCheck } from 'lucide-react'
 import { createPssrTemplate, seedDefaultPssrTemplate, deletePssrTemplate } from '@/app/actions/pssr'
 
 interface Template {
@@ -56,7 +57,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
   }
 
   const card: React.CSSProperties = {
-    background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+    background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
     padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '16px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
   }
@@ -66,14 +67,16 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
       {/* Empty state with seed button */}
       {templates.length === 0 && (
         <div style={{
-          background: 'white', borderRadius: '16px', border: '1.5px dashed #cbd5e1',
+          background: 'var(--card-bg)', borderRadius: '16px', border: '1.5px dashed var(--border)',
           padding: '48px', textAlign: 'center',
         }}>
-          <div style={{ fontSize: '32px', marginBottom: '12px' }}>🛡️</div>
-          <p style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <ShieldCheck size={32} color="var(--warning-500)" aria-hidden="true" />
+          </div>
+          <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
             No hay templates PSSR
           </p>
-          <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
             Crea uno desde cero o carga el checklist estándar de 22 ítems
           </p>
           {canEdit && (
@@ -82,7 +85,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 onClick={() => setShowModal(true)}
                 style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: '#0f172a', color: 'white', border: 'none', cursor: 'pointer',
+                  background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
                 }}
               >
                 + Nuevo template
@@ -101,7 +104,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 onClick={() => setShowModal(true)}
                 style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: '#0f172a', color: 'white', border: 'none', cursor: 'pointer',
+                  background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
                 }}
               >
                 + Nuevo template
@@ -113,18 +116,19 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
               {/* Icon */}
               <div style={{
                 width: '42px', height: '42px', borderRadius: '10px', flexShrink: 0,
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                background: 'var(--warning-50)', border: '1px solid var(--warning-500)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '18px',
-              }}>🛡️</div>
+              }}>
+                <ShieldCheck size={20} color="var(--warning-700)" aria-hidden="true" />
+              </div>
 
               {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: '15px', color: '#0f172a' }}>{t.name}</div>
+                <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-strong)' }}>{t.name}</div>
                 {t.description && (
-                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{t.description}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{t.description}</div>
                 )}
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   {t.pssr_template_items.length} ítems
                 </div>
               </div>
@@ -132,8 +136,8 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
               {/* Status chip */}
               <span style={{
                 padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
-                background: t.is_active ? '#ecfdf5' : '#f1f5f9',
-                color: t.is_active ? '#10b981' : '#64748b',
+                background: t.is_active ? 'rgba(16,185,129,0.12)' : 'var(--gray-100)',
+                color: t.is_active ? 'var(--success-700)' : 'var(--text-muted)',
               }}>
                 {t.is_active ? 'Activo' : 'Inactivo'}
               </span>
@@ -158,7 +162,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                     onClick={() => router.push(`/admin/templates/pssr/${t.id}`)}
                     style={{
                       padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                      background: '#f8fafc', border: '1px solid #e2e8f0', color: '#374151',
+                      background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-strong)',
                       cursor: 'pointer',
                     }}
                   >
@@ -189,15 +193,15 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }} onClick={() => setShowModal(false)}>
           <div style={{
-            background: 'white', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '440px',
+            background: 'var(--card-bg)', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '440px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 20px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               Nuevo template PSSR
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', display: 'block', marginBottom: '6px' }}>
                   Nombre *
                 </label>
                 <input
@@ -206,13 +210,13 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   placeholder="PSSR Estándar"
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: '8px',
-                    border: '1.5px solid #d1d5db', fontSize: '14px', outline: 'none',
+                    border: '1.5px solid var(--border)', fontSize: '14px', outline: 'none',
                     boxSizing: 'border-box', fontFamily: 'inherit',
                   }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', display: 'block', marginBottom: '6px' }}>
                   Descripción
                 </label>
                 <textarea
@@ -222,7 +226,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   placeholder="Checklist completo de 22 ítems..."
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: '8px',
-                    border: '1.5px solid #d1d5db', fontSize: '14px', outline: 'none',
+                    border: '1.5px solid var(--border)', fontSize: '14px', outline: 'none',
                     resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit',
                   }}
                 />
@@ -235,7 +239,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   onClick={() => setShowModal(false)}
                   style={{
                     padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                    background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#374151',
+                    background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--text-strong)',
                   }}
                 >
                   Cancelar
@@ -245,7 +249,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   disabled={isPending}
                   style={{
                     padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                    background: '#0f172a', color: 'white', border: 'none',
+                    background: 'var(--gray-900)', color: '#fff', border: 'none',
                     cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                   }}
                 >

@@ -215,21 +215,21 @@ export default function ImportSignalsWizard({
 
       {/* Header */}
       <div style={{ marginBottom: '28px' }}>
-        <a href={`/projects/${projectId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '16px' }}>
+        <a href={`/projects/${projectId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '16px' }}>
           ← {projectName}
         </a>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
               Importar Lista de Señales
             </h1>
-            <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
               Carga tu Signal List (I&C) desde Excel. Incluye rango, alarmas, P&IDs y diagramas.
             </p>
           </div>
           <button onClick={downloadTemplate} style={{
-            padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0',
-            borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer',
+            padding: '8px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
           }}>
             ↓ Descargar plantilla
           </button>
@@ -257,15 +257,15 @@ export default function ImportSignalsWizard({
           const active = step === s
           return (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {i > 0 && <div style={{ width: '32px', height: '1px', background: done ? '#3b82f6' : '#e2e8f0' }} />}
+              {i > 0 && <div style={{ width: '32px', height: '1px', background: done ? '#3b82f6' : 'var(--border)' }} />}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
                   width: '24px', height: '24px', borderRadius: '50%', fontSize: '11px', fontWeight: 700,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: done || active ? '#3b82f6' : '#f1f5f9',
-                  color: done || active ? 'white' : '#94a3b8',
+                  background: done || active ? '#3b82f6' : 'var(--gray-100)',
+                  color: done || active ? '#fff' : 'var(--gray-400)',
                 }}>{done ? '✓' : i + 1}</div>
-                <span style={{ fontSize: '13px', color: active ? '#0f172a' : '#94a3b8', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
+                <span style={{ fontSize: '13px', color: active ? 'var(--text-strong)' : 'var(--gray-400)', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
               </div>
             </div>
           )
@@ -281,23 +281,23 @@ export default function ImportSignalsWizard({
             onDrop={handleDrop}
             onClick={() => document.getElementById('sig-file-input')?.click()}
             style={{
-              border: `2px dashed ${dragging ? '#3b82f6' : '#cbd5e1'}`,
+              border: `2px dashed ${dragging ? '#3b82f6' : 'var(--gray-300)'}`,
               borderRadius: '16px', padding: '64px 32px', textAlign: 'center',
-              background: dragging ? '#eff6ff' : 'white', transition: 'all 0.15s', cursor: 'pointer',
+              background: dragging ? '#eff6ff' : 'var(--card-bg)', transition: 'all 0.15s', cursor: 'pointer',
             }}
           >
             <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
-            <p style={{ fontWeight: 600, color: '#0f172a', fontSize: '16px', marginBottom: '6px' }}>
+            <p style={{ fontWeight: 600, color: 'var(--text-strong)', fontSize: '16px', marginBottom: '6px' }}>
               Arrastra tu Signal List aquí
             </p>
-            <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '8px' }}>o haz click para seleccionar</p>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>.xlsx · .xls</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '8px' }}>o haz click para seleccionar</p>
+            <p style={{ color: 'var(--gray-400)', fontSize: '12px' }}>.xlsx · .xls</p>
             <input id="sig-file-input" type="file" accept=".xlsx,.xls" onChange={handleFileInput} style={{ display: 'none' }} />
           </div>
 
           {/* Column reference */}
-          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '20px' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: '0 0 12px' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', padding: '20px' }}>
+            <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 12px' }}>
               Columnas soportadas
             </h3>
             {[
@@ -316,14 +316,14 @@ export default function ImportSignalsWizard({
               <div key={item.col} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-start' }}>
                 <span style={{
                   padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700,
-                  background: item.req ? '#3b82f615' : '#f8fafc',
-                  color: item.req ? '#3b82f6' : '#94a3b8',
-                  border: `1px solid ${item.req ? '#3b82f630' : '#e2e8f0'}`,
+                  background: item.req ? '#3b82f615' : 'var(--gray-50)',
+                  color: item.req ? '#3b82f6' : 'var(--gray-400)',
+                  border: `1px solid ${item.req ? '#3b82f630' : 'var(--border)'}`,
                   flexShrink: 0, marginTop: '2px', whiteSpace: 'nowrap',
                 }}>{item.req ? 'REQ' : 'OPC'}</span>
                 <div>
-                  <div style={{ fontSize: '11px', color: '#0f172a', fontWeight: 500, fontFamily: 'monospace' }}>{item.col}</div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>{item.desc}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-strong)', fontWeight: 500, fontFamily: 'monospace' }}>{item.col}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--gray-400)' }}>{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -341,11 +341,11 @@ export default function ImportSignalsWizard({
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
-              <span style={{ fontWeight: 600, color: '#0f172a' }}>{fileName}</span>
-              <span style={{ color: '#64748b', fontSize: '14px', marginLeft: '12px' }}>{rows.length} señales detectadas</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{fileName}</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '14px', marginLeft: '12px' }}>{rows.length} señales detectadas</span>
             </div>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]) }}
-              style={{ fontSize: '13px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+              style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               ← Cambiar archivo
             </button>
           </div>
@@ -362,13 +362,13 @@ export default function ImportSignalsWizard({
             </div>
           )}
 
-          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '20px' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', marginBottom: '20px' }}>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
                     {['#', 'Tag Señal', 'Tag Instr.', 'Tipo', 'Descripción', 'Servicio', 'Rango', 'Unidad', 'Alarmas', 'Origen → Destino', 'P&ID'].map(h => (
-                      <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '10px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -378,28 +378,28 @@ export default function ImportSignalsWizard({
                     const badDisc = !disciplineCodes.has(row.discipline_code.toUpperCase())
                     const hasErr  = badType || badDisc
                     return (
-                      <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: hasErr ? '#fef2f2' : 'white' }}>
-                        <td style={{ padding: '8px 10px', color: '#94a3b8' }}>{i + 2}</td>
-                        <td style={{ padding: '8px 10px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{row.signal_tag}</td>
-                        <td style={{ padding: '8px 10px', color: '#64748b', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{row.instrument_tag !== row.signal_tag ? row.instrument_tag : '='}</td>
+                      <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: hasErr ? '#fef2f2' : 'var(--card-bg)' }}>
+                        <td style={{ padding: '8px 10px', color: 'var(--gray-400)' }}>{i + 2}</td>
+                        <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{row.signal_tag}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{row.instrument_tag !== row.signal_tag ? row.instrument_tag : '='}</td>
                         <td style={{ padding: '8px 10px' }}>
                           <span style={{
                             padding: '2px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700,
-                            background: badType ? '#fee2e2' : `${signalTypeColors[row.signal_type] ?? '#94a3b8'}18`,
-                            color: badType ? '#dc2626' : signalTypeColors[row.signal_type] ?? '#94a3b8',
+                            background: badType ? '#fee2e2' : `${signalTypeColors[row.signal_type] ?? 'var(--gray-400)'}18`,
+                            color: badType ? '#dc2626' : signalTypeColors[row.signal_type] ?? 'var(--gray-400)',
                           }}>{row.signal_type}</span>
                         </td>
-                        <td style={{ padding: '8px 10px', color: '#475569', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</td>
-                        <td style={{ padding: '8px 10px', color: '#64748b', whiteSpace: 'nowrap' }}>{row.service || '—'}</td>
-                        <td style={{ padding: '8px 10px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{row.service || '—'}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                           {row.range_min !== null && row.range_max !== null ? `${row.range_min} – ${row.range_max}` : '—'}
                         </td>
-                        <td style={{ padding: '8px 10px', color: '#64748b' }}>{row.eng_unit || '—'}</td>
-                        <td style={{ padding: '8px 10px', color: '#64748b', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.alarm_setpoints || '—'}</td>
-                        <td style={{ padding: '8px 10px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)' }}>{row.eng_unit || '—'}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.alarm_setpoints || '—'}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                           {row.origin && row.destination ? `${row.origin} → ${row.destination}` : row.origin || row.destination || '—'}
                         </td>
-                        <td style={{ padding: '8px 10px', color: '#64748b', whiteSpace: 'nowrap' }}>{row.pid_drawing || '—'}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{row.pid_drawing || '—'}</td>
                       </tr>
                     )
                   })}
@@ -407,7 +407,7 @@ export default function ImportSignalsWizard({
               </table>
             </div>
             {rows.length > 25 && (
-              <div style={{ padding: '10px 16px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+              <div style={{ padding: '10px 16px', background: 'var(--gray-50)', borderTop: '1px solid #f1f5f9', fontSize: '12px', color: 'var(--gray-400)', textAlign: 'center' }}>
                 Mostrando 25 de {rows.length} señales
               </div>
             )}
@@ -419,15 +419,15 @@ export default function ImportSignalsWizard({
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]) }}
-              style={{ padding: '10px 20px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', color: '#475569', cursor: 'pointer' }}>
+              style={{ padding: '10px 20px', background: 'var(--gray-100)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-muted)', cursor: 'pointer' }}>
               Cancelar
             </button>
             <button onClick={handleImport} disabled={loading || rows.length === 0}
               style={{
                 padding: '10px 24px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: 'none',
                 cursor: loading || rows.length === 0 ? 'not-allowed' : 'pointer',
-                background: loading || rows.length === 0 ? '#e2e8f0' : '#10b981',
-                color: loading || rows.length === 0 ? '#94a3b8' : 'white',
+                background: loading || rows.length === 0 ? 'var(--border)' : '#10b981',
+                color: loading || rows.length === 0 ? 'var(--gray-400)' : 'var(--card-bg)',
               }}>
               {loading ? 'Importando...' : `✓ Importar ${rows.length} señal${rows.length !== 1 ? 'es' : ''}`}
             </button>
@@ -439,7 +439,7 @@ export default function ImportSignalsWizard({
       {step === 'result' && result && (
         <div style={{ maxWidth: '560px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '56px', marginBottom: '16px' }}>{result.errors.length === 0 ? '✅' : '⚠️'}</div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', marginBottom: '6px' }}>
             {result.errors.length === 0 ? 'Importación completada' : 'Importación con advertencias'}
           </h2>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '24px 0' }}>
@@ -464,11 +464,11 @@ export default function ImportSignalsWizard({
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-            <a href={`/projects/${projectId}`} style={{ padding: '10px 24px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>
+            <a href={`/projects/${projectId}`} style={{ padding: '10px 24px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>
               Ver proyecto
             </a>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]); setResult(null) }}
-              style={{ padding: '10px 20px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', color: '#475569', cursor: 'pointer' }}>
+              style={{ padding: '10px 20px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-muted)', cursor: 'pointer' }}>
               Importar más
             </button>
           </div>

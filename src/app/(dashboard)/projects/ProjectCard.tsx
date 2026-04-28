@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations, useLocale } from 'next-intl'
+import { Card, Badge } from '@/components/ui'
 
 export interface ProjectCardData {
   id: string; name: string; code: string
@@ -29,58 +30,37 @@ export default function ProjectCard({ project, phases, inactive = false }: {
 
   return (
     <a href={`/projects/${project.id}`} style={{ textDecoration: 'none' }}>
-      <div
-        style={{
-          background: 'white', borderRadius: '14px', padding: '20px 22px',
-          border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-          opacity: inactive ? 0.65 : 1,
-          transition: 'box-shadow 0.15s, transform 0.15s',
-          cursor: 'pointer',
-        }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'
-          ;(e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'
-          ;(e.currentTarget as HTMLElement).style.transform = 'translateY(0)'
-        }}
-      >
+      <Card padding="md" hoverable elevation="sm" style={{ opacity: inactive ? 0.65 : 1 }}>
         {/* Card header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
             <div style={{
-              width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0,
-              background: '#3b82f615', border: '1px solid #3b82f625',
+              width: 44, height: 44, borderRadius: 'var(--radius-md)', flexShrink: 0,
+              background: 'var(--primary-50)', border: '1px solid var(--primary-200)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '11px', fontWeight: 700, color: '#3b82f6', letterSpacing: '0.02em',
+              fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary-500)', letterSpacing: '0.02em',
             }}>
               {project.code.slice(0, 6)}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontWeight: 600, color: 'var(--text-strong)', fontSize: 'var(--text-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {project.name}
               </div>
-              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>
                 {meta || t('card.noMeta')}
               </div>
             </div>
           </div>
-          <span style={{
-            padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600, flexShrink: 0,
-            background: inactive ? '#f1f5f9' : '#10b98118',
-            color: inactive ? '#94a3b8' : '#10b981',
-            border: `1px solid ${inactive ? '#e2e8f0' : '#10b98130'}`,
-          }}>
+          <Badge variant={inactive ? 'neutral' : 'success'} size="sm">
             {inactive ? t('card.inactive') : t('card.active')}
-          </span>
+          </Badge>
         </div>
 
         {/* Phases */}
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
           {phases.map(phase => (
             <div key={phase.id} title={phase.name} style={{
-              padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+              padding: '3px 10px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600,
               background: `${phase.color}15`, color: phase.color,
               border: `1px solid ${phase.color}30`,
             }}>
@@ -91,22 +71,22 @@ export default function ProjectCard({ project, phases, inactive = false }: {
 
         {/* Dates */}
         {(project.start_date || project.end_date) && (
-          <div style={{ display: 'flex', gap: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', gap: 16, paddingTop: 12, borderTop: '1px solid var(--gray-100)' }}>
             {project.start_date && (
               <div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.start')}</div>
-                <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>{formatDate(project.start_date)}</div>
+                <div style={{ fontSize: 10, color: 'var(--gray-400)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.start')}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-600)', marginTop: 2 }}>{formatDate(project.start_date)}</div>
               </div>
             )}
             {project.end_date && (
               <div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.target')}</div>
-                <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>{formatDate(project.end_date)}</div>
+                <div style={{ fontSize: 10, color: 'var(--gray-400)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.target')}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-600)', marginTop: 2 }}>{formatDate(project.end_date)}</div>
               </div>
             )}
           </div>
         )}
-      </div>
+      </Card>
     </a>
   )
 }

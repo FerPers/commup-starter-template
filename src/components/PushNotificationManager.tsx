@@ -13,6 +13,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { Bell, BellOff } from 'lucide-react';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 export type NotificationTopic =
@@ -98,7 +99,14 @@ export function usePushNotifications(userId: string) {
       // 2. Registrar / obtener SW
       const reg = await navigator.serviceWorker.ready;
 
-      // 3. Crear subscription con VAPID
+      // 3. Limpiar subscription stale (VAPID key cambiada o restos del browser)
+      //    Sin esto, pushManager.subscribe() puede fallar con "push service error".
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        try { await existing.unsubscribe(); } catch { }
+      }
+
+      // 4. Crear subscription con VAPID
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
@@ -283,33 +291,40 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
 
   if (!isSupported) {
     return (
-      <div className="p-4 bg-slate-800 rounded-xl text-slate-400 text-sm">
-        <span className="mr-2">🔔</span>
+      <div style={{ padding: 16, background: 'var(--gray-800)', borderRadius: 'var(--radius-lg)', color: 'var(--gray-400)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Bell size={16} aria-hidden="true" />
         Notificaciones push no disponibles en este dispositivo/navegador
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Status Card */}
-      <div className={`p-4 rounded-2xl border ${
-        isSubscribed
-          ? 'bg-sky-900/30 border-sky-700'
-          : 'bg-slate-800 border-slate-700'
-      }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
-              isSubscribed ? 'bg-sky-800' : 'bg-slate-700'
-            }`}>
-              {isSubscribed ? '🔔' : '🔕'}
+      <div style={{
+        padding: 16,
+        borderRadius: 16,
+        border: `1px solid ${isSubscribed ? 'var(--primary-700)' : 'var(--gray-700)'}`,
+        background: isSubscribed ? 'rgba(30, 58, 138, 0.3)' : 'var(--gray-800)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 40, height: 40,
+              borderRadius: 'var(--radius-lg)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: isSubscribed ? 'var(--primary-800)' : 'var(--gray-700)',
+              color: isSubscribed ? 'var(--primary-200)' : 'var(--gray-400)',
+            }}>
+              {isSubscribed
+                ? <Bell size={20} aria-hidden="true" />
+                : <BellOff size={20} aria-hidden="true" />}
             </div>
             <div>
-              <div className="font-semibold text-white">
+              <div style={{ fontWeight: 600, color: '#fff' }}>
                 {isSubscribed ? 'Notificaciones Activas' : 'Notificaciones Inactivas'}
               </div>
-              <div className="text-sm text-slate-200">
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-200)' }}>
                 {isSubscribed
                   ? `${topics.length} categorías activas`
                   : 'Active para recibir alertas de campo'}
@@ -317,7 +332,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
             </div>
           </div>
 
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
             <input
               type="checkbox"
               className="sr-only peer"
@@ -325,18 +340,18 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
               disabled={isLoading}
               onChange={() => isSubscribed ? unsubscribe() : subscribe()}
             />
-            <div className="w-12 h-6 bg-slate-700 rounded-full peer peer-checked:bg-sky-600 peer-disabled:opacity-50 transition-colors
+            <div className="w-12 h-6 bg-[var(--gray-700)] rounded-full peer peer-checked:bg-[var(--primary-600)] peer-disabled:opacity-50 transition-colors
               after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
               peer-checked:after:translate-x-6" />
           </label>
         </div>
 
         {error && (
-          <div className="mt-3 text-red-400 text-sm">⚠️ {error}</div>
+          <div style={{ marginTop: 12, color: 'var(--danger-500)', fontSize: 'var(--text-sm)' }}>⚠️ {error}</div>
         )}
 
         {permission === 'denied' && (
-          <div className="mt-3 p-3 bg-red-900/30 rounded-xl text-sm text-red-300">
+          <div style={{ marginTop: 12, padding: 12, background: 'rgba(127, 29, 29, 0.3)', borderRadius: 'var(--radius-lg)', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }}>
             🚫 Notificaciones bloqueadas en el navegador.
             Ve a Configuración del sitio y habilítalas.
           </div>
@@ -345,20 +360,29 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
 
       {/* Topic Selector */}
       {isSubscribed && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-200">Alertas configuradas</span>
-            <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--gray-200)' }}>Alertas configuradas</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {testStatus.kind === 'ok' && (
-                <span className="text-xs text-emerald-400">✓ {testStatus.msg}</span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success-500)' }}>✓ {testStatus.msg}</span>
               )}
               {testStatus.kind === 'error' && (
-                <span className="text-xs text-red-400">✗ {testStatus.msg}</span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--danger-500)' }}>✗ {testStatus.msg}</span>
               )}
               <button
                 onClick={sendTestNotification}
                 disabled={testStatus.kind === 'loading'}
-                className="text-xs text-sky-400 hover:text-sky-300 disabled:opacity-50 transition"
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--primary-400)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: testStatus.kind === 'loading' ? 'not-allowed' : 'pointer',
+                  opacity: testStatus.kind === 'loading' ? 0.5 : 1,
+                  fontFamily: 'inherit',
+                  transition: 'color 0.15s',
+                }}
               >
                 {testStatus.kind === 'loading' ? 'Enviando…' : 'Enviar prueba →'}
               </button>
@@ -369,19 +393,19 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
             ([topic, config]) => (
               <div
                 key={topic}
-                className="flex items-start gap-3 p-3 bg-slate-800 rounded-xl"
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 12, background: 'var(--gray-800)', borderRadius: 'var(--radius-lg)' }}
               >
-                <span className="text-xl mt-0.5">{config.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm text-white">{config.label}</span>
+                <span style={{ fontSize: 'var(--text-lg)', marginTop: 2 }}>{config.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontWeight: 500, fontSize: 'var(--text-sm)', color: '#fff' }}>{config.label}</span>
                     {config.priority === 'high' && (
-                      <span className="text-xs bg-red-900/50 text-red-400 px-1.5 py-0.5 rounded">ALTA</span>
+                      <span style={{ fontSize: 'var(--text-xs)', background: 'rgba(127, 29, 29, 0.5)', color: 'var(--danger-500)', padding: '2px 6px', borderRadius: 'var(--radius-sm)' }}>ALTA</span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-200 mt-1">{config.description}</p>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-200)', marginTop: 4, margin: 0 }}>{config.description}</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer mt-0.5">
+                <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer', marginTop: 2 }}>
                   <input
                     type="checkbox"
                     className="sr-only peer"
@@ -393,7 +417,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
                       updateTopics(next);
                     }}
                   />
-                  <div className="w-9 h-5 bg-slate-700 rounded-full peer peer-checked:bg-sky-600 transition-colors
+                  <div className="w-9 h-5 bg-[var(--gray-700)] rounded-full peer peer-checked:bg-[var(--primary-600)] transition-colors
                     after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all
                     peer-checked:after:translate-x-4" />
                 </label>

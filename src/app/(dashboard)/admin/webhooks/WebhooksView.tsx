@@ -37,11 +37,11 @@ type Delivery = {
 }
 
 const btnPrimary: React.CSSProperties = {
-  padding: '8px 14px', background: '#3b82f6', color: 'white',
+  padding: '8px 14px', background: '#3b82f6', color: '#fff',
   border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnOutline: React.CSSProperties = {
-  padding: '6px 12px', background: 'white', color: '#475569',
+  padding: '6px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
   border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const btnDanger: React.CSSProperties = {
@@ -50,10 +50,10 @@ const btnDanger: React.CSSProperties = {
 }
 const input: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13,
-  fontFamily: 'inherit', width: '100%', background: 'white',
+  fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: '#475569',
+  fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
@@ -123,10 +123,10 @@ export default function WebhooksView({
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
             Webhooks
           </h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
             Endpoints HTTPS que reciben eventos de dominio en tiempo real. Firmados con HMAC-SHA256 en{' '}
             <code>X-CommUp-Signature</code>. Reintentos automáticos con backoff exponencial.
           </p>
@@ -141,7 +141,7 @@ export default function WebhooksView({
       )}
 
       {subs.length === 0 && (
-        <div style={{ padding: 40, background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
           No hay subscriptions. Crea la primera para empezar a recibir eventos.
         </div>
       )}
@@ -150,7 +150,7 @@ export default function WebhooksView({
         const isExpanded = expandedSubId === s.id
         const subDeliveries = deliveriesBySub[s.id] ?? []
         return (
-          <div key={s.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: 12, overflow: 'hidden' }}>
+          <div key={s.id} style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, marginBottom: 12, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
               <button
                 onClick={() => handleToggle(s)}
@@ -163,19 +163,19 @@ export default function WebhooksView({
               >
                 <div style={{
                   position: 'absolute', top: 2, left: s.enabled ? 16 : 2,
-                  width: 14, height: 14, borderRadius: '50%', background: 'white',
+                  width: 14, height: 14, borderRadius: '50%', background: 'var(--card-bg)',
                   transition: 'left 0.15s',
                 }} />
               </button>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 10 }}>
                   {s.name}
                   {s.project_id
                     ? <span style={{ fontSize: 10, fontWeight: 600, background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: 4 }}>
                         proyecto: {projectsById[s.project_id] ?? s.project_id.slice(0, 8)}
                       </span>
-                    : <span style={{ fontSize: 10, fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: 4 }}>
+                    : <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 4 }}>
                         todos los proyectos
                       </span>
                   }
@@ -185,13 +185,13 @@ export default function WebhooksView({
                     </span>
                   )}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {s.endpoint_url}
                 </div>
                 <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <span>eventos: <strong style={{ color: '#475569' }}>{s.event_types.join(', ')}</strong></span>
-                  <span>último OK: <strong style={{ color: '#475569' }}>{fmtDate(s.last_success_at)}</strong></span>
-                  <span>último error: <strong style={{ color: s.last_error_at ? '#b91c1c' : '#475569' }}>{fmtDate(s.last_error_at)}</strong></span>
+                  <span>eventos: <strong style={{ color: 'var(--text-muted)' }}>{s.event_types.join(', ')}</strong></span>
+                  <span>último OK: <strong style={{ color: 'var(--text-muted)' }}>{fmtDate(s.last_success_at)}</strong></span>
+                  <span>último error: <strong style={{ color: s.last_error_at ? '#b91c1c' : 'var(--text-muted)' }}>{fmtDate(s.last_error_at)}</strong></span>
                 </div>
               </div>
 
@@ -247,7 +247,7 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
   return (
     <div style={{ borderTop: '1px solid #f1f5f9', maxHeight: 340, overflow: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-        <thead style={{ position: 'sticky', top: 0, background: '#f8fafc' }}>
+        <thead style={{ position: 'sticky', top: 0, background: 'var(--gray-50)' }}>
           <tr>
             <th style={th}>Estado</th>
             <th style={th}>Creada</th>
@@ -286,7 +286,7 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
                     </code>
                   ) : '—'}
                 </td>
-                <td style={{ ...td, fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#64748b' }}>
+                <td style={{ ...td, fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--text-muted)' }}>
                   {d.domain_event_id.slice(0, 8)}…
                 </td>
               </tr>
@@ -301,7 +301,7 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
 // ──────────────────────────────────────────────────────────────
 const th: React.CSSProperties = {
   padding: '8px 12px', textAlign: 'left', fontSize: 10,
-  fontWeight: 700, color: '#475569',
+  fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 const td: React.CSSProperties = {
@@ -415,8 +415,8 @@ function CreateSubscriptionModal({
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '6px 10px', borderRadius: 6, cursor: 'pointer',
-                    background: checked ? '#eff6ff' : '#f8fafc',
-                    border: checked ? '1px solid #93c5fd' : '1px solid #e2e8f0',
+                    background: checked ? '#eff6ff' : 'var(--gray-50)',
+                    border: checked ? '1px solid #93c5fd' : '1px solid var(--border)',
                     fontSize: 12, fontFamily: 'ui-monospace, monospace',
                   }}
                 >
@@ -471,10 +471,10 @@ function SecretRevealModal({
   return (
     <div style={modalBackdrop}>
       <div style={{ ...modalBox, maxWidth: 640 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: '#0f172a' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-strong)' }}>
           🔐 Secret del webhook
         </h2>
-        <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px' }}>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 16px' }}>
           Subscription: <strong>{name}</strong>
         </p>
 
@@ -491,7 +491,7 @@ function SecretRevealModal({
           <input
             readOnly
             value={secret}
-            style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12, background: '#f8fafc' }}
+            style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12, background: 'var(--gray-50)' }}
             onFocus={e => e.currentTarget.select()}
           />
           <button
@@ -502,10 +502,10 @@ function SecretRevealModal({
           </button>
         </div>
 
-        <div style={{ fontSize: 12, color: '#475569', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>Verificación de firma (Node.js):</div>
           <pre style={{
-            background: '#0f172a', color: '#e2e8f0', padding: 12, borderRadius: 6,
+            background: 'var(--gray-900)', color: 'var(--gray-200)', padding: 12, borderRadius: 6,
             fontSize: 11, overflow: 'auto', margin: 0,
           }}>
 {`import crypto from 'crypto'
@@ -520,7 +520,7 @@ if (sig !== expected) return res.status(401).end()`}
           </pre>
         </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#475569', marginBottom: 16 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
           <input
             type="checkbox"
             checked={confirmed}
@@ -550,14 +550,14 @@ const modalBackdrop: React.CSSProperties = {
   padding: 40, zIndex: 100, overflow: 'auto',
 }
 const modalBox: React.CSSProperties = {
-  background: 'white', borderRadius: 10, width: '100%', padding: 24,
+  background: 'var(--card-bg)', borderRadius: 10, width: '100%', padding: 24,
 }
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#0f172a' }}>{title}</h2>
-      <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b' }}>×</button>
+      <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>{title}</h2>
+      <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
     </div>
   )
 }

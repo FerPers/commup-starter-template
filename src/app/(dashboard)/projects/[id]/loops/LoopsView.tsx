@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 
 const STATUS_COLORS: Record<string, string> = {
-  not_started: '#94a3b8',
+  not_started: 'var(--gray-400)',
   in_progress:  '#3b82f6',
   completed:    '#10b981',
   approved:     '#7c3aed',
@@ -67,14 +67,14 @@ export default function LoopsView({
       <div style={{ marginBottom: '24px' }}>
         <a href={`/projects/${projectId}`} style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '14px',
+          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '14px',
         }}>
           ← {projectName}
         </a>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: '0 0 4px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: '0 0 4px' }}>
           {t('loops.title')}
         </h1>
-        <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
           {t('loops.subtitle', { count: loops.length })}
         </p>
       </div>
@@ -84,17 +84,18 @@ export default function LoopsView({
         <input
           type="text"
           placeholder={t('loops.searchPlaceholder')}
+          aria-label={t('loops.searchPlaceholder')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
             flex: '1', minWidth: '200px', padding: '8px 12px',
-            border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', outline: 'none', color: '#0f172a',
+            border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', outline: 'none', color: 'var(--text-strong)',
           }}
         />
         <select
           value={statusFilter}
           onChange={e => setStatus(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#475569', background: 'white', cursor: 'pointer' }}
+          style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', background: 'var(--card-bg)', cursor: 'pointer' }}
         >
           <option value="all">{t('allStatuses')}</option>
           {statuses.map(s => (
@@ -105,23 +106,23 @@ export default function LoopsView({
 
       {loops.length === 0 ? (
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           padding: '64px 32px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>⟳</div>
-          <p style={{ fontSize: '15px', fontWeight: 500, color: '#0f172a', margin: '0 0 6px' }}>{t('loops.emptyTitle')}</p>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{t('loops.emptyDesc')}</p>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>{t('loops.emptyTitle')}</p>
+          <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>{t('loops.emptyDesc')}</p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                <tr style={{ background: 'var(--gray-50)', borderBottom: '2px solid var(--border)' }}>
                   {[t('loops.col.loopNumber'), t('loops.col.description'), t('loops.col.subsystem'), t('loops.col.discipline'), t('loops.col.tags'), t('col.status'), ''].map(h => (
                     <th key={h} style={{
                       padding: '10px 12px', textAlign: 'left',
-                      fontWeight: 600, color: '#64748b', fontSize: '11px',
+                      fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px',
                       textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap',
                     }}>{h}</th>
                   ))}
@@ -130,12 +131,12 @@ export default function LoopsView({
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                    <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '13px' }}>
                       {t('noResults')}
                     </td>
                   </tr>
                 ) : filtered.map((loop, i) => {
-                  const statusColor = STATUS_COLORS[loop.status] ?? '#94a3b8'
+                  const statusColor = STATUS_COLORS[loop.status] ?? 'var(--gray-400)'
                   const disc = loop.disciplines
                   const sub = loop.subsystems
                   return (
@@ -143,22 +144,22 @@ export default function LoopsView({
                       key={loop.id}
                       style={{
                         borderBottom: '1px solid #f1f5f9',
-                        background: i % 2 === 0 ? 'white' : '#fafafa',
+                        background: i % 2 === 0 ? 'var(--card-bg)' : 'var(--gray-50)',
                         cursor: 'pointer',
                       }}
                       onClick={() => setSelected(selected?.id === loop.id ? null : loop)}
                     >
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                         {loop.loop_number}
                       </td>
-                      <td style={{ padding: '10px 12px', color: '#475569', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {loop.description || '—'}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         {sub ? (
                           <div>
-                            <div style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a' }}>{sub.code}</div>
-                            <div style={{ fontSize: '11px', color: '#94a3b8' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
+                            <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-strong)' }}>{sub.code}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
                           </div>
                         ) : '—'}
                       </td>
@@ -172,7 +173,7 @@ export default function LoopsView({
                           </span>
                         ) : '—'}
                       </td>
-                      <td style={{ padding: '10px 12px', color: '#64748b' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
                         {loop.loop_tags.length}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
@@ -183,7 +184,7 @@ export default function LoopsView({
                           {t(`status.${loop.status}` as Parameters<typeof t>[0])}
                         </span>
                       </td>
-                      <td style={{ padding: '10px 12px', color: '#94a3b8', fontSize: '12px', textAlign: 'right' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--gray-400)', fontSize: '12px', textAlign: 'right' }}>
                         {selected?.id === loop.id ? '▲' : '▼'}
                       </td>
                     </tr>
@@ -195,28 +196,28 @@ export default function LoopsView({
 
           {/* Tags detail panel */}
           {selected && selected.loop_tags.length > 0 && (
-            <div style={{ borderTop: '2px solid #e2e8f0', padding: '16px 24px', background: '#f8fafc' }}>
+            <div style={{ borderTop: '2px solid var(--border)', padding: '16px 24px', background: 'var(--gray-50)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
                   {selected.loop_number} — {t('loops.tagsInLoop')}
                 </span>
-                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '16px' }}>✕</button>
+                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '16px' }}>✕</button>
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {selected.loop_tags.map(lt => lt.tags && (
                   <span key={lt.id} style={{
-                    padding: '4px 10px', background: 'white', border: '1px solid #e2e8f0',
-                    borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace', color: '#0f172a',
+                    padding: '4px 10px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                    borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-strong)',
                   }}>
                     {lt.tags.tag_number}
-                    {lt.role_in_loop && <span style={{ color: '#94a3b8', marginLeft: '4px' }}>({lt.role_in_loop})</span>}
+                    {lt.role_in_loop && <span style={{ color: 'var(--gray-400)', marginLeft: '4px' }}>({lt.role_in_loop})</span>}
                   </span>
                 ))}
               </div>
             </div>
           )}
 
-          <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', fontSize: '12px', color: '#94a3b8' }}>
+          <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', background: 'var(--gray-50)', fontSize: '12px', color: 'var(--gray-400)' }}>
             {t('showing', { filtered: filtered.length, total: loops.length })}
           </div>
         </div>

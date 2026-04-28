@@ -22,7 +22,7 @@ type Plan = {
 const PLAN_STYLE: Record<string, { color: string; bg: string }> = {
   active:    { color: '#10b981', bg: '#ecfdf5' },
   suspended: { color: '#f59e0b', bg: '#fffbeb' },
-  completed: { color: '#64748b', bg: '#f1f5f9' },
+  completed: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
 }
 
 export default function PreservationGlobal({
@@ -56,7 +56,7 @@ export default function PreservationGlobal({
     const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     if (diffDays < 0) return { label: t('due.overdue', { days: Math.abs(diffDays) }), color: '#ef4444', bg: '#fee2e2' }
     if (diffDays <= 7) return { label: t('due.soon', { days: diffDays }), color: '#f59e0b', bg: '#fffbeb' }
-    return { label: nextDue, color: '#64748b', bg: 'transparent' }
+    return { label: nextDue, color: 'var(--text-muted)', bg: 'transparent' }
   }
 
   const [search, setSearch] = useState('')
@@ -98,29 +98,29 @@ export default function PreservationGlobal({
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('title')}</h1>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{tc('allOrg')}</p>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{tc('allOrg')}</p>
       </div>
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '24px' }}>
         <div
           onClick={() => setFilterDue(filterDue === 'overdue' ? '' : 'overdue')}
-          style={{ padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'overdue' ? '#fee2e2' : 'white', border: `1px solid ${filterDue === 'overdue' ? '#fca5a540' : '#e2e8f0'}` }}
+          style={{ padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'overdue' ? '#fee2e2' : 'var(--card-bg)', border: `1px solid ${filterDue === 'overdue' ? '#fca5a540' : 'var(--border)'}` }}
         >
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#ef4444' }}>{overdueCnt}</div>
-          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{t('summary.overdue')}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.overdue')}</div>
         </div>
         <div
           onClick={() => setFilterDue(filterDue === 'soon' ? '' : 'soon')}
-          style={{ padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'soon' ? '#fffbeb' : 'white', border: `1px solid ${filterDue === 'soon' ? '#fde68a' : '#e2e8f0'}` }}
+          style={{ padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'soon' ? '#fffbeb' : 'var(--card-bg)', border: `1px solid ${filterDue === 'soon' ? '#fde68a' : 'var(--border)'}` }}
         >
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#f59e0b' }}>{soonCnt}</div>
-          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{t('summary.dueSoon')}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.dueSoon')}</div>
         </div>
-        <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'white', border: '1px solid #e2e8f0' }}>
+        <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#10b981' }}>{activeCnt}</div>
-          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{t('summary.active')}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.active')}</div>
         </div>
       </div>
 
@@ -130,7 +130,8 @@ export default function PreservationGlobal({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('filters.search')}
-          style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '240px', fontFamily: 'inherit' }}
+          aria-label={t('filters.search')}
+          style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', width: '240px', fontFamily: 'inherit' }}
         />
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)} style={selStyle}>
           <option value="">{tc('allProjects')}</option>
@@ -143,24 +144,24 @@ export default function PreservationGlobal({
         {hasFilters && (
           <button
             onClick={() => { setFilterProject(''); setFilterStatus(''); setFilterDue(''); setSearch(''); setPage(1) }}
-            style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
+            style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {tc('clearFilters')}
           </button>
         )}
-        <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
+        <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
           {t('filters.count', { filtered: filtered.length, total: plans.length })}
         </span>
       </div>
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{t('empty')}</p>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{t('empty')}</p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 90px 110px 110px 90px', gap: '12px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 90px 110px 110px 90px', gap: '12px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <span>{t('table.colProject')}</span>
             <span>{t('table.colTag')}</span>
             <span>{t('table.colProcedure')}</span>
@@ -196,10 +197,10 @@ export default function PreservationGlobal({
 
                 {/* Tag */}
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>
                     {plan.tags?.tag_number ?? '—'}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
                     {plan.tags?.description ?? ''}
                   </div>
                 </div>
@@ -208,24 +209,24 @@ export default function PreservationGlobal({
                 <div>
                   {proc && (
                     <>
-                      <div style={{ fontSize: '11px', fontWeight: 600, color: '#475569', fontFamily: 'ui-monospace, monospace' }}>{proc.code}</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>{proc.title}</div>
+                      <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>{proc.code}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{proc.title}</div>
                     </>
                   )}
                 </div>
 
                 {/* Frequency */}
-                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   {proc ? (freqLabels[proc.frequency] ?? proc.frequency) : '—'}
                 </div>
 
                 {/* Next due */}
-                <div style={{ fontSize: '11px', fontWeight: 500, color: plan.status === 'active' ? due.color : '#94a3b8', background: plan.status === 'active' ? due.bg : 'transparent', padding: due.bg !== 'transparent' ? '2px 6px' : '0', borderRadius: '4px', display: 'inline-block' }}>
+                <div style={{ fontSize: '11px', fontWeight: 500, color: plan.status === 'active' ? due.color : 'var(--gray-400)', background: plan.status === 'active' ? due.bg : 'transparent', padding: due.bg !== 'transparent' ? '2px 6px' : '0', borderRadius: '4px', display: 'inline-block' }}>
                   {plan.status === 'active' ? due.label : plan.next_due_date}
                 </div>
 
                 {/* Last record */}
-                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   {plan.last_performed_date ?? '—'}
                 </div>
 
@@ -242,9 +243,9 @@ export default function PreservationGlobal({
       {/* Pagination */}
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>{tc('prevPage')}</button>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>{tc('page', { page, total: totalPages })}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>{tc('nextPage')}</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? 'var(--gray-50)' : 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', color: page === 1 ? 'var(--gray-300)' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>{tc('prevPage')}</button>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tc('page', { page, total: totalPages })}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? 'var(--gray-50)' : 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? 'var(--gray-300)' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>{tc('nextPage')}</button>
         </div>
       )}
     </div>
@@ -252,6 +253,6 @@ export default function PreservationGlobal({
 }
 
 const selStyle: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#374151', background: 'white', fontFamily: 'inherit', cursor: 'pointer',
+  padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
 }

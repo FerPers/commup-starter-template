@@ -34,14 +34,14 @@ type System     = { id: string; code: string; name: string }
 const CATEGORY_CFG = {
   A: { label: 'Cat A', color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
   B: { label: 'Cat B', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  C: { label: 'Cat C', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+  C: { label: 'Cat C', color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
 } as const
 
 const STATUS_COLORS = {
   open:        { color: '#ef4444', bg: '#fee2e2' },
   in_progress: { color: '#3b82f6', bg: '#eff6ff' },
   closed:      { color: '#10b981', bg: '#ecfdf5' },
-  cancelled:   { color: '#64748b', bg: '#f1f5f9' },
+  cancelled:   { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
 } as const
 
 // ── Main component ──────────────────────────────────────────────────────
@@ -144,12 +144,12 @@ export default function PunchListView({
 
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '6px' }}>
-        <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}>
+        <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
           {t('backLink', { projectName })}
         </a>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('title')}</h1>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
         <span style={{ fontSize: '13px', color: '#94a3b8' }}>{t('filters.count', { filtered: filtered.length, total: punches.length })}</span>
       </div>
 
@@ -158,7 +158,7 @@ export default function PunchListView({
         {([
           { labelKey: 'summary.catAOpen' as const, count: catACnt, color: '#ef4444', bg: '#fee2e2', border: '#fecaca', filterVal: 'A' as const },
           { labelKey: 'summary.catBOpen' as const, count: catBCnt, color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', filterVal: 'B' as const },
-          { labelKey: 'summary.catCOpen' as const, count: catCCnt, color: '#64748b', bg: '#f8fafc', border: '#e2e8f0', filterVal: 'C' as const },
+          { labelKey: 'summary.catCOpen' as const, count: catCCnt, color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)', filterVal: 'C' as const },
           { labelKey: 'summary.closed'   as const, count: closedCnt, color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', filterVal: null },
         ]).map(card => (
           <div
@@ -166,7 +166,7 @@ export default function PunchListView({
             onClick={() => card.filterVal && setFilterCat(prev => prev === card.filterVal ? '' : card.filterVal!)}
             style={{
               padding: '16px 18px', borderRadius: '12px',
-              background: filterCat === card.filterVal && card.filterVal ? card.bg : 'white',
+              background: filterCat === card.filterVal && card.filterVal ? card.bg : 'var(--card-bg)',
               border: `1px solid ${filterCat === card.filterVal && card.filterVal ? card.color + '40' : card.border}`,
               cursor: card.filterVal ? 'pointer' : 'default',
             }}
@@ -193,13 +193,13 @@ export default function PunchListView({
           <button
             onClick={() => applyBulk('cancelled')}
             disabled={isBulkPending}
-            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}
           >
             {t('bulk.cancelSelected')}
           </button>
           <button
             onClick={clearSelection}
-            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: '#64748b', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+            style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', background: 'var(--card-bg)', border: '1px solid var(--border)', cursor: 'pointer' }}
           >
             {t('bulk.deselect')}
           </button>
@@ -216,7 +216,8 @@ export default function PunchListView({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('filters.search')}
-          style={{ flex: '1 1 220px', minWidth: '180px', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px' }}
+          aria-label={t('filters.search')}
+          style={{ flex: '1 1 220px', minWidth: '180px', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px' }}
         />
 
         <select value={filterCat} onChange={e => setFilterCat(e.target.value as 'A' | 'B' | 'C' | '')} style={selStyle}>
@@ -250,7 +251,7 @@ export default function PunchListView({
         {hasFilters && (
           <button
             onClick={() => { setSearch(''); setFilterCat(''); setFilterStatus(''); setFilterDisc(''); setFilterSystem('') }}
-            style={{ padding: '8px 12px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
+            style={{ padding: '8px 12px', background: 'var(--gray-100)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('filters.clear')}
           </button>
@@ -264,11 +265,11 @@ export default function PunchListView({
           <p style={{ fontSize: '14px' }}>{hasFilters ? t('noResultsFiltered') : t('noResultsEmpty')}</p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc' }}>
-                <th style={{ padding: '10px 14px', width: '36px', borderBottom: '1px solid #e2e8f0' }}>
+              <tr style={{ background: 'var(--gray-50)' }}>
+                <th style={{ padding: '10px 14px', width: '36px', borderBottom: '1px solid var(--border)' }}>
                   <input
                     type="checkbox"
                     checked={allFilteredSelected}
@@ -277,7 +278,7 @@ export default function PunchListView({
                   />
                 </th>
                 {[t('table.colPunch'), t('table.colTag'), t('table.colCat'), t('table.colDesc'), t('table.colStatus'), t('table.colAssigned'), t('table.colDue')].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #e2e8f0' }}>
+                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>
                     {h}
                   </th>
                 ))}
@@ -293,7 +294,7 @@ export default function PunchListView({
                     key={punch.id}
                     onClick={() => setSelectedPunch(punch)}
                     style={{ borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', transition: 'background 0.1s', background: isChecked ? '#eff6ff' : 'transparent' }}
-                    onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8fafc' }}
+                    onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = 'var(--gray-50)' }}
                     onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = isChecked ? '#eff6ff' : 'transparent' }}
                   >
                     <td style={{ padding: '12px 14px', width: '36px' }} onClick={e => { e.stopPropagation(); toggleRow(punch.id) }}>
@@ -305,7 +306,7 @@ export default function PunchListView({
                         style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
                       />
                     </td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', fontFamily: 'ui-monospace, monospace', color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 14px', fontSize: '12px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {punch.punch_number}
                     </td>
                     <td style={{ padding: '12px 14px' }}>
@@ -323,7 +324,7 @@ export default function PunchListView({
                         {catCfg.label}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 14px', fontSize: '13px', color: '#0f172a', maxWidth: '320px' }}>
+                    <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-strong)', maxWidth: '320px' }}>
                       <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {punch.description}
                       </span>
@@ -333,10 +334,10 @@ export default function PunchListView({
                         {punchStatusLabels[punch.status] ?? punch.status}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: '#475569', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                       {punch.assigned_to_profile?.full_name ?? <span style={{ color: '#cbd5e1' }}>{t('noAssignee')}</span>}
                     </td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: punch.target_date ? '#475569' : '#cbd5e1', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 14px', fontSize: '12px', color: punch.target_date ? 'var(--text-muted)' : '#cbd5e1', whiteSpace: 'nowrap' }}>
                       {punch.target_date ?? '—'}
                     </td>
                   </tr>
@@ -361,8 +362,8 @@ export default function PunchListView({
 }
 
 const selStyle: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#374151', background: 'white', fontFamily: 'inherit', cursor: 'pointer',
+  padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
 }
 
 // ── Punch Detail Modal ──────────────────────────────────────────────────
@@ -421,16 +422,16 @@ function PunchDetailModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
           <div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: '#475569' }}>{punch.punch_number}</span>
+              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'var(--text-muted)' }}>{punch.punch_number}</span>
               <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
               <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{punchStatusLabels[punch.status] ?? punch.status}</span>
             </div>
-            <p style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0, lineHeight: '1.4' }}>{punch.description}</p>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: 0, lineHeight: '1.4' }}>{punch.description}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#94a3b8', cursor: 'pointer', padding: '0 0 0 12px' }}>✕</button>
         </div>
@@ -450,7 +451,7 @@ function PunchDetailModal({
         )}
 
         {/* Meta */}
-        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px', flexWrap: 'wrap' }}>
           {punch.raised_by_profile && <span><strong>{t('detail.raisedBy')}</strong> {punch.raised_by_profile.full_name}</span>}
           {punch.assigned_to_profile && <span><strong>{t('detail.assignedTo')}</strong> {punch.assigned_to_profile.full_name}</span>}
           {punch.target_date && <span><strong>{t('detail.targetDate')}</strong> {punch.target_date}</span>}
@@ -460,7 +461,7 @@ function PunchDetailModal({
         {/* Status actions */}
         {!isClosed && (
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>{t('detail.changeStatus')}</label>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('detail.changeStatus')}</label>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {punch.status !== 'in_progress' && (
                 <button onClick={() => handleStatusChange('in_progress')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#eff6ff', color: '#3b82f6', border: '1px solid #bfdbfe', cursor: 'pointer' }}>
@@ -470,7 +471,7 @@ function PunchDetailModal({
               <button onClick={() => handleStatusChange('closed')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', cursor: 'pointer' }}>
                 {t('detail.close')}
               </button>
-              <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+              <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}>
                 {t('detail.cancel')}
               </button>
             </div>
@@ -480,7 +481,7 @@ function PunchDetailModal({
         {/* Comment */}
         {!isClosed && (
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
               {t('detail.labelComment')}
             </label>
             <textarea
@@ -488,9 +489,9 @@ function PunchDetailModal({
               value={comment}
               onChange={e => setComment(e.target.value)}
               placeholder={t('detail.commentPlaceholder')}
-              style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', marginBottom: '8px' }}
+              style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', marginBottom: '8px' }}
             />
-            <button onClick={handleAddComment} disabled={isPending || !comment.trim()} style={{ padding: '7px 14px', background: comment.trim() ? '#0f172a' : '#f1f5f9', color: comment.trim() ? 'white' : '#94a3b8', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: comment.trim() ? 'pointer' : 'default' }}>
+            <button onClick={handleAddComment} disabled={isPending || !comment.trim()} style={{ padding: '7px 14px', background: comment.trim() ? 'var(--primary-500)' : 'var(--gray-100)', color: comment.trim() ? '#fff' : 'var(--gray-400)', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: comment.trim() ? 'pointer' : 'default' }}>
               {t('detail.addComment')}
             </button>
           </div>

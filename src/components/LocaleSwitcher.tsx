@@ -31,8 +31,8 @@ export default function LocaleSwitcher({ variant = 'dark' }: { variant?: 'dark' 
   }
 
   const activeColor = variant === 'dark' ? '#60a5fa' : '#1d4ed8'
-  const inactiveColor = variant === 'dark' ? '#475569' : '#94a3b8'
-  const dividerColor = variant === 'dark' ? '#1e293b' : '#e2e8f0'
+  const inactiveColor = variant === 'dark' ? '#94a3b8' : '#94a3b8'
+  const dividerColor = variant === 'dark' ? '#334155' : '#e2e8f0'
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', opacity: isPending ? 0.5 : 1, transition: 'opacity 0.15s' }}>

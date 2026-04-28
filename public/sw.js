@@ -7,7 +7,7 @@
 //   default          → stale-while-revalidate
 // Plus: Push notifications, Background Sync, Conflict log replay.
 
-const SW_VERSION = '2.0.1'
+const SW_VERSION = '2.0.2'
 const CACHE_STATIC = `commup-static-v${SW_VERSION}`
 const CACHE_API    = `commup-api-v${SW_VERSION}`
 const CACHE_IMAGES = `commup-images-v${SW_VERSION}`

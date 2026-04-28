@@ -103,7 +103,7 @@ export default function PssrTemplateEditor({
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '9px 12px', borderRadius: '8px',
     border: '1.5px solid #d1d5db', fontSize: '14px', outline: 'none',
-    boxSizing: 'border-box', fontFamily: 'inherit', color: '#0f172a',
+    boxSizing: 'border-box', fontFamily: 'inherit', color: 'var(--text-strong)',
   }
 
   const STATUS_COLORS: Record<string, string> = {
@@ -115,26 +115,26 @@ export default function PssrTemplateEditor({
     'Seguridad de Procesos': '#f97316',
     'Seguridad / HSE': '#10b981',
     'Operaciones y Capacitación': '#6366f1',
-    'Mantenimiento': '#64748b',
+    'Mantenimiento': 'var(--text-muted)',
     'Medio Ambiente': '#22c55e',
     'Construcción y Comisionamiento': '#d97706',
   }
 
-  function catColor(cat: string) { return STATUS_COLORS[cat] ?? '#64748b' }
+  function catColor(cat: string) { return STATUS_COLORS[cat] ?? 'var(--text-muted)' }
 
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <span style={{ fontSize: '14px', color: '#64748b' }}>
-          <strong style={{ color: '#0f172a' }}>{items.length}</strong> ítems en{' '}
-          <strong style={{ color: '#0f172a' }}>{grouped.length}</strong> categorías
+        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+          <strong style={{ color: 'var(--text-strong)' }}>{items.length}</strong> ítems en{' '}
+          <strong style={{ color: 'var(--text-strong)' }}>{grouped.length}</strong> categorías
         </span>
         {canEdit && (
           <button
             onClick={openNew}
             style={{
               padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: '#0f172a', color: 'white', border: 'none', cursor: 'pointer',
+              background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
             }}
           >
             + Nuevo ítem
@@ -146,21 +146,21 @@ export default function PssrTemplateEditor({
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {grouped.map(([category, catItems]) => (
           <div key={category} style={{
-            background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+            background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
             overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}>
             {/* Category header */}
             <div style={{
               padding: '12px 20px',
               borderLeft: `4px solid ${catColor(category)}`,
-              background: '#f8fafc',
+              background: 'var(--gray-50)',
               display: 'flex', alignItems: 'center', gap: '10px',
             }}>
               <span style={{
                 display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%',
                 background: catColor(category), flexShrink: 0,
               }} />
-              <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {category}
               </span>
               <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
@@ -182,8 +182,8 @@ export default function PssrTemplateEditor({
                   {item.item_order}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#374151' }}>{item.element}</div>
-                  <div style={{ fontSize: '13px', color: '#64748b', marginTop: '3px', lineHeight: 1.5 }}>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--gray-700)' }}>{item.element}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '3px', lineHeight: 1.5 }}>
                     {item.requirement}
                   </div>
                   {item.notes_hint && (
@@ -194,8 +194,8 @@ export default function PssrTemplateEditor({
                 </div>
                 {!item.is_required && (
                   <span style={{
-                    fontSize: '10px', fontWeight: 600, color: '#64748b',
-                    background: '#f1f5f9', padding: '2px 7px', borderRadius: '4px',
+                    fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)',
+                    background: 'var(--gray-100)', padding: '2px 7px', borderRadius: '4px',
                     flexShrink: 0,
                   }}>
                     OPCIONAL
@@ -207,7 +207,7 @@ export default function PssrTemplateEditor({
                       onClick={() => openEdit(item)}
                       style={{
                         padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
-                        background: '#f8fafc', border: '1px solid #e2e8f0', color: '#374151', cursor: 'pointer',
+                        background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--gray-700)', cursor: 'pointer',
                       }}
                     >
                       Editar
@@ -231,10 +231,10 @@ export default function PssrTemplateEditor({
 
         {items.length === 0 && (
           <div style={{
-            background: 'white', borderRadius: '12px', border: '1.5px dashed #cbd5e1',
+            background: 'var(--card-bg)', borderRadius: '12px', border: '1.5px dashed #cbd5e1',
             padding: '48px', textAlign: 'center',
           }}>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
               Sin ítems. Agrega el primero o regresa al listado para cargar los 22 ítems estándar.
             </p>
           </div>
@@ -249,16 +249,16 @@ export default function PssrTemplateEditor({
           overflowY: 'auto',
         }} onClick={() => setShowModal(false)}>
           <div style={{
-            background: 'white', borderRadius: '16px', padding: '32px',
+            background: 'var(--card-bg)', borderRadius: '16px', padding: '32px',
             width: '100%', maxWidth: '560px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 20px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               {editingItem ? 'Editar ítem' : 'Nuevo ítem'}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                     Categoría *
                   </label>
                   <input
@@ -276,7 +276,7 @@ export default function PssrTemplateEditor({
                   </datalist>
                 </div>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                     Elemento *
                   </label>
                   <input
@@ -288,7 +288,7 @@ export default function PssrTemplateEditor({
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   Requisito de verificación *
                 </label>
                 <textarea
@@ -300,7 +300,7 @@ export default function PssrTemplateEditor({
                 />
               </div>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   Nota / guía de verificación
                 </label>
                 <input
@@ -310,7 +310,7 @@ export default function PssrTemplateEditor({
                   style={inputStyle}
                 />
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#374151' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--gray-700)' }}>
                 <input
                   type="checkbox"
                   checked={form.is_required}
@@ -324,7 +324,7 @@ export default function PssrTemplateEditor({
                   onClick={() => setShowModal(false)}
                   style={{
                     padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                    background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#374151',
+                    background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
                   }}
                 >
                   Cancelar
@@ -334,7 +334,7 @@ export default function PssrTemplateEditor({
                   disabled={isPending}
                   style={{
                     padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                    background: '#0f172a', color: 'white', border: 'none',
+                    background: 'var(--primary-500)', color: '#fff', border: 'none',
                     cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                   }}
                 >

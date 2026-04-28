@@ -232,14 +232,14 @@ export default function ImportWizard({
   return (
     <div style={{ padding: '32px' }}>
 
-      <a href={`/projects/${projectId}/tags`} style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+      <a href={`/projects/${projectId}/tags`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
         ← {projectName}
       </a>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px', gap: '16px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.4px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             Importar Tags / Equipos
             {disciplinePrefill && (
               <span style={{
@@ -250,12 +250,12 @@ export default function ImportWizard({
               </span>
             )}
           </h1>
-          <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
             Carga tu lista desde Excel. Se crean áreas, sistemas y subsistemas automáticamente.
           </p>
         </div>
         {step === 'upload' && (
-          <button onClick={() => downloadTemplate(prefillCode || 'MECH')} style={{ padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <button onClick={() => downloadTemplate(prefillCode || 'MECH')} style={{ padding: '8px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
             ↓ Descargar plantilla
           </button>
         )}
@@ -269,18 +269,18 @@ export default function ImportWizard({
           const active = step === s
           return (
             <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
-              {i > 0 && <div style={{ width: '40px', height: '1px', background: (done || active) ? '#3b82f6' : '#e2e8f0' }} />}
+              {i > 0 && <div style={{ width: '40px', height: '1px', background: (done || active) ? '#3b82f6' : 'var(--border)' }} />}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
                   width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '12px', fontWeight: 600,
-                  background: done ? '#3b82f6' : active ? '#eff6ff' : '#f1f5f9',
-                  color:      done ? 'white'   : active ? '#3b82f6' : '#94a3b8',
+                  background: done ? '#3b82f6' : active ? '#eff6ff' : 'var(--gray-100)',
+                  color:      done ? 'var(--card-bg)'   : active ? '#3b82f6' : 'var(--gray-400)',
                   border: active ? '2px solid #3b82f6' : '2px solid transparent',
                 }}>
                   {done ? '✓' : i + 1}
                 </div>
-                <span style={{ fontSize: '13px', color: active ? '#1e40af' : '#94a3b8', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
+                <span style={{ fontSize: '13px', color: active ? '#1e40af' : 'var(--gray-400)', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
               </div>
             </div>
           )
@@ -295,8 +295,8 @@ export default function ImportWizard({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
           {!disciplinePrefill && (
-            <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500, whiteSpace: 'nowrap' }}>Disciplina:</span>
+            <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>Disciplina:</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', flex: 1 }}>
                 {disciplines.map(d => (
                   <button
@@ -304,9 +304,9 @@ export default function ImportWizard({
                     onClick={() => setManualDiscipline(manualDiscipline === d.code ? '' : d.code)}
                     style={{
                       padding: '5px 14px', borderRadius: '7px', border: '1px solid',
-                      borderColor: manualDiscipline === d.code ? d.color : '#e2e8f0',
-                      background: manualDiscipline === d.code ? `${d.color}15` : 'white',
-                      color: manualDiscipline === d.code ? d.color : '#64748b',
+                      borderColor: manualDiscipline === d.code ? d.color : 'var(--border)',
+                      background: manualDiscipline === d.code ? `${d.color}15` : 'var(--card-bg)',
+                      color: manualDiscipline === d.code ? d.color : 'var(--text-muted)',
                       fontSize: '12px', fontWeight: manualDiscipline === d.code ? 700 : 400,
                       cursor: 'pointer',
                     }}
@@ -327,17 +327,17 @@ export default function ImportWizard({
             onDrop={onDrop}
             onClick={() => document.getElementById('file-input')?.click()}
             style={{
-              border: `2px dashed ${dragging ? '#3b82f6' : '#cbd5e1'}`,
+              border: `2px dashed ${dragging ? '#3b82f6' : 'var(--gray-300)'}`,
               borderRadius: '14px', padding: '56px 32px', textAlign: 'center',
-              background: dragging ? '#eff6ff' : 'white',
+              background: dragging ? '#eff6ff' : 'var(--card-bg)',
               cursor: 'pointer', transition: 'all 0.2s',
             }}
           >
             <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.4 }}>⊞</div>
-            <p style={{ fontSize: '15px', fontWeight: 500, color: '#475569', margin: '0 0 6px' }}>Arrastra tu archivo Excel aquí</p>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>o haz clic para seleccionar (.xlsx, .xls)</p>
+            <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>Arrastra tu archivo Excel aquí</p>
+            <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: '0 0 20px' }}>o haz clic para seleccionar (.xlsx, .xls)</p>
             <input id="file-input" type="file" accept=".xlsx,.xls" onChange={onFileChange} style={{ display: 'none' }} />
-            <span style={{ padding: '8px 20px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, pointerEvents: 'none' }}>
+            <span style={{ padding: '8px 20px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, pointerEvents: 'none' }}>
               Seleccionar archivo
             </span>
             {parseWarnings.length > 0 && (
@@ -349,8 +349,8 @@ export default function ImportWizard({
           </div>{/* end left column */}
 
           {/* Column guide */}
-          <div style={{ background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '20px' }}>
-            <p style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ background: 'var(--gray-50)', borderRadius: '12px', border: '1px solid var(--border)', padding: '20px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Columnas detectadas automáticamente
             </p>
             {[
@@ -366,26 +366,26 @@ export default function ImportWizard({
               { key: 'MOUNTING TYPICAL / TIPICO',req: false, note: 'Típico de montaje (INST)' },
             ].map(col => (
               <div key={col.key} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? '#fee2e2' : '#f1f5f9', color: col.req ? '#dc2626' : '#64748b' }}>
+                <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? '#fee2e2' : 'var(--gray-100)', color: col.req ? '#dc2626' : 'var(--text-muted)' }}>
                   {col.req ? 'REQ' : 'OPT'}
                 </span>
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#334155', fontFamily: 'monospace' }}>{col.key}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{col.note}</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{col.key}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{col.note}</div>
                 </div>
               </div>
             ))}
             {!disciplinePrefill && (
               <>
-                <div style={{ borderTop: '1px solid #e2e8f0', margin: '12px 0' }} />
-                <p style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Disciplinas disponibles</p>
+                <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0' }} />
+                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Disciplinas disponibles</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {disciplines.map(d => <span key={d.code} style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: `${d.color}18`, color: d.color }}>{d.code}</span>)}
                 </div>
               </>
             )}
-            <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '14px', paddingTop: '12px' }}>
-              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>
+            <div style={{ borderTop: '1px solid var(--border)', marginTop: '14px', paddingTop: '12px' }}>
+              <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
                 El encabezado puede estar en cualquier fila — se detecta automáticamente. Compatible con Instrument Index, listas eléctricas y mecánicas.
               </p>
             </div>
@@ -397,13 +397,13 @@ export default function ImportWizard({
       {step === 'preview' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <div style={{ fontSize: '14px', color: '#475569' }}>
-              <strong style={{ color: '#0f172a' }}>{fileName}</strong>
-              <span style={{ margin: '0 8px', color: '#cbd5e1' }}>·</span>
+            <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+              <strong style={{ color: 'var(--text-strong)' }}>{fileName}</strong>
+              <span style={{ margin: '0 8px', color: 'var(--gray-300)' }}>·</span>
               <span style={{ color: '#10b981', fontWeight: 500 }}>{validRows.length} válidos</span>
               {invalidRows.length > 0 && <span style={{ color: '#ef4444', fontWeight: 500, marginLeft: '8px' }}>{invalidRows.length} omitidos</span>}
             </div>
-            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null) }} style={{ fontSize: '13px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>← Cambiar archivo</button>
+            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null) }} style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>← Cambiar archivo</button>
           </div>
 
           {parseWarnings.length > 0 && (
@@ -412,10 +412,10 @@ export default function ImportWizard({
             </div>
           )}
 
-          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'auto', marginBottom: '20px' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'auto', marginBottom: '20px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
                   <Th>#</Th><Th>TAG</Th><Th>Descripción</Th><Th>Tipo detectado</Th><Th>Disciplina</Th>
                   <Th>Área / Sistema / Subsistema</Th>
                   {hasPid && <Th>P&ID</Th>}
@@ -427,32 +427,32 @@ export default function ImportWizard({
                   const isInvalid = !effectivePrefill && !disciplineCodes.has(row.discipline_code)
                   const d = disciplines.find(x => x.code.toUpperCase() === row.discipline_code)
                   const manualD = disciplines.find(x => x.code.toUpperCase() === manualDiscipline)
-                  const dColor = d?.color ?? (disciplinePrefill?.color ?? manualD?.color ?? '#94a3b8')
+                  const dColor = d?.color ?? (disciplinePrefill?.color ?? manualD?.color ?? 'var(--gray-400)')
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: isInvalid ? '#fff5f5' : undefined }}>
-                      <td style={tdStyle}><span style={{ color: '#cbd5e1' }}>{i + 1}</span></td>
-                      <td style={tdStyle}><span style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'monospace' }}>{row.tag_number}</span></td>
-                      <td style={tdStyle}><span style={{ color: '#334155' }}>{row.description || '—'}</span></td>
+                      <td style={tdStyle}><span style={{ color: 'var(--gray-300)' }}>{i + 1}</span></td>
+                      <td style={tdStyle}><span style={{ fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'monospace' }}>{row.tag_number}</span></td>
+                      <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.description || '—'}</span></td>
                       <td style={tdStyle}>{(() => {
                         const t = detectTagType(row.tag_number)
                         return t
                           ? <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>{t.typeName}</span>
-                          : <span style={{ fontSize: '11px', color: '#cbd5e1' }}>—</span>
+                          : <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>—</span>
                       })()}</td>
                       <td style={tdStyle}>
                         <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: `${dColor}18`, color: isInvalid ? '#ef4444' : dColor }}>
                           {row.discipline_code || '?'}
                         </span>
                       </td>
-                      <td style={tdStyle}><span style={{ color: '#64748b', fontFamily: 'monospace', fontSize: '11px' }}>{[row.area_code, row.system_code, row.subsystem_code].join(' / ')}</span></td>
-                      {hasPid && <td style={tdStyle}><span style={{ color: '#64748b', fontSize: '11px', fontFamily: 'monospace' }}>{row.pid_drawing || '—'}</span></td>}
-                      <td style={tdStyle}><span style={{ color: '#64748b' }}>{row.manufacturer || '—'}</span></td>
+                      <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '11px' }}>{[row.area_code, row.system_code, row.subsystem_code].join(' / ')}</span></td>
+                      {hasPid && <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontSize: '11px', fontFamily: 'monospace' }}>{row.pid_drawing || '—'}</span></td>}
+                      <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.manufacturer || '—'}</span></td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
-            {rows.length > 30 && <div style={{ padding: '10px 16px', fontSize: '12px', color: '#94a3b8', borderTop: '1px solid #f1f5f9' }}>Mostrando 30 de {rows.length} filas</div>}
+            {rows.length > 30 && <div style={{ padding: '10px 16px', fontSize: '12px', color: 'var(--gray-400)', borderTop: '1px solid #f1f5f9' }}>Mostrando 30 de {rows.length} filas</div>}
           </div>
 
           {importError && (
@@ -462,8 +462,8 @@ export default function ImportWizard({
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-            <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 20px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#475569', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Cancelar</a>
-            <button onClick={handleImport} disabled={loading || validRows.length === 0} style={{ padding: '10px 24px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: loading ? 'wait' : 'pointer', opacity: validRows.length === 0 ? 0.5 : 1 }}>
+            <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 20px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Cancelar</a>
+            <button onClick={handleImport} disabled={loading || validRows.length === 0} style={{ padding: '10px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: loading ? 'wait' : 'pointer', opacity: validRows.length === 0 ? 0.5 : 1 }}>
               {loading ? 'Importando…' : `✓ Importar ${validRows.length} tags`}
             </button>
           </div>
@@ -474,7 +474,7 @@ export default function ImportWizard({
       {step === 'result' && result && (
         <div style={{ textAlign: 'center', padding: '32px' }}>
           <div style={{ fontSize: '52px', marginBottom: '12px' }}>{result.errors.length === 0 ? '✅' : '⚠️'}</div>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: '0 0 24px' }}>Importación completada</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 24px' }}>Importación completada</h2>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '32px' }}>
             <div style={{ padding: '20px 32px', background: '#ecfdf5', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
               <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>{result.imported}</div>
@@ -494,8 +494,8 @@ export default function ImportWizard({
             </div>
           )}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-            <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>Ver tags →</a>
-            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setResult(null) }} style={{ padding: '10px 22px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#475569', cursor: 'pointer' }}>Importar más</button>
+            <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>Ver tags →</a>
+            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setResult(null) }} style={{ padding: '10px 22px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>Importar más</button>
           </div>
         </div>
       )}
@@ -505,6 +505,6 @@ export default function ImportWizard({
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{children}</th>
+  return <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{children}</th>
 }
 const tdStyle: React.CSSProperties = { padding: '10px 14px', verticalAlign: 'middle' }

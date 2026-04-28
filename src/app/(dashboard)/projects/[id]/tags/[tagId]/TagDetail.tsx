@@ -77,7 +77,7 @@ type Tab = 'overview' | 'itrs' | 'punches' | 'docs' | 'preservation'
 // ── Status config ────────────────────────────────────────────────
 
 const STATUS: Record<string, { color: string; bg: string; border: string }> = {
-  not_started: { color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0' },
+  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)', border: 'var(--border)' },
   in_progress:  { color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
   completed:    { color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
   on_hold:      { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
@@ -156,7 +156,7 @@ export default function TagDetail({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
         <a
           href={`/projects/${projectId}/tags`}
-          style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+          style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
         >
           {t('detail.backLink', { project: projectName })}
         </a>
@@ -176,14 +176,14 @@ export default function TagDetail({
 
       {/* ── Tag header card ─────────────────────────────────────── */}
       <div style={{
-        background: 'white', borderRadius: '14px 14px 0 0',
-        border: '1px solid #e2e8f0', borderBottom: 'none',
+        background: 'var(--card-bg)', borderRadius: '14px 14px 0 0',
+        border: '1px solid var(--border)', borderBottom: 'none',
         padding: '22px 24px',
       }}>
         {/* Breadcrumb hierarchy */}
         {hier && (
           <div style={{
-            fontSize: '11px', color: '#94a3b8', fontFamily: 'ui-monospace, monospace',
+            fontSize: '11px', color: 'var(--gray-400)', fontFamily: 'ui-monospace, monospace',
             letterSpacing: '0.03em', marginBottom: '10px',
           }}>
             {hier}
@@ -203,19 +203,19 @@ export default function TagDetail({
             </span>
             <div style={{ minWidth: 0 }}>
               <h1 style={{
-                fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0,
+                fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', margin: 0,
                 fontFamily: 'ui-monospace, monospace', letterSpacing: '-0.5px',
               }}>
                 {tag.tag_number}
               </h1>
-              <p style={{ fontSize: '14px', color: '#475569', margin: '4px 0 0', lineHeight: '1.4' }}>
+              <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0', lineHeight: '1.4' }}>
                 {tag.description || '—'}
               </p>
               {(tag.manufacturer || tag.model || tag.serial_number) && (
-                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '5px 0 0', fontFamily: 'ui-monospace, monospace' }}>
+                <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '5px 0 0', fontFamily: 'ui-monospace, monospace' }}>
                   {[tag.manufacturer, tag.model].filter(Boolean).join(' · ')}
                   {tag.serial_number && (
-                    <span style={{ marginLeft: '8px', color: '#cbd5e1' }}>SN: {tag.serial_number}</span>
+                    <span style={{ marginLeft: '8px', color: 'var(--gray-300)' }}>SN: {tag.serial_number}</span>
                   )}
                 </p>
               )}
@@ -239,7 +239,7 @@ export default function TagDetail({
             display: 'flex', alignItems: 'center', gap: '10px',
           }}>
             <span style={{
-              fontSize: '10px', fontWeight: 600, color: '#94a3b8',
+              fontSize: '10px', fontWeight: 600, color: 'var(--gray-400)',
               textTransform: 'uppercase', letterSpacing: '0.06em',
             }}>
               P&amp;ID
@@ -261,9 +261,9 @@ export default function TagDetail({
               </a>
             ) : (
               <span style={{
-                fontSize: '12px', color: '#64748b', fontFamily: 'ui-monospace, monospace',
-                background: '#f8fafc', padding: '3px 10px', borderRadius: '5px',
-                border: '1px solid #e2e8f0',
+                fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace',
+                background: 'var(--gray-50)', padding: '3px 10px', borderRadius: '5px',
+                border: '1px solid var(--border)',
               }}>
                 {tag.pid_drawing}
               </span>
@@ -294,8 +294,8 @@ export default function TagDetail({
 
       {/* ── Tab bar ──────────────────────────────────────────────── */}
       <div style={{
-        background: 'white', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
-        borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0',
+        background: 'var(--card-bg)', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0',
         paddingLeft: '8px',
       }}>
         {!editMode && tabs.map(tab => {
@@ -307,7 +307,7 @@ export default function TagDetail({
               style={{
                 padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: '13px', fontWeight: active ? 600 : 400,
-                color: active ? '#0f172a' : '#64748b',
+                color: active ? 'var(--text-strong)' : 'var(--text-muted)',
                 borderBottom: active ? '2px solid #3b82f6' : '2px solid transparent',
                 display: 'flex', alignItems: 'center', gap: '6px',
                 transition: 'color 0.15s',
@@ -318,8 +318,8 @@ export default function TagDetail({
               {tab.badge !== undefined && (
                 <span style={{
                   padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
-                  background: active ? '#3b82f6' : '#f1f5f9',
-                  color: active ? 'white' : '#94a3b8',
+                  background: active ? '#3b82f6' : 'var(--gray-100)',
+                  color: active ? '#fff' : 'var(--gray-400)',
                 }}>
                   {tab.badge}
                 </span>
@@ -344,8 +344,8 @@ export default function TagDetail({
               <button
                 onClick={() => setEditMode(true)}
                 style={{
-                  padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0',
-                  borderRadius: '7px', fontSize: '12px', color: '#475569', cursor: 'pointer',
+                  padding: '6px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                  borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
                 }}
               >
                 {t('detail.editTag')}
@@ -354,8 +354,8 @@ export default function TagDetail({
               <button
                 onClick={() => setEditMode(false)}
                 style={{
-                  padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0',
-                  borderRadius: '7px', fontSize: '12px', color: '#94a3b8', cursor: 'pointer',
+                  padding: '6px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                  borderRadius: '7px', fontSize: '12px', color: 'var(--gray-400)', cursor: 'pointer',
                 }}
               >
                 {t('detail.cancel')}
@@ -367,7 +367,7 @@ export default function TagDetail({
 
       {/* ── Tab content ─────────────────────────────────────────── */}
       <div style={{
-        background: '#f8fafc', border: '1px solid #e2e8f0', borderTop: 'none',
+        background: 'var(--gray-50)', border: '1px solid var(--border)', borderTop: 'none',
         borderRadius: '0 0 14px 14px', padding: '24px', minHeight: '300px',
       }}>
         {editMode ? (
@@ -469,8 +469,8 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
               padding: '10px 0',
               borderBottom: i < infoFields.length - 1 ? '1px solid #f1f5f9' : 'none',
             }}>
-              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>{f.label}</span>
-              <span style={{ fontSize: '13px', color: '#0f172a', fontWeight: 500 }}>{f.value}</span>
+              <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontWeight: 500 }}>{f.label}</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-strong)', fontWeight: 500 }}>{f.value}</span>
             </div>
           ))}
         </div>
@@ -489,7 +489,7 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
                 padding: '10px 0',
                 borderBottom: i < locFields.length - 1 ? '1px solid #f1f5f9' : 'none',
               }}>
-                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>{f.label}</span>
+                <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontWeight: 500 }}>{f.label}</span>
                 {f.link ? (
                   <a href={f.link} target="_blank" rel="noopener noreferrer" style={{
                     fontSize: '12px', color: '#2563eb', fontFamily: 'ui-monospace, monospace',
@@ -499,7 +499,7 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
                   </a>
                 ) : (
                   <span style={{
-                    fontSize: '13px', color: f.value === '—' ? '#cbd5e1' : '#0f172a',
+                    fontSize: '13px', color: f.value === '—' ? 'var(--gray-300)' : 'var(--text-strong)',
                     fontWeight: 500,
                     fontFamily: f.label !== 'P&ID' && f.value !== '—' ? undefined : 'ui-monospace, monospace',
                   }}>
@@ -515,7 +515,7 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
         <div style={cardStyle}>
           <p style={sectionLabel}>{t('overview.sectionEngineering')}</p>
           {!hasEngParams ? (
-            <div style={{ padding: '16px 0', textAlign: 'center', color: '#cbd5e1', fontSize: '13px' }}>
+            <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--gray-300)', fontSize: '13px' }}>
               {t('overview.noEngParams')}
             </div>
           ) : (
@@ -524,9 +524,9 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
               {/* Range */}
               {(tag.range_min != null || tag.range_max != null) && (
                 <EngRow label={t('overview.engRange')}>
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: 'var(--text-strong)' }}>
                     {fmt(tag.range_min)} – {fmt(tag.range_max)}
-                    {tag.eng_unit && <span style={{ marginLeft: '6px', color: '#64748b' }}>{tag.eng_unit}</span>}
+                    {tag.eng_unit && <span style={{ marginLeft: '6px', color: 'var(--text-muted)' }}>{tag.eng_unit}</span>}
                   </span>
                 </EngRow>
               )}
@@ -545,7 +545,7 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
 
               {isInst && tag.signal_type && (
                 <EngRow label={t('overview.engSignalType')}>
-                  <span style={{ fontSize: '13px', color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{tag.signal_type}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{tag.signal_type}</span>
                 </EngRow>
               )}
 
@@ -562,37 +562,37 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
 
               {isInst && tag.io_address && (
                 <EngRow label={t('overview.engIoAddress')}>
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.io_address}</span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: 'var(--text-strong)' }}>{tag.io_address}</span>
                 </EngRow>
               )}
 
               {isInst && tag.junction_box && (
                 <EngRow label={t('overview.engJunctionBox')}>
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.junction_box}</span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: 'var(--text-strong)' }}>{tag.junction_box}</span>
                 </EngRow>
               )}
 
               {tag.fluid_type && (
                 <EngRow label={t('overview.engFluidType')}>
-                  <span style={{ fontSize: '13px', color: '#0f172a' }}>{tag.fluid_type}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--text-strong)' }}>{tag.fluid_type}</span>
                 </EngRow>
               )}
 
               {tag.datasheet_number && (
                 <EngRow label={t('overview.engDatasheet')}>
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.datasheet_number}</span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: 'var(--text-strong)' }}>{tag.datasheet_number}</span>
                 </EngRow>
               )}
 
               {isInst && tag.mounting_typical && (
                 <EngRow label={t('overview.engMounting')}>
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.mounting_typical}</span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: 'var(--text-strong)' }}>{tag.mounting_typical}</span>
                 </EngRow>
               )}
 
               {tag.revision && (
                 <EngRow label={t('overview.engRevision')} last>
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#0f172a' }}>{tag.revision}</span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: 'var(--text-strong)' }}>{tag.revision}</span>
                 </EngRow>
               )}
 
@@ -613,7 +613,7 @@ function EngRow({ label, children, last }: { label: string; children: React.Reac
       borderBottom: last ? 'none' : '1px solid #f1f5f9',
       alignItems: 'center',
     }}>
-      <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontWeight: 500 }}>{label}</span>
       <div>{children}</div>
     </div>
   )
@@ -780,7 +780,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
                 onChange={e => set('preservation_required', e.target.checked)}
                 style={{ width: '16px', height: '16px', accentColor: '#3b82f6' }}
               />
-              <span style={{ fontSize: '13px', color: '#475569' }}>{t('edit.preservationCheck')}</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('edit.preservationCheck')}</span>
             </label>
           </FormField>
 
@@ -824,10 +824,10 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
         {isInst && (
           <>
             <div style={{ margin: '20px 0 14px', paddingTop: '16px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {t('edit.sectionInstrumentation')}
               </span>
-              <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{t('edit.instrSubtitle')}</span>
+              <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>{t('edit.instrSubtitle')}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
 
@@ -883,8 +883,8 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
           onClick={onCancel}
           disabled={isPending}
           style={{
-            padding: '9px 20px', background: 'white', border: '1px solid #e2e8f0',
-            borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer',
+            padding: '9px 20px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
           }}
         >
           {t('edit.cancel')}
@@ -894,7 +894,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
           disabled={isPending}
           style={{
             padding: '9px 20px', background: isPending ? '#93c5fd' : '#3b82f6', border: 'none',
-            borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'white',
+            borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff',
             cursor: isPending ? 'not-allowed' : 'pointer',
           }}
         >
@@ -909,7 +909,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
             <button
               onClick={() => setShowDeleteConfirm(true)}
               style={{
-                width: '100%', padding: '8px 12px', background: 'white',
+                width: '100%', padding: '8px 12px', background: 'var(--card-bg)',
                 border: '1px solid #fecaca', borderRadius: '7px',
                 fontSize: '12px', color: '#dc2626', cursor: 'pointer', textAlign: 'left',
               }}
@@ -926,7 +926,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
                   onClick={handleDelete}
                   disabled={isPending}
                   style={{
-                    padding: '7px 14px', background: '#dc2626', color: 'white',
+                    padding: '7px 14px', background: '#dc2626', color: '#fff',
                     border: 'none', borderRadius: '6px', fontSize: '12px',
                     fontWeight: 600, cursor: isPending ? 'not-allowed' : 'pointer',
                   }}
@@ -937,8 +937,8 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={isPending}
                   style={{
-                    padding: '7px 12px', background: 'white', color: '#64748b',
-                    border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                    padding: '7px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
+                    border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                   }}
                 >
                   {t('edit.cancel')}
@@ -956,7 +956,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
 function FormField({ label, children, style }: { label: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={style}>
-      <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }}>
+      <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }}>
         {label}
       </label>
       {children}
@@ -983,7 +983,7 @@ function DocsTab({ tag, pidSignedUrl, pidDocId, projectId }: { tag: Tag; pidSign
     <div>
       <p style={sectionLabel}>{t('docs.sectionTitle')}</p>
       <div style={{
-        background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0',
+        background: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border)',
         overflow: 'hidden', marginTop: '12px',
       }}>
         <div style={{
@@ -999,7 +999,7 @@ function DocsTab({ tag, pidSignedUrl, pidDocId, projectId }: { tag: Tag; pidSign
               }}>
                 {tag.pid_drawing}
               </div>
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '2px' }}>
                 {pidSignedUrl ? t('docs.docAvailable') : t('docs.docNotUploaded')}
               </div>
             </div>
@@ -1054,8 +1054,8 @@ function EmptyTab({ icon, title, message }: { icon: string; title: string; messa
       padding: '52px 32px', textAlign: 'center',
     }}>
       <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.25 }}>{icon}</div>
-      <p style={{ fontSize: '14px', fontWeight: 500, color: '#475569', margin: '0 0 6px' }}>{title}</p>
-      <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, maxWidth: '360px', lineHeight: '1.5' }}>{message}</p>
+      <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>{title}</p>
+      <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0, maxWidth: '360px', lineHeight: '1.5' }}>{message}</p>
     </div>
   )
 }
@@ -1063,22 +1063,22 @@ function EmptyTab({ icon, title, message }: { icon: string; title: string; messa
 // ── Shared styles ────────────────────────────────────────────────
 
 const navBtn: React.CSSProperties = {
-  padding: '6px 12px', background: 'white', border: '1px solid #e2e8f0',
-  borderRadius: '7px', fontSize: '12px', color: '#475569',
+  padding: '6px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+  borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)',
   textDecoration: 'none', cursor: 'pointer',
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '16px 18px',
+  background: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border)', padding: '16px 18px',
 }
 
 const sectionLabel: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 600, color: '#94a3b8',
+  fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)',
   textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px',
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '7px',
-  fontSize: '13px', color: '#0f172a', background: 'white', boxSizing: 'border-box',
+  width: '100%', padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '7px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', boxSizing: 'border-box',
   outline: 'none',
 }

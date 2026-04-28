@@ -114,53 +114,57 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900 text-white">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--gray-900)', color: '#fff' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-slate-800 bg-slate-900/95 backdrop-blur">
-        <div className="w-9 h-9 rounded-xl bg-sky-600/20 border border-sky-600/40 flex items-center justify-center">
-          <span className="text-lg">🤖</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderBottom: '1px solid var(--gray-800)', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(8px)' }}>
+        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 18 }}>🤖</span>
         </div>
         <div>
-          <h1 className="font-bold text-base">Asistente CommUP</h1>
-          <p className="text-xs text-slate-500">Powered by Claude · Solo lectura</p>
+          <h1 style={{ fontWeight: 700, fontSize: 'var(--text-base)', margin: 0 }}>Asistente CommUP</h1>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)', margin: 0 }}>Powered by Claude · Solo lectura</p>
         </div>
-        <div className="ml-auto flex items-center gap-1">
-          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span className="text-xs text-slate-500">Online</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 8, height: 8, background: 'var(--success-500)', borderRadius: 'var(--radius-pill)', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)' }}>Online</span>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}
           >
             {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-lg bg-sky-900 flex items-center justify-center mr-2 flex-shrink-0 mt-1">
-                <span className="text-sm">🤖</span>
+              <div style={{ width: 28, height: 28, borderRadius: 'var(--radius-md)', background: 'var(--primary-900)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8, flexShrink: 0, marginTop: 4 }}>
+                <span style={{ fontSize: 'var(--text-base)' }}>🤖</span>
               </div>
             )}
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
-                msg.role === 'user'
-                  ? 'bg-sky-600 text-white rounded-br-sm'
-                  : 'bg-slate-800 text-slate-100 rounded-bl-sm'
-              }`}
+              style={{
+                maxWidth: '85%',
+                borderRadius: 16,
+                padding: '12px 16px',
+                fontSize: 'var(--text-sm)',
+                background: msg.role === 'user' ? 'var(--primary-600)' : 'var(--gray-800)',
+                color: msg.role === 'user' ? '#fff' : 'var(--gray-100)',
+                borderBottomRightRadius: msg.role === 'user' ? 4 : 16,
+                borderBottomLeftRadius: msg.role === 'user' ? 16 : 4,
+              }}
             >
               {msg.loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 4 }}>
                     {[0, 1, 2].map((i) => (
                       <span
                         key={i}
-                        className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce"
-                        style={{ animationDelay: `${i * 0.15}s` }}
+                        style={{ width: 6, height: 6, background: 'var(--primary-400)', borderRadius: 'var(--radius-pill)', animation: 'bounce 1s infinite', animationDelay: `${i * 0.15}s` }}
                       />
                     ))}
                   </div>
-                  <span className="text-slate-500 text-xs">Consultando datos...</span>
+                  <span style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)' }}>Consultando datos...</span>
                 </div>
               ) : (
                 <div
@@ -171,7 +175,7 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
                 />
               )}
               {!msg.loading && (
-                <div className={`text-xs mt-1 ${msg.role === 'user' ? 'text-sky-200' : 'text-slate-600'}`}>
+                <div style={{ fontSize: 'var(--text-xs)', marginTop: 4, color: msg.role === 'user' ? 'var(--primary-200)' : 'var(--gray-600)' }}>
                   {new Date(msg.timestamp).toLocaleTimeString('es', { timeStyle: 'short' })}
                 </div>
               )}
@@ -183,19 +187,40 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
 
       {/* Error */}
       {error && (
-        <div className="mx-4 mb-2 p-3 bg-red-900/50 border border-red-700 rounded-xl text-sm text-red-300">
+        <div style={{ margin: '0 16px 8px', padding: 12, background: 'rgba(127, 29, 29, 0.5)', border: '1px solid var(--danger-700)', borderRadius: 'var(--radius-lg)', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }}>
           ⚠️ {error}
         </div>
       )}
 
       {/* Quick prompts (solo si pocos mensajes) */}
       {messages.length <= 2 && (
-        <div className="px-4 pb-2 flex flex-wrap gap-2">
+        <div style={{ padding: '0 16px 8px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {QUICK_PROMPTS.map((prompt) => (
             <button
               key={prompt}
               onClick={() => sendMessage(prompt)}
-              className="text-xs px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-sky-400 border border-slate-700 hover:border-sky-600/50 rounded-lg transition text-left"
+              style={{
+                fontSize: 'var(--text-xs)',
+                padding: '8px 12px',
+                background: 'var(--gray-800)',
+                color: 'var(--gray-400)',
+                border: '1px solid var(--gray-700)',
+                borderRadius: 'var(--radius-md)',
+                transition: 'background 0.15s, color 0.15s, border-color 0.15s',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--gray-700)'
+                e.currentTarget.style.color = 'var(--primary-400)'
+                e.currentTarget.style.borderColor = 'rgba(37, 99, 235, 0.5)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--gray-800)'
+                e.currentTarget.style.color = 'var(--gray-400)'
+                e.currentTarget.style.borderColor = 'var(--gray-700)'
+              }}
             >
               {prompt}
             </button>
@@ -204,9 +229,9 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-slate-800 bg-slate-900/95 backdrop-blur">
-        <div className="flex items-end gap-2">
-          <div className="flex-1 bg-slate-800 border border-slate-700 rounded-2xl focus-within:border-sky-600 transition">
+      <div style={{ padding: 16, borderTop: '1px solid var(--gray-800)', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(8px)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+          <div style={{ flex: 1, background: 'var(--gray-800)', border: '1px solid var(--gray-700)', borderRadius: 16, transition: 'border-color 0.15s' }}>
             <textarea
               ref={inputRef}
               value={input}
@@ -215,27 +240,39 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
               placeholder="Pregunta sobre sistemas, ITRs, punches, forecast..."
               disabled={isLoading}
               rows={1}
-              className="w-full bg-transparent text-white px-4 py-3 resize-none focus:outline-none placeholder-slate-600 text-sm max-h-32"
-              style={{ minHeight: '48px' }}
+              style={{ width: '100%', background: 'transparent', color: '#fff', padding: '12px 16px', resize: 'none', outline: 'none', fontSize: 'var(--text-sm)', maxHeight: 128, minHeight: 48, border: 'none', fontFamily: 'inherit' }}
             />
           </div>
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || isLoading}
-            className="flex-shrink-0 w-11 h-11 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-xl transition flex items-center justify-center"
+            style={{
+              flexShrink: 0,
+              width: 44,
+              height: 44,
+              background: !input.trim() || isLoading ? 'var(--gray-700)' : 'var(--primary-600)',
+              color: !input.trim() || isLoading ? 'var(--gray-500)' : '#fff',
+              borderRadius: 'var(--radius-lg)',
+              border: 'none',
+              cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+              transition: 'background 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
             {isLoading ? (
-              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <svg style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 10" />
               </svg>
             ) : (
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <svg style={{ width: 16, height: 16 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
               </svg>
             )}
           </button>
         </div>
-        <p className="text-xs text-slate-600 text-center mt-2">
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-600)', textAlign: 'center', marginTop: 8 }}>
           Enter para enviar · Shift+Enter para nueva línea · Solo consultas de lectura
         </p>
       </div>
@@ -249,13 +286,13 @@ function markdownToHTML(text: string): string {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code class="bg-slate-700 px-1 rounded text-sky-300 text-xs">$1</code>')
-    .replace(/^### (.+)$/gm, '<h3 class="font-bold text-sky-400 mt-3 mb-1">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="font-bold text-sky-300 mt-4 mb-2 text-base">$1</h2>')
-    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc text-slate-300">$1</li>')
-    .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal text-slate-300">$1</li>')
-    .replace(/(<li[\s\S]*?<\/li>)+/gm, '<ul class="my-2 space-y-1">$&</ul>')
-    .replace(/\n{2,}/g, '</p><p class="mt-2">')
+    .replace(/`(.+?)`/g, '<code style="background:var(--gray-700);padding:1px 4px;border-radius:var(--radius-sm);color:var(--primary-300);font-size:var(--text-xs)">$1</code>')
+    .replace(/^### (.+)$/gm, '<h3 style="font-weight:700;color:var(--primary-400);margin:12px 0 4px">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 style="font-weight:700;color:var(--primary-300);margin:16px 0 8px;font-size:var(--text-base)">$1</h2>')
+    .replace(/^- (.+)$/gm, '<li style="margin-left:16px;list-style:disc;color:var(--gray-300)">$1</li>')
+    .replace(/^\d+\. (.+)$/gm, '<li style="margin-left:16px;list-style:decimal;color:var(--gray-300)">$1</li>')
+    .replace(/(<li[\s\S]*?<\/li>)+/gm, '<ul style="margin:8px 0">$&</ul>')
+    .replace(/\n{2,}/g, '</p><p style="margin-top:8px">')
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>').replace(/$/, '</p>');
 }

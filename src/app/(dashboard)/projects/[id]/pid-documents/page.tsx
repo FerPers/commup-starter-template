@@ -64,17 +64,17 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
       {/* Header */}
       <div style={{ marginBottom: '28px' }}>
         <a href={`/projects/${id}/tags`} style={{
-          fontSize: '13px', color: '#64748b', textDecoration: 'none',
+          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none',
           display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px',
         }}>
           ← Tags / Equipos
         </a>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
           <div>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.4px' }}>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>
               Documentos P&ID
             </h1>
-            <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
               {project.name} · {docs.length === 0 ? 'Sin documentos subidos' : `${docs.length} PDF${docs.length !== 1 ? 's' : ''} subido${docs.length !== 1 ? 's' : ''}`}
             </p>
           </div>

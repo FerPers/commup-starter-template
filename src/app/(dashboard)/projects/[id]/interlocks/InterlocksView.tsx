@@ -50,14 +50,14 @@ export default function InterlocksView({
       <div style={{ marginBottom: '24px' }}>
         <a href={`/projects/${projectId}`} style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '14px',
+          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '14px',
         }}>
           ← {projectName}
         </a>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: '0 0 4px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: '0 0 4px' }}>
           {t('interlocks.title')}
         </h1>
-        <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
           {t('interlocks.subtitle', { count: interlocks.length })}
         </p>
       </div>
@@ -67,11 +67,12 @@ export default function InterlocksView({
         <input
           type="text"
           placeholder={t('interlocks.searchPlaceholder')}
+          aria-label={t('interlocks.searchPlaceholder')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
             width: '100%', maxWidth: '400px', padding: '8px 12px',
-            border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', outline: 'none', color: '#0f172a',
+            border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', outline: 'none', color: 'var(--text-strong)',
             boxSizing: 'border-box',
           }}
         />
@@ -79,19 +80,19 @@ export default function InterlocksView({
 
       {interlocks.length === 0 ? (
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           padding: '64px 32px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>⛓</div>
-          <p style={{ fontSize: '15px', fontWeight: 500, color: '#0f172a', margin: '0 0 6px' }}>{t('interlocks.emptyTitle')}</p>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{t('interlocks.emptyDesc')}</p>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>{t('interlocks.emptyTitle')}</p>
+          <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>{t('interlocks.emptyDesc')}</p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                <tr style={{ background: 'var(--gray-50)', borderBottom: '2px solid var(--border)' }}>
                   {[
                     t('interlocks.col.number'),
                     t('interlocks.col.description'),
@@ -103,7 +104,7 @@ export default function InterlocksView({
                   ].map(h => (
                     <th key={h} style={{
                       padding: '10px 12px', textAlign: 'left',
-                      fontWeight: 600, color: '#64748b', fontSize: '11px',
+                      fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px',
                       textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap',
                     }}>{h}</th>
                   ))}
@@ -112,25 +113,25 @@ export default function InterlocksView({
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                    <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '13px' }}>
                       {t('noResults')}
                     </td>
                   </tr>
                 ) : filtered.map((il, i) => {
                   const sub = il.subsystems
                   return (
-                    <tr key={il.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                    <tr key={il.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? 'var(--card-bg)' : 'var(--gray-50)' }}>
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                         {il.interlock_number}
                       </td>
-                      <td style={{ padding: '10px 12px', color: '#475569', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {il.description}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         {sub ? (
                           <div>
-                            <div style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a' }}>{sub.code}</div>
-                            <div style={{ fontSize: '11px', color: '#94a3b8' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
+                            <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-strong)' }}>{sub.code}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
                           </div>
                         ) : '—'}
                       </td>
@@ -144,7 +145,7 @@ export default function InterlocksView({
                           }}>
                             {il.cause_tag.tag_number}
                           </span>
-                        ) : <span style={{ color: '#94a3b8' }}>—</span>}
+                        ) : <span style={{ color: 'var(--gray-400)' }}>—</span>}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         {il.effect_tag ? (
@@ -154,13 +155,13 @@ export default function InterlocksView({
                           }}>
                             {il.effect_tag.tag_number}
                           </span>
-                        ) : <span style={{ color: '#94a3b8' }}>—</span>}
+                        ) : <span style={{ color: 'var(--gray-400)' }}>—</span>}
                       </td>
 
-                      <td style={{ padding: '10px 12px', color: '#64748b', fontSize: '12px' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '12px' }}>
                         {il.set_point || '—'}
                       </td>
-                      <td style={{ padding: '10px 12px', color: '#475569', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {il.action || '—'}
                       </td>
                     </tr>
@@ -170,7 +171,7 @@ export default function InterlocksView({
             </table>
           </div>
 
-          <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', fontSize: '12px', color: '#94a3b8' }}>
+          <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', background: 'var(--gray-50)', fontSize: '12px', color: 'var(--gray-400)' }}>
             {t('showing', { filtered: filtered.length, total: interlocks.length })}
           </div>
         </div>

@@ -3,6 +3,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { Search, X, Download } from 'lucide-react'
+import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } from '@/components/ui'
 import { bulkUpdateItrStatus } from '@/app/actions/bulk'
 
 const PAGE_SIZE = 50
@@ -28,18 +30,16 @@ type ItrRow = {
 type Phase = { id: string; code: string; name: string; color: string; order_index: number }
 
 const ITR_STYLE: Record<string, { color: string; bg: string }> = {
-  not_started: { color: '#64748b', bg: '#f1f5f9' },
-  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { color: '#10b981', bg: '#ecfdf5' },
-  approved:     { color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:     { color: '#ef4444', bg: '#fee2e2' },
+  not_started: { color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
+  in_progress: { color: 'var(--primary-500)', bg: 'var(--primary-50)' },
+  completed:   { color: 'var(--success-500)', bg: 'var(--success-50)' },
+  approved:    { color: '#7c3aed',            bg: '#f5f3ff' },
+  rejected:    { color: 'var(--danger-500)',  bg: 'var(--danger-50)' },
 }
 
 const ITR_STATUS_KEYS = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
 
 const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', client: 'C' }
-
-const GRID = '36px 110px 1fr 1fr 130px 80px 80px 90px 60px'
 
 export default function ItrListGlobal({
   projects,
@@ -186,7 +186,7 @@ export default function ItrListGlobal({
       ]
     })
     const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -196,266 +196,295 @@ export default function ItrListGlobal({
   }
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1400px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('title')}</h1>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{tc('allOrg')}</p>
+    <div style={{ padding: 32, maxWidth: 1400 }}>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: 0 }}>{tc('allOrg')}</p>
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 24 }}>
         {ITR_STATUS_KEYS.map(key => {
           const style = ITR_STYLE[key]
+          const active = filterStatus === key
           return (
-            <div
+            <button
               key={key}
-              onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
+              onClick={() => setFilterStatus(active ? '' : key)}
+              aria-pressed={active}
               style={{
-                padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s',
-                background: filterStatus === key ? style.bg : 'white',
-                border: `1px solid ${filterStatus === key ? style.color + '40' : '#e2e8f0'}`,
+                padding: '14px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                transition: 'background 0.15s, border-color 0.15s',
+                background: active ? style.bg : 'var(--card-bg)',
+                border: `1px solid ${active ? style.color + '40' : 'var(--border)'}`,
+                textAlign: 'left', fontFamily: 'inherit',
               }}
             >
-              <div style={{ fontSize: '22px', fontWeight: 700, color: style.color }}>{counts[key] ?? 0}</div>
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{itrStatusLabels[key]}</div>
-            </div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: style.color }}>{counts[key] ?? 0}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>{itrStatusLabels[key]}</div>
+            </button>
           )
         })}
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Input
+          inputSize="sm"
+          fullWidth={false}
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder={t('filters.search')}
-          style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '240px', fontFamily: 'inherit' }}
+          aria-label={t('filters.search')}
+          leftIcon={<Search size={14} />}
+          wrapperStyle={{ width: 260 }}
         />
-        <select value={filterProject} onChange={e => { setFilterProject(e.target.value); setPage(1) }} style={selStyle}>
+        <Select selectSize="sm" fullWidth={false} value={filterProject} onChange={(e) => { setFilterProject(e.target.value); setPage(1) }} style={{ width: 200 }}>
           <option value="">{tc('allProjects')}</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
-        </select>
-        <select value={filterPhase} onChange={e => { setFilterPhase(e.target.value); setPage(1) }} style={selStyle}>
+        </Select>
+        <Select selectSize="sm" fullWidth={false} value={filterPhase} onChange={(e) => { setFilterPhase(e.target.value); setPage(1) }} style={{ width: 180 }}>
           <option value="">{t('filters.allPhases')}</option>
           {phases.map(p => <option key={p.id} value={p.code}>{p.code} — {p.name}</option>)}
-        </select>
-        <select value={filterDisc} onChange={e => { setFilterDisc(e.target.value); setPage(1) }} style={selStyle}>
+        </Select>
+        <Select selectSize="sm" fullWidth={false} value={filterDisc} onChange={(e) => { setFilterDisc(e.target.value); setPage(1) }} style={{ width: 180 }}>
           <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
-        </select>
+        </Select>
         {hasFilters && (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => { setFilterStatus(''); setFilterPhase(''); setFilterDisc(''); setFilterProject(''); setSearch(''); setPage(1) }}
-            style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
             {tc('clearFilters')}
-          </button>
+          </Button>
         )}
-        <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginLeft: 'auto' }}>
           {t('filters.count', { filtered: filtered.length, total: itrs.length })}
         </span>
         {filtered.length > 0 && (
-          <button
-            onClick={exportCsv}
-            style={{ padding: '7px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: '#374151', cursor: 'pointer', fontFamily: 'inherit' }}
-          >
+          <Button variant="outline" size="sm" leftIcon={<Download size={14} />} onClick={exportCsv}>
             {tc('exportCsv')}
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
-          padding: '10px 16px', marginBottom: '8px',
-          background: '#1e293b', borderRadius: '10px', color: 'white',
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '10px 16px', marginBottom: 8,
+          background: 'var(--gray-800)', borderRadius: 'var(--radius-md)', color: '#fff',
         }}>
-          <span style={{ fontSize: '13px', fontWeight: 500 }}>
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>
             {t('bulk.selected', { count: selectedIds.size })}
           </span>
-          <span style={{ color: '#475569' }}>|</span>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{tc('changeStatusTo')}</span>
+          <span style={{ color: 'var(--gray-600)' }}>|</span>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)' }}>{tc('changeStatusTo')}</span>
           <select
             value={bulkStatus}
-            onChange={e => setBulkStatus(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white', fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer' }}
+            onChange={(e) => setBulkStatus(e.target.value)}
+            style={{
+              padding: '6px 10px', borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--gray-700)', background: 'var(--gray-900)',
+              color: '#fff', fontSize: 'var(--text-sm)',
+              fontFamily: 'inherit', cursor: 'pointer',
+            }}
           >
             <option value="">{tc('choose')}</option>
             {ITR_STATUS_KEYS.map(k => (
               <option key={k} value={k}>{itrStatusLabels[k]}</option>
             ))}
           </select>
-          <button
+          <Button
+            size="sm"
             onClick={handleBulkApply}
             disabled={!bulkStatus || bulkLoading}
-            style={{
-              padding: '6px 14px', borderRadius: '6px', border: 'none',
-              background: bulkStatus && !bulkLoading ? '#3b82f6' : '#334155',
-              color: bulkStatus && !bulkLoading ? 'white' : '#64748b',
-              fontSize: '12px', fontWeight: 600, cursor: bulkStatus && !bulkLoading ? 'pointer' : 'not-allowed',
-              fontFamily: 'inherit',
-            }}
+            loading={bulkLoading}
           >
-            {bulkLoading ? tc('applying') : tc('apply')}
-          </button>
-          {bulkError && <span style={{ fontSize: '12px', color: '#f87171' }}>{bulkError}</span>}
+            {tc('apply')}
+          </Button>
+          {bulkError && <span style={{ fontSize: 'var(--text-sm)', color: '#f87171' }}>{bulkError}</span>}
           <button
             onClick={() => { setSelectedIds(new Set()); setBulkStatus(''); setBulkError('') }}
-            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '0 4px' }}
+            aria-label={tc('deselectAll')}
             title={tc('deselectAll')}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--gray-400)', cursor: 'pointer', padding: '0 4px', display: 'inline-flex', alignItems: 'center' }}
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
       )}
 
       {/* Table */}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{t('empty')}</p>
-        </div>
-      ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '12px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              ref={selectAllRef}
-              checked={allFilteredSelected}
-              onChange={toggleSelectAll}
-              title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
-              style={{ cursor: 'pointer', accentColor: '#3b82f6', width: '15px', height: '15px' }}
-            />
-            <span>{t('table.colProject')}</span>
-            <span>{t('table.colItr')}</span>
-            <span>{t('table.colTemplate')}</span>
-            <span>{t('table.colInspector')}</span>
-            <span>{t('table.colDate')}</span>
-            <span>{t('table.colProgress')}</span>
-            <span>{t('table.colStatus')}</span>
-            <span>{t('table.colSignature')}</span>
-          </div>
-
-          {paginated.map(itr => {
-            const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
-            const executor = itr.itr_assignments.find(a => a.role === 'executor')
-            const disc = itr.itr_templates?.disciplines
-            const phase = itr.project_phases
-            const proj = itr.projects
-            const isSelected = selectedIds.has(itr.id)
-
-            return (
-              <div
-                key={itr.id}
-                style={{
-                  display: 'grid', gridTemplateColumns: GRID, gap: '12px',
-                  padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center',
-                  background: isSelected ? '#eff6ff' : undefined,
-                  transition: 'background 0.1s',
-                }}
+      <DataTable<ItrRow>
+        rows={paginated}
+        rowKey={(itr) => itr.id}
+        responsive="stack"
+        ariaLabel={t('title')}
+        empty={<EmptyState title={t('empty')} />}
+        rowStyle={(itr) => selectedIds.has(itr.id) ? { background: 'var(--primary-50)' } : undefined}
+        columns={[
+          {
+            key: 'select',
+            width: 36,
+            sticky: 'left',
+            hideBelow: 768,
+            header: (
+              <input
+                type="checkbox"
+                ref={selectAllRef}
+                checked={allFilteredSelected}
+                onChange={toggleSelectAll}
+                title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+              />
+            ),
+            cell: (itr) => (
+              <input
+                type="checkbox"
+                checked={selectedIds.has(itr.id)}
+                onChange={() => toggleRow(itr.id)}
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+              />
+            ),
+          },
+          {
+            key: 'project',
+            width: 110,
+            header: t('table.colProject'),
+            cell: (itr) => itr.projects ? (
+              <a
+                href={`/projects/${itr.projects.id}`}
+                title={itr.projects.name}
+                style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => toggleRow(itr.id)}
-                  style={{ cursor: 'pointer', accentColor: '#3b82f6', width: '15px', height: '15px' }}
-                />
-
-                {/* Project */}
+                {itr.projects.code}
+              </a>
+            ) : null,
+          },
+          {
+            key: 'itr',
+            header: t('table.colItr'),
+            cell: (itr) => {
+              const phase = itr.project_phases
+              return (
                 <div>
-                  {proj && (
-                    <a
-                      href={`/projects/${proj.id}`}
-                      style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                      title={proj.name}
-                    >
-                      {proj.code}
-                    </a>
-                  )}
-                </div>
-
-                {/* ITR + Tag */}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {phase && (
-                      <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>
+                      <span style={{ padding: '1px 6px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 700, background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>
                     )}
                     <a
                       href={itr.tags ? `/projects/${itr.project_id}/tags/${itr.tags.id}/itrs/${itr.id}` : '#'}
-                      style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
+                      style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-500)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
                     >
                       {itr.itr_number}
                     </a>
                   </div>
                   {itr.tags && (
-                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
                       {itr.tags.tag_number} — {itr.tags.description}
                     </div>
                   )}
                 </div>
-
-                {/* Template */}
+              )
+            },
+          },
+          {
+            key: 'template',
+            header: t('table.colTemplate'),
+            cell: (itr) => {
+              const disc = itr.itr_templates?.disciplines
+              return (
                 <div>
                   {disc && (
-                    <span style={{ fontSize: '10px', fontWeight: 600, color: disc.color, marginRight: '6px', padding: '1px 5px', background: `${disc.color}15`, borderRadius: '4px' }}>{disc.code}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: disc.color, marginRight: 6, padding: '1px 5px', background: `${disc.color}15`, borderRadius: 'var(--radius-sm)' }}>{disc.code}</span>
                   )}
-                  <span style={{ fontSize: '12px', color: '#374151' }}>{itr.itr_templates?.title ?? '—'}</span>
+                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)' }}>{itr.itr_templates?.title ?? '—'}</span>
                 </div>
-
-                {/* Inspector */}
-                <div style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              )
+            },
+          },
+          {
+            key: 'inspector',
+            width: 140,
+            header: t('table.colInspector'),
+            cell: (itr) => {
+              const executor = itr.itr_assignments.find(a => a.role === 'executor')
+              return (
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {executor?.profiles?.full_name ?? '—'}
                 </div>
-
-                {/* Scheduled date */}
-                <div style={{ fontSize: '11px', color: '#64748b' }}>
-                  {itr.scheduled_date ?? '—'}
-                </div>
-
-                {/* Progress */}
-                <div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'right', marginBottom: '3px' }}>{itr.progress_pct}%</div>
-                  <div style={{ height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '2px' }} />
-                  </div>
-                </div>
-
-                {/* Status */}
-                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: style.bg, color: style.color, whiteSpace: 'nowrap', textAlign: 'center' }}>
-                  {itrStatusLabels[itr.status] ?? itr.status}
-                </span>
-
-                {/* Signatures */}
-                <div style={{ display: 'flex', gap: '2px' }}>
-                  {(['executor', 'supervisor', 'client'] as const).map(role => {
-                    const signed = itr.itr_signatures.some(s => s.role === role)
-                    return (
-                      <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? '#ecfdf5' : '#f8fafc', border: `1px solid ${signed ? '#a7f3d0' : '#e2e8f0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: signed ? '#10b981' : '#cbd5e1' }}>
-                        {SIGN_LABELS[role]}
-                      </span>
-                    )
-                  })}
+              )
+            },
+          },
+          {
+            key: 'date',
+            width: 100,
+            hideBelow: 1024,
+            header: t('table.colDate'),
+            cell: (itr) => (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                {itr.scheduled_date ?? '—'}
+              </div>
+            ),
+          },
+          {
+            key: 'progress',
+            width: 110,
+            header: t('table.colProgress'),
+            cell: (itr) => (
+              <div>
+                <div style={{ fontSize: 10, color: 'var(--gray-400)', textAlign: 'right', marginBottom: 3 }}>{itr.progress_pct}%</div>
+                <div style={{ height: 4, background: 'var(--gray-100)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: 2 }} />
                 </div>
               </div>
-            )
-          })}
-        </div>
-      )}
+            ),
+          },
+          {
+            key: 'status',
+            width: 110,
+            header: t('table.colStatus'),
+            cell: (itr) => {
+              const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
+              return (
+                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: style.bg, color: style.color, whiteSpace: 'nowrap' }}>
+                  {itrStatusLabels[itr.status] ?? itr.status}
+                </span>
+              )
+            },
+          },
+          {
+            key: 'signatures',
+            width: 80,
+            hideBelow: 1024,
+            header: t('table.colSignature'),
+            cell: (itr) => (
+              <div style={{ display: 'flex', gap: 2 }}>
+                {(['executor', 'supervisor', 'client'] as const).map(role => {
+                  const signed = itr.itr_signatures.some(s => s.role === role)
+                  return (
+                    <span key={role} style={{ width: 18, height: 18, borderRadius: 'var(--radius-sm)', background: signed ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: signed ? 'var(--success-500)' : 'var(--gray-300)' }}>
+                      {SIGN_LABELS[role]}
+                    </span>
+                  )
+                })}
+              </div>
+            ),
+          },
+        ] satisfies DataTableColumn<ItrRow>[]}
+      />
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>{tc('prevPage')}</button>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>{tc('page', { page, total: totalPages })}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>{tc('nextPage')}</button>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20, alignItems: 'center' }}>
+          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{tc('prevPage')}</Button>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{tc('page', { page, total: totalPages })}</span>
+          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{tc('nextPage')}</Button>
         </div>
       )}
     </div>
   )
-}
-
-const selStyle: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#374151', background: 'white', fontFamily: 'inherit', cursor: 'pointer',
 }

@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
+import { Boxes, Award, TrendingUp } from 'lucide-react'
+import { Card } from '@/components/ui'
 import ProjectHeader from './ProjectHeader'
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -86,14 +88,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   }
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: 32 }}>
 
       <ProjectHeader project={project} canEdit={canEdit} canDelete={canDelete} />
 
       {/* Info strip */}
       <div style={{
-        display: 'flex', gap: '0', background: 'white', borderRadius: '12px',
-        border: '1px solid #e2e8f0', marginBottom: '24px', overflow: 'hidden',
+        display: 'flex', gap: 0, background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--border)', marginBottom: 24, overflow: 'hidden',
       }}>
         {[
           { label: 'Código', value: project.code },
@@ -104,12 +106,12 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         ].map((item, i, arr) => (
           <div key={item.label} style={{
             flex: 1, padding: '14px 20px',
-            borderRight: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none',
+            borderRight: i < arr.length - 1 ? '1px solid var(--gray-100)' : 'none',
           }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
               {item.label}
             </div>
-            <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>{item.value}</div>
+            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>{item.value}</div>
           </div>
         ))}
       </div>
@@ -117,41 +119,41 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       {/* Digital Twin — hero entry */}
       <a
         href={`/projects/${project.id}/twin`}
-        style={{ textDecoration: 'none', display: 'block', marginBottom: '24px' }}
+        style={{ textDecoration: 'none', display: 'block', marginBottom: 24 }}
       >
         <div style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #2563eb 100%)',
-          borderRadius: '14px', padding: '22px 26px',
+          background: 'linear-gradient(135deg, var(--gray-900) 0%, var(--primary-900) 60%, var(--primary-600) 100%)',
+          borderRadius: 'var(--radius-lg)', padding: '22px 26px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: '20px', color: 'white',
+          gap: 20, color: '#fff',
           boxShadow: '0 4px 14px rgba(37,99,235,0.25)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '18px', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0 }}>
             <div style={{
-              width: '52px', height: '52px', borderRadius: '14px',
+              width: 52, height: 52, borderRadius: 'var(--radius-lg)',
               background: 'rgba(255,255,255,0.12)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '26px', flexShrink: 0,
+              flexShrink: 0,
             }}>
-              🔷
+              <Boxes size={26} color="#fff" aria-hidden="true" />
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.2px' }}>
+              <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, letterSpacing: '-0.2px' }}>
                 Digital Twin · Vista 360°
               </div>
-              <div style={{ fontSize: '12.5px', color: '#cbd5e1', marginTop: '3px' }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-300)', marginTop: 3 }}>
                 Semáforo en tiempo real por tag — ITRs, punches, certs, preservation y P&ID
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success-500)', boxShadow: '0 0 8px var(--success-500)' }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--warning-500)' }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger-500)' }} />
             <span style={{
-              marginLeft: '10px', padding: '7px 14px',
-              background: 'rgba(255,255,255,0.15)', borderRadius: '8px',
-              fontSize: '12.5px', fontWeight: 600, whiteSpace: 'nowrap',
+              marginLeft: 10, padding: '7px 14px',
+              background: 'rgba(255,255,255,0.15)', borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)', fontWeight: 600, whiteSpace: 'nowrap',
             }}>
               Abrir Twin →
             </span>
@@ -160,36 +162,32 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       </a>
 
       {/* Phase KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
         {(phases ?? []).map(phase => {
           const phaseItrs = (itrCounts ?? []).filter(i => i.phase_id === phase.id)
           const total = phaseItrs.length
           const approved = phaseItrs.filter(i => i.status === 'approved').length
           const pct = total > 0 ? Math.round((approved / total) * 100) : 0
           return (
-          <div key={phase.id} style={{
-            background: 'white', borderRadius: '12px', padding: '18px 20px',
-            border: '1px solid #e2e8f0', borderTop: `3px solid ${phase.color}`,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+          <Card key={phase.id} padding="md" style={{ borderTop: `3px solid ${phase.color}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
               <div>
-                <p style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, margin: 0 }}>{phase.name}</p>
-                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '2px 0 0' }}>Certificado: {phase.certificate_name}</p>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 500, margin: 0 }}>{phase.name}</p>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', margin: '2px 0 0' }}>Certificado: {phase.certificate_name}</p>
               </div>
               <span style={{
-                padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 700,
+                padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700,
                 background: `${phase.color}18`, color: phase.color,
               }}>
                 {phase.code}
               </span>
             </div>
-            <p style={{ fontSize: '32px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-1px' }}>{pct}%</p>
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 8px' }}>{approved} / {total} ITRs</p>
-            <div style={{ height: '5px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', background: phase.color, borderRadius: '3px' }} />
+            <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px', letterSpacing: '-1px' }}>{pct}%</p>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', margin: '0 0 8px' }}>{approved} / {total} ITRs</p>
+            <div style={{ height: 5, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', background: phase.color, borderRadius: 3 }} />
             </div>
-          </div>
+          </Card>
           )
         })}
         {(() => {
@@ -197,158 +195,130 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           const catA = openPunches.filter(p => p.category === 'A').length
           const catB = openPunches.filter(p => p.category === 'B').length
           return (
-            <div style={{
-              background: 'white', borderRadius: '12px', padding: '18px 20px',
-              border: '1px solid #e2e8f0', borderTop: '3px solid #ef4444',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}>
-              <p style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, margin: '0 0 10px' }}>Punch List Abiertos</p>
-              <p style={{ fontSize: '32px', fontWeight: 700, color: '#ef4444', margin: '0 0 4px', letterSpacing: '-1px' }}>{openPunches.length}</p>
-              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>Cat A: {catA} · Cat B: {catB}</p>
-            </div>
+            <Card padding="md" style={{ borderTop: '3px solid var(--danger-500)' }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 500, margin: '0 0 10px' }}>Punch List Abiertos</p>
+              <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--danger-500)', margin: '0 0 4px', letterSpacing: '-1px' }}>{openPunches.length}</p>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', margin: 0 }}>Cat A: {catA} · Cat B: {catB}</p>
+            </Card>
           )
         })()}
       </div>
 
       {/* Disciplines + Coming soon modules */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
         {/* Disciplines */}
-        <div style={cardStyle}>
+        <Card padding="md">
           <h3 style={sectionTitle}>Disciplinas</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
             {(disciplines ?? []).map(d => (
               <span key={d.id} style={{
-                padding: '5px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 500,
+                padding: '5px 12px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-sm)', fontWeight: 500,
                 background: `${d.color}15`, color: d.color, border: `1px solid ${d.color}30`,
               }}>
                 {d.code} — {d.name}
               </span>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* Tags + Signals — import links */}
-        <div style={cardStyle}>
+        <Card padding="md">
           <h3 style={sectionTitle}>Tags / Equipos y Señales</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
 
             {/* Tags de Equipos */}
-            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Tags de Equipos</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                  {tagCount && tagCount > 0
-                    ? <span style={{ color: '#3b82f6', fontWeight: 500 }}>{tagCount} tags importados</span>
-                    : 'Mecánicos, eléctricos, tuberías… (Fase A)'}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                {(tagCount ?? 0) > 0 && (
-                  <a href={`/projects/${project.id}/tags`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                    Ver tags →
-                  </a>
-                )}
-                {canEdit && (
-                  <a href={`/projects/${project.id}/import`} style={{ padding: '6px 14px', background: '#3b82f6', color: 'white', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                    {(tagCount ?? 0) > 0 ? 'Importar más' : 'Importar'}
-                  </a>
-                )}
-              </div>
-            </div>
+            <ResourceRow
+              title="Tags de Equipos"
+              detail={tagCount && tagCount > 0
+                ? <span style={{ color: 'var(--primary-500)', fontWeight: 500 }}>{tagCount} tags importados</span>
+                : 'Mecánicos, eléctricos, tuberías… (Fase A)'}
+              actions={
+                <>
+                  {(tagCount ?? 0) > 0 && (
+                    <ResourceLink href={`/projects/${project.id}/tags`}>Ver tags →</ResourceLink>
+                  )}
+                  {canEdit && (
+                    <ResourcePrimary href={`/projects/${project.id}/import`}>
+                      {(tagCount ?? 0) > 0 ? 'Importar más' : 'Importar'}
+                    </ResourcePrimary>
+                  )}
+                </>
+              }
+            />
 
             {/* Documentos P&ID */}
-            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Documentos P&ID</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>PDFs de planos de proceso para caminatas de verificación</div>
-              </div>
-              <a href={`/projects/${project.id}/pid-documents`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                Gestionar →
-              </a>
-            </div>
+            <ResourceRow
+              title="Documentos P&ID"
+              detail="PDFs de planos de proceso para caminatas de verificación"
+              actions={<ResourceLink href={`/projects/${project.id}/pid-documents`}>Gestionar →</ResourceLink>}
+            />
 
             {/* Lista de Señales I&C */}
-            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Lista de Señales I&C</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                  {(signalCount ?? 0) > 0
-                    ? <span style={{ color: '#10b981', fontWeight: 500 }}>{signalCount} señales importadas</span>
-                    : 'AI/AO/DI/DO con rango, alarmas, P&IDs (Fases B/C)'}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                {(signalCount ?? 0) > 0 && (
-                  <a href={`/projects/${project.id}/signals`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                    Ver señales →
-                  </a>
-                )}
-                {canEdit && (
-                  <a href={`/projects/${project.id}/import-signals`} style={{ padding: '6px 14px', background: '#10b981', color: 'white', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                    {(signalCount ?? 0) > 0 ? 'Importar más' : 'Importar'}
-                  </a>
-                )}
-              </div>
-            </div>
+            <ResourceRow
+              title="Lista de Señales I&C"
+              detail={(signalCount ?? 0) > 0
+                ? <span style={{ color: 'var(--success-500)', fontWeight: 500 }}>{signalCount} señales importadas</span>
+                : 'AI/AO/DI/DO con rango, alarmas, P&IDs (Fases B/C)'}
+              actions={
+                <>
+                  {(signalCount ?? 0) > 0 && (
+                    <ResourceLink href={`/projects/${project.id}/signals`}>Ver señales →</ResourceLink>
+                  )}
+                  {canEdit && (
+                    <ResourcePrimary href={`/projects/${project.id}/import-signals`} color="var(--success-500)">
+                      {(signalCount ?? 0) > 0 ? 'Importar más' : 'Importar'}
+                    </ResourcePrimary>
+                  )}
+                </>
+              }
+            />
 
             {/* Loops */}
-            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Loops de Control</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                  {(loopCount ?? 0) > 0
-                    ? <span style={{ color: '#8b5cf6', fontWeight: 500 }}>{loopCount} loops</span>
-                    : 'Lazos de control agrupados por subsistema'}
-                </div>
-              </div>
-              <a href={`/projects/${project.id}/loops`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                Ver →
-              </a>
-            </div>
+            <ResourceRow
+              title="Loops de Control"
+              detail={(loopCount ?? 0) > 0
+                ? <span style={{ color: '#8b5cf6', fontWeight: 500 }}>{loopCount} loops</span>
+                : 'Lazos de control agrupados por subsistema'}
+              actions={<ResourceLink href={`/projects/${project.id}/loops`}>Ver →</ResourceLink>}
+            />
 
             {/* Interlocks */}
-            <div style={{ padding: '14px 16px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>Interlocks / SIS</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                  {(interlockCount ?? 0) > 0
-                    ? <span style={{ color: '#ef4444', fontWeight: 500 }}>{interlockCount} interlocks</span>
-                    : 'Causa → efecto, set point y acción de seguridad'}
-                </div>
-              </div>
-              <a href={`/projects/${project.id}/interlocks`} style={{ padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '7px', fontSize: '12px', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                Ver →
-              </a>
-            </div>
+            <ResourceRow
+              title="Interlocks / SIS"
+              detail={(interlockCount ?? 0) > 0
+                ? <span style={{ color: 'var(--danger-500)', fontWeight: 500 }}>{interlockCount} interlocks</span>
+                : 'Causa → efecto, set point y acción de seguridad'}
+              actions={<ResourceLink href={`/projects/${project.id}/interlocks`}>Ver →</ResourceLink>}
+            />
 
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Certificates badge */}
       {(() => {
         const issued = (certCounts ?? []).filter(c => c.status === 'issued').length
         return (
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginTop: 16, marginBottom: 16 }}>
             <a href={`/projects/${project.id}/certificates`} style={{ textDecoration: 'none' }}>
               <div style={{
-                background: issued > 0 ? '#ecfdf5' : 'white',
-                border: `1px solid ${issued > 0 ? '#a7f3d0' : '#e2e8f0'}`,
-                borderRadius: '12px', padding: '14px 20px',
+                background: issued > 0 ? 'var(--success-50)' : 'var(--card-bg)',
+                border: `1px solid ${issued > 0 ? '#a7f3d0' : 'var(--border)'}`,
+                borderRadius: 'var(--radius-lg)', padding: '14px 20px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 transition: 'box-shadow 0.15s',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '20px' }}>◎</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Award size={20} color="var(--success-700)" aria-hidden="true" />
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Certificados de Completación</div>
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px' }}>
+                    <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>Certificados de Completación</div>
+                    <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 1 }}>
                       {issued > 0 ? `${issued} certificado${issued > 1 ? 's' : ''} emitido${issued > 1 ? 's' : ''}` : 'Ver elegibilidad por subsistema'}
                     </div>
                   </div>
                 </div>
-                <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 500 }}>Ver →</span>
+                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', fontWeight: 500 }}>Ver →</span>
               </div>
             </a>
           </div>
@@ -356,109 +326,138 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       })()}
 
       {/* KPIs card */}
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: 16 }}>
         <a href={`/projects/${project.id}/kpis`} style={{ textDecoration: 'none' }}>
           <div style={{
-            background: 'white', border: '1px solid #e2e8f0',
-            borderRadius: '12px', padding: '14px 20px',
+            background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)', padding: '14px 20px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '20px' }}>▲</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <TrendingUp size={20} color="var(--primary-500)" aria-hidden="true" />
               <div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>KPIs & S-curve</div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px' }}>
+                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>KPIs & S-curve</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 1 }}>
                   Avance por subsistema, curva S planificado vs real, export Excel
                 </div>
               </div>
             </div>
-            <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 500 }}>Ver →</span>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', fontWeight: 500 }}>Ver →</span>
           </div>
         </a>
       </div>
 
       {/* ITRs + Punch List */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
 
         {/* ITR card — real */}
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <Card padding="md">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h3 style={sectionTitle}>ITRs</h3>
-            <a href={`/projects/${project.id}/itrs`} style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}>
+            <a href={`/projects/${project.id}/itrs`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', textDecoration: 'none', fontWeight: 500 }}>
               Ver todos →
             </a>
           </div>
           {(itrCounts ?? []).length === 0 ? (
-            <div style={{ padding: '24px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+            <div style={{ padding: 24, background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0 }}>
                 Sin ITRs asignados. Abre un tag y asigna un template.
               </p>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {[
-                { key: 'not_started', label: 'Sin iniciar', color: '#64748b', bg: '#f1f5f9' },
-                { key: 'in_progress',  label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
-                { key: 'completed',    label: 'Completados',  color: '#10b981', bg: '#ecfdf5' },
-                { key: 'approved',     label: 'Aprobados',    color: '#7c3aed', bg: '#f5f3ff' },
+                { key: 'not_started', label: 'Sin iniciar', color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
+                { key: 'in_progress', label: 'En progreso', color: 'var(--primary-500)', bg: 'var(--primary-50)' },
+                { key: 'completed',   label: 'Completados', color: 'var(--success-500)', bg: 'var(--success-50)' },
+                { key: 'approved',    label: 'Aprobados',   color: '#7c3aed',            bg: '#f5f3ff' },
               ].map(s => {
                 const cnt = (itrCounts ?? []).filter(i => i.status === s.key).length
                 return cnt > 0 ? (
-                  <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: '8px', textAlign: 'center', minWidth: '70px' }}>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: s.color }}>{cnt}</div>
-                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>{s.label}</div>
+                  <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: 'var(--radius-md)', textAlign: 'center', minWidth: 70 }}>
+                    <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: s.color }}>{cnt}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{s.label}</div>
                   </div>
                 ) : null
               })}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Punch List card — real */}
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <Card padding="md">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h3 style={sectionTitle}>Punch List</h3>
-            <a href={`/projects/${project.id}/punches`} style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}>
+            <a href={`/projects/${project.id}/punches`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', textDecoration: 'none', fontWeight: 500 }}>
               Ver todos →
             </a>
           </div>
           {(punchCounts ?? []).length === 0 ? (
-            <div style={{ padding: '24px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+            <div style={{ padding: 24, background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0 }}>
                 Sin punches registrados. Se crean desde la ejecución de ITRs.
               </p>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {[
-                { key: 'A', label: 'Cat A', color: '#ef4444', bg: '#fee2e2' },
-                { key: 'B', label: 'Cat B', color: '#f59e0b', bg: '#fffbeb' },
-                { key: 'C', label: 'Cat C', color: '#64748b', bg: '#f8fafc' },
+                { key: 'A', label: 'Cat A', color: 'var(--danger-500)',  bg: 'var(--danger-50)' },
+                { key: 'B', label: 'Cat B', color: 'var(--warning-500)', bg: 'var(--warning-50)' },
+                { key: 'C', label: 'Cat C', color: 'var(--gray-500)',    bg: 'var(--gray-50)' },
               ].map(s => {
                 const open = (punchCounts ?? []).filter(p => p.category === s.key && p.status !== 'closed' && p.status !== 'cancelled').length
                 const closed = (punchCounts ?? []).filter(p => p.category === s.key && (p.status === 'closed' || p.status === 'cancelled')).length
                 return (
-                  <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: '8px', textAlign: 'center', minWidth: '70px' }}>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: s.color }}>{open}</div>
-                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>{s.label} abiertos</div>
-                    {closed > 0 && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '1px' }}>{closed} cerrados</div>}
+                  <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: 'var(--radius-md)', textAlign: 'center', minWidth: 70 }}>
+                    <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: s.color }}>{open}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{s.label} abiertos</div>
+                    {closed > 0 && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 1 }}>{closed} cerrados</div>}
                   </div>
                 )
               })}
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
     </div>
   )
 }
 
-
-const cardStyle: React.CSSProperties = {
-  background: 'white', borderRadius: '14px', padding: '20px 22px',
-  border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-}
 const sectionTitle: React.CSSProperties = {
-  fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: 0,
+  fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-strong)', margin: 0,
+}
+
+function ResourceRow({ title, detail, actions }: { title: string; detail: React.ReactNode; actions: React.ReactNode }) {
+  return (
+    <div style={{ padding: '14px 16px', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      <div>
+        <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>{title}</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginTop: 2 }}>{detail}</div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>{actions}</div>
+    </div>
+  )
+}
+
+function ResourceLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} style={{
+      padding: '6px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+      color: 'var(--gray-600)', borderRadius: 'var(--radius-sm)',
+      fontSize: 'var(--text-sm)', fontWeight: 500,
+      textDecoration: 'none', whiteSpace: 'nowrap',
+    }}>{children}</a>
+  )
+}
+
+function ResourcePrimary({ href, children, color = 'var(--primary-500)' }: { href: string; children: React.ReactNode; color?: string }) {
+  return (
+    <a href={href} style={{
+      padding: '6px 14px', background: color, color: '#fff',
+      borderRadius: 'var(--radius-sm)',
+      fontSize: 'var(--text-sm)', fontWeight: 500,
+      textDecoration: 'none', whiteSpace: 'nowrap',
+    }}>{children}</a>
+  )
 }

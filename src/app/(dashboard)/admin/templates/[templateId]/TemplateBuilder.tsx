@@ -109,7 +109,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
     { value: 'yes_no',      label: t('itemTypeYesNo'),       color: '#10b981' },
     { value: 'number',      label: t('itemTypeNumber'),      color: '#f59e0b' },
     { value: 'measurement', label: t('itemTypeMeasurement'), color: '#8b5cf6' },
-    { value: 'text',        label: t('itemTypeText'),        color: '#64748b' },
+    { value: 'text',        label: t('itemTypeText'),        color: 'var(--text-muted)' },
     { value: 'select',      label: t('itemTypeSelect'),      color: '#14b8a6' },
     { value: 'photo',       label: t('itemTypePhoto'),       color: '#ec4899' },
     { value: 'signature',   label: t('itemTypeSignature'),   color: '#6366f1' },
@@ -117,7 +117,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
   ]
 
   function TypeBadge({ type }: { type: string }) {
-    const cfg = ITEM_TYPES.find(it => it.value === type) ?? { label: type, color: '#94a3b8' }
+    const cfg = ITEM_TYPES.find(it => it.value === type) ?? { label: type, color: 'var(--gray-400)' }
     return (
       <span style={{
         padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
@@ -413,7 +413,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
     return (
       <div style={{
         margin: '0 0 2px', padding: '16px 18px',
-        background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px',
+        background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '10px',
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '10px', marginBottom: '10px' }}>
           <label style={fieldLabel}>
@@ -504,14 +504,14 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         {/* Flags */}
         <div style={{ display: 'flex', gap: '16px', marginBottom: '14px', flexWrap: 'wrap' }}>
           {FLAGS.map(flag => (
-            <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: '#374151' }}>
+            <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)' }}>
               <input
                 type="checkbox"
                 checked={itemForm[flag.key] as boolean}
                 onChange={e => setItemForm(f => ({ ...f, [flag.key]: e.target.checked }))}
                 style={{ accentColor: flag.color, width: '14px', height: '14px' }}
               />
-              <span style={{ color: (itemForm[flag.key] as boolean) ? flag.color : '#64748b' }}>{flag.label}</span>
+              <span style={{ color: (itemForm[flag.key] as boolean) ? flag.color : 'var(--text-muted)' }}>{flag.label}</span>
             </label>
           ))}
         </div>
@@ -583,7 +583,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
             onClick={onSave}
             disabled={isPending}
             style={{
-              padding: '7px 16px', background: '#3b82f6', color: 'white',
+              padding: '7px 16px', background: '#3b82f6', color: '#fff',
               borderRadius: '7px', fontSize: '12px', fontWeight: 500,
               border: 'none', cursor: isPending ? 'not-allowed' : 'pointer',
               opacity: isPending ? 0.6 : 1,
@@ -594,8 +594,8 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
           <button
             onClick={onCancel}
             style={{
-              padding: '7px 14px', background: 'white', border: '1px solid #e2e8f0',
-              borderRadius: '7px', fontSize: '12px', color: '#64748b', cursor: 'pointer',
+              padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+              borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
             }}
           >
             {t('btnCancel')}
@@ -617,14 +617,14 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       {/* Breadcrumb */}
       <a href="/admin/templates" style={{
         display: 'inline-flex', alignItems: 'center', gap: '6px',
-        fontSize: '13px', color: '#64748b', textDecoration: 'none', marginBottom: '20px',
+        fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '20px',
       }}>
         {t('breadcrumb')}
       </a>
 
       {/* Header card */}
       <div style={{
-        background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+        background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
         padding: '22px 24px', marginBottom: '24px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
@@ -633,7 +633,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
                 <span style={{
-                  fontSize: '22px', fontWeight: 800, color: '#0f172a',
+                  fontSize: '22px', fontWeight: 800, color: 'var(--text-strong)',
                   fontFamily: 'monospace', letterSpacing: '-0.5px',
                 }}>
                   {template.code}
@@ -664,17 +664,17 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 <span style={{
                   padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                   background: template.is_active ? '#10b98115' : '#94a3b815',
-                  color: template.is_active ? '#10b981' : '#94a3b8',
-                  border: `1px solid ${template.is_active ? '#10b98130' : '#e2e8f0'}`,
+                  color: template.is_active ? '#10b981' : 'var(--gray-400)',
+                  border: `1px solid ${template.is_active ? '#10b98130' : 'var(--border)'}`,
                 }}>
                   {template.is_active ? t('statusActive') : t('statusInactive')}
                 </span>
               </div>
               <p style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', margin: '0 0 4px' }}>{template.title}</p>
               {template.description && (
-                <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{template.description}</p>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{template.description}</p>
               )}
-              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '8px 0 0' }}>
+              <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '8px 0 0' }}>
                 {t('versionMeta', {
                   version: template.version,
                   items: totalItems,
@@ -721,7 +721,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                     disabled={isPending}
                     style={{
                       padding: '7px 14px', background: '#1e40af', border: 'none',
-                      borderRadius: '8px', fontSize: '12px', color: 'white', cursor: isPending ? 'not-allowed' : 'pointer',
+                      borderRadius: '8px', fontSize: '12px', color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer',
                       fontWeight: 600, opacity: isPending ? 0.7 : 1,
                     }}
                   >
@@ -730,8 +730,8 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                   <button
                     onClick={() => setHeaderEditing(true)}
                     style={{
-                      padding: '7px 14px', background: 'white', border: '1px solid #e2e8f0',
-                      borderRadius: '8px', fontSize: '12px', color: '#475569', cursor: 'pointer',
+                      padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                      borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
                     }}
                   >
                     {t('btnEditHeader')}
@@ -742,7 +742,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
           </div>
         ) : (
           <div>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 16px' }}>
               {t('headerEditTitle')}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px', marginBottom: '12px' }}>
@@ -780,7 +780,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                 onChange={e => setHeaderForm(f => ({ ...f, is_active: e.target.checked }))}
                 style={{ accentColor: '#10b981', width: '14px', height: '14px' }}
               />
-              <span style={{ fontSize: '13px', color: '#374151' }}>{t('flagActiveLabel')}</span>
+              <span style={{ fontSize: '13px', color: 'var(--gray-700)' }}>{t('flagActiveLabel')}</span>
             </label>
             {headerError && (
               <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 12px', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px' }}>
@@ -791,13 +791,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               <button
                 onClick={saveHeader}
                 disabled={isPending}
-                style={{ padding: '8px 18px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
+                style={{ padding: '8px 18px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
               >
                 {isPending ? t('btnSaving') : t('btnSave')}
               </button>
               <button
                 onClick={() => { setHeaderEditing(false); setHeaderError(null) }}
-                style={{ padding: '8px 14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                style={{ padding: '8px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 {t('btnCancel')}
               </button>
@@ -817,14 +817,14 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       {/* Sections */}
       {sections.length === 0 && (
         <div style={{
-          background: 'white', borderRadius: '14px', border: '2px dashed #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '2px dashed #e2e8f0',
           padding: '48px', textAlign: 'center', marginBottom: '16px',
         }}>
           <div style={{ fontSize: '28px', opacity: 0.3, marginBottom: '10px' }}>▤</div>
-          <p style={{ fontSize: '14px', fontWeight: 500, color: '#475569', margin: '0 0 4px' }}>
+          <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 4px' }}>
             {t('emptyTitle')}
           </p>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>
             {t('emptyDesc')}
           </p>
         </div>
@@ -832,13 +832,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
       {sections.map((section, sIdx) => (
         <div key={section.id} style={{
-          background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
           marginBottom: '12px', overflow: 'hidden',
         }}>
           {/* Section header */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0',
+            padding: '12px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)',
           }}>
             {editingSectionId === section.id ? (
               <>
@@ -850,14 +850,14 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                   style={{ ...fieldInput, flex: 1, fontSize: '13px', fontWeight: 600 }}
                 />
                 <button onClick={() => handleSaveSection(section.id)} style={iconBtn('#3b82f6')}>✓</button>
-                <button onClick={() => setEditingSectionId(null)} style={iconBtn('#94a3b8')}>✕</button>
+                <button onClick={() => setEditingSectionId(null)} style={iconBtn('var(--gray-400)')}>✕</button>
               </>
             ) : (
               <>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', flex: 1 }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', flex: 1 }}>
                   {section.title}
                 </span>
-                <span style={{ fontSize: '11px', color: '#94a3b8', marginRight: '8px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--gray-400)', marginRight: '8px' }}>
                   {t('sectionItemCount', { count: section.items.length, plural: section.items.length !== 1 ? 's' : '' })}
                 </span>
                 {canEdit && (
@@ -865,13 +865,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                     <button
                       onClick={() => handleMoveSection(section.id, 'up')}
                       disabled={sIdx === 0 || isPending}
-                      style={{ ...iconBtn('#64748b'), opacity: sIdx === 0 ? 0.3 : 1 }}
+                      style={{ ...iconBtn('var(--text-muted)'), opacity: sIdx === 0 ? 0.3 : 1 }}
                       title={t('tooltipMoveUp')}
                     >▲</button>
                     <button
                       onClick={() => handleMoveSection(section.id, 'down')}
                       disabled={sIdx === sections.length - 1 || isPending}
-                      style={{ ...iconBtn('#64748b'), opacity: sIdx === sections.length - 1 ? 0.3 : 1 }}
+                      style={{ ...iconBtn('var(--text-muted)'), opacity: sIdx === sections.length - 1 ? 0.3 : 1 }}
                       title={t('tooltipMoveDown')}
                     >▼</button>
                     <button
@@ -893,7 +893,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
           {/* Items */}
           <div style={{ padding: '8px 0' }}>
             {section.items.length === 0 && addingItemSectionId !== section.id && (
-              <p style={{ fontSize: '12px', color: '#94a3b8', padding: '12px 18px', margin: 0 }}>
+              <p style={{ fontSize: '12px', color: 'var(--gray-400)', padding: '12px 18px', margin: 0 }}>
                 {t('emptySectionHint')}
               </p>
             )}
@@ -919,13 +919,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                     alignItems: 'center', fontSize: '12px',
                   }}
                 >
-                  <span style={{ color: '#64748b', fontFamily: 'monospace', fontWeight: 600, fontSize: '11px' }}>
+                  <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontWeight: 600, fontSize: '11px' }}>
                     {item.item_number ?? '—'}
                   </span>
                   <div>
-                    <div style={{ color: '#0f172a', fontWeight: 500 }}>{item.description}</div>
+                    <div style={{ color: 'var(--text-strong)', fontWeight: 500 }}>{item.description}</div>
                     {item.description_es && (
-                      <div style={{ color: '#64748b', fontSize: '11px', marginTop: '1px' }}>{item.description_es}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '1px' }}>{item.description_es}</div>
                     )}
                     {item.condition_item_id && (() => {
                       const condItem = sections.flatMap(s => s.items).find(it => it.id === item.condition_item_id)
@@ -940,13 +940,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                   </div>
                   <TypeBadge type={item.item_type} />
                   <span title={t('tooltipCritical')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                    {item.is_critical ? <span style={{ color: '#ef4444' }}>●</span> : <span style={{ color: '#e2e8f0' }}>○</span>}
+                    {item.is_critical ? <span style={{ color: '#ef4444' }}>●</span> : <span style={{ color: 'var(--border)' }}>○</span>}
                   </span>
                   <span title={t('tooltipRequired')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                    {item.is_required ? <span style={{ color: '#f59e0b' }}>●</span> : <span style={{ color: '#e2e8f0' }}>○</span>}
+                    {item.is_required ? <span style={{ color: '#f59e0b' }}>●</span> : <span style={{ color: 'var(--border)' }}>○</span>}
                   </span>
                   <span title={t('tooltipPhoto')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                    {item.requires_photo ? <span style={{ color: '#3b82f6' }}>⊙</span> : <span style={{ color: '#e2e8f0' }}>○</span>}
+                    {item.requires_photo ? <span style={{ color: '#3b82f6' }}>⊙</span> : <span style={{ color: 'var(--border)' }}>○</span>}
                   </span>
                   {canEdit ? (
                     <div style={{ display: 'flex', gap: '2px', justifyContent: 'flex-end' }}>
@@ -978,11 +978,11 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                   onClick={() => openAddItem(section.id)}
                   style={{
                     padding: '6px 14px', background: 'transparent', border: '1px dashed #cbd5e1',
-                    borderRadius: '7px', fontSize: '12px', color: '#64748b', cursor: 'pointer',
+                    borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
                     transition: 'all 0.15s',
                   }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLElement).style.color = '#3b82f6' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#cbd5e1'; (e.currentTarget as HTMLElement).style.color = '#64748b' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gray-300)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
                 >
                   {t('btnAddItem')}
                 </button>
@@ -1008,13 +1008,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               <button
                 onClick={handleAddSection}
                 disabled={isPending || !newSectionTitle.trim()}
-                style={{ padding: '9px 18px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
+                style={{ padding: '9px 18px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
               >
                 {t('btnAddSection')}
               </button>
               <button
                 onClick={() => { setShowAddSection(false); setNewSectionTitle('') }}
-                style={{ padding: '9px 14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                style={{ padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 {t('btnCancel')}
               </button>
@@ -1023,12 +1023,12 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
             <button
               onClick={() => setShowAddSection(true)}
               style={{
-                padding: '10px 20px', background: 'white', border: '1px dashed #cbd5e1',
-                borderRadius: '10px', fontSize: '13px', color: '#64748b', cursor: 'pointer',
+                padding: '10px 20px', background: 'var(--card-bg)', border: '1px dashed #cbd5e1',
+                borderRadius: '10px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
                 width: '100%', transition: 'all 0.15s',
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLElement).style.color = '#3b82f6' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#cbd5e1'; (e.currentTarget as HTMLElement).style.color = '#64748b' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gray-300)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
             >
               {t('btnAddSectionMain')}
             </button>
@@ -1037,14 +1037,14 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       )}
 
       {/* Legend */}
-      <div style={{ marginTop: '28px', padding: '12px 16px', background: '#f8fafc', borderRadius: '8px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+      <div style={{ marginTop: '28px', padding: '12px 16px', background: 'var(--gray-50)', borderRadius: '8px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         {[
           { icon: '●', color: '#ef4444', label: t('legendCritical') },
           { icon: '●', color: '#f59e0b', label: t('legendRequired') },
           { icon: '⊙', color: '#3b82f6', label: t('legendRequiresPhoto') },
-          { icon: '○', color: '#e2e8f0', label: t('legendNotApplicable') },
+          { icon: '○', color: 'var(--border)', label: t('legendNotApplicable') },
         ].map(l => (
-          <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#64748b' }}>
+          <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-muted)' }}>
             <span style={{ color: l.color, fontSize: '13px' }}>{l.icon}</span>
             {l.label}
           </span>
@@ -1070,27 +1070,27 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setShowPublishConfirm(false) }}
         >
-          <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
-            <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: '0 0 10px' }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+            <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
               {t('publishVersionTitle')}
             </h2>
-            <p style={{ fontSize: '13px', color: '#475569', margin: '0 0 6px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 6px' }}>
               {t('publishVersionDesc', { version: template.version + 1 })}
             </p>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 22px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '0 0 22px' }}>
               {t('publishVersionNote')}
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowPublishConfirm(false)}
-                style={{ padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                style={{ padding: '8px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 {t('btnCancel')}
               </button>
               <button
                 onClick={handlePublishVersion}
                 disabled={isPending}
-                style={{ padding: '8px 20px', background: '#1e40af', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'white', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
+                style={{ padding: '8px 20px', background: '#1e40af', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
               >
                 {isPending ? t('btnSaving') : t('btnPublishVersionConfirm', { version: template.version + 1 })}
               </button>
@@ -1106,12 +1106,12 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
 const fieldLabel: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', gap: '5px',
-  fontSize: '11px', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.04em',
+  fontSize: '11px', fontWeight: 600, color: 'var(--gray-700)', textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 
 const fieldInput: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '7px',
-  fontSize: '13px', color: '#0f172a', background: 'white', outline: 'none',
+  padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', outline: 'none',
   fontFamily: 'inherit', width: '100%', boxSizing: 'border-box',
 }
 
@@ -1125,6 +1125,6 @@ function iconBtn(color: string): React.CSSProperties {
 
 const miniBtn: React.CSSProperties = {
   width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  borderRadius: '4px', border: 'none', background: 'transparent', color: '#94a3b8',
+  borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--gray-400)',
   cursor: 'pointer', fontSize: '10px', padding: 0,
 }

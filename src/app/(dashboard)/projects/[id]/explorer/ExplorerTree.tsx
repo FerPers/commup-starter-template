@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { FolderOpen } from 'lucide-react'
 import type { ExplorerArea, ExplorerSystem, ExplorerSubsystem } from '@/types/database'
 
 interface Props {
@@ -35,7 +36,7 @@ function rollupSystem(sys: ExplorerSystem) {
 
 function ProgressBar({ pct }: { pct: number }) {
   return (
-    <div style={{ width: '80px', height: '5px', background: '#f1f5f9', borderRadius: '999px', overflow: 'hidden', flexShrink: 0 }}>
+    <div style={{ width: '80px', height: '5px', background: 'var(--gray-100)', borderRadius: '999px', overflow: 'hidden', flexShrink: 0 }}>
       <div style={{
         height: '100%',
         width: `${pct}%`,
@@ -60,7 +61,7 @@ function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: s
         display: 'flex', alignItems: 'center', gap: '10px',
         padding: '8px 12px 8px 48px',
         cursor: 'pointer',
-        background: hover ? '#f8fafc' : 'transparent',
+        background: hover ? 'var(--gray-50)' : 'transparent',
         borderRadius: '6px',
         transition: 'background 0.1s',
       }}
@@ -68,12 +69,12 @@ function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: s
       <span style={{ color: '#94a3b8', fontSize: '13px', flexShrink: 0 }}>└─</span>
       <span style={{
         fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 600,
-        color: '#475569', background: '#f1f5f9', padding: '2px 7px',
+        color: 'var(--text-muted)', background: 'var(--gray-100)', padding: '2px 7px',
         borderRadius: '5px', flexShrink: 0,
       }}>
         {sub.code}
       </span>
-      <span style={{ fontSize: '13px', color: '#64748b', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span style={{ fontSize: '13px', color: 'var(--text-muted)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {sub.name}
       </span>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -88,7 +89,7 @@ function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: s
         )}
         <span style={{ fontSize: '11px', color: '#94a3b8' }}>{sub.tag_count} tags</span>
         <ProgressBar pct={pct} />
-        <span style={{ fontSize: '11px', fontWeight: 600, color: pct === 100 ? '#10b981' : '#64748b', width: '32px', textAlign: 'right' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: pct === 100 ? '#10b981' : 'var(--text-muted)', width: '32px', textAlign: 'right' }}>
           {pct}%
         </span>
       </div>
@@ -114,7 +115,7 @@ function SystemRow({
           display: 'flex', alignItems: 'center', gap: '10px',
           padding: '9px 12px 9px 24px',
           cursor: 'pointer',
-          background: hover ? '#f8fafc' : 'transparent',
+          background: hover ? 'var(--gray-50)' : 'transparent',
           borderRadius: '6px',
         }}
       >
@@ -123,7 +124,7 @@ function SystemRow({
         </span>
         <span style={{
           fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 600,
-          color: '#334155', background: '#e2e8f0', padding: '2px 7px',
+          color: '#334155', background: 'var(--border)', padding: '2px 7px',
           borderRadius: '5px', flexShrink: 0,
         }}>
           {sys.code}
@@ -143,7 +144,7 @@ function SystemRow({
           )}
           <span style={{ fontSize: '11px', color: '#94a3b8' }}>{roll.tags} tags</span>
           <ProgressBar pct={roll.pct} />
-          <span style={{ fontSize: '11px', fontWeight: 600, color: roll.pct === 100 ? '#10b981' : '#64748b', width: '32px', textAlign: 'right' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: roll.pct === 100 ? '#10b981' : 'var(--text-muted)', width: '32px', textAlign: 'right' }}>
             {roll.pct}%
           </span>
         </div>
@@ -179,9 +180,11 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
     return (
       <div style={{
         textAlign: 'center', padding: '60px 20px', color: '#94a3b8',
-        background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+        background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
       }}>
-        <div style={{ fontSize: '32px', marginBottom: '12px' }}>🗂️</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+          <FolderOpen size={32} aria-hidden="true" />
+        </div>
         <div style={{ fontWeight: 500 }}>No hay áreas definidas en este proyecto</div>
         <div style={{ fontSize: '13px', marginTop: '4px' }}>Importa tags para generar la jerarquía automáticamente</div>
       </div>
@@ -190,8 +193,8 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
 
   return (
     <div style={{
-      background: 'white', borderRadius: '12px',
-      border: '1px solid #e2e8f0', overflow: 'hidden',
+      background: 'var(--card-bg)', borderRadius: '12px',
+      border: '1px solid var(--border)', overflow: 'hidden',
     }}>
       {explorerData.map((area, aIdx) => {
         const roll = rollupArea(area)
@@ -206,20 +209,20 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '12px 12px',
                 cursor: 'pointer',
-                background: '#f8fafc',
+                background: 'var(--gray-50)',
               }}
             >
-              <span style={{ color: '#64748b', fontSize: '12px', width: '14px', textAlign: 'center', flexShrink: 0 }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '12px', width: '14px', textAlign: 'center', flexShrink: 0 }}>
                 {isAreaOpen ? '▾' : '▸'}
               </span>
               <span style={{
                 fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 700,
-                color: '#0f172a', background: '#e2e8f0', padding: '3px 8px',
+                color: 'var(--text-strong)', background: 'var(--border)', padding: '3px 8px',
                 borderRadius: '5px', flexShrink: 0,
               }}>
                 {area.code}
               </span>
-              <span style={{ fontSize: '14px', color: '#0f172a', fontWeight: 600, flex: 1 }}>
+              <span style={{ fontSize: '14px', color: 'var(--text-strong)', fontWeight: 600, flex: 1 }}>
                 {area.name}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
@@ -232,9 +235,9 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
                     ● {roll.punches} Cat-A
                   </span>
                 )}
-                <span style={{ fontSize: '12px', color: '#64748b' }}>{roll.tags} tags</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{roll.tags} tags</span>
                 <ProgressBar pct={roll.pct} />
-                <span style={{ fontSize: '12px', fontWeight: 700, color: roll.pct === 100 ? '#10b981' : '#0f172a', width: '36px', textAlign: 'right' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: roll.pct === 100 ? 'var(--success-500)' : 'var(--text-strong)', width: '36px', textAlign: 'right' }}>
                   {roll.pct}%
                 </span>
               </div>

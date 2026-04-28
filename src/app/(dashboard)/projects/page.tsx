@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { FolderKanban, Plus } from 'lucide-react'
+import { EmptyState, Button } from '@/components/ui'
 import ProjectCard from './ProjectCard'
 
 export default async function ProjectsPage() {
@@ -38,25 +40,22 @@ export default async function ProjectsPage() {
   const totalCount       = (projects ?? []).length
 
   return (
-    <div style={{ padding: '32px' }}>
-
+    <div style={{ padding: 32 }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
         <div>
-          <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
             {t('title')}
           </h1>
-          <p style={{ color: '#64748b', marginTop: '4px', fontSize: '15px' }}>
+          <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: 'var(--text-base)' }}>
             {t('subtitle', { count: totalCount })}
           </p>
         </div>
         {canCreateProject && (
-          <a href="/setup?mode=project" style={{
-            padding: '10px 20px', background: '#3b82f6', color: 'white',
-            borderRadius: '10px', fontSize: '14px', fontWeight: 500,
-            textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px',
-          }}>
-            {t('newProject')}
+          <a href="/setup?mode=project" style={{ textDecoration: 'none' }}>
+            <Button variant="primary" leftIcon={<Plus size={16} aria-hidden="true" />}>
+              {t('newProject')}
+            </Button>
           </a>
         )}
       </div>
@@ -64,34 +63,31 @@ export default async function ProjectsPage() {
       {/* Empty state */}
       {totalCount === 0 && (
         <div style={{
-          padding: '64px', textAlign: 'center',
-          background: 'white', borderRadius: '16px',
-          border: '2px dashed #e2e8f0',
+          background: 'var(--card-bg)',
+          borderRadius: 'var(--radius-lg)',
+          border: '2px dashed var(--border)',
+          padding: '32px 24px',
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⬡</div>
-          <p style={{ color: '#475569', fontWeight: 500, fontSize: '16px', marginBottom: '6px' }}>{t('empty.title')}</p>
-          <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
-            {t('empty.desc')}
-          </p>
-          {canCreateProject && (
-            <a href="/setup?mode=project" style={{
-              padding: '10px 24px', background: '#3b82f6', color: 'white',
-              borderRadius: '10px', fontSize: '14px', fontWeight: 500,
-              textDecoration: 'none',
-            }}>
-              {t('createFirst')}
-            </a>
-          )}
+          <EmptyState
+            icon={<FolderKanban size={28} aria-hidden="true" />}
+            title={t('empty.title')}
+            description={t('empty.desc')}
+            action={canCreateProject && (
+              <a href="/setup?mode=project" style={{ textDecoration: 'none' }}>
+                <Button variant="primary">{t('createFirst')}</Button>
+              </a>
+            )}
+          />
         </div>
       )}
 
       {/* Active projects */}
       {activeProjects.length > 0 && (
-        <section style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
+        <section style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
             {t('active')} · {activeProjects.length}
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
             {activeProjects.map(project => (
               <ProjectCard key={project.id} project={project as any} phases={phases ?? []} />
             ))}
@@ -102,17 +98,16 @@ export default async function ProjectsPage() {
       {/* Inactive projects */}
       {inactiveProjects.length > 0 && (
         <section>
-          <h2 style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
+          <h2 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
             {t('inactive')} · {inactiveProjects.length}
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
             {inactiveProjects.map(project => (
               <ProjectCard key={project.id} project={project as any} phases={phases ?? []} inactive />
             ))}
           </div>
         </section>
       )}
-
     </div>
   )
 }

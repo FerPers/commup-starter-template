@@ -1,21 +1,185 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   CommUp Design Tokens — Stage 17
+   Fuente única de verdad para color, tipografía, radius, sombras.
+   Tokens duales light/dark. Componentes UI consumen estos tokens.
+   ========================================================================== */
+
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --sidebar-bg: #0f172a;
-  --sidebar-text: #94a3b8;
-  --sidebar-active: #3b82f6;
-  --card-bg: #ffffff;
-  --border: #e2e8f0;
-  --primary: #3b82f6;
-  --primary-dark: #1d4ed8;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --punch-a: #ef4444;
-  --punch-b: #f59e0b;
-  --punch-c: #6b7280;
+  /* ---------- Color: Gray scale ---------- */
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* ---------- Color: Primary (blue) ---------- */
+  --primary-50:  #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+
+  /* ---------- Color: Success (green) ---------- */
+  --success-50:  #ecfdf5;
+  --success-300: #6ee7b7;
+  --success-500: #10b981;
+  --success-600: #059669;
+  --success-700: #047857;
+
+  /* ---------- Color: Warning (amber) ---------- */
+  --warning-50:  #fffbeb;
+  --warning-300: #fcd34d;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+
+  /* ---------- Color: Danger (red) ---------- */
+  --danger-50:  #fef2f2;
+  --danger-300: #fca5a5;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --danger-700: #b91c1c;
+
+  /* ---------- Color: Accent (purple) ---------- */
+  --accent-50:  #faf5ff;
+  --accent-300: #d8b4fe;
+  --accent-500: #a855f7;
+  --accent-600: #9333ea;
+  --accent-700: #7e22ce;
+
+  /* ---------- Role chips (Topbar) — duales light/dark ---------- */
+  --role-owner-fg:     var(--accent-700);
+  --role-owner-bg:     rgba(168, 85, 247, 0.12);
+  --role-owner-border: rgba(168, 85, 247, 0.30);
+  --role-admin-fg:     var(--primary-700);
+  --role-admin-bg:     rgba(59, 130, 246, 0.12);
+  --role-admin-border: rgba(59, 130, 246, 0.30);
+  --role-architect-fg:     var(--primary-700);
+  --role-architect-bg:     rgba(59, 130, 246, 0.10);
+  --role-architect-border: rgba(59, 130, 246, 0.25);
+  --role-leader-fg:     var(--warning-700);
+  --role-leader-bg:     rgba(245, 158, 11, 0.12);
+  --role-leader-border: rgba(245, 158, 11, 0.30);
+  --role-inspector-fg:     var(--success-700);
+  --role-inspector-bg:     rgba(16, 185, 129, 0.12);
+  --role-inspector-border: rgba(16, 185, 129, 0.30);
+  --role-client-fg:     var(--gray-700);
+  --role-client-bg:     rgba(100, 116, 139, 0.12);
+  --role-client-border: rgba(100, 116, 139, 0.30);
+
+  /* ---------- Tipografía ---------- */
+  --text-xs:   11px;
+  --text-sm:   12px;
+  --text-base: 14px;
+  --text-md:   16px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+
+  /* ---------- Radius ---------- */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-pill: 999px;
+
+  /* ---------- Sombras ---------- */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.10), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+
+  /* ---------- Aliases semánticos (light mode) ----------
+     Compatibilidad hacia atrás: los nombres viejos siguen funcionando.
+     Páginas existentes consumen estos sin romperse. */
+  --background:     var(--gray-50);
+  --foreground:     var(--gray-900);
+  --card-bg:        #ffffff;
+  --border:         var(--gray-200);
+  --text-muted:     var(--gray-500);
+  --text-strong:    var(--gray-900);
+
+  --sidebar-bg:     var(--gray-900);
+  --sidebar-text:   var(--gray-400);
+  --sidebar-active: var(--primary-500);
+
+  --primary:        var(--primary-500);
+  --primary-dark:   var(--primary-700);
+  --success:        var(--success-500);
+  --warning:        var(--warning-500);
+  --danger:         var(--danger-500);
+
+  --punch-a:        var(--danger-500);
+  --punch-b:        var(--warning-500);
+  --punch-c:        var(--gray-500);
+
+  /* Focus ring (a11y, consumido por componentes UI Fase 2) */
+  --focus-ring:     0 0 0 3px rgba(59, 130, 246, 0.35);
+}
+
+/* ==========================================================================
+   Dark mode — Fase 7 lo activa con [data-theme="dark"] en <html>
+   Estrategia: invertir solo los grises claros (50/100/200) que las páginas
+   usan como fondos/borders sutiles. Los grises medios+oscuros (300-900) se
+   mantienen para componentes "siempre oscuros" (PushNotificationManager,
+   AIAssistantChat, etc.) y para texto dim que ya se ve bien en ambos modos.
+   Los aliases semánticos cambian completamente.
+   ========================================================================== */
+:root[data-theme="dark"] {
+  /* Solo invertir grises claros (fondos/bordes/hovers que deben oscurecerse) */
+  --gray-50:  #0f172a;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+
+  /* Aliases semánticos en dark */
+  --background:     #0f172a;
+  --foreground:     #f8fafc;
+  --card-bg:        #1e293b;
+  --border:         #334155;
+  --text-muted:     var(--gray-400);
+  --text-strong:    #f8fafc;
+
+  --sidebar-bg:     #0a1224;
+  --sidebar-text:   var(--gray-400);
+  --sidebar-active: var(--primary-400);
+
+  --primary:        var(--primary-400);
+  --primary-dark:   var(--primary-600);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.40), 0 2px 4px -2px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.50), 0 4px 6px -4px rgba(0, 0, 0, 0.30);
+
+  --focus-ring:     0 0 0 3px rgba(96, 165, 250, 0.45);
+
+  /* Role chips override en dark — fg lighter + bg/border más opacos para AA */
+  --role-owner-fg:     var(--accent-300);
+  --role-owner-bg:     rgba(168, 85, 247, 0.22);
+  --role-owner-border: rgba(168, 85, 247, 0.45);
+  --role-admin-fg:     var(--primary-300);
+  --role-admin-bg:     rgba(59, 130, 246, 0.22);
+  --role-admin-border: rgba(59, 130, 246, 0.45);
+  --role-architect-fg:     var(--primary-300);
+  --role-architect-bg:     rgba(59, 130, 246, 0.20);
+  --role-architect-border: rgba(59, 130, 246, 0.40);
+  --role-leader-fg:     var(--warning-300);
+  --role-leader-bg:     rgba(245, 158, 11, 0.22);
+  --role-leader-border: rgba(245, 158, 11, 0.45);
+  --role-inspector-fg:     var(--success-300);
+  --role-inspector-bg:     rgba(16, 185, 129, 0.22);
+  --role-inspector-border: rgba(16, 185, 129, 0.45);
+  --role-client-fg:     var(--gray-300);
+  --role-client-bg:     rgba(148, 163, 184, 0.22);
+  --role-client-border: rgba(148, 163, 184, 0.45);
 }
 
 @theme inline {
@@ -33,11 +197,59 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-base);
   -webkit-font-smoothing: antialiased;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: var(--radius-sm); }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ==========================================================================
+   Form controls — defaults compatibles con dark mode
+   Las páginas usan inline styles para border/padding/width pero NO definen
+   background/color/placeholder, así que estos defaults aplican en ambos modos.
+   ========================================================================== */
+input, textarea, select {
+  background-color: var(--card-bg);
+  color: var(--text-strong);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select {
+  color-scheme: dark;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Focus rings — keyboard a11y (WCAG 2.4.7 Focus Visible)
+   Aplica en inputs/textarea/select/button/a sin focus ring propio.
+   Usa box-shadow porque varios componentes legacy ponen outline: none inline,
+   y box-shadow no se setea inline en esos casos, así que sí se ve.
+   ========================================================================== */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}

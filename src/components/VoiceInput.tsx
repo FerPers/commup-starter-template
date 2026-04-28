@@ -177,15 +177,16 @@ export function useVoiceInput(options: {
 function VoiceWaveform({ active }: { active: boolean }) {
   const bars = Array.from({ length: 7 });
   return (
-    <div className="flex items-center justify-center gap-1 h-6">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, height: 24 }}>
       {bars.map((_, i) => (
         <div
           key={i}
-          className={`w-1 rounded-full transition-all ${
-            active ? 'bg-sky-400' : 'bg-slate-600'
-          }`}
           style={{
-            height: active ? undefined : '4px',
+            width: 4,
+            borderRadius: 'var(--radius-pill)',
+            transition: 'all 0.15s',
+            background: active ? 'var(--primary-400)' : 'var(--gray-600)',
+            height: active ? undefined : 4,
             animation: active
               ? `waveBar 0.8s ease-in-out ${i * 0.1}s infinite alternate`
               : 'none',
@@ -260,16 +261,19 @@ export default function VoiceInput({
   }, [value]);
 
   return (
-    <div className={`flex flex-col gap-1 ${className}`}>
+    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {label && (
-        <label className="text-sm font-medium text-slate-300">{label}</label>
+        <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-300)' }}>{label}</label>
       )}
 
-      <div className={`relative rounded-xl border transition-all ${
-        isListening
-          ? 'border-sky-500 ring-2 ring-sky-500/30 bg-slate-800'
-          : 'border-slate-600 bg-slate-800 focus-within:border-slate-500'
-      }`}>
+      <div style={{
+        position: 'relative',
+        borderRadius: 'var(--radius-lg)',
+        border: `1px solid ${isListening ? 'var(--primary-500)' : 'var(--gray-600)'}`,
+        background: 'var(--gray-800)',
+        boxShadow: isListening ? '0 0 0 2px rgba(59, 130, 246, 0.3)' : undefined,
+        transition: 'all 0.15s',
+      }}>
         {/* Textarea */}
         <textarea
           ref={textareaRef}
@@ -279,43 +283,65 @@ export default function VoiceInput({
           disabled={disabled || isListening}
           maxLength={maxLength}
           rows={3}
-          className="w-full bg-transparent text-white px-4 pt-3 pb-10 resize-none focus:outline-none placeholder-slate-600 text-sm leading-relaxed"
+          style={{
+            width: '100%',
+            background: 'transparent',
+            color: '#fff',
+            padding: '12px 16px 40px',
+            resize: 'none',
+            outline: 'none',
+            fontSize: 'var(--text-sm)',
+            lineHeight: 1.6,
+            border: 'none',
+            fontFamily: 'inherit',
+          }}
         />
 
         {/* Interim text overlay */}
         {isListening && interimDisplay && (
-          <div className="absolute top-3 left-4 right-12 pointer-events-none">
-            <span className="text-slate-500 text-sm">{value && value + ' '}</span>
-            <span className="text-sky-300/70 text-sm italic">{interimDisplay}</span>
+          <div style={{ position: 'absolute', top: 12, left: 16, right: 48, pointerEvents: 'none' }}>
+            <span style={{ color: 'var(--gray-500)', fontSize: 'var(--text-sm)' }}>{value && value + ' '}</span>
+            <span style={{ color: 'rgba(147, 197, 253, 0.7)', fontSize: 'var(--text-sm)', fontStyle: 'italic' }}>{interimDisplay}</span>
           </div>
         )}
 
         {/* Bottom bar: contador + waveform + botón */}
-        <div className="absolute bottom-2 left-3 right-2 flex items-center gap-2">
+        <div style={{ position: 'absolute', bottom: 8, left: 12, right: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Contador de caracteres */}
-          <span className="text-slate-600 text-xs">
+          <span style={{ color: 'var(--gray-600)', fontSize: 'var(--text-xs)' }}>
             {value.length}/{maxLength}
           </span>
 
           {/* Waveform cuando escucha */}
           {isListening && (
-            <div className="flex-1">
+            <div style={{ flex: 1 }}>
               <VoiceWaveform active={true} />
             </div>
           )}
 
-          <div className="flex-1" />
+          <div style={{ flex: 1 }} />
 
           {/* Botón micrófono */}
           {isAvailable && !disabled && (
             <button
               type="button"
               onClick={toggleVoice}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                isListening
-                  ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
-                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-              }`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 600,
+                transition: 'all 0.15s',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                background: isListening ? 'var(--danger-500)' : 'var(--gray-700)',
+                color: isListening ? '#fff' : 'var(--gray-300)',
+                animation: isListening ? 'pulse 2s infinite' : undefined,
+              }}
             >
               {isListening ? (
                 <>
@@ -324,7 +350,7 @@ export default function VoiceInput({
                 </>
               ) : (
                 <>
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <svg style={{ width: 14, height: 14 }} viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-1 13.93V19h-2v2h6v-2h-2v-2.07A7 7 0 0 0 19 11h-2a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93z"/>
                   </svg>
                   <span>Dictar</span>
@@ -338,9 +364,25 @@ export default function VoiceInput({
             <button
               type="button"
               onClick={() => onChange('')}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-400 hover:bg-slate-700 transition"
+              style={{
+                padding: 6,
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--gray-600)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--gray-400)'
+                e.currentTarget.style.background = 'var(--gray-700)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--gray-600)'
+                e.currentTarget.style.background = 'transparent'
+              }}
             >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <svg style={{ width: 14, height: 14 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
@@ -350,22 +392,22 @@ export default function VoiceInput({
 
       {/* Listening indicator */}
       {isListening && (
-        <div className="flex items-center gap-2 text-sky-400 text-xs">
-          <span className="w-2 h-2 bg-sky-400 rounded-full animate-pulse" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary-400)', fontSize: 'var(--text-xs)' }}>
+          <span style={{ width: 8, height: 8, background: 'var(--primary-400)', borderRadius: 'var(--radius-pill)', animation: 'pulse 2s infinite' }} />
           Escuchando... Hable claramente en español
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="text-red-400 text-xs flex items-center gap-1">
+        <div style={{ color: 'var(--danger-500)', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 4 }}>
           <span>⚠️</span> {error}
         </div>
       )}
 
       {/* Fallback notice */}
       {!isAvailable && (
-        <div className="text-slate-500 text-xs">
+        <div style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)' }}>
           💡 Dictado disponible en Chrome y Edge
         </div>
       )}

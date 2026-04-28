@@ -163,20 +163,20 @@ export default async function PidViewerPage({
       {/* Top bar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px',
-        background: 'white', borderBottom: '1px solid #e2e8f0', flexShrink: 0,
+        background: 'var(--card-bg)', borderBottom: '1px solid var(--border)', flexShrink: 0,
       }}>
         <Link
           href={`/projects/${id}/pid-documents`}
-          style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}
+          style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}
         >
           ← P&IDs
         </Link>
-        <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }} />
-        <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+        <div style={{ width: '1px', height: '16px', background: 'var(--border)' }} />
+        <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
           {doc.drawing_number}
         </span>
         {doc.title && (
-          <span style={{ fontSize: '13px', color: '#64748b' }}>{doc.title}</span>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{doc.title}</span>
         )}
         <div style={{ marginLeft: 'auto', fontSize: '12px', color: '#94a3b8' }}>
           {hotspots.length} hotspot{hotspots.length !== 1 ? 's' : ''} marcados

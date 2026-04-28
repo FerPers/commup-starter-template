@@ -58,8 +58,8 @@ const TYPE_LABEL: Record<ItrItemType, string> = {
 
 function ItemControl({ item }: { item: PreviewItem }) {
   const inputBase: React.CSSProperties = {
-    width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0',
-    borderRadius: '8px', fontSize: '14px', color: '#0f172a', background: 'white',
+    width: '100%', padding: '8px 12px', border: '1px solid var(--border)',
+    borderRadius: '8px', fontSize: '14px', color: 'var(--text-strong)', background: 'var(--card-bg)',
     boxSizing: 'border-box', fontFamily: 'inherit',
   }
 
@@ -67,7 +67,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <input type="checkbox" disabled style={{ width: 18, height: 18, accentColor: '#3b82f6', cursor: 'not-allowed' }} />
-        <span style={{ fontSize: '13px', color: '#64748b' }}>Marcar como verificado</span>
+        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Marcar como verificado</span>
       </div>
     )
   }
@@ -78,7 +78,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
         {['Sí', 'No', 'N/A'].map(opt => (
           <button key={opt} disabled style={{
             padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-            background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b',
+            background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-muted)',
             cursor: 'not-allowed',
           }}>
             {opt}
@@ -92,9 +92,9 @@ function ItemControl({ item }: { item: PreviewItem }) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input type="number" disabled placeholder="0.00" style={{ ...inputBase, width: '140px' }} />
-        {item.unit && <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>{item.unit}</span>}
+        {item.unit && <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>{item.unit}</span>}
         {(item.acceptance_min !== null || item.acceptance_max !== null) && (
-          <span style={{ fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '4px 8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--gray-50)', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border)' }}>
             {item.acceptance_min !== null && item.acceptance_max !== null
               ? `${item.acceptance_min} – ${item.acceptance_max} ${item.unit ?? ''}`
               : item.acceptance_min !== null
@@ -111,13 +111,13 @@ function ItemControl({ item }: { item: PreviewItem }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input type="number" disabled placeholder="Valor medido" style={{ ...inputBase, width: '160px' }} />
-          {item.unit && <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>{item.unit}</span>}
-          <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '6px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b' }}>
+          {item.unit && <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>{item.unit}</span>}
+          <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '6px', background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
             Resultado: —
           </span>
         </div>
         {(item.acceptance_min !== null || item.acceptance_max !== null) && (
-          <div style={{ fontSize: '12px', color: '#64748b' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             Criterio de aceptación:{' '}
             <strong>
               {item.acceptance_min !== null && item.acceptance_max !== null
@@ -129,7 +129,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
           </div>
         )}
         {item.acceptance_text && (
-          <div style={{ fontSize: '12px', color: '#64748b' }}>Criterio: <strong>{item.acceptance_text}</strong></div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Criterio: <strong>{item.acceptance_text}</strong></div>
         )}
       </div>
     )
@@ -154,7 +154,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px',
         padding: '12px 16px', border: '1.5px dashed #cbd5e1', borderRadius: '10px',
-        background: '#fafbfc', color: '#64748b', fontSize: '13px',
+        background: 'var(--gray-50)', color: 'var(--text-muted)', fontSize: '13px',
       }}>
         <span style={{ fontSize: '22px' }}>📷</span>
         <span>Tomar / adjuntar foto</span>
@@ -166,8 +166,8 @@ function ItemControl({ item }: { item: PreviewItem }) {
     return (
       <div style={{
         height: '80px', border: '1.5px dashed #cbd5e1', borderRadius: '10px',
-        background: '#fafbfc', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#94a3b8', fontSize: '13px', gap: '8px',
+        background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--gray-400)', fontSize: '13px', gap: '8px',
       }}>
         <span style={{ fontSize: '20px' }}>✍️</span>
         <span>Área de firma</span>
@@ -187,7 +187,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
 function RemarksField() {
   return (
     <div style={{ marginTop: '8px' }}>
-      <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
+      <label style={{ fontSize: '11px', color: 'var(--gray-400)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
         Observaciones / Remarks
       </label>
       <textarea
@@ -195,9 +195,9 @@ function RemarksField() {
         placeholder="Observaciones opcionales..."
         rows={1}
         style={{
-          width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0',
-          borderRadius: '6px', fontSize: '13px', color: '#94a3b8',
-          background: '#fafbfc', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
+          width: '100%', padding: '6px 10px', border: '1px solid var(--border)',
+          borderRadius: '6px', fontSize: '13px', color: 'var(--gray-400)',
+          background: 'var(--gray-50)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
         }}
       />
     </div>
@@ -209,22 +209,22 @@ function RemarksField() {
 function SignatureBlock({ role, label }: { role: string; label: string }) {
   return (
     <div style={{
-      flex: '1 1 200px', border: '1px solid #e2e8f0', borderRadius: '10px',
-      padding: '12px 16px', background: 'white',
+      flex: '1 1 200px', border: '1px solid var(--border)', borderRadius: '10px',
+      padding: '12px 16px', background: 'var(--card-bg)',
     }}>
-      <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+      <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
         {label} — {role}
       </div>
       <div style={{
         height: '60px', border: '1.5px dashed #cbd5e1', borderRadius: '8px',
-        background: '#fafbfc', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#94a3b8', fontSize: '12px',
+        background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--gray-400)', fontSize: '12px',
       }}>
         Firma digital
       </div>
       <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-        <div style={{ flex: 1, borderBottom: '1px solid #e2e8f0', paddingBottom: '2px', fontSize: '11px', color: '#94a3b8' }}>Nombre</div>
-        <div style={{ flex: 1, borderBottom: '1px solid #e2e8f0', paddingBottom: '2px', fontSize: '11px', color: '#94a3b8' }}>Fecha</div>
+        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--gray-400)' }}>Nombre</div>
+        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--gray-400)' }}>Fecha</div>
       </div>
     </div>
   )
@@ -253,7 +253,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
       {/* Top bar */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,
-        background: 'white', borderBottom: '1px solid #e2e8f0',
+        background: 'var(--card-bg)', borderBottom: '1px solid var(--border)',
         padding: '12px 24px', display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', gap: '16px',
         boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
@@ -261,12 +261,12 @@ export default function TemplatePreview({ template }: { template: TemplateData }
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <a
             href={`/admin/templates/${template.id}`}
-            style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}
+            style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}
           >
             ← {template.code}
           </a>
-          <span style={{ color: '#e2e8f0' }}>|</span>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+          <span style={{ color: 'var(--border)' }}>|</span>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
             Vista de campo — Preview
           </span>
           <span style={{
@@ -279,7 +279,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
         {/* Language toggle */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '4px',
-          background: '#f1f5f9', borderRadius: '8px', padding: '3px',
+          background: 'var(--gray-100)', borderRadius: '8px', padding: '3px',
         }}>
           {(['es', 'en'] as const).map(l => (
             <button
@@ -288,8 +288,8 @@ export default function TemplatePreview({ template }: { template: TemplateData }
               style={{
                 padding: '4px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
                 border: 'none', cursor: 'pointer',
-                background: lang === l ? 'white' : 'transparent',
-                color: lang === l ? '#0f172a' : '#64748b',
+                background: lang === l ? 'var(--card-bg)' : 'transparent',
+                color: lang === l ? 'var(--text-strong)' : 'var(--text-muted)',
                 boxShadow: lang === l ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                 transition: 'all 0.15s',
                 textTransform: 'uppercase',
@@ -306,7 +306,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
 
         {/* Header card */}
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           overflow: 'hidden', marginBottom: '24px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
         }}>
@@ -336,7 +336,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
               )}
               <span style={{
                 padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                background: '#f1f5f9', color: '#64748b',
+                background: 'var(--gray-100)', color: 'var(--text-muted)',
               }}>
                 v{template.version}
               </span>
@@ -344,7 +344,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
 
             {/* Title */}
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', fontFamily: 'ui-monospace, monospace', letterSpacing: '-0.5px' }}>
+              <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', letterSpacing: '-0.5px' }}>
                 {template.code}
               </span>
               <span style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b' }}>
@@ -352,11 +352,11 @@ export default function TemplatePreview({ template }: { template: TemplateData }
               </span>
             </div>
             {template.description && (
-              <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#64748b' }}>{template.description}</p>
+              <p style={{ margin: '0 0 14px', fontSize: '13px', color: 'var(--text-muted)' }}>{template.description}</p>
             )}
 
             {/* Stats */}
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+            <div style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
               {totalItems} ítem{totalItems !== 1 ? 's' : ''} · {sections.length} sección{sections.length !== 1 ? 'es' : ''}
             </div>
 
@@ -375,10 +375,10 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                 { label: lang === 'es' ? 'Supervisor' : 'Supervisor', value: '' },
               ].map(f => (
                 <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {f.label}
                   </span>
-                  <div style={{ borderBottom: '1.5px solid #e2e8f0', height: '24px' }} />
+                  <div style={{ borderBottom: '1.5px solid var(--border)', height: '24px' }} />
                 </div>
               ))}
             </div>
@@ -388,8 +388,8 @@ export default function TemplatePreview({ template }: { template: TemplateData }
         {/* Legend */}
         <div style={{
           display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px',
-          padding: '10px 16px', background: 'white', borderRadius: '10px',
-          border: '1px solid #e2e8f0', fontSize: '12px', color: '#64748b',
+          padding: '10px 16px', background: 'var(--card-bg)', borderRadius: '10px',
+          border: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-muted)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ color: '#ef4444', fontWeight: 700 }}>★</span>
@@ -410,7 +410,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
           <div key={section.id} style={{ marginBottom: '20px' }}>
             {/* Section header */}
             <div style={{
-              background: '#1e293b', color: 'white',
+              background: '#1e293b', color: '#fff',
               padding: '10px 20px', borderRadius: '10px 10px 0 0',
               display: 'flex', alignItems: 'center', gap: '10px',
             }}>
@@ -429,7 +429,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
 
             {/* Items */}
             <div style={{
-              background: 'white', border: '1px solid #e2e8f0',
+              background: 'var(--card-bg)', border: '1px solid var(--border)',
               borderTop: 'none', borderRadius: '0 0 10px 10px',
               overflow: 'hidden',
             }}>
@@ -446,7 +446,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                     style={{
                       padding: '14px 20px',
                       borderBottom: ii < section.itr_template_items.length - 1 ? '1px solid #f1f5f9' : 'none',
-                      background: item.is_critical ? '#fff8f8' : 'white',
+                      background: item.is_critical ? '#fff8f8' : 'var(--card-bg)',
                     }}
                   >
                     {/* Item header row */}
@@ -455,7 +455,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                       {item.item_number && (
                         <span style={{
                           fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 700,
-                          color: '#64748b', minWidth: '40px', paddingTop: '1px',
+                          color: 'var(--text-muted)', minWidth: '40px', paddingTop: '1px',
                         }}>
                           {item.item_number}
                         </span>
@@ -464,7 +464,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                       {/* Description */}
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '14px', color: '#0f172a', lineHeight: 1.5 }}>
+                          <span style={{ fontSize: '14px', color: 'var(--text-strong)', lineHeight: 1.5 }}>
                             {lang === 'es' ? item.description : (item.description_es ?? item.description)}
                           </span>
                           {/* Flags */}
@@ -482,12 +482,12 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                         </div>
                         {/* Show both languages when EN mode */}
                         {lang === 'en' && item.description_es && item.description_es !== item.description && (
-                          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px', fontStyle: 'italic' }}>
+                          <div style={{ fontSize: '12px', color: 'var(--gray-400)', marginTop: '2px', fontStyle: 'italic' }}>
                             ES: {item.description}
                           </div>
                         )}
                         {lang === 'es' && item.description_es && item.description_es !== item.description && (
-                          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px', fontStyle: 'italic' }}>
+                          <div style={{ fontSize: '12px', color: 'var(--gray-400)', marginTop: '2px', fontStyle: 'italic' }}>
                             EN: {item.description_es}
                           </div>
                         )}
@@ -496,7 +496,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                       {/* Type badge */}
                       <span style={{
                         padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
-                        background: '#f1f5f9', color: '#64748b', whiteSpace: 'nowrap', flexShrink: 0,
+                        background: 'var(--gray-100)', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0,
                       }}>
                         {TYPE_LABEL[item.item_type]}
                       </span>
@@ -516,11 +516,11 @@ export default function TemplatePreview({ template }: { template: TemplateData }
 
         {/* Signature block */}
         <div style={{
-          background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
           padding: '24px 28px', marginTop: '8px',
           boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
         }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 16px' }}>
+          <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 16px' }}>
             {lang === 'es' ? 'Firmas de aprobación' : 'Approval signatures'}
           </h3>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
@@ -531,7 +531,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>
+        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '11px', color: 'var(--gray-400)' }}>
           CommUp · {template.code} · v{template.version} · {lang === 'es' ? 'Vista de campo — solo previsualización' : 'Field view — preview only'}
         </div>
       </div>

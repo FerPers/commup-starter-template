@@ -18,14 +18,21 @@
   "Sidebar": {
     "groups": {
       "main": "Principal",
+      "setup": "Configuración",
       "execution": "Ejecución",
       "control": "Control",
-      "admin": "Administración",
+      "closure": "Cierre",
+      "ops": "Operaciones",
+      "integrations": "Integraciones",
+      "system": "Sistema",
       "project": "Proyecto"
     },
     "nav": {
       "dashboard": "Dashboard",
       "projects": "Proyectos",
+      "projectOverview": "Resumen",
+      "tags": "Tags",
+      "signals": "Señales",
       "scan": "Escanear QR/NFC",
       "itrs": "ITRs",
       "punchList": "Punch List",
@@ -49,12 +56,35 @@
       "pssr": "PSSR",
       "dataQuality": "Calidad de Datos",
       "handover": "Handover",
-      "opsPunches": "Tracking de Ops"
+      "opsPunches": "Tracking de Ops",
+      "loops": "Loops",
+      "interlocks": "Interlocks",
+      "pidDocuments": "P&IDs"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
     "logout": "Cerrar sesión",
-    "platform": "CMS Platform"
+    "platform": "CMS Platform",
+    "theme": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "switchToLight": "Cambiar a modo claro",
+      "switchToDark": "Cambiar a modo oscuro"
+    }
+  },
+  "Topbar": {
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Arquitecto",
+      "leader": "Líder",
+      "inspector": "Inspector",
+      "client": "Cliente"
+    },
+    "roleAria": "Rol: {role} en {org}"
+  },
+  "Breadcrumbs": {
+    "label": "Migas de pan"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -111,13 +141,43 @@
       "sign": "Firmar →",
       "projectsTitle": "Proyectos activos",
       "noProjects": "Sin proyectos activos.",
-      "viewItrs": "Accede a <link>ITRs</link> para ver el estado detallado de cada inspección."
+      "viewItrs": "Accede a <link>ITRs</link> para ver el estado detallado de cada inspección.",
+      "viewDetail": "Ver detalle →"
     },
     "architect": {
       "catATitle": "Punches Cat A sin asignar",
       "catADesc": "{count, plural, one {# punch bloqueante sin responsable} other {# punches bloqueantes sin responsable}}",
       "catAViewAll": "Ver todos →",
       "catAMore": "+ {count} más"
+    },
+    "widgets": {
+      "inspectorSummary": { "title": "Resumen del día", "desc": "Indicadores rápidos de tus ITRs y punches" },
+      "myItrs": { "title": "Mis ITRs asignadas", "desc": "ITRs pendientes de ejecución que tienes asignadas" },
+      "myPunches": { "title": "Mis punches asignados", "desc": "Punches abiertos o en proceso bajo tu responsabilidad" },
+      "clientSummary": { "title": "Resumen del proyecto", "desc": "Proyectos activos y firmas pendientes" },
+      "clientSignatures": { "title": "Firmas pendientes", "desc": "ITRs completados que esperan tu firma como Cliente" },
+      "clientProjects": { "title": "Proyectos activos", "desc": "Lista de proyectos activos de la organización (solo lectura)" },
+      "catAAlerts": { "title": "Alertas Cat A", "desc": "Punches bloqueantes sin responsable asignado" },
+      "kpiSummary": { "title": "KPIs principales", "desc": "Avance por fase, punches abiertos y preservación" },
+      "projectsActive": { "title": "Proyectos activos", "desc": "Lista de proyectos activos de la organización" },
+      "disciplines": { "title": "Disciplinas", "desc": "Disciplinas configuradas para los proyectos" }
+    },
+    "customizer": {
+      "customize": "Personalizar",
+      "title": "Personalizar dashboard",
+      "description": "Muestra, oculta y reordena los widgets según tus necesidades. Tu configuración se guarda en tu perfil.",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "saved": "Dashboard actualizado",
+      "saveError": "No se pudo guardar",
+      "reset": "Layout restaurado al valor por defecto",
+      "resetDefaults": "Restaurar por defecto",
+      "moveUp": "Mover arriba",
+      "moveDown": "Mover abajo",
+      "show": "Mostrar widget",
+      "hide": "Ocultar widget",
+      "empty": "No hay widgets disponibles para tu rol.",
+      "allHidden": "Todos los widgets están ocultos. Usa Personalizar para mostrar al menos uno."
     }
   },
   "Common": {

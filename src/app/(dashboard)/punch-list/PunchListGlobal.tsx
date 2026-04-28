@@ -3,6 +3,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { Search, X, Download } from 'lucide-react'
+import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } from '@/components/ui'
 import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
 
 const PAGE_SIZE = 50
@@ -30,21 +32,19 @@ type Punch = {
 }
 
 const CATEGORY_CFG = {
-  A: { label: 'Cat A', color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
-  B: { label: 'Cat B', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  C: { label: 'Cat C', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+  A: { label: 'Cat A', color: 'var(--danger-500)',  bg: 'var(--danger-50)',  border: '#fecaca' },
+  B: { label: 'Cat B', color: 'var(--warning-500)', bg: 'var(--warning-50)', border: '#fde68a' },
+  C: { label: 'Cat C', color: 'var(--gray-500)',    bg: 'var(--gray-50)',    border: 'var(--border)' },
 } as const
 
 const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
-  open:        { color: '#ef4444', bg: '#fee2e2' },
-  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
-  closed:      { color: '#10b981', bg: '#ecfdf5' },
-  cancelled:   { color: '#64748b', bg: '#f1f5f9' },
+  open:        { color: 'var(--danger-500)',  bg: 'var(--danger-50)' },
+  in_progress: { color: 'var(--primary-500)', bg: 'var(--primary-50)' },
+  closed:      { color: 'var(--success-500)', bg: 'var(--success-50)' },
+  cancelled:   { color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
 }
 
 const PUNCH_STATUS_KEYS = ['open', 'in_progress', 'closed', 'cancelled'] as const
-
-const GRID = '36px 100px 70px 1fr 1fr 110px 90px 90px'
 
 export default function PunchListGlobal({
   projects,
@@ -171,7 +171,7 @@ export default function PunchListGlobal({
       p.priority,
     ])
     const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -181,247 +181,272 @@ export default function PunchListGlobal({
   }
 
   const summaryCards = [
-    { labelKey: 'summary.catAOpen' as const, count: catACnt, color: '#ef4444', bg: '#fee2e2', cat: 'A' as const },
-    { labelKey: 'summary.catBOpen' as const, count: catBCnt, color: '#f59e0b', bg: '#fffbeb', cat: 'B' as const },
-    { labelKey: 'summary.catCOpen' as const, count: catCCnt, color: '#64748b', bg: '#f8fafc', cat: 'C' as const },
-    { labelKey: 'summary.closed'   as const, count: closedCnt, color: '#10b981', bg: '#ecfdf5', cat: null },
+    { labelKey: 'summary.catAOpen' as const, count: catACnt, color: 'var(--danger-500)',  bg: 'var(--danger-50)',  cat: 'A' as const },
+    { labelKey: 'summary.catBOpen' as const, count: catBCnt, color: 'var(--warning-500)', bg: 'var(--warning-50)', cat: 'B' as const },
+    { labelKey: 'summary.catCOpen' as const, count: catCCnt, color: 'var(--gray-500)',    bg: 'var(--gray-50)',    cat: 'C' as const },
+    { labelKey: 'summary.closed'   as const, count: closedCnt, color: 'var(--success-500)', bg: 'var(--success-50)', cat: null },
   ]
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1300px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{t('title')}</h1>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{tc('allOrg')}</p>
+    <div style={{ padding: 32, maxWidth: 1300 }}>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: 0 }}>{tc('allOrg')}</p>
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '24px' }}>
-        {summaryCards.map(card => (
-          <div
-            key={card.labelKey}
-            onClick={() => card.cat && setFilterCat(filterCat === card.cat ? '' : card.cat)}
-            style={{
-              padding: '14px 16px', borderRadius: '10px', cursor: card.cat ? 'pointer' : 'default',
-              background: filterCat === card.cat ? card.bg : 'white',
-              border: `1px solid ${filterCat === card.cat ? card.color + '40' : '#e2e8f0'}`,
-              transition: 'all 0.15s',
-            }}
-          >
-            <div style={{ fontSize: '22px', fontWeight: 700, color: card.color }}>{card.count}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{t(card.labelKey)}</div>
-          </div>
-        ))}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+        {summaryCards.map(card => {
+          const active = card.cat && filterCat === card.cat
+          return (
+            <button
+              key={card.labelKey}
+              onClick={() => card.cat && setFilterCat(filterCat === card.cat ? '' : card.cat)}
+              aria-pressed={!!active}
+              disabled={!card.cat}
+              style={{
+                padding: '14px 16px', borderRadius: 'var(--radius-md)',
+                cursor: card.cat ? 'pointer' : 'default',
+                background: active ? card.bg : 'var(--card-bg)',
+                border: `1px solid ${active ? `${card.color}40` : 'var(--border)'}`,
+                transition: 'background 0.15s, border-color 0.15s',
+                textAlign: 'left', fontFamily: 'inherit',
+              }}
+            >
+              <div style={{ fontSize: 22, fontWeight: 700, color: card.color }}>{card.count}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>{t(card.labelKey)}</div>
+            </button>
+          )
+        })}
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Input
+          inputSize="sm"
+          fullWidth={false}
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder={t('filters.search')}
-          style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', width: '240px', fontFamily: 'inherit' }}
+          aria-label={t('filters.search')}
+          leftIcon={<Search size={14} />}
+          wrapperStyle={{ width: 260 }}
         />
-        <select value={filterProject} onChange={e => setFilterProject(e.target.value)} style={selStyle}>
+        <Select selectSize="sm" fullWidth={false} value={filterProject} onChange={(e) => setFilterProject(e.target.value)} style={{ width: 200 }}>
           <option value="">{tc('allProjects')}</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
-        </select>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={selStyle}>
+        </Select>
+        <Select selectSize="sm" fullWidth={false} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ width: 160 }}>
           <option value="">{t('filters.allStatuses')}</option>
           {PUNCH_STATUS_KEYS.map(k => <option key={k} value={k}>{punchStatusLabels[k]}</option>)}
-        </select>
-        <select value={filterDisc} onChange={e => setFilterDisc(e.target.value)} style={selStyle}>
+        </Select>
+        <Select selectSize="sm" fullWidth={false} value={filterDisc} onChange={(e) => setFilterDisc(e.target.value)} style={{ width: 180 }}>
           <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
-        </select>
+        </Select>
         {hasFilters && (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => { setFilterProject(''); setFilterCat(''); setFilterStatus(''); setFilterDisc(''); setSearch(''); setPage(1) }}
-            style={{ padding: '8px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}
           >
             {tc('clearFilters')}
-          </button>
+          </Button>
         )}
-        <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginLeft: 'auto' }}>
           {t('filters.count', { filtered: filtered.length, total: punches.length })}
         </span>
         {filtered.length > 0 && (
-          <button
-            onClick={exportCsv}
-            style={{ padding: '7px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: '#374151', cursor: 'pointer', fontFamily: 'inherit' }}
-          >
+          <Button variant="outline" size="sm" leftIcon={<Download size={14} />} onClick={exportCsv}>
             {tc('exportCsv')}
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
-          padding: '10px 16px', marginBottom: '8px',
-          background: '#1e293b', borderRadius: '10px', color: 'white',
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '10px 16px', marginBottom: 8,
+          background: 'var(--gray-800)', borderRadius: 'var(--radius-md)', color: '#fff',
         }}>
-          <span style={{ fontSize: '13px', fontWeight: 500 }}>
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>
             {t('bulk.selected', { count: selectedIds.size })}
           </span>
-          <span style={{ color: '#475569' }}>|</span>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{tc('changeStatusTo')}</span>
+          <span style={{ color: 'var(--gray-600)' }}>|</span>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)' }}>{tc('changeStatusTo')}</span>
           <select
             value={bulkStatus}
-            onChange={e => setBulkStatus(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white', fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer' }}
+            onChange={(e) => setBulkStatus(e.target.value)}
+            style={{
+              padding: '6px 10px', borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--gray-700)', background: 'var(--gray-900)',
+              color: '#fff', fontSize: 'var(--text-sm)',
+              fontFamily: 'inherit', cursor: 'pointer',
+            }}
           >
             <option value="">{tc('choose')}</option>
             {PUNCH_STATUS_KEYS.map(k => (
               <option key={k} value={k}>{punchStatusLabels[k]}</option>
             ))}
           </select>
-          <button
+          <Button
+            size="sm"
             onClick={handleBulkApply}
             disabled={!bulkStatus || bulkLoading}
-            style={{
-              padding: '6px 14px', borderRadius: '6px', border: 'none',
-              background: bulkStatus && !bulkLoading ? '#3b82f6' : '#334155',
-              color: bulkStatus && !bulkLoading ? 'white' : '#64748b',
-              fontSize: '12px', fontWeight: 600, cursor: bulkStatus && !bulkLoading ? 'pointer' : 'not-allowed',
-              fontFamily: 'inherit',
-            }}
+            loading={bulkLoading}
           >
-            {bulkLoading ? tc('applying') : tc('apply')}
-          </button>
-          {bulkError && <span style={{ fontSize: '12px', color: '#f87171' }}>{bulkError}</span>}
+            {tc('apply')}
+          </Button>
+          {bulkError && <span style={{ fontSize: 'var(--text-sm)', color: '#f87171' }}>{bulkError}</span>}
           <button
             onClick={() => { setSelectedIds(new Set()); setBulkStatus(''); setBulkError('') }}
-            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '0 4px' }}
+            aria-label={tc('deselectAll')}
             title={tc('deselectAll')}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--gray-400)', cursor: 'pointer', padding: '0 4px', display: 'inline-flex', alignItems: 'center' }}
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
       )}
 
       {/* Table */}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{t('empty')}</p>
-        </div>
-      ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '12px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              ref={selectAllRef}
-              checked={allFilteredSelected}
-              onChange={toggleSelectAll}
-              title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
-              style={{ cursor: 'pointer', accentColor: '#3b82f6', width: '15px', height: '15px' }}
-            />
-            <span>{t('table.colProject')}</span>
-            <span>{t('table.colCat')}</span>
-            <span>{t('table.colPunch')}</span>
-            <span>{t('table.colDesc')}</span>
-            <span>{t('table.colAssigned')}</span>
-            <span>{t('table.colDue')}</span>
-            <span>{t('table.colStatus')}</span>
-          </div>
-
-          {paginated.map(p => {
-            const cat  = CATEGORY_CFG[p.category]
-            const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
-            const proj = p.projects
-            const disc = p.tags?.disciplines
-            const today = new Date().toISOString().slice(0, 10)
-            const isOverdue = p.target_date && p.target_date < today && p.status !== 'closed' && p.status !== 'cancelled'
-            const isSelected = selectedIds.has(p.id)
-
-            return (
-              <div
-                key={p.id}
-                style={{
-                  display: 'grid', gridTemplateColumns: GRID, gap: '12px',
-                  padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center',
-                  background: isSelected ? '#eff6ff' : undefined,
-                  transition: 'background 0.1s',
-                }}
+      <DataTable<Punch>
+        rows={paginated}
+        rowKey={(p) => p.id}
+        responsive="stack"
+        ariaLabel={t('title')}
+        empty={<EmptyState title={t('empty')} />}
+        rowStyle={(p) => selectedIds.has(p.id) ? { background: 'var(--primary-50)' } : undefined}
+        columns={[
+          {
+            key: 'select',
+            width: 36,
+            sticky: 'left',
+            hideBelow: 768,
+            header: (
+              <input
+                type="checkbox"
+                ref={selectAllRef}
+                checked={allFilteredSelected}
+                onChange={toggleSelectAll}
+                title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+              />
+            ),
+            cell: (p) => (
+              <input
+                type="checkbox"
+                checked={selectedIds.has(p.id)}
+                onChange={() => toggleRow(p.id)}
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+              />
+            ),
+          },
+          {
+            key: 'project',
+            width: 100,
+            header: t('table.colProject'),
+            cell: (p) => p.projects ? (
+              <a
+                href={`/projects/${p.projects.id}/punches`}
+                title={p.projects.name}
+                style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => toggleRow(p.id)}
-                  style={{ cursor: 'pointer', accentColor: '#3b82f6', width: '15px', height: '15px' }}
-                />
-
-                {/* Project */}
+                {p.projects.code}
+              </a>
+            ) : null,
+          },
+          {
+            key: 'category',
+            width: 70,
+            header: t('table.colCat'),
+            cell: (p) => {
+              const cat = CATEGORY_CFG[p.category]
+              return (
+                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontWeight: 700, background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>
+                  {cat.label}
+                </span>
+              )
+            },
+          },
+          {
+            key: 'punch',
+            header: t('table.colPunch'),
+            cell: (p) => {
+              const disc = p.tags?.disciplines
+              return (
                 <div>
-                  {proj && (
-                    <a
-                      href={`/projects/${proj.id}/punches`}
-                      title={proj.name}
-                      style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >
-                      {proj.code}
-                    </a>
-                  )}
-                </div>
-
-                {/* Category */}
-                <div>
-                  <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>
-                    {cat.label}
-                  </span>
-                </div>
-
-                {/* Punch + Tag */}
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</div>
+                  <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</div>
                   {p.tags && (
-                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {disc && <span style={{ fontSize: '9px', fontWeight: 700, color: disc.color, background: `${disc.color}15`, padding: '1px 4px', borderRadius: '3px' }}>{disc.code}</span>}
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {disc && <span style={{ fontSize: 9, fontWeight: 700, color: disc.color, background: `${disc.color}15`, padding: '1px 4px', borderRadius: 3 }}>{disc.code}</span>}
                       {p.tags.tag_number}
                     </div>
                   )}
                 </div>
-
-                {/* Description */}
-                <div style={{ fontSize: '12px', color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.description}>
-                  {p.description}
-                </div>
-
-                {/* Assigned */}
-                <div style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {p.assigned_to_profile?.full_name ?? '—'}
-                </div>
-
-                {/* Due date */}
-                <div style={{ fontSize: '11px', color: isOverdue ? '#ef4444' : '#64748b', fontWeight: isOverdue ? 600 : 400 }}>
+              )
+            },
+          },
+          {
+            key: 'desc',
+            header: t('table.colDesc'),
+            cell: (p) => (
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 320 }} title={p.description}>
+                {p.description}
+              </div>
+            ),
+          },
+          {
+            key: 'assigned',
+            width: 130,
+            hideBelow: 1024,
+            header: t('table.colAssigned'),
+            cell: (p) => (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {p.assigned_to_profile?.full_name ?? '—'}
+              </div>
+            ),
+          },
+          {
+            key: 'due',
+            width: 100,
+            header: t('table.colDue'),
+            cell: (p) => {
+              const today = new Date().toISOString().slice(0, 10)
+              const isOverdue = !!(p.target_date && p.target_date < today && p.status !== 'closed' && p.status !== 'cancelled')
+              return (
+                <div style={{ fontSize: 'var(--text-xs)', color: isOverdue ? 'var(--danger-500)' : 'var(--text-muted)', fontWeight: isOverdue ? 600 : 400 }}>
                   {p.target_date ?? '—'}
-                  {isOverdue && <span style={{ display: 'block', fontSize: '9px', color: '#ef4444' }}>{t('overdue')}</span>}
+                  {isOverdue && <span style={{ display: 'block', fontSize: 9, color: 'var(--danger-500)' }}>{t('overdue')}</span>}
                 </div>
-
-                {/* Status */}
-                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>
+              )
+            },
+          },
+          {
+            key: 'status',
+            width: 100,
+            header: t('table.colStatus'),
+            cell: (p) => {
+              const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
+              return (
+                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>
                   {punchStatusLabels[p.status] ?? p.status}
                 </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
+              )
+            },
+          },
+        ] satisfies DataTableColumn<Punch>[]}
+      />
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === 1 ? '#cbd5e1' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>{tc('prevPage')}</button>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>{tc('page', { page, total: totalPages })}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? '#f8fafc' : 'white', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? '#cbd5e1' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>{tc('nextPage')}</button>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20, alignItems: 'center' }}>
+          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{tc('prevPage')}</Button>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{tc('page', { page, total: totalPages })}</span>
+          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{tc('nextPage')}</Button>
         </div>
       )}
     </div>
   )
-}
-
-const selStyle: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#374151', background: 'white', fontFamily: 'inherit', cursor: 'pointer',
 }

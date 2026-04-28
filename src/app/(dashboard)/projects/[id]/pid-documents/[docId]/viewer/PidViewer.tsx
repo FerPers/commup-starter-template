@@ -80,10 +80,10 @@ function TagSelector({
       <div
         onClick={() => setOpen(o => !o)}
         style={{
-          padding: '6px 10px', background: 'white', border: '1px solid #e2e8f0',
+          padding: '6px 10px', background: 'var(--card-bg)', border: '1px solid var(--border)',
           borderRadius: '7px', fontSize: '12px', cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: '6px', minWidth: '200px',
-          color: selected ? '#0f172a' : '#94a3b8',
+          color: selected ? 'var(--text-strong)' : 'var(--gray-400)',
         }}
       >
         {selected ? (
@@ -97,7 +97,8 @@ function TagSelector({
             <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}>{selected.tag_number}</span>
             <button
               onClick={e => { e.stopPropagation(); onChange(null); setQuery('') }}
-              style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '14px', padding: 0 }}
+              aria-label="Limpiar selección"
+              style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '14px', padding: 0 }}
             >×</button>
           </>
         ) : (
@@ -108,7 +109,7 @@ function TagSelector({
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px',
-          background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px',
+          background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 100, overflow: 'hidden',
         }}>
           <div style={{ padding: '8px' }}>
@@ -117,15 +118,16 @@ function TagSelector({
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder={t('viewer.tagSearchPlaceholder')}
+              aria-label={t('viewer.tagSearchPlaceholder')}
               style={{
-                width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0',
+                width: '100%', padding: '6px 10px', border: '1px solid var(--border)',
                 borderRadius: '6px', fontSize: '12px', outline: 'none', boxSizing: 'border-box',
               }}
             />
           </div>
           <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
             {filtered.length === 0 ? (
-              <div style={{ padding: '12px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+              <div style={{ padding: '12px', fontSize: '12px', color: 'var(--gray-400)', textAlign: 'center' }}>
                 {t('viewer.tagSearchEmpty')}
               </div>
             ) : filtered.map(item => (
@@ -137,7 +139,7 @@ function TagSelector({
                   display: 'flex', alignItems: 'center', gap: '6px',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--gray-50)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span style={{
@@ -146,8 +148,8 @@ function TagSelector({
                 }}>
                   {item.discipline.code}
                 </span>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: '#0f172a' }}>{item.tag_number}</span>
-                <span style={{ color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description}</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--text-strong)' }}>{item.tag_number}</span>
+                <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description}</span>
               </div>
             ))}
           </div>
@@ -309,29 +311,29 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       {/* Left toolbar */}
       <div style={{
-        width: '260px', minWidth: '260px', background: 'white',
-        borderRight: '1px solid #e2e8f0', padding: '16px 12px',
+        width: '260px', minWidth: '260px', background: 'var(--card-bg)',
+        borderRight: '1px solid var(--border)', padding: '16px 12px',
         display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto',
       }}>
         {/* Page navigation */}
         {numPages > 1 && (
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
               {t('viewer.pageLabel')}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                style={{ padding: '5px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', background: 'white', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}
+                style={{ padding: '5px 10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px' }}
               >‹</button>
-              <span style={{ fontSize: '13px', color: '#0f172a', flex: 1, textAlign: 'center' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-strong)', flex: 1, textAlign: 'center' }}>
                 {currentPage} / {numPages}
               </span>
               <button
                 onClick={() => setCurrentPage(p => Math.min(numPages, p + 1))}
                 disabled={currentPage >= numPages}
-                style={{ padding: '5px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', background: 'white', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}
+                style={{ padding: '5px 10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px' }}
               >›</button>
             </div>
           </div>
@@ -339,20 +341,20 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
 
         {/* Zoom */}
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
             {t('viewer.zoomLabel')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
               onClick={() => setScale(s => Math.max(0.5, +(s - 0.25).toFixed(2)))}
-              style={{ padding: '5px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', background: 'white', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}
+              style={{ padding: '5px 10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px' }}
             >−</button>
-            <span style={{ fontSize: '13px', color: '#0f172a', flex: 1, textAlign: 'center' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-strong)', flex: 1, textAlign: 'center' }}>
               {Math.round(scale * 100)}%
             </span>
             <button
               onClick={() => setScale(s => Math.min(3, +(s + 0.25).toFixed(2)))}
-              style={{ padding: '5px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', background: 'white', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}
+              style={{ padding: '5px 10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px' }}
             >+</button>
           </div>
         </div>
@@ -360,7 +362,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
         {/* Edit mode + tag selector */}
         {canEdit && (
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
               {t('viewer.editSectionLabel')}
             </div>
             <button
@@ -368,16 +370,16 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
               style={{
                 width: '100%', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 500,
                 cursor: 'pointer', marginBottom: '8px',
-                background: editMode ? '#eff6ff' : 'white',
-                color: editMode ? '#2563eb' : '#64748b',
-                border: `1px solid ${editMode ? '#bfdbfe' : '#e2e8f0'}`,
+                background: editMode ? '#eff6ff' : 'var(--card-bg)',
+                color: editMode ? '#2563eb' : 'var(--text-muted)',
+                border: `1px solid ${editMode ? '#bfdbfe' : 'var(--border)'}`,
               }}
             >
               {editMode ? t('viewer.editModeOn') : t('viewer.editModeOff')}
             </button>
             {editMode && (
               <>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
                   {t('viewer.editStep1')}
                 </div>
                 <TagSelector tags={tags} value={placingTag} onChange={setPlacingTag} />
@@ -394,7 +396,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
         {/* Hotspot list for this page */}
         {pageHotspots.length > 0 && (
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
               {t('viewer.tagListLabel', { count: pageHotspots.length })}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -404,15 +406,15 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                   onClick={() => setSelectedHotspot(h)}
                   style={{
                     padding: '6px 8px', borderRadius: '6px', cursor: 'pointer',
-                    border: '1px solid #f1f5f9', background: selectedHotspot?.id === h.id ? '#eff6ff' : 'white',
+                    border: '1px solid #f1f5f9', background: selectedHotspot?.id === h.id ? '#eff6ff' : 'var(--card-bg)',
                     display: 'flex', alignItems: 'center', gap: '6px',
                     transition: 'background 0.1s',
                   }}
-                  onMouseEnter={e => { if (selectedHotspot?.id !== h.id) (e.currentTarget as HTMLElement).style.background = '#f8fafc' }}
-                  onMouseLeave={e => { if (selectedHotspot?.id !== h.id) (e.currentTarget as HTMLElement).style.background = 'white' }}
+                  onMouseEnter={e => { if (selectedHotspot?.id !== h.id) (e.currentTarget as HTMLElement).style.background = 'var(--gray-50)' }}
+                  onMouseLeave={e => { if (selectedHotspot?.id !== h.id) (e.currentTarget as HTMLElement).style.background = 'var(--card-bg)' }}
                 >
                   <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: h.discipline.color, flexShrink: 0, display: 'inline-block' }} />
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px', fontWeight: 600, color: '#0f172a' }}>{h.tag.tag_number}</span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)' }}>{h.tag.tag_number}</span>
                 </div>
               ))}
             </div>
@@ -423,7 +425,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
       {/* Main PDF area */}
       <div
         ref={containerRef}
-        style={{ flex: 1, overflow: 'auto', background: '#475569', padding: '16px' }}
+        style={{ flex: 1, overflow: 'auto', background: 'var(--text-muted)', padding: '16px' }}
       >
         {/* width:max-content can exceed the container (unlike fit-content which caps at it).
             margin:0 auto centers when PDF < container; resolves to 0 when PDF > container
@@ -434,12 +436,12 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
             file={signedUrl}
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
             loading={
-              <div style={{ width: `${pageWidth * scale}px`, height: '600px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+              <div style={{ width: `${pageWidth * scale}px`, height: '600px', background: 'var(--card-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>
                 {t('viewer.pdfLoading')}
               </div>
             }
             error={
-              <div style={{ width: `${pageWidth}px`, padding: '40px', background: 'white', color: '#ef4444', borderRadius: '8px' }}>
+              <div style={{ width: `${pageWidth}px`, padding: '40px', background: 'var(--card-bg)', color: '#ef4444', borderRadius: '8px' }}>
                 {t('viewer.pdfError')}
               </div>
             }
@@ -491,7 +493,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                 transition: 'box-shadow 0.15s',
               }}
             >
-              <span style={{ fontSize: '8px', color: 'white', fontWeight: 700, lineHeight: 1 }}>
+              <span style={{ fontSize: '8px', color: '#fff', fontWeight: 700, lineHeight: 1 }}>
                 {h.discipline.code.substring(0, 1)}
               </span>
             </div>
@@ -516,15 +518,15 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
               {/* Confirmation popover */}
               <div style={{
                 position: 'absolute', top: '28px', left: '50%', transform: 'translateX(-50%)',
-                background: 'white', borderRadius: '8px', padding: '10px 12px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.2)', border: '1px solid #e2e8f0',
+                background: 'var(--card-bg)', borderRadius: '8px', padding: '10px 12px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.2)', border: '1px solid var(--border)',
                 display: 'flex', gap: '8px', whiteSpace: 'nowrap',
               }}>
                 <button
                   onClick={e => { e.stopPropagation(); handleConfirmHotspot() }}
                   disabled={isPending}
                   style={{
-                    padding: '5px 12px', background: '#3b82f6', color: 'white',
+                    padding: '5px 12px', background: '#3b82f6', color: '#fff',
                     border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 500,
                   }}
                 >
@@ -533,8 +535,8 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                 <button
                   onClick={e => { e.stopPropagation(); setPendingPos(null) }}
                   style={{
-                    padding: '5px 12px', background: 'white', color: '#64748b',
-                    border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                    padding: '5px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
+                    border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                   }}
                 >
                   {t('viewer.cancel')}

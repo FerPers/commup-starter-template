@@ -88,17 +88,17 @@ export default function AuditLogView({
 
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
           {t('title')}
         </h1>
-        <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
           {t('subtitle', { total })}
         </p>
       </div>
 
       {/* Filters */}
       <div style={{
-        background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px',
+        background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px',
         padding: '16px 20px', marginBottom: '20px',
         display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end',
       }}>
@@ -158,14 +158,14 @@ export default function AuditLogView({
 
       {/* Table */}
       <div style={{
-        background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden',
+        background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden',
       }}>
         {/* Table header */}
         <div style={{
           display: 'grid', gridTemplateColumns: '180px 1fr 120px 120px 36px',
-          padding: '10px 16px', background: '#f8fafc',
-          borderBottom: '1px solid #e2e8f0',
-          fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em',
+          padding: '10px 16px', background: 'var(--gray-50)',
+          borderBottom: '1px solid var(--border)',
+          fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em',
         }}>
           <span>{t('cols.date')}</span>
           <span>{t('cols.user')}</span>
@@ -175,13 +175,13 @@ export default function AuditLogView({
         </div>
 
         {logs.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px' }}>
             {t('empty')}
           </div>
         ) : (
           logs.map(log => {
             const isExpanded = expanded === log.id
-            const actionColor = ACTION_COLORS[log.action] ?? '#64748b'
+            const actionColor = ACTION_COLORS[log.action] ?? 'var(--text-muted)'
             const date = new Date(log.created_at).toLocaleString(locale, {
               day: '2-digit', month: 'short', year: 'numeric',
               hour: '2-digit', minute: '2-digit',
@@ -197,14 +197,14 @@ export default function AuditLogView({
                   }}
                   onClick={() => log.payload && setExpanded(isExpanded ? null : log.id)}
                 >
-                  <span style={{ fontSize: '12px', color: '#475569' }}>{date}</span>
-                  <span style={{ fontSize: '13px', color: '#0f172a' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{date}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--text-strong)' }}>
                     {log.profiles?.full_name ?? '—'}
                   </span>
                   <span style={{ fontSize: '12px' }}>
                     <span style={{
                       padding: '2px 8px', borderRadius: '999px',
-                      background: '#f1f5f9', color: '#475569', fontSize: '11px', fontWeight: 500,
+                      background: 'var(--gray-100)', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 500,
                     }}>
                       {log.entity_type}
                     </span>
@@ -218,7 +218,7 @@ export default function AuditLogView({
                       {log.action}
                     </span>
                   </span>
-                  <span style={{ textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+                  <span style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px' }}>
                     {log.payload ? (isExpanded ? '▲' : '▼') : ''}
                   </span>
                 </div>
@@ -227,8 +227,8 @@ export default function AuditLogView({
                   <div style={{
                     margin: '0 16px 12px',
                     padding: '12px 14px',
-                    background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0',
-                    fontSize: '12px', color: '#475569', fontFamily: 'monospace',
+                    background: 'var(--gray-50)', borderRadius: '8px', border: '1px solid var(--border)',
+                    fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace',
                     whiteSpace: 'pre-wrap', wordBreak: 'break-all',
                   }}>
                     {JSON.stringify(log.payload, null, 2)}
@@ -250,7 +250,7 @@ export default function AuditLogView({
           >
             ← {t('pagination.prev')}
           </button>
-          <span style={{ padding: '7px 14px', fontSize: '13px', color: '#64748b' }}>
+          <span style={{ padding: '7px 14px', fontSize: '13px', color: 'var(--text-muted)' }}>
             {t('pagination.info', { page: page + 1, total: totalPages })}
           </span>
           <button
@@ -269,25 +269,25 @@ export default function AuditLogView({
 // ── Shared styles ──────────────────────────────────────────────────────────
 
 const labelStyle: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em',
+  fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 
 const selectStyle: React.CSSProperties = {
-  padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#0f172a', background: 'white', cursor: 'pointer',
+  padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', cursor: 'pointer',
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#0f172a', background: 'white',
+  padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)',
 }
 
 const btnPrimary: React.CSSProperties = {
-  padding: '7px 14px', background: '#3b82f6', color: 'white',
+  padding: '7px 14px', background: '#3b82f6', color: '#fff',
   border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
 }
 
 const btnOutline: React.CSSProperties = {
-  padding: '7px 12px', background: 'white', border: '1px solid #e2e8f0',
-  borderRadius: '7px', fontSize: '12px', color: '#475569', cursor: 'pointer',
+  padding: '7px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+  borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
 }
