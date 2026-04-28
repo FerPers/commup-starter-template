@@ -44,9 +44,9 @@ interface PushNotificationManagerProps {
   onSubscriptionChange?: (active: boolean) => void;
 }
 
-// ─── VAPID public key (generada en Cloudflare Dashboard) ──────────────────
-// En producción: cargar desde env o config endpoint
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BExample-VAPID-Public-Key-Replace-In-Production';
+// ─── VAPID public key ─────────────────────────────────────────────────────
+// Pública por diseño (se envía al browser). Override opcional vía env si se rota.
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BBQUEtX69_ZQkpAsgIOxmlokvU31Uizx99xL4MkJsKV_qNGxDHNkDaZv-DuHyp4yfMPB2b0q8LeJv4OceDkTq2Y';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -107,7 +107,6 @@ export function usePushNotifications(userId: string) {
       }
 
       // 4. Crear subscription con VAPID
-      console.log('[Push] VAPID prefix:', VAPID_PUBLIC_KEY.slice(0, 12), 'len:', VAPID_PUBLIC_KEY.length);
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
@@ -142,7 +141,6 @@ export function usePushNotifications(userId: string) {
       setIsSubscribed(true);
       return true;
     } catch (err: any) {
-      console.error('[Push] subscribe failed:', err?.name, err?.message, err);
       setError(err.message || 'Error activando notificaciones');
       return false;
     } finally {
