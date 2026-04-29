@@ -8,7 +8,7 @@ const PUBLIC_EXACT = ['/']
 // Static asset extensions — bypass entirely
 const STATIC_RE = /\.(?:ico|png|jpg|jpeg|svg|webp|woff2?|mjs|js|css|map)$/i
 
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
 
   // Let static assets through without touching cookies
