@@ -1,12 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import {
-  createApiKey,
-  revokeApiKey,
-  API_SCOPES,
-  type ApiScope,
-} from '@/app/actions/api-keys'
+import { createApiKey, revokeApiKey } from '@/app/actions/api-keys'
+import { API_SCOPES, type ApiScope } from '@/lib/constants/api-scopes'
 
 type ApiKey = {
   id: string

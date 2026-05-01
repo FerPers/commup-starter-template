@@ -1,0 +1,16 @@
+export const WEBHOOK_EVENT_TYPES: { value: string; label: string }[] = [
+  { value: '*',                     label: '* — todos los eventos' },
+  { value: 'tag.created',           label: 'tag.created' },
+  { value: 'tag.updated',           label: 'tag.updated' },
+  { value: 'tag.status_changed',    label: 'tag.status_changed' },
+  { value: 'itr.created',           label: 'itr.created' },
+  { value: 'itr.updated',           label: 'itr.updated' },
+  { value: 'itr.approved',          label: 'itr.approved' },
+  { value: 'itr.rejected',          label: 'itr.rejected' },
+  { value: 'punch.created',         label: 'punch.created' },
+  { value: 'punch.updated',         label: 'punch.updated' },
+  { value: 'punch.closed',          label: 'punch.closed' },
+  { value: 'certificate.created',   label: 'certificate.created' },
+  { value: 'certificate.issued',    label: 'certificate.issued' },
+  { value: 'preservation.due',      label: 'preservation.due' },
+]

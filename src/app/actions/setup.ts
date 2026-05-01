@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { DEFAULT_PSSR_ITEMS } from '@/app/actions/pssr'
+import { DEFAULT_PSSR_ITEMS } from '@/lib/constants/pssr'
 
 interface PhaseInput {
   code: string

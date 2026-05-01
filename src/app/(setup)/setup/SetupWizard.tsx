@@ -90,33 +90,37 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
     setLoading(true)
     setError(null)
 
-    if (isNewProject) {
-      // New project within existing org — steps 2 only
-      const result = await createProject({
-        name: projName, code: projCode,
-        location: projLocation, client: projClient,
-        start_date: projStart, end_date: projEnd,
-      })
-      if (result.error) {
-        setError(result.error)
-        setLoading(false)
+    try {
+      if (isNewProject) {
+        const result = await createProject({
+          name: projName, code: projCode,
+          location: projLocation, client: projClient,
+          start_date: projStart, end_date: projEnd,
+        })
+        if (result.error) {
+          setError(result.error)
+          setLoading(false)
+        } else {
+          router.push(`/projects/${result.project_id}`)
+        }
       } else {
-        router.push(`/projects/${result.project_id}`)
+        const result = await completeSetup({
+          org: { name: orgName, slug: orgSlug },
+          project: { name: projName, code: projCode, location: projLocation, client: projClient, start_date: projStart, end_date: projEnd },
+          phases,
+          disciplines,
+        })
+        if (result.error) {
+          setError(result.error)
+          setLoading(false)
+        } else {
+          router.push(`/projects/${result.project_id}`)
+        }
       }
-    } else {
-      // Initial setup — all 4 steps (org + project + phases + disciplines)
-      const result = await completeSetup({
-        org: { name: orgName, slug: orgSlug },
-        project: { name: projName, code: projCode, location: projLocation, client: projClient, start_date: projStart, end_date: projEnd },
-        phases,
-        disciplines,
-      })
-      if (result.error) {
-        setError(result.error)
-        setLoading(false)
-      } else {
-        router.push(`/projects/${result.project_id}`)
-      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido al procesar la solicitud'
+      setError(`${msg} — revisa la consola del navegador o el log del servidor para más detalles`)
+      setLoading(false)
     }
   }
 

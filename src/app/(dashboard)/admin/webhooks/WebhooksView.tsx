@@ -5,8 +5,8 @@ import {
   createWebhookSubscription,
   setWebhookEnabled,
   deleteWebhookSubscription,
-  WEBHOOK_EVENT_TYPES,
 } from '@/app/actions/webhooks'
+import { WEBHOOK_EVENT_TYPES } from '@/lib/constants/webhook-events'
 
 type Sub = {
   id: string
