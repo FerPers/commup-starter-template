@@ -123,6 +123,11 @@ export async function deleteItr(
 }
 
 // ── Upsert Response + recalc progress ────────────────────────────────
+//
+// Acepta un patch parcial: solo persistimos los campos presentes en `input`.
+// Esto evita que un save de "remarks" pise value_numeric/is_passed en BD.
+// Para measurements con acceptance, recomputamos is_passed server-side
+// como red de seguridad si el cliente no lo manda.
 
 export async function upsertResponse(input: {
   itrId: string
@@ -138,30 +143,64 @@ export async function upsertResponse(input: {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
 
-  const { itrId, itemId, templateId, ...values } = input
+  const { itrId, itemId, templateId } = input
 
-  const { error } = await ctx.supabase
+  // Build patch with only the fields explicitly provided.
+  const patch: Record<string, unknown> = {
+    responded_at: new Date().toISOString(),
+    responded_by: ctx.userId,
+  }
+  if ('valueText'    in input) patch.value_text    = input.valueText
+  if ('valueNumeric' in input) patch.value_numeric = input.valueNumeric
+  if ('valueBool'    in input) patch.value_bool    = input.valueBool
+  if ('valueOption'  in input) patch.value_option  = input.valueOption
+  if ('remarks'      in input) patch.remarks       = input.remarks
+  if ('isPassed'     in input) patch.is_passed     = input.isPassed
+
+  // Defensive: if a numeric value is being set on a measurement item with
+  // acceptance bounds, recompute is_passed server-side regardless of client.
+  if ('valueNumeric' in input && input.valueNumeric !== null && input.valueNumeric !== undefined) {
+    const { data: item } = await ctx.supabase
+      .from('itr_template_items')
+      .select('item_type, acceptance_min, acceptance_max')
+      .eq('id', itemId)
+      .single()
+    if (item?.item_type === 'measurement' && (item.acceptance_min !== null || item.acceptance_max !== null)) {
+      const v = input.valueNumeric
+      const minOk = item.acceptance_min === null || v >= Number(item.acceptance_min)
+      const maxOk = item.acceptance_max === null || v <= Number(item.acceptance_max)
+      patch.is_passed = minOk && maxOk
+    }
+  }
+
+  // UPDATE if response exists, INSERT otherwise. We don't use upsert because
+  // upsert with partial fields would null-out the missing columns.
+  const { data: existing } = await ctx.supabase
     .from('itr_responses')
-    .upsert(
-      {
-        itr_id: itrId,
-        item_id: itemId,
-        value_text: values.valueText ?? null,
-        value_numeric: values.valueNumeric ?? null,
-        value_bool: values.valueBool ?? null,
-        value_option: values.valueOption ?? null,
-        remarks: values.remarks ?? null,
-        is_passed: values.isPassed ?? null,
-        responded_at: new Date().toISOString(),
-        responded_by: ctx.userId,
-      },
-      { onConflict: 'itr_id,item_id' },
-    )
+    .select('id')
+    .eq('itr_id', itrId)
+    .eq('item_id', itemId)
+    .maybeSingle()
 
-  if (error) return { error: error.message }
+  if (existing) {
+    const { error } = await ctx.supabase
+      .from('itr_responses')
+      .update(patch)
+      .eq('id', existing.id)
+    if (error) return { error: error.message }
+  } else {
+    const { error } = await ctx.supabase
+      .from('itr_responses')
+      .insert({ itr_id: itrId, item_id: itemId, ...patch })
+    if (error) return { error: error.message }
+  }
 
-  // Recalculate progress
-  const [{ count: totalItems }, { count: doneItems }] = await Promise.all([
+  // Recalculate progress + status (with rejected-on-critical-fail logic).
+  const [
+    { count: totalItems },
+    { count: doneItems },
+    { data: criticalFails },
+  ] = await Promise.all([
     ctx.supabase
       .from('itr_template_items')
       .select('*', { count: 'exact', head: true })
@@ -170,14 +209,30 @@ export async function upsertResponse(input: {
       .from('itr_responses')
       .select('*', { count: 'exact', head: true })
       .eq('itr_id', itrId),
+    ctx.supabase
+      .from('itr_responses')
+      .select('item_id, itr_template_items!inner(is_critical)')
+      .eq('itr_id', itrId)
+      .eq('is_passed', false)
+      .eq('itr_template_items.is_critical', true)
+      .limit(1),
   ])
 
   const pct = totalItems ? Math.round(((doneItems ?? 0) / totalItems) * 100) : 0
-  const newStatus = pct === 0 ? 'not_started' : pct >= 100 ? 'completed' : 'in_progress'
+  const hasCriticalFail = (criticalFails?.length ?? 0) > 0
+
+  let newStatus: 'not_started' | 'in_progress' | 'completed' | 'rejected'
+  if (pct === 0) newStatus = 'not_started'
+  else if (pct < 100) newStatus = 'in_progress'
+  else newStatus = hasCriticalFail ? 'rejected' : 'completed'
 
   await ctx.supabase
     .from('itrs')
-    .update({ progress_pct: pct, status: newStatus })
+    .update({
+      progress_pct: pct,
+      status: newStatus,
+      completed_date: pct >= 100 ? new Date().toISOString() : null,
+    })
     .eq('id', itrId)
 
   return {}

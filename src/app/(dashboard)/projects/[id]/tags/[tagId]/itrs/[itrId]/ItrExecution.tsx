@@ -207,12 +207,19 @@ export default function ItrExecution({
     rejected:     t('status.rejected'),
   }
 
-  // Build response lookup by item_id
+  // Build response lookup by item_id. Re-sync when server data changes after
+  // router.refresh() so server-side computed fields (e.g. defensive is_passed)
+  // become visible without a hard reload.
   const [responses, setResponses] = useState<Record<string, Response>>(() => {
     const map: Record<string, Response> = {}
     for (const r of itr.itr_responses) map[r.item_id] = r
     return map
   })
+  useEffect(() => {
+    const map: Record<string, Response> = {}
+    for (const r of itr.itr_responses) map[r.item_id] = r
+    setResponses(map)
+  }, [itr.itr_responses])
 
   // Sorted sections + items
   const sections = template?.itr_template_sections
@@ -246,9 +253,18 @@ export default function ItrExecution({
     },
   ) => {
     setSaveError(null)
+    // Map camelCase patch → snake_case so state matches DB shape and reads
+    // via response?.value_numeric / is_passed work consistently.
+    const patch: Partial<Response> = {}
+    if ('valueText'    in data) patch.value_text    = data.valueText ?? null
+    if ('valueNumeric' in data) patch.value_numeric = data.valueNumeric ?? null
+    if ('valueBool'    in data) patch.value_bool    = data.valueBool ?? null
+    if ('valueOption'  in data) patch.value_option  = data.valueOption ?? null
+    if ('remarks'      in data) patch.remarks       = data.remarks ?? null
+    if ('isPassed'     in data) patch.is_passed     = data.isPassed ?? null
     setResponses(prev => ({
       ...prev,
-      [itemId]: { ...(prev[itemId] ?? { id: '', item_id: itemId, responded_at: null }), ...data },
+      [itemId]: { ...(prev[itemId] ?? { id: '', item_id: itemId, responded_at: null }), ...patch },
     }))
     if (savingRef.current) return
     savingRef.current = true
@@ -1253,30 +1269,14 @@ function ItemRow({
             defaultValue={response?.remarks ?? ''}
             disabled={!canEdit}
             placeholder={t('item.remarksPlaceholder')}
-            onBlur={e => {
-              onSave(item.id, {
-                valueBool: response?.value_bool ?? null,
-                valueNumeric: response?.value_numeric ?? null,
-                valueText: response?.value_text ?? null,
-                valueOption: response?.value_option ?? null,
-                isPassed: response?.is_passed ?? null,
-                remarks: e.target.value || null,
-              })
-            }}
+            onBlur={e => onSave(item.id, { remarks: e.target.value || null })}
             style={{ width: '100%', padding: '6px 10px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
           />
           <div style={{ alignSelf: 'flex-end' }}>
             <MicAppend
               targetRef={remarksRef}
               disabled={!canEdit}
-              onCommit={(value) => onSave(item.id, {
-                valueBool: response?.value_bool ?? null,
-                valueNumeric: response?.value_numeric ?? null,
-                valueText: response?.value_text ?? null,
-                valueOption: response?.value_option ?? null,
-                isPassed: response?.is_passed ?? null,
-                remarks: value || null,
-              })}
+              onCommit={value => onSave(item.id, { remarks: value || null })}
             />
           </div>
         </div>
