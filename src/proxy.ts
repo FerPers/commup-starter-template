@@ -1,10 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
-// OpenNext Cloudflare 1.19+ rejects Node.js middleware. Edge runtime keeps
-// this compatible with the Workers deployment target.
-export const runtime = 'edge'
-
 // Paths that don't require authentication
 const PUBLIC_PREFIXES = ['/login', '/setup', '/offline', '/api/']
 const PUBLIC_EXACT = ['/']

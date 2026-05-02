@@ -12,7 +12,7 @@
 		"publish": true
 	},
 	"dependencies": {
-		"@opennextjs/cloudflare": "^1.18.0",
+		"@opennextjs/cloudflare": "1.18.1",
 		"@react-pdf/renderer": "^4.5.1",
 		"@supabase/ssr": "^0.9.0",
 		"@supabase/supabase-js": "^2.100.1",
