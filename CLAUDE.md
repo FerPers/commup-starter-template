@@ -48,7 +48,9 @@ src/app/
 
 | File | Purpose |
 |------|---------|
-| `src/proxy.ts` | Route protection (replaces `middleware.ts` — Next.js 16 uses `proxy` convention) |
+| `src/app/(dashboard)/layout.tsx` | Auth gate for all authenticated pages — redirects to `/login` (no user) or `/setup` (user without org membership) |
+| `src/app/(auth)/layout.tsx` | Inverse gate — redirects authenticated users out of `/login` |
+| `src/app/(setup)/layout.tsx` | Setup wizard gate — auth + role check |
 | `src/lib/supabase/client.ts` | Browser Supabase client (`createBrowserClient`) |
 | `src/lib/supabase/server.ts` | Server Supabase client (`createServerClient` with cookies) |
 | `src/types/database.ts` | Full TypeScript interfaces for all 35 DB tables + enum types |
@@ -57,9 +59,10 @@ src/app/
 | `supabase-schema.sql` | Canonical Postgres schema — run this in Supabase SQL editor |
 | `wrangler.jsonc` | Cloudflare Workers config pointing to `.open-next/worker.js` |
 
-## Next.js 16 — Critical Quirk
+## Next.js 16 — Critical Quirks
 
-**`middleware.ts` is deprecated.** This project uses `src/proxy.ts` with an exported function named `proxy` (not `middleware`). Do not create a `middleware.ts` file — it will conflict.
+- **No `middleware.ts` and no `proxy.ts`.** Next.js 16 forces `proxy.ts` to Node.js runtime, but OpenNext Cloudflare rejects Node.js middleware — these two are incompatible today. Auth gating lives in route-group layouts (`(auth)/layout.tsx`, `(setup)/layout.tsx`, `(dashboard)/layout.tsx`) instead. Do not reintroduce a middleware/proxy file.
+- **`@opennextjs/cloudflare` is pinned to `1.18.1`** (no caret) in `package.json`. 1.19+ has additional checks that break the build. Do not bump without first verifying the build locally.
 
 ## Database Modules (35 tables)
 

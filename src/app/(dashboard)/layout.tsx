@@ -41,8 +41,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     preservation: preservationCount ?? 0,
   }
 
-  const role = (membership?.role ?? null) as OrgMemberRole | null
-  const orgRel = membership?.organizations as { name: string } | { name: string }[] | null | undefined
+  // Authenticated users without an org go to /setup. This used to live in
+  // src/proxy.ts but Next.js 16 + Cloudflare Workers don't allow proxy/middleware,
+  // so the gate moved here.
+  if (!membership) redirect('/setup')
+
+  const role = (membership.role ?? null) as OrgMemberRole | null
+  const orgRel = membership.organizations as { name: string } | { name: string }[] | null | undefined
   const orgName = Array.isArray(orgRel) ? (orgRel[0]?.name ?? null) : (orgRel?.name ?? null)
 
   return (
