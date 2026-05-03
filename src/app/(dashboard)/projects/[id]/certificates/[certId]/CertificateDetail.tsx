@@ -237,16 +237,6 @@ export default function CertificateDetail({
             }}>
               {certStatusLabels[cert.status] ?? cert.status}
             </span>
-            <button
-              className="no-print"
-              onClick={() => window.print()}
-              style={{
-                padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                cursor: 'pointer', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-muted)',
-              }}
-            >
-              {t('detail.printBtn')}
-            </button>
             {cert.status === 'issued' && (
               <a
                 href={`/projects/${projectId}/certificates/${cert.id}/pdf`}

@@ -11,91 +11,87 @@ export async function GET(
 ) {
   const { id: projectId, certId } = await params
 
-  // Auth check
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  // Fetch certificate with all related data
-  const { data: cert, error } = await supabase
-    .from('certificates')
-    .select(`
-      id,
-      certificate_number,
-      title,
-      status,
-      issued_date,
-      notes,
-      created_at,
-      project_phases ( code, name, color, certificate_name ),
-      subsystems (
-        code,
-        name,
-        systems ( code, name )
-      ),
-      issued_by_profile:profiles!certificates_issued_by_fkey ( full_name ),
-      punch_exceptions (
-        id,
-        justification,
-        approved_at,
-        punches ( punch_number, description, category ),
-        approved_by_profile:profiles!punch_exceptions_approved_by_fkey ( full_name )
-      )
-    `)
-    .eq('id', certId)
-    .eq('project_id', projectId)
-    .single()
+  const [
+    { data: cert, error: certErr },
+    { data: project },
+    { data: exceptions },
+    { data: signatures },
+  ] = await Promise.all([
+    supabase
+      .from('certificates')
+      .select(`
+        id, certificate_number, title, status,
+        issued_date, notes, created_at,
+        project_phases(id, code, name, color, certificate_name),
+        subsystems(id, code, name, systems(id, code, name)),
+        issued_by_profile:profiles!issued_by(full_name)
+      `)
+      .eq('id', certId)
+      .eq('project_id', projectId)
+      .single(),
+    supabase
+      .from('projects')
+      .select('code, name, client')
+      .eq('id', projectId)
+      .single(),
+    supabase
+      .from('certificate_punch_exceptions')
+      .select(`
+        id, justification, approved_at,
+        punches(punch_number, description, category),
+        approved_by_profile:profiles!approved_by(full_name)
+      `)
+      .eq('certificate_id', certId)
+      .order('approved_at'),
+    supabase
+      .from('certificate_signatures')
+      .select(`
+        id, role, signed_at, comments,
+        signer_profile:profiles!user_id(full_name)
+      `)
+      .eq('certificate_id', certId)
+      .order('signed_at'),
+  ])
 
-  if (error || !cert) {
+  if (certErr || !cert) {
     return new Response('Certificate not found', { status: 404 })
   }
 
-  // Fetch project info
-  const { data: project } = await supabase
-    .from('projects')
-    .select('code, name, client_name')
-    .eq('id', projectId)
-    .single()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const subsystemId = (cert as any).subsystems?.id
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const phaseId = (cert as any).project_phases?.id
 
-  // Fetch approved ITRs linked to this certificate's subsystem+phase
-  const { data: itrs } = await supabase
-    .from('itrs')
-    .select(`
-      id,
-      itr_number,
-      status,
-      progress_pct,
-      itr_templates ( code, title ),
-      tags ( tag_number, description )
-    `)
-    .eq('project_id', projectId)
-    .eq('subsystem_id', (cert.subsystems as unknown as { id?: string } | null)?.id ?? '')
-    .eq('phase_id', (cert.project_phases as unknown as { id?: string } | null)?.id ?? '')
-    .eq('status', 'approved')
-
-  // Fetch digital signatures
-  const { data: signatures } = await supabase
-    .from('certificate_signatures')
-    .select(`
-      id, role, signed_at, comments,
-      signer_profile:profiles!user_id ( full_name )
-    `)
-    .eq('certificate_id', certId)
-    .order('signed_at')
+  const { data: itrs } = subsystemId && phaseId
+    ? await supabase
+        .from('itrs')
+        .select(`
+          id, itr_number, status, progress_pct,
+          itr_templates(code, title),
+          tags(tag_number, description)
+        `)
+        .eq('project_id', projectId)
+        .eq('subsystem_id', subsystemId)
+        .eq('phase_id', phaseId)
+        .eq('status', 'approved')
+    : { data: [] }
 
   const certData = {
     ...cert,
     projectName: project?.name ?? '',
     projectCode: project?.code ?? '',
-    projectClient: project?.client_name ?? null,
-    exceptions: (cert.punch_exceptions as unknown as typeof cert.punch_exceptions) ?? [],
+    projectClient: project?.client ?? null,
+    exceptions: exceptions ?? [],
     itrs: itrs ?? [],
     signatures: signatures ?? [],
   }
 
-  // Generate PDF
   const element = React.createElement(CertPdfDocument, {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cert: certData as any,
