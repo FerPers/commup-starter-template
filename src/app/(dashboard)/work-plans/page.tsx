@@ -1,20 +1,12 @@
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import WorkPlansGlobal from './WorkPlansGlobal'
 
 export default async function WorkPlansPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: member } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!member) redirect('/login')
+  const ctx = await getActiveMembership()
+  if (!ctx) redirect('/login')
+  const supabase = ctx.supabase
+  const member = { org_id: ctx.orgId, role: ctx.role }
 
   const orgId = member.org_id
   const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(member.role)
@@ -68,7 +60,7 @@ export default async function WorkPlansPage() {
       orgMembers={(members ?? []) as any}
       workPlans={(rawPlans ?? []) as any}
       canEdit={canEdit}
-      currentUserId={user.id}
+      currentUserId={ctx.userId}
     />
   )
 }

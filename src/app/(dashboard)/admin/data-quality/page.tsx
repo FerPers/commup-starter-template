@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import {
   getDataQualitySummary,
@@ -13,18 +13,10 @@ export default async function DataQualityPage({
 }: {
   searchParams: Promise<{ severity?: string; category?: string; project?: string }>
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) redirect('/setup')
+  const ctx = await getActiveMembership()
+  if (!ctx) redirect('/login')
+  const supabase = ctx.supabase
+  const membership = { org_id: ctx.orgId, role: ctx.role }
   if (!['owner', 'admin', 'architect'].includes(membership.role)) redirect('/dashboard')
 
   const params = await searchParams

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createTemplate, deleteTemplate } from '@/app/actions/itr-templates'
 import BulkImportCatalogModal from './BulkImportCatalogModal'
+import ImportFromOrgModal from './ImportFromOrgModal'
 
 interface Discipline { id: string; code: string; name: string; color: string }
 interface Phase { id: string; code: string; name: string; color: string; order_index: number }
@@ -37,6 +38,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
   const [activeDisc, setActiveDisc] = useState('all')
   const [showModal, setShowModal] = useState(false)
   const [showBulkImport, setShowBulkImport] = useState(false)
+  const [showImportFromOrg, setShowImportFromOrg] = useState(false)
   const [form, setForm] = useState(DEFAULT_FORM)
   const [formError, setFormError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -127,6 +129,16 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
         {canEdit && (
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button
+              onClick={() => setShowImportFromOrg(true)}
+              style={{
+                padding: '9px 18px', background: '#eff6ff', color: '#2563eb',
+                borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                border: '1px solid #bfdbfe', cursor: 'pointer',
+              }}
+            >
+              Importar de otra org
+            </button>
             <button
               onClick={() => setShowBulkImport(true)}
               style={{
@@ -419,6 +431,11 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
           onClose={() => setShowBulkImport(false)}
           onSuccess={() => { setShowBulkImport(false); router.refresh() }}
         />
+      )}
+
+      {/* Import from another org modal */}
+      {showImportFromOrg && (
+        <ImportFromOrgModal onClose={() => setShowImportFromOrg(false)} />
       )}
     </div>
   )

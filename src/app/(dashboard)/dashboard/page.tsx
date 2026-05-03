@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import type { OrgMemberRole } from '@/types/database'
@@ -32,24 +32,15 @@ function renderWidget(id: WidgetId, ctx: { userId: string; orgId: string; role: 
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const auth = await getActiveMembership()
+  if (!auth) redirect('/login')
+  const supabase = auth.supabase
 
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) redirect('/setup')
-
-  const role = membership.role as OrgMemberRole
-  const orgId = membership.org_id as string
+  const role = auth.role as OrgMemberRole
+  const orgId = auth.orgId
 
   const [{ data: profile }, { data: org }, t, locale] = await Promise.all([
-    supabase.from('profiles').select('full_name, dashboard_layout').eq('id', user.id).maybeSingle(),
+    supabase.from('profiles').select('full_name, dashboard_layout').eq('id', auth.userId).maybeSingle(),
     supabase.from('organizations').select('name').eq('id', orgId).maybeSingle(),
     getTranslations('Dashboard'),
     getLocale(),
@@ -72,7 +63,7 @@ export default async function DashboardPage() {
   const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const isCompact = role === 'inspector' || role === 'client'
 
-  const ctx = { userId: user.id, orgId, role }
+  const ctx = { userId: auth.userId, orgId, role }
 
   return (
     <div style={{ padding: isCompact ? 28 : 32, maxWidth: isCompact ? 860 : undefined }}>

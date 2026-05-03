@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 
 export const metadata = { title: 'Tag 360° — CommUp' }
@@ -12,18 +12,10 @@ export default async function Tag360Resolver({
 }) {
   const { tagId } = await params
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) redirect('/setup')
+  const ctx = await getActiveMembership()
+  if (!ctx) redirect('/login')
+  const supabase = ctx.supabase
+  const membership = { org_id: ctx.orgId, role: ctx.role }
 
   const decoded = decodeURIComponent(tagId)
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decoded)

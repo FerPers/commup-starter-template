@@ -2,26 +2,23 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { logActivity } from '@/lib/log-activity'
 import { DEFAULT_PSSR_ITEMS } from '@/lib/constants/pssr'
 
 // ── Template CRUD ─────────────────────────────────────────────
 
 export async function createPssrTemplate(data: { name: string; description?: string }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
-
-  const { data: membership } = await supabase
-    .from('org_members').select('org_id, role').eq('user_id', user.id).limit(1).maybeSingle()
-  if (!membership || !['owner','admin','architect','leader'].includes(membership.role))
+  const ctx = await getActiveMembership()
+  if (!ctx) throw new Error('No autenticado')
+  if (!['owner','admin','architect','leader'].includes(ctx.role))
     throw new Error('Sin permisos')
 
-  const { data: template, error } = await supabase.from('pssr_templates').insert({
-    org_id: membership.org_id,
+  const { data: template, error } = await ctx.supabase.from('pssr_templates').insert({
+    org_id: ctx.orgId,
     name: data.name,
     description: data.description ?? null,
-    created_by: user.id,
+    created_by: ctx.userId,
   }).select().single()
   if (error) throw new Error(error.message)
 
@@ -243,10 +240,10 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('No autenticado')
 
-  // Must be leader+ to approve
-  const { data: membership } = await supabase
-    .from('org_members').select('role').eq('user_id', user.id).limit(1).maybeSingle()
-  if (!membership || !['owner','admin','architect','leader'].includes(membership.role))
+  // Must be leader+ to approve. Use active membership context for role gate
+  // and orgId when logging activity below.
+  const ctx = await getActiveMembership()
+  if (!ctx || !['owner','admin','architect','leader'].includes(ctx.role))
     throw new Error('Solo líderes o superiores pueden aprobar el PSSR')
 
   // Verify signatures exist
@@ -307,12 +304,8 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
   }).eq('id', reviewId)
   if (error) throw new Error(error.message)
 
-  // Get orgId for logActivity
-  const { data: member } = await supabase
-    .from('org_members').select('org_id').eq('user_id', user.id).limit(1).maybeSingle()
-
   await logActivity(supabase, {
-    orgId: (member?.org_id ?? (review.projects as { org_id: string }).org_id) as string,
+    orgId: ctx.orgId,
     userId: user.id,
     entityType: 'pssr',
     entityId: reviewId,
@@ -337,11 +330,10 @@ export async function rejectPssrReview(reviewId: string, projectId: string) {
   if (error) throw new Error(error.message)
 
   if (user) {
-    const { data: member } = await supabase
-      .from('org_members').select('org_id').eq('user_id', user.id).limit(1).maybeSingle()
-    if (member) {
+    const ctx = await getActiveMembership()
+    if (ctx) {
       await logActivity(supabase, {
-        orgId: member.org_id as string,
+        orgId: ctx.orgId,
         userId: user.id,
         entityType: 'pssr',
         entityId: reviewId,

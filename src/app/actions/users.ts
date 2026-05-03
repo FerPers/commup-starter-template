@@ -1,27 +1,11 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
 
 const ADMIN_ROLES = ['owner', 'admin']
-
-async function getCtx() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data: m } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!m) return null
-  return { supabase, orgId: m.org_id as string, userId: user.id, role: m.role as string }
-}
 
 // ── inviteUser ─────────────────────────────────────────────────────────────
 
@@ -77,11 +61,23 @@ export async function inviteUser(input: {
   })
 
   if (!inviteErr && invited?.user) {
-    await admin.from('profiles').upsert(
+    const { error: profileErr } = await admin.from('profiles').upsert(
       { id: invited.user.id, email, full_name: email.split('@')[0] },
       { onConflict: 'id' }
     )
-    await admin.from('org_members').insert({ org_id: ctx.orgId, user_id: invited.user.id, role })
+    if (profileErr) {
+      return { error: `Usuario invitado pero perfil no se pudo crear: ${profileErr.message}` }
+    }
+
+    // Surfacing this error matters: prior versions silently dropped it, leaving
+    // auth users without a membership row (orphans visible in admin/users only
+    // by the "pending confirmation" badge).
+    const { error: memberErr } = await admin
+      .from('org_members')
+      .insert({ org_id: ctx.orgId, user_id: invited.user.id, role })
+    if (memberErr) {
+      return { error: `Usuario invitado pero no se pudo agregar a la organización: ${memberErr.message}` }
+    }
 
     await logActivity(ctx.supabase, {
       orgId: ctx.orgId, userId: ctx.userId,

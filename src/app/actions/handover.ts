@@ -1,27 +1,11 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { generateHandoverPackage } from '@/lib/handover/generate'
 
 const ADMIN_ROLES = ['owner', 'admin', 'architect']
-
-async function getCtx() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data: m } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!m) return null
-  return { supabase, orgId: m.org_id as string, userId: user.id, role: m.role as string }
-}
 
 export type GenerateHandoverInput = {
   projectId: string

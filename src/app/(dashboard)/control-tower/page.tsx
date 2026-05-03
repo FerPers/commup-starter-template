@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
@@ -59,18 +59,10 @@ export default async function ControlTowerPage({
 }: {
   searchParams: Promise<{ projectId?: string }>
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) redirect('/setup')
+  const ctx = await getActiveMembership()
+  if (!ctx) redirect('/login')
+  const supabase = ctx.supabase
+  const membership = { org_id: ctx.orgId, role: ctx.role }
   const orgId = membership.org_id
 
   const t = await getTranslations('ControlTower')

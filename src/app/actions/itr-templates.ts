@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { revalidatePath } from 'next/cache'
 import { detectItrPhase } from '@/lib/utils'
 
@@ -9,19 +9,9 @@ const TIPO_ESPECIAL = 'Especial / Matriz'
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 async function getCtx() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data: m } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!m || !EDITOR_ROLES.includes(m.role)) return null
-  return { supabase, orgId: m.org_id as string }
+  const ctx = await getActiveMembership()
+  if (!ctx || !EDITOR_ROLES.includes(ctx.role)) return null
+  return { supabase: ctx.supabase, orgId: ctx.orgId }
 }
 
 // ── Templates ──────────────────────────────────────────────────
@@ -580,4 +570,208 @@ export async function bulkImportCatalog(
 
   revalidatePath('/admin/templates')
   return result
+}
+
+// ── Cross-org template sharing ─────────────────────────────────
+//
+// Strategy: clone (not share). When importing from another org we duplicate
+// the template into the active org so each org owns its evolution. Disciplines
+// and phases are matched by code in the target org — if no match, the import
+// fails and asks the user to create them first.
+
+export type ImportableTemplate = {
+  id: string
+  code: string
+  title: string
+  version: number
+  disciplineCode: string | null
+  phaseCode: string | null
+  sourceOrgId: string
+  sourceOrgName: string
+  sectionCount: number
+  itemCount: number
+}
+
+export async function listImportableTemplates(): Promise<{
+  templates: ImportableTemplate[]
+  error?: string
+}> {
+  const ctx = await getActiveMembership()
+  if (!ctx) return { templates: [], error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { templates: [], error: 'Sin permisos' }
+
+  const { data: memberships } = await ctx.supabase
+    .from('org_members')
+    .select('org_id, organizations(name)')
+    .eq('user_id', ctx.userId)
+
+  const otherOrgIds = (memberships ?? [])
+    .map(m => m.org_id as string)
+    .filter(id => id !== ctx.orgId)
+
+  if (otherOrgIds.length === 0) return { templates: [] }
+
+  const orgNames = new Map<string, string>()
+  for (const m of memberships ?? []) {
+    const orgRel = m.organizations as { name: string } | { name: string }[] | null
+    const name = Array.isArray(orgRel) ? orgRel[0]?.name : orgRel?.name
+    if (name) orgNames.set(m.org_id as string, name)
+  }
+
+  const { data, error } = await ctx.supabase
+    .from('itr_templates')
+    .select(`
+      id, code, title, version, org_id,
+      disciplines(code),
+      project_phases(code),
+      itr_template_sections(id, itr_template_items(id))
+    `)
+    .in('org_id', otherOrgIds)
+    .eq('is_active', true)
+    .order('code')
+
+  if (error) return { templates: [], error: error.message }
+
+  const templates: ImportableTemplate[] = (data ?? []).map(t => {
+    const disc = t.disciplines as { code: string } | { code: string }[] | null
+    const phase = t.project_phases as { code: string } | { code: string }[] | null
+    const sections = (t.itr_template_sections ?? []) as Array<{ id: string; itr_template_items: { id: string }[] }>
+    return {
+      id: t.id as string,
+      code: t.code as string,
+      title: t.title as string,
+      version: t.version as number,
+      disciplineCode: Array.isArray(disc) ? disc[0]?.code ?? null : disc?.code ?? null,
+      phaseCode: Array.isArray(phase) ? phase[0]?.code ?? null : phase?.code ?? null,
+      sourceOrgId: t.org_id as string,
+      sourceOrgName: orgNames.get(t.org_id as string) ?? '—',
+      sectionCount: sections.length,
+      itemCount: sections.reduce((sum, s) => sum + s.itr_template_items.length, 0),
+    }
+  })
+
+  return { templates }
+}
+
+export async function cloneTemplateToActiveOrg(
+  sourceTemplateId: string,
+  options?: { codeSuffix?: string }
+): Promise<{ id?: string; error?: string }> {
+  const ctx = await getActiveMembership()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+
+  // Verify the source template belongs to an org the user is a member of.
+  const { data: source } = await ctx.supabase
+    .from('itr_templates')
+    .select(`
+      id, code, title, description, version, org_id, is_global,
+      disciplines(code),
+      project_phases(code),
+      itr_template_sections(
+        id, title, order_index,
+        itr_template_items(
+          item_number, description, description_es, item_type, is_required,
+          is_critical, requires_photo, requires_measurement, options, unit,
+          acceptance_min, acceptance_max, acceptance_text, order_index
+        )
+      )
+    `)
+    .eq('id', sourceTemplateId)
+    .single()
+
+  if (!source) return { error: 'Template origen no encontrado o sin acceso' }
+  if (source.org_id === ctx.orgId) return { error: 'El template ya está en la org activa' }
+
+  const sourceDisc = source.disciplines as { code: string } | { code: string }[] | null
+  const sourcePhase = source.project_phases as { code: string } | { code: string }[] | null
+  const discCode = Array.isArray(sourceDisc) ? sourceDisc[0]?.code : sourceDisc?.code
+  const phaseCode = Array.isArray(sourcePhase) ? sourcePhase[0]?.code : sourcePhase?.code
+
+  if (!discCode || !phaseCode) {
+    return { error: 'Template origen sin disciplina o fase válida' }
+  }
+
+  // Map source discipline + phase by code into target org. RLS ensures we only
+  // see rows in the active org here.
+  const [{ data: targetDisc }, { data: targetPhase }] = await Promise.all([
+    ctx.supabase
+      .from('disciplines')
+      .select('id')
+      .eq('org_id', ctx.orgId)
+      .eq('code', discCode)
+      .maybeSingle(),
+    ctx.supabase
+      .from('project_phases')
+      .select('id')
+      .eq('org_id', ctx.orgId)
+      .eq('code', phaseCode)
+      .maybeSingle(),
+  ])
+
+  if (!targetDisc) {
+    return { error: `Falta la disciplina "${discCode}" en la org activa. Créala antes de importar.` }
+  }
+  if (!targetPhase) {
+    return { error: `Falta la fase "${phaseCode}" en la org activa. Créala antes de importar.` }
+  }
+
+  const newCode = `${source.code}${options?.codeSuffix ?? ''}`
+
+  const { data: existing } = await ctx.supabase
+    .from('itr_templates')
+    .select('id')
+    .eq('org_id', ctx.orgId)
+    .eq('code', newCode)
+    .maybeSingle()
+
+  if (existing) {
+    return { error: `Ya existe un template con código "${newCode}" en esta org` }
+  }
+
+  const { data: cloned, error: tplErr } = await ctx.supabase
+    .from('itr_templates')
+    .insert({
+      org_id: ctx.orgId,
+      discipline_id: targetDisc.id,
+      phase_id: targetPhase.id,
+      code: newCode,
+      title: source.title,
+      description: source.description,
+      version: 1,
+      is_active: true,
+      is_global: false,
+    })
+    .select('id')
+    .single()
+
+  if (tplErr || !cloned) return { error: tplErr?.message ?? 'No se pudo crear el template' }
+
+  const sections = (source.itr_template_sections ?? []) as Array<{
+    title: string
+    order_index: number
+    itr_template_items: Array<Record<string, unknown>>
+  }>
+
+  for (const sec of sections) {
+    const { data: newSec, error: secErr } = await ctx.supabase
+      .from('itr_template_sections')
+      .insert({ template_id: cloned.id, title: sec.title, order_index: sec.order_index })
+      .select('id')
+      .single()
+
+    if (secErr || !newSec) continue
+
+    if (sec.itr_template_items.length > 0) {
+      const itemRows = sec.itr_template_items.map(item => ({
+        ...item,
+        section_id: newSec.id,
+        template_id: cloned.id,
+      }))
+      await ctx.supabase.from('itr_template_items').insert(itemRows)
+    }
+  }
+
+  revalidatePath('/admin/templates')
+  return { id: cloned.id }
 }

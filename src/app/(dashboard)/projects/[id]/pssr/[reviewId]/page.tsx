@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import PssrReviewForm from './PssrReviewForm'
 
@@ -8,13 +8,10 @@ export default async function PssrReviewPage({
   params: Promise<{ id: string; reviewId: string }>
 }) {
   const { id: projectId, reviewId } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: membership } = await supabase
-    .from('org_members').select('org_id, role').eq('user_id', user.id).limit(1).maybeSingle()
-  if (!membership) redirect('/setup')
+  const ctx = await getActiveMembership()
+  if (!ctx) redirect('/login')
+  const supabase = ctx.supabase
+  const membership = { org_id: ctx.orgId, role: ctx.role }
 
   const canApprove = ['owner','admin','architect','leader'].includes(membership.role)
 
@@ -42,7 +39,7 @@ export default async function PssrReviewPage({
       .select('*, profiles(full_name, id)')
       .eq('review_id', reviewId)
       .order('signed_at'),
-    supabase.from('profiles').select('id, full_name').eq('id', user.id).single(),
+    supabase.from('profiles').select('id, full_name').eq('id', ctx.userId).single(),
   ])
 
   if (!project || !review) notFound()
@@ -57,8 +54,8 @@ export default async function PssrReviewPage({
         items={(items ?? []) as any[]}
         signatures={(signatures ?? []) as any[]}
         project={project}
-        currentUserId={user.id}
-        currentUserName={profile?.full_name ?? user.email ?? 'Usuario'}
+        currentUserId={ctx.userId}
+        currentUserName={profile?.full_name ?? ctx.userEmail ?? 'Usuario'}
         canApprove={canApprove}
         totalItems={totalItems}
       />

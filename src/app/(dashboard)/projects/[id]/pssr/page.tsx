@@ -1,5 +1,5 @@
 import { ShieldCheck } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import PssrListView from './PssrListView'
 
@@ -9,13 +9,10 @@ export default async function PssrListPage({
   params: Promise<{ id: string }>
 }) {
   const { id: projectId } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: membership } = await supabase
-    .from('org_members').select('org_id, role').eq('user_id', user.id).limit(1).maybeSingle()
-  if (!membership) redirect('/setup')
+  const ctx = await getActiveMembership()
+  if (!ctx) redirect('/login')
+  const supabase = ctx.supabase
+  const membership = { org_id: ctx.orgId, role: ctx.role }
 
   const canEdit = ['owner','admin','architect','leader'].includes(membership.role)
 

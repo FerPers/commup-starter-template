@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { revalidatePath } from 'next/cache'
 
 const PRIVILEGED_ROLES = ['owner', 'admin', 'architect']
@@ -35,30 +35,20 @@ export async function deleteTag(
   projectId: string,
   tagId: string
 ): Promise<{ error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
+  const ctx = await getActiveMembership()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos para eliminar' }
 
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) return { error: 'No perteneces a ninguna organización' }
-  if (!PRIVILEGED_ROLES.includes(membership.role)) return { error: 'Sin permisos para eliminar' }
-
-  const { data: project } = await supabase
+  const { data: project } = await ctx.supabase
     .from('projects')
     .select('id')
     .eq('id', projectId)
-    .eq('org_id', membership.org_id)
+    .eq('org_id', ctx.orgId)
     .single()
 
   if (!project) return { error: 'Proyecto no encontrado' }
 
-  const { error } = await supabase
+  const { error } = await ctx.supabase
     .from('tags')
     .delete()
     .eq('id', tagId)
@@ -75,31 +65,20 @@ export async function updateTag(
   tagId: string,
   payload: TagUpdatePayload
 ): Promise<{ error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
+  const ctx = await getActiveMembership()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos para editar' }
 
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) return { error: 'No perteneces a ninguna organización' }
-  if (!PRIVILEGED_ROLES.includes(membership.role)) return { error: 'Sin permisos para editar' }
-
-  // Verify project belongs to org
-  const { data: project } = await supabase
+  const { data: project } = await ctx.supabase
     .from('projects')
     .select('id')
     .eq('id', projectId)
-    .eq('org_id', membership.org_id)
+    .eq('org_id', ctx.orgId)
     .single()
 
   if (!project) return { error: 'Proyecto no encontrado' }
 
-  const { error } = await supabase
+  const { error } = await ctx.supabase
     .from('tags')
     .update(payload)
     .eq('id', tagId)

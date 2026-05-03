@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import ItrExecution from './ItrExecution'
 import SuggestionsBar, { type ItrSuggestion } from '@/components/itr/SuggestionsBar'
@@ -10,18 +10,10 @@ export default async function ItrExecutionPage({
 }) {
   const { id: projectId, tagId, itrId } = await params
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) redirect('/setup')
+  const ctx = await getActiveMembership()
+  if (!ctx) redirect('/login')
+  const supabase = ctx.supabase
+  const membership = { org_id: ctx.orgId, role: ctx.role }
 
   const { data: itr } = await supabase
     .from('itrs')
@@ -87,7 +79,7 @@ export default async function ItrExecutionPage({
         itr={itr as any}
         projectId={projectId}
         tagId={tagId}
-        currentUserId={user.id}
+        currentUserId={ctx.userId}
         currentUserRole={membership.role}
         canEdit={canEdit}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

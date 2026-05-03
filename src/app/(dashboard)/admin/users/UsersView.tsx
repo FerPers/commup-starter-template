@@ -14,6 +14,12 @@ type Member = {
   email: string
 }
 
+type PendingInvite = {
+  userId: string
+  email: string
+  invitedAt: string
+}
+
 const ALL_ROLES = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client']
 
 const ROLE_COLORS: Record<string, { color: string; bg: string }> = {
@@ -54,10 +60,12 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
 
 export default function UsersView({
   members,
+  pendingInvites,
   currentUserId,
   currentRole,
 }: {
   members: Member[]
+  pendingInvites: PendingInvite[]
   currentUserId: string
   currentRole: string
 }) {
@@ -267,6 +275,34 @@ export default function UsersView({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Pending invites */}
+      {pendingInvites.length > 0 && (
+        <div style={{
+          marginBottom: '20px',
+          padding: '14px 18px',
+          background: '#fffbeb',
+          border: '1px solid #fcd34d',
+          borderRadius: '10px',
+        }}>
+          <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 600, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Pendiente de confirmación ({pendingInvites.length})
+          </p>
+          <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#78350f' }}>
+            Estos usuarios fueron invitados pero no aparecen como miembros activos. Posibles huérfanos: invítalos de nuevo si es necesario.
+          </p>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {pendingInvites.map(p => (
+              <li key={p.userId} style={{ fontSize: 13, color: '#78350f', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span><strong>{p.email}</strong></span>
+                <span style={{ color: '#a16207', fontSize: 12 }}>
+                  invitado {new Date(p.invitedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
