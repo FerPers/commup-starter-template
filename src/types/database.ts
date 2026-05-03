@@ -456,6 +456,7 @@ export interface Certificate {
   document_url: string | null
   is_blocked: boolean
   block_reason: string | null
+  notes: string | null
   created_at: string
 }
 
@@ -466,6 +467,18 @@ export interface CertificatePunchException {
   justification: string
   approved_by: string
   approved_at: string
+}
+
+export type CertSignatureRole = 'completion' | 'client' | 'authority'
+
+export interface CertificateSignature {
+  id: string
+  certificate_id: string
+  user_id: string
+  role: CertSignatureRole
+  signature_image: string | null
+  comments: string | null
+  signed_at: string
 }
 
 // ── Module 10: Work Plans & KPIs ─────────────────────────────

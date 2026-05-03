@@ -3,7 +3,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { revokeCertificate } from '@/app/actions/certificates'
+import { revokeCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
+
+type CertSignatureRoleId = 'completion' | 'client' | 'authority'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,16 @@ type ItrRow = {
   tags: { tag_number: string; description: string } | null
 }
 
+type SignatureRow = {
+  id: string
+  role: CertSignatureRoleId
+  signature_image: string | null
+  comments: string | null
+  signed_at: string
+  user_id: string
+  signer_profile: { id: string; full_name: string } | null
+}
+
 // ── Config (colors only) ───────────────────────────────────────────────────
 
 const ITR_STATUS_COLORS = {
@@ -65,7 +77,9 @@ export default function CertificateDetail({
   cert,
   exceptions,
   itrs,
-  canEdit: _canEdit,
+  signatures,
+  currentUserId,
+  canEdit,
   isAdmin,
 }: {
   projectId: string
@@ -75,6 +89,8 @@ export default function CertificateDetail({
   cert: CertFull
   exceptions: ExceptionRow[]
   itrs: ItrRow[]
+  signatures: SignatureRow[]
+  currentUserId: string
   canEdit: boolean
   isAdmin: boolean
 }) {
@@ -84,6 +100,9 @@ export default function CertificateDetail({
   const [isPending, startTransition] = useTransition()
   const [revokeConfirm, setRevokeConfirm] = useState(false)
   const [revokeError, setRevokeError]     = useState('')
+  const [signRole, setSignRole]           = useState<CertSignatureRoleId | null>(null)
+  const [signComments, setSignComments]   = useState('')
+  const [signError, setSignError]         = useState('')
 
   const phase     = cert.project_phases
   const subsystem = cert.subsystems
@@ -116,6 +135,52 @@ export default function CertificateDetail({
       }
     })
   }
+
+  function openSignModal(role: CertSignatureRoleId) {
+    setSignError('')
+    setSignComments('')
+    setSignRole(role)
+  }
+
+  function handleSign() {
+    if (!signRole) return
+    setSignError('')
+    startTransition(async () => {
+      const result = await signCertificate({
+        certId: cert.id,
+        role: signRole,
+        projectId,
+        comments: signComments || undefined,
+      })
+      if (result.error) {
+        setSignError(result.error)
+      } else {
+        setSignRole(null)
+        setSignComments('')
+        router.refresh()
+      }
+    })
+  }
+
+  function handleUnsign(signatureId: string) {
+    setSignError('')
+    startTransition(async () => {
+      const result = await removeCertificateSignature({
+        signatureId,
+        certId: cert.id,
+        projectId,
+      })
+      if (result.error) {
+        alert(result.error)
+      } else {
+        router.refresh()
+      }
+    })
+  }
+
+  const SIG_ROLES: CertSignatureRoleId[] = ['completion', 'client', 'authority']
+  const sigByRole = new Map<CertSignatureRoleId, SignatureRow>()
+  for (const s of signatures) sigByRole.set(s.role, s)
 
   return (
     <div style={{ padding: '32px' }}>
@@ -360,19 +425,136 @@ export default function CertificateDetail({
           {t('detail.signaturesTitle')}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '32px' }}>
-          {([
-            t('detail.sigRoles.completion'),
-            t('detail.sigRoles.client'),
-            t('detail.sigRoles.authority'),
-          ] as const).map(role => (
-            <div key={role}>
-              <div style={{ borderBottom: '1px solid #0f172a', marginBottom: '8px', height: '50px' }} />
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{role}</div>
-              <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '3px' }}>{t('detail.sigName')}</div>
-            </div>
-          ))}
+          {SIG_ROLES.map(role => {
+            const sig = sigByRole.get(role)
+            const roleLabel = t(`detail.sigRoles.${role}`)
+            const isOwner = sig?.user_id === currentUserId
+            const canRemove = sig && (isOwner || isAdmin)
+            const canSign = canEdit && cert.status === 'issued' && !sig
+
+            return (
+              <div key={role}>
+                {sig ? (
+                  <>
+                    <div style={{
+                      borderBottom: '1px solid #0f172a', marginBottom: '8px', height: '50px',
+                      display: 'flex', alignItems: 'flex-end', paddingBottom: '6px',
+                      fontFamily: 'cursive', fontSize: '18px', color: '#0f172a',
+                    }}>
+                      {sig.signer_profile?.full_name ?? '—'}
+                    </div>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{roleLabel}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                      {sig.signer_profile?.full_name ?? '—'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '2px' }}>
+                      {t('detail.sigSignedOn', {
+                        date: new Date(sig.signed_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }),
+                      })}
+                    </div>
+                    {sig.comments && (
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+                        “{sig.comments}”
+                      </div>
+                    )}
+                    {canRemove && (
+                      <button
+                        className="no-print"
+                        onClick={() => handleUnsign(sig.id)}
+                        disabled={isPending}
+                        style={{
+                          marginTop: '10px', padding: '5px 12px', fontSize: '11px', fontWeight: 500,
+                          border: '1px solid var(--border)', borderRadius: '6px',
+                          background: 'var(--card-bg)', color: 'var(--text-muted)',
+                          cursor: isPending ? 'wait' : 'pointer',
+                        }}
+                      >
+                        {isPending ? t('detail.sigUnsigning') : t('detail.sigUnsign')}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div style={{ borderBottom: '1px dashed var(--border)', marginBottom: '8px', height: '50px' }} />
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{roleLabel}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '3px' }}>
+                      {t('detail.sigPending')}
+                    </div>
+                    {canSign && (
+                      <button
+                        className="no-print"
+                        onClick={() => openSignModal(role)}
+                        disabled={isPending}
+                        style={{
+                          marginTop: '10px', padding: '6px 14px', fontSize: '12px', fontWeight: 600,
+                          border: '1px solid #bbf7d0', borderRadius: '8px',
+                          background: '#f0fdf4', color: '#15803d',
+                          cursor: isPending ? 'wait' : 'pointer',
+                        }}
+                      >
+                        {t('detail.sigSign', { role: roleLabel })}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
+
+      {/* Sign confirm modal */}
+      {signRole && (
+        <div className="no-print" style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'var(--card-bg)', borderRadius: '14px', padding: '28px',
+            maxWidth: '440px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+          }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
+              {t('detail.sigConfirmTitle', { role: t(`detail.sigRoles.${signRole}`) })}
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
+              {t('detail.sigConfirmBody')}
+            </p>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+              {t('detail.sigCommentsLabel')}
+            </label>
+            <textarea
+              value={signComments}
+              onChange={e => setSignComments(e.target.value)}
+              placeholder={t('detail.sigCommentsPlaceholder')}
+              rows={3}
+              style={{
+                width: '100%', padding: '8px 10px', borderRadius: '8px',
+                border: '1px solid var(--border)', fontSize: '13px',
+                background: 'var(--card-bg)', color: 'var(--text-strong)',
+                fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box',
+              }}
+            />
+            {signError && (
+              <p style={{ fontSize: '13px', color: '#ef4444', margin: '12px 0 0' }}>{signError}</p>
+            )}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button
+                onClick={() => { setSignRole(null); setSignError('') }}
+                style={{ padding: '8px 18px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer' }}
+              >
+                {t('detail.sigCancel')}
+              </button>
+              <button
+                onClick={handleSign}
+                disabled={isPending}
+                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: '#10b981', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'wait' : 'pointer' }}
+              >
+                {isPending ? t('detail.sigSigning') : t('detail.sigConfirmAction')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Revoke confirm modal */}
       {revokeConfirm && (

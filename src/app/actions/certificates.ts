@@ -246,3 +246,94 @@ export async function revokeCertificate(input: {
   revalidatePath(`/projects/${input.projectId}/certificates/${input.certId}`)
   return {}
 }
+
+// ── signCertificate ────────────────────────────────────────────────────────
+
+export async function signCertificate(input: {
+  certId: string
+  role: 'completion' | 'client' | 'authority'
+  projectId: string
+  comments?: string
+}): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos para firmar certificados' }
+
+  const { supabase, userId } = ctx
+
+  const { data: existing } = await supabase
+    .from('certificate_signatures')
+    .select('id')
+    .eq('certificate_id', input.certId)
+    .eq('role', input.role)
+    .maybeSingle()
+
+  if (existing) return { error: `Ya existe una firma para el rol ${input.role}` }
+
+  const { error } = await supabase
+    .from('certificate_signatures')
+    .insert({
+      certificate_id: input.certId,
+      user_id: userId,
+      role: input.role,
+      comments: input.comments?.trim() || null,
+    } as never)
+
+  if (error) return { error: error.message }
+
+  await logActivity(supabase, {
+    orgId: ctx.orgId,
+    userId,
+    entityType: 'certificate',
+    entityId: input.certId,
+    action: 'signed',
+    payload: { role: input.role, projectId: input.projectId },
+  })
+
+  revalidatePath(`/projects/${input.projectId}/certificates/${input.certId}`)
+  return {}
+}
+
+// ── removeCertificateSignature ─────────────────────────────────────────────
+
+export async function removeCertificateSignature(input: {
+  signatureId: string
+  certId: string
+  projectId: string
+}): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { supabase, userId } = ctx
+
+  const { data: sig } = await supabase
+    .from('certificate_signatures')
+    .select('user_id, role')
+    .eq('id', input.signatureId)
+    .maybeSingle()
+
+  if (!sig) return { error: 'Firma no encontrada' }
+
+  const isOwner = sig.user_id === userId
+  const isAdmin = ctx.role === 'owner' || ctx.role === 'admin'
+  if (!isOwner && !isAdmin) return { error: 'Solo el firmante o un admin puede quitar la firma' }
+
+  const { error } = await supabase
+    .from('certificate_signatures')
+    .delete()
+    .eq('id', input.signatureId)
+
+  if (error) return { error: error.message }
+
+  await logActivity(supabase, {
+    orgId: ctx.orgId,
+    userId,
+    entityType: 'certificate',
+    entityId: input.certId,
+    action: 'unsigned',
+    payload: { role: sig.role, projectId: input.projectId },
+  })
+
+  revalidatePath(`/projects/${input.projectId}/certificates/${input.certId}`)
+  return {}
+}

@@ -485,6 +485,18 @@
         "client": "Representante Cliente",
         "authority": "Autoridad"
       },
+      "sigSign": "Firmar como {role}",
+      "sigSigning": "Firmando…",
+      "sigUnsign": "Quitar firma",
+      "sigUnsigning": "Quitando…",
+      "sigSignedOn": "Firmado el {date}",
+      "sigPending": "Pendiente de firma",
+      "sigCommentsLabel": "Comentarios (opcional)",
+      "sigCommentsPlaceholder": "Notas sobre la firma…",
+      "sigConfirmTitle": "Firmar como {role}",
+      "sigConfirmBody": "Tu firma quedará registrada con tu nombre y la fecha actual. Esta acción es auditable.",
+      "sigConfirmAction": "Confirmar firma",
+      "sigCancel": "Cancelar",
       "revokeModal": {
         "title": "¿Revocar certificado?",
         "body": "El certificado {certNumber} quedará en estado Revocado. Esta acción es auditable.",

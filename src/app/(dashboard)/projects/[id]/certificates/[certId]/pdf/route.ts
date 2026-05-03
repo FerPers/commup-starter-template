@@ -75,6 +75,16 @@ export async function GET(
     .eq('phase_id', (cert.project_phases as unknown as { id?: string } | null)?.id ?? '')
     .eq('status', 'approved')
 
+  // Fetch digital signatures
+  const { data: signatures } = await supabase
+    .from('certificate_signatures')
+    .select(`
+      id, role, signed_at, comments,
+      signer_profile:profiles!user_id ( full_name )
+    `)
+    .eq('certificate_id', certId)
+    .order('signed_at')
+
   const certData = {
     ...cert,
     projectName: project?.name ?? '',
@@ -82,6 +92,7 @@ export async function GET(
     projectClient: project?.client_name ?? null,
     exceptions: (cert.punch_exceptions as unknown as typeof cert.punch_exceptions) ?? [],
     itrs: itrs ?? [],
+    signatures: signatures ?? [],
   }
 
   // Generate PDF

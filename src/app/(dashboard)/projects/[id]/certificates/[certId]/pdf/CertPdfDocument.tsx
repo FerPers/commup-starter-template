@@ -30,6 +30,14 @@ type ItrRow = {
   tags: { tag_number: string; description: string } | null
 }
 
+type SignatureRow = {
+  id: string
+  role: 'completion' | 'client' | 'authority'
+  signed_at: string
+  comments: string | null
+  signer_profile: { full_name: string } | null
+}
+
 export type CertPdfData = {
   id: string
   certificate_number: string
@@ -55,6 +63,7 @@ export type CertPdfData = {
   projectClient: string | null
   exceptions: ExceptionRow[]
   itrs: ItrRow[]
+  signatures: SignatureRow[]
 }
 
 // ── Styles ──────────────────────────────────────────────────────────────────
@@ -475,7 +484,7 @@ export function CertPdfDocument({ cert }: { cert: CertPdfData }) {
         <View style={s.signaturesSection}>
           <Text style={s.signaturesTitle}>Authorized Signatures</Text>
           <View style={s.signaturesGrid}>
-            {/* Issuer */}
+            {/* Issuer (always from cert.issued_by) */}
             <View style={s.sigBox}>
               <Text style={s.sigRole}>Issued by</Text>
               {cert.issued_by_profile ? (
@@ -491,19 +500,32 @@ export function CertPdfDocument({ cert }: { cert: CertPdfData }) {
               )}
             </View>
 
-            {/* Reviewer */}
-            <View style={s.sigBox}>
-              <Text style={s.sigRole}>Reviewed by</Text>
-              <View style={s.sigEmpty} />
-              <Text style={{ fontSize: 7.5, color: '#94a3b8' }}>Name / Date</Text>
-            </View>
-
-            {/* Client */}
-            <View style={s.sigBox}>
-              <Text style={s.sigRole}>Client representative</Text>
-              <View style={s.sigEmpty} />
-              <Text style={{ fontSize: 7.5, color: '#94a3b8' }}>Name / Date</Text>
-            </View>
+            {/* Completion / Client / Authority — pulled from cert.signatures */}
+            {(['completion','client','authority'] as const).map(role => {
+              const sig = cert.signatures.find(s => s.role === role)
+              const roleLabel =
+                role === 'completion' ? 'Completion Manager'
+                : role === 'client'    ? 'Client representative'
+                : 'Authority'
+              return (
+                <View key={role} style={s.sigBox}>
+                  <Text style={s.sigRole}>{roleLabel}</Text>
+                  {sig ? (
+                    <>
+                      <Text style={s.sigName}>{sig.signer_profile?.full_name ?? '—'}</Text>
+                      <Text style={s.sigDate}>
+                        {new Date(sig.signed_at).toISOString().split('T')[0]}
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <View style={s.sigEmpty} />
+                      <Text style={{ fontSize: 7.5, color: '#94a3b8' }}>Name / Date</Text>
+                    </>
+                  )}
+                </View>
+              )
+            })}
           </View>
         </View>
 

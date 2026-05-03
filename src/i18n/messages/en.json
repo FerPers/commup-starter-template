@@ -485,6 +485,18 @@
         "client": "Client Representative",
         "authority": "Authority"
       },
+      "sigSign": "Sign as {role}",
+      "sigSigning": "Signing…",
+      "sigUnsign": "Remove signature",
+      "sigUnsigning": "Removing…",
+      "sigSignedOn": "Signed on {date}",
+      "sigPending": "Awaiting signature",
+      "sigCommentsLabel": "Comments (optional)",
+      "sigCommentsPlaceholder": "Notes about the signature…",
+      "sigConfirmTitle": "Sign as {role}",
+      "sigConfirmBody": "Your signature will be recorded with your name and the current date. This action is auditable.",
+      "sigConfirmAction": "Confirm signature",
+      "sigCancel": "Cancel",
       "revokeModal": {
         "title": "Revoke certificate?",
         "body": "Certificate {certNumber} will be set to Revoked status. This action is auditable.",

@@ -27,6 +27,7 @@ export default async function CertificateDetailPage({
   const [
     { data: cert },
     { data: exceptions },
+    { data: signatures },
   ] = await Promise.all([
     supabase
       .from('certificates')
@@ -49,6 +50,14 @@ export default async function CertificateDetailPage({
       `)
       .eq('certificate_id', certId)
       .order('approved_at'),
+    supabase
+      .from('certificate_signatures')
+      .select(`
+        id, role, signature_image, comments, signed_at, user_id,
+        signer_profile:profiles!user_id(id, full_name)
+      `)
+      .eq('certificate_id', certId)
+      .order('signed_at'),
   ])
 
   if (!cert) notFound()
@@ -88,6 +97,9 @@ export default async function CertificateDetailPage({
       exceptions={(exceptions ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       itrs={(itrs ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      signatures={(signatures ?? []) as any}
+      currentUserId={ctx.userId}
       canEdit={canEdit}
       isAdmin={isAdmin}
     />
