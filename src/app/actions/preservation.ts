@@ -355,3 +355,172 @@ export async function finalizeRecord(input: {
   revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}/preservation/${input.planId}`)
   return {}
 }
+
+// ═══════════════════════════════════════════════════════════
+// CROSS-ORG SHARING (procedures only — plans/records live per project)
+// ═══════════════════════════════════════════════════════════
+
+export type ImportableProcedure = {
+  id: string
+  code: string
+  title: string
+  frequency: string
+  intervalDays: number
+  disciplineCode: string | null
+  equipmentTypeCode: string | null
+  sourceOrgId: string
+  sourceOrgName: string
+  itemCount: number
+}
+
+export async function listImportableProcedures(): Promise<{
+  procedures: ImportableProcedure[]
+  error?: string
+}> {
+  const ctx = await getCtx()
+  if (!ctx) return { procedures: [], error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { procedures: [], error: 'Sin permisos' }
+
+  const { data: memberships } = await ctx.supabase
+    .from('org_members')
+    .select('org_id, organizations(name)')
+    .eq('user_id', ctx.userId)
+
+  const otherOrgIds = (memberships ?? [])
+    .map(m => m.org_id as string)
+    .filter(id => id !== ctx.orgId)
+
+  if (otherOrgIds.length === 0) return { procedures: [] }
+
+  const orgNames = new Map<string, string>()
+  for (const m of memberships ?? []) {
+    const orgRel = m.organizations as { name: string } | { name: string }[] | null
+    const name = Array.isArray(orgRel) ? orgRel[0]?.name : orgRel?.name
+    if (name) orgNames.set(m.org_id as string, name)
+  }
+
+  const { data, error } = await ctx.supabase
+    .from('preservation_procedures')
+    .select(`
+      id, code, title, frequency, interval_days, org_id,
+      disciplines(code),
+      equipment_types(code),
+      preservation_procedure_items(id)
+    `)
+    .in('org_id', otherOrgIds)
+    .order('code')
+
+  if (error) return { procedures: [], error: error.message }
+
+  const procedures: ImportableProcedure[] = (data ?? []).map(p => {
+    const disc = p.disciplines as { code: string } | { code: string }[] | null
+    const eqt = p.equipment_types as { code: string } | { code: string }[] | null
+    const items = (p.preservation_procedure_items ?? []) as Array<{ id: string }>
+    return {
+      id: p.id as string,
+      code: p.code as string,
+      title: p.title as string,
+      frequency: p.frequency as string,
+      intervalDays: p.interval_days as number,
+      disciplineCode: Array.isArray(disc) ? disc[0]?.code ?? null : disc?.code ?? null,
+      equipmentTypeCode: Array.isArray(eqt) ? eqt[0]?.code ?? null : eqt?.code ?? null,
+      sourceOrgId: p.org_id as string,
+      sourceOrgName: orgNames.get(p.org_id as string) ?? '—',
+      itemCount: items.length,
+    }
+  })
+
+  return { procedures }
+}
+
+export async function cloneProcedureToActiveOrg(
+  sourceProcedureId: string,
+  options?: { codeSuffix?: string }
+): Promise<{ id?: string; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+
+  const { data: source } = await ctx.supabase
+    .from('preservation_procedures')
+    .select(`
+      id, code, title, description, frequency, interval_days,
+      requires_photo, requires_signature, org_id,
+      disciplines(code),
+      equipment_types(code),
+      preservation_procedure_items(
+        order_index, label, item_type, unit, min_value, max_value, is_critical, is_required
+      )
+    `)
+    .eq('id', sourceProcedureId)
+    .single()
+
+  if (!source) return { error: 'Procedimiento origen no encontrado o sin acceso' }
+  if (source.org_id === ctx.orgId) return { error: 'El procedimiento ya está en la org activa' }
+
+  const sourceDisc = source.disciplines as { code: string } | { code: string }[] | null
+  const sourceEqt = source.equipment_types as { code: string } | { code: string }[] | null
+  const discCode = Array.isArray(sourceDisc) ? sourceDisc[0]?.code : sourceDisc?.code
+  const eqtCode = Array.isArray(sourceEqt) ? sourceEqt[0]?.code : sourceEqt?.code
+
+  // Map discipline + equipment_type by code into target org (both optional in schema).
+  const [{ data: targetDisc }, { data: targetEqt }] = await Promise.all([
+    discCode
+      ? ctx.supabase.from('disciplines').select('id').eq('org_id', ctx.orgId).eq('code', discCode).maybeSingle()
+      : Promise.resolve({ data: null }),
+    eqtCode
+      ? ctx.supabase.from('equipment_types').select('id').eq('org_id', ctx.orgId).eq('code', eqtCode).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  if (discCode && !targetDisc) {
+    return { error: `Falta la disciplina "${discCode}" en la org activa. Créala antes de importar.` }
+  }
+  if (eqtCode && !targetEqt) {
+    return { error: `Falta el tipo de equipo "${eqtCode}" en la org activa. Créalo antes de importar.` }
+  }
+
+  const newCode = `${source.code}${options?.codeSuffix ?? ''}`
+
+  const { data: existing } = await ctx.supabase
+    .from('preservation_procedures')
+    .select('id')
+    .eq('org_id', ctx.orgId)
+    .eq('code', newCode)
+    .maybeSingle()
+
+  if (existing) {
+    return { error: `Ya existe un procedimiento con código "${newCode}" en esta org` }
+  }
+
+  const { data: cloned, error: procErr } = await ctx.supabase
+    .from('preservation_procedures')
+    .insert({
+      org_id: ctx.orgId,
+      code: newCode,
+      title: source.title,
+      description: source.description,
+      frequency: source.frequency,
+      interval_days: source.interval_days,
+      requires_photo: source.requires_photo,
+      requires_signature: source.requires_signature,
+      discipline_id: targetDisc?.id ?? null,
+      equipment_type_id: targetEqt?.id ?? null,
+    })
+    .select('id')
+    .single()
+
+  if (procErr || !cloned) return { error: procErr?.message ?? 'No se pudo crear el procedimiento' }
+
+  const items = (source.preservation_procedure_items ?? []) as Array<Record<string, unknown>>
+  if (items.length > 0) {
+    const itemRows = items.map(item => ({ ...item, procedure_id: cloned.id }))
+    const { error: itemErr } = await ctx.supabase
+      .from('preservation_procedure_items')
+      .insert(itemRows)
+    if (itemErr) return { error: `Procedimiento clonado pero items fallaron: ${itemErr.message}` }
+  }
+
+  revalidatePath('/admin/templates/preservation')
+  return { id: cloned.id }
+}

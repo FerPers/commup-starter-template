@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProcedure, deleteProcedure } from '@/app/actions/preservation'
+import ImportProcedureFromOrgModal from './ImportProcedureFromOrgModal'
 
 interface Discipline { id: string; code: string; name: string; color: string }
 interface Procedure {
@@ -51,6 +52,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
   const [isPending, startTransition] = useTransition()
   const [activeDisc, setActiveDisc] = useState('all')
   const [showModal, setShowModal] = useState(false)
+  const [showImportFromOrg, setShowImportFromOrg] = useState(false)
   const [form, setForm] = useState(DEFAULT_FORM)
   const [formError, setFormError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -142,16 +144,28 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
         </div>
 
         {canEdit && (
-          <button
-            onClick={() => setShowModal(true)}
-            style={{
-              padding: '8px 18px', borderRadius: '8px', background: '#3b82f6', color: 'white',
-              fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none',
-              display: 'flex', alignItems: 'center', gap: '6px',
-            }}
-          >
-            + Nuevo procedimiento
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => setShowImportFromOrg(true)}
+              style={{
+                padding: '8px 16px', borderRadius: '8px', background: 'var(--card-bg)',
+                color: 'var(--text-muted)', fontWeight: 500, fontSize: '13px',
+                cursor: 'pointer', border: '1px solid var(--border)',
+              }}
+            >
+              Importar de otra org
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              style={{
+                padding: '8px 18px', borderRadius: '8px', background: '#3b82f6', color: 'white',
+                fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none',
+                display: 'flex', alignItems: 'center', gap: '6px',
+              }}
+            >
+              + Nuevo procedimiento
+            </button>
+          </div>
         )}
       </div>
 
@@ -253,6 +267,10 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             )
           })}
         </div>
+      )}
+
+      {showImportFromOrg && (
+        <ImportProcedureFromOrgModal onClose={() => setShowImportFromOrg(false)} />
       )}
 
       {/* Create modal */}

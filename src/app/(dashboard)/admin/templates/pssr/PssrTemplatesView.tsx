@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
 import { createPssrTemplate, seedDefaultPssrTemplate, deletePssrTemplate } from '@/app/actions/pssr'
+import ImportPssrFromOrgModal from './ImportPssrFromOrgModal'
 
 interface Template {
   id: string
@@ -18,6 +19,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showModal, setShowModal] = useState(false)
+  const [showImportFromOrg, setShowImportFromOrg] = useState(false)
   const [form, setForm] = useState({ name: '', description: '' })
   const [formError, setFormError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -82,6 +84,15 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
           {canEdit && (
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
+                onClick={() => setShowImportFromOrg(true)}
+                style={{
+                  padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                  background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer',
+                }}
+              >
+                Importar de otra org
+              </button>
+              <button
                 onClick={() => setShowModal(true)}
                 style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
@@ -99,7 +110,16 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
       {templates.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {canEdit && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4px', gap: '8px' }}>
+              <button
+                onClick={() => setShowImportFromOrg(true)}
+                style={{
+                  padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                  background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer',
+                }}
+              >
+                Importar de otra org
+              </button>
               <button
                 onClick={() => setShowModal(true)}
                 style={{
@@ -184,6 +204,10 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
             </div>
           ))}
         </div>
+      )}
+
+      {showImportFromOrg && (
+        <ImportPssrFromOrgModal onClose={() => setShowImportFromOrg(false)} />
       )}
 
       {/* Create modal */}
