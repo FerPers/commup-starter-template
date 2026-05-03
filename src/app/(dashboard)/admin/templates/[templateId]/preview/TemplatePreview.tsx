@@ -434,11 +434,12 @@ export default function TemplatePreview({ template }: { template: TemplateData }
               overflow: 'hidden',
             }}>
               {section.itr_template_items.map((item, ii) => {
-                const desc = lang === 'en' && item.description_es
-                  ? item.description_es   // description_es actually stores EN in this DB structure
+                // Schema convention: `description` is the primary text (English),
+                // `description_es` is the Spanish translation. Fall back to the
+                // primary when a translation isn't filled in yet.
+                const visibleDesc = lang === 'es'
+                  ? (item.description_es?.trim() || item.description)
                   : item.description
-                // Note: field name is description_es but stores EN translation
-                const descEs = lang === 'es' ? item.description : (item.description_es ?? item.description)
 
                 return (
                   <div
@@ -465,7 +466,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '14px', color: 'var(--text-strong)', lineHeight: 1.5 }}>
-                            {lang === 'es' ? item.description : (item.description_es ?? item.description)}
+                            {visibleDesc}
                           </span>
                           {/* Flags */}
                           <span style={{ display: 'inline-flex', gap: '4px', flexShrink: 0 }}>
@@ -480,17 +481,6 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                             )}
                           </span>
                         </div>
-                        {/* Show both languages when EN mode */}
-                        {lang === 'en' && item.description_es && item.description_es !== item.description && (
-                          <div style={{ fontSize: '12px', color: 'var(--gray-400)', marginTop: '2px', fontStyle: 'italic' }}>
-                            ES: {item.description}
-                          </div>
-                        )}
-                        {lang === 'es' && item.description_es && item.description_es !== item.description && (
-                          <div style={{ fontSize: '12px', color: 'var(--gray-400)', marginTop: '2px', fontStyle: 'italic' }}>
-                            EN: {item.description_es}
-                          </div>
-                        )}
                       </div>
 
                       {/* Type badge */}
