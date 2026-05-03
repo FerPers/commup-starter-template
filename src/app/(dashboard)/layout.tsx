@@ -26,24 +26,35 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = ctx.supabase
   const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
+  const { data: orgProjects } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('org_id', ctx.orgId)
+
+  const projectIds = (orgProjects ?? []).map(p => p.id)
+
   const [
     { count: punchCount },
     { count: preservationCount },
     { data: org },
     memberships,
   ] = await Promise.all([
-    supabase
-      .from('punches')
-      .select('*', { count: 'exact', head: true })
-      .eq('org_id', ctx.orgId)
-      .eq('category', 'A')
-      .in('status', ['open', 'in_progress'])
-      .is('assigned_to', null),
-    supabase
-      .from('preservation_records')
-      .select('*', { count: 'exact', head: true })
-      .neq('status', 'completed')
-      .lt('next_due_date', threeDaysAgo),
+    projectIds.length === 0
+      ? Promise.resolve({ count: 0 })
+      : supabase
+          .from('punches')
+          .select('*', { count: 'exact', head: true })
+          .in('project_id', projectIds)
+          .eq('category', 'A')
+          .in('status', ['open', 'in_progress']),
+    projectIds.length === 0
+      ? Promise.resolve({ count: 0 })
+      : supabase
+          .from('preservation_plans')
+          .select('*', { count: 'exact', head: true })
+          .in('project_id', projectIds)
+          .neq('status', 'completed')
+          .lt('next_due_date', threeDaysAgo),
     supabase
       .from('organizations')
       .select('name')

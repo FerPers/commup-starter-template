@@ -8,24 +8,30 @@ export default async function GlobalPunchListPage() {
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const [{ data: projects }, { data: punches }, { data: disciplines }] = await Promise.all([
-    supabase
-      .from('projects')
-      .select('id, name, code')
-      .eq('org_id', membership.org_id)
-      .order('name'),
-    supabase
-      .from('punches')
-      .select(`
-        id, punch_number, category, description, status, priority,
-        target_date, closed_date, created_at, itr_id, project_id,
-        raised_by_profile:profiles!raised_by(full_name),
-        assigned_to_profile:profiles!assigned_to(full_name),
-        projects(id, name, code),
-        tags(id, tag_number, description, disciplines(code, name, color)),
-        subsystems(id, code, name, systems(code, name))
-      `)
-      .order('created_at', { ascending: false }),
+  const { data: projects } = await supabase
+    .from('projects')
+    .select('id, name, code')
+    .eq('org_id', membership.org_id)
+    .order('name')
+
+  const projectIds = (projects ?? []).map(p => p.id)
+
+  const [{ data: punches }, { data: disciplines }] = await Promise.all([
+    projectIds.length === 0
+      ? Promise.resolve({ data: [] as unknown as null })
+      : supabase
+          .from('punches')
+          .select(`
+            id, punch_number, category, description, status, priority,
+            target_date, closed_date, created_at, itr_id, project_id,
+            raised_by_profile:profiles!raised_by(full_name),
+            assigned_to_profile:profiles!assigned_to(full_name),
+            projects(id, name, code),
+            tags(id, tag_number, description, disciplines(code, name, color)),
+            subsystems(id, code, name, systems(code, name))
+          `)
+          .in('project_id', projectIds)
+          .order('created_at', { ascending: false }),
     supabase
       .from('disciplines')
       .select('id, code, name, color')
