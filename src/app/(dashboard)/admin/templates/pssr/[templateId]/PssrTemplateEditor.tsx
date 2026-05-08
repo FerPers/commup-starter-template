@@ -3,6 +3,30 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { upsertPssrTemplateItem, deletePssrTemplateItem } from '@/app/actions/pssr'
+import { exportPssrTemplate } from '@/app/actions/templates-backup'
+
+function downloadJsonFile(filename: string, payload: unknown) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+function dateStamp() {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function slugifySimple(s: string) {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'pssr'
+}
 
 interface Item {
   id: string
@@ -130,15 +154,35 @@ export default function PssrTemplateEditor({
           <strong style={{ color: 'var(--text-strong)' }}>{grouped.length}</strong> categorías
         </span>
         {canEdit && (
-          <button
-            onClick={openNew}
-            style={{
-              padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
-            }}
-          >
-            + Nuevo ítem
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => {
+                startTransition(async () => {
+                  const res = await exportPssrTemplate(template.id)
+                  if (res.error || !res.backup) { setFormError(res.error ?? 'Error al exportar'); return }
+                  downloadJsonFile(`commup-pssr-${slugifySimple(template.name)}-${dateStamp()}.json`, res.backup)
+                })
+              }}
+              disabled={isPending}
+              style={{
+                padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                background: '#fef3c7', color: '#a16207', border: '1px solid #fde68a',
+                cursor: isPending ? 'not-allowed' : 'pointer',
+              }}
+              title="Descargar este template como JSON"
+            >
+              Exportar JSON
+            </button>
+            <button
+              onClick={openNew}
+              style={{
+                padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+                background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
+              }}
+            >
+              + Nuevo ítem
+            </button>
+          </div>
         )}
       </div>
 

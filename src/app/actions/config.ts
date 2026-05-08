@@ -198,6 +198,39 @@ export async function updateOrgProfile(input: {
   return {}
 }
 
+/**
+ * Toggle whether the active org is a public template catalog. When true, its
+ * templates (ITR, preservation, PSSR) become readable by any authenticated
+ * user via the catalog RLS policies, enabling cross-org template browsing
+ * without explicit membership.
+ */
+export async function setOrgTemplateCatalog(value: boolean): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (ctx.role !== 'owner') return { error: 'Solo el owner puede marcar la org como catálogo público' }
+
+  // Read current settings, merge the flag, write back. settings is jsonb.
+  const { data: org, error: fetchErr } = await ctx.supabase
+    .from('organizations')
+    .select('settings')
+    .eq('id', ctx.orgId)
+    .single()
+  if (fetchErr) return { error: fetchErr.message }
+
+  const settings = (org?.settings as Record<string, unknown> | null) ?? {}
+  const next = { ...settings, is_template_catalog: value }
+
+  const { error } = await ctx.supabase
+    .from('organizations')
+    .update({ settings: next })
+    .eq('id', ctx.orgId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/config')
+  revalidatePath('/admin/templates')
+  return {}
+}
+
 export async function uploadOrgLogo(
   orgId: string,
   formData: FormData,

@@ -14,7 +14,7 @@ export default async function AdminConfigPage() {
   const [{ data: org }, { data: phases }, { data: disciplines }, { data: projects }] = await Promise.all([
     supabase
       .from('organizations')
-      .select('id, name, logo_url')
+      .select('id, name, logo_url, settings')
       .eq('id', orgId)
       .single(),
     supabase
@@ -34,12 +34,16 @@ export default async function AdminConfigPage() {
       .order('name'),
   ])
 
+  const isCatalog = !!(org?.settings as Record<string, unknown> | null)?.is_template_catalog
+
   return (
     <OrgConfigView
       org={org ?? { id: orgId, name: '', logo_url: null }}
       phases={phases ?? []}
       disciplines={disciplines ?? []}
       projects={projects ?? []}
+      isTemplateCatalog={isCatalog}
+      isOwner={ctx.role === 'owner'}
     />
   )
 }

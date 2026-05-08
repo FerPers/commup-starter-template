@@ -370,6 +370,7 @@ export type ImportableProcedure = {
   equipmentTypeCode: string | null
   sourceOrgId: string
   sourceOrgName: string
+  sourceOrgIsCatalog: boolean
   itemCount: number
 }
 
@@ -381,23 +382,22 @@ export async function listImportableProcedures(): Promise<{
   if (!ctx) return { procedures: [], error: 'No autenticado' }
   if (!EDITOR_ROLES.includes(ctx.role)) return { procedures: [], error: 'Sin permisos' }
 
-  const { data: memberships } = await ctx.supabase
-    .from('org_members')
-    .select('org_id, organizations(name)')
-    .eq('user_id', ctx.userId)
+  const { data: orgs } = await ctx.supabase
+    .from('organizations')
+    .select('id, name, settings')
+    .neq('id', ctx.orgId)
 
-  const otherOrgIds = (memberships ?? [])
-    .map(m => m.org_id as string)
-    .filter(id => id !== ctx.orgId)
-
-  if (otherOrgIds.length === 0) return { procedures: [] }
-
-  const orgNames = new Map<string, string>()
-  for (const m of memberships ?? []) {
-    const orgRel = m.organizations as { name: string } | { name: string }[] | null
-    const name = Array.isArray(orgRel) ? orgRel[0]?.name : orgRel?.name
-    if (name) orgNames.set(m.org_id as string, name)
+  const orgInfo = new Map<string, { name: string; isCatalog: boolean }>()
+  for (const o of orgs ?? []) {
+    const settings = (o.settings as Record<string, unknown> | null) ?? {}
+    orgInfo.set(o.id as string, {
+      name: o.name as string,
+      isCatalog: !!settings.is_template_catalog,
+    })
   }
+
+  const otherOrgIds = [...orgInfo.keys()]
+  if (otherOrgIds.length === 0) return { procedures: [] }
 
   const { data, error } = await ctx.supabase
     .from('preservation_procedures')
@@ -416,6 +416,7 @@ export async function listImportableProcedures(): Promise<{
     const disc = p.disciplines as { code: string } | { code: string }[] | null
     const eqt = p.equipment_types as { code: string } | { code: string }[] | null
     const items = (p.preservation_procedure_items ?? []) as Array<{ id: string }>
+    const info = orgInfo.get(p.org_id as string)
     return {
       id: p.id as string,
       code: p.code as string,
@@ -425,7 +426,8 @@ export async function listImportableProcedures(): Promise<{
       disciplineCode: Array.isArray(disc) ? disc[0]?.code ?? null : disc?.code ?? null,
       equipmentTypeCode: Array.isArray(eqt) ? eqt[0]?.code ?? null : eqt?.code ?? null,
       sourceOrgId: p.org_id as string,
-      sourceOrgName: orgNames.get(p.org_id as string) ?? '—',
+      sourceOrgName: info?.name ?? '—',
+      sourceOrgIsCatalog: info?.isCatalog ?? false,
       itemCount: items.length,
     }
   })

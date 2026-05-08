@@ -130,6 +130,17 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
         {canEdit && (
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             <button
+              onClick={() => router.push('/admin/templates/backup')}
+              style={{
+                padding: '9px 18px', background: '#fef3c7', color: '#a16207',
+                borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                border: '1px solid #fde68a', cursor: 'pointer',
+              }}
+              title="Exportar/Restaurar todos los templates"
+            >
+              Backup / Restore
+            </button>
+            <button
               onClick={() => setShowImportFromOrg(true)}
               style={{
                 padding: '9px 18px', background: '#eff6ff', color: '#2563eb',

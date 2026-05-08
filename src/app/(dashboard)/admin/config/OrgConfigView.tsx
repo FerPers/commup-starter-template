@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   createPhase, updatePhase, deletePhase,
   createDiscipline, updateDiscipline, deleteDiscipline,
-  updateOrgProfile, uploadOrgLogo,
+  updateOrgProfile, uploadOrgLogo, setOrgTemplateCatalog,
 } from '@/app/actions/config'
 
 type Org = { id: string; name: string; logo_url: string | null }
@@ -162,11 +162,15 @@ export default function OrgConfigView({
   phases: initialPhases,
   disciplines: initialDisciplines,
   projects,
+  isTemplateCatalog: initialIsCatalog,
+  isOwner,
 }: {
   org: Org
   phases: Phase[]
   disciplines: Discipline[]
   projects: Project[]
+  isTemplateCatalog: boolean
+  isOwner: boolean
 }) {
   const t = useTranslations('Config')
   const [isPending, startTransition] = useTransition()
@@ -177,6 +181,8 @@ export default function OrgConfigView({
   const [orgLogoUrl, setOrgLogoUrl] = useState(initialOrg.logo_url)
   const [orgSaveMsg, setOrgSaveMsg] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [isCatalog, setIsCatalog] = useState(initialIsCatalog)
+  const [catalogMsg, setCatalogMsg] = useState<string | null>(null)
 
   const [newPhase, setNewPhase] = useState({ code: '', name: '', color: '#3b82f6', certName: '' })
   const [showNewPhase, setShowNewPhase] = useState(false)
@@ -201,6 +207,23 @@ export default function OrgConfigView({
       const res = await uploadOrgLogo(initialOrg.id, fd)
       if (res.error) setError(res.error)
       else if (res.url) setOrgLogoUrl(res.url)
+    })
+  }
+
+  function handleToggleCatalog(value: boolean) {
+    setCatalogMsg(null)
+    setIsCatalog(value)
+    startTransition(async () => {
+      const res = await setOrgTemplateCatalog(value)
+      if (res.error) {
+        setError(res.error)
+        setIsCatalog(!value)
+      } else {
+        setCatalogMsg(value
+          ? 'Esta org ahora es catálogo público — sus templates son visibles a cualquier user de CommUp.'
+          : 'Catálogo desactivado — los templates vuelven a ser solo de miembros.'
+        )
+      }
     })
   }
 
@@ -292,6 +315,52 @@ export default function OrgConfigView({
             </div>
           </div>
         </form>
+
+        {/* ── Catálogo público de templates ─────────────────────── */}
+        <div style={{
+          marginTop: '24px',
+          paddingTop: '20px',
+          borderTop: '1px solid var(--border)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '4px' }}>
+                Catálogo público de templates
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                Si activas esta opción, los templates ITR, procedimientos de preservación y templates PSSR de
+                esta org serán visibles a cualquier usuario autenticado de CommUp como banco de plantillas.
+                Los demás usuarios podrán <strong>importar (clonar)</strong> tus templates a su org pero no
+                modificar los originales. Solo el owner de la org puede activar este modo.
+              </div>
+            </div>
+            <label style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: isOwner ? 'pointer' : 'not-allowed',
+              fontSize: '13px', fontWeight: 600, color: isCatalog ? '#10b981' : 'var(--text-muted)',
+              padding: '6px 12px', borderRadius: '999px',
+              border: `1px solid ${isCatalog ? '#a7f3d0' : 'var(--border)'}`,
+              background: isCatalog ? '#ecfdf5' : 'var(--card-bg)',
+              opacity: isOwner ? 1 : 0.6, whiteSpace: 'nowrap',
+            }}>
+              <input
+                type="checkbox"
+                checked={isCatalog}
+                disabled={!isOwner || isPending}
+                onChange={e => handleToggleCatalog(e.target.checked)}
+                style={{ cursor: isOwner ? 'pointer' : 'not-allowed' }}
+              />
+              {isCatalog ? 'Catálogo activo' : 'Activar catálogo'}
+            </label>
+          </div>
+          {!isOwner && (
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>
+              Solo el owner de la org puede modificar este flag.
+            </p>
+          )}
+          {catalogMsg && (
+            <p style={{ fontSize: '12px', color: '#10b981', margin: '8px 0 0' }}>{catalogMsg}</p>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>

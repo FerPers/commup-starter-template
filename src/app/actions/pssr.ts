@@ -359,6 +359,7 @@ export type ImportablePssrTemplate = {
   isActive: boolean
   sourceOrgId: string
   sourceOrgName: string
+  sourceOrgIsCatalog: boolean
   itemCount: number
 }
 
@@ -370,23 +371,22 @@ export async function listImportablePssrTemplates(): Promise<{
   if (!ctx) return { templates: [], error: 'No autenticado' }
   if (!EDITOR_ROLES.includes(ctx.role)) return { templates: [], error: 'Sin permisos' }
 
-  const { data: memberships } = await ctx.supabase
-    .from('org_members')
-    .select('org_id, organizations(name)')
-    .eq('user_id', ctx.userId)
+  const { data: orgs } = await ctx.supabase
+    .from('organizations')
+    .select('id, name, settings')
+    .neq('id', ctx.orgId)
 
-  const otherOrgIds = (memberships ?? [])
-    .map(m => m.org_id as string)
-    .filter(id => id !== ctx.orgId)
-
-  if (otherOrgIds.length === 0) return { templates: [] }
-
-  const orgNames = new Map<string, string>()
-  for (const m of memberships ?? []) {
-    const orgRel = m.organizations as { name: string } | { name: string }[] | null
-    const name = Array.isArray(orgRel) ? orgRel[0]?.name : orgRel?.name
-    if (name) orgNames.set(m.org_id as string, name)
+  const orgInfo = new Map<string, { name: string; isCatalog: boolean }>()
+  for (const o of orgs ?? []) {
+    const settings = (o.settings as Record<string, unknown> | null) ?? {}
+    orgInfo.set(o.id as string, {
+      name: o.name as string,
+      isCatalog: !!settings.is_template_catalog,
+    })
   }
+
+  const otherOrgIds = [...orgInfo.keys()]
+  if (otherOrgIds.length === 0) return { templates: [] }
 
   const { data, error } = await ctx.supabase
     .from('pssr_templates')
@@ -401,13 +401,15 @@ export async function listImportablePssrTemplates(): Promise<{
 
   const templates: ImportablePssrTemplate[] = (data ?? []).map(t => {
     const items = (t.pssr_template_items ?? []) as Array<{ id: string }>
+    const info = orgInfo.get(t.org_id as string)
     return {
       id: t.id as string,
       name: t.name as string,
       description: (t.description as string | null) ?? null,
       isActive: t.is_active as boolean,
       sourceOrgId: t.org_id as string,
-      sourceOrgName: orgNames.get(t.org_id as string) ?? '—',
+      sourceOrgName: info?.name ?? '—',
+      sourceOrgIsCatalog: info?.isCatalog ?? false,
       itemCount: items.length,
     }
   })

@@ -108,8 +108,17 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
 
           {Array.from(byOrg.entries()).map(([orgId, list]) => (
             <div key={orgId} style={{ marginBottom: 20 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {list[0].sourceOrgName}
+                {list[0].sourceOrgIsCatalog && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999,
+                    background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7',
+                    letterSpacing: '0.04em',
+                  }}>
+                    CATÁLOGO PÚBLICO
+                  </span>
+                )}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {list.map(t => (

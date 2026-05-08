@@ -10,8 +10,27 @@ import {
   createItem, updateItem, deleteItem, reorderItems,
   type ItemPayload,
 } from '@/app/actions/itr-templates'
+import { exportItrTemplate } from '@/app/actions/templates-backup'
 import type { ItrItemType } from '@/types/database'
 import ImportItemsModal from './ImportItemsModal'
+
+function downloadJsonFile(filename: string, payload: unknown) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+function dateStamp() {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -715,6 +734,24 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                     }}
                   >
                     {t('btnImportExcel')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      startTransition(async () => {
+                        const res = await exportItrTemplate(template.id)
+                        if (res.error || !res.backup) { setActionError(res.error ?? 'Error al exportar'); return }
+                        downloadJsonFile(`commup-itr-${template.code}-${dateStamp()}.json`, res.backup)
+                      })
+                    }}
+                    disabled={isPending}
+                    style={{
+                      padding: '7px 14px', background: '#fef3c7', border: '1px solid #fde68a',
+                      borderRadius: '8px', fontSize: '12px', color: '#a16207', cursor: isPending ? 'not-allowed' : 'pointer',
+                      fontWeight: 500,
+                    }}
+                    title="Descargar este template como JSON (backup individual)"
+                  >
+                    Exportar JSON
                   </button>
                   <button
                     onClick={() => setShowPublishConfirm(true)}

@@ -8,6 +8,25 @@ import {
   reorderProcedureItems,
   updateProcedure,
 } from '@/app/actions/preservation'
+import { exportPreservationProcedure } from '@/app/actions/templates-backup'
+
+function downloadJsonFile(filename: string, payload: unknown) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+function dateStamp() {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -253,12 +272,28 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               </div>
             </div>
             {canEdit && (
-              <button
-                onClick={() => setEditHeader(true)}
-                style={{ padding: '7px 14px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--gray-700)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none', whiteSpace: 'nowrap' }}
-              >
-                Editar encabezado
-              </button>
+              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <button
+                  onClick={() => {
+                    startTransition(async () => {
+                      const res = await exportPreservationProcedure(procedure.id)
+                      if (res.error || !res.backup) { setHdrError(res.error ?? 'Error al exportar'); return }
+                      downloadJsonFile(`commup-pres-${procedure.code}-${dateStamp()}.json`, res.backup)
+                    })
+                  }}
+                  disabled={isPending}
+                  style={{ padding: '7px 14px', borderRadius: '8px', background: '#fef3c7', color: '#a16207', border: '1px solid #fde68a', fontWeight: 500, fontSize: '13px', cursor: isPending ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+                  title="Descargar este procedimiento como JSON"
+                >
+                  Exportar JSON
+                </button>
+                <button
+                  onClick={() => setEditHeader(true)}
+                  style={{ padding: '7px 14px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--gray-700)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none', whiteSpace: 'nowrap' }}
+                >
+                  Editar encabezado
+                </button>
+              </div>
             )}
           </div>
         ) : (

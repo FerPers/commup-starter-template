@@ -588,6 +588,7 @@ export type ImportableTemplate = {
   phaseCode: string | null
   sourceOrgId: string
   sourceOrgName: string
+  sourceOrgIsCatalog: boolean
   sectionCount: number
   itemCount: number
 }
@@ -600,23 +601,24 @@ export async function listImportableTemplates(): Promise<{
   if (!ctx) return { templates: [], error: 'No autenticado' }
   if (!EDITOR_ROLES.includes(ctx.role)) return { templates: [], error: 'Sin permisos' }
 
-  const { data: memberships } = await ctx.supabase
-    .from('org_members')
-    .select('org_id, organizations(name)')
-    .eq('user_id', ctx.userId)
+  // RLS now exposes member orgs ∪ catalog orgs. Query org metadata once,
+  // exclude the active org, and use that as the universe of source orgs.
+  const { data: orgs } = await ctx.supabase
+    .from('organizations')
+    .select('id, name, settings')
+    .neq('id', ctx.orgId)
 
-  const otherOrgIds = (memberships ?? [])
-    .map(m => m.org_id as string)
-    .filter(id => id !== ctx.orgId)
-
-  if (otherOrgIds.length === 0) return { templates: [] }
-
-  const orgNames = new Map<string, string>()
-  for (const m of memberships ?? []) {
-    const orgRel = m.organizations as { name: string } | { name: string }[] | null
-    const name = Array.isArray(orgRel) ? orgRel[0]?.name : orgRel?.name
-    if (name) orgNames.set(m.org_id as string, name)
+  const orgInfo = new Map<string, { name: string; isCatalog: boolean }>()
+  for (const o of orgs ?? []) {
+    const settings = (o.settings as Record<string, unknown> | null) ?? {}
+    orgInfo.set(o.id as string, {
+      name: o.name as string,
+      isCatalog: !!settings.is_template_catalog,
+    })
   }
+
+  const otherOrgIds = [...orgInfo.keys()]
+  if (otherOrgIds.length === 0) return { templates: [] }
 
   const { data, error } = await ctx.supabase
     .from('itr_templates')
@@ -636,6 +638,7 @@ export async function listImportableTemplates(): Promise<{
     const disc = t.disciplines as { code: string } | { code: string }[] | null
     const phase = t.project_phases as { code: string } | { code: string }[] | null
     const sections = (t.itr_template_sections ?? []) as Array<{ id: string; itr_template_items: { id: string }[] }>
+    const info = orgInfo.get(t.org_id as string)
     return {
       id: t.id as string,
       code: t.code as string,
@@ -644,7 +647,8 @@ export async function listImportableTemplates(): Promise<{
       disciplineCode: Array.isArray(disc) ? disc[0]?.code ?? null : disc?.code ?? null,
       phaseCode: Array.isArray(phase) ? phase[0]?.code ?? null : phase?.code ?? null,
       sourceOrgId: t.org_id as string,
-      sourceOrgName: orgNames.get(t.org_id as string) ?? '—',
+      sourceOrgName: info?.name ?? '—',
+      sourceOrgIsCatalog: info?.isCatalog ?? false,
       sectionCount: sections.length,
       itemCount: sections.reduce((sum, s) => sum + s.itr_template_items.length, 0),
     }
