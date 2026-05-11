@@ -9,6 +9,7 @@ import {
   createMissingTaxonomy,
 } from '@/app/actions/templates-backup'
 import type { TemplatesBackup, RestoreResult, TaxonomyPreview } from '@/lib/constants/templates-backup'
+import BackupDocumentView from '@/components/templates/BackupDocumentView'
 
 interface Props {
   orgName: string
@@ -49,6 +50,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
   const [filename, setFilename] = useState<string | null>(null)
   const [showRaw, setShowRaw] = useState(false)
   const [rawJson, setRawJson] = useState<string>('')
+  const [showDoc, setShowDoc] = useState(false)
 
   const [skipDuplicates, setSkipDuplicates] = useState(true)
   const [duplicateSuffix, setDuplicateSuffix] = useState(' (restaurado)')
@@ -314,8 +316,19 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
               onCheck={setIncludePssr}
             />
 
-            {/* Raw JSON toggle */}
-            <div>
+            {/* Raw JSON toggle + Document view */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setShowDoc(true)}
+                style={{
+                  padding: '6px 12px', background: '#eff6ff', border: '1px solid #bfdbfe',
+                  borderRadius: '6px', fontSize: '12px', color: '#1e40af', cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+                title="Renderiza el backup como documento imprimible"
+              >
+                Ver como documento
+              </button>
               <button
                 onClick={() => setShowRaw(s => !s)}
                 style={{
@@ -402,6 +415,10 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
               </button>
             </div>
           </div>
+        )}
+
+        {showDoc && parsed && (
+          <BackupDocumentView backup={parsed} onClose={() => setShowDoc(false)} />
         )}
 
         {/* ───── Result ───── */}

@@ -11,8 +11,10 @@ import {
   type ItemPayload,
 } from '@/app/actions/itr-templates'
 import { exportItrTemplate } from '@/app/actions/templates-backup'
+import type { TemplatesBackup } from '@/lib/constants/templates-backup'
 import type { ItrItemType } from '@/types/database'
 import ImportItemsModal from './ImportItemsModal'
+import BackupDocumentView from '@/components/templates/BackupDocumentView'
 
 function downloadJsonFile(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -158,6 +160,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
   // ── Import modal state
   const [showImport, setShowImport] = useState(false)
+  const [docPreview, setDocPreview] = useState<TemplatesBackup | null>(null)
 
   // ── Publish version state
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
@@ -648,8 +651,8 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
         {!headerEditing ? (
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 320px', minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
                 <span style={{
                   fontSize: '22px', fontWeight: 800, color: 'var(--text-strong)',
@@ -734,6 +737,24 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
                     }}
                   >
                     {t('btnImportExcel')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      startTransition(async () => {
+                        const res = await exportItrTemplate(template.id)
+                        if (res.error || !res.backup) { setActionError(res.error ?? 'Error al previsualizar'); return }
+                        setDocPreview(res.backup)
+                      })
+                    }}
+                    disabled={isPending}
+                    style={{
+                      padding: '7px 14px', background: '#eff6ff', border: '1px solid #bfdbfe',
+                      borderRadius: '8px', fontSize: '12px', color: '#1e40af', cursor: isPending ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                    }}
+                    title="Renderiza el template como documento imprimible"
+                  >
+                    Ver como documento
                   </button>
                   <button
                     onClick={() => {
@@ -1087,6 +1108,11 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
           </span>
         ))}
       </div>
+
+      {/* Document preview overlay */}
+      {docPreview && (
+        <BackupDocumentView backup={docPreview} onClose={() => setDocPreview(null)} />
+      )}
 
       {/* Import modal */}
       {showImport && (

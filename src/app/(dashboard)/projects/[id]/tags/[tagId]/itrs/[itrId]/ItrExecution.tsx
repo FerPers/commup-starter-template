@@ -149,6 +149,17 @@ export default function ItrExecution({
   const locale = useLocale()
   const [isPending, startTransition] = useTransition()
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [itemLang, setItemLang] = useState<'es' | 'en'>(() => {
+    if (typeof window === 'undefined') return locale.startsWith('es') ? 'es' : 'en'
+    const stored = window.localStorage.getItem('commup-itr-item-lang')
+    if (stored === 'es' || stored === 'en') return stored
+    return locale.startsWith('es') ? 'es' : 'en'
+  })
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('commup-itr-item-lang', itemLang)
+    }
+  }, [itemLang])
   const [saveError, setSaveError] = useState<string | null>(null)
   const [showSignModal, setShowSignModal] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
@@ -333,9 +344,40 @@ export default function ItrExecution({
               </div>
             )}
           </div>
-          <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
-            {STATUS_LABELS[itr.status] ?? itr.status}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <div
+              role="group"
+              aria-label="Idioma de los ítems"
+              style={{ display: 'inline-flex', padding: '2px', borderRadius: '8px', background: 'var(--gray-50)', border: '1px solid var(--border)' }}
+            >
+              {(['es', 'en'] as const).map(l => (
+                <button
+                  key={l}
+                  onClick={() => setItemLang(l)}
+                  aria-pressed={itemLang === l}
+                  style={{
+                    padding: '3px 9px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    background: itemLang === l ? 'var(--card-bg)' : 'transparent',
+                    color: itemLang === l ? 'var(--text-strong)' : 'var(--text-muted)',
+                    boxShadow: itemLang === l ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                  title={l === 'es' ? 'Mostrar ítems en español' : 'Show items in English'}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
+              {STATUS_LABELS[itr.status] ?? itr.status}
+            </span>
+          </div>
         </div>
 
         {/* Tag info row */}
@@ -406,11 +448,14 @@ export default function ItrExecution({
             <p style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444', margin: '0 0 4px' }}>
               {t('criticalBlocked', { count: criticalBlocked.length })}
             </p>
-            {criticalBlocked.map(item => (
-              <p key={item.id} style={{ fontSize: '11px', color: '#7f1d1d', margin: '2px 0' }}>
-                • {item.item_number ? `${item.item_number} ` : ''}{item.description}
-              </p>
-            ))}
+            {criticalBlocked.map(item => {
+              const desc = itemLang === 'es' ? (item.description_es?.trim() || item.description) : item.description
+              return (
+                <p key={item.id} style={{ fontSize: '11px', color: '#7f1d1d', margin: '2px 0' }}>
+                  • {item.item_number ? `${item.item_number} ` : ''}{desc}
+                </p>
+              )
+            })}
           </div>
         )}
       </div>
@@ -440,6 +485,7 @@ export default function ItrExecution({
                   itemAttachments={attachmentMap[item.id] ?? []}
                   onAttachmentAdded={att => addAttachment(item.id, att)}
                   onAttachmentRemoved={attId => removeAttachment(item.id, attId)}
+                  lang={itemLang}
                 />
               ))}
             </div>
@@ -1066,6 +1112,7 @@ function ItemRow({
   itemAttachments,
   onAttachmentAdded,
   onAttachmentRemoved,
+  lang,
 }: {
   item: Item
   response: Response | null
@@ -1085,11 +1132,18 @@ function ItemRow({
   itemAttachments: Attachment[]
   onAttachmentAdded: (att: Attachment) => void
   onAttachmentRemoved: (attId: string) => void
+  lang: 'es' | 'en'
 }) {
   const t = useTranslations('ItrExecution')
   const isPassed = response?.is_passed
   const textRef = useRef<HTMLTextAreaElement | null>(null)
   const remarksRef = useRef<HTMLTextAreaElement | null>(null)
+
+  // `description` is the primary text (typically EN). `description_es` is the
+  // Spanish translation. Pick the chosen lang; if empty, fall back to primary.
+  const visibleDesc = lang === 'es'
+    ? (item.description_es?.trim() || item.description)
+    : item.description
 
   return (
     <div style={{ background: 'var(--card-bg)', border: `1px solid ${isPassed === false ? '#fecaca' : 'var(--border)'}`, borderRadius: '10px', padding: '14px 16px' }}>
@@ -1107,15 +1161,12 @@ function ItemRow({
               {item.requires_photo && <span style={{ fontSize: '10px', color: '#3b82f6' }} title={t('item.titlePhoto')}>⊙</span>}
             </div>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '2px 0 0', lineHeight: '1.4' }}>{item.description}</p>
-          {item.description_es && (
-            <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '1px 0 0' }}>{item.description_es}</p>
-          )}
+          <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '2px 0 0', lineHeight: '1.4' }}>{visibleDesc}</p>
         </div>
 
         {/* Add punch button */}
         <button
-          onClick={() => onAddPunch(item.description, item.id)}
+          onClick={() => onAddPunch(visibleDesc, item.id)}
           title={t('item.punchTooltip')}
           style={{ flexShrink: 0, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, color: '#c2410c', background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer', marginTop: '2px' }}
         >

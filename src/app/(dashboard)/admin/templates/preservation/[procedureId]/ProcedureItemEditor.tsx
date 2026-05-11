@@ -9,6 +9,8 @@ import {
   updateProcedure,
 } from '@/app/actions/preservation'
 import { exportPreservationProcedure } from '@/app/actions/templates-backup'
+import type { TemplatesBackup } from '@/lib/constants/templates-backup'
+import BackupDocumentView from '@/components/templates/BackupDocumentView'
 
 function downloadJsonFile(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -119,6 +121,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
     requiresSignature: procedure.requires_signature,
   })
   const [hdrError, setHdrError] = useState<string | null>(null)
+  const [docPreview, setDocPreview] = useState<TemplatesBackup | null>(null)
 
   function openEdit(item: ProcItem) {
     setEditingItemId(item.id)
@@ -273,6 +276,20 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
             </div>
             {canEdit && (
               <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <button
+                  onClick={() => {
+                    startTransition(async () => {
+                      const res = await exportPreservationProcedure(procedure.id)
+                      if (res.error || !res.backup) { setHdrError(res.error ?? 'Error al previsualizar'); return }
+                      setDocPreview(res.backup)
+                    })
+                  }}
+                  disabled={isPending}
+                  style={{ padding: '7px 14px', borderRadius: '8px', background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+                  title="Renderiza este procedimiento como documento imprimible"
+                >
+                  Ver como documento
+                </button>
                 <button
                   onClick={() => {
                     startTransition(async () => {
@@ -556,6 +573,10 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
             </div>
           </div>
         </div>
+      )}
+
+      {docPreview && (
+        <BackupDocumentView backup={docPreview} onClose={() => setDocPreview(null)} />
       )}
     </div>
   )

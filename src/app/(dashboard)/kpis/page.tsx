@@ -8,22 +8,34 @@ export default async function GlobalKpiPage() {
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const [{ data: projects }, { data: itrs }, { data: punches }, { data: certificates }] = await Promise.all([
-    supabase
-      .from('projects')
-      .select('id, name, code, status, start_date, end_date')
-      .eq('org_id', membership.org_id)
-      .order('name'),
-    supabase
-      .from('itrs')
-      .select('id, status, project_id'),
-    supabase
-      .from('punches')
-      .select('id, category, status, project_id')
-      .not('status', 'in', '(closed,cancelled)'),
-    supabase
-      .from('certificates')
-      .select('id, status, project_id'),
+  const { data: projects } = await supabase
+    .from('projects')
+    .select('id, name, code, status, start_date, end_date')
+    .eq('org_id', membership.org_id)
+    .order('name')
+
+  const projectIds = (projects ?? []).map(p => p.id)
+
+  const [{ data: itrs }, { data: punches }, { data: certificates }] = await Promise.all([
+    projectIds.length === 0
+      ? Promise.resolve({ data: [] as Array<{ id: string; status: string; project_id: string }> })
+      : supabase
+          .from('itrs')
+          .select('id, status, project_id')
+          .in('project_id', projectIds),
+    projectIds.length === 0
+      ? Promise.resolve({ data: [] as Array<{ id: string; category: string; status: string; project_id: string }> })
+      : supabase
+          .from('punches')
+          .select('id, category, status, project_id')
+          .in('project_id', projectIds)
+          .not('status', 'in', '(closed,cancelled)'),
+    projectIds.length === 0
+      ? Promise.resolve({ data: [] as Array<{ id: string; status: string; project_id: string }> })
+      : supabase
+          .from('certificates')
+          .select('id, status, project_id')
+          .in('project_id', projectIds),
   ])
 
   // Build per-project KPI summary server-side

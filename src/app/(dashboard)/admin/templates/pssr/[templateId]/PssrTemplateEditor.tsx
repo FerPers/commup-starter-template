@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { upsertPssrTemplateItem, deletePssrTemplateItem } from '@/app/actions/pssr'
 import { exportPssrTemplate } from '@/app/actions/templates-backup'
+import type { TemplatesBackup } from '@/lib/constants/templates-backup'
+import BackupDocumentView from '@/components/templates/BackupDocumentView'
 
 function downloadJsonFile(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -66,6 +68,7 @@ export default function PssrTemplateEditor({
   const [form, setForm] = useState(BLANK_FORM)
   const [formError, setFormError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [docPreview, setDocPreview] = useState<TemplatesBackup | null>(null)
 
   const grouped = groupByCategory(items)
 
@@ -155,6 +158,24 @@ export default function PssrTemplateEditor({
         </span>
         {canEdit && (
           <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => {
+                startTransition(async () => {
+                  const res = await exportPssrTemplate(template.id)
+                  if (res.error || !res.backup) { setFormError(res.error ?? 'Error al previsualizar'); return }
+                  setDocPreview(res.backup)
+                })
+              }}
+              disabled={isPending}
+              style={{
+                padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+                background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe',
+                cursor: isPending ? 'not-allowed' : 'pointer',
+              }}
+              title="Renderiza este template como documento imprimible"
+            >
+              Ver como documento
+            </button>
             <button
               onClick={() => {
                 startTransition(async () => {
@@ -388,6 +409,10 @@ export default function PssrTemplateEditor({
             </div>
           </div>
         </div>
+      )}
+
+      {docPreview && (
+        <BackupDocumentView backup={docPreview} onClose={() => setDocPreview(null)} />
       )}
     </>
   )
