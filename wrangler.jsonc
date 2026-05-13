@@ -15,8 +15,8 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true,
-	"triggers": {
-		"crons": ["0 2 * * *"]
-	}
+	"upload_source_maps": true
+	// Cron schedules live in .github/workflows/cron.yml (GitHub Actions hits
+	// /api/cron/* via HTTPS). OpenNext does not emit a `scheduled` handler
+	// so a wrangler cron fires into a no-op.
 }

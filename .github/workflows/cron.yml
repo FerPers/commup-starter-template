@@ -1,0 +1,63 @@
+name: Cron
+
+# Dispatch the /api/cron/* endpoints on a schedule. The Cloudflare Workers
+# cron in wrangler.jsonc fires but is a no-op (OpenNext does not generate a
+# `scheduled` handler), so all recurring work goes through this workflow.
+#
+# Required GitHub secrets:
+#   APP_URL      https://commup.app   (no trailing slash)
+#   CRON_SECRET  matches process.env.CRON_SECRET on the worker
+
+on:
+  schedule:
+    # KPI snapshot — daily at 02:00 UTC
+    - cron: '0 2 * * *'
+    # Push dispatch — every 5 minutes (route default window is 5 min)
+    - cron: '*/5 * * * *'
+    # Preservation overdue — daily at 07:00 UTC
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which endpoint to fire'
+        required: true
+        type: choice
+        options:
+          - snapshot
+          - push-dispatch
+          - preservation-overdue
+          - all
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: KPI snapshot
+        if: github.event.schedule == '0 2 * * *' || github.event.inputs.target == 'snapshot' || github.event.inputs.target == 'all'
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -X POST "$APP_URL/api/cron/snapshot" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json"
+
+      - name: Push dispatch
+        if: github.event.schedule == '*/5 * * * *' || github.event.inputs.target == 'push-dispatch' || github.event.inputs.target == 'all'
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -X POST "$APP_URL/api/cron/push-dispatch" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json"
+
+      - name: Preservation overdue
+        if: github.event.schedule == '0 7 * * *' || github.event.inputs.target == 'preservation-overdue' || github.event.inputs.target == 'all'
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -X POST "$APP_URL/api/cron/preservation-overdue" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json"
