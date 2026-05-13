@@ -129,6 +129,17 @@ export async function upsertResponse(input: {
 
   const { itrId, itemId, templateId } = input
 
+  // Guard: ITR aprobado es inmutable. Sin este chequeo, upsertResponse recalcula
+  // status al final y pisaría 'approved' con 'in_progress'/'completed' (bug ses15).
+  const { data: itrRow } = await ctx.supabase
+    .from('itrs')
+    .select('status')
+    .eq('id', itrId)
+    .single()
+  if (itrRow?.status === 'approved') {
+    return { error: 'Este ITR ya está aprobado y no puede modificarse' }
+  }
+
   // Build patch with only the fields explicitly provided.
   const patch: Record<string, unknown> = {
     responded_at: new Date().toISOString(),
@@ -302,6 +313,23 @@ export async function signItr(
 ): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
+
+  // Guard autoritativo: solo se puede firmar un ITR completado (100% y sin críticos fallados).
+  // Bloquea not_started/in_progress/rejected (re-ejecutar para volver a completed) y approved (ya tiene 3 firmas).
+  const { data: itrRow } = await ctx.supabase
+    .from('itrs')
+    .select('status, progress_pct')
+    .eq('id', itrId)
+    .single()
+
+  if (!itrRow) return { error: 'ITR no encontrado' }
+  if (itrRow.status === 'approved') return { error: 'El ITR ya está aprobado' }
+  if (itrRow.status === 'rejected') {
+    return { error: 'No se puede firmar un ITR rechazado. Corrige los ítems críticos para que pase a "completado".' }
+  }
+  if (itrRow.status !== 'completed' || (itrRow.progress_pct ?? 0) < 100) {
+    return { error: 'No se puede firmar: el ITR no está completo. Responde todos los ítems antes de firmar.' }
+  }
 
   const { data: existing } = await ctx.supabase
     .from('itr_signatures')

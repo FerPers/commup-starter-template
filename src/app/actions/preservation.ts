@@ -338,9 +338,20 @@ export async function finalizeRecord(input: {
   punchCategory?: 'A' | 'B' | 'C'
   projectId: string
   tagId: string
-}): Promise<{ error?: string; punchNumber?: string }> {
+}): Promise<{ error?: string; punchNumber?: string; alreadyFinalized?: boolean }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
+
+  // Guard: si el record ya está finalizado, no permitir sobreescribir
+  const { data: existing } = await ctx.supabase
+    .from('preservation_records')
+    .select('status')
+    .eq('id', input.recordId)
+    .single()
+
+  if (existing?.status === 'finalized') {
+    return { error: 'Este registro ya fue finalizado. Crea un nuevo record si necesitas re-evaluar.', alreadyFinalized: true }
+  }
 
   const { error } = await ctx.supabase
     .from('preservation_records')
@@ -348,6 +359,7 @@ export async function finalizeRecord(input: {
       result: input.result,
       remarks: input.remarks?.trim() ?? null,
       punch_raised: input.raisePunch,
+      status: 'finalized',
     })
     .eq('id', input.recordId)
 
@@ -356,56 +368,67 @@ export async function finalizeRecord(input: {
   let createdPunchNumber: string | undefined
 
   if (input.raisePunch) {
-    // Resolve tag → subsystem + discipline (required by punches schema)
-    const { data: tag } = await ctx.supabase
-      .from('tags')
-      .select('tag_number, subsystem_id, discipline_id')
-      .eq('id', input.tagId)
-      .single()
-
-    if (!tag || !tag.subsystem_id || !tag.discipline_id) {
-      return { error: 'Record guardado pero no se pudo crear punch: tag sin subsistema o disciplina' }
-    }
-
-    // Resolve plan → procedure code for description
-    const { data: plan } = await ctx.supabase
-      .from('preservation_plans')
-      .select('preservation_procedures(code, title)')
-      .eq('id', input.planId)
-      .single()
-
-    const proc = plan?.preservation_procedures as { code: string; title: string } | { code: string; title: string }[] | null
-    const procRow = Array.isArray(proc) ? proc[0] : proc
-    const procCode = procRow?.code ?? 'PRES'
-    const procTitle = procRow?.title ?? ''
-
-    const description =
-      `[Preservación NOK] ${procCode} en ${tag.tag_number}` +
-      (procTitle ? ` — ${procTitle}` : '') +
-      (input.remarks?.trim() ? `\n${input.remarks.trim()}` : '')
-
-    const { data: punch, error: punchErr } = await ctx.supabase
+    // Dedup: si ya hay punch vinculado a este record, no crear otro
+    const { data: existingPunch } = await ctx.supabase
       .from('punches')
-      .insert({
-        project_id: input.projectId,
-        subsystem_id: tag.subsystem_id,
-        tag_id: input.tagId,
-        preservation_record_id: input.recordId,
-        category: input.punchCategory ?? 'B',
-        description,
-        discipline_id: tag.discipline_id,
-        raised_by: ctx.userId,
-        status: 'open',
-        priority: input.punchCategory === 'A' ? 'critical' : 'major',
-        created_via: 'preservation',
-      })
       .select('punch_number')
-      .single()
+      .eq('preservation_record_id', input.recordId)
+      .maybeSingle()
 
-    if (punchErr) {
-      return { error: `Record guardado pero punch falló: ${punchErr.message}` }
+    if (existingPunch) {
+      createdPunchNumber = existingPunch.punch_number as string
+    } else {
+      // Resolve tag → subsystem + discipline (required by punches schema)
+      const { data: tag } = await ctx.supabase
+        .from('tags')
+        .select('tag_number, subsystem_id, discipline_id')
+        .eq('id', input.tagId)
+        .single()
+
+      if (!tag || !tag.subsystem_id || !tag.discipline_id) {
+        return { error: 'Record guardado pero no se pudo crear punch: tag sin subsistema o disciplina' }
+      }
+
+      // Resolve plan → procedure code for description
+      const { data: plan } = await ctx.supabase
+        .from('preservation_plans')
+        .select('preservation_procedures(code, title)')
+        .eq('id', input.planId)
+        .single()
+
+      const proc = plan?.preservation_procedures as { code: string; title: string } | { code: string; title: string }[] | null
+      const procRow = Array.isArray(proc) ? proc[0] : proc
+      const procCode = procRow?.code ?? 'PRES'
+      const procTitle = procRow?.title ?? ''
+
+      const description =
+        `[Preservación NOK] ${procCode} en ${tag.tag_number}` +
+        (procTitle ? ` — ${procTitle}` : '') +
+        (input.remarks?.trim() ? `\n${input.remarks.trim()}` : '')
+
+      const { data: punch, error: punchErr } = await ctx.supabase
+        .from('punches')
+        .insert({
+          project_id: input.projectId,
+          subsystem_id: tag.subsystem_id,
+          tag_id: input.tagId,
+          preservation_record_id: input.recordId,
+          category: input.punchCategory ?? 'B',
+          description,
+          discipline_id: tag.discipline_id,
+          raised_by: ctx.userId,
+          status: 'open',
+          priority: input.punchCategory === 'A' ? 'critical' : 'major',
+          created_via: 'preservation',
+        })
+        .select('punch_number')
+        .single()
+
+      if (punchErr) {
+        return { error: `Record guardado pero punch falló: ${punchErr.message}` }
+      }
+      createdPunchNumber = punch?.punch_number as string | undefined
     }
-    createdPunchNumber = punch?.punch_number as string | undefined
   }
 
   revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)

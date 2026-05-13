@@ -975,7 +975,10 @@
       "btnPhoto": "Photo",
       "btnPhotos": "Photos ({count})",
       "btnSign": "✍ Sign",
-      "btnPdf": "Download PDF"
+      "btnPdf": "Download PDF",
+      "signTooltipIncomplete": "Complete all items before signing",
+      "signTooltipRejected": "ITR rejected: fix critical items to return it to completed",
+      "signTooltipApproved": "This ITR is already approved"
     },
     "signModal": {
       "title": "Sign ITR",

@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer'
-import React, { type JSXElementConstructor, type ReactElement } from 'react'
-import { ItrPdfDocument } from './ItrPdfDocument'
+import { renderItrPdf, type ItrPdfData } from '@/lib/pdf/itr'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,14 +9,12 @@ export async function GET(
 ) {
   const { id: projectId, tagId, itrId } = await params
 
-  // Auth check
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  // Fetch full ITR data with all related records
   const { data: itr, error } = await supabase
     .from('itrs')
     .select(`
@@ -79,16 +75,11 @@ export async function GET(
     return new Response('ITR not found', { status: 404 })
   }
 
-  // Generate PDF buffer
-  const element = React.createElement(ItrPdfDocument, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    itr: itr as any,
-  }) as unknown as ReactElement<DocumentProps, JSXElementConstructor<DocumentProps>>
-  const buffer = await renderToBuffer(element)
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bytes = await renderItrPdf(itr as any as ItrPdfData)
   const filename = `ITR-${itr.itr_number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`
 
-  return new Response(new Uint8Array(buffer), {
+  return new Response(bytes as BodyInit, {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',

@@ -268,6 +268,7 @@ export interface PreservationRecord {
   remarks: string | null
   punch_raised: boolean
   punch_id: string | null
+  status: 'open' | 'finalized'
   created_at: string
 }
 

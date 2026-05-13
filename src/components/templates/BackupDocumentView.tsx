@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type {
   TemplatesBackup,
   ItrTemplateBackup,
@@ -14,16 +15,27 @@ interface Props {
 }
 
 export default function BackupDocumentView({ backup, onClose }: Props) {
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
+    setMounted(true)
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+
+    // Browsers print the document <title> as the page header. Swap it
+    // temporarily so the printed PDF doesn't say "CommUp — Completion ..."
+    const prevTitle = document.title
+    const orgName = backup.org?.name ?? 'Organización'
+    document.title = `Templates Backup — ${orgName}`
+
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
+      document.title = prevTitle
     }
-  }, [onClose])
+  }, [onClose, backup.org?.name])
 
   const totalItr = backup.itr_templates.length
   const totalPres = backup.preservation_procedures.length
@@ -32,9 +44,12 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
     ? new Date(backup.exported_at).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })
     : '—'
 
-  return (
+  if (!mounted) return null
+
+  const overlay = (
     <div
       className="backup-doc-overlay"
+      data-backup-doc-portal
       style={{
         position: 'fixed',
         inset: 0,
@@ -44,19 +59,37 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
         flexDirection: 'column',
       }}
     >
+      {/*
+        Print isolation: hide every direct child of <body> except this portal.
+        `visibility:hidden` left the subtree taking layout space, which is why
+        the printed PDF had 7 blank pages before the content (the underlying
+        template detail kept pushing the overlay down). `display:none` removes
+        them from the flow entirely. We only need to handle body's direct
+        children because the overlay is mounted via createPortal at body root.
+      */}
       <style>{`
         @media print {
-          body * { visibility: hidden !important; }
-          .backup-doc-overlay, .backup-doc-overlay * { visibility: visible !important; }
-          .backup-doc-overlay { position: static !important; background: #fff !important; }
+          @page { margin: 12mm 10mm; }
+          body > *:not([data-backup-doc-portal]) { display: none !important; }
+          html, body { background: #fff !important; }
+          .backup-doc-overlay {
+            position: static !important;
+            background: #fff !important;
+            display: block !important;
+          }
           .backup-doc-toolbar { display: none !important; }
+          .backup-doc-scroll {
+            overflow: visible !important;
+            height: auto !important;
+            padding: 0 !important;
+            background: #fff !important;
+          }
           .backup-doc-paper {
             box-shadow: none !important;
             margin: 0 !important;
             max-width: 100% !important;
             padding: 0 !important;
           }
-          .backup-doc-scroll { overflow: visible !important; height: auto !important; }
           .backup-doc-page-break { break-before: page; page-break-before: always; }
           .backup-doc-section { break-inside: avoid; page-break-inside: avoid; }
         }
@@ -207,6 +240,8 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
       </div>
     </div>
   )
+
+  return createPortal(overlay, document.body)
 }
 
 function Stat({ label, value, color }: { label: string; value: number; color: string }) {

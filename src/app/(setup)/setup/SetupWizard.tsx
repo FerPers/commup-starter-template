@@ -59,7 +59,8 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Step 1 — Organization (initial setup only)
+  // Step 1 — Organization + user profile (initial setup only)
+  const [userFullName, setUserFullName] = useState('')
   const [orgName, setOrgName] = useState('')
   const [orgSlug, setOrgSlug] = useState('')
 
@@ -105,6 +106,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         }
       } else {
         const result = await completeSetup({
+          userFullName,
           org: { name: orgName, slug: orgSlug },
           project: { name: projName, code: projCode, location: projLocation, client: projClient, start_date: projStart, end_date: projEnd },
           phases,
@@ -130,7 +132,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
     ? ['Proyecto']
     : ['Organización', 'Proyecto', 'Fases', 'Disciplinas']
 
-  const canNext1 = orgName.trim().length > 2 && orgSlug.trim().length > 2
+  const canNext1 = userFullName.trim().length > 2 && orgName.trim().length > 2 && orgSlug.trim().length > 2
   const canNext2 = projName.trim().length > 2 && projCode.trim().length > 0
 
   // In new project mode, step 2 is the only step — submit directly
@@ -202,8 +204,17 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         {/* ── Step 1: Organization ── */}
         {step === 1 && (
           <div>
-            <h2 style={stepTitleStyle}>Tu organización</h2>
-            <p style={stepDescStyle}>La organización agrupa todos tus proyectos y usuarios.</p>
+            <h2 style={stepTitleStyle}>Tu cuenta y organización</h2>
+            <p style={stepDescStyle}>Tu nombre aparecerá en firmas digitales, certificados y reportes PDF.</p>
+
+            <label style={labelStyle}>Tu nombre y apellido *</label>
+            <input
+              style={inputStyle}
+              placeholder="Ej: Luis Fernando Perdomo"
+              value={userFullName}
+              onChange={e => setUserFullName(e.target.value)}
+              autoComplete="name"
+            />
 
             <label style={labelStyle}>Nombre de la organización *</label>
             <input

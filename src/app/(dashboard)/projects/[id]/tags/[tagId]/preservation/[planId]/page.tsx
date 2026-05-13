@@ -36,8 +36,8 @@ export default async function PreservationExecutionPage({
 
   if (!plan) notFound()
 
-  // Load existing open record for today (if any) — so user can resume
-  const today = new Date().toISOString().split('T')[0]
+  // Load existing open record (status='open') so user can resume.
+  // No date filter — un record en progreso de ayer sigue siendo el open. Solo hay 1 abierto por plan.
   const { data: openRecord } = await supabase
     .from('preservation_records')
     .select(`
@@ -45,7 +45,8 @@ export default async function PreservationExecutionPage({
       preservation_record_responses(id, item_id, value_bool, value_numeric, value_text, is_passed)
     `)
     .eq('plan_id', planId)
-    .gte('performed_at', today + 'T00:00:00')
+    .eq('status', 'open')
+    .order('performed_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 

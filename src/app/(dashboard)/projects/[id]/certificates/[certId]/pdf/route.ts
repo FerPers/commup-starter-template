@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer'
-import React, { type JSXElementConstructor, type ReactElement } from 'react'
-import { CertPdfDocument } from './CertPdfDocument'
+import { renderCertificatePdf, type CertPdfData } from '@/lib/pdf/certificate'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,25 +80,24 @@ export async function GET(
         .eq('status', 'approved')
     : { data: [] }
 
-  const certData = {
-    ...cert,
+  const certData: CertPdfData = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...(cert as any),
     projectName: project?.name ?? '',
     projectCode: project?.code ?? '',
     projectClient: project?.client ?? null,
-    exceptions: exceptions ?? [],
-    itrs: itrs ?? [],
-    signatures: signatures ?? [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    exceptions: (exceptions ?? []) as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    itrs: (itrs ?? []) as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    signatures: (signatures ?? []) as any,
   }
 
-  const element = React.createElement(CertPdfDocument, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cert: certData as any,
-  }) as unknown as ReactElement<DocumentProps, JSXElementConstructor<DocumentProps>>
-  const buffer = await renderToBuffer(element)
-
+  const bytes = await renderCertificatePdf(certData)
   const filename = `CERT-${cert.certificate_number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`
 
-  return new Response(new Uint8Array(buffer), {
+  return new Response(bytes as BodyInit, {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',

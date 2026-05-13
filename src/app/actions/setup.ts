@@ -19,6 +19,7 @@ interface DisciplineInput {
 }
 
 interface SetupInput {
+  userFullName: string
   org: { name: string; slug: string }
   project: { name: string; code: string; location: string; client: string; start_date: string; end_date: string }
   phases: PhaseInput[]
@@ -31,13 +32,19 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  const fullName = input.userFullName.trim()
+  if (fullName.length < 2) return { error: 'Ingresa tu nombre completo' }
+  // Evita que el nombre quede como el email (problema heredado: PDFs mostraban email como firmante)
+  if (fullName.toLowerCase() === (user.email ?? '').toLowerCase()) {
+    return { error: 'El nombre no puede ser tu correo electrónico' }
+  }
+
   // Use admin client for all DB writes (bypasses RLS — safe because we verified auth above)
   const admin = createAdminClient()
 
-  // Upsert profile (profiles table: id, full_name, avatar_url — no email column)
   const { error: profileError } = await admin.from('profiles').upsert({
     id: user.id,
-    full_name: (user.user_metadata?.full_name as string) || user.email || 'Usuario',
+    full_name: fullName,
   })
   if (profileError) return { error: `Error creando perfil: ${profileError.message}` }
 

@@ -551,13 +551,24 @@ export default function ItrExecution({
           >
             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
           </button>
-          <button
-            onClick={() => setShowSignModal(true)}
-            disabled={!canEdit || itr.status === 'approved'}
-            style={{ padding: '9px 20px', background: !canEdit || itr.status === 'approved' ? 'var(--gray-50)' : '#7c3aed', color: !canEdit || itr.status === 'approved' ? 'var(--gray-400)' : 'var(--card-bg)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !canEdit || itr.status === 'approved' ? 'not-allowed' : 'pointer' }}
-          >
-            {t('footer.btnSign')}
-          </button>
+          {(() => {
+            const canSign = canEdit && itr.status === 'completed'
+            const signTooltip =
+              itr.status === 'approved'   ? t('footer.signTooltipApproved')
+              : itr.status === 'rejected' ? t('footer.signTooltipRejected')
+              : itr.status !== 'completed' ? t('footer.signTooltipIncomplete')
+              : ''
+            return (
+              <button
+                onClick={() => setShowSignModal(true)}
+                disabled={!canSign}
+                title={signTooltip || undefined}
+                style={{ padding: '9px 20px', background: !canSign ? 'var(--gray-50)' : '#7c3aed', color: !canSign ? 'var(--gray-400)' : 'var(--card-bg)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !canSign ? 'not-allowed' : 'pointer' }}
+              >
+                {t('footer.btnSign')}
+              </button>
+            )
+          })()}
           {itr.status === 'approved' && (
             <a
               href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}/pdf`}
