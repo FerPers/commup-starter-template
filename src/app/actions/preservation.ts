@@ -335,9 +335,10 @@ export async function finalizeRecord(input: {
   result: 'ok' | 'nok' | 'na'
   remarks?: string
   raisePunch: boolean
+  punchCategory?: 'A' | 'B' | 'C'
   projectId: string
   tagId: string
-}): Promise<{ error?: string }> {
+}): Promise<{ error?: string; punchNumber?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
 
@@ -351,9 +352,69 @@ export async function finalizeRecord(input: {
     .eq('id', input.recordId)
 
   if (error) return { error: error.message }
+
+  let createdPunchNumber: string | undefined
+
+  if (input.raisePunch) {
+    // Resolve tag → subsystem + discipline (required by punches schema)
+    const { data: tag } = await ctx.supabase
+      .from('tags')
+      .select('tag_number, subsystem_id, discipline_id')
+      .eq('id', input.tagId)
+      .single()
+
+    if (!tag || !tag.subsystem_id || !tag.discipline_id) {
+      return { error: 'Record guardado pero no se pudo crear punch: tag sin subsistema o disciplina' }
+    }
+
+    // Resolve plan → procedure code for description
+    const { data: plan } = await ctx.supabase
+      .from('preservation_plans')
+      .select('preservation_procedures(code, title)')
+      .eq('id', input.planId)
+      .single()
+
+    const proc = plan?.preservation_procedures as { code: string; title: string } | { code: string; title: string }[] | null
+    const procRow = Array.isArray(proc) ? proc[0] : proc
+    const procCode = procRow?.code ?? 'PRES'
+    const procTitle = procRow?.title ?? ''
+
+    const description =
+      `[Preservación NOK] ${procCode} en ${tag.tag_number}` +
+      (procTitle ? ` — ${procTitle}` : '') +
+      (input.remarks?.trim() ? `\n${input.remarks.trim()}` : '')
+
+    const { data: punch, error: punchErr } = await ctx.supabase
+      .from('punches')
+      .insert({
+        project_id: input.projectId,
+        subsystem_id: tag.subsystem_id,
+        tag_id: input.tagId,
+        preservation_record_id: input.recordId,
+        category: input.punchCategory ?? 'B',
+        description,
+        discipline_id: tag.discipline_id,
+        raised_by: ctx.userId,
+        status: 'open',
+        priority: input.punchCategory === 'A' ? 'critical' : 'major',
+        created_via: 'preservation',
+      })
+      .select('punch_number')
+      .single()
+
+    if (punchErr) {
+      return { error: `Record guardado pero punch falló: ${punchErr.message}` }
+    }
+    createdPunchNumber = punch?.punch_number as string | undefined
+  }
+
   revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
   revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}/preservation/${input.planId}`)
-  return {}
+  if (input.raisePunch) {
+    revalidatePath(`/projects/${input.projectId}/punches`)
+    revalidatePath('/punch-list')
+  }
+  return { punchNumber: createdPunchNumber }
 }
 
 // ═══════════════════════════════════════════════════════════

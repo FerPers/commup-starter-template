@@ -5,7 +5,12 @@ import {
   Text,
   View,
   StyleSheet,
+  Font,
 } from '@react-pdf/renderer'
+
+// Prevent react-pdf from inserting soft-hyphens into long unbreakable strings
+// (e.g. email addresses like luis.perdomo@outlook.com → "out-/look.com").
+Font.registerHyphenationCallback(word => [word])
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

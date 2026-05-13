@@ -136,15 +136,20 @@ export default function PreservationExecution({
   const [result, setResult] = useState<'ok' | 'nok' | 'na'>(
     (openRecord?.result as 'ok' | 'nok' | 'na') ?? 'ok'
   )
+  // Once user picks a result manually, stop auto-deriving so we don't fight them
+  const [resultOverridden, setResultOverridden] = useState(false)
   const [remarks, setRemarks] = useState(openRecord?.remarks ?? '')
   const [raisePunch, setRaisePunch] = useState(false)
+  const [punchCategory, setPunchCategory] = useState<'A' | 'B' | 'C'>('B')
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [savedPunchNumber, setSavedPunchNumber] = useState<string | null>(null)
 
   const items = procedure.preservation_procedure_items
 
-  // Auto-derive result from critical items
+  // Auto-derive result from critical items (bidirectional: nok ↔ ok)
   useEffect(() => {
+    if (resultOverridden) return
     const hasCriticalFail = items
       .filter(i => i.is_critical)
       .some(i => {
@@ -158,8 +163,9 @@ export default function PreservationExecution({
         }
         return false
       })
-    if (hasCriticalFail) setResult('nok')
-  }, [responses, items])
+    setResult(hasCriticalFail ? 'nok' : 'ok')
+    if (!hasCriticalFail) setRaisePunch(false)
+  }, [responses, items, resultOverridden])
 
   async function ensureRecord(): Promise<string | null> {
     if (recordId) return recordId
@@ -224,12 +230,14 @@ export default function PreservationExecution({
         result,
         remarks: remarks || undefined,
         raisePunch,
+        punchCategory: raisePunch ? punchCategory : undefined,
         projectId,
         tagId,
       })
       if (res.error) { setSubmitError(res.error); return }
+      setSavedPunchNumber(res.punchNumber ?? null)
       setSaved(true)
-      setTimeout(() => router.push(`/projects/${projectId}/tags/${tagId}`), 1500)
+      setTimeout(() => router.push(`/projects/${projectId}/tags/${tagId}`), 2200)
     })
   }
 
@@ -244,6 +252,11 @@ export default function PreservationExecution({
         <div style={{ fontSize: '20px', fontWeight: 700, color: '#16a34a', marginBottom: '8px' }}>
           {t('savedTitle')}
         </div>
+        {savedPunchNumber && (
+          <div style={{ display: 'inline-block', margin: '8px 0 12px', padding: '6px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: '#dc2626' }}>
+            {t('savedPunchCreated', { number: savedPunchNumber })}
+          </div>
+        )}
         <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{t('savedRedirect')}</div>
       </div>
     )
@@ -425,7 +438,7 @@ export default function PreservationExecution({
             return (
               <button
                 key={r}
-                onClick={() => setResult(r)}
+                onClick={() => { setResultOverridden(true); setResult(r) }}
                 style={{
                   padding: '10px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '14px',
                   cursor: 'pointer', border: '2px solid',
@@ -454,20 +467,51 @@ export default function PreservationExecution({
         </div>
 
         {result === 'nok' && (
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '14px', padding: '10px 14px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
-            <input
-              type="checkbox"
-              checked={raisePunch}
-              onChange={e => setRaisePunch(e.target.checked)}
-              style={{ width: '16px', height: '16px' }}
-            />
-            <div>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>{t('raisePunchLabel')}</span>
-              <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '1px' }}>
-                {t('raisePunchDesc')}
+          <div style={{ marginBottom: '14px', padding: '10px 14px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={raisePunch}
+                onChange={e => setRaisePunch(e.target.checked)}
+                style={{ width: '16px', height: '16px' }}
+              />
+              <div>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>{t('raisePunchLabel')}</span>
+                <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '1px' }}>
+                  {t('raisePunchDesc')}
+                </div>
               </div>
-            </div>
-          </label>
+            </label>
+            {raisePunch && (
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #fecaca', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#7f1d1d' }}>{t('punchCategoryLabel')}</span>
+                {(['A', 'B', 'C'] as const).map(cat => {
+                  const catCfg = {
+                    A: { label: t('punchCatA'), color: '#dc2626', bg: '#fef2f2', border: '#dc2626' },
+                    B: { label: t('punchCatB'), color: '#d97706', bg: '#fffbeb', border: '#d97706' },
+                    C: { label: t('punchCatC'), color: '#16a34a', bg: '#f0fdf4', border: '#16a34a' },
+                  }[cat]
+                  const active = punchCategory === cat
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setPunchCategory(cat)}
+                      style={{
+                        padding: '5px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
+                        cursor: 'pointer', border: '2px solid',
+                        borderColor: active ? catCfg.border : 'var(--border)',
+                        background: active ? catCfg.bg : 'var(--card-bg)',
+                        color: active ? catCfg.color : 'var(--text-muted)',
+                      }}
+                    >
+                      {cat} — {catCfg.label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         {submitError && (

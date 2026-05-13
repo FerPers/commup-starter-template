@@ -3,6 +3,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProcedure, deleteProcedure } from '@/app/actions/preservation'
+import { exportPreservationProcedure } from '@/app/actions/templates-backup'
+import type { TemplatesBackup } from '@/lib/constants/templates-backup'
+import BackupDocumentView from '@/components/templates/BackupDocumentView'
 import ImportProcedureFromOrgModal from './ImportProcedureFromOrgModal'
 
 interface Discipline { id: string; code: string; name: string; color: string }
@@ -56,6 +59,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
   const [form, setForm] = useState(DEFAULT_FORM)
   const [formError, setFormError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [docPreview, setDocPreview] = useState<TemplatesBackup | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
 
   const filtered = activeDisc === 'all'
     ? procedures
@@ -251,22 +256,54 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
-                  {proc.requires_photo && (
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      📷 Foto requerida
-                    </span>
-                  )}
-                  {proc.requires_signature && (
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      ✍ Firma requerida
-                    </span>
-                  )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    {proc.requires_photo && (
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        📷 Foto requerida
+                      </span>
+                    )}
+                    {proc.requires_signature && (
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        ✍ Firma requerida
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation()
+                      startTransition(async () => {
+                        const res = await exportPreservationProcedure(proc.id)
+                        if (res.error || !res.backup) { setPreviewError(res.error ?? 'Error al previsualizar'); return }
+                        setDocPreview(res.backup)
+                      })
+                    }}
+                    disabled={isPending}
+                    title="Vista previa como documento imprimible"
+                    style={{
+                      padding: '4px 10px', borderRadius: '6px', background: '#eff6ff', color: '#1e40af',
+                      border: '1px solid #bfdbfe', fontWeight: 600, fontSize: '11px', cursor: 'pointer',
+                      whiteSpace: 'nowrap', flexShrink: 0,
+                    }}
+                  >
+                    👁 Vista previa
+                  </button>
                 </div>
               </div>
             )
           })}
         </div>
+      )}
+
+      {previewError && (
+        <div style={{ marginTop: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
+          {previewError}
+          <button onClick={() => setPreviewError(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}>✕</button>
+        </div>
+      )}
+
+      {docPreview && (
+        <BackupDocumentView backup={docPreview} onClose={() => setDocPreview(null)} />
       )}
 
       {showImportFromOrg && (

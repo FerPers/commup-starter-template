@@ -4,6 +4,9 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
 import { createPssrTemplate, seedDefaultPssrTemplate, deletePssrTemplate } from '@/app/actions/pssr'
+import { exportPssrTemplate } from '@/app/actions/templates-backup'
+import type { TemplatesBackup } from '@/lib/constants/templates-backup'
+import BackupDocumentView from '@/components/templates/BackupDocumentView'
 import ImportPssrFromOrgModal from './ImportPssrFromOrgModal'
 
 interface Template {
@@ -24,6 +27,8 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
   const [formError, setFormError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [seedingId, setSeedingId] = useState<string | null>(null)
+  const [docPreview, setDocPreview] = useState<TemplatesBackup | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
 
   async function handleCreate() {
     if (!form.name.trim()) { setFormError('El nombre es requerido'); return }
@@ -163,6 +168,26 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
               </span>
 
               {/* Actions */}
+              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <button
+                  onClick={() => {
+                    startTransition(async () => {
+                      const res = await exportPssrTemplate(t.id)
+                      if (res.error || !res.backup) { setPreviewError(res.error ?? 'Error al previsualizar'); return }
+                      setDocPreview(res.backup)
+                    })
+                  }}
+                  disabled={isPending}
+                  title="Vista previa como documento imprimible"
+                  style={{
+                    padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
+                    background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af',
+                    cursor: 'pointer',
+                  }}
+                >
+                  👁 Vista previa
+                </button>
+              </div>
               {canEdit && (
                 <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                   {t.pssr_template_items.length === 0 && (
@@ -208,6 +233,17 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
 
       {showImportFromOrg && (
         <ImportPssrFromOrgModal onClose={() => setShowImportFromOrg(false)} />
+      )}
+
+      {previewError && (
+        <div style={{ marginTop: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
+          {previewError}
+          <button onClick={() => setPreviewError(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}>✕</button>
+        </div>
+      )}
+
+      {docPreview && (
+        <BackupDocumentView backup={docPreview} onClose={() => setDocPreview(null)} />
       )}
 
       {/* Create modal */}
