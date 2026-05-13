@@ -1,6 +1,7 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
 
@@ -470,11 +471,11 @@ export async function revokeItrApproval(input: {
       link_url: `/projects/${projectId}/tags/${tagId}/itrs/${itrId}`,
       payload: { itrId, projectId, tagId, itrNumber: itrRow.itr_number, reason },
     }))
-    const { error: notifErr } = await ctx.supabase.from('notifications').insert(rows)
-    if (notifErr) {
-      // Non-fatal: revoke already succeeded, just log.
-      console.error('[notifications.insert]', notifErr)
-    }
+    // Admin client: notifications are fire-and-forget and the user's RLS
+    // context can't INSERT rows for other recipients across orgs.
+    const admin = createAdminClient()
+    const { error: notifErr } = await admin.from('notifications').insert(rows)
+    if (notifErr) console.error('[notifications.insert]', notifErr)
   }
 
   revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)

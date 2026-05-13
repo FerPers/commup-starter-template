@@ -1,6 +1,7 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
 
@@ -219,19 +220,53 @@ export async function removePunchException(input: {
 export async function revokeCertificate(input: {
   certId: string
   projectId: string
-}): Promise<{ error?: string }> {
+  reason: string
+}): Promise<{ error?: string; revokedCount?: number }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!['owner', 'admin'].includes(ctx.role)) return { error: 'Solo admin/owner puede revocar certificados' }
+  if (!['owner', 'admin', 'architect'].includes(ctx.role)) {
+    return { error: 'Sin permisos para revocar certificados' }
+  }
+
+  const reason = (input.reason ?? '').trim()
+  if (reason.length < 3) {
+    return { error: 'Debes indicar un motivo (al menos 3 caracteres)' }
+  }
 
   const { supabase } = ctx
 
-  const { error } = await supabase
+  const { data: cert } = await supabase
+    .from('certificates')
+    .select('id, code, status, project_id')
+    .eq('id', input.certId)
+    .single()
+
+  if (!cert) return { error: 'Certificado no encontrado' }
+  if (cert.project_id !== input.projectId) return { error: 'Certificado no pertenece al proyecto' }
+  if (cert.status !== 'issued') {
+    return { error: 'Solo se pueden revocar certificados emitidos' }
+  }
+
+  // Snapshot signatures before delete
+  const { data: signatures } = await supabase
+    .from('certificate_signatures')
+    .select('id, user_id, role, signed_at')
+    .eq('certificate_id', input.certId)
+
+  const signers = (signatures ?? []) as Array<{ id: string; user_id: string; role: string; signed_at: string }>
+
+  // Drop signatures so cert can be re-issued cleanly
+  const { error: delErr } = await supabase
+    .from('certificate_signatures')
+    .delete()
+    .eq('certificate_id', input.certId)
+  if (delErr) return { error: delErr.message }
+
+  const { error: updErr } = await supabase
     .from('certificates')
     .update({ status: 'rejected' })
     .eq('id', input.certId)
-
-  if (error) return { error: error.message }
+  if (updErr) return { error: updErr.message }
 
   await logActivity(supabase, {
     orgId: ctx.orgId,
@@ -239,12 +274,38 @@ export async function revokeCertificate(input: {
     entityType: 'certificate',
     entityId: input.certId,
     action: 'revoked',
-    payload: { projectId: input.projectId },
+    payload: {
+      projectId: input.projectId,
+      reason,
+      previousSignatures: signers.map(s => ({
+        userId: s.user_id,
+        role: s.role,
+        signedAt: s.signed_at,
+      })),
+    },
   })
+
+  const uniqueRecipients = Array.from(new Set(signers.map(s => s.user_id))).filter(
+    uid => uid && uid !== ctx.userId,
+  )
+  if (uniqueRecipients.length > 0) {
+    const rows = uniqueRecipients.map(uid => ({
+      org_id: ctx.orgId,
+      recipient_user_id: uid,
+      kind: 'certificate_revoked',
+      title: `El certificado ${cert.code} fue revocado`,
+      body: reason,
+      link_url: `/projects/${input.projectId}/certificates/${input.certId}`,
+      payload: { certId: input.certId, projectId: input.projectId, certCode: cert.code, reason },
+    }))
+    const admin = createAdminClient()
+    const { error: notifErr } = await admin.from('notifications').insert(rows)
+    if (notifErr) console.error('[notifications.insert]', notifErr)
+  }
 
   revalidatePath(`/projects/${input.projectId}/certificates`)
   revalidatePath(`/projects/${input.projectId}/certificates/${input.certId}`)
-  return {}
+  return { revokedCount: signers.length }
 }
 
 // ── signCertificate ────────────────────────────────────────────────────────

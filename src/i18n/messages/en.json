@@ -499,7 +499,9 @@
       "sigCancel": "Cancel",
       "revokeModal": {
         "title": "Revoke certificate?",
-        "body": "Certificate {certNumber} will be set to Revoked status. This action is auditable.",
+        "body": "Certificate {certNumber} will be set to Revoked status and current signatures will be deleted. Signers will be notified.",
+        "reasonLabel": "Reason (required)",
+        "reasonPlaceholder": "E.g. scope error, additional ITRs required...",
         "cancel": "Cancel",
         "submitting": "Revoking...",
         "confirm": "Yes, revoke"

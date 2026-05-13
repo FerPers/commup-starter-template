@@ -499,7 +499,9 @@
       "sigCancel": "Cancelar",
       "revokeModal": {
         "title": "¿Revocar certificado?",
-        "body": "El certificado {certNumber} quedará en estado Revocado. Esta acción es auditable.",
+        "body": "El certificado {certNumber} quedará en estado Revocado y se eliminarán las firmas actuales. Los firmantes serán notificados.",
+        "reasonLabel": "Motivo (obligatorio)",
+        "reasonPlaceholder": "Ej. error en alcance, ITRs adicionales necesarios...",
         "cancel": "Cancelar",
         "submitting": "Revocando...",
         "confirm": "Sí, revocar"

@@ -100,6 +100,7 @@ export default function CertificateDetail({
   const [isPending, startTransition] = useTransition()
   const [revokeConfirm, setRevokeConfirm] = useState(false)
   const [revokeError, setRevokeError]     = useState('')
+  const [revokeReason, setRevokeReason]   = useState('')
   const [signRole, setSignRole]           = useState<CertSignatureRoleId | null>(null)
   const [signComments, setSignComments]   = useState('')
   const [signError, setSignError]         = useState('')
@@ -126,11 +127,12 @@ export default function CertificateDetail({
   function handleRevoke() {
     setRevokeError('')
     startTransition(async () => {
-      const result = await revokeCertificate({ certId: cert.id, projectId })
+      const result = await revokeCertificate({ certId: cert.id, projectId, reason: revokeReason })
       if (result.error) {
         setRevokeError(result.error)
       } else {
         setRevokeConfirm(false)
+        setRevokeReason('')
         router.refresh()
       }
     })
@@ -559,23 +561,35 @@ export default function CertificateDetail({
             <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
               {t('detail.revokeModal.title')}
             </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px', lineHeight: '1.5' }}
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}
                dangerouslySetInnerHTML={{ __html: t('detail.revokeModal.body', { certNumber: `<strong>${cert.certificate_number}</strong>` }) }}
             />
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-strong)' }}>
+                {t('detail.revokeModal.reasonLabel')}
+              </span>
+              <textarea
+                value={revokeReason}
+                onChange={e => setRevokeReason(e.target.value)}
+                rows={3}
+                placeholder={t('detail.revokeModal.reasonPlaceholder')}
+                style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', minHeight: 70 }}
+              />
+            </label>
             {revokeError && (
               <p style={{ fontSize: '13px', color: '#ef4444', margin: '0 0 14px' }}>{revokeError}</p>
             )}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setRevokeConfirm(false)}
+                onClick={() => { setRevokeConfirm(false); setRevokeReason(''); setRevokeError('') }}
                 style={{ padding: '8px 18px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer' }}
               >
                 {t('detail.revokeModal.cancel')}
               </button>
               <button
                 onClick={handleRevoke}
-                disabled={isPending}
-                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: '#ef4444', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'wait' : 'pointer' }}
+                disabled={isPending || revokeReason.trim().length < 3}
+                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: (revokeReason.trim().length < 3) ? '#fca5a5' : '#ef4444', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: (isPending || revokeReason.trim().length < 3) ? 'not-allowed' : 'pointer' }}
               >
                 {isPending ? t('detail.revokeModal.submitting') : t('detail.revokeModal.confirm')}
               </button>

@@ -189,7 +189,7 @@ export default function NotificationsBell({
                 No tienes notificaciones
               </p>
             ) : (
-              items.map(n => (
+              items.slice(0, 10).map(n => (
                 <button
                   key={n.id}
                   type="button"
@@ -228,6 +228,22 @@ export default function NotificationsBell({
               ))
             )}
           </div>
+          <button
+            onClick={() => { setOpen(false); router.push('/notifications') }}
+            style={{
+              padding: '10px 12px',
+              background: 'var(--gray-50)',
+              border: 'none',
+              borderTop: '1px solid var(--border)',
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--text-strong)',
+              cursor: 'pointer',
+              textAlign: 'center',
+            }}
+          >
+            Ver todas
+          </button>
         </div>
       )}
     </div>
