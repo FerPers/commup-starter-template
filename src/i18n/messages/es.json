@@ -976,9 +976,20 @@
       "btnPhotos": "Fotos ({count})",
       "btnSign": "✍ Firmar",
       "btnPdf": "Descargar PDF",
+      "btnRevoke": "↺ Revocar aprobación",
       "signTooltipIncomplete": "Completa todos los ítems antes de firmar",
       "signTooltipRejected": "ITR rechazado: corrige los ítems críticos para volver a completado",
       "signTooltipApproved": "Este ITR ya está aprobado"
+    },
+    "revoke": {
+      "title": "Revocar aprobación del ITR {itrNumber}",
+      "body": "Se eliminarán todas las firmas actuales y el ITR volverá a estado 'completado'. Las respuestas se conservan. Los firmantes serán notificados.",
+      "signersAffected": "{count, plural, =0 {Sin firmantes registrados} one {# firmante recibirá notificación} other {# firmantes recibirán notificación}}",
+      "reasonLabel": "Motivo de la revocación",
+      "reasonPlaceholder": "Ej. valor crítico fuera de tolerancia detectado después de la aprobación...",
+      "cancel": "Cancelar",
+      "confirm": "Revocar aprobación",
+      "confirming": "Revocando..."
     },
     "signModal": {
       "title": "Firmar ITR",

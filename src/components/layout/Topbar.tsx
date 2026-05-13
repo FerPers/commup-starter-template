@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import type { OrgMemberRole } from '@/types/database'
 import Breadcrumbs from './Breadcrumbs'
 import OrgSwitcher from './OrgSwitcher'
+import NotificationsBell from './NotificationsBell'
 
 type Membership = {
   orgId: string
@@ -15,9 +16,10 @@ interface TopbarProps {
   activeOrgId: string
   memberships: Membership[]
   userEmail: string | null
+  unreadNotifications: number
 }
 
-export default async function Topbar({ role, orgName, activeOrgId, memberships, userEmail }: TopbarProps) {
+export default async function Topbar({ role, orgName, activeOrgId, memberships, userEmail, unreadNotifications }: TopbarProps) {
   const t = await getTranslations('Topbar')
   const roleLabels: Record<string, string> = {
     owner:     t('role.owner'),
@@ -45,6 +47,8 @@ export default async function Topbar({ role, orgName, activeOrgId, memberships, 
       }}
     >
       <Breadcrumbs />
+
+      {role && <NotificationsBell initialUnread={unreadNotifications} />}
 
       {role && (
         <OrgSwitcher

@@ -36,6 +36,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const [
     { count: punchCount },
     { count: preservationCount },
+    { count: unreadNotificationsCount },
     { data: org },
     memberships,
   ] = await Promise.all([
@@ -55,6 +56,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
           .in('project_id', projectIds)
           .neq('status', 'completed')
           .lt('next_due_date', threeDaysAgo),
+    supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('recipient_user_id', ctx.userId)
+      .eq('org_id', ctx.orgId)
+      .is('read_at', null),
     supabase
       .from('organizations')
       .select('name')
@@ -82,6 +89,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             activeOrgId={ctx.orgId}
             memberships={memberships}
             userEmail={ctx.userEmail}
+            unreadNotifications={unreadNotificationsCount ?? 0}
           />
           <main style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
             {children}

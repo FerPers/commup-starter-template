@@ -376,3 +376,109 @@ export async function signItr(
   revalidatePath(`/projects/${projectId}/itrs`)
   return {}
 }
+
+// ── Revoke ITR Approval ──────────────────────────────────────────────
+
+const REVOKE_ROLES = ['owner', 'admin', 'architect']
+
+export async function revokeItrApproval(input: {
+  itrId: string
+  projectId: string
+  tagId: string
+  reason: string
+}): Promise<{ error?: string; revokedCount?: number }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!REVOKE_ROLES.includes(ctx.role)) {
+    return { error: 'Sin permisos para revocar aprobaciones' }
+  }
+
+  const reason = (input.reason ?? '').trim()
+  if (reason.length < 3) {
+    return { error: 'Debes indicar un motivo (al menos 3 caracteres)' }
+  }
+
+  const { itrId, projectId, tagId } = input
+
+  const { data: itrRow } = await ctx.supabase
+    .from('itrs')
+    .select('id, status, itr_number, project_id')
+    .eq('id', itrId)
+    .single()
+
+  if (!itrRow) return { error: 'ITR no encontrado' }
+  if (itrRow.project_id !== projectId) return { error: 'ITR no pertenece al proyecto' }
+  if (itrRow.status !== 'approved') {
+    return { error: 'Solo se pueden revocar ITRs aprobados' }
+  }
+
+  // Snapshot current signatures so we can build notifications + audit payload.
+  const { data: signatures } = await ctx.supabase
+    .from('itr_signatures')
+    .select('id, user_id, role, signed_at')
+    .eq('itr_id', itrId)
+
+  const signers = signatures ?? []
+
+  // Drop signatures (UNIQUE(itr_id, role) won't conflict on re-sign later).
+  const { error: delErr } = await ctx.supabase
+    .from('itr_signatures')
+    .delete()
+    .eq('itr_id', itrId)
+  if (delErr) return { error: delErr.message }
+
+  // Downgrade status. Responses stay intact; status drops to completed because
+  // the ITR was at 100% to ever be approved.
+  const { error: updErr } = await ctx.supabase
+    .from('itrs')
+    .update({ status: 'completed' })
+    .eq('id', itrId)
+  if (updErr) return { error: updErr.message }
+
+  await logActivity(ctx.supabase, {
+    orgId: ctx.orgId,
+    userId: ctx.userId,
+    entityType: 'itr',
+    entityId: itrId,
+    action: 'revoked',
+    payload: {
+      projectId,
+      tagId,
+      reason,
+      previousSignatures: signers.map(s => ({
+        userId: s.user_id,
+        role: s.role,
+        signedAt: s.signed_at,
+      })),
+    },
+  })
+
+  // Notify each signer (dedupe by user — a user could in theory have signed
+  // more than one role, though UNIQUE(itr_id, role) and one-user-per-cert
+  // make this rare).
+  const uniqueRecipients = Array.from(new Set(signers.map(s => s.user_id))).filter(
+    uid => uid && uid !== ctx.userId,
+  )
+
+  if (uniqueRecipients.length > 0) {
+    const rows = uniqueRecipients.map(uid => ({
+      org_id: ctx.orgId,
+      recipient_user_id: uid,
+      kind: 'itr_signature_revoked',
+      title: `Tu firma en el ITR ${itrRow.itr_number} fue revocada`,
+      body: reason,
+      link_url: `/projects/${projectId}/tags/${tagId}/itrs/${itrId}`,
+      payload: { itrId, projectId, tagId, itrNumber: itrRow.itr_number, reason },
+    }))
+    const { error: notifErr } = await ctx.supabase.from('notifications').insert(rows)
+    if (notifErr) {
+      // Non-fatal: revoke already succeeded, just log.
+      console.error('[notifications.insert]', notifErr)
+    }
+  }
+
+  revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
+  revalidatePath(`/projects/${projectId}/tags/${tagId}`)
+  revalidatePath(`/projects/${projectId}/itrs`)
+  return { revokedCount: signers.length }
+}
