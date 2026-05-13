@@ -1,10 +1,10 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
-import NotificationsList from './NotificationsList'
+import InboxList from './InboxList'
 
 export const dynamic = 'force-dynamic'
 
-export default async function NotificationsPage() {
+export default async function InboxPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
 
@@ -17,7 +17,7 @@ export default async function NotificationsPage() {
     .limit(200)
 
   return (
-    <NotificationsList
+    <InboxList
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       initialItems={(items ?? []) as any}
     />

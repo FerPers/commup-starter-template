@@ -9,6 +9,7 @@ import {
   markAllNotificationsRead,
   type NotificationRow,
 } from '@/app/actions/notifications'
+import { createClient } from '@/lib/supabase/client'
 
 function formatRelative(iso: string): string {
   const ts = new Date(iso).getTime()
@@ -25,8 +26,12 @@ function formatRelative(iso: string): string {
 
 export default function NotificationsBell({
   initialUnread,
+  userId,
+  orgId,
 }: {
   initialUnread: number
+  userId: string
+  orgId: string
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -46,6 +51,48 @@ export default function NotificationsBell({
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [open])
+
+  // Realtime: bump unread + prepend new notification when the active user
+  // receives one in the current org. RLS already restricts SELECT to own rows,
+  // so the channel only ever fires for rows the user can read.
+  useEffect(() => {
+    if (!userId) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`notif:${userId}`)
+      .on(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        'postgres_changes' as any,
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_user_id=eq.${userId}`,
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload: any) => {
+          const row = payload.new as NotificationRow & { org_id: string }
+          if (row.org_id !== orgId) return
+          setUnread(u => u + 1)
+          setItems(prev => [
+            {
+              id: row.id,
+              kind: row.kind,
+              title: row.title,
+              body: row.body,
+              link_url: row.link_url,
+              read_at: row.read_at,
+              created_at: row.created_at,
+            },
+            ...prev,
+          ].slice(0, 20))
+        },
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, orgId])
 
   async function loadItems() {
     setLoading(true)
@@ -229,7 +276,7 @@ export default function NotificationsBell({
             )}
           </div>
           <button
-            onClick={() => { setOpen(false); router.push('/notifications') }}
+            onClick={() => { setOpen(false); router.push('/inbox') }}
             style={{
               padding: '10px 12px',
               background: 'var(--gray-50)',

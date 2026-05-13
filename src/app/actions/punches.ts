@@ -1,6 +1,7 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
 
@@ -71,12 +72,106 @@ export async function createPunch(input: {
 
   if (error) return { error: error.message }
 
+  if (input.assignedTo && input.assignedTo !== userId) {
+    const admin = createAdminClient()
+    const { error: notifErr } = await admin.from('notifications').insert({
+      org_id: orgId,
+      recipient_user_id: input.assignedTo,
+      kind: 'punch_assigned',
+      title: `Te asignaron el punch ${punch.punch_number}`,
+      body: input.description.length > 140 ? `${input.description.slice(0, 137)}…` : input.description,
+      link_url: input.tagId
+        ? `/projects/${input.projectId}/tags/${input.tagId}`
+        : `/projects/${input.projectId}/punches`,
+      payload: {
+        punchId: punch.id,
+        punchNumber: punch.punch_number,
+        projectId: input.projectId,
+        tagId: input.tagId ?? null,
+        category: input.category,
+        priority: input.priority ?? 'major',
+      },
+    })
+    if (notifErr) console.error('[notifications.insert]', notifErr)
+  }
+
   revalidatePath(`/projects/${input.projectId}/punches`)
   if (input.tagId) {
     revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
   }
 
   return { punchId: punch.id, punchNumber: punch.punch_number }
+}
+
+// ── reassignPunch ──────────────────────────────────────────────────────────
+
+export async function reassignPunch(input: {
+  punchId: string
+  projectId: string
+  tagId?: string | null
+  newAssignee: string | null
+}): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos para reasignar punches' }
+
+  const { supabase, userId, orgId } = ctx
+
+  const { data: punch } = await supabase
+    .from('punches')
+    .select('id, punch_number, description, category, priority, project_id, tag_id, assigned_to')
+    .eq('id', input.punchId)
+    .single()
+  if (!punch) return { error: 'Punch no encontrado' }
+  if (punch.project_id !== input.projectId) return { error: 'Punch no pertenece al proyecto' }
+  if (punch.assigned_to === input.newAssignee) return {}
+
+  const { error } = await supabase
+    .from('punches')
+    .update({ assigned_to: input.newAssignee })
+    .eq('id', input.punchId)
+  if (error) return { error: error.message }
+
+  await logActivity(supabase, {
+    orgId,
+    userId,
+    entityType: 'punch',
+    entityId: input.punchId,
+    action: 'reassigned',
+    payload: { from: punch.assigned_to, to: input.newAssignee, projectId: input.projectId },
+  })
+
+  if (input.newAssignee && input.newAssignee !== userId) {
+    const admin = createAdminClient()
+    const body = (punch.description ?? '').length > 140
+      ? `${(punch.description ?? '').slice(0, 137)}…`
+      : (punch.description ?? '')
+    const { error: notifErr } = await admin.from('notifications').insert({
+      org_id: orgId,
+      recipient_user_id: input.newAssignee,
+      kind: 'punch_assigned',
+      title: `Te asignaron el punch ${punch.punch_number}`,
+      body,
+      link_url: punch.tag_id
+        ? `/projects/${input.projectId}/tags/${punch.tag_id}`
+        : `/projects/${input.projectId}/punches`,
+      payload: {
+        punchId: punch.id,
+        punchNumber: punch.punch_number,
+        projectId: input.projectId,
+        tagId: punch.tag_id,
+        category: punch.category,
+        priority: punch.priority,
+      },
+    })
+    if (notifErr) console.error('[notifications.insert]', notifErr)
+  }
+
+  revalidatePath(`/projects/${input.projectId}/punches`)
+  if (input.tagId) {
+    revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
+  }
+  return {}
 }
 
 // ── updatePunchStatus ──────────────────────────────────────────────────────

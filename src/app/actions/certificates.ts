@@ -160,6 +160,39 @@ export async function issueCertificate(input: {
     },
   })
 
+  // Notify potential signers (owner / admin / architect of the org) that a
+  // certificate needs their signature. Issuer is excluded.
+  const admin = createAdminClient()
+  const { data: signers } = await admin
+    .from('org_members')
+    .select('user_id')
+    .eq('org_id', ctx.orgId)
+    .in('role', ['owner', 'admin', 'architect'])
+
+  const recipients = (signers ?? [])
+    .map(s => s.user_id)
+    .filter(uid => uid && uid !== userId)
+
+  if (recipients.length > 0) {
+    const rows = recipients.map(uid => ({
+      org_id: ctx.orgId,
+      recipient_user_id: uid,
+      kind: 'cert_signature_requested',
+      title: `Firma requerida: ${cert.certificate_number}`,
+      body: title,
+      link_url: `/projects/${projectId}/certificates/${cert.id}`,
+      payload: {
+        certId: cert.id,
+        certNumber: cert.certificate_number,
+        projectId,
+        subsystemId,
+        phaseId,
+      },
+    }))
+    const { error: notifErr } = await admin.from('notifications').insert(rows)
+    if (notifErr) console.error('[notifications.insert]', notifErr)
+  }
+
   revalidatePath(`/projects/${projectId}/certificates`)
   return { certId: cert.id, certNumber: cert.certificate_number }
 }

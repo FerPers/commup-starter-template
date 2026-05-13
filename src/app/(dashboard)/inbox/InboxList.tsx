@@ -12,6 +12,9 @@ import {
 const KIND_LABELS: Record<string, string> = {
   itr_signature_revoked: 'Firma ITR revocada',
   certificate_revoked: 'Certificado revocado',
+  punch_assigned: 'Punch asignado',
+  cert_signature_requested: 'Firma de certificado solicitada',
+  preservation_overdue: 'Preservación vencida',
 }
 
 function formatDate(iso: string): string {
@@ -19,7 +22,7 @@ function formatDate(iso: string): string {
   return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 }
 
-export default function NotificationsList({
+export default function InboxList({
   initialItems,
 }: {
   initialItems: NotificationRow[]
@@ -59,7 +62,7 @@ export default function NotificationsList({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: 'var(--text-strong)' }}>
-            Notificaciones
+            Inbox
           </h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
             {items.length} total · {unreadCount} sin leer

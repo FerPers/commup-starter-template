@@ -16,10 +16,11 @@ interface TopbarProps {
   activeOrgId: string
   memberships: Membership[]
   userEmail: string | null
+  userId: string
   unreadNotifications: number
 }
 
-export default async function Topbar({ role, orgName, activeOrgId, memberships, userEmail, unreadNotifications }: TopbarProps) {
+export default async function Topbar({ role, orgName, activeOrgId, memberships, userEmail, userId, unreadNotifications }: TopbarProps) {
   const t = await getTranslations('Topbar')
   const roleLabels: Record<string, string> = {
     owner:     t('role.owner'),
@@ -48,7 +49,13 @@ export default async function Topbar({ role, orgName, activeOrgId, memberships, 
     >
       <Breadcrumbs />
 
-      {role && <NotificationsBell initialUnread={unreadNotifications} />}
+      {role && (
+        <NotificationsBell
+          initialUnread={unreadNotifications}
+          userId={userId}
+          orgId={activeOrgId}
+        />
+      )}
 
       {role && (
         <OrgSwitcher

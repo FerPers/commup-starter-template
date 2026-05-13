@@ -89,6 +89,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             activeOrgId={ctx.orgId}
             memberships={memberships}
             userEmail={ctx.userEmail}
+            userId={ctx.userId}
             unreadNotifications={unreadNotificationsCount ?? 0}
           />
           <main style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
