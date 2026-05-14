@@ -22,3 +22,5 @@ export const DEFAULT_PSSR_ITEMS = [
   { category: 'Construcción y Comisionamiento', element: 'Orden y Aseo (Housekeeping)', requirement: '¿Se han retirado todos los andamios, plataformas temporales, materiales combustibles y escombros, asegurando rutas de escape despejadas?', notes_hint: 'Recorrido final de limpieza de la planta.' },
   { category: 'Construcción y Comisionamiento', element: 'Lista de Pendientes (Punch List)', requirement: '¿Se han completado y cerrado todos los elementos de pre-comisionamiento categoría "A" (requeridos para el arranque seguro)?', notes_hint: 'Adjuntar reporte del sistema de Punch List.' },
 ]
+
+export const PSSR_ALREADY_SIGNED = 'PSSR_ALREADY_SIGNED'

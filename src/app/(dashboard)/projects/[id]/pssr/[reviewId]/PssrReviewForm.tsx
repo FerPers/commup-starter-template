@@ -13,6 +13,7 @@ import {
   approvePssrAndIssueRfsu,
   rejectPssrReview,
 } from '@/app/actions/pssr'
+import { PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -155,6 +156,15 @@ export default function PssrReviewForm({
     if (readonly) return
     // Optimistic update
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, status } : i))
+    // Detail editor only renders for si/no — collapse on transitions away
+    if (status === 'na' || status === 'pending') {
+      setExpandedItems(prev => {
+        if (!prev.has(item.id)) return prev
+        const next = new Set(prev)
+        next.delete(item.id)
+        return next
+      })
+    }
     startTransition(async () => {
       try {
         await updatePssrReviewItem({ itemId: item.id, reviewId: review.id, projectId, status })
@@ -345,6 +355,16 @@ export default function PssrReviewForm({
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <a
+              href={`/projects/${projectId}/pssr/${review.id}/pdf`}
+              style={{
+                padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+                background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--gray-700)',
+                textDecoration: 'none',
+              }}
+            >
+              {t('review.downloadPdf')}
+            </a>
             {review.status === 'approved' && review.rfsu_certificate_id && (
               <a
                 href={`/projects/${projectId}/certificates/${review.rfsu_certificate_id}`}
@@ -537,8 +557,8 @@ export default function PssrReviewForm({
                           </button>
                         )}
 
-                        {/* Detail fields */}
-                        {isItemExpanded && !readonly && (
+                        {/* Detail fields — only for si/no (toggle button matches) */}
+                        {isItemExpanded && !readonly && (item.status === 'si' || item.status === 'no') && (
                           <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <input
                               defaultValue={item.responsible ?? ''}
@@ -758,6 +778,7 @@ function SignModal({
   const [discipline, setDiscipline] = useState('')
   const [isDrawing, setIsDrawing] = useState(false)
   const [hasDrawn, setHasDrawn] = useState(false)
+  const [signError, setSignError] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const lastPoint = useRef<{ x: number; y: number } | null>(null)
 
@@ -802,15 +823,21 @@ function SignModal({
   }
 
   function handleSign() {
+    setSignError(null)
     const signatureData = canvasRef.current!.toDataURL('image/png')
     startTransition(async () => {
-      await addPssrSignature({ reviewId, projectId, discipline, signatureData })
-      onSigned({
-        id: crypto.randomUUID(),
-        user_id: '', discipline, signature_data: signatureData,
-        signed_at: new Date().toISOString(),
-        profiles: { full_name: currentUserName, id: '' },
-      })
+      try {
+        await addPssrSignature({ reviewId, projectId, discipline, signatureData })
+        onSigned({
+          id: crypto.randomUUID(),
+          user_id: '', discipline, signature_data: signatureData,
+          signed_at: new Date().toISOString(),
+          profiles: { full_name: currentUserName, id: '' },
+        })
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Error'
+        setSignError(msg === PSSR_ALREADY_SIGNED ? t('review.errorAlreadySigned') : msg)
+      }
     })
   }
 
@@ -867,6 +894,16 @@ function SignModal({
             onPointerLeave={() => setIsDrawing(false)}
           />
         </div>
+
+        {signError && (
+          <div style={{
+            padding: '10px 12px', borderRadius: '8px', background: '#fef2f2',
+            border: '1px solid #fecaca', color: '#dc2626', fontSize: '12px', fontWeight: 500,
+            marginBottom: '14px',
+          }}>
+            {signError}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={{

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { logActivity } from '@/lib/log-activity'
-import { DEFAULT_PSSR_ITEMS } from '@/lib/constants/pssr'
+import { DEFAULT_PSSR_ITEMS, PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
 import {
   notifyPssrSubmittedForApproval,
   notifyPssrApproved,
@@ -255,14 +255,18 @@ export async function addPssrSignature(data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('No autenticado')
 
-  const { error } = await supabase.from('pssr_signatures').upsert({
+  const { error } = await supabase.from('pssr_signatures').insert({
     review_id: data.reviewId,
     user_id: user.id,
     discipline: data.discipline,
     signature_data: data.signatureData,
     signed_at: new Date().toISOString(),
-  }, { onConflict: 'review_id,user_id' })
-  if (error) throw new Error(error.message)
+  })
+  if (error) {
+    // 23505 unique_violation on (review_id, user_id) → user already signed
+    if (error.code === '23505') throw new Error(PSSR_ALREADY_SIGNED)
+    throw new Error(error.message)
+  }
 
   revalidatePath(`/projects/${data.projectId}/pssr/${data.reviewId}`)
 }
