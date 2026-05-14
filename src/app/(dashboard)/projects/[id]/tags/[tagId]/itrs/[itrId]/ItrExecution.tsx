@@ -450,6 +450,7 @@ export default function ItrExecution({
                 </div>
                 {sig?.signature_image && (
                   <div style={{ borderTop: '1px solid #a7f3d0', padding: '4px 6px', background: '#f0fdf4' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- base64 signature data URL, Image optimizer doesn't apply */}
                     <img src={sig.signature_image} alt={t(`roles.${role}` as Parameters<typeof t>[0])} style={{ height: '36px', maxWidth: '140px', objectFit: 'contain', display: 'block' }} />
                   </div>
                 )}
@@ -968,6 +969,7 @@ function PhotoUpload({
           {existingAttachments.map(att => (
             <div key={att.id} style={{ position: 'relative', width: '72px', height: '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0 }}>
               {att.signed_url
+                // eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL with rotating token, Image cache would break
                 ? <img src={att.signed_url} alt={t('upload.photoAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setLightbox(att.signed_url)} />
                 : <div style={{ width: '100%', height: '100%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📷</div>
               }
@@ -1005,6 +1007,7 @@ function PhotoUpload({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}
           onClick={() => setLightbox(null)}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL lightbox, optimizer adds no value */}
           <img src={lightbox} alt={t('upload.photoFullAlt')} style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '10px', objectFit: 'contain' }} />
         </div>
       )}

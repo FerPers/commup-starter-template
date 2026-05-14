@@ -272,6 +272,7 @@ export default function OrgConfigView({
                 overflow: 'hidden', flexShrink: 0,
               }}>
                 {orgLogoUrl
+                  // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage signed URL, no optimization benefit on Workers
                   ? <img src={orgLogoUrl} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   : <span style={{ fontSize: '24px', color: '#cbd5e1' }}>◈</span>
                 }

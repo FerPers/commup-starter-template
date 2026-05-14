@@ -520,6 +520,7 @@ export default function SwipeCaptureFlow({
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {currentItem.photos!.map((photo, i) => (
                       <div key={photo.id} className="relative flex-shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL with rotating token, Image cache would break */}
                         <img
                           src={photo.thumbnail_url || photo.url}
                           alt={`Foto ${i + 1}`}

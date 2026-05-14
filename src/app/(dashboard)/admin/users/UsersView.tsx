@@ -47,6 +47,7 @@ function RoleBadge({ role, label }: { role: string; label: string }) {
 
 function Avatar({ name, url }: { name: string; url: string | null }) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  // eslint-disable-next-line @next/next/no-img-element -- Avatar from external/Supabase URL, no optimization benefit on Workers
   if (url) return <img src={url} alt={name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
   return (
     <div style={{
