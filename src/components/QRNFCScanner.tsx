@@ -294,7 +294,7 @@ export default function QRNFCScanner() {
       stopQR();
       stopNFC();
     };
-  }, [mode]);
+  }, [mode, startNFC, startQR, stopNFC, stopQR]);
 
   const handleManualSubmit = () => {
     const tagId = parseTagId(manualInput);

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import * as XLSX from 'xlsx'
 import { importTags, type TagRow, type ImportResult } from '@/app/actions/import'
 import { detectTagType } from '@/lib/tag-types'
@@ -144,7 +144,7 @@ export default function ImportWizard({
   const [importError, setImportError] = useState<string | null>(null)
   const [manualDiscipline, setManualDiscipline] = useState<string>('')
 
-  const disciplineCodes  = new Set(disciplines.map(d => d.code.toUpperCase()))
+  const disciplineCodes  = useMemo(() => new Set(disciplines.map(d => d.code.toUpperCase())), [disciplines])
   const prefillCode      = disciplinePrefill?.code.toUpperCase() ?? ''
   const effectivePrefill = prefillCode || manualDiscipline
 

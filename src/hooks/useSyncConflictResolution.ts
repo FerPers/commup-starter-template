@@ -197,17 +197,6 @@ export function useSyncConflictResolution({
     });
   }, []);
 
-  // Online: trigger sync automático
-  useEffect(() => {
-    const handler = () => {
-      if (navigator.onLine) {
-        setTimeout(() => syncAll(), 500);
-      }
-    };
-    window.addEventListener('online', handler);
-    return () => window.removeEventListener('online', handler);
-  }, []);
-
   const refreshPendingCount = async (db: IDBDatabase) => {
     const all = await dbGetAll(db, 'sync_queue');
     setPendingCount(all.length);
@@ -388,6 +377,17 @@ export function useSyncConflictResolution({
     setLastSyncAt(new Date().toISOString());
     setIsSyncing(false);
   }, [isSyncing, onConflictDetected, onSyncSuccess, onSyncError]);
+
+  // Online: trigger sync automático
+  useEffect(() => {
+    const handler = () => {
+      if (navigator.onLine) {
+        setTimeout(() => syncAll(), 500);
+      }
+    };
+    window.addEventListener('online', handler);
+    return () => window.removeEventListener('online', handler);
+  }, [syncAll]);
 
   /**
    * Resolver un conflicto manualmente (override de LWW)
