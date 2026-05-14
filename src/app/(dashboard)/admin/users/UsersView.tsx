@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { inviteUser, updateMemberRole, removeMember } from '@/app/actions/users'
 
@@ -12,12 +12,14 @@ type Member = {
   fullName: string
   avatarUrl: string | null
   email: string
+  lastActive: string | null
 }
 
 type PendingInvite = {
   userId: string
   email: string
   invitedAt: string
+  role: string | null
 }
 
 const ALL_ROLES = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client']
@@ -58,6 +60,25 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
   )
 }
 
+function formatJoinedDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function formatLastActive(
+  iso: string | null,
+  t: (key: string, vals?: Record<string, string | number>) => string,
+): string {
+  if (!iso) return t('table.lastActiveNever')
+  const then = new Date(iso)
+  const now  = new Date()
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const dayDiff = Math.floor((startOfDay(now) - startOfDay(then)) / 86400000)
+  if (dayDiff <= 0) return t('table.lastActiveToday')
+  if (dayDiff === 1) return t('table.lastActiveYesterday')
+  if (dayDiff < 7)   return t('table.lastActiveDaysAgo', { days: dayDiff })
+  return formatJoinedDate(iso)
+}
+
 export default function UsersView({
   members,
   pendingInvites,
@@ -78,6 +99,9 @@ export default function UsersView({
   const [success, setSuccess] = useState<string | null>(null)
   const [tempPassword, setTempPassword] = useState<{ email: string; password: string } | null>(null)
 
+  const [filterRole, setFilterRole] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'pending'>('all')
+
   const isAdmin = ['owner', 'admin'].includes(currentRole)
 
   const roleLabels: Record<string, string> = {
@@ -97,6 +121,16 @@ export default function UsersView({
     inspector: t('roleDesc.inspector'),
     client:    t('roleDesc.client'),
   }
+
+  const filteredMembers = useMemo(() => {
+    if (filterStatus === 'pending') return []
+    return members.filter(m => filterRole === 'all' || m.role === filterRole)
+  }, [members, filterRole, filterStatus])
+
+  const filteredPending = useMemo(() => {
+    if (filterStatus === 'active') return []
+    return pendingInvites.filter(p => filterRole === 'all' || p.role === filterRole)
+  }, [pendingInvites, filterRole, filterStatus])
 
   function notify(msg: string) {
     setSuccess(msg)
@@ -135,6 +169,13 @@ export default function UsersView({
       const res = await removeMember({ memberId })
       if (res.error) setError(res.error)
     })
+  }
+
+  const labelStyle = { fontSize: '11px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }
+  const selectStyle = {
+    padding: '7px 10px', border: '1px solid var(--border)',
+    borderRadius: '8px', fontSize: '13px', color: 'var(--text-strong)',
+    background: 'var(--card-bg)', cursor: 'pointer', minWidth: '140px',
   }
 
   return (
@@ -188,10 +229,10 @@ export default function UsersView({
                 {t('tempPassword.title')}
               </p>
               <p style={{ margin: '0 0 4px', fontSize: '13px', color: '#78350f' }}>
-                Email: <strong>{tempPassword.email}</strong>
+                {t('tempPassword.emailLabel')} <strong>{tempPassword.email}</strong>
               </p>
               <p style={{ margin: 0, fontSize: '13px', color: '#78350f' }}>
-                Contraseña temporal: <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{tempPassword.password}</strong>
+                {t('tempPassword.passwordLabel')} <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{tempPassword.password}</strong>
               </p>
               <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#a16207' }}>
                 {t('tempPassword.hint')}
@@ -200,7 +241,7 @@ export default function UsersView({
             <button
               onClick={() => setTempPassword(null)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a16207', fontSize: '18px', lineHeight: 1, padding: '2px' }}
-              aria-label="Cerrar"
+              aria-label={t('tempPassword.close')}
             >×</button>
           </div>
         </div>
@@ -247,9 +288,11 @@ export default function UsersView({
                   background: 'var(--card-bg)', cursor: 'pointer',
                 }}
               >
-                {ALL_ROLES.filter(r => r !== 'owner').map(r => (
-                  <option key={r} value={r}>{roleLabels[r] ?? r}</option>
-                ))}
+                {ALL_ROLES
+                  .filter(r => r !== 'owner' || currentRole === 'owner')
+                  .map(r => (
+                    <option key={r} value={r}>{roleLabels[r] ?? r}</option>
+                  ))}
               </select>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -278,8 +321,37 @@ export default function UsersView({
         </div>
       )}
 
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <div>
+          <label style={labelStyle}>{t('filters.role')}</label>
+          <select
+            value={filterRole}
+            onChange={e => setFilterRole(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="all">{t('filters.all')}</option>
+            {ALL_ROLES.map(r => (
+              <option key={r} value={r}>{roleLabels[r] ?? r}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle}>{t('filters.status')}</label>
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value as 'all' | 'active' | 'pending')}
+            style={selectStyle}
+          >
+            <option value="all">{t('filters.all')}</option>
+            <option value="active">{t('filters.active')}</option>
+            <option value="pending">{t('filters.pending')}</option>
+          </select>
+        </div>
+      </div>
+
       {/* Pending invites */}
-      {pendingInvites.length > 0 && (
+      {filteredPending.length > 0 && (
         <div style={{
           marginBottom: '20px',
           padding: '14px 18px',
@@ -288,17 +360,24 @@ export default function UsersView({
           borderRadius: '10px',
         }}>
           <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 600, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Pendiente de confirmación ({pendingInvites.length})
+            {t('pending.title', { count: filteredPending.length })}
           </p>
           <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#78350f' }}>
-            Estos usuarios fueron invitados pero no aparecen como miembros activos. Posibles huérfanos: invítalos de nuevo si es necesario.
+            {t('pending.desc')}
           </p>
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {pendingInvites.map(p => (
-              <li key={p.userId} style={{ fontSize: 13, color: '#78350f', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <span><strong>{p.email}</strong></span>
+            {filteredPending.map(p => (
+              <li key={p.userId} style={{ fontSize: 13, color: '#78350f', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+                <span>
+                  <strong>{p.email}</strong>
+                  {p.role && (
+                    <span style={{ marginLeft: 8 }}>
+                      <RoleBadge role={p.role} label={roleLabels[p.role] ?? p.role} />
+                    </span>
+                  )}
+                </span>
                 <span style={{ color: '#a16207', fontSize: 12 }}>
-                  invitado {new Date(p.invitedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  {t('pending.invitedOn', { date: formatJoinedDate(p.invitedAt) })}
                 </span>
               </li>
             ))}
@@ -307,101 +386,125 @@ export default function UsersView({
       )}
 
       {/* Members table */}
-      <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-        {members.length === 0 ? (
-          <div style={{ padding: '48px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px' }}>
-            No hay miembros
-          </div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid #f1f5f9' }}>
-                {[t('table.colUser'), t('table.colEmail'), t('table.colRole'), t('table.colSince'), ''].map((h, i) => (
-                  <th key={i} style={{
-                    padding: '12px 20px', textAlign: 'left',
-                    fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)',
-                    textTransform: 'uppercase', letterSpacing: '0.06em',
-                  }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((m, i) => {
-                const isSelf  = m.userId === currentUserId
-                const isOwner = m.role === 'owner'
-                const canEdit = isAdmin && (!isOwner || currentRole === 'owner')
-                return (
-                  <tr key={m.id} style={{
-                    borderBottom: i < members.length - 1 ? '1px solid #f1f5f9' : 'none',
-                    opacity: isPending ? 0.6 : 1,
-                  }}>
-                    <td style={{ padding: '14px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Avatar name={m.fullName} url={m.avatarUrl} />
-                        <div>
-                          <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-strong)' }}>
-                            {m.fullName}
-                            {isSelf && (
-                              <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--gray-400)', fontWeight: 400 }}>
-                                {t('table.self')}
-                              </span>
-                            )}
+      {filterStatus !== 'pending' && (
+        <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+          {filteredMembers.length === 0 ? (
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px' }}>
+              {members.length === 0 ? t('table.empty') : t('table.emptyFiltered')}
+            </div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid #f1f5f9' }}>
+                  {[
+                    t('table.colUser'),
+                    t('table.colEmail'),
+                    t('table.colRole'),
+                    t('table.colSince'),
+                    t('table.colLastActive'),
+                    '',
+                  ].map((h, i) => (
+                    <th key={i} style={{
+                      padding: '12px 20px', textAlign: 'left',
+                      fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)',
+                      textTransform: 'uppercase', letterSpacing: '0.06em',
+                    }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMembers.map((m, i) => {
+                  const isSelf  = m.userId === currentUserId
+                  const isOwner = m.role === 'owner'
+                  const canEdit = isAdmin && (!isOwner || currentRole === 'owner')
+                  return (
+                    <tr key={m.id} style={{
+                      borderBottom: i < filteredMembers.length - 1 ? '1px solid #f1f5f9' : 'none',
+                      opacity: isPending ? 0.6 : 1,
+                    }}>
+                      <td style={{ padding: '14px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <Avatar name={m.fullName} url={m.avatarUrl} />
+                          <div>
+                            <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-strong)' }}>
+                              {m.fullName}
+                              {isSelf && (
+                                <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--gray-400)', fontWeight: 400 }}>
+                                  {t('table.self')}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                      {m.email}
-                    </td>
-                    <td style={{ padding: '14px 20px' }}>
-                      {canEdit && !isSelf ? (
-                        <select
-                          value={m.role}
-                          onChange={e => handleRoleChange(m.id, e.target.value)}
-                          disabled={isPending}
-                          style={{
-                            padding: '4px 8px', border: '1px solid var(--border)',
-                            borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                            color: ROLE_COLORS[m.role]?.color ?? 'var(--text-muted)',
-                            background: ROLE_COLORS[m.role]?.bg ?? 'var(--gray-50)',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {ALL_ROLES.map(r => (
-                            <option key={r} value={r}>{roleLabels[r] ?? r}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <RoleBadge role={m.role} label={roleLabels[m.role] ?? m.role} />
-                      )}
-                    </td>
-                    <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--gray-400)' }}>
-                      {new Date(m.joinedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
-                    </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                      {isAdmin && !isSelf && !isOwner && (
-                        <button
-                          onClick={() => handleRemove(m.id, m.fullName)}
-                          disabled={isPending}
-                          style={{
-                            padding: '6px 12px', background: 'transparent',
-                            border: '1px solid #fca5a5', borderRadius: '6px',
-                            fontSize: '12px', color: '#ef4444', cursor: 'pointer',
-                          }}
-                        >
-                          {t('table.remove')}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+                      </td>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                        {m.email}
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        {canEdit && !isSelf ? (
+                          <select
+                            value={m.role}
+                            onChange={e => handleRoleChange(m.id, e.target.value)}
+                            disabled={isPending}
+                            style={{
+                              padding: '4px 8px', border: '1px solid var(--border)',
+                              borderRadius: '6px', fontSize: '12px', fontWeight: 600,
+                              color: ROLE_COLORS[m.role]?.color ?? 'var(--text-muted)',
+                              background: ROLE_COLORS[m.role]?.bg ?? 'var(--gray-50)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {ALL_ROLES
+                              .filter(r => r !== 'owner' || currentRole === 'owner')
+                              .map(r => (
+                                <option key={r} value={r}>{roleLabels[r] ?? r}</option>
+                              ))}
+                          </select>
+                        ) : (
+                          <RoleBadge role={m.role} label={roleLabels[m.role] ?? m.role} />
+                        )}
+                      </td>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--gray-400)' }}>
+                        {formatJoinedDate(m.joinedAt)}
+                      </td>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--gray-400)' }} title={m.lastActive ?? ''}>
+                        {formatLastActive(m.lastActive, t)}
+                      </td>
+                      <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                        {isAdmin && !isSelf && (!isOwner || currentRole === 'owner') && (
+                          <button
+                            onClick={() => handleRemove(m.id, m.fullName)}
+                            disabled={isPending}
+                            style={{
+                              padding: '6px 12px', background: 'transparent',
+                              border: '1px solid #fca5a5', borderRadius: '6px',
+                              fontSize: '12px', color: '#ef4444', cursor: 'pointer',
+                            }}
+                          >
+                            {t('table.remove')}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {/* Empty pending state */}
+      {filterStatus === 'pending' && filteredPending.length === 0 && (
+        <div style={{
+          padding: '48px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
+        }}>
+          {t('pending.empty')}
+        </div>
+      )}
 
       {/* Role legend */}
       <div style={{ marginTop: '20px', padding: '16px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>

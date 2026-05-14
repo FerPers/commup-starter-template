@@ -2,9 +2,15 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { logActivity } from '@/lib/log-activity'
 import { DEFAULT_PSSR_ITEMS } from '@/lib/constants/pssr'
+import {
+  notifyPssrSubmittedForApproval,
+  notifyPssrApproved,
+  notifyPssrRejected,
+} from '@/lib/notifications/pssr'
 
 // ── Template CRUD ─────────────────────────────────────────────
 
@@ -199,6 +205,8 @@ export async function updatePssrReviewDueDate(reviewId: string, projectId: strin
 
 export async function submitPssrForApproval(reviewId: string, projectId: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autenticado')
 
   // Verify all items are si or na
   const { data: pendingItems } = await supabase
@@ -210,11 +218,29 @@ export async function submitPssrForApproval(reviewId: string, projectId: string)
   if (pendingItems && pendingItems.length > 0)
     throw new Error(`${pendingItems.length} ítem(s) sin completar o con estado NO`)
 
+  const { data: review, error: fetchErr } = await supabase
+    .from('pssr_reviews')
+    .select('id, org_id, review_number, systems(code, name)')
+    .eq('id', reviewId)
+    .single()
+  if (fetchErr || !review) throw new Error(fetchErr?.message ?? 'PSSR no encontrado')
+
   const { error } = await supabase
     .from('pssr_reviews')
     .update({ status: 'pending_approval', updated_at: new Date().toISOString() })
     .eq('id', reviewId)
   if (error) throw new Error(error.message)
+
+  const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
+  await notifyPssrSubmittedForApproval(createAdminClient(), {
+    orgId: review.org_id as string,
+    submitterUserId: user.id,
+    reviewId,
+    reviewNumber: review.review_number as string,
+    projectId,
+    systemCode: sys?.code ?? null,
+    systemName: sys?.name ?? null,
+  })
 
   revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
 }
@@ -328,15 +354,40 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
     payload: { projectId, certNumber: cert.certificate_number, certId: cert.id },
   })
 
+  await notifyPssrApproved(createAdminClient(), {
+    orgId: ctx.orgId,
+    approverUserId: user.id,
+    createdBy: (review.created_by as string | null) ?? null,
+    rfsuCertNumber: cert.certificate_number as string,
+    rfsuCertId: cert.id as string,
+    reviewId,
+    reviewNumber: review.review_number as string,
+    projectId,
+    systemCode: system?.code ?? null,
+    systemName: system?.name ?? null,
+  })
+
   revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
   revalidatePath(`/projects/${projectId}/pssr`)
   revalidatePath(`/certificates`)
   return cert
 }
 
-export async function rejectPssrReview(reviewId: string, projectId: string) {
+export async function rejectPssrReview(reviewId: string, projectId: string, reason?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autenticado')
+
+  const ctx = await getActiveMembership()
+  if (!ctx || !['owner','admin','architect','leader'].includes(ctx.role))
+    throw new Error('Solo líderes o superiores pueden rechazar el PSSR')
+
+  const { data: review, error: fetchErr } = await supabase
+    .from('pssr_reviews')
+    .select('id, org_id, review_number, created_by, systems(code, name)')
+    .eq('id', reviewId)
+    .single()
+  if (fetchErr || !review) throw new Error(fetchErr?.message ?? 'PSSR no encontrado')
 
   const { error } = await supabase
     .from('pssr_reviews')
@@ -344,19 +395,27 @@ export async function rejectPssrReview(reviewId: string, projectId: string) {
     .eq('id', reviewId)
   if (error) throw new Error(error.message)
 
-  if (user) {
-    const ctx = await getActiveMembership()
-    if (ctx) {
-      await logActivity(supabase, {
-        orgId: ctx.orgId,
-        userId: user.id,
-        entityType: 'pssr',
-        entityId: reviewId,
-        action: 'rejected',
-        payload: { projectId },
-      })
-    }
-  }
+  await logActivity(supabase, {
+    orgId: ctx.orgId,
+    userId: user.id,
+    entityType: 'pssr',
+    entityId: reviewId,
+    action: 'rejected',
+    payload: { projectId, reason: reason ?? null },
+  })
+
+  const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
+  await notifyPssrRejected(createAdminClient(), {
+    orgId: review.org_id as string,
+    rejecterUserId: user.id,
+    createdBy: (review.created_by as string | null) ?? null,
+    reason: reason?.trim() || null,
+    reviewId,
+    reviewNumber: review.review_number as string,
+    projectId,
+    systemCode: sys?.code ?? null,
+    systemName: sys?.name ?? null,
+  })
 
   revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
 }

@@ -1,7 +1,11 @@
 import { ShieldCheck } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
+import type { ComponentProps } from 'react'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import PssrListView from './PssrListView'
+
+type ListProps = ComponentProps<typeof PssrListView>
 
 export default async function PssrListPage({
   params,
@@ -13,6 +17,7 @@ export default async function PssrListPage({
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
+  const t = await getTranslations('PSSR')
 
   const canEdit = ['owner','admin','architect','leader'].includes(membership.role)
 
@@ -55,10 +60,10 @@ export default async function PssrListPage({
           </div>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>
-              Pre-Startup Safety Review
+              {t('pageTitle')}
             </h1>
             <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-              Revisión de seguridad previa al arranque — {project.name}
+              {t('pageSubtitle', { projectName: project.name })}
             </p>
           </div>
         </div>
@@ -66,9 +71,9 @@ export default async function PssrListPage({
 
       <PssrListView
         projectId={projectId}
-        systems={(systems ?? []) as any[]}
-        reviews={(reviews ?? []) as any[]}
-        templates={(templates ?? []) as any[]}
+        systems={(systems ?? []) as ListProps['systems']}
+        reviews={(reviews ?? []) as unknown as ListProps['reviews']}
+        templates={(templates ?? []) as ListProps['templates']}
         canEdit={canEdit}
       />
     </div>

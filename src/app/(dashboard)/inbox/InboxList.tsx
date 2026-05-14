@@ -19,6 +19,9 @@ const KIND_LABELS: Record<string, string> = {
   cert_signature_requested: 'Firma de certificado solicitada',
   preservation_overdue: 'Preservación vencida',
   pssr_review_overdue: 'PSSR vencido',
+  pssr_submitted_for_approval: 'PSSR enviado para aprobación',
+  pssr_approved: 'PSSR aprobado',
+  pssr_rejected: 'PSSR rechazado',
 }
 
 const KIND_FILTER_OPTIONS = Object.entries(KIND_LABELS)

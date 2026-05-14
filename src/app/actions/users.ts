@@ -23,6 +23,9 @@ export async function inviteUser(input: {
   if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos para invitar usuarios' }
 
   const { email, role } = input
+  if (role === 'owner' && ctx.role !== 'owner') {
+    return { error: 'Solo un owner puede invitar a otro owner' }
+  }
   const admin = createAdminClient()
 
   // Check if user already exists in auth
@@ -130,7 +133,6 @@ export async function updateMemberRole(input: {
   if (!ctx) return { error: 'No autenticado' }
   if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos para cambiar roles' }
 
-  // Prevent self-demotion of owner
   const { data: member } = await ctx.supabase
     .from('org_members')
     .select('user_id, role')
@@ -139,8 +141,29 @@ export async function updateMemberRole(input: {
     .single()
 
   if (!member) return { error: 'Miembro no encontrado' }
-  if (member.user_id === ctx.userId && member.role === 'owner') {
+
+  // Only owners can mutate owner rows (admins cannot demote/promote owners).
+  if (member.role === 'owner' && ctx.role !== 'owner') {
+    return { error: 'Solo un owner puede cambiar el rol de otro owner' }
+  }
+  if (input.role === 'owner' && ctx.role !== 'owner') {
+    return { error: 'Solo un owner puede asignar el rol de owner' }
+  }
+
+  if (member.user_id === ctx.userId && member.role === 'owner' && input.role !== 'owner') {
     return { error: 'No puedes cambiar tu propio rol de owner' }
+  }
+
+  // Last-owner protection: never let the org end up with zero owners.
+  if (member.role === 'owner' && input.role !== 'owner') {
+    const { count } = await ctx.supabase
+      .from('org_members')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.orgId)
+      .eq('role', 'owner')
+    if ((count ?? 0) <= 1) {
+      return { error: 'No puedes degradar al último owner de la organización' }
+    }
   }
 
   const { error } = await ctx.supabase
@@ -179,7 +202,18 @@ export async function removeMember(input: {
 
   if (!member) return { error: 'Miembro no encontrado' }
   if (member.user_id === ctx.userId) return { error: 'No puedes removerte a ti mismo' }
-  if (member.role === 'owner') return { error: 'No se puede remover al owner' }
+
+  if (member.role === 'owner') {
+    if (ctx.role !== 'owner') return { error: 'Solo un owner puede remover a otro owner' }
+    const { count } = await ctx.supabase
+      .from('org_members')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.orgId)
+      .eq('role', 'owner')
+    if ((count ?? 0) <= 1) {
+      return { error: 'No puedes remover al último owner de la organización' }
+    }
+  }
 
   const { error } = await ctx.supabase
     .from('org_members')

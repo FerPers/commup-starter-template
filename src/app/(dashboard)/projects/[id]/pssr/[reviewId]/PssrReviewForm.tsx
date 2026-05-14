@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import {
   updatePssrReviewItem,
   updatePssrReviewNotes,
@@ -64,12 +65,20 @@ interface Props {
 
 // ── Config ─────────────────────────────────────────────────────────
 
-const STATUS_CFG: Record<ReviewStatus, { label: string; color: string; bg: string }> = {
-  draft:            { label: 'Borrador',         color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_progress:      { label: 'En progreso',       color: '#3b82f6', bg: '#eff6ff' },
-  pending_approval: { label: 'Pend. aprobación',  color: '#f59e0b', bg: '#fffbeb' },
-  approved:         { label: 'Aprobado ✓',        color: '#10b981', bg: '#ecfdf5' },
-  rejected:         { label: 'Rechazado',          color: '#ef4444', bg: '#fee2e2' },
+type StatusKey = 'draft' | 'inProgress' | 'pendingApproval' | 'approvedDone' | 'rejected'
+const STATUS_KEY_MAP: Record<ReviewStatus, StatusKey> = {
+  draft: 'draft',
+  in_progress: 'inProgress',
+  pending_approval: 'pendingApproval',
+  approved: 'approvedDone',
+  rejected: 'rejected',
+}
+const STATUS_STYLES: Record<StatusKey, { color: string; bg: string }> = {
+  draft:           { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
+  inProgress:      { color: '#3b82f6',           bg: '#eff6ff' },
+  pendingApproval: { color: '#f59e0b',           bg: '#fffbeb' },
+  approvedDone:    { color: '#10b981',           bg: '#ecfdf5' },
+  rejected:        { color: '#ef4444',           bg: '#fee2e2' },
 }
 
 const CAT_COLORS: Record<string, string> = {
@@ -94,6 +103,7 @@ export default function PssrReviewForm({
   project, currentUserId, currentUserName, canApprove,
   totalItems,
 }: Props) {
+  const t = useTranslations('PSSR')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [items, setItems] = useState(initialItems)
@@ -128,7 +138,7 @@ export default function PssrReviewForm({
   function toggleCat(cat: string) {
     setExpandedCats(prev => {
       const next = new Set(prev)
-      next.has(cat) ? next.delete(cat) : next.add(cat)
+      if (next.has(cat)) next.delete(cat); else next.add(cat)
       return next
     })
   }
@@ -136,7 +146,7 @@ export default function PssrReviewForm({
   function toggleItem(itemId: string) {
     setExpandedItems(prev => {
       const next = new Set(prev)
-      next.has(itemId) ? next.delete(itemId) : next.add(itemId)
+      if (next.has(itemId)) next.delete(itemId); else next.add(itemId)
       return next
     })
   }
@@ -179,7 +189,7 @@ export default function PssrReviewForm({
         setSavedDueDate(value ?? '')
         setEditingDueDate(false)
       } catch (e: unknown) {
-        setActionError(e instanceof Error ? e.message : 'Error al guardar fecha')
+        setActionError(e instanceof Error ? e.message : t('review.errorDate'))
       }
     })
   }
@@ -191,7 +201,7 @@ export default function PssrReviewForm({
         await submitPssrForApproval(review.id, projectId)
         router.refresh()
       } catch (e: unknown) {
-        setActionError(e instanceof Error ? e.message : 'Error')
+        setActionError(e instanceof Error ? e.message : t('review.errorGeneric'))
       }
     })
   }
@@ -199,28 +209,29 @@ export default function PssrReviewForm({
   async function handleApprove() {
     setActionError(null)
     if (sigs.length === 0) {
-      setActionError('Se requiere al menos una firma antes de aprobar')
+      setActionError(t('review.errorNeedsSignature'))
       return
     }
     startTransition(async () => {
       try {
         const cert = await approvePssrAndIssueRfsu(review.id, projectId)
-        setActionSuccess(`PSSR aprobado. Certificado RFSU ${cert.certificate_number} emitido.`)
+        setActionSuccess(t('review.approveSuccess', { certNumber: cert.certificate_number }))
         router.refresh()
       } catch (e: unknown) {
-        setActionError(e instanceof Error ? e.message : 'Error')
+        setActionError(e instanceof Error ? e.message : t('review.errorGeneric'))
       }
     })
   }
 
   async function handleReject() {
-    if (!confirm('¿Rechazar este PSSR? El equipo deberá corregir los ítems y re-enviarlo.')) return
+    if (!confirm(t('review.rejectConfirm'))) return
+    const reason = window.prompt(t('review.rejectReasonPrompt')) ?? undefined
     startTransition(async () => {
       try {
-        await rejectPssrReview(review.id, projectId)
+        await rejectPssrReview(review.id, projectId, reason)
         router.refresh()
       } catch (e: unknown) {
-        setActionError(e instanceof Error ? e.message : 'Error')
+        setActionError(e instanceof Error ? e.message : t('review.errorGeneric'))
       }
     })
   }
@@ -232,7 +243,8 @@ export default function PssrReviewForm({
     })
   }
 
-  const statusCfg = STATUS_CFG[review.status]
+  const statusKey = STATUS_KEY_MAP[review.status]
+  const statusSty = STATUS_STYLES[statusKey]
   const system = review.systems
 
   return (
@@ -240,7 +252,7 @@ export default function PssrReviewForm({
       {/* Back + Header ───────────────────────────────────────── */}
       <div style={{ marginBottom: '24px' }}>
         <a href={`/projects/${projectId}/pssr`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
-          ← PSSR · {project.name}
+          {t('backToList', { projectName: project.name })}
         </a>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginTop: '10px', flexWrap: 'wrap' }}>
           <div>
@@ -250,9 +262,9 @@ export default function PssrReviewForm({
               </h1>
               <span style={{
                 padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                background: statusCfg.bg, color: statusCfg.color,
+                background: statusSty.bg, color: statusSty.color,
               }}>
-                {statusCfg.label}
+                {t(`status.${statusKey}`)}
               </span>
               {system && (
                 <span style={{
@@ -275,7 +287,7 @@ export default function PssrReviewForm({
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
                     <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Fecha objetivo
+                      {t('review.dueDateLabel')}
                     </label>
                     <input
                       type="date"
@@ -288,14 +300,14 @@ export default function PssrReviewForm({
                       disabled={isPending}
                       style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: '#10b981', color: '#fff', border: 'none', cursor: 'pointer' }}
                     >
-                      Guardar
+                      {t('review.saveDate')}
                     </button>
                     <button
                       onClick={() => { setDueDate(savedDueDate); setEditingDueDate(false) }}
                       disabled={isPending}
                       style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', border: 'none', cursor: 'pointer' }}
                     >
-                      Cancelar
+                      {t('review.cancelDate')}
                     </button>
                   </div>
                 )
@@ -304,7 +316,7 @@ export default function PssrReviewForm({
               return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    Fecha objetivo
+                    {t('review.dueDateLabel')}
                   </span>
                   {savedDueDate ? (
                     <span style={{
@@ -313,7 +325,7 @@ export default function PssrReviewForm({
                       color: isOverdue ? '#dc2626' : 'var(--text-muted)',
                       border: `1px solid ${isOverdue ? '#fecaca' : 'var(--border)'}`,
                     }}>
-                      {savedDueDate}{isOverdue ? ' · Vencido' : ''}
+                      {savedDueDate}{isOverdue ? t('review.overdueSuffix') : ''}
                     </span>
                   ) : (
                     <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</span>
@@ -323,7 +335,7 @@ export default function PssrReviewForm({
                       onClick={() => { setDueDate(savedDueDate); setEditingDueDate(true) }}
                       style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'transparent', color: 'var(--primary-500)', border: '1px solid var(--border)', cursor: 'pointer' }}
                     >
-                      {savedDueDate ? 'Editar' : 'Establecer'}
+                      {savedDueDate ? t('review.editDate') : t('review.setDate')}
                     </button>
                   )}
                 </div>
@@ -342,7 +354,7 @@ export default function PssrReviewForm({
                   textDecoration: 'none',
                 }}
               >
-                Ver certificado RFSU →
+                {t('review.viewRfsu')}
               </a>
             )}
             {(review.status === 'draft' || review.status === 'in_progress' || review.status === 'rejected') && !readonly && localAllResolved && (
@@ -355,7 +367,7 @@ export default function PssrReviewForm({
                   cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                 }}
               >
-                Enviar para aprobación
+                {t('review.submitForApproval')}
               </button>
             )}
             {review.status === 'pending_approval' && canApprove && (
@@ -369,19 +381,19 @@ export default function PssrReviewForm({
                     cursor: isPending ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  Rechazar
+                  {t('review.reject')}
                 </button>
                 <button
                   onClick={handleApprove}
                   disabled={isPending || sigs.length === 0}
-                  title={sigs.length === 0 ? 'Se requiere al menos una firma' : undefined}
+                  title={sigs.length === 0 ? t('review.needsSignatureTooltip') : undefined}
                   style={{
                     padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
                     background: sigs.length === 0 ? '#d1fae5' : '#10b981', color: '#fff', border: 'none',
                     cursor: isPending || sigs.length === 0 ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                   }}
                 >
-                  ✓ Aprobar + Emitir RFSU
+                  {t('review.approve')}
                 </button>
               </>
             )}
@@ -397,9 +409,9 @@ export default function PssrReviewForm({
       }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>PROGRESO</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{t('review.progressLabel')}</span>
             <span style={{ fontSize: '12px', fontWeight: 700, color: localPct === 100 ? 'var(--success-500)' : 'var(--text-strong)' }}>
-              {localResolved}/{totalItems} ítems
+              {t('review.progressCount', { resolved: localResolved, total: totalItems })}
             </span>
           </div>
           <div style={{ height: '8px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -521,7 +533,7 @@ export default function PssrReviewForm({
                               fontSize: '11px', color: '#3b82f6', fontWeight: 600,
                             }}
                           >
-                            {isItemExpanded ? '▾ Ocultar detalles' : '▸ Responsable / Acciones'}
+                            {isItemExpanded ? t('review.itemHideDetails') : t('review.itemShowDetails')}
                           </button>
                         )}
 
@@ -531,7 +543,7 @@ export default function PssrReviewForm({
                             <input
                               defaultValue={item.responsible ?? ''}
                               onBlur={e => handleFieldSave(item, 'responsible', e.target.value)}
-                              placeholder="Responsable asignado"
+                              placeholder={t('review.responsiblePlaceholder')}
                               style={{
                                 width: '100%', padding: '7px 10px', borderRadius: '6px',
                                 border: '1px solid var(--border)', fontSize: '12px', outline: 'none',
@@ -541,7 +553,7 @@ export default function PssrReviewForm({
                             <textarea
                               defaultValue={item.actions ?? ''}
                               onBlur={e => handleFieldSave(item, 'actions', e.target.value)}
-                              placeholder="Acciones requeridas / comentarios"
+                              placeholder={t('review.actionsPlaceholder')}
                               rows={2}
                               style={{
                                 width: '100%', padding: '7px 10px', borderRadius: '6px',
@@ -589,7 +601,7 @@ export default function PssrReviewForm({
                                 textTransform: 'uppercase',
                               }}
                             >
-                              {s === 'si' ? 'Sí' : s === 'no' ? 'No' : 'N/A'}
+                              {s === 'si' ? t('review.yes') : s === 'no' ? t('review.no') : t('review.na')}
                             </button>
                           ))}
                         </div>
@@ -601,7 +613,7 @@ export default function PssrReviewForm({
                           background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
                           flexShrink: 0, textTransform: 'uppercase',
                         }}>
-                          {item.status === 'si' ? 'Sí' : item.status === 'no' ? 'No' : item.status === 'na' ? 'N/A' : '—'}
+                          {item.status === 'si' ? t('review.yes') : item.status === 'no' ? t('review.no') : item.status === 'na' ? t('review.na') : '—'}
                         </span>
                       )}
                     </div>
@@ -620,14 +632,14 @@ export default function PssrReviewForm({
           padding: '20px 24px', marginBottom: '20px',
         }}>
           <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>
-            Observaciones generales
+            {t('review.notesLabel')}
           </label>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
             onBlur={handleSaveNotes}
             rows={3}
-            placeholder="Notas, condiciones especiales, observaciones del equipo..."
+            placeholder={t('review.notesPlaceholder')}
             style={{
               width: '100%', padding: '10px 12px', borderRadius: '8px',
               border: '1.5px solid var(--border)', fontSize: '13px', outline: 'none',
@@ -645,10 +657,10 @@ export default function PssrReviewForm({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>
             <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-              Firmas de aprobación
+              {t('review.signaturesTitle')}
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-              Los líderes responsables firman para certificar el cumplimiento
+              {t('review.signaturesSubtitle')}
             </p>
           </div>
           {!readonly && review.status !== 'draft' && (
@@ -659,7 +671,7 @@ export default function PssrReviewForm({
                 background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer',
               }}
             >
-              ✍ Firmar
+              {t('review.signBtn')}
             </button>
           )}
         </div>
@@ -671,8 +683,8 @@ export default function PssrReviewForm({
           }}>
             <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>
               {review.status === 'draft'
-                ? 'Completa todos los ítems antes de agregar firmas'
-                : 'Sin firmas aún — los responsables deben firmar antes de aprobar'}
+                ? t('review.signEmptyDraft')
+                : t('review.signEmpty')}
             </p>
           </div>
         ) : (
@@ -682,6 +694,7 @@ export default function PssrReviewForm({
                 border: '1px solid var(--border)', borderRadius: '10px', padding: '12px',
                 background: 'var(--gray-50)',
               }}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- signature_data is a base64 data: URL, next/image doesn't handle data URLs without a custom loader */}
                 <img
                   src={sig.signature_data}
                   alt="Firma"
@@ -689,13 +702,13 @@ export default function PssrReviewForm({
                 />
                 <div style={{ marginTop: '8px' }}>
                   <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>
-                    {sig.profiles?.full_name ?? 'Usuario'}
+                    {sig.profiles?.full_name ?? t('review.signUserFallback')}
                   </div>
                   {sig.discipline && (
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sig.discipline}</div>
                   )}
                   <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginTop: '2px' }}>
-                    {new Date(sig.signed_at).toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(sig.signed_at).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
                 {!readonly && sig.user_id === currentUserId && (
@@ -706,7 +719,7 @@ export default function PssrReviewForm({
                       background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer',
                     }}
                   >
-                    Eliminar
+                    {t('review.removeSig')}
                   </button>
                 )}
               </div>
@@ -737,9 +750,10 @@ function SignModal({
   reviewId: string
   projectId: string
   currentUserName: string
-  onSigned: (sig: any) => void
+  onSigned: (sig: Signature) => void
   onClose: () => void
 }) {
+  const t = useTranslations('PSSR')
   const [isPending, startTransition] = useTransition()
   const [discipline, setDiscipline] = useState('')
   const [isDrawing, setIsDrawing] = useState(false)
@@ -810,17 +824,17 @@ function SignModal({
         width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
       }} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 16px' }}>
-          Firma de aprobación
+          {t('signModal.title')}
         </h3>
 
         <div style={{ marginBottom: '14px' }}>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-            Disciplina / Rol
+            {t('signModal.disciplineLabel')}
           </label>
           <input
             value={discipline}
             onChange={e => setDiscipline(e.target.value)}
-            placeholder="Process Engineer, HSE Lead, Operations Manager..."
+            placeholder={t('signModal.disciplinePlaceholder')}
             list="pssr-disciplines"
             style={{
               width: '100%', padding: '9px 12px', borderRadius: '8px',
@@ -836,9 +850,9 @@ function SignModal({
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>Firma</label>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</label>
           <button onClick={clearCanvas} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--gray-400)', cursor: 'pointer' }}>
-            Limpiar
+            {t('signModal.clear')}
           </button>
         </div>
         <div style={{ border: '1.5px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: 'var(--gray-50)', marginBottom: '20px' }}>
@@ -859,7 +873,7 @@ function SignModal({
             padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
             background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
           }}>
-            Cancelar
+            {t('signModal.cancel')}
           </button>
           <button
             onClick={handleSign}
@@ -870,7 +884,7 @@ function SignModal({
               cursor: isPending || !hasDrawn ? 'not-allowed' : 'pointer',
             }}
           >
-            {isPending ? 'Guardando...' : 'Confirmar firma'}
+            {isPending ? t('signModal.saving') : t('signModal.confirm')}
           </button>
         </div>
       </div>

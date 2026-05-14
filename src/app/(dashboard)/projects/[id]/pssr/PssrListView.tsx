@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { ShieldCheck, AlertTriangle } from 'lucide-react'
 import { createPssrReview } from '@/app/actions/pssr'
 
@@ -19,12 +21,20 @@ interface Review {
 }
 interface Template { id: string; name: string }
 
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  draft:             { label: 'Borrador',          color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_progress:       { label: 'En progreso',        color: '#3b82f6', bg: '#eff6ff' },
-  pending_approval:  { label: 'Pend. aprobación',   color: '#f59e0b', bg: '#fffbeb' },
-  approved:          { label: 'Aprobado',            color: '#10b981', bg: '#ecfdf5' },
-  rejected:          { label: 'Rechazado',           color: '#ef4444', bg: '#fee2e2' },
+type StatusKey = 'draft' | 'inProgress' | 'pendingApproval' | 'approved' | 'rejected'
+const STATUS_KEY_MAP: Record<string, StatusKey> = {
+  draft: 'draft',
+  in_progress: 'inProgress',
+  pending_approval: 'pendingApproval',
+  approved: 'approved',
+  rejected: 'rejected',
+}
+const STATUS_STYLES: Record<StatusKey, { color: string; bg: string }> = {
+  draft:            { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
+  inProgress:       { color: '#3b82f6',           bg: '#eff6ff' },
+  pendingApproval:  { color: '#f59e0b',           bg: '#fffbeb' },
+  approved:         { color: '#10b981',           bg: '#ecfdf5' },
+  rejected:         { color: '#ef4444',           bg: '#fee2e2' },
 }
 
 export default function PssrListView({
@@ -36,6 +46,7 @@ export default function PssrListView({
   templates: Template[]
   canEdit: boolean
 }) {
+  const t = useTranslations('PSSR')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showModal, setShowModal] = useState(false)
@@ -50,8 +61,8 @@ export default function PssrListView({
   }
 
   async function handleCreate() {
-    if (!form.systemId) { setFormError('Selecciona un sistema'); return }
-    if (!form.templateId) { setFormError('Selecciona un template'); return }
+    if (!form.systemId) { setFormError(t('createModal.errorSelectSystem')); return }
+    if (!form.templateId) { setFormError(t('createModal.errorSelectTemplate')); return }
     setFormError(null)
     startTransition(async () => {
       try {
@@ -65,7 +76,7 @@ export default function PssrListView({
         setShowModal(false)
         router.push(`/projects/${projectId}/pssr/${review.id}`)
       } catch (e: unknown) {
-        setFormError(e instanceof Error ? e.message : 'Error al crear')
+        setFormError(e instanceof Error ? e.message : t('createModal.errorGeneric'))
       }
     })
   }
@@ -95,19 +106,19 @@ export default function PssrListView({
             }}
           >
             <ShieldCheck size={14} aria-hidden="true" />
-            Iniciar PSSR
+            {t('list.startReview')}
           </button>
         )}
         {canEdit && templates.length === 0 && (
-          <a href="/admin/templates/pssr" style={{
+          <Link href="/admin/templates/pssr" style={{
             padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
             background: 'var(--warning-50)', color: 'var(--warning-700)', textDecoration: 'none',
             border: '1px solid var(--warning-500)',
             display: 'inline-flex', alignItems: 'center', gap: '6px',
           }}>
             <AlertTriangle size={14} aria-hidden="true" />
-            Configura un template PSSR primero
-          </a>
+            {t('list.configureTemplateFirst')}
+          </Link>
         )}
       </div>
 
@@ -121,10 +132,10 @@ export default function PssrListView({
             <ShieldCheck size={40} color="var(--warning-500)" aria-hidden="true" />
           </div>
           <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
-            Sin revisiones PSSR
+            {t('list.emptyTitle')}
           </p>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-            Inicia una revisión cuando el sistema tenga el certificado RFC emitido y esté listo para arrancar.
+            {t('list.emptyHint')}
           </p>
         </div>
       )}
@@ -143,14 +154,15 @@ export default function PssrListView({
                 {system?.code ?? '—'}
               </span>
               <span style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-strong)' }}>
-                {system?.name ?? 'Sistema'}
+                {system?.name ?? t('list.systemFallback')}
               </span>
             </div>
 
             {/* Reviews list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {sysReviews.map(review => {
-                const cfg = STATUS_CFG[review.status] ?? STATUS_CFG.draft
+                const statusKey = STATUS_KEY_MAP[review.status] ?? 'draft'
+                const sty = STATUS_STYLES[statusKey]
                 return (
                   <div
                     key={review.id}
@@ -169,22 +181,22 @@ export default function PssrListView({
                         </span>
                         <span style={{
                           padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
-                          background: cfg.bg, color: cfg.color,
+                          background: sty.bg, color: sty.color,
                         }}>
-                          {cfg.label}
+                          {t(`status.${statusKey}`)}
                         </span>
                         {review.rfsu_certificate_id && (
                           <span style={{
                             padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
                             background: '#ecfdf5', color: '#10b981',
                           }}>
-                            ✓ RFSU emitido
+                            {t('list.rfsuIssued')}
                           </span>
                         )}
                       </div>
                       <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                        {new Date(review.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        {review.approved_at && ` · Aprobado ${new Date(review.approved_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })}`}
+                        {new Date(review.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {review.approved_at && ` · ${t('list.approvedOn', { date: new Date(review.approved_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) })}`}
                       </div>
                     </div>
                     <span style={{ color: '#cbd5e1', fontSize: '18px' }}>›</span>
@@ -200,7 +212,7 @@ export default function PssrListView({
       {canEdit && templates.length > 0 && systems.filter(s => !reviewsBySystem.has(s.id)).length > 0 && (
         <div style={{ ...cardStyle, border: '1.5px dashed #e2e8f0' }}>
           <p style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Sistemas sin PSSR
+            {t('list.systemsWithoutPssr')}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {systems.filter(s => !reviewsBySystem.has(s.id)).map(s => (
@@ -234,19 +246,19 @@ export default function PssrListView({
             width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
             <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
-              Iniciar PSSR
+              {t('createModal.title')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                  Sistema *
+                  {t('createModal.systemLabel')}
                 </label>
                 <select
                   value={form.systemId}
                   onChange={e => setForm(f => ({ ...f, systemId: e.target.value }))}
                   style={inputStyle}
                 >
-                  <option value="">— Seleccionar sistema —</option>
+                  <option value="">{t('createModal.systemPlaceholder')}</option>
                   {systems.map(s => (
                     <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
                   ))}
@@ -255,33 +267,33 @@ export default function PssrListView({
               {templates.length > 1 && (
                 <div>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                    Template
+                    {t('createModal.templateLabel')}
                   </label>
                   <select
                     value={form.templateId}
                     onChange={e => setForm(f => ({ ...f, templateId: e.target.value }))}
                     style={inputStyle}
                   >
-                    {templates.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                    {templates.map(tpl => (
+                      <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
                     ))}
                   </select>
                 </div>
               )}
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                  Título (opcional)
+                  {t('createModal.titleLabel')}
                 </label>
                 <input
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="Pre-Startup Safety Review"
+                  placeholder={t('createModal.titlePlaceholder')}
                   style={inputStyle}
                 />
               </div>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                  Fecha objetivo (opcional)
+                  {t('createModal.dueDateLabel')}
                 </label>
                 <input
                   type="date"
@@ -290,7 +302,7 @@ export default function PssrListView({
                   style={inputStyle}
                 />
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-                  Si se establece y el PSSR no se completa, se notificará al equipo cuando esté vencido.
+                  {t('createModal.dueDateHint')}
                 </p>
               </div>
               {formError && <p style={{ color: '#dc2626', fontSize: '13px', margin: 0 }}>{formError}</p>}
@@ -299,14 +311,14 @@ export default function PssrListView({
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
                   background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
                 }}>
-                  Cancelar
+                  {t('createModal.cancel')}
                 </button>
                 <button onClick={handleCreate} disabled={isPending} style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
                   background: '#f59e0b', color: 'white', border: 'none',
                   cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                 }}>
-                  {isPending ? 'Iniciando...' : 'Iniciar revisión'}
+                  {isPending ? t('createModal.submitting') : t('createModal.submit')}
                 </button>
               </div>
             </div>

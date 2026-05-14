@@ -732,15 +732,38 @@
     },
     "tempPassword": {
       "title": "User created — share these credentials manually",
-      "hint": "The user can change their password from their profile after signing in."
+      "hint": "The user can change their password from their profile after signing in.",
+      "emailLabel": "Email:",
+      "passwordLabel": "Temporary password:",
+      "close": "Close"
     },
     "table": {
       "colUser": "User",
       "colEmail": "Email",
       "colRole": "Role",
       "colSince": "Member since",
+      "colLastActive": "Last active",
       "self": "(you)",
-      "remove": "Remove"
+      "remove": "Remove",
+      "lastActiveNever": "—",
+      "lastActiveToday": "Today",
+      "lastActiveYesterday": "Yesterday",
+      "lastActiveDaysAgo": "{days}d ago",
+      "empty": "No members",
+      "emptyFiltered": "No members match the filters"
+    },
+    "filters": {
+      "role": "Role",
+      "status": "Status",
+      "all": "All",
+      "active": "Active",
+      "pending": "Pending"
+    },
+    "pending": {
+      "title": "Pending confirmation ({count})",
+      "desc": "These users were invited but don't appear as active members. Possible orphans — invite them again if needed.",
+      "invitedOn": "invited on {date}",
+      "empty": "No pending invitations"
     },
     "roles": {
       "owner": "Owner",
@@ -1564,6 +1587,93 @@
     "errors": {
       "selectProject": "Pick a project first.",
       "selectFormat": "Select at least one format (JSON or PDF)."
+    }
+  },
+  "PSSR": {
+    "pageTitle": "Pre-Startup Safety Review",
+    "pageSubtitle": "Safety review before start-up — {projectName}",
+    "backToProject": "← {projectName}",
+    "backToList": "← PSSR · {projectName}",
+    "status": {
+      "draft": "Draft",
+      "inProgress": "In progress",
+      "pendingApproval": "Pending approval",
+      "approved": "Approved",
+      "approvedDone": "Approved ✓",
+      "rejected": "Rejected"
+    },
+    "list": {
+      "startReview": "Start PSSR",
+      "configureTemplateFirst": "Configure a PSSR template first",
+      "emptyTitle": "No PSSR reviews yet",
+      "emptyHint": "Start a review once the system has the RFC certificate issued and is ready for start-up.",
+      "systemFallback": "System",
+      "rfsuIssued": "✓ RFSU issued",
+      "approvedOn": "Approved {date}",
+      "systemsWithoutPssr": "Systems without PSSR"
+    },
+    "createModal": {
+      "title": "Start PSSR",
+      "systemLabel": "System *",
+      "systemPlaceholder": "— Select system —",
+      "templateLabel": "Template",
+      "titleLabel": "Title (optional)",
+      "titlePlaceholder": "Pre-Startup Safety Review",
+      "dueDateLabel": "Target date (optional)",
+      "dueDateHint": "If set and the PSSR is not completed, the team will be notified when overdue.",
+      "cancel": "Cancel",
+      "submit": "Start review",
+      "submitting": "Starting...",
+      "errorSelectSystem": "Select a system",
+      "errorSelectTemplate": "Select a template",
+      "errorGeneric": "Failed to create"
+    },
+    "review": {
+      "progressLabel": "PROGRESS",
+      "progressCount": "{resolved}/{total} items",
+      "dueDateLabel": "Target date",
+      "overdueSuffix": " · Overdue",
+      "editDate": "Edit",
+      "setDate": "Set",
+      "saveDate": "Save",
+      "cancelDate": "Cancel",
+      "viewRfsu": "View RFSU certificate →",
+      "submitForApproval": "Submit for approval",
+      "reject": "Reject",
+      "approve": "✓ Approve + Issue RFSU",
+      "needsSignatureTooltip": "At least one signature is required",
+      "errorDate": "Failed to save date",
+      "errorGeneric": "Error",
+      "errorNeedsSignature": "At least one signature is required before approving",
+      "rejectConfirm": "Reject this PSSR? The team will need to address the items and resubmit.",
+      "rejectReasonPrompt": "Rejection reason (optional):",
+      "approveSuccess": "PSSR approved. RFSU certificate {certNumber} issued.",
+      "itemHideDetails": "▾ Hide details",
+      "itemShowDetails": "▸ Owner / Actions",
+      "responsiblePlaceholder": "Assigned owner",
+      "actionsPlaceholder": "Required actions / comments",
+      "yes": "Yes",
+      "no": "No",
+      "na": "N/A",
+      "notesLabel": "General notes",
+      "notesPlaceholder": "Notes, special conditions, team observations...",
+      "signaturesTitle": "Approval signatures",
+      "signaturesSubtitle": "Responsible leads sign to certify compliance",
+      "signBtn": "✍ Sign",
+      "signEmptyDraft": "Complete all items before adding signatures",
+      "signEmpty": "No signatures yet — leads must sign before approval",
+      "signUserFallback": "User",
+      "removeSig": "Remove"
+    },
+    "signModal": {
+      "title": "Approval signature",
+      "disciplineLabel": "Discipline / Role",
+      "disciplinePlaceholder": "Process Engineer, HSE Lead, Operations Manager...",
+      "signatureLabel": "Signature",
+      "clear": "Clear",
+      "cancel": "Cancel",
+      "confirm": "Confirm signature",
+      "saving": "Saving..."
     }
   }
 }

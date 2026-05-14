@@ -732,15 +732,38 @@
     },
     "tempPassword": {
       "title": "Usuario creado — comparte estas credenciales manualmente",
-      "hint": "El usuario puede cambiar su contraseña desde su perfil después de ingresar."
+      "hint": "El usuario puede cambiar su contraseña desde su perfil después de ingresar.",
+      "emailLabel": "Email:",
+      "passwordLabel": "Contraseña temporal:",
+      "close": "Cerrar"
     },
     "table": {
       "colUser": "Usuario",
       "colEmail": "Email",
       "colRole": "Rol",
       "colSince": "Miembro desde",
+      "colLastActive": "Última actividad",
       "self": "(tú)",
-      "remove": "Remover"
+      "remove": "Remover",
+      "lastActiveNever": "—",
+      "lastActiveToday": "Hoy",
+      "lastActiveYesterday": "Ayer",
+      "lastActiveDaysAgo": "Hace {days}d",
+      "empty": "No hay miembros",
+      "emptyFiltered": "No hay miembros que coincidan con los filtros"
+    },
+    "filters": {
+      "role": "Rol",
+      "status": "Estado",
+      "all": "Todos",
+      "active": "Activos",
+      "pending": "Pendientes"
+    },
+    "pending": {
+      "title": "Pendiente de confirmación ({count})",
+      "desc": "Estos usuarios fueron invitados pero no aparecen como miembros activos. Posibles huérfanos: invítalos de nuevo si es necesario.",
+      "invitedOn": "invitado {date}",
+      "empty": "No hay invitaciones pendientes"
     },
     "roles": {
       "owner": "Owner",
@@ -1564,6 +1587,93 @@
     "errors": {
       "selectProject": "Seleccioná un proyecto primero.",
       "selectFormat": "Seleccioná al menos un formato (JSON o PDF)."
+    }
+  },
+  "PSSR": {
+    "pageTitle": "Pre-Startup Safety Review",
+    "pageSubtitle": "Revisión de seguridad previa al arranque — {projectName}",
+    "backToProject": "← {projectName}",
+    "backToList": "← PSSR · {projectName}",
+    "status": {
+      "draft": "Borrador",
+      "inProgress": "En progreso",
+      "pendingApproval": "Pend. aprobación",
+      "approved": "Aprobado",
+      "approvedDone": "Aprobado ✓",
+      "rejected": "Rechazado"
+    },
+    "list": {
+      "startReview": "Iniciar PSSR",
+      "configureTemplateFirst": "Configura un template PSSR primero",
+      "emptyTitle": "Sin revisiones PSSR",
+      "emptyHint": "Inicia una revisión cuando el sistema tenga el certificado RFC emitido y esté listo para arrancar.",
+      "systemFallback": "Sistema",
+      "rfsuIssued": "✓ RFSU emitido",
+      "approvedOn": "Aprobado {date}",
+      "systemsWithoutPssr": "Sistemas sin PSSR"
+    },
+    "createModal": {
+      "title": "Iniciar PSSR",
+      "systemLabel": "Sistema *",
+      "systemPlaceholder": "— Seleccionar sistema —",
+      "templateLabel": "Template",
+      "titleLabel": "Título (opcional)",
+      "titlePlaceholder": "Pre-Startup Safety Review",
+      "dueDateLabel": "Fecha objetivo (opcional)",
+      "dueDateHint": "Si se establece y el PSSR no se completa, se notificará al equipo cuando esté vencido.",
+      "cancel": "Cancelar",
+      "submit": "Iniciar revisión",
+      "submitting": "Iniciando...",
+      "errorSelectSystem": "Selecciona un sistema",
+      "errorSelectTemplate": "Selecciona un template",
+      "errorGeneric": "Error al crear"
+    },
+    "review": {
+      "progressLabel": "PROGRESO",
+      "progressCount": "{resolved}/{total} ítems",
+      "dueDateLabel": "Fecha objetivo",
+      "overdueSuffix": " · Vencido",
+      "editDate": "Editar",
+      "setDate": "Establecer",
+      "saveDate": "Guardar",
+      "cancelDate": "Cancelar",
+      "viewRfsu": "Ver certificado RFSU →",
+      "submitForApproval": "Enviar para aprobación",
+      "reject": "Rechazar",
+      "approve": "✓ Aprobar + Emitir RFSU",
+      "needsSignatureTooltip": "Se requiere al menos una firma",
+      "errorDate": "Error al guardar fecha",
+      "errorGeneric": "Error",
+      "errorNeedsSignature": "Se requiere al menos una firma antes de aprobar",
+      "rejectConfirm": "¿Rechazar este PSSR? El equipo deberá corregir los ítems y re-enviarlo.",
+      "rejectReasonPrompt": "Motivo del rechazo (opcional):",
+      "approveSuccess": "PSSR aprobado. Certificado RFSU {certNumber} emitido.",
+      "itemHideDetails": "▾ Ocultar detalles",
+      "itemShowDetails": "▸ Responsable / Acciones",
+      "responsiblePlaceholder": "Responsable asignado",
+      "actionsPlaceholder": "Acciones requeridas / comentarios",
+      "yes": "Sí",
+      "no": "No",
+      "na": "N/A",
+      "notesLabel": "Observaciones generales",
+      "notesPlaceholder": "Notas, condiciones especiales, observaciones del equipo...",
+      "signaturesTitle": "Firmas de aprobación",
+      "signaturesSubtitle": "Los líderes responsables firman para certificar el cumplimiento",
+      "signBtn": "✍ Firmar",
+      "signEmptyDraft": "Completa todos los ítems antes de agregar firmas",
+      "signEmpty": "Sin firmas aún — los responsables deben firmar antes de aprobar",
+      "signUserFallback": "Usuario",
+      "removeSig": "Eliminar"
+    },
+    "signModal": {
+      "title": "Firma de aprobación",
+      "disciplineLabel": "Disciplina / Rol",
+      "disciplinePlaceholder": "Process Engineer, HSE Lead, Operations Manager...",
+      "signatureLabel": "Firma",
+      "clear": "Limpiar",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar firma",
+      "saving": "Guardando..."
     }
   }
 }
