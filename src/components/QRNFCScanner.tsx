@@ -57,6 +57,7 @@ function useNFCScan(
   const [nfcActive, setNfcActive] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Browser feature detection: NDEFReader only exists on client, must read after mount
     setNfcAvailable('NDEFReader' in window);
   }, []);
 
@@ -219,6 +220,7 @@ export default function QRNFCScanner() {
   useEffect(() => {
     const saved = localStorage.getItem('commup-recent-scans');
     if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate history from localStorage which is only available client-side
       try { setRecentScans(JSON.parse(saved)); } catch { }
     }
   }, []);

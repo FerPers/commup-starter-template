@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useMounted } from '@/hooks/useMounted'
 import {
   LayoutDashboard, FolderKanban, FileCheck2, ClipboardList, ShieldCheck,
   Settings, Users, ScanLine, ClipboardCheck, Flag, Wrench, CalendarDays,
@@ -16,9 +16,8 @@ import ThemeToggle from '@/components/ThemeToggle'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 
 function SyncIndicator() {
-  const [mounted, setMounted] = useState(false)
+  const mounted = useMounted()
   const { isOnline, pendingCount } = useOfflineSync()
-  useEffect(() => { setMounted(true) }, [])
 
   // Antes de hidratar mostramos un estado neutral para evitar mismatch
   // (useOfflineSync depende de navigator.onLine, que difiere SSR vs client).

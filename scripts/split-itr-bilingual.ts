@@ -162,7 +162,7 @@ async function main() {
   const all: SourceRow[] = []
   let from = 0
   while (true) {
-    let q = supabase
+    const q = supabase
       .from('itr_template_items')
       .select('id, description, description_es')
       .or('description_es.is.null,description_es.eq.')

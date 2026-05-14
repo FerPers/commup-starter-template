@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import PssrTemplateEditor from './PssrTemplateEditor'
@@ -32,9 +33,9 @@ export default async function PssrTemplateEditorPage({
   return (
     <div style={{ padding: '32px' }}>
       <div style={{ marginBottom: '28px' }}>
-        <a href="/admin/templates/pssr" style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
+        <Link href="/admin/templates/pssr" style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
           ← Templates PSSR
-        </a>
+        </Link>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0', letterSpacing: '-0.4px' }}>
           {template.name}
         </h1>

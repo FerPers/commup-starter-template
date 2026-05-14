@@ -65,6 +65,7 @@ export default function Breadcrumbs() {
 
   useEffect(() => {
     if (!projectId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear stale name when leaving project context before next fetch resolves
       setProjectName(null)
       return
     }

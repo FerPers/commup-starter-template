@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
@@ -637,12 +638,12 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
     <div style={{ padding: '32px', maxWidth: '1000px' }}>
 
       {/* Breadcrumb */}
-      <a href="/admin/templates" style={{
+      <Link href="/admin/templates" style={{
         display: 'inline-flex', alignItems: 'center', gap: '6px',
         fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '20px',
       }}>
         {t('breadcrumb')}
-      </a>
+      </Link>
 
       {/* Header card */}
       <div style={{

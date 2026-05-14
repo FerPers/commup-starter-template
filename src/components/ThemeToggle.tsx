@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { Sun, Moon } from 'lucide-react'
 import { setTheme } from '@/app/actions/theme'
+import { useMounted } from '@/hooks/useMounted'
 import type { Theme } from '@/types/theme'
 
 function getInitialTheme(): Theme {
@@ -14,12 +15,12 @@ function getInitialTheme(): Theme {
 export default function ThemeToggle() {
   const t = useTranslations('Sidebar')
   const [theme, setThemeState] = useState<Theme>('light')
-  const [mounted, setMounted] = useState(false)
+  const mounted = useMounted()
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration-safe: SSR renders 'light' default; on mount we read documentElement.dataset.theme set by the cookie-based pre-paint script
     setThemeState(getInitialTheme())
-    setMounted(true)
   }, [])
 
   function toggle() {

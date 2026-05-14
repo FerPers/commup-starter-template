@@ -118,6 +118,7 @@ export default function ItrListGlobal({
 
   // Reset selections when filters change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Bulk selection must reset when filters narrow the list to avoid acting on items no longer visible
     setSelectedIds(new Set())
     setBulkError('')
   }, [filterStatus, filterPhase, filterDisc, filterProject, search])

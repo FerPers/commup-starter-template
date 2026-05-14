@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { assignPreservationPlan, updatePlanStatus } from '@/app/actions/preservation'
 
@@ -133,7 +134,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
         )}
         {canEdit && procedures.length === 0 && (
           <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
-            Crea procedimientos en <a href="/admin/templates/preservation" style={{ color: '#3b82f6' }}>Admin › Templates</a>
+            Crea procedimientos en <Link href="/admin/templates/preservation" style={{ color: '#3b82f6' }}>Admin › Templates</Link>
           </span>
         )}
       </div>

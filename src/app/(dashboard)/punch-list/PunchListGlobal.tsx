@@ -122,6 +122,7 @@ export default function PunchListGlobal({
 
   // Reset selections when filters change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Bulk selection must reset when filters narrow the list to avoid acting on items no longer visible
     setSelectedIds(new Set())
     setBulkError('')
   }, [filterProject, filterCat, filterStatus, filterDisc, search])

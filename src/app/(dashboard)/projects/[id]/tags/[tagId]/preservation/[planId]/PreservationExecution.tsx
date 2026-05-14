@@ -163,6 +163,7 @@ export default function PreservationExecution({
         }
         return false
       })
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Derived: recompute pass/fail when responses or items change, unless the user overrode the result manually
     setResult(hasCriticalFail ? 'nok' : 'ok')
     if (!hasCriticalFail) setRaisePunch(false)
   }, [responses, items, resultOverridden])

@@ -1175,6 +1175,7 @@ function MicAppend({
       SpeechRecognition?: new () => WebSpeechRecognizer
       webkitSpeechRecognition?: new () => WebSpeechRecognizer
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Web Speech API detection requires window access, only available client-side
     setSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition))
   }, [])
 

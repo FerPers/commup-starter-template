@@ -60,6 +60,7 @@ export function useVoiceInput(options: {
     const SpeechRecognition =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Web Speech API detection requires window access, only available client-side
     setIsAvailable(!!SpeechRecognition);
   }, []);
 

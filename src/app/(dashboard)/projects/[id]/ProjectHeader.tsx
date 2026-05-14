@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { updateProject, deleteProject } from '@/app/actions/projects'
 import type { ProjectStatus } from '@/types/database'
 
@@ -106,12 +107,12 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
     <>
       {/* Back + Header */}
       <div style={{ marginBottom: '28px' }}>
-        <a href="/projects" style={{
+        <Link href="/projects" style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '16px',
         }}>
           ← Proyectos
-        </a>
+        </Link>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

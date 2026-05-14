@@ -186,6 +186,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
     if (!highlightTagId) return
     const match = hotspots.find(h => h.tag_id === highlightTagId)
     if (match) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Initialize page + hotspot from URL highlightTagId param when arriving with a deep link
       setCurrentPage(match.page_num)
       setSelectedHotspot(match)
     }
@@ -204,6 +205,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
 
   // Exit edit mode when no tag is selected
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear pending position when leaving placement mode so a stale ghost marker doesn't render
     if (!placingTag) setPendingPos(null)
   }, [placingTag])
 

@@ -10,6 +10,8 @@ const eslintConfig = [
 			".open-next/**",
 			"node_modules/**",
 			"audit-package/**",
+			".agents/**",
+			"supabase/functions/**",
 			"public/**/*.min.js",
 			"public/**/*.min.mjs",
 			"public/**/*.min.css",

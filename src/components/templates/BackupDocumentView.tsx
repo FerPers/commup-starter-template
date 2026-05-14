@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useMounted } from '@/hooks/useMounted'
 import type {
   TemplatesBackup,
   ItrTemplateBackup,
@@ -15,10 +16,9 @@ interface Props {
 }
 
 export default function BackupDocumentView({ backup, onClose }: Props) {
-  const [mounted, setMounted] = useState(false)
+  const mounted = useMounted()
 
   useEffect(() => {
-    setMounted(true)
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     const prevOverflow = document.body.style.overflow
