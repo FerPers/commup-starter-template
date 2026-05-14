@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, type CSSProperties, type ReactElement, cloneElement } from 'react';
+import { useCallback, useId, useRef, useState, type CSSProperties, type ReactElement, cloneElement } from 'react';
 
 export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right';
 
@@ -23,16 +23,16 @@ function placementStyle(placement: TooltipPlacement): CSSProperties {
 export function Tooltip({ content, placement = 'top', children, delayMs = 200 }: TooltipProps) {
   const [open, setOpen] = useState(false);
   const id = useId();
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const show = () => {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => setOpen(true), delayMs);
-  };
-  const hide = () => {
-    if (timer) clearTimeout(timer);
+  const show = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setOpen(true), delayMs);
+  }, [delayMs]);
+  const hide = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     setOpen(false);
-  };
+  }, []);
 
   const triggerProps = {
     onMouseEnter: show,
@@ -44,6 +44,7 @@ export function Tooltip({ content, placement = 'top', children, delayMs = 200 }:
 
   return (
     <span style={{ position: 'relative', display: 'inline-flex' }}>
+      {/* eslint-disable-next-line react-hooks/refs -- triggerProps holds useCallback handlers that read timerRef only inside event handlers; the rule cannot statically infer this */}
       {cloneElement(children, triggerProps as Record<string, unknown>)}
       {open && (
         <span

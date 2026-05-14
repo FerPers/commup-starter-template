@@ -58,10 +58,13 @@ export default function TagsView({
   const [isPending, startTransition]  = useTransition()
   const [bulkError, setBulkError]     = useState<string | null>(null)
 
-  // Reset discipline when subsystem filter changes
-  useMemo(() => {
+  // Reset discipline when subsystem filter changes — React's "adjust state during render" pattern
+  // (https://react.dev/reference/react/useState#storing-information-from-previous-renders)
+  const [prevSubsystemFilter, setPrevSubsystemFilter] = useState(subsystemFilter)
+  if (prevSubsystemFilter !== subsystemFilter) {
+    setPrevSubsystemFilter(subsystemFilter)
     if (subsystemFilter) setActiveDiscipline('ALL')
-  }, [subsystemFilter])
+  }
 
   // Build discipline summary
   const subsystemFilteredTags = useMemo(() =>

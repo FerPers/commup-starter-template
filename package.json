@@ -41,6 +41,8 @@
 		"@types/web-push": "^3.6.4",
 		"eslint": "9.39.2",
 		"eslint-config-next": "^16.2.2",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.0.4",
 		"tailwindcss": "4.1.17",
 		"tsx": "^4.21.0",
 		"typescript": "5.9.3",
@@ -53,11 +55,16 @@
 	"scripts": {
 		"build": "next build",
 		"cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",
-		"check": "npm run build && tsc",
+		"check": "npm run lint && npm run typecheck && npm run build",
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
 		"dev": "next dev",
 		"lint": "eslint .",
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-		"start": "next start"
+		"start": "next start",
+		"typecheck": "tsc --noEmit",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --max-warnings=9999"
 	}
 }

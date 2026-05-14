@@ -24,6 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const supabase = ctx.supabase
+  // eslint-disable-next-line react-hooks/purity -- Server Component: runs once per request, not on client render
   const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   const { data: orgProjects } = await supabase

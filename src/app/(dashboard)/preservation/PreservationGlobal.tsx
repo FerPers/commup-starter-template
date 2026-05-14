@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 const PAGE_SIZE = 50
@@ -65,8 +65,14 @@ export default function PreservationGlobal({
   const [filterDue, setFilterDue] = useState<'overdue' | 'soon' | ''>('')
   const [page, setPage] = useState(1)
 
-  const today = new Date().toISOString().slice(0, 10)
-  const soon  = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  // Lazy initial state: pinned to mount time so the wall clock isn't read every render
+  const [{ today, soon }] = useState(() => {
+    const now = Date.now()
+    return {
+      today: new Date(now).toISOString().slice(0, 10),
+      soon: new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    }
+  })
 
   const overdueCnt = plans.filter(p => p.status === 'active' && p.next_due_date < today).length
   const soonCnt    = plans.filter(p => p.status === 'active' && p.next_due_date >= today && p.next_due_date <= soon).length
