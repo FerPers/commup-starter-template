@@ -163,7 +163,7 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
   function toggleArea(id: string) {
     setOpenAreas(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id); else next.add(id)
       return next
     })
   }
@@ -171,7 +171,7 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
   function toggleSystem(id: string) {
     setOpenSystems(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id); else next.add(id)
       return next
     })
   }

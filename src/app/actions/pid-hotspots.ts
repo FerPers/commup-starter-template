@@ -3,8 +3,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { revalidatePath } from 'next/cache'
 
-const PRIVILEGED_ROLES = ['owner', 'admin', 'architect']
-
 export async function upsertHotspot(input: {
   pid_document_id: string
   tag_id: string

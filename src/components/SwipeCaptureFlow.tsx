@@ -278,7 +278,6 @@ function MultiSelectField({
 
 // ─── Componente Principal ──────────────────────────────────────────────────
 export default function SwipeCaptureFlow({
-  itrId,
   itrName,
   items,
   onSave,

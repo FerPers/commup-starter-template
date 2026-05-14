@@ -12,7 +12,6 @@ export default async function PreservationExecutionPage({
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
-  const membership = { org_id: ctx.orgId, role: ctx.role }
 
   // Load plan + procedure + items
   const { data: plan } = await supabase

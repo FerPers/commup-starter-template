@@ -73,7 +73,6 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
 // ─── FETCH: estrategia por tipo de recurso ───────────────────────────────
 self.addEventListener('fetch', (event: FetchEvent) => {
   const { request } = event;
-  const url = new URL(request.url);
 
   // 1) Navegación → network-first con fallback a offline.html
   if (request.mode === 'navigate') {

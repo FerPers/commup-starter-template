@@ -58,10 +58,10 @@ export default function AuditLogView({
     const params = new URLSearchParams(searchParams.toString())
     const merged = { entityType, userId, from, to, ...overrides }
 
-    merged.entityType ? params.set('entityType', merged.entityType) : params.delete('entityType')
-    merged.userId ? params.set('userId', merged.userId) : params.delete('userId')
-    merged.from ? params.set('from', merged.from) : params.delete('from')
-    merged.to ? params.set('to', merged.to) : params.delete('to')
+    if (merged.entityType) params.set('entityType', merged.entityType); else params.delete('entityType')
+    if (merged.userId) params.set('userId', merged.userId); else params.delete('userId')
+    if (merged.from) params.set('from', merged.from); else params.delete('from')
+    if (merged.to) params.set('to', merged.to); else params.delete('to')
     params.delete('page')
 
     startTransition(() => router.push(`?${params.toString()}`))

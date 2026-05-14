@@ -4,7 +4,7 @@
  */
 
 import {
-  Renderer, COLOR, A4_W, A4_H, MARGIN, CONTENT_W, FOOTER_H, BOTTOM_LIMIT,
+  Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H, BOTTOM_LIMIT,
   sanitize, truncateToWidth, wrapText,
   type Color,
 } from './renderer'

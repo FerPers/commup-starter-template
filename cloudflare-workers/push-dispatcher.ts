@@ -79,13 +79,8 @@ async function sendWebPush(
   const jwt = await signVAPID(audience, env.VAPID_SUBJECT, env.VAPID_PRIVATE_KEY);
   const authHeader = `vapid t=${jwt},k=${env.VAPID_PUBLIC_KEY}`;
 
-  // Encrypt payload (Web Push Encryption - RFC 8291)
-  // Usamos la API de Cloudflare crypto para cifrar con p256dh + auth
-  const payloadBytes = new TextEncoder().encode(JSON.stringify(payload));
-
-  // NOTA: En producción usar web-push encryption library completa.
-  // Este ejemplo envía plaintext para simplificar (algunos servicios lo aceptan).
-  // Para producción: implementar RFC 8291 ECDH encryption.
+  // NOTA: payload se envía sin encriptación RFC 8291 (algunos servicios lo aceptan).
+  // Para producción: implementar Web Push Encryption (RFC 8291) con p256dh + auth.
 
   try {
     const response = await fetch(subscription.endpoint, {

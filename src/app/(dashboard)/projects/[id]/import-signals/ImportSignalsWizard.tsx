@@ -61,8 +61,6 @@ export default function ImportSignalsWizard({
         })
 
         const first = normalized[0]
-        const required = ['TAG_DE_SEÑAL', 'TIPO_DE_SEÑAL', 'DISCIPLINA']
-        // Also accept english column names
         const hasSignalTag = 'TAG_DE_SEÑAL' in first || 'SIGNAL_TAG' in first || 'TAG' in first
         const hasType      = 'TIPO_DE_SEÑAL' in first || 'SIGNAL_TYPE' in first || 'TIPO' in first
 

@@ -220,7 +220,7 @@ function buildDelayDrivers(
   model: LinearModel,
   predictedDays: number | null,
   plannedMCDay: number,
-  currentDay: number
+  _currentDay: number
 ): DelayDriver[] {
   const drivers: DelayDriver[] = [];
   const totalAttempts = snapshot.completed_itrs + snapshot.rejected_itrs;

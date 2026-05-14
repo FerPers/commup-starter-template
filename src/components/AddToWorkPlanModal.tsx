@@ -168,14 +168,11 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                   style={inputStyle}
                 >
                   <option value="">{t('addToPlanModal.selectPlanPh')}</option>
-                  {plans.map(p => {
-                    const st = PLAN_STATUS_STYLE[p.status] ?? PLAN_STATUS_STYLE.draft
-                    return (
-                      <option key={p.id} value={p.id}>
-                        {p.plan_date} — {p.disciplines?.code ?? '?'} {p.disciplines?.name ?? ''} [{p.status}]
-                      </option>
-                    )
-                  })}
+                  {plans.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.plan_date} — {p.disciplines?.code ?? '?'} {p.disciplines?.name ?? ''} [{p.status}]
+                    </option>
+                  ))}
                 </select>
                 {/* Plan status chips */}
                 {selectedPlanId && (() => {

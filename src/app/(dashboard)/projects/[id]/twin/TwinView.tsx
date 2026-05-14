@@ -212,10 +212,9 @@ function Badge({ label, color, bg, title }: { label: string; color: string; bg: 
 // ── Subsystem panel ───────────────────────────────────────────────────────────
 
 function SubsystemPanel({
-  subsystemId, subsystemCode, subsystemName,
+  subsystemCode, subsystemName,
   tags, projectId, highlightTagId,
 }: {
-  subsystemId: string
   subsystemCode: string
   subsystemName: string
   tags: Tag360[]
@@ -227,7 +226,6 @@ function SubsystemPanel({
   const total    = tags.length
   const green    = tags.filter(t => t.semaforo_global === 'green').length
   const red      = tags.filter(t => t.semaforo_global === 'red').length
-  const yellow   = tags.filter(t => t.semaforo_global === 'yellow').length
   const pct      = total > 0 ? Math.round((green / total) * 100) : 0
 
   // Subsystem semaforo
@@ -293,17 +291,15 @@ function SubsystemPanel({
 // ── System block ──────────────────────────────────────────────────────────────
 
 function SystemBlock({
-  systemId, systemCode, systemName,
-  subsystems, tags, projectId, highlightTagId, activeSubsystem,
+  systemCode, systemName,
+  subsystems, tags, projectId, highlightTagId,
 }: {
-  systemId: string
   systemCode: string
   systemName: string
   subsystems: Array<{ id: string; code: string; name: string }>
   tags: Tag360[]
   projectId: string
   highlightTagId: string | null
-  activeSubsystem: string | null
 }) {
   const total   = tags.length
   const green   = tags.filter(t => t.semaforo_global === 'green').length
@@ -348,7 +344,6 @@ function SystemBlock({
           return (
             <SubsystemPanel
               key={sub.id}
-              subsystemId={sub.id}
               subsystemCode={sub.code}
               subsystemName={sub.name}
               tags={subTags}
@@ -562,14 +557,12 @@ export default function TwinView({
         filteredSystems.map(sys => (
           <SystemBlock
             key={sys.id}
-            systemId={sys.id}
             systemCode={sys.code}
             systemName={sys.name}
             subsystems={sys.subsystems}
             tags={filteredTags.filter(t => t.system_id === sys.id)}
             projectId={projectId}
             highlightTagId={highlightTagId}
-            activeSubsystem={null}
           />
         ))
       )}

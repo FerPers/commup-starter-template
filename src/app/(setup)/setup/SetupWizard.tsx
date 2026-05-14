@@ -40,10 +40,6 @@ const ALL_DISCIPLINES = [
 // Default selected disciplines (most common for O&G projects)
 const DEFAULT_SELECTED_CODES = ['ELEC', 'INST', 'MECH', 'PIPE', 'SAFE']
 
-const DEFAULT_DISCIPLINES = ALL_DISCIPLINES
-  .filter(d => DEFAULT_SELECTED_CODES.includes(d.code))
-  .map(({ phases: _phases, ...d }) => d)
-
 // ── Types ─────────────────────────────────────────────────────
 
 interface Phase {
@@ -356,7 +352,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
                     onClick={() => {
                       setSelectedCodes(prev => {
                         const next = new Set(prev)
-                        next.has(disc.code) ? next.delete(disc.code) : next.add(disc.code)
+                        if (next.has(disc.code)) next.delete(disc.code); else next.add(disc.code)
                         return next
                       })
                     }}
