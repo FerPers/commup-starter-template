@@ -28,6 +28,27 @@ interface RecentScan {
 
 type ScanMode = 'QR' | 'NFC' | 'MANUAL';
 
+interface NDEFRecord { recordType: string; data: ArrayBuffer; encoding?: string }
+interface NDEFMessage { records: NDEFRecord[] }
+interface NDEFReadingEvent { message: NDEFMessage; serialNumber: string }
+interface NDEFReaderLike {
+  scan(options: { signal: AbortSignal }): Promise<void>;
+  addEventListener(type: 'reading', cb: (e: NDEFReadingEvent) => void): void;
+  addEventListener(type: 'readingerror', cb: () => void): void;
+}
+type NDEFReaderCtor = new () => NDEFReaderLike;
+
+interface Html5QrcodeScannerLike {
+  stop(): Promise<void>;
+  clear(): void;
+  start(
+    camera: { deviceId: string },
+    config: Record<string, unknown>,
+    onScan: (decodedText: string) => void,
+    onError?: undefined
+  ): Promise<void>;
+}
+
 // ─── CommUP Tag URL pattern ────────────────────────────────────────────────
 // Formatos aceptados:
 //   https://app.commup.io/tag_360/EQ-001-PUMP-001
@@ -68,11 +89,12 @@ function useNFCScan(
     }
     try {
       abortRef.current = new AbortController();
-      const ndef = new (window as any).NDEFReader();
+      const Ctor = (window as unknown as { NDEFReader: NDEFReaderCtor }).NDEFReader;
+      const ndef = new Ctor();
       await ndef.scan({ signal: abortRef.current.signal });
       setNfcActive(true);
 
-      ndef.addEventListener('reading', ({ message, serialNumber }: any) => {
+      ndef.addEventListener('reading', ({ message, serialNumber }: NDEFReadingEvent) => {
         let raw = serialNumber;
         for (const record of message.records) {
           if (record.recordType === 'url') {
@@ -98,11 +120,12 @@ function useNFCScan(
       ndef.addEventListener('readingerror', () => {
         onError('Error leyendo NFC tag. Acerque más el dispositivo.');
       });
-    } catch (err: any) {
-      if (err.name === 'NotAllowedError') {
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string };
+      if (e.name === 'NotAllowedError') {
         onError('Permiso NFC denegado. Habilítelo en configuración.');
       } else {
-        onError(`NFC error: ${err.message}`);
+        onError(`NFC error: ${e.message ?? String(err)}`);
       }
       setNfcActive(false);
     }
@@ -122,7 +145,7 @@ function useQRScan(
   onScan: (result: ScanResult) => void,
   onError: (error: string) => void
 ) {
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<Html5QrcodeScannerLike | null>(null);
   const [qrActive, setQrActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
@@ -142,7 +165,7 @@ function useQRScan(
       }
 
       // Preferir cámara trasera
-      const backCamera = cameras.find((c: any) =>
+      const backCamera = cameras.find((c) =>
         c.label.toLowerCase().includes('back') ||
         c.label.toLowerCase().includes('rear') ||
         c.label.toLowerCase().includes('environment')
@@ -176,10 +199,11 @@ function useQRScan(
 
       setQrActive(true);
       setCameraError(null);
-    } catch (err: any) {
-      const msg = err.message?.includes('permission')
+    } catch (err: unknown) {
+      const m = (err as { message?: string })?.message;
+      const msg = m?.includes('permission')
         ? 'Permiso de cámara denegado. Habilítelo en el navegador.'
-        : err.message || 'Error iniciando cámara';
+        : m || 'Error iniciando cámara';
       setCameraError(msg);
       onError(msg);
     }

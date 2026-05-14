@@ -24,9 +24,6 @@ jobs:
   lint:
     name: ESLint
     runs-on: ubuntu-latest
-    # Informational only until S22 lint cleanup completes (155 errors → 0).
-    # Flip to required by removing this line once the backlog is clear.
-    continue-on-error: true
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:

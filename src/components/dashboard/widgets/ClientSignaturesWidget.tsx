@@ -13,9 +13,20 @@ export default async function ClientSignaturesWidget({ userId }: { userId: strin
     .eq('user_id', userId)
     .eq('role', 'client')
 
+  type ItrWithRel = {
+    id: string
+    itr_number: string
+    status: string | null
+    project_id: string
+    tags: { id: string; tag_number: string; description: string | null } | null
+    projects: { id: string; name: string; code: string } | null
+    project_phases: { code: string; color: string; name: string } | null
+    itr_signatures: Array<{ role: string }>
+  } | null
+
   const pendingSignature = (clientAssignments ?? []).filter(a => {
-    const itr = a.itrs as any
-    return itr && itr.status === 'completed' && !(itr.itr_signatures as any[]).some((s: any) => s.role === 'client')
+    const itr = a.itrs as unknown as ItrWithRel
+    return itr && itr.status === 'completed' && !itr.itr_signatures.some(s => s.role === 'client')
   })
 
   if (pendingSignature.length === 0) return null
@@ -31,7 +42,8 @@ export default async function ClientSignaturesWidget({ userId }: { userId: strin
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {pendingSignature.map(a => {
-          const itr = a.itrs as any
+          const itr = a.itrs as unknown as ItrWithRel
+          if (!itr) return null
           const phase = itr.project_phases
           return (
             <a key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>

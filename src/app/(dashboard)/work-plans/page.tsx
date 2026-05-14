@@ -1,6 +1,9 @@
+import type { ComponentProps } from 'react'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import WorkPlansGlobal from './WorkPlansGlobal'
+
+type WPGProps = ComponentProps<typeof WorkPlansGlobal>
 
 export default async function WorkPlansPage() {
   const ctx = await getActiveMembership()
@@ -55,10 +58,10 @@ export default async function WorkPlansPage() {
 
   return (
     <WorkPlansGlobal
-      projects={(projects ?? []) as any}
-      disciplines={(disciplines ?? []) as any}
-      orgMembers={(members ?? []) as any}
-      workPlans={(rawPlans ?? []) as any}
+      projects={(projects ?? []) as unknown as WPGProps['projects']}
+      disciplines={(disciplines ?? []) as unknown as WPGProps['disciplines']}
+      orgMembers={(members ?? []) as unknown as WPGProps['orgMembers']}
+      workPlans={(rawPlans ?? []) as unknown as WPGProps['workPlans']}
       canEdit={canEdit}
       currentUserId={ctx.userId}
     />

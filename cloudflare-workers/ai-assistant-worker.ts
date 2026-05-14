@@ -126,7 +126,9 @@ const COMMUP_TOOLS = [
 
 // ─── Supabase Query Executor ──────────────────────────────────────────────
 
-async function supabase(env: Env, path: string, params?: Record<string, string>): Promise<any> {
+type Row = Record<string, unknown>;
+
+async function supabase(env: Env, path: string, params?: Record<string, string>): Promise<Row[]> {
   const url = new URL(`${env.SUPABASE_URL}/rest/v1/${path}`);
   if (params) {
     for (const [k, v] of Object.entries(params)) {
@@ -148,7 +150,7 @@ async function supabase(env: Env, path: string, params?: Record<string, string>)
 
 async function executeTool(
   toolName: string,
-  toolInput: Record<string, any>,
+  toolInput: Record<string, unknown>,
   env: Env
 ): Promise<string> {
   try {
@@ -164,7 +166,7 @@ async function executeTool(
         return JSON.stringify({
           systems: data,
           count: data.length,
-          summary: `${data.filter((s: any) => s.delay_risk === 'critical').length} críticos, ${data.filter((s: any) => s.delay_risk === 'delayed').length} retrasados`,
+          summary: `${data.filter((s) => s.delay_risk === 'critical').length} críticos, ${data.filter((s) => s.delay_risk === 'delayed').length} retrasados`,
         });
       }
 
@@ -184,13 +186,13 @@ async function executeTool(
         return JSON.stringify({
           system: { id: sys.id, tag: sys.system_tag, mc_status: sys.mc_status },
           blocking_items: {
-            punch_cat_a: punches.filter((p: any) => p.category === 'A'),
-            punch_cat_b: punches.filter((p: any) => p.category === 'B'),
-            rejected_itrs: rejectedITRs.filter((i: any) => i.status === 'rejected'),
-            pending_itrs: rejectedITRs.filter((i: any) => i.status === 'pending'),
+            punch_cat_a: punches.filter((p) => p.category === 'A'),
+            punch_cat_b: punches.filter((p) => p.category === 'B'),
+            rejected_itrs: rejectedITRs.filter((i) => i.status === 'rejected'),
+            pending_itrs: rejectedITRs.filter((i) => i.status === 'pending'),
             pending_certificates: pendingCerts,
           },
-          summary: `${punches.filter((p: any) => p.category === 'A').length} Punch Cat A, ${rejectedITRs.length} ITRs pendientes/rechazados`,
+          summary: `${punches.filter((p) => p.category === 'A').length} Punch Cat A, ${rejectedITRs.length} ITRs pendientes/rechazados`,
         });
       }
 
@@ -200,13 +202,13 @@ async function executeTool(
         if (toolInput.category !== 'all') query += `&category=eq.${toolInput.category}`;
         if (toolInput.discipline) query += `&discipline=eq.${toolInput.discipline}`;
         if (toolInput.status !== 'all' && toolInput.status) query += `&status=eq.${toolInput.status}`;
-        query += `&order=category.asc,raised_at.asc&limit=${Math.min(toolInput.limit || 20, 50)}`;
+        query += `&order=category.asc,raised_at.asc&limit=${Math.min((toolInput.limit as number) || 20, 50)}`;
 
         const data = await supabase(env, query);
         return JSON.stringify({
           punches: data,
           count: data.length,
-          cat_a_count: data.filter((p: any) => p.category === 'A').length,
+          cat_a_count: data.filter((p) => p.category === 'A').length,
         });
       }
 
@@ -216,13 +218,13 @@ async function executeTool(
         if (toolInput.status && toolInput.status !== 'all') query += `&status=eq.${toolInput.status}`;
         if (toolInput.discipline) query += `&discipline=eq.${toolInput.discipline}`;
         if (toolInput.assigned_to_name) query += `&assigned_to_name=ilike.*${toolInput.assigned_to_name}*`;
-        query += `&order=rejection_count.desc,planned_date.asc&limit=${Math.min(toolInput.limit || 20, 50)}`;
+        query += `&order=rejection_count.desc,planned_date.asc&limit=${Math.min((toolInput.limit as number) || 20, 50)}`;
 
         const data = await supabase(env, query);
         const stats = {
-          pending: data.filter((i: any) => i.status === 'pending').length,
-          rejected: data.filter((i: any) => i.status === 'rejected').length,
-          approved: data.filter((i: any) => i.status === 'approved').length,
+          pending: data.filter((i) => i.status === 'pending').length,
+          rejected: data.filter((i) => i.status === 'rejected').length,
+          approved: data.filter((i) => i.status === 'approved').length,
         };
         return JSON.stringify({ itrs: data, count: data.length, stats });
       }
@@ -239,9 +241,9 @@ async function executeTool(
           systems: data,
           count: data.length,
           worst_case: worstDelay
-            ? `${worstDelay.system_tag}: ${worstDelay.delay_days_p50 > 0 ? '+' : ''}${worstDelay.delay_days_p50} días vs plan`
+            ? `${worstDelay.system_tag}: ${(worstDelay.delay_days_p50 as number) > 0 ? '+' : ''}${worstDelay.delay_days_p50} días vs plan`
             : 'N/A',
-          critical_count: data.filter((s: any) => s.delay_risk === 'critical').length,
+          critical_count: data.filter((s) => s.delay_risk === 'critical').length,
         });
       }
 
@@ -258,8 +260,8 @@ async function executeTool(
       default:
         return JSON.stringify({ error: `Tool desconocida: ${toolName}` });
     }
-  } catch (err: any) {
-    return JSON.stringify({ error: err.message, tool: toolName });
+  } catch (err: unknown) {
+    return JSON.stringify({ error: err instanceof Error ? err.message : String(err), tool: toolName });
   }
 }
 
@@ -294,9 +296,19 @@ Formato de respuesta:
 
 // ─── Agentic Loop ─────────────────────────────────────────────────────────
 
+type ContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
+  | { type: 'tool_result'; tool_use_id: string; content: string };
+
 interface Message {
   role: 'user' | 'assistant';
-  content: string | any[];
+  content: string | ContentBlock[];
+}
+
+interface ClaudeResponse {
+  stop_reason: string;
+  content: ContentBlock[];
 }
 
 async function runAgenticLoop(
@@ -332,18 +344,18 @@ async function runAgenticLoop(
       throw new Error(`Claude API error ${response.status}: ${err}`);
     }
 
-    const result = await response.json() as any;
+    const result = await response.json() as ClaudeResponse;
 
     // Sin tool use → respuesta final
-    if (result.stop_reason === 'end_turn' || !result.content.some((c: any) => c.type === 'tool_use')) {
-      const textContent = result.content.find((c: any) => c.type === 'text');
+    if (result.stop_reason === 'end_turn' || !result.content.some((c) => c.type === 'tool_use')) {
+      const textContent = result.content.find((c): c is Extract<ContentBlock, { type: 'text' }> => c.type === 'text');
       return textContent?.text || 'No se pudo generar una respuesta.';
     }
 
     // Procesar tool calls
     currentMessages.push({ role: 'assistant', content: result.content });
 
-    const toolResults: any[] = [];
+    const toolResults: ContentBlock[] = [];
     for (const block of result.content) {
       if (block.type === 'tool_use') {
         const toolResult = await executeTool(block.name, block.input, env);
@@ -416,9 +428,9 @@ export default {
         timestamp: new Date().toISOString(),
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[AI Assistant] Error:', err);
-      return json({ error: err.message }, 500);
+      return json({ error: err instanceof Error ? err.message : String(err) }, 500);
     }
   },
 } satisfies ExportedHandler<Env>;

@@ -26,7 +26,7 @@ export default async function PssrTemplatesPage() {
           Checklist Pre-Startup Safety Review — define los ítems de verificación para el arranque
         </p>
       </div>
-      <PssrTemplatesView templates={(templates ?? []) as any[]} canEdit={canEdit} />
+      <PssrTemplatesView templates={templates ?? []} canEdit={canEdit} />
     </div>
   )
 }

@@ -26,7 +26,7 @@ export default async function PssrTemplateEditorPage({
 
   const { data: items } = await supabase
     .from('pssr_template_items')
-    .select('*')
+    .select('id, item_order, category, element, requirement, notes_hint, is_required')
     .eq('template_id', templateId)
     .order('item_order')
 
@@ -45,7 +45,7 @@ export default async function PssrTemplateEditorPage({
       </div>
       <PssrTemplateEditor
         template={template}
-        items={(items ?? []) as any[]}
+        items={items ?? []}
         canEdit={canEdit}
       />
     </div>

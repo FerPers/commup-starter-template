@@ -19,18 +19,29 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
     rejected: t('itrStatus.rejected'),
   }
 
+  type ItrFull = {
+    id: string
+    itr_number: string
+    status: string
+    progress_pct: number
+    scheduled_date: string | null
+    project_id: string
+    tags: { id: string; tag_number: string; description: string | null } | null
+    projects: { id: string; name: string; code: string } | null
+    project_phases: { code: string; color: string; name: string } | null
+  } | null
   const seen = new Set<string>()
   const activeItrs = (myAssignments ?? [])
     .filter(a => {
-      const itr = a.itrs as any
+      const itr = a.itrs as unknown as ItrFull
       if (!itr || ['approved', 'rejected'].includes(itr.status)) return false
       if (seen.has(itr.id)) return false
       seen.add(itr.id)
       return true
     })
     .sort((a, b) => {
-      const da = (a.itrs as any)?.scheduled_date ?? '9999'
-      const db = (b.itrs as any)?.scheduled_date ?? '9999'
+      const da = (a.itrs as unknown as ItrFull)?.scheduled_date ?? '9999'
+      const db = (b.itrs as unknown as ItrFull)?.scheduled_date ?? '9999'
       return da.localeCompare(db)
     })
 
@@ -39,7 +50,8 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
   return (
     <TaskSection title={t('inspector.myItrs')} count={activeItrs.length} emptyText={t('inspector.myItrsEmpty')}>
       {activeItrs.map(a => {
-        const itr = a.itrs as any
+        const itr = a.itrs as unknown as ItrFull
+        if (!itr) return null
         const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
         const phase = itr.project_phases
         const overdue = itr.scheduled_date && itr.scheduled_date < todayStr && itr.status === 'not_started'

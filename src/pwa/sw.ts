@@ -360,12 +360,12 @@ function openSyncDB(): Promise<IDBDatabase> {
   });
 }
 
-function getAllFromStore(db: IDBDatabase, storeName: string): Promise<any[]> {
+function getAllFromStore<T = unknown>(db: IDBDatabase, storeName: string): Promise<T[]> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readonly');
     const store = tx.objectStore(storeName);
     const req = store.getAll();
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => resolve(req.result as T[]);
     req.onerror = () => reject(req.error);
   });
 }
@@ -402,6 +402,6 @@ interface SyncEvent extends ExtendableEvent {
 }
 
 interface NotificationEvent extends ExtendableEvent {
-  notification: Notification & { data: any };
+  notification: Notification & { data: Record<string, unknown> };
   action: string;
 }

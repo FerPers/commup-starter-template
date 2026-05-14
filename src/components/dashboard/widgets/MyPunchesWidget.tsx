@@ -23,10 +23,23 @@ export default async function MyPunchesWidget({ userId }: { userId: string }) {
   const todayStr = new Date().toISOString().slice(0, 10)
   const items = myPunches ?? []
 
+  type PunchRow = {
+    id: string
+    punch_number: string
+    category: 'A' | 'B' | 'C'
+    description: string | null
+    status: string
+    priority: string | null
+    target_date: string | null
+    project_id: string
+    projects: { id: string; name: string; code: string } | null
+    tags: { tag_number: string } | null
+  }
+
   return (
     <TaskSection title={t('inspector.myPunches')} count={items.length} emptyText={t('inspector.myPunchesEmpty')}>
-      {items.map((p: any) => {
-        const cat = CATEGORY_CFG[p.category as 'A' | 'B' | 'C']
+      {(items as unknown as PunchRow[]).map(p => {
+        const cat = CATEGORY_CFG[p.category]
         const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
         const overdue = p.target_date && p.target_date < todayStr
         return (

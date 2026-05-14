@@ -18,15 +18,16 @@ export default async function InspectorSummaryWidget({ userId }: { userId: strin
       .in('status', ['open', 'in_progress']),
   ])
 
+  type ItrMini = { id: string; status: string | null } | null
   const seen = new Set<string>()
   const activeItrs = (assignments ?? []).filter(a => {
-    const itr = a.itrs as any
-    if (!itr || ['approved', 'rejected'].includes(itr.status)) return false
+    const itr = a.itrs as unknown as ItrMini
+    if (!itr || ['approved', 'rejected'].includes(itr.status ?? '')) return false
     if (seen.has(itr.id)) return false
     seen.add(itr.id)
     return true
   })
-  const inProgress = activeItrs.filter(a => (a.itrs as any)?.status === 'in_progress').length
+  const inProgress = activeItrs.filter(a => (a.itrs as unknown as ItrMini)?.status === 'in_progress').length
 
   return (
     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>

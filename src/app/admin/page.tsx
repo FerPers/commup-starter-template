@@ -2,33 +2,34 @@
 import { useState } from "react";
 
 export default function AdminDashboard() {
-  const [fileData, setFileData] = useState<any[]>([]);
+  const [, setFileData] = useState<string[][]>([]);
   const [stats, setStats] = useState({ total: 0, inst: 0, mech: 0, elec: 0 });
 
   // Función para procesar el archivo CSV (Excel guardado como CSV)
-const handleFileUpload = (e: any) => {
-    const file = e.target.files[0];
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     const reader = new FileReader();
-    reader.onload = (event: any) => {
-      const text = event.target.result;
-      
+    reader.onload = (event: ProgressEvent<FileReader>) => {
+      const text = (event.target?.result as string) ?? '';
+
       // 1. Limpiamos espacios y saltos de línea extra
-      const rows = text.split("\n").map((row: string) => row.trim()).filter((row: string) => row !== "");
-      
+      const rows = text.split("\n").map((row) => row.trim()).filter((row) => row !== "");
+
       // 2. Quitamos el encabezado y separamos por comas
-      const data = rows.slice(1).map((row: string) => row.split(","));
-      
+      const data = rows.slice(1).map((row) => row.split(","));
+
       setFileData(data);
 
       // 3. ¡AHORA SÍ! Filtramos sobre 'data' (columnas), no sobre 'rows' (letras)
       setStats({
         total: data.length,
-        inst: data.filter((col: any) => 
+        inst: data.filter((col) =>
           col[1]?.toLowerCase().includes("inst")).length,
-        mech: data.filter((col: any) => 
-          col[1]?.toLowerCase().includes("mecanica") || 
+        mech: data.filter((col) =>
+          col[1]?.toLowerCase().includes("mecanica") ||
           col[1]?.toLowerCase().includes("mech")).length,
-        elec: data.filter((col: any) => 
+        elec: data.filter((col) =>
           col[1]?.toLowerCase().includes("elec")).length,
       });
 
@@ -70,7 +71,7 @@ const handleFileUpload = (e: any) => {
 }
 
 // Componente pequeño para las tarjetas
-function Card({ title, value, color }: any) {
+function Card({ title, value, color }: { title: string; value: number; color: string }) {
   return (
     <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', borderLeft: `5px solid ${color}`, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
       <h4 style={{ margin: 0, color: '#666' }}>{title}</h4>

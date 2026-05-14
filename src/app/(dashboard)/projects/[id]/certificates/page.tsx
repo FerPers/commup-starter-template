@@ -110,12 +110,13 @@ export default async function CertificatesPage({
       return { phaseId: phase.id, totalItrs, approvedItrs, openCatA, openCatBPunches, certificate, eligible }
     })
 
+    const sysRel = (ss as { systems: unknown }).systems
+    const sysItem = Array.isArray(sysRel) ? (sysRel[0] ?? null) : (sysRel ?? null)
     return {
       id: ss.id,
       code: ss.code,
       name: ss.name,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      system: (ss as any).systems ?? null,
+      system: sysItem as { id: string; code: string; name: string } | null,
       phaseData,
     }
   })
@@ -126,9 +127,8 @@ export default async function CertificatesPage({
     <CertificatesView
       projectId={projectId}
       projectName={project.name}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      phases={(phases ?? []) as any}
-      subsystemRows={subsystemRows as any}
+      phases={phases ?? []}
+      subsystemRows={subsystemRows}
       canEdit={canEdit}
     />
   )

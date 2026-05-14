@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import * as XLSX from 'xlsx'
 import { importSignals, type SignalRow, type SignalImportResult } from '@/app/actions/import-signals'
 
@@ -146,12 +146,12 @@ export default function ImportSignalsWizard({
     reader.readAsArrayBuffer(file)
   }
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  function handleDrop(e: React.DragEvent) {
     e.preventDefault()
     setDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) parseFile(file)
-  }, [disciplineCodes])
+  }
 
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]

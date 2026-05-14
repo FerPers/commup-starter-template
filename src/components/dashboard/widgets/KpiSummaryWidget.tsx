@@ -18,6 +18,10 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
   const in7DaysStr = in7Days.toISOString().split('T')[0]
   const today = new Date().toISOString().split('T')[0]
 
+  type ItrRow = { id: string; status: string | null; phase_id: string | null }
+  type PunchRow = { id: string; category: string | null; status: string | null }
+  type PreservationRow = { id: string; next_due_date: string }
+
   const [{ data: phases }, { data: orgItrs }, { data: orgPunches }, { data: orgPreservationDue }] = await Promise.all([
     supabase
       .from('project_phases')
@@ -26,10 +30,10 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
       .order('order_index'),
     projectIds.length > 0
       ? supabase.from('itrs').select('id, status, phase_id').in('project_id', projectIds)
-      : Promise.resolve({ data: [] as any[] }),
+      : Promise.resolve({ data: [] as ItrRow[] }),
     projectIds.length > 0
       ? supabase.from('punches').select('id, category, status').in('project_id', projectIds)
-      : Promise.resolve({ data: [] as any[] }),
+      : Promise.resolve({ data: [] as PunchRow[] }),
     projectIds.length > 0
       ? supabase
           .from('preservation_plans')
@@ -37,23 +41,24 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
           .in('project_id', projectIds)
           .eq('status', 'active')
           .lte('next_due_date', in7DaysStr)
-      : Promise.resolve({ data: [] as any[] }),
+      : Promise.resolve({ data: [] as PreservationRow[] }),
   ])
 
-  const open = (orgPunches ?? []).filter((p: any) => p.status !== 'closed' && p.status !== 'cancelled')
-  const catA = open.filter((p: any) => p.category === 'A').length
-  const catB = open.filter((p: any) => p.category === 'B').length
+  const punchRows = (orgPunches ?? []) as PunchRow[]
+  const open = punchRows.filter(p => p.status !== 'closed' && p.status !== 'cancelled')
+  const catA = open.filter(p => p.category === 'A').length
+  const catB = open.filter(p => p.category === 'B').length
 
-  const due = orgPreservationDue ?? []
-  const overdue = (due as any[]).filter(p => p.next_due_date < today).length
-  const upcoming = (due as any[]).filter(p => p.next_due_date >= today).length
+  const due = (orgPreservationDue ?? []) as PreservationRow[]
+  const overdue = due.filter(p => p.next_due_date < today).length
+  const upcoming = due.filter(p => p.next_due_date >= today).length
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
       {(phases ?? []).slice(0, 3).map(phase => {
-        const phaseItrs = (orgItrs ?? []).filter((i: any) => i.phase_id === phase.id)
+        const phaseItrs = ((orgItrs ?? []) as ItrRow[]).filter(i => i.phase_id === phase.id)
         const total = phaseItrs.length
-        const approved = phaseItrs.filter((i: any) => i.status === 'approved').length
+        const approved = phaseItrs.filter(i => i.status === 'approved').length
         const pct = total > 0 ? Math.round((approved / total) * 100) : 0
         return <KpiCard key={phase.id} label={phase.name} value={`${pct}%`} color={phase.color} sub={`${approved} / ${total} ITRs`} progress={pct} />
       })}

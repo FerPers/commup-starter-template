@@ -97,8 +97,8 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
           timestamp: new Date().toISOString(),
         },
       ]);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
       setMessages((prev) => prev.filter((m) => m.id !== 'loading'));
     } finally {
       setIsLoading(false);

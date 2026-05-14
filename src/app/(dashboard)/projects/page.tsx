@@ -81,7 +81,7 @@ export default async function ProjectsPage() {
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
             {activeProjects.map(project => (
-              <ProjectCard key={project.id} project={project as any} phases={phases ?? []} />
+              <ProjectCard key={project.id} project={project} phases={phases ?? []} />
             ))}
           </div>
         </section>
@@ -95,7 +95,7 @@ export default async function ProjectsPage() {
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
             {inactiveProjects.map(project => (
-              <ProjectCard key={project.id} project={project as any} phases={phases ?? []} inactive />
+              <ProjectCard key={project.id} project={project} phases={phases ?? []} inactive />
             ))}
           </div>
         </section>

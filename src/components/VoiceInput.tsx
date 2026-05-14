@@ -29,6 +29,36 @@ interface VoiceInputProps {
 
 type RecordState = 'idle' | 'listening' | 'processing' | 'error';
 
+interface SpeechAlt { transcript: string; confidence: number }
+interface SpeechResult { isFinal: boolean; length: number; [index: number]: SpeechAlt }
+interface SpeechEvent { resultIndex: number; results: { length: number; [index: number]: SpeechResult } }
+interface SpeechErrorEvent { error: string }
+interface SpeechGrammarListLike {
+  addFromString(grammar: string, weight: number): void;
+}
+interface SpeechRecognitionLike {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  grammars?: SpeechGrammarListLike;
+  onstart: () => void;
+  onresult: (event: SpeechEvent) => void;
+  onerror: (event: SpeechErrorEvent) => void;
+  onend: () => void;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+type SpeechGrammarListCtor = new () => SpeechGrammarListLike;
+interface SpeechWindow {
+  SpeechRecognition?: SpeechRecognitionCtor;
+  webkitSpeechRecognition?: SpeechRecognitionCtor;
+  SpeechGrammarList?: SpeechGrammarListCtor;
+  webkitSpeechGrammarList?: SpeechGrammarListCtor;
+}
+
 // Vocabulario técnico O&G para mejorar reconocimiento
 const ONG_GRAMMAR_WORDS = [
   'válvula', 'brida', 'manifold', 'scrubber', 'separador', 'compresor',
@@ -51,23 +81,21 @@ export function useVoiceInput(options: {
   onError: (error: string) => void;
 }) {
   const { language = 'es-ES', onResult, onError } = options;
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const [state, setState] = useState<RecordState>('idle');
   const [isAvailable, setIsAvailable] = useState(false);
   const [interimText, setInterimText] = useState('');
 
   useEffect(() => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+    const w = window as unknown as SpeechWindow;
+    const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Web Speech API detection requires window access, only available client-side
     setIsAvailable(!!SpeechRecognition);
   }, []);
 
   const start = useCallback(async () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+    const w = window as unknown as SpeechWindow;
+    const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       onError('Dictado no disponible en este navegador. Use Chrome o Edge.');
@@ -92,13 +120,13 @@ export function useVoiceInput(options: {
 
     // Grammar opcional (Chrome desktop)
     if ('SpeechGrammarList' in window || 'webkitSpeechGrammarList' in window) {
-      const GrammarList =
-        (window as any).SpeechGrammarList ||
-        (window as any).webkitSpeechGrammarList;
-      const grammarList = new GrammarList();
-      const grammar = `#JSGF V1.0; grammar oilgas; public <term> = ${ONG_GRAMMAR_WORDS.join(' | ')};`;
-      grammarList.addFromString(grammar, 1);
-      recognition.grammars = grammarList;
+      const GrammarList = w.SpeechGrammarList || w.webkitSpeechGrammarList;
+      if (GrammarList) {
+        const grammarList = new GrammarList();
+        const grammar = `#JSGF V1.0; grammar oilgas; public <term> = ${ONG_GRAMMAR_WORDS.join(' | ')};`;
+        grammarList.addFromString(grammar, 1);
+        recognition.grammars = grammarList;
+      }
     }
 
     recognition.onstart = () => {
@@ -106,7 +134,7 @@ export function useVoiceInput(options: {
       setInterimText('');
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechEvent) => {
       let interim = '';
       let finalText = '';
 
@@ -140,7 +168,7 @@ export function useVoiceInput(options: {
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechErrorEvent) => {
       setState('error');
       switch (event.error) {
         case 'not-allowed': onError('Micrófono bloqueado por el navegador'); break;

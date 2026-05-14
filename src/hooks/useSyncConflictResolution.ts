@@ -101,16 +101,16 @@ async function openDB(): Promise<IDBDatabase> {
   });
 }
 
-async function dbGet(db: IDBDatabase, store: string, key: IDBValidKey): Promise<any> {
+async function dbGet<T = unknown>(db: IDBDatabase, store: string, key: IDBValidKey): Promise<T | undefined> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(store, 'readonly');
     const req = tx.objectStore(store).get(key);
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => resolve(req.result as T | undefined);
     req.onerror = () => reject(req.error);
   });
 }
 
-async function dbPut(db: IDBDatabase, store: string, value: any): Promise<any> {
+async function dbPut<T = unknown>(db: IDBDatabase, store: string, value: T): Promise<IDBValidKey> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(store, 'readwrite');
     const req = tx.objectStore(store).put(value);
@@ -119,11 +119,11 @@ async function dbPut(db: IDBDatabase, store: string, value: any): Promise<any> {
   });
 }
 
-async function dbGetAll(db: IDBDatabase, store: string): Promise<any[]> {
+async function dbGetAll<T = unknown>(db: IDBDatabase, store: string): Promise<T[]> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(store, 'readonly');
     const req = tx.objectStore(store).getAll();
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => resolve(req.result as T[]);
     req.onerror = () => reject(req.error);
   });
 }
@@ -214,7 +214,7 @@ export function useSyncConflictResolution({
   };
 
   const loadConflicts = async (db: IDBDatabase) => {
-    const all = await dbGetAll(db, 'conflict_log');
+    const all = await dbGetAll<ConflictRecord>(db, 'conflict_log');
     setConflicts(all.sort((a, b) =>
       new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()
     ));
@@ -250,7 +250,7 @@ export function useSyncConflictResolution({
     };
 
     // Upsert: si ya hay un item para este entity, reemplazar (solo el último cuenta)
-    const existing = await dbGetAll(db, 'sync_queue');
+    const existing = await dbGetAll<SyncQueueItem>(db, 'sync_queue');
     const dup = existing.find((e) => e.entity_id === entityId && e.entity_type === entityType);
     if (dup) {
       await dbPut(db, 'sync_queue', { ...item, id: dup.id });
@@ -266,7 +266,8 @@ export function useSyncConflictResolution({
       const tag = entityType === 'itr_item' ? 'commup-itr-sync'
         : entityType === 'punch' ? 'commup-punch-sync'
         : 'commup-general-sync';
-      await (reg as any).sync.register(tag).catch(() => {});
+      const regWithSync = reg as ServiceWorkerRegistration & { sync?: { register: (tag: string) => Promise<void> } };
+      await regWithSync.sync?.register(tag).catch(() => {});
     }
   }, [userId]);
 
@@ -278,7 +279,7 @@ export function useSyncConflictResolution({
     if (!db || isSyncing || !navigator.onLine) return;
 
     setIsSyncing(true);
-    const items = await dbGetAll(db, 'sync_queue');
+    const items = await dbGetAll<SyncQueueItem>(db, 'sync_queue');
 
     for (const item of items) {
       try {
@@ -346,7 +347,7 @@ export function useSyncConflictResolution({
           });
 
           // 5. Eliminar de la cola
-          await dbDelete(db, 'sync_queue', item.id);
+          await dbDelete(db, 'sync_queue', item.id!);
 
           if (conflict) {
             // Marcar conflicto como resuelto
@@ -368,16 +369,17 @@ export function useSyncConflictResolution({
         } else {
           throw new Error(`HTTP ${response.status}`);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         console.error(`[Sync] Error syncing ${item.entity_id}:`, err);
-        onSyncError?.(item.entity_id, err.message);
+        onSyncError?.(item.entity_id, msg);
 
         // Backoff exponencial: max 5 retries
         if (item.retry_count < 5) {
           await dbPut(db, 'sync_queue', { ...item, retry_count: item.retry_count + 1 });
         } else {
           console.error(`[Sync] Max retries reached for ${item.entity_id}, removing from queue`);
-          await dbDelete(db, 'sync_queue', item.id);
+          await dbDelete(db, 'sync_queue', item.id!);
         }
       }
     }
@@ -398,7 +400,7 @@ export function useSyncConflictResolution({
     const db = dbRef.current;
     if (!db) return;
 
-    const conflict = await dbGet(db, 'conflict_log', conflictId);
+    const conflict = await dbGet<ConflictRecord>(db, 'conflict_log', conflictId);
     if (!conflict) return;
 
     const resolved: ConflictRecord = {
@@ -439,8 +441,8 @@ export function useSyncConflictResolution({
     const db = dbRef.current;
     if (!db) return null;
 
-    const queue = await dbGetAll(db, 'sync_queue');
-    const allConflicts = await dbGetAll(db, 'conflict_log');
+    const queue = await dbGetAll<SyncQueueItem>(db, 'sync_queue');
+    const allConflicts = await dbGetAll<ConflictRecord>(db, 'conflict_log');
     const unresolvedConflicts = allConflicts.filter((c) => !c.resolved_at);
 
     return {

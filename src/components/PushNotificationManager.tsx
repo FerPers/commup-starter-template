@@ -140,8 +140,9 @@ export function usePushNotifications(userId: string) {
 
       setIsSubscribed(true);
       return true;
-    } catch (err: any) {
-      setError(err.message || 'Error activando notificaciones');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || 'Error activando notificaciones');
       return false;
     } finally {
       setIsLoading(false);
@@ -163,8 +164,8 @@ export function usePushNotifications(userId: string) {
         });
       }
       setIsSubscribed(false);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsLoading(false);
     }

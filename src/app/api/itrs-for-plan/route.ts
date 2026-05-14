@@ -17,12 +17,16 @@ export async function GET(req: NextRequest) {
     .order('itr_number')
     .limit(500)
 
-  const result = (data ?? []).map(itr => ({
-    id: itr.id,
-    itr_number: itr.itr_number,
-    tag_number: (itr.tags as any)?.tag_number ?? '',
-    title: (itr.itr_templates as any)?.title ?? '',
-  }))
+  const result = (data ?? []).map(itr => {
+    const tag = itr.tags as unknown as { tag_number: string } | null
+    const tpl = itr.itr_templates as unknown as { title: string } | null
+    return {
+      id: itr.id,
+      itr_number: itr.itr_number,
+      tag_number: tag?.tag_number ?? '',
+      title: tpl?.title ?? '',
+    }
+  })
 
   return NextResponse.json(result)
 }

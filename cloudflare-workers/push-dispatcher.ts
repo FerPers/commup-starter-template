@@ -106,17 +106,26 @@ async function sendWebPush(
     }
 
     return { success: response.ok, status: response.status };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
 // ─── Supabase helpers ──────────────────────────────────────────────────────
-async function supabaseQuery(
+type SubscriptionRow = {
+  id?: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  topics?: string[] | null;
+  user_id?: string;
+};
+
+async function supabaseQuery<T = unknown>(
   env: Env,
   path: string,
   options: RequestInit = {}
-): Promise<any> {
+): Promise<T> {
   const url = `${env.SUPABASE_URL}/rest/v1/${path}`;
   const response = await fetch(url, {
     ...options,
@@ -171,7 +180,7 @@ export default {
         };
 
         // Upsert en Supabase
-        const result = await supabaseQuery(env, 'push_subscriptions', {
+        const result = await supabaseQuery<Array<{ id: string }>>(env, 'push_subscriptions', {
           method: 'POST',
           body: JSON.stringify({
             user_id: body.user_id,
@@ -224,7 +233,7 @@ export default {
         });
 
         // Actualizar KV
-        const existing = await env.PUSH_SUBS_KV.get(`sub:${endpoint}`, 'json') as any;
+        const existing = await env.PUSH_SUBS_KV.get(`sub:${endpoint}`, 'json') as { p256dh: string; auth: string; topics: string[] } | null;
         if (existing) {
           await env.PUSH_SUBS_KV.put(`sub:${endpoint}`, JSON.stringify({ ...existing, topics }), {
             expirationTtl: 7 * 24 * 3600,
@@ -238,7 +247,7 @@ export default {
       if (path === '/api/push/test' && request.method === 'POST') {
         const { user_id } = await request.json() as { user_id: string };
 
-        const subs = await supabaseQuery(env, `push_subscriptions?user_id=eq.${user_id}&select=endpoint,p256dh,auth`);
+        const subs = await supabaseQuery<SubscriptionRow[]>(env, `push_subscriptions?user_id=eq.${user_id}&select=endpoint,p256dh,auth`);
 
         const testPayload = {
           title: '🔔 CommUP — Prueba de notificación',
@@ -250,7 +259,7 @@ export default {
         };
 
         const results = await Promise.all(
-          subs.map((sub: any) => sendWebPush(env, sub, testPayload))
+          subs.map((sub) => sendWebPush(env, sub, testPayload))
         );
 
         return json({ success: true, sent: results.length, results });
@@ -271,11 +280,11 @@ export default {
           query += `&user_id=in.(${body.user_ids.join(',')})`;
         }
 
-        const subs = await supabaseQuery(env, query);
+        const subs = await supabaseQuery<SubscriptionRow[]>(env, query);
 
         // Filtrar por tópico si se especifica
         const filtered = body.topic
-          ? subs.filter((s: any) => s.topics?.includes(body.topic))
+          ? subs.filter((s) => s.topics?.includes(body.topic!))
           : subs;
 
         if (filtered.length === 0) {
@@ -291,7 +300,7 @@ export default {
         for (let i = 0; i < filtered.length; i += BATCH_SIZE) {
           const batch = filtered.slice(i, i + BATCH_SIZE);
           const results = await Promise.allSettled(
-            batch.map((sub: any) => sendWebPush(env, sub, body.payload))
+            batch.map((sub) => sendWebPush(env, sub, body.payload))
           );
 
           for (let j = 0; j < results.length; j++) {
@@ -328,9 +337,9 @@ export default {
 
       return json({ error: 'Not found' }, 404);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[PushDispatcher] Error:', err);
-      return json({ error: err.message }, 500);
+      return json({ error: err instanceof Error ? err.message : String(err) }, 500);
     }
   },
 

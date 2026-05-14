@@ -49,10 +49,11 @@ export default async function DashboardPage() {
   const stored = (profile?.dashboard_layout ?? null) as DashboardLayout | null
   const layout = resolveLayout(role, stored)
 
+  type TKey = Parameters<typeof t>[0]
   const customizerOptions = widgetsForRole(role).map(w => ({
     id: w.id,
-    title: t(w.titleKey as any),
-    desc: t(w.descKey as any),
+    title: t(w.titleKey as TKey),
+    desc: t(w.descKey as TKey),
   }))
 
   const orderedKnown = layout.widgets.filter(w => WIDGET_REGISTRY[w.id])

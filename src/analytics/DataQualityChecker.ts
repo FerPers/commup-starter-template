@@ -74,16 +74,58 @@ export interface DataQualityReport {
 
 // ─── Tipos de datos de entrada ────────────────────────────────────────────
 
+export interface QualitySystem { id: string }
+export interface QualitySubsystem { id: string; system_id?: string }
+export interface QualityLoop { id: string; loop_number: string }
+export interface QualityTag {
+  id: string;
+  tag_number: string;
+  loop_id?: string | null;
+  tag_type?: string | null;
+}
+export interface QualityITR {
+  id: string;
+  itr_number: string;
+  status: string;
+  inspector_signature?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  started_at?: string | null;
+  rejection_count?: number;
+  system_id?: string | null;
+  loop_id?: string | null;
+  certificate_required?: boolean;
+}
+export interface QualityITRItem { itr_id: string; status: string }
+export interface QualityPunch {
+  id: string;
+  punch_number?: string | null;
+  category?: string | null;
+  status: string;
+  system_id?: string | null;
+  system_tag?: string | null;
+  assigned_to?: string | null;
+  cleared_at?: string | null;
+}
+export interface QualityCertificate {
+  id: string;
+  certificate_number: string;
+  status: string;
+  cert_type?: string | null;
+  system_id?: string | null;
+}
+export interface QualityMCRecord { id: string }
+
 export interface QualityInputData {
-  systems: any[];
-  subsystems: any[];
-  loops: any[];
-  tags: any[];
-  itrs: any[];
-  itr_items: any[];
-  punches: any[];
-  certificates: any[];
-  mc_records: any[];
+  systems: QualitySystem[];
+  subsystems: QualitySubsystem[];
+  loops: QualityLoop[];
+  tags: QualityTag[];
+  itrs: QualityITR[];
+  itr_items: QualityITRItem[];
+  punches: QualityPunch[];
+  certificates: QualityCertificate[];
+  mc_records: QualityMCRecord[];
 }
 
 // ─── Utilidades ───────────────────────────────────────────────────────────
@@ -150,8 +192,8 @@ function checkITRIntegrity(data: QualityInputData): CheckResult {
 
       // 1.3 ITR con 0 items completados marcado como aprobado
       if (itr.status === 'approved') {
-        const itrItems = data.itr_items.filter((it: any) => it.itr_id === itr.id);
-        const completedItems = itrItems.filter((it: any) => it.status === 'ok' || it.status === 'na');
+        const itrItems = data.itr_items.filter((it) => it.itr_id === itr.id);
+        const completedItems = itrItems.filter((it) => it.status === 'ok' || it.status === 'na');
         if (itrItems.length > 0 && completedItems.length === 0) {
           issues.push({
             id: issueId(),
@@ -173,18 +215,19 @@ function checkITRIntegrity(data: QualityInputData): CheckResult {
       }
 
       // 1.4 ITR rechazado 3+ veces (calidad issue)
-      if (itr.rejection_count >= 3) {
+      if ((itr.rejection_count ?? 0) >= 3) {
+        const rejCount = itr.rejection_count ?? 0;
         issues.push({
           id: issueId(),
           check_id: 'itr_repeated_rejection',
           check_name: 'ITR con Rechazos Repetidos',
           category: 'itr_integrity',
-          severity: itr.rejection_count >= 5 ? 'error' : 'warning',
+          severity: rejCount >= 5 ? 'error' : 'warning',
           entity_type: 'itr',
           entity_id: itr.id,
           entity_label: itr.itr_number,
-          description: `ITR ${itr.itr_number} rechazado ${itr.rejection_count} veces. Indica problema de calidad sistemático`,
-          detail: `rejection_count=${itr.rejection_count}`,
+          description: `ITR ${itr.itr_number} rechazado ${rejCount} veces. Indica problema de calidad sistemático`,
+          detail: `rejection_count=${rejCount}`,
           suggested_fix: 'Revisar causa raíz de rechazos. Posible falta de capacitación o problema con el scope',
           fix_url: `/itrs/${itr.id}/rejection-history`,
           auto_fixable: false,
@@ -234,7 +277,7 @@ function checkLoopTagCoverage(data: QualityInputData): CheckResult {
   const issues: DataQualityIssue[] = [];
   const [_, ms] = timeit(() => {
     for (const loop of data.loops) {
-      const loopTags = data.tags.filter((t: any) => t.loop_id === loop.id);
+      const loopTags = data.tags.filter((t) => t.loop_id === loop.id);
 
       // 2.1 Loop sin tags
       if (loopTags.length === 0) {
@@ -257,7 +300,7 @@ function checkLoopTagCoverage(data: QualityInputData): CheckResult {
       }
 
       // 2.2 Loop con ITR en scope pero sin tags = no se puede completar loop check
-      const loopITRs = data.itrs.filter((i: any) => i.loop_id === loop.id);
+      const loopITRs = data.itrs.filter((i) => i.loop_id === loop.id);
       if (loopITRs.length > 0 && loopTags.length === 0) {
         issues.push({
           id: issueId(),
@@ -279,7 +322,7 @@ function checkLoopTagCoverage(data: QualityInputData): CheckResult {
     }
 
     // 2.3 Tags sin loop (huérfanos de instrumentación)
-    const orphanTags = data.tags.filter((t: any) => !t.loop_id && t.tag_type === 'instrument');
+    const orphanTags = data.tags.filter((t) => !t.loop_id && t.tag_type === 'instrument');
     for (const tag of orphanTags.slice(0, 50)) {  // limitar a 50 para no inundar
       issues.push({
         id: issueId(),
@@ -335,7 +378,7 @@ function checkLoopTagCoverage(data: QualityInputData): CheckResult {
 
 function checkOrphanPunches(data: QualityInputData): CheckResult {
   const issues: DataQualityIssue[] = [];
-  const systemIds = new Set(data.systems.map((s: any) => s.id));
+  const systemIds = new Set(data.systems.map((s) => s.id));
   const [_, ms] = timeit(() => {
     for (const punch of data.punches) {
       // 3.1 Punch sin sistema
@@ -368,7 +411,7 @@ function checkOrphanPunches(data: QualityInputData): CheckResult {
           severity: 'critical',
           entity_type: 'punch',
           entity_id: punch.id,
-          entity_label: punch.punch_number,
+          entity_label: punch.punch_number ?? punch.id,
           description: `Punch Cat A ${punch.punch_number} sin ejecutor asignado. Bloquea MC de ${punch.system_tag || punch.system_id}`,
           detail: `category=A, assigned_to=null, status=${punch.status}`,
           suggested_fix: 'Asignar ejecutor responsable de inmediato',
@@ -388,7 +431,7 @@ function checkOrphanPunches(data: QualityInputData): CheckResult {
           severity: 'warning',
           entity_type: 'punch',
           entity_id: punch.id,
-          entity_label: punch.punch_number,
+          entity_label: punch.punch_number ?? punch.id,
           description: `Punch ${punch.punch_number} marcado como cerrado pero sin fecha de cierre registrada`,
           detail: `status=cleared, cleared_at=null`,
           suggested_fix: 'Registrar fecha de cierre manualmente en el punch',
@@ -422,9 +465,9 @@ function checkCertificatePrereqs(data: QualityInputData): CheckResult {
       if (cert.status === 'issued') continue; // ya emitido = OK
 
       // 4.1 Certificado en proceso con ITRs pendientes críticos
-      const systemITRs = data.itrs.filter((i: any) => i.system_id === cert.system_id);
+      const systemITRs = data.itrs.filter((i) => i.system_id === cert.system_id);
       const pendingCritical = systemITRs.filter(
-        (i: any) => i.status !== 'approved' && i.certificate_required === true
+        (i) => i.status !== 'approved' && i.certificate_required === true
       );
 
       if (pendingCritical.length > 0) {
@@ -449,7 +492,7 @@ function checkCertificatePrereqs(data: QualityInputData): CheckResult {
       // 4.2 Certificado MC sin todos los punches Cat A cerrados
       if (cert.cert_type === 'MC') {
         const openCatA = data.punches.filter(
-          (p: any) => p.system_id === cert.system_id && p.category === 'A' && p.status !== 'cleared'
+          (p) => p.system_id === cert.system_id && p.category === 'A' && p.status !== 'cleared'
         );
         if (openCatA.length > 0) {
           issues.push({
