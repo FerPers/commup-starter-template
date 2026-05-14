@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X, Download } from 'lucide-react'
 import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } from '@/components/ui'
-import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
+import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 import { reassignPunch } from '@/app/actions/punches'
 
 const PAGE_SIZE = 50
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
+const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 type Project    = { id: string; name: string; code: string }
 type Discipline = { id: string; code: string; name: string; color: string }
@@ -67,6 +68,7 @@ export default function PunchListGlobal({
   const tc = useTranslations('Common')
   const tTags = useTranslations('Tags')
   const canReassign = REASSIGN_ROLES.includes(currentUserRole)
+  const canDelete = EDITOR_ROLES.includes(currentUserRole)
   const [reassignPunchRow, setReassignPunchRow] = useState<Punch | null>(null)
 
   const punchStatusLabels: Record<string, string> = {
@@ -153,6 +155,19 @@ export default function PunchListGlobal({
     setBulkLoading(true)
     setBulkError('')
     const { error } = await bulkUpdatePunchStatus(Array.from(selectedIds), bulkStatus)
+    setBulkLoading(false)
+    if (error) { setBulkError(error); return }
+    setSelectedIds(new Set())
+    setBulkStatus('')
+    router.refresh()
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return
+    if (!confirm(t('bulk.deleteConfirm', { count: selectedIds.size }))) return
+    setBulkLoading(true)
+    setBulkError('')
+    const { error } = await bulkDeletePunches(Array.from(selectedIds))
     setBulkLoading(false)
     if (error) { setBulkError(error); return }
     setSelectedIds(new Set())
@@ -309,6 +324,21 @@ export default function PunchListGlobal({
           >
             {tc('apply')}
           </Button>
+          {canDelete && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkLoading}
+              style={{
+                padding: '6px 12px', borderRadius: 'var(--radius-sm)',
+                background: '#dc2626', border: '1px solid #b91c1c',
+                color: '#fff', fontSize: 'var(--text-sm)', fontWeight: 600,
+                fontFamily: 'inherit', cursor: bulkLoading ? 'default' : 'pointer',
+                opacity: bulkLoading ? 0.6 : 1,
+              }}
+            >
+              {t('bulk.delete')}
+            </button>
+          )}
           {bulkError && <span style={{ fontSize: 'var(--text-sm)', color: '#f87171' }}>{bulkError}</span>}
           <button
             onClick={() => { setSelectedIds(new Set()); setBulkStatus(''); setBulkError('') }}

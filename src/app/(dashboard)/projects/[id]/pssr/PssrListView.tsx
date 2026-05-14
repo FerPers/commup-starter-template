@@ -39,7 +39,7 @@ export default function PssrListView({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({ systemId: '', templateId: templates[0]?.id ?? '', title: '' })
+  const [form, setForm] = useState({ systemId: '', templateId: templates[0]?.id ?? '', title: '', reviewDueDate: '' })
   const [formError, setFormError] = useState<string | null>(null)
 
   // Group reviews by system
@@ -60,6 +60,7 @@ export default function PssrListView({
           systemId: form.systemId,
           templateId: form.templateId,
           title: form.title || undefined,
+          reviewDueDate: form.reviewDueDate || null,
         })
         setShowModal(false)
         router.push(`/projects/${projectId}/pssr/${review.id}`)
@@ -277,6 +278,20 @@ export default function PssrListView({
                   placeholder="Pre-Startup Safety Review"
                   style={inputStyle}
                 />
+              </div>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                  Fecha objetivo (opcional)
+                </label>
+                <input
+                  type="date"
+                  value={form.reviewDueDate}
+                  onChange={e => setForm(f => ({ ...f, reviewDueDate: e.target.value }))}
+                  style={inputStyle}
+                />
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                  Si se establece y el PSSR no se completa, se notificará al equipo cuando esté vencido.
+                </p>
               </div>
               {formError && <p style={{ color: '#dc2626', fontSize: '13px', margin: 0 }}>{formError}</p>}
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>

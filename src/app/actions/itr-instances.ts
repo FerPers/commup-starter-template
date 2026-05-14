@@ -4,6 +4,7 @@ import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
+import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
 
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
@@ -82,6 +83,18 @@ export async function createItrAssignment(input: {
     .insert(assignments)
 
   if (assignErr) return { error: assignErr.message }
+
+  const changes: ItrAssignmentChange[] = assignments.map(a => ({
+    itrId: itr.id,
+    itrNumber,
+    projectId,
+    tagId,
+    role: a.role as 'executor' | 'supervisor' | 'client',
+    recipientUserId: a.user_id,
+    changeType: 'added',
+  }))
+  const admin = createAdminClient()
+  await notifyItrAssignmentChanged(admin, ctx.orgId, ctx.userId, changes)
 
   revalidatePath(`/projects/${projectId}/tags/${tagId}`)
   revalidatePath(`/projects/${projectId}/itrs`)

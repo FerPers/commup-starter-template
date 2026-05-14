@@ -86,6 +86,7 @@ export async function createPssrReview(data: {
   systemId: string
   templateId: string
   title?: string
+  reviewDueDate?: string | null
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -104,7 +105,7 @@ export async function createPssrReview(data: {
     .eq('system_id', data.systemId)
   const reviewNumber = `PSSR-${String((count ?? 0) + 1).padStart(3, '0')}`
 
-  const { data: review, error: reviewError } = await supabase.from('pssr_reviews').insert({
+  const insertRow: Record<string, unknown> = {
     org_id: project.org_id,
     project_id: data.projectId,
     system_id: data.systemId,
@@ -112,7 +113,10 @@ export async function createPssrReview(data: {
     review_number: reviewNumber,
     title: data.title ?? 'Pre-Startup Safety Review',
     created_by: user.id,
-  }).select().single()
+  }
+  if (data.reviewDueDate) insertRow.review_due_date = data.reviewDueDate
+
+  const { data: review, error: reviewError } = await supabase.from('pssr_reviews').insert(insertRow).select().single()
   if (reviewError) throw new Error(reviewError.message)
 
   // Copy template items to review items
@@ -180,6 +184,17 @@ export async function updatePssrReviewNotes(reviewId: string, projectId: string,
     .eq('id', reviewId)
   if (error) throw new Error(error.message)
   revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
+}
+
+export async function updatePssrReviewDueDate(reviewId: string, projectId: string, reviewDueDate: string | null) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('pssr_reviews')
+    .update({ review_due_date: reviewDueDate, last_overdue_notif_at: null, updated_at: new Date().toISOString() })
+    .eq('id', reviewId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
+  revalidatePath(`/projects/${projectId}/pssr`)
 }
 
 export async function submitPssrForApproval(reviewId: string, projectId: string) {

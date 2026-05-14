@@ -341,6 +341,95 @@ export async function revokeCertificate(input: {
   return { revokedCount: signers.length }
 }
 
+// ── reopenCertificate ──────────────────────────────────────────────────────
+
+export async function reopenCertificate(input: {
+  certId: string
+  projectId: string
+  reason: string
+}): Promise<{ error?: string; notifiedCount?: number }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+  if (!['owner', 'admin', 'architect'].includes(ctx.role)) {
+    return { error: 'Sin permisos para reabrir certificados' }
+  }
+
+  const reason = (input.reason ?? '').trim()
+  if (reason.length < 3) {
+    return { error: 'Debes indicar un motivo (al menos 3 caracteres)' }
+  }
+
+  const { supabase } = ctx
+
+  const { data: cert } = await supabase
+    .from('certificates')
+    .select('id, code, status, project_id')
+    .eq('id', input.certId)
+    .single()
+
+  if (!cert) return { error: 'Certificado no encontrado' }
+  if (cert.project_id !== input.projectId) return { error: 'Certificado no pertenece al proyecto' }
+  if (cert.status !== 'rejected') {
+    return { error: 'Solo se pueden reabrir certificados rechazados' }
+  }
+
+  const { data: lastRevoke } = await supabase
+    .from('activity_log')
+    .select('payload')
+    .eq('entity_type', 'certificate')
+    .eq('entity_id', input.certId)
+    .eq('action', 'revoked')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  type PrevSigner = { userId: string; role: string; signedAt: string }
+  const previousSignatures = (lastRevoke?.payload as { previousSignatures?: PrevSigner[] } | null)?.previousSignatures ?? []
+
+  const { error: updErr } = await supabase
+    .from('certificates')
+    .update({ status: 'issued' })
+    .eq('id', input.certId)
+  if (updErr) return { error: updErr.message }
+
+  await logActivity(supabase, {
+    orgId: ctx.orgId,
+    userId: ctx.userId,
+    entityType: 'certificate',
+    entityId: input.certId,
+    action: 'reopened',
+    payload: {
+      projectId: input.projectId,
+      reason,
+      previousSignatures,
+    },
+  })
+
+  const uniqueRecipients = Array.from(new Set(previousSignatures.map(s => s.userId))).filter(
+    uid => uid && uid !== ctx.userId,
+  )
+  let notifiedCount = 0
+  if (uniqueRecipients.length > 0) {
+    const rows = uniqueRecipients.map(uid => ({
+      org_id: ctx.orgId,
+      recipient_user_id: uid,
+      kind: 'certificate_reopened',
+      title: `El certificado ${cert.code} fue reabierto`,
+      body: reason,
+      link_url: `/projects/${input.projectId}/certificates/${input.certId}`,
+      payload: { certId: input.certId, projectId: input.projectId, certCode: cert.code, reason },
+    }))
+    const admin = createAdminClient()
+    const { error: notifErr } = await admin.from('notifications').insert(rows)
+    if (notifErr) console.error('[notifications.insert]', notifErr)
+    else notifiedCount = uniqueRecipients.length
+  }
+
+  revalidatePath(`/projects/${input.projectId}/certificates`)
+  revalidatePath(`/projects/${input.projectId}/certificates/${input.certId}`)
+  return { notifiedCount }
+}
+
 // ── signCertificate ────────────────────────────────────────────────────────
 
 export async function signCertificate(input: {
@@ -383,6 +472,63 @@ export async function signCertificate(input: {
     action: 'signed',
     payload: { role: input.role, projectId: input.projectId },
   })
+
+  // Cycle close: if this was the 3rd signature (completion + client + authority),
+  // fire a separate `cert_issued` event so issuer + signers + admins see it.
+  const { data: allSigs } = await supabase
+    .from('certificate_signatures')
+    .select('user_id, role')
+    .eq('certificate_id', input.certId)
+
+  const signerUserIds = (allSigs ?? []).map(s => s.user_id as string).filter(Boolean)
+  if (signerUserIds.length >= 3) {
+    const { data: cert } = await supabase
+      .from('certificates')
+      .select('certificate_number, title, issued_by')
+      .eq('id', input.certId)
+      .single()
+
+    await logActivity(supabase, {
+      orgId: ctx.orgId,
+      userId,
+      entityType: 'certificate',
+      entityId: input.certId,
+      action: 'fully_signed',
+      payload: { projectId: input.projectId, certNumber: cert?.certificate_number ?? null },
+    })
+
+    const admin = createAdminClient()
+    const { data: admins } = await admin
+      .from('org_members')
+      .select('user_id')
+      .eq('org_id', ctx.orgId)
+      .in('role', ['owner', 'admin', 'architect'])
+
+    const recipientSet = new Set<string>()
+    if (cert?.issued_by) recipientSet.add(cert.issued_by as string)
+    signerUserIds.forEach(uid => recipientSet.add(uid))
+    ;(admins ?? []).forEach(a => { if (a.user_id) recipientSet.add(a.user_id as string) })
+    recipientSet.delete(userId)
+
+    const recipients = Array.from(recipientSet)
+    if (recipients.length > 0 && cert) {
+      const rows = recipients.map(uid => ({
+        org_id: ctx.orgId,
+        recipient_user_id: uid,
+        kind: 'cert_issued',
+        title: `Certificado ${cert.certificate_number} emitido y firmado`,
+        body: cert.title,
+        link_url: `/projects/${input.projectId}/certificates/${input.certId}`,
+        payload: {
+          certId: input.certId,
+          projectId: input.projectId,
+          certNumber: cert.certificate_number,
+        },
+      }))
+      const { error: notifErr } = await admin.from('notifications').insert(rows)
+      if (notifErr) console.error('[notifications.insert cert_issued]', notifErr)
+    }
+  }
 
   revalidatePath(`/projects/${input.projectId}/certificates/${input.certId}`)
   return {}

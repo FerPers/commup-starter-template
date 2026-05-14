@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   updatePssrReviewItem,
   updatePssrReviewNotes,
+  updatePssrReviewDueDate,
   submitPssrForApproval,
   addPssrSignature,
   removePssrSignature,
@@ -47,6 +48,7 @@ interface Props {
     title: string
     status: ReviewStatus
     notes: string | null
+    review_due_date: string | null
     rfsu_certificate_id: string | null
     systems: { id: string; code: string; name: string } | null
     approved_at: string | null
@@ -97,6 +99,9 @@ export default function PssrReviewForm({
   const [items, setItems] = useState(initialItems)
   const [sigs, setSigs] = useState(initialSigs)
   const [notes, setNotes] = useState(review.notes ?? '')
+  const [dueDate, setDueDate] = useState(review.review_due_date ?? '')
+  const [editingDueDate, setEditingDueDate] = useState(false)
+  const [savedDueDate, setSavedDueDate] = useState(review.review_due_date ?? '')
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [showSignModal, setShowSignModal] = useState(false)
@@ -163,6 +168,19 @@ export default function PssrReviewForm({
   async function handleSaveNotes() {
     startTransition(async () => {
       await updatePssrReviewNotes(review.id, projectId, notes)
+    })
+  }
+
+  async function handleSaveDueDate() {
+    const value = dueDate || null
+    startTransition(async () => {
+      try {
+        await updatePssrReviewDueDate(review.id, projectId, value)
+        setSavedDueDate(value ?? '')
+        setEditingDueDate(false)
+      } catch (e: unknown) {
+        setActionError(e instanceof Error ? e.message : 'Error al guardar fecha')
+      }
     })
   }
 
@@ -246,6 +264,71 @@ export default function PssrReviewForm({
               )}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>{review.title}</p>
+
+            {/* Due date chip / editor */}
+            {(() => {
+              const today = new Date().toISOString().split('T')[0]
+              const isOverdue = !!(savedDueDate && savedDueDate < today && review.status !== 'approved')
+              const canEditDate = canApprove && review.status !== 'approved'
+
+              if (editingDueDate && canEditDate) {
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Fecha objetivo
+                    </label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={e => setDueDate(e.target.value)}
+                      style={{ padding: '4px 8px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit' }}
+                    />
+                    <button
+                      onClick={handleSaveDueDate}
+                      disabled={isPending}
+                      style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: '#10b981', color: '#fff', border: 'none', cursor: 'pointer' }}
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => { setDueDate(savedDueDate); setEditingDueDate(false) }}
+                      disabled={isPending}
+                      style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', border: 'none', cursor: 'pointer' }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )
+              }
+
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Fecha objetivo
+                  </span>
+                  {savedDueDate ? (
+                    <span style={{
+                      padding: '2px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
+                      background: isOverdue ? '#fee2e2' : '#f1f5f9',
+                      color: isOverdue ? '#dc2626' : 'var(--text-muted)',
+                      border: `1px solid ${isOverdue ? '#fecaca' : 'var(--border)'}`,
+                    }}>
+                      {savedDueDate}{isOverdue ? ' · Vencido' : ''}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</span>
+                  )}
+                  {canEditDate && (
+                    <button
+                      onClick={() => { setDueDate(savedDueDate); setEditingDueDate(true) }}
+                      style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'transparent', color: 'var(--primary-500)', border: '1px solid var(--border)', cursor: 'pointer' }}
+                    >
+                      {savedDueDate ? 'Editar' : 'Establecer'}
+                    </button>
+                  )}
+                </div>
+              )
+            })()}
           </div>
 
           {/* Action buttons */}

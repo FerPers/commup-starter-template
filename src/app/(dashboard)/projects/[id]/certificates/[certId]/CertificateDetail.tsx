@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { revokeCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
+import { revokeCertificate, reopenCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
 
 type CertSignatureRoleId = 'completion' | 'client' | 'authority'
 
@@ -101,6 +101,9 @@ export default function CertificateDetail({
   const [revokeConfirm, setRevokeConfirm] = useState(false)
   const [revokeError, setRevokeError]     = useState('')
   const [revokeReason, setRevokeReason]   = useState('')
+  const [reopenConfirm, setReopenConfirm] = useState(false)
+  const [reopenError, setReopenError]     = useState('')
+  const [reopenReason, setReopenReason]   = useState('')
   const [signRole, setSignRole]           = useState<CertSignatureRoleId | null>(null)
   const [signComments, setSignComments]   = useState('')
   const [signError, setSignError]         = useState('')
@@ -133,6 +136,20 @@ export default function CertificateDetail({
       } else {
         setRevokeConfirm(false)
         setRevokeReason('')
+        router.refresh()
+      }
+    })
+  }
+
+  function handleReopen() {
+    setReopenError('')
+    startTransition(async () => {
+      const result = await reopenCertificate({ certId: cert.id, projectId, reason: reopenReason })
+      if (result.error) {
+        setReopenError(result.error)
+      } else {
+        setReopenConfirm(false)
+        setReopenReason('')
         router.refresh()
       }
     })
@@ -265,6 +282,18 @@ export default function CertificateDetail({
                 }}
               >
                 {t('detail.revokeBtn')}
+              </button>
+            )}
+            {isAdmin && cert.status === 'rejected' && (
+              <button
+                className="no-print"
+                onClick={() => setReopenConfirm(true)}
+                style={{
+                  padding: '7px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                  cursor: 'pointer', border: '1px solid #bfdbfe', background: '#eff6ff', color: '#3b82f6',
+                }}
+              >
+                {t('detail.reopenBtn')}
               </button>
             )}
           </div>
@@ -542,6 +571,56 @@ export default function CertificateDetail({
                 style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: '#10b981', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'wait' : 'pointer' }}
               >
                 {isPending ? t('detail.sigSigning') : t('detail.sigConfirmAction')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reopen confirm modal */}
+      {reopenConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'var(--card-bg)', borderRadius: '14px', padding: '28px',
+            maxWidth: '400px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+          }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
+              {t('detail.reopenModal.title')}
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}
+               dangerouslySetInnerHTML={{ __html: t('detail.reopenModal.body', { certNumber: `<strong>${cert.certificate_number}</strong>` }) }}
+            />
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-strong)' }}>
+                {t('detail.reopenModal.reasonLabel')}
+              </span>
+              <textarea
+                value={reopenReason}
+                onChange={e => setReopenReason(e.target.value)}
+                rows={3}
+                placeholder={t('detail.reopenModal.reasonPlaceholder')}
+                style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', minHeight: 70 }}
+              />
+            </label>
+            {reopenError && (
+              <p style={{ fontSize: '13px', color: '#ef4444', margin: '0 0 14px' }}>{reopenError}</p>
+            )}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setReopenConfirm(false); setReopenReason(''); setReopenError('') }}
+                style={{ padding: '8px 18px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer' }}
+              >
+                {t('detail.reopenModal.cancel')}
+              </button>
+              <button
+                onClick={handleReopen}
+                disabled={isPending || reopenReason.trim().length < 3}
+                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: (reopenReason.trim().length < 3) ? '#93c5fd' : '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: (isPending || reopenReason.trim().length < 3) ? 'not-allowed' : 'pointer' }}
+              >
+                {isPending ? t('detail.reopenModal.submitting') : t('detail.reopenModal.confirm')}
               </button>
             </div>
           </div>

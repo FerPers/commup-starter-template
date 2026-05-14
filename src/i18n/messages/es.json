@@ -280,7 +280,10 @@
       "selected": "{count, plural, one {# punch seleccionado} other {# punches seleccionados}}",
       "close": "Cerrar",
       "cancelSelected": "Cancelar",
-      "deselect": "Deseleccionar todo"
+      "deselect": "Deseleccionar todo",
+      "delete": "Eliminar",
+      "deleteConfirm": "¿Eliminar {count, plural, one {# punch} other {# punches}}? Esta acción no se puede deshacer.",
+      "deleted": "{count, plural, one {# punch eliminado} other {# punches eliminados}}"
     },
     "catLabels": {
       "A": "Cat A — Bloqueante",
@@ -506,6 +509,16 @@
         "cancel": "Cancelar",
         "submitting": "Revocando...",
         "confirm": "Sí, revocar"
+      },
+      "reopenBtn": "Reabrir",
+      "reopenModal": {
+        "title": "¿Reabrir certificado?",
+        "body": "El certificado {certNumber} volverá al estado Emitido y necesitará nuevas firmas. Los firmantes previos serán notificados.",
+        "reasonLabel": "Motivo (obligatorio)",
+        "reasonPlaceholder": "Ej. issues resueltos, ITRs ahora aprobados...",
+        "cancel": "Cancelar",
+        "submitting": "Reabriendo...",
+        "confirm": "Sí, reabrir"
       },
       "pdfBtn": "Descargar PDF"
     }

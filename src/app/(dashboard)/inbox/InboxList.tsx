@@ -11,10 +11,14 @@ import {
 
 const KIND_LABELS: Record<string, string> = {
   itr_signature_revoked: 'Firma ITR revocada',
+  itr_assignment_changed: 'Asignación ITR',
   certificate_revoked: 'Certificado revocado',
+  certificate_reopened: 'Certificado reabierto',
+  cert_issued: 'Certificado emitido y firmado',
   punch_assigned: 'Punch asignado',
   cert_signature_requested: 'Firma de certificado solicitada',
   preservation_overdue: 'Preservación vencida',
+  pssr_review_overdue: 'PSSR vencido',
 }
 
 const KIND_FILTER_OPTIONS = Object.entries(KIND_LABELS)

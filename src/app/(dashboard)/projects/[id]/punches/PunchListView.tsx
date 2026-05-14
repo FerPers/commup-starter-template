@@ -4,9 +4,10 @@ import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updatePunchStatus, closePunch, addPunchComment, reassignPunch } from '@/app/actions/punches'
-import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
+import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
+const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 type OrgMember = { user_id: string; profiles: { full_name: string } | null }
 
@@ -146,6 +147,20 @@ export default function PunchListView({
     })
   }
 
+  const canDelete = EDITOR_ROLES.includes(currentUserRole)
+
+  function handleBulkDelete() {
+    if (!selected.size) return
+    if (!confirm(t('bulk.deleteConfirm', { count: selected.size }))) return
+    setBulkError(null)
+    startBulkTransition(async () => {
+      const res = await bulkDeletePunches([...selected])
+      if (res.error) { setBulkError(res.error); return }
+      clearSelection()
+      router.refresh()
+    })
+  }
+
   function refresh() { router.refresh() }
 
   return (
@@ -206,6 +221,15 @@ export default function PunchListView({
           >
             {t('bulk.cancelSelected')}
           </button>
+          {canDelete && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkPending}
+              style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', cursor: 'pointer' }}
+            >
+              {t('bulk.delete')}
+            </button>
+          )}
           <button
             onClick={clearSelection}
             style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', background: 'var(--card-bg)', border: '1px solid var(--border)', cursor: 'pointer' }}

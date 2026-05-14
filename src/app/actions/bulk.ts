@@ -1,6 +1,7 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { logActivity } from '@/lib/log-activity'
 import { revalidatePath } from 'next/cache'
 
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
@@ -87,31 +88,44 @@ export async function bulkApproveItrs(
   return { approved }
 }
 
-export async function bulkAssignItrs(
-  ids: string[],
-  userId: string,
-  role: 'executor' | 'supervisor' | 'client'
-): Promise<{ error?: string }> {
-  if (!ids.length) return {}
+export async function bulkDeletePunches(
+  ids: string[]
+): Promise<{ deleted: number; error?: string }> {
+  if (!ids.length) return { deleted: 0 }
   const ctx = await getCtx()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!ctx) return { deleted: 0, error: 'No autenticado' }
+  if (!EDITOR_ROLES.includes(ctx.role)) return { deleted: 0, error: 'Sin permisos' }
 
-  // Upsert: delete existing assignment for that role, then insert new ones
-  const { error: delErr } = await ctx.supabase
-    .from('itr_assignments')
+  const { data: rows, error: fetchErr } = await ctx.supabase
+    .from('punches')
+    .select('id, punch_number, project_id')
+    .in('id', ids)
+
+  if (fetchErr) return { deleted: 0, error: fetchErr.message }
+  if (!rows || rows.length === 0) return { deleted: 0 }
+
+  const deletableIds = rows.map(r => r.id)
+  const { error } = await ctx.supabase
+    .from('punches')
     .delete()
-    .in('itr_id', ids)
-    .eq('role', role)
+    .in('id', deletableIds)
 
-  if (delErr) return { error: delErr.message }
+  if (error) return { deleted: 0, error: error.message }
 
-  const rows = ids.map(itr_id => ({ itr_id, user_id: userId, role }))
-  const { error: insErr } = await ctx.supabase
-    .from('itr_assignments')
-    .insert(rows)
+  await logActivity(ctx.supabase, {
+    orgId: ctx.orgId,
+    userId: ctx.userId,
+    entityType: 'punch',
+    action: 'bulk_deleted',
+    payload: {
+      count: deletableIds.length,
+      punches: rows.map(r => ({ id: r.id, punch_number: r.punch_number, project_id: r.project_id })),
+    },
+  })
 
-  if (insErr) return { error: insErr.message }
-  revalidatePath('/itrs')
-  return {}
+  const projectIds = new Set(rows.map(r => r.project_id).filter(Boolean) as string[])
+  projectIds.forEach(pid => revalidatePath(`/projects/${pid}/punches`))
+  revalidatePath('/punch-list')
+
+  return { deleted: deletableIds.length }
 }

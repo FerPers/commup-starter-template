@@ -16,6 +16,8 @@ on:
     - cron: '*/5 * * * *'
     # Preservation overdue — daily at 07:00 UTC
     - cron: '0 7 * * *'
+    # PSSR review overdue — daily at 08:00 UTC
+    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       target:
@@ -26,6 +28,7 @@ on:
           - snapshot
           - push-dispatch
           - preservation-overdue
+          - pssr-review-overdue
           - all
 
 jobs:
@@ -59,5 +62,15 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           curl -fsS -X POST "$APP_URL/api/cron/preservation-overdue" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json"
+
+      - name: PSSR review overdue
+        if: github.event.schedule == '0 8 * * *' || github.event.inputs.target == 'pssr-review-overdue' || github.event.inputs.target == 'all'
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -X POST "$APP_URL/api/cron/pssr-review-overdue" \
             -H "Authorization: Bearer $CRON_SECRET" \
             -H "Content-Type: application/json"

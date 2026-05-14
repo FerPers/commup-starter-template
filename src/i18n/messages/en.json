@@ -280,7 +280,10 @@
       "selected": "{count, plural, one {# punch selected} other {# punches selected}}",
       "close": "Close",
       "cancelSelected": "Cancel",
-      "deselect": "Deselect all"
+      "deselect": "Deselect all",
+      "delete": "Delete",
+      "deleteConfirm": "Delete {count, plural, one {# punch} other {# punches}}? This action cannot be undone.",
+      "deleted": "{count, plural, one {# punch deleted} other {# punches deleted}}"
     },
     "catLabels": {
       "A": "Cat A — Blocking",
@@ -506,6 +509,16 @@
         "cancel": "Cancel",
         "submitting": "Revoking...",
         "confirm": "Yes, revoke"
+      },
+      "reopenBtn": "Reopen",
+      "reopenModal": {
+        "title": "Reopen certificate?",
+        "body": "Certificate {certNumber} will return to Issued status and need new signatures. Previous signers will be notified.",
+        "reasonLabel": "Reason (required)",
+        "reasonPlaceholder": "E.g. issues resolved, ITRs now approved...",
+        "cancel": "Cancel",
+        "submitting": "Reopening...",
+        "confirm": "Yes, reopen"
       },
       "pdfBtn": "Download PDF"
     }
