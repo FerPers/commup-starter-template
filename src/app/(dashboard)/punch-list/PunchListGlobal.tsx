@@ -1,16 +1,19 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X, Download } from 'lucide-react'
 import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } from '@/components/ui'
 import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
+import { reassignPunch } from '@/app/actions/punches'
 
 const PAGE_SIZE = 50
+const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 type Project    = { id: string; name: string; code: string }
 type Discipline = { id: string; code: string; name: string; color: string }
+type OrgMember  = { user_id: string; profiles: { full_name: string } | null }
 
 type Punch = {
   id: string
@@ -24,6 +27,7 @@ type Punch = {
   created_at: string
   itr_id: string | null
   project_id: string
+  assigned_to: string | null
   raised_by_profile: { full_name: string } | null
   assigned_to_profile: { full_name: string } | null
   projects: { id: string; name: string; code: string } | null
@@ -50,13 +54,20 @@ export default function PunchListGlobal({
   projects,
   punches,
   disciplines,
+  orgMembers,
+  currentUserRole,
 }: {
   projects: Project[]
   punches: Punch[]
   disciplines: Discipline[]
+  orgMembers: OrgMember[]
+  currentUserRole: string
 }) {
   const t  = useTranslations('PunchList')
   const tc = useTranslations('Common')
+  const tTags = useTranslations('Tags')
+  const canReassign = REASSIGN_ROLES.includes(currentUserRole)
+  const [reassignPunchRow, setReassignPunchRow] = useState<Punch | null>(null)
 
   const punchStatusLabels: Record<string, string> = {
     open:        t('punchStatus.open'),
@@ -436,8 +447,45 @@ export default function PunchListGlobal({
               )
             },
           },
+          ...(canReassign ? [{
+            key: 'actions',
+            width: 110,
+            header: '',
+            cell: (p: Punch) => {
+              const isClosed = p.status === 'closed' || p.status === 'cancelled'
+              if (isClosed) return null
+              return (
+                <button
+                  onClick={() => setReassignPunchRow(p)}
+                  title={tTags('punches.detail.labelReassign')}
+                  style={{
+                    padding: '4px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 6,
+                    background: 'var(--card-bg)',
+                    color: 'var(--text-muted)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {tTags('punches.detail.reassignBtn')}
+                </button>
+              )
+            },
+          }] : []),
         ] satisfies DataTableColumn<Punch>[]}
       />
+
+      {reassignPunchRow && (
+        <GlobalReassignModal
+          punch={reassignPunchRow}
+          orgMembers={orgMembers}
+          onClose={() => setReassignPunchRow(null)}
+          onDone={() => { setReassignPunchRow(null); router.refresh() }}
+        />
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -447,6 +495,93 @@ export default function PunchListGlobal({
           <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{tc('nextPage')}</Button>
         </div>
       )}
+    </div>
+  )
+}
+
+function GlobalReassignModal({
+  punch,
+  orgMembers,
+  onClose,
+  onDone,
+}: {
+  punch: Punch
+  orgMembers: OrgMember[]
+  onClose: () => void
+  onDone: () => void
+}) {
+  const tTags = useTranslations('Tags')
+  const [reassignTo, setReassignTo] = useState<string>(punch.assigned_to ?? '')
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const reassignDirty = (reassignTo || null) !== (punch.assigned_to ?? null)
+
+  function handleConfirm() {
+    if (!reassignDirty) return
+    setError(null)
+    startTransition(async () => {
+      const res = await reassignPunch({
+        punchId: punch.id,
+        projectId: punch.project_id,
+        tagId: punch.tags?.id ?? null,
+        newAssignee: reassignTo || null,
+      })
+      if (res.error) { setError(res.error); return }
+      onDone()
+    })
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: 'var(--card-bg)', borderRadius: 14, padding: 24, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 13, fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{punch.punch_number}</div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-strong)', margin: 0, lineHeight: 1.4 }}>{tTags('punches.detail.labelReassign')}</h3>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--gray-400)', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.4 }}>{punch.description}</p>
+
+        <select
+          value={reassignTo}
+          onChange={e => setReassignTo(e.target.value)}
+          disabled={isPending}
+          style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 7, fontSize: 13, background: 'var(--card-bg)', fontFamily: 'inherit', marginBottom: 16 }}
+        >
+          <option value="">{tTags('punches.detail.reassignPlaceholder')}</option>
+          {orgMembers.map(m => (
+            <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name ?? m.user_id}</option>
+          ))}
+        </select>
+
+        {error && (
+          <p style={{ fontSize: 12, color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: 6, margin: '0 0 12px' }}>{error}</p>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '8px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 7, fontSize: 13, color: 'var(--text-muted)', cursor: 'pointer' }}>
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={isPending || !reassignDirty}
+            style={{
+              padding: '8px 16px',
+              background: reassignDirty && !isPending ? 'var(--primary-500)' : 'var(--gray-100)',
+              color: reassignDirty && !isPending ? '#fff' : 'var(--gray-400)',
+              border: 'none', borderRadius: 7, fontSize: 13, fontWeight: 600,
+              cursor: reassignDirty && !isPending ? 'pointer' : 'default',
+            }}
+          >
+            {isPending ? tTags('punches.detail.reassignSubmitting') : tTags('punches.detail.reassignBtn')}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

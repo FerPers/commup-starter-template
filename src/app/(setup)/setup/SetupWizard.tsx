@@ -7,7 +7,10 @@ import { completeSetup, createProject } from '@/app/actions/setup'
 // ── Helpers ───────────────────────────────────────────────────
 
 function toSlug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return name.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
 // ── Default data ──────────────────────────────────────────────

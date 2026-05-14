@@ -110,6 +110,7 @@ export default function CertificatesView({
   // Summary counts for selected phase
   const greenCount  = allSubsystems.filter(ss => ss.phaseData.find(p => p.phaseId === selectedPhaseId)?.eligible === 'green').length
   const yellowCount = allSubsystems.filter(ss => ss.phaseData.find(p => p.phaseId === selectedPhaseId)?.eligible === 'yellow').length
+  const redCount    = allSubsystems.filter(ss => ss.phaseData.find(p => p.phaseId === selectedPhaseId)?.eligible === 'red').length
   const issuedCount = allSubsystems.filter(ss => {
     const cert = ss.phaseData.find(p => p.phaseId === selectedPhaseId)?.certificate
     return cert && cert.status === 'issued'
@@ -198,6 +199,7 @@ export default function CertificatesView({
           {[
             { labelKey: 'view.summary.greenLabel',  value: greenCount,  color: '#10b981', bg: '#ecfdf5' },
             { labelKey: 'view.summary.yellowLabel', value: yellowCount, color: '#f59e0b', bg: '#fffbeb' },
+            { labelKey: 'view.summary.redLabel',    value: redCount,    color: '#ef4444', bg: '#fef2f2' },
             { labelKey: 'view.summary.issuedLabel', value: issuedCount, color: '#7c3aed', bg: '#f5f3ff' },
           ].map(s => (
             <div key={s.labelKey} style={{

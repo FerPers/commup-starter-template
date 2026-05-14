@@ -17,6 +17,8 @@ const KIND_LABELS: Record<string, string> = {
   preservation_overdue: 'Preservación vencida',
 }
 
+const KIND_FILTER_OPTIONS = Object.entries(KIND_LABELS)
+
 function formatDate(iso: string): string {
   const d = new Date(iso)
   return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
@@ -30,12 +32,16 @@ export default function InboxList({
   const router = useRouter()
   const [items, setItems] = useState<NotificationRow[]>(initialItems)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [kindFilter, setKindFilter] = useState<string>('')
   const [isPending, startTransition] = useTransition()
 
   const filtered = useMemo(() => {
-    if (filter === 'unread') return items.filter(i => !i.read_at)
-    return items
-  }, [items, filter])
+    return items.filter(i => {
+      if (filter === 'unread' && i.read_at) return false
+      if (kindFilter && i.kind !== kindFilter) return false
+      return true
+    })
+  }, [items, filter, kindFilter])
 
   const unreadCount = items.filter(i => !i.read_at).length
 
@@ -46,6 +52,13 @@ export default function InboxList({
         setItems(prev => prev.map(it => it.id === n.id ? { ...it, read_at: new Date().toISOString() } : it))
       }
       if (n.link_url) router.push(n.link_url)
+    })
+  }
+
+  function handleMarkRead(id: string) {
+    startTransition(async () => {
+      await markNotificationRead(id)
+      setItems(prev => prev.map(it => it.id === id ? { ...it, read_at: new Date().toISOString() } : it))
     })
   }
 
@@ -98,6 +111,25 @@ export default function InboxList({
               Sin leer
             </button>
           </div>
+          <select
+            value={kindFilter}
+            onChange={e => setKindFilter(e.target.value)}
+            style={{
+              padding: '6px 10px',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--text-strong)',
+              background: 'var(--card-bg)',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="">Todos los tipos</option>
+            {KIND_FILTER_OPTIONS.map(([k, label]) => (
+              <option key={k} value={k}>{label}</option>
+            ))}
+          </select>
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAll}
@@ -129,57 +161,107 @@ export default function InboxList({
           </p>
         ) : (
           filtered.map(n => (
-            <button
+            <InboxRow
               key={n.id}
-              onClick={() => handleClick(n)}
-              disabled={isPending}
-              style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-                padding: '14px 18px',
-                background: n.read_at ? 'transparent' : 'rgba(124, 58, 237, 0.06)',
-                border: 'none',
-                borderBottom: '1px solid var(--border)',
-                cursor: isPending ? 'wait' : 'pointer',
-                textAlign: 'left',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                  {!n.read_at && (
-                    <span style={{ width: 9, height: 9, borderRadius: 999, background: '#7c3aed', flexShrink: 0 }} />
-                  )}
-                  <span style={{ fontSize: 14, fontWeight: n.read_at ? 500 : 600, color: 'var(--text-strong)' }}>
-                    {n.title}
-                  </span>
-                </div>
-                <span style={{
-                  fontSize: 11, fontWeight: 600,
-                  padding: '2px 8px',
-                  borderRadius: 999,
-                  background: 'var(--gray-100)',
-                  color: 'var(--text-muted)',
-                  flexShrink: 0,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                }}>
-                  {KIND_LABELS[n.kind] ?? n.kind}
-                </span>
-              </div>
-              {n.body && (
-                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  {n.body}
-                </p>
-              )}
-              <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>
-                {formatDate(n.created_at)}
-              </span>
-            </button>
+              n={n}
+              isPending={isPending}
+              onOpen={() => handleClick(n)}
+              onMarkRead={() => handleMarkRead(n.id)}
+            />
           ))
         )}
       </div>
+    </div>
+  )
+}
+
+function InboxRow({
+  n,
+  isPending,
+  onOpen,
+  onMarkRead,
+}: {
+  n: NotificationRow
+  isPending: boolean
+  onOpen: () => void
+  onMarkRead: () => void
+}) {
+  const [hover, setHover] = useState(false)
+  const unread = !n.read_at
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        padding: '14px 18px',
+        background: unread ? 'rgba(124, 58, 237, 0.06)' : 'transparent',
+        borderBottom: '1px solid var(--border)',
+        cursor: isPending ? 'wait' : 'pointer',
+        textAlign: 'left',
+        position: 'relative',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          {unread && (
+            <span style={{ width: 9, height: 9, borderRadius: 999, background: '#7c3aed', flexShrink: 0 }} />
+          )}
+          <span style={{ fontSize: 14, fontWeight: unread ? 600 : 500, color: 'var(--text-strong)' }}>
+            {n.title}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {unread && hover && (
+            <button
+              onClick={e => { e.stopPropagation(); onMarkRead() }}
+              disabled={isPending}
+              title="Marcar como leída"
+              style={{
+                padding: '3px 8px',
+                border: '1px solid var(--border)',
+                borderRadius: 6,
+                background: 'var(--card-bg)',
+                color: 'var(--text-muted)',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: isPending ? 'wait' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <Check size={11} /> Leída
+            </button>
+          )}
+          <span style={{
+            fontSize: 11, fontWeight: 600,
+            padding: '2px 8px',
+            borderRadius: 999,
+            background: 'var(--gray-100)',
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+          }}>
+            {KIND_LABELS[n.kind] ?? n.kind}
+          </span>
+        </div>
+      </div>
+      {n.body && (
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+          {n.body}
+        </p>
+      )}
+      <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>
+        {formatDate(n.created_at)}
+      </span>
     </div>
   )
 }

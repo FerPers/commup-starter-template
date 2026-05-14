@@ -408,6 +408,7 @@
       "summary": {
         "greenLabel": "Elegibles sin bloqueo",
         "yellowLabel": "Con Cat B abiertos",
+        "redLabel": "Bloqueados (Cat A)",
         "issuedLabel": "Certificados emitidos"
       },
       "empty": "No hay subsistemas con ITRs asignados en esta fase.",
@@ -1199,7 +1200,12 @@
         "cancel": "Cancelar",
         "labelComment": "Comentario / Resolución",
         "commentPlaceholder": "Añade un comentario...",
-        "addComment": "Agregar comentario"
+        "addComment": "Agregar comentario",
+        "labelReassign": "Reasignar",
+        "reassignPlaceholder": "Sin asignar",
+        "reassignBtn": "↻ Reasignar",
+        "reassignSubmitting": "Reasignando...",
+        "reassignNoop": "Ya está asignado a esa persona"
       }
     }
   },

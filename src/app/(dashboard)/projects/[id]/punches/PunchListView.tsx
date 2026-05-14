@@ -3,8 +3,12 @@
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { updatePunchStatus, closePunch, addPunchComment } from '@/app/actions/punches'
+import { updatePunchStatus, closePunch, addPunchComment, reassignPunch } from '@/app/actions/punches'
 import { bulkUpdatePunchStatus } from '@/app/actions/bulk'
+
+const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
+
+type OrgMember = { user_id: string; profiles: { full_name: string } | null }
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -19,6 +23,7 @@ type Punch = {
   closed_date: string | null
   created_at: string
   itr_id: string | null
+  assigned_to: string | null
   raised_by_profile: { full_name: string } | null
   assigned_to_profile: { full_name: string } | null
   tags: { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } } | null
@@ -53,6 +58,8 @@ export default function PunchListView({
   phases: _phases,
   disciplines,
   systems,
+  orgMembers,
+  currentUserRole,
 }: {
   projectId: string
   projectName: string
@@ -60,6 +67,8 @@ export default function PunchListView({
   phases: Phase[]
   disciplines: Discipline[]
   systems: System[]
+  orgMembers: OrgMember[]
+  currentUserRole: string
 }) {
   const t = useTranslations('PunchList')
   const router = useRouter()
@@ -353,6 +362,8 @@ export default function PunchListView({
         <PunchDetailModal
           punch={selectedPunch}
           projectId={projectId}
+          orgMembers={orgMembers}
+          canReassign={REASSIGN_ROLES.includes(currentUserRole)}
           onClose={() => setSelectedPunch(null)}
           onUpdated={() => { setSelectedPunch(null); refresh() }}
         />
@@ -371,18 +382,24 @@ const selStyle: React.CSSProperties = {
 function PunchDetailModal({
   punch,
   projectId,
+  orgMembers,
+  canReassign,
   onClose,
   onUpdated,
 }: {
   punch: Punch
   projectId: string
+  orgMembers: OrgMember[]
+  canReassign: boolean
   onClose: () => void
   onUpdated: () => void
 }) {
   const t = useTranslations('PunchList')
+  const tTags = useTranslations('Tags')
   const [comment, setComment] = useState('')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [reassignTo, setReassignTo] = useState<string>(punch.assigned_to ?? '')
 
   const catCfg = CATEGORY_CFG[punch.category]
   const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
@@ -393,6 +410,7 @@ function PunchDetailModal({
     cancelled:   t('punchStatus.cancelled'),
   }
   const isClosed = punch.status === 'closed' || punch.status === 'cancelled'
+  const reassignDirty = (reassignTo || null) !== (punch.assigned_to ?? null)
 
   function handleStatusChange(newStatus: 'open' | 'in_progress' | 'closed' | 'cancelled') {
     startTransition(async () => {
@@ -413,6 +431,21 @@ function PunchDetailModal({
       const res = await addPunchComment({ punchId: punch.id, comment: comment.trim(), projectId, tagId: punch.tags?.id ?? null })
       if (res.error) { setError(res.error); return }
       setComment('')
+      onUpdated()
+    })
+  }
+
+  function handleReassign() {
+    if (!reassignDirty) return
+    setError(null)
+    startTransition(async () => {
+      const res = await reassignPunch({
+        punchId: punch.id,
+        projectId,
+        tagId: punch.tags?.id ?? null,
+        newAssignee: reassignTo || null,
+      })
+      if (res.error) { setError(res.error); return }
       onUpdated()
     })
   }
@@ -473,6 +506,42 @@ function PunchDetailModal({
               </button>
               <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}>
                 {t('detail.cancel')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Reassign */}
+        {!isClosed && canReassign && (
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+              {tTags('punches.detail.labelReassign')}
+            </label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select
+                value={reassignTo}
+                onChange={e => setReassignTo(e.target.value)}
+                disabled={isPending}
+                style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit' }}
+              >
+                <option value="">{tTags('punches.detail.reassignPlaceholder')}</option>
+                {orgMembers.map(m => (
+                  <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name ?? m.user_id}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleReassign}
+                disabled={isPending || !reassignDirty}
+                style={{
+                  padding: '8px 14px',
+                  background: reassignDirty && !isPending ? 'var(--primary-500)' : 'var(--gray-100)',
+                  color: reassignDirty && !isPending ? '#fff' : 'var(--gray-400)',
+                  border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
+                  cursor: reassignDirty && !isPending ? 'pointer' : 'default',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {isPending ? tTags('punches.detail.reassignSubmitting') : tTags('punches.detail.reassignBtn')}
               </button>
             </div>
           </div>

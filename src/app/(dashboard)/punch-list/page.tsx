@@ -16,14 +16,14 @@ export default async function GlobalPunchListPage() {
 
   const projectIds = (projects ?? []).map(p => p.id)
 
-  const [{ data: punches }, { data: disciplines }] = await Promise.all([
+  const [{ data: punches }, { data: disciplines }, { data: orgMembers }] = await Promise.all([
     projectIds.length === 0
       ? Promise.resolve({ data: [] as unknown as null })
       : supabase
           .from('punches')
           .select(`
             id, punch_number, category, description, status, priority,
-            target_date, closed_date, created_at, itr_id, project_id,
+            target_date, closed_date, created_at, itr_id, project_id, assigned_to,
             raised_by_profile:profiles!raised_by(full_name),
             assigned_to_profile:profiles!assigned_to(full_name),
             projects(id, name, code),
@@ -37,16 +37,24 @@ export default async function GlobalPunchListPage() {
       .select('id, code, name, color')
       .eq('org_id', membership.org_id)
       .order('code'),
+    supabase
+      .from('org_members')
+      .select('user_id, profiles(full_name)')
+      .eq('org_id', membership.org_id)
+      .order('role'),
   ])
 
   return (
     <PunchListGlobal
+      currentUserRole={membership.role}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       projects={(projects ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       punches={(punches ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       disciplines={(disciplines ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      orgMembers={(orgMembers ?? []) as any}
     />
   )
 }

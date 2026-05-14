@@ -408,6 +408,7 @@
       "summary": {
         "greenLabel": "Eligible, no blockers",
         "yellowLabel": "With open Cat B",
+        "redLabel": "Blocked (Cat A)",
         "issuedLabel": "Issued certificates"
       },
       "empty": "No subsystems with ITRs assigned to this phase.",
@@ -1199,7 +1200,12 @@
         "cancel": "Cancel",
         "labelComment": "Comment / Resolution",
         "commentPlaceholder": "Add a comment...",
-        "addComment": "Add comment"
+        "addComment": "Add comment",
+        "labelReassign": "Reassign",
+        "reassignPlaceholder": "Unassigned",
+        "reassignBtn": "↻ Reassign",
+        "reassignSubmitting": "Reassigning...",
+        "reassignNoop": "Already assigned to that person"
       }
     }
   },

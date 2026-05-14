@@ -20,6 +20,7 @@ export default async function PunchListPage({
     { data: phases },
     { data: disciplines },
     { data: systems },
+    { data: orgMembers },
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -31,7 +32,7 @@ export default async function PunchListPage({
       .from('punches')
       .select(`
         id, punch_number, category, description, status, priority,
-        target_date, closed_date, created_at, itr_id,
+        target_date, closed_date, created_at, itr_id, assigned_to,
         raised_by_profile:profiles!raised_by(full_name),
         assigned_to_profile:profiles!assigned_to(full_name),
         tags(id, tag_number, description, disciplines(code, name, color)),
@@ -54,6 +55,11 @@ export default async function PunchListPage({
       .select('id, code, name')
       .eq('project_id', projectId)
       .order('code'),
+    supabase
+      .from('org_members')
+      .select('user_id, profiles(full_name)')
+      .eq('org_id', membership.org_id)
+      .order('role'),
   ])
 
   if (!project) notFound()
@@ -62,6 +68,7 @@ export default async function PunchListPage({
     <PunchListView
       projectId={projectId}
       projectName={project.name}
+      currentUserRole={membership.role}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       punches={(punches ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,6 +77,8 @@ export default async function PunchListPage({
       disciplines={(disciplines ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       systems={(systems ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      orgMembers={(orgMembers ?? []) as any}
     />
   )
 }

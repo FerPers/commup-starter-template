@@ -100,6 +100,7 @@ export default function TagDetail({
   prevTagId,
   nextTagId,
   canEdit,
+  currentUserRole,
   tagItrs,
   templates,
   orgMembers,
@@ -115,6 +116,7 @@ export default function TagDetail({
   prevTagId: string | null
   nextTagId: string | null
   canEdit: boolean
+  currentUserRole: string
   tagItrs: TagItr[]
   templates: ItrTemplate[]
   orgMembers: OrgMember[]
@@ -393,6 +395,7 @@ export default function TagDetail({
                 projectId={projectId}
                 tagId={tag.id}
                 orgMembers={orgMembers as OrgMemberForPunch[]}
+                currentUserRole={currentUserRole}
               />
             )}
             {activeTab === 'docs'         && <DocsTab tag={tag} pidSignedUrl={pidSignedUrl} pidDocId={pidDocId} projectId={projectId} />}

@@ -76,7 +76,7 @@ export default async function TagDetailPage({
       .from('punches')
       .select(`
         id, punch_number, category, description, status, priority,
-        target_date, closed_date, created_at, itr_id,
+        target_date, closed_date, created_at, itr_id, assigned_to,
         raised_by_profile:profiles!raised_by(full_name),
         assigned_to_profile:profiles!assigned_to(full_name)
       `)
@@ -146,6 +146,7 @@ export default async function TagDetailPage({
       prevTagId={prevTagId}
       nextTagId={nextTagId}
       canEdit={canEdit}
+      currentUserRole={membership.role}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       tagItrs={(tagItrs ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
