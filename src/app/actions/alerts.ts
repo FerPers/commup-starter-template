@@ -1,6 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/supabase/membership'
+import { checkProjectAccess } from '@/lib/auth/access'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -36,10 +37,13 @@ function plannedPctForToday(startDate: string | null, endDate: string | null): n
 // ── getProjectAlerts ────────────────────────────────────────────────────────
 
 export async function getProjectAlerts(projectId: string): Promise<ProjectAlert[]> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
+  const ctx = await getActiveMembership()
+  if (!ctx) return []
 
+  const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+  if (!access.ok) return []
+
+  const supabase = ctx.supabase
   const today = new Date().toISOString().split('T')[0]
 
   const [

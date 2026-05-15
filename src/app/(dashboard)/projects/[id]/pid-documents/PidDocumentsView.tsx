@@ -181,7 +181,11 @@ function DocRow({
 
   function handleDelete() {
     startTransition(async () => {
-      await deletePidDocument({ id: doc.id, projectId, filePath: doc.file_path })
+      const res = await deletePidDocument({ id: doc.id, projectId, filePath: doc.file_path })
+      if (res.error) {
+        alert(res.error)
+        return
+      }
       onDeleted(doc.id, doc.drawing_number)
     })
   }
@@ -334,7 +338,7 @@ function UploadForm({
         .from('pid-documents')
         .createSignedUrl(filePath, 3600)
 
-      await registerPidDocument({
+      const res = await registerPidDocument({
         project_id: projectId,
         drawing_number: drawingNumber.trim(),
         title: title.trim() || null,
@@ -342,6 +346,7 @@ function UploadForm({
         file_name: file.name,
         file_size: file.size,
       })
+      if (res.error) throw new Error(res.error)
 
       onUploaded({
         id: crypto.randomUUID(),

@@ -95,13 +95,13 @@ export async function createPssrReview(data: {
   title?: string
   reviewDueDate?: string | null
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  const ctx = await getActiveMembership()
+  if (!ctx) throw new Error('No autenticado')
+  const supabase = ctx.supabase
 
-  // Get org_id
+  // Verify project belongs to the active org
   const { data: project } = await supabase
-    .from('projects').select('org_id').eq('id', data.projectId).single()
+    .from('projects').select('org_id').eq('id', data.projectId).eq('org_id', ctx.orgId).single()
   if (!project) throw new Error('Proyecto no encontrado')
 
   // Auto-number per system: PSSR-001, PSSR-002...
@@ -113,13 +113,13 @@ export async function createPssrReview(data: {
   const reviewNumber = `PSSR-${String((count ?? 0) + 1).padStart(3, '0')}`
 
   const insertRow: Record<string, unknown> = {
-    org_id: project.org_id,
+    org_id: ctx.orgId,
     project_id: data.projectId,
     system_id: data.systemId,
     template_id: data.templateId,
     review_number: reviewNumber,
     title: data.title ?? 'Pre-Startup Safety Review',
-    created_by: user.id,
+    created_by: ctx.userId,
   }
   if (data.reviewDueDate) insertRow.review_due_date = data.reviewDueDate
 
@@ -160,11 +160,11 @@ export async function updatePssrReviewItem(data: {
   actions?: string
   completionDate?: string | null
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  const ctx = await getActiveMembership()
+  if (!ctx) throw new Error('No autenticado')
+  const supabase = ctx.supabase
 
-  const payload: Record<string, unknown> = { updated_by: user.id, updated_at: new Date().toISOString() }
+  const payload: Record<string, unknown> = { updated_by: ctx.userId, updated_at: new Date().toISOString() }
   if (data.status !== undefined)         payload.status = data.status
   if (data.responsible !== undefined)    payload.responsible = data.responsible
   if (data.actions !== undefined)        payload.actions = data.actions
@@ -205,9 +205,9 @@ export async function updatePssrReviewDueDate(reviewId: string, projectId: strin
 }
 
 export async function submitPssrForApproval(reviewId: string, projectId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  const ctx = await getActiveMembership()
+  if (!ctx) throw new Error('No autenticado')
+  const supabase = ctx.supabase
 
   // Verify all items are si or na
   const { data: pendingItems } = await supabase
@@ -235,7 +235,7 @@ export async function submitPssrForApproval(reviewId: string, projectId: string)
   const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
   await notifyPssrSubmittedForApproval(createAdminClient(), {
     orgId: review.org_id as string,
-    submitterUserId: user.id,
+    submitterUserId: ctx.userId,
     reviewId,
     reviewNumber: review.review_number as string,
     projectId,
@@ -252,13 +252,13 @@ export async function addPssrSignature(data: {
   discipline: string
   signatureData: string
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  const ctx = await getActiveMembership()
+  if (!ctx) throw new Error('No autenticado')
+  const supabase = ctx.supabase
 
   const { error } = await supabase.from('pssr_signatures').insert({
     review_id: data.reviewId,
-    user_id: user.id,
+    user_id: ctx.userId,
     discipline: data.discipline,
     signature_data: data.signatureData,
     signed_at: new Date().toISOString(),
@@ -282,15 +282,11 @@ export async function removePssrSignature(signatureId: string, reviewId: string,
 // ── Approve PSSR + Issue RFSU Certificate ────────────────────
 
 export async function approvePssrAndIssueRfsu(reviewId: string, projectId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
-
-  // Must be leader+ to approve. Use active membership context for role gate
-  // and orgId when logging activity below.
   const ctx = await getActiveMembership()
-  if (!ctx || !['owner','admin','architect','leader'].includes(ctx.role))
+  if (!ctx) throw new Error('No autenticado')
+  if (!['owner','admin','architect','leader'].includes(ctx.role))
     throw new Error('Solo líderes o superiores pueden aprobar el PSSR')
+  const supabase = ctx.supabase
 
   // Verify signatures exist
   const { count: sigCount } = await supabase
@@ -335,15 +331,15 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
     title: `RFSU — ${system?.name ?? 'Sistema'} (${system?.code ?? ''})`,
     status: 'issued',
     issued_date: new Date().toISOString().split('T')[0],
-    issued_by: user.id,
-    approved_by: user.id,
+    issued_by: ctx.userId,
+    approved_by: ctx.userId,
   }).select().single()
   if (certError) throw new Error(certError.message)
 
   // Approve PSSR + link certificate
   const { error } = await supabase.from('pssr_reviews').update({
     status: 'approved',
-    approved_by: user.id,
+    approved_by: ctx.userId,
     approved_at: new Date().toISOString(),
     rfsu_certificate_id: cert.id,
     updated_at: new Date().toISOString(),
@@ -352,7 +348,7 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
 
   await logActivity(supabase, {
     orgId: ctx.orgId,
-    userId: user.id,
+    userId: ctx.userId,
     entityType: 'pssr',
     entityId: reviewId,
     action: 'approved',
@@ -361,7 +357,7 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
 
   await notifyPssrApproved(createAdminClient(), {
     orgId: ctx.orgId,
-    approverUserId: user.id,
+    approverUserId: ctx.userId,
     createdBy: (review.created_by as string | null) ?? null,
     rfsuCertNumber: cert.certificate_number as string,
     rfsuCertId: cert.id as string,
@@ -379,13 +375,11 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
 }
 
 export async function rejectPssrReview(reviewId: string, projectId: string, reason?: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
-
   const ctx = await getActiveMembership()
-  if (!ctx || !['owner','admin','architect','leader'].includes(ctx.role))
+  if (!ctx) throw new Error('No autenticado')
+  if (!['owner','admin','architect','leader'].includes(ctx.role))
     throw new Error('Solo líderes o superiores pueden rechazar el PSSR')
+  const supabase = ctx.supabase
 
   const { data: review, error: fetchErr } = await supabase
     .from('pssr_reviews')
@@ -402,7 +396,7 @@ export async function rejectPssrReview(reviewId: string, projectId: string, reas
 
   await logActivity(supabase, {
     orgId: ctx.orgId,
-    userId: user.id,
+    userId: ctx.userId,
     entityType: 'pssr',
     entityId: reviewId,
     action: 'rejected',
@@ -412,7 +406,7 @@ export async function rejectPssrReview(reviewId: string, projectId: string, reas
   const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
   await notifyPssrRejected(createAdminClient(), {
     orgId: review.org_id as string,
-    rejecterUserId: user.id,
+    rejecterUserId: ctx.userId,
     createdBy: (review.created_by as string | null) ?? null,
     reason: reason?.trim() || null,
     reviewId,

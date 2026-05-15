@@ -1,7 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getActiveMembership } from '@/lib/supabase/membership'
+import { checkProjectAccess } from '@/lib/auth/access'
 
 export async function registerPidDocument(data: {
   project_id: string
@@ -10,22 +11,25 @@ export async function registerPidDocument(data: {
   file_path: string
   file_name: string
   file_size: number
-}) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+}): Promise<{ error?: string }> {
+  const ctx = await getActiveMembership()
+  if (!ctx) return { error: 'No autenticado' }
 
-  const { error } = await supabase
+  const access = await checkProjectAccess(ctx.supabase, ctx.orgId, data.project_id)
+  if (!access.ok) return { error: access.error }
+
+  const { error } = await ctx.supabase
     .from('pid_documents')
     .upsert(
-      { ...data, uploaded_by: user.id },
+      { ...data, uploaded_by: ctx.userId },
       { onConflict: 'project_id,drawing_number' }
     )
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath(`/projects/${data.project_id}/tags`)
   revalidatePath(`/projects/${data.project_id}/pid-documents`)
+  return {}
 }
 
 export async function deletePidDocument({
@@ -36,24 +40,25 @@ export async function deletePidDocument({
   id: string
   projectId: string
   filePath: string
-}) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+}): Promise<{ error?: string }> {
+  const ctx = await getActiveMembership()
+  if (!ctx) return { error: 'No autenticado' }
 
-  // Delete from storage first
-  const { error: storageError } = await supabase.storage
+  const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+  if (!access.ok) return { error: access.error }
+
+  const { error: storageError } = await ctx.supabase.storage
     .from('pid-documents')
     .remove([filePath])
-  if (storageError) throw new Error(storageError.message)
+  if (storageError) return { error: storageError.message }
 
-  // Delete from database
-  const { error } = await supabase
+  const { error } = await ctx.supabase
     .from('pid_documents')
     .delete()
     .eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath(`/projects/${projectId}/tags`)
   revalidatePath(`/projects/${projectId}/pid-documents`)
+  return {}
 }

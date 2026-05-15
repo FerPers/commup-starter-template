@@ -1,5 +1,9 @@
 'use server'
 
+// User-scoped UI preference (no org/project context) — same pattern as
+// locale.ts / theme.ts. The layout is stored on profiles.dashboard_layout
+// keyed by the authenticated user, so raw auth.getUser() is intentional here.
+
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { DashboardLayout } from '@/types/dashboard'

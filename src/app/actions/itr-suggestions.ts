@@ -1,14 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-
-async function getCtx() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-  return { supabase, userId: user.id }
-}
+import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
 
 export async function acceptItrSuggestionAction(
   suggestionId: string,
