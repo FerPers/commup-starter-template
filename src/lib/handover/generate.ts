@@ -70,7 +70,10 @@ export async function generateHandoverPackage(
     if (rpcErr) throw new Error(`RPC generate_handover_package failed: ${errMsg(rpcErr)}`)
     const handoverData = payload as unknown as HandoverPackageData
 
-    const signingSecret = process.env.HANDOVER_SIGNING_SECRET ?? process.env.CRON_SECRET ?? 'commup-dev-handover-secret'
+    const signingSecret = process.env.HANDOVER_SIGNING_SECRET
+    if (!signingSecret) {
+      throw new Error('HANDOVER_SIGNING_SECRET is required')
+    }
     const jsonString    = JSON.stringify(handoverData)
     const signatureHash = await hmacSha256(signingSecret, jsonString)
 

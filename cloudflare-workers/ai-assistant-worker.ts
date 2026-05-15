@@ -13,16 +13,17 @@
  *   "¿Qué está bloqueando el certificado del Scrubber V-401?"
  *
  * Arquitectura:
- *   1. Tool-use: Claude llama herramientas que consultan Supabase en tiempo real
- *   2. Context: Se inyecta snapshot del proyecto para reducir latencia
- *   3. Guardrails: Solo consultas de lectura, no puede modificar datos
- *   4. Rate limiting: 60 requests/hora por usuario
+ *   1. Auth: Authorization: Bearer <supabase_jwt> validado contra Supabase Auth.
+ *   2. Multi-tenancy: queries pasan el JWT del usuario a PostgREST → RLS aplica.
+ *   3. Tool-use: Claude llama herramientas que consultan Supabase en tiempo real.
+ *   4. Guardrails: solo SELECT (no service role para queries de tools).
+ *   5. Rate limiting: 60 requests/hora por usuario (key derivada del JWT validado).
  */
 
 export interface Env {
   ANTHROPIC_API_KEY: string;
   SUPABASE_URL: string;
-  SUPABASE_SERVICE_KEY: string;
+  SUPABASE_ANON_KEY: string;
   RATE_LIMIT_KV: KVNamespace;
 }
 
@@ -124,11 +125,45 @@ const COMMUP_TOOLS = [
   },
 ] as const;
 
+// ─── Auth ─────────────────────────────────────────────────────────────────
+
+interface SupabaseUser {
+  id: string;
+  email?: string;
+  aud?: string;
+}
+
+/**
+ * Valida un JWT de Supabase contra el endpoint `/auth/v1/user`.
+ * Devuelve el user verificado o `null` si el token es inválido/expirado.
+ */
+async function verifySupabaseJwt(env: Env, jwt: string): Promise<SupabaseUser | null> {
+  const resp = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      'apikey': env.SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${jwt}`,
+    },
+  });
+  if (!resp.ok) return null;
+  const user = await resp.json() as Partial<SupabaseUser> & { id?: string };
+  if (!user || typeof user.id !== 'string') return null;
+  return user as SupabaseUser;
+}
+
 // ─── Supabase Query Executor ──────────────────────────────────────────────
 
 type Row = Record<string, unknown>;
 
-async function supabase(env: Env, path: string, params?: Record<string, string>): Promise<Row[]> {
+/**
+ * Ejecuta una consulta PostgREST con el JWT del usuario.
+ * RLS se aplica automáticamente — solo verá datos de orgs a las que pertenece.
+ */
+async function supabase(
+  env: Env,
+  userJwt: string,
+  path: string,
+  params?: Record<string, string>,
+): Promise<Row[]> {
   const url = new URL(`${env.SUPABASE_URL}/rest/v1/${path}`);
   if (params) {
     for (const [k, v] of Object.entries(params)) {
@@ -137,8 +172,8 @@ async function supabase(env: Env, path: string, params?: Record<string, string>)
   }
   const resp = await fetch(url.toString(), {
     headers: {
-      'apikey': env.SUPABASE_SERVICE_KEY,
-      'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'apikey': env.SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${userJwt}`,
       'Content-Type': 'application/json',
     },
   });
@@ -151,7 +186,8 @@ async function supabase(env: Env, path: string, params?: Record<string, string>)
 async function executeTool(
   toolName: string,
   toolInput: Record<string, unknown>,
-  env: Env
+  env: Env,
+  userJwt: string,
 ): Promise<string> {
   try {
     switch (toolName) {
@@ -162,7 +198,7 @@ async function executeTool(
           query += `&system_tag=in.(${tags.map((t) => `"${t}"`).join(',')})`;
         }
         query += '&order=delay_risk.desc&limit=20';
-        const data = await supabase(env, query);
+        const data = await supabase(env, userJwt, query);
         return JSON.stringify({
           systems: data,
           count: data.length,
@@ -173,14 +209,14 @@ async function executeTool(
       case 'get_blocking_items': {
         const sysId = toolInput.system_id as string;
         // Buscar por tag o ID
-        const systems = await supabase(env, `systems?or=(id.eq.${sysId},system_tag.eq.${sysId})&limit=1`);
+        const systems = await supabase(env, userJwt, `systems?or=(id.eq.${sysId},system_tag.eq.${sysId})&limit=1`);
         if (!systems.length) return JSON.stringify({ error: 'Sistema no encontrado', system_id: sysId });
 
         const sys = systems[0];
         const [punches, rejectedITRs, pendingCerts] = await Promise.all([
-          supabase(env, `punch_items?system_id=eq.${sys.id}&status=neq.cleared&order=category.asc&limit=20`),
-          supabase(env, `itrs?system_id=eq.${sys.id}&status=in.(rejected,pending)&limit=20`),
-          supabase(env, `certificates?system_id=eq.${sys.id}&status=neq.issued&limit=10`),
+          supabase(env, userJwt, `punch_items?system_id=eq.${sys.id}&status=neq.cleared&order=category.asc&limit=20`),
+          supabase(env, userJwt, `itrs?system_id=eq.${sys.id}&status=in.(rejected,pending)&limit=20`),
+          supabase(env, userJwt, `certificates?system_id=eq.${sys.id}&status=neq.issued&limit=10`),
         ]);
 
         return JSON.stringify({
@@ -204,7 +240,7 @@ async function executeTool(
         if (toolInput.status !== 'all' && toolInput.status) query += `&status=eq.${toolInput.status}`;
         query += `&order=category.asc,raised_at.asc&limit=${Math.min((toolInput.limit as number) || 20, 50)}`;
 
-        const data = await supabase(env, query);
+        const data = await supabase(env, userJwt, query);
         return JSON.stringify({
           punches: data,
           count: data.length,
@@ -220,7 +256,7 @@ async function executeTool(
         if (toolInput.assigned_to_name) query += `&assigned_to_name=ilike.*${toolInput.assigned_to_name}*`;
         query += `&order=rejection_count.desc,planned_date.asc&limit=${Math.min((toolInput.limit as number) || 20, 50)}`;
 
-        const data = await supabase(env, query);
+        const data = await supabase(env, userJwt, query);
         const stats = {
           pending: data.filter((i) => i.status === 'pending').length,
           rejected: data.filter((i) => i.status === 'rejected').length,
@@ -235,7 +271,7 @@ async function executeTool(
         if (toolInput.risk_level && toolInput.risk_level !== 'all') query += `&delay_risk=eq.${toolInput.risk_level}`;
         query += `&limit=${toolInput.top_n || 10}`;
 
-        const data = await supabase(env, query);
+        const data = await supabase(env, userJwt, query);
         const worstDelay = data[0];
         return JSON.stringify({
           systems: data,
@@ -253,7 +289,7 @@ async function executeTool(
         if (toolInput.category) query += `&category=eq.${toolInput.category}`;
         query += `&order=severity.asc&limit=${toolInput.limit || 10}`;
 
-        const data = await supabase(env, query);
+        const data = await supabase(env, userJwt, query);
         return JSON.stringify({ issues: data, count: data.length });
       }
 
@@ -314,7 +350,8 @@ interface ClaudeResponse {
 async function runAgenticLoop(
   messages: Message[],
   env: Env,
-  maxIterations = 5
+  userJwt: string,
+  maxIterations = 5,
 ): Promise<string> {
   const currentMessages = [...messages];
   let iterations = 0;
@@ -358,7 +395,7 @@ async function runAgenticLoop(
     const toolResults: ContentBlock[] = [];
     for (const block of result.content) {
       if (block.type === 'tool_use') {
-        const toolResult = await executeTool(block.name, block.input, env);
+        const toolResult = await executeTool(block.name, block.input, env, userJwt);
         toolResults.push({
           type: 'tool_result',
           tool_use_id: block.id,
@@ -403,24 +440,30 @@ export default {
       });
 
     try {
-      const body = await request.json() as {
-        messages: Message[];
-        user_id: string;
-        stream?: boolean;
-      };
+      const authHeader = request.headers.get('Authorization') ?? '';
+      const jwtMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+      if (!jwtMatch) {
+        return json({ error: 'Authorization header con Bearer JWT requerido' }, 401);
+      }
+      const userJwt = jwtMatch[1].trim();
 
-      if (!body.messages || !body.user_id) {
-        return json({ error: 'messages y user_id son requeridos' }, 400);
+      const user = await verifySupabaseJwt(env, userJwt);
+      if (!user) {
+        return json({ error: 'JWT inválido o expirado' }, 401);
+      }
+      const userId = user.id;
+
+      const body = await request.json() as { messages?: Message[] };
+      if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
+        return json({ error: 'messages es requerido (array no vacío)' }, 400);
       }
 
-      // Rate limiting
-      const allowed = await checkRateLimit(body.user_id, env);
+      const allowed = await checkRateLimit(userId, env);
       if (!allowed) {
         return json({ error: 'Límite de 60 consultas por hora alcanzado', retry_after: 'próxima hora' }, 429);
       }
 
-      // Ejecutar loop agéntico
-      const answer = await runAgenticLoop(body.messages, env);
+      const answer = await runAgenticLoop(body.messages, env, userJwt);
 
       return json({
         answer,
