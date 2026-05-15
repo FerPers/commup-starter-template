@@ -1,11 +1,9 @@
 'use server'
 
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { OWNER_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
 import type { ProjectStatus } from '@/types/database'
-
-const PRIVILEGED_ROLES = ['owner', 'admin', 'architect']
-const OWNER_ONLY = ['owner']
 
 export interface ProjectUpdatePayload {
   name?: string
@@ -47,7 +45,7 @@ export async function updateProject(
 export async function deleteProject(projectId: string): Promise<{ error?: string }> {
   const ctx = await getActiveMembership()
   if (!ctx) return { error: 'No autenticado' }
-  if (!OWNER_ONLY.includes(ctx.role)) return { error: 'Solo el owner puede eliminar proyectos' }
+  if (!OWNER_ROLES.includes(ctx.role)) return { error: 'Solo el owner puede eliminar proyectos' }
 
   const { data: project } = await ctx.supabase
     .from('projects')

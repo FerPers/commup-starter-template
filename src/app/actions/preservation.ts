@@ -1,10 +1,8 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
-
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
-const ADMIN_ROLES = ['owner', 'admin', 'architect']
 
 // ═══════════════════════════════════════════════════════════
 // PROCEDURES
@@ -84,7 +82,7 @@ export async function updateProcedure(input: {
 export async function deleteProcedure(procedureId: string): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   const { count } = await ctx.supabase
     .from('preservation_plans')

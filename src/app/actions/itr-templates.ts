@@ -1,12 +1,11 @@
 'use server'
 
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
 import { detectItrPhase } from '@/lib/utils'
 
 const TIPO_ESPECIAL = 'Especial / Matriz'
-
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 async function getCtx() {
   const ctx = await getActiveMembership()

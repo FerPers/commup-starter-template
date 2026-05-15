@@ -1,11 +1,10 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
 import { revalidatePath } from 'next/cache'
-
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 export async function bulkAssignItrs(
   ids: string[],

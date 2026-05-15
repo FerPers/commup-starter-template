@@ -1,11 +1,10 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { generateHandoverPackage } from '@/lib/handover/generate'
-
-const ADMIN_ROLES = ['owner', 'admin', 'architect']
 
 export type GenerateHandoverInput = {
   projectId: string
@@ -26,7 +25,7 @@ export async function generateHandoverPackageAction(
 ): Promise<GenerateHandoverResult> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'Not authenticated' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Insufficient permissions' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Insufficient permissions' }
 
   if (!input.projectId)                      return { error: 'projectId is required' }
   if (!input.formats || input.formats.length === 0) return { error: 'Select at least one format' }

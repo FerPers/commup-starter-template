@@ -1,10 +1,9 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
 import type { ApiScope } from '@/lib/constants/api-scopes'
-
-const ADMIN_ROLES = ['owner', 'admin', 'architect']
 
 export type CreateApiKeyInput = {
   name: string
@@ -17,7 +16,7 @@ export async function createApiKey(
 ): Promise<{ error?: string; id?: string; token?: string; keyPrefix?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   if (!input.name?.trim()) return { error: 'Nombre requerido' }
   if (!input.scopes || input.scopes.length === 0) return { error: 'Al menos un scope es requerido' }
@@ -45,7 +44,7 @@ export async function createApiKey(
 export async function revokeApiKey(keyId: string): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   const { error } = await ctx.supabase.rpc('revoke_api_key', { p_key_id: keyId })
   if (error) return { error: error.message }

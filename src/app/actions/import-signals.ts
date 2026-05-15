@@ -1,9 +1,8 @@
 'use server'
 
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
-
-const PRIVILEGED_ROLES = ['owner', 'admin', 'architect']
 
 export interface SignalRow {
   signal_tag:      string

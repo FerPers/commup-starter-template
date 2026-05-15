@@ -1,6 +1,7 @@
 'use server'
 
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
 import {
   BACKUP_FORMAT,
@@ -16,8 +17,6 @@ import {
   type RestoreResult,
   type TaxonomyPreview,
 } from '@/lib/constants/templates-backup'
-
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 // ═══════════════════════════════════════════════════════════
 // EXPORT

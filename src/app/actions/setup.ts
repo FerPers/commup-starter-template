@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { DEFAULT_PSSR_ITEMS } from '@/lib/constants/pssr'
 
 interface PhaseInput {
@@ -122,8 +123,6 @@ interface ProjectInput {
   name: string; code: string; location: string; client: string
   start_date: string; end_date: string
 }
-
-const PRIVILEGED_ROLES = ['owner', 'admin', 'architect']
 
 export async function createProject(input: ProjectInput): Promise<{ error?: string; project_id?: string }> {
   const supabase = await createClient()

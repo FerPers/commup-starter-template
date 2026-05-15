@@ -1,10 +1,9 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { logActivity } from '@/lib/log-activity'
 import { revalidatePath } from 'next/cache'
-
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 export async function bulkUpdateItrStatus(
   ids: string[],

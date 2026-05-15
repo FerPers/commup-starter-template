@@ -1,9 +1,8 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
-
-const ADMIN_ROLES = ['owner', 'admin', 'architect']
 
 export type WorkflowActionType =
   | 'block_certificate'
@@ -41,7 +40,7 @@ export async function createWorkflowRule(
 ): Promise<{ error?: string; id?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   const err = validate(input)
   if (err) return { error: err }
@@ -74,7 +73,7 @@ export async function updateWorkflowRule(
 ): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   const err = validate(input)
   if (err) return { error: err }
@@ -105,7 +104,7 @@ export async function toggleWorkflowRule(
 ): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   const { error } = await ctx.supabase
     .from('workflow_rules')
@@ -121,7 +120,7 @@ export async function toggleWorkflowRule(
 export async function deleteWorkflowRule(id: string): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   const { error } = await ctx.supabase
     .from('workflow_rules')

@@ -1,12 +1,11 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
-
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 // ── Create ITR Assignment ────────────────────────────────────────────
 
@@ -393,8 +392,6 @@ export async function signItr(
 
 // ── Revoke ITR Approval ──────────────────────────────────────────────
 
-const REVOKE_ROLES = ['owner', 'admin', 'architect']
-
 export async function revokeItrApproval(input: {
   itrId: string
   projectId: string
@@ -403,7 +400,7 @@ export async function revokeItrApproval(input: {
 }): Promise<{ error?: string; revokedCount?: number }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!REVOKE_ROLES.includes(ctx.role)) {
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) {
     return { error: 'Sin permisos para revocar aprobaciones' }
   }
 

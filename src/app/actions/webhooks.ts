@@ -1,9 +1,8 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
-
-const ADMIN_ROLES = ['owner', 'admin', 'architect']
 
 export type CreateWebhookInput = {
   name: string
@@ -17,7 +16,7 @@ export async function createWebhookSubscription(
 ): Promise<{ error?: string; id?: string; secret?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   if (!input.name?.trim()) return { error: 'Nombre requerido' }
   if (!input.endpointUrl?.trim()) return { error: 'URL requerida' }
@@ -52,7 +51,7 @@ export async function setWebhookEnabled(
 ): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   const { error } = await ctx.supabase.rpc('set_webhook_enabled', {
     p_sub_id:  subId,
@@ -67,7 +66,7 @@ export async function setWebhookEnabled(
 export async function deleteWebhookSubscription(subId: string): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
 
   const { error } = await ctx.supabase.rpc('delete_webhook_subscription', { p_sub_id: subId })
   if (error) return { error: error.message }

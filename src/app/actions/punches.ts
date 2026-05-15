@@ -1,11 +1,10 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
-
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 // ── createPunch ────────────────────────────────────────────────────────────
 

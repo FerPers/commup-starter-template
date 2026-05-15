@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { logActivity } from '@/lib/log-activity'
 import { DEFAULT_PSSR_ITEMS, PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
 import {
@@ -427,8 +428,6 @@ export async function rejectPssrReview(reviewId: string, projectId: string, reas
 // ═══════════════════════════════════════════════════════════
 // CROSS-ORG SHARING (templates only — reviews live per project)
 // ═══════════════════════════════════════════════════════════
-
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 export type ImportablePssrTemplate = {
   id: string

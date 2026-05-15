@@ -1,9 +1,8 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
-
-const ADMIN_ROLES = ['owner', 'admin']
 
 // ═══════════════════════════════════════════════════════════
 // PROJECT PHASES
