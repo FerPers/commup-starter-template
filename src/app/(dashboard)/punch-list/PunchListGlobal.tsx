@@ -288,6 +288,20 @@ export default function PunchListGlobal({
             {tc('exportCsv')}
           </Button>
         )}
+        <a
+          href="/punch-list/export"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '6px 12px', height: 28,
+            border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--text-sm)', fontWeight: 500,
+            color: 'var(--text-strong)', textDecoration: 'none',
+            background: 'transparent', whiteSpace: 'nowrap',
+          }}
+        >
+          <Download size={14} />
+          {t('exportExcel')}
+        </a>
       </div>
 
       {/* Bulk action bar */}

@@ -174,7 +174,19 @@ export default function PunchListView({
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
-        <span style={{ fontSize: '13px', color: '#94a3b8' }}>{t('filters.count', { filtered: filtered.length, total: punches.length })}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '13px', color: '#94a3b8' }}>{t('filters.count', { filtered: filtered.length, total: punches.length })}</span>
+          <a
+            href={`/projects/${projectId}/punches/export`}
+            style={{
+              padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+              borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+              textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
+            }}
+          >
+            {t('exportExcel')}
+          </a>
+        </div>
       </div>
 
       {/* Summary cards */}

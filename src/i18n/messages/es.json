@@ -266,6 +266,7 @@
       "catCOpen": "Cat C abiertos",
       "closed": "Cerrados"
     },
+    "exportExcel": "↓ Excel",
     "filters": {
       "search": "Buscar punch, tag, descripción...",
       "allStatuses": "Todos los estados",
