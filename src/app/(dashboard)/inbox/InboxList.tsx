@@ -6,6 +6,7 @@ import { Check, Filter } from 'lucide-react'
 import {
   markNotificationRead,
   markAllNotificationsRead,
+  fetchMoreNotifications,
   type NotificationRow,
 } from '@/app/actions/notifications'
 
@@ -33,14 +34,20 @@ function formatDate(iso: string): string {
 
 export default function InboxList({
   initialItems,
+  initialHasMore,
+  totalCount,
 }: {
   initialItems: NotificationRow[]
+  initialHasMore: boolean
+  totalCount: number
 }) {
   const router = useRouter()
   const [items, setItems] = useState<NotificationRow[]>(initialItems)
+  const [hasMore, setHasMore] = useState(initialHasMore)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const [kindFilter, setKindFilter] = useState<string>('')
   const [isPending, startTransition] = useTransition()
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   const filtered = useMemo(() => {
     return items.filter(i => {
@@ -77,6 +84,16 @@ export default function InboxList({
     })
   }
 
+  async function handleLoadMore() {
+    const cursor = items[items.length - 1]?.created_at
+    if (!cursor) return
+    setIsLoadingMore(true)
+    const { items: more, hasMore: nextHasMore } = await fetchMoreNotifications(cursor)
+    setItems(prev => [...prev, ...more])
+    setHasMore(nextHasMore)
+    setIsLoadingMore(false)
+  }
+
   return (
     <div style={{ padding: '24px 32px', maxWidth: 880, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
@@ -85,7 +102,9 @@ export default function InboxList({
             Inbox
           </h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
-            {items.length} total · {unreadCount} sin leer
+            {items.length < totalCount
+              ? `${items.length} de ${totalCount} · ${unreadCount} sin leer`
+              : `${totalCount} total · ${unreadCount} sin leer`}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -178,6 +197,27 @@ export default function InboxList({
           ))
         )}
       </div>
+
+      {hasMore && (
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          <button
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+            style={{
+              padding: '8px 20px',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              background: 'var(--card-bg)',
+              color: 'var(--text-strong)',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: isLoadingMore ? 'wait' : 'pointer',
+            }}
+          >
+            {isLoadingMore ? 'Cargando…' : 'Cargar más'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -42,6 +42,27 @@ export async function listMyNotifications(limit = 20): Promise<{
   }
 }
 
+export async function fetchMoreNotifications(
+  cursor: string,
+  limit = 50,
+): Promise<{ items: NotificationRow[]; hasMore: boolean }> {
+  const ctx = await getCtx()
+  if (!ctx) return { items: [], hasMore: false }
+
+  const { data } = await ctx.supabase
+    .from('notifications')
+    .select('id, kind, title, body, link_url, read_at, created_at')
+    .eq('recipient_user_id', ctx.userId)
+    .eq('org_id', ctx.orgId)
+    .lt('created_at', cursor)
+    .order('created_at', { ascending: false })
+    .limit(limit + 1)
+
+  const rows = (data ?? []) as NotificationRow[]
+  const hasMore = rows.length > limit
+  return { items: hasMore ? rows.slice(0, limit) : rows, hasMore }
+}
+
 export async function markNotificationRead(id: string): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
