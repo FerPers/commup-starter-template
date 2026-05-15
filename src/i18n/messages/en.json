@@ -670,6 +670,7 @@
       "viewReport": "View report",
       "exportExcel": "↓ Export Excel",
       "phaseProgressPdf": "↓ Phase Progress PDF",
+      "areaKpisPdf": "↓ Area KPIs PDF",
       "sCurveTitle": "S-curve — Project Progress",
       "snapshotCount": "{count, plural, one {# snapshot} other {# snapshots}} · Last: {date}",
       "noSnapshotsEdit": "No snapshots — use \"Take Snapshot\" to record today's progress",
