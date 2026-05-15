@@ -9,6 +9,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, parsePagination, apiHeaders } from '@/lib/api/auth'
+import {
+  requireProjectAccess,
+  requireSubsystemAccess,
+  requireDisciplineAccess,
+} from '@/lib/api/access'
 
 // ── CORS preflight ────────────────────────────────────────────────────────────
 export function OPTIONS() {
@@ -107,17 +112,16 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Verify project belongs to org
-  const { data: project } = await admin
-    .from('projects')
-    .select('id')
-    .eq('id', project_id as string)
-    .eq('org_id', auth.orgId)
-    .maybeSingle()
+  // Verify project, subsystem and discipline all belong to this org/project.
+  // Prevents cross-tenant inserts where an OrgA key references OrgB sub-resources.
+  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id as string)
+  if (!projectCheck.ok) return projectCheck.response
 
-  if (!project) {
-    return NextResponse.json({ error: 'Project not found' }, { status: 404, headers: apiHeaders() })
-  }
+  const subsystemCheck = await requireSubsystemAccess(admin, project_id as string, subsystem_id as string)
+  if (!subsystemCheck.ok) return subsystemCheck.response
+
+  const disciplineCheck = await requireDisciplineAccess(admin, auth.orgId, discipline_id as string)
+  if (!disciplineCheck.ok) return disciplineCheck.response
 
   const { data, error } = await admin
     .from('tags')

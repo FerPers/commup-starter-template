@@ -8,6 +8,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, parsePagination, apiHeaders } from '@/lib/api/auth'
+import {
+  requireProjectAccess,
+  requireTagAccess,
+  requireTemplateAccess,
+  requirePhaseAccess,
+} from '@/lib/api/access'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -81,9 +87,20 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  const { data: project } = await admin
-    .from('projects').select('id, org_id').eq('id', project_id as string).eq('org_id', auth.orgId).maybeSingle()
-  if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404, headers: apiHeaders() })
+  // Cross-tenant FK guards: project (org), tag (project), template (org+is_global), phase (org).
+  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id as string)
+  if (!projectCheck.ok) return projectCheck.response
+
+  const tagCheck = await requireTagAccess(admin, project_id as string, tag_id as string)
+  if (!tagCheck.ok) return tagCheck.response
+
+  const templateCheck = await requireTemplateAccess(admin, auth.orgId, template_id as string)
+  if (!templateCheck.ok) return templateCheck.response
+
+  if (phase_id) {
+    const phaseCheck = await requirePhaseAccess(admin, auth.orgId, phase_id as string)
+    if (!phaseCheck.ok) return phaseCheck.response
+  }
 
   const { data, error } = await admin
     .from('itrs')

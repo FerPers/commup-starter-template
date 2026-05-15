@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders, parsePagination } from '@/lib/api/auth'
+import { requireProjectAccess, requireSystemsAccess } from '@/lib/api/access'
 import { generateHandoverPackage } from '@/lib/handover/generate'
 
 export function OPTIONS() {
@@ -70,10 +71,13 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  const { data: project } = await admin
-    .from('projects').select('id').eq('id', projectId).eq('org_id', auth.orgId).maybeSingle()
-  if (!project) {
-    return NextResponse.json({ error: 'Project not found' }, { status: 404, headers: apiHeaders() })
+  const projectCheck = await requireProjectAccess(admin, auth.orgId, projectId)
+  if (!projectCheck.ok) return projectCheck.response
+
+  // Each system_id passed by the caller must live inside the same project.
+  if (systemIds) {
+    const systemsCheck = await requireSystemsAccess(admin, projectId, systemIds)
+    if (!systemsCheck.ok) return systemsCheck.response
   }
 
   try {

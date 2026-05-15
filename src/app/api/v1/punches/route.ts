@@ -8,6 +8,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, parsePagination, apiHeaders } from '@/lib/api/auth'
+import {
+  requireProjectAccess,
+  requireTagAccess,
+  requireSubsystemAccess,
+} from '@/lib/api/access'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -85,9 +90,17 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  const { data: project } = await admin
-    .from('projects').select('id').eq('id', project_id as string).eq('org_id', auth.orgId).maybeSingle()
-  if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404, headers: apiHeaders() })
+  // Cross-tenant FK guards: project (org), tag (project), subsystem (project, optional).
+  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id as string)
+  if (!projectCheck.ok) return projectCheck.response
+
+  const tagCheck = await requireTagAccess(admin, project_id as string, tag_id as string)
+  if (!tagCheck.ok) return tagCheck.response
+
+  if (subsystem_id) {
+    const subsystemCheck = await requireSubsystemAccess(admin, project_id as string, subsystem_id as string)
+    if (!subsystemCheck.ok) return subsystemCheck.response
+  }
 
   // Auto-generate punch_number: PUNCH-<timestamp>
   const punch_number = `PUNCH-${Date.now()}`
