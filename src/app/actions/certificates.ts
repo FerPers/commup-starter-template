@@ -437,12 +437,20 @@ export async function signCertificate(input: {
   role: 'completion' | 'client' | 'authority'
   projectId: string
   comments?: string
+  signatureImage?: string | null
 }): Promise<{ error?: string }> {
   const ctx = await getCtx()
   if (!ctx) return { error: 'No autenticado' }
   if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos para firmar certificados' }
 
   const { supabase, userId } = ctx
+
+  // Cap signature payload at ~256 KB to avoid abuse (canvas PNG ~5-20 KB typical).
+  const sigImage = input.signatureImage?.trim() || null
+  if (sigImage) {
+    if (!sigImage.startsWith('data:image/')) return { error: 'Firma inválida' }
+    if (sigImage.length > 256 * 1024) return { error: 'La firma excede el tamaño permitido' }
+  }
 
   const { data: existing } = await supabase
     .from('certificate_signatures')
@@ -460,6 +468,7 @@ export async function signCertificate(input: {
       user_id: userId,
       role: input.role,
       comments: input.comments?.trim() || null,
+      signature_image: sigImage,
     } as never)
 
   if (error) return { error: error.message }

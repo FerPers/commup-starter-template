@@ -502,6 +502,9 @@
       "sigConfirmBody": "Tu firma quedará registrada con tu nombre y la fecha actual. Esta acción es auditable.",
       "sigConfirmAction": "Confirmar firma",
       "sigCancel": "Cancelar",
+      "sigCanvasLabel": "Firma",
+      "sigCanvasClear": "Limpiar",
+      "sigCanvasPlaceholder": "Firma aquí con dedo o ratón",
       "revokeModal": {
         "title": "¿Revocar certificado?",
         "body": "El certificado {certNumber} quedará en estado Revocado y se eliminarán las firmas actuales. Los firmantes serán notificados.",

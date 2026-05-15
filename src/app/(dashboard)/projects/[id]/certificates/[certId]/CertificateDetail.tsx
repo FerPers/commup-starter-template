@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeCertificate, reopenCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
@@ -161,7 +161,7 @@ export default function CertificateDetail({
     setSignRole(role)
   }
 
-  function handleSign() {
+  function handleSign(signatureImage: string) {
     if (!signRole) return
     setSignError('')
     startTransition(async () => {
@@ -170,6 +170,7 @@ export default function CertificateDetail({
         role: signRole,
         projectId,
         comments: signComments || undefined,
+        signatureImage,
       })
       if (result.error) {
         setSignError(result.error)
@@ -459,10 +460,15 @@ export default function CertificateDetail({
                   <>
                     <div style={{
                       borderBottom: '1px solid #0f172a', marginBottom: '8px', height: '50px',
-                      display: 'flex', alignItems: 'flex-end', paddingBottom: '6px',
+                      display: 'flex', alignItems: 'flex-end', justifyContent: sig.signature_image ? 'center' : 'flex-start',
+                      paddingBottom: '6px',
                       fontFamily: 'cursive', fontSize: '18px', color: '#0f172a',
                     }}>
-                      {sig.signer_profile?.full_name ?? '—'}
+                      {sig.signature_image
+                        // eslint-disable-next-line @next/next/no-img-element -- base64 signature data URL, Image optimizer doesn't apply
+                        ? <img src={sig.signature_image} alt={roleLabel} style={{ maxHeight: '46px', maxWidth: '100%', objectFit: 'contain' }} />
+                        : (sig.signer_profile?.full_name ?? '—')
+                      }
                     </div>
                     <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{roleLabel}</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
@@ -524,57 +530,17 @@ export default function CertificateDetail({
         </div>
       </div>
 
-      {/* Sign confirm modal */}
+      {/* Sign confirm modal (canvas) */}
       {signRole && (
-        <div className="no-print" style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-        }}>
-          <div style={{
-            background: 'var(--card-bg)', borderRadius: '14px', padding: '28px',
-            maxWidth: '440px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
-          }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
-              {t('detail.sigConfirmTitle', { role: t(`detail.sigRoles.${signRole}`) })}
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
-              {t('detail.sigConfirmBody')}
-            </p>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-              {t('detail.sigCommentsLabel')}
-            </label>
-            <textarea
-              value={signComments}
-              onChange={e => setSignComments(e.target.value)}
-              placeholder={t('detail.sigCommentsPlaceholder')}
-              rows={3}
-              style={{
-                width: '100%', padding: '8px 10px', borderRadius: '8px',
-                border: '1px solid var(--border)', fontSize: '13px',
-                background: 'var(--card-bg)', color: 'var(--text-strong)',
-                fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box',
-              }}
-            />
-            {signError && (
-              <p style={{ fontSize: '13px', color: '#ef4444', margin: '12px 0 0' }}>{signError}</p>
-            )}
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
-              <button
-                onClick={() => { setSignRole(null); setSignError('') }}
-                style={{ padding: '8px 18px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer' }}
-              >
-                {t('detail.sigCancel')}
-              </button>
-              <button
-                onClick={handleSign}
-                disabled={isPending}
-                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: '#10b981', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'wait' : 'pointer' }}
-              >
-                {isPending ? t('detail.sigSigning') : t('detail.sigConfirmAction')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <CertSignModal
+          role={signRole}
+          comments={signComments}
+          onCommentsChange={setSignComments}
+          isPending={isPending}
+          signError={signError}
+          onCancel={() => { setSignRole(null); setSignError('') }}
+          onSign={handleSign}
+        />
       )}
 
       {/* Reopen confirm modal */}
@@ -676,6 +642,183 @@ export default function CertificateDetail({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Certificate Sign Modal (canvas drawing pad) ────────────────────────────
+
+function CertSignModal({
+  role,
+  comments,
+  onCommentsChange,
+  isPending,
+  signError,
+  onCancel,
+  onSign,
+}: {
+  role: CertSignatureRoleId
+  comments: string
+  onCommentsChange: (v: string) => void
+  isPending: boolean
+  signError: string
+  onCancel: () => void
+  onSign: (signatureImage: string) => void
+}) {
+  const t = useTranslations('Certificates')
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [hasDrawn, setHasDrawn] = useState(false)
+  const lastPoint = useRef<{ x: number; y: number } | null>(null)
+
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext('2d')
+    if (!ctx) return
+    ctx.strokeStyle = '#0f172a'
+    ctx.lineWidth = 2.5
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.fillStyle = '#0f172a'
+  }, [])
+
+  function getPoint(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current!
+    const rect = canvas.getBoundingClientRect()
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    }
+  }
+
+  function onPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setIsDrawing(true)
+    setHasDrawn(true)
+    const pt = getPoint(e)
+    lastPoint.current = pt
+    const ctx = canvasRef.current!.getContext('2d')!
+    ctx.beginPath()
+    ctx.arc(pt.x, pt.y, 1.2, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (!isDrawing) return
+    const ctx = canvasRef.current!.getContext('2d')!
+    const pt = getPoint(e)
+    ctx.beginPath()
+    ctx.moveTo(lastPoint.current!.x, lastPoint.current!.y)
+    ctx.lineTo(pt.x, pt.y)
+    ctx.stroke()
+    lastPoint.current = pt
+  }
+
+  function onPointerUp() {
+    setIsDrawing(false)
+    lastPoint.current = null
+  }
+
+  function clearCanvas() {
+    const canvas = canvasRef.current!
+    canvas.getContext('2d')!.clearRect(0, 0, canvas.width, canvas.height)
+    setHasDrawn(false)
+  }
+
+  function submit() {
+    if (!hasDrawn) return
+    onSign(canvasRef.current!.toDataURL('image/png'))
+  }
+
+  return (
+    <div className="no-print" style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+      padding: '20px',
+    }}
+      onClick={e => { if (e.target === e.currentTarget) onCancel() }}
+    >
+      <div style={{
+        background: 'var(--card-bg)', borderRadius: '14px', padding: '24px',
+        maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+      }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
+          {t('detail.sigConfirmTitle', { role: t(`detail.sigRoles.${role}`) })}
+        </h3>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
+          {t('detail.sigConfirmBody')}
+        </p>
+
+        {/* Canvas drawing pad */}
+        <div style={{ marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>
+              {t('detail.sigCanvasLabel')}
+            </label>
+            <button
+              onClick={clearCanvas}
+              style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+            >
+              {t('detail.sigCanvasClear')}
+            </button>
+          </div>
+          <div style={{ position: 'relative', border: '1.5px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: 'var(--gray-50)' }}>
+            <canvas
+              ref={canvasRef}
+              width={392}
+              height={160}
+              style={{ display: 'block', width: '100%', height: '160px', cursor: 'crosshair', touchAction: 'none' }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+            />
+            {!hasDrawn && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                <span style={{ fontSize: '13px', color: 'var(--gray-300)' }}>{t('detail.sigCanvasPlaceholder')}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+          {t('detail.sigCommentsLabel')}
+        </label>
+        <textarea
+          value={comments}
+          onChange={e => onCommentsChange(e.target.value)}
+          placeholder={t('detail.sigCommentsPlaceholder')}
+          rows={3}
+          style={{
+            width: '100%', padding: '8px 10px', borderRadius: '8px',
+            border: '1px solid var(--border)', fontSize: '13px',
+            background: 'var(--card-bg)', color: 'var(--text-strong)',
+            fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box',
+          }}
+        />
+        {signError && (
+          <p style={{ fontSize: '13px', color: '#ef4444', margin: '12px 0 0' }}>{signError}</p>
+        )}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+          <button
+            onClick={onCancel}
+            style={{ padding: '8px 18px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer' }}
+          >
+            {t('detail.sigCancel')}
+          </button>
+          <button
+            onClick={submit}
+            disabled={isPending || !hasDrawn}
+            style={{
+              padding: '8px 18px', border: 'none', borderRadius: '8px',
+              background: (isPending || !hasDrawn) ? '#a7f3d0' : '#10b981',
+              color: '#fff', fontSize: '13px', fontWeight: 600,
+              cursor: (isPending || !hasDrawn) ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {isPending ? t('detail.sigSigning') : t('detail.sigConfirmAction')}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

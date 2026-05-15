@@ -502,6 +502,9 @@
       "sigConfirmBody": "Your signature will be recorded with your name and the current date. This action is auditable.",
       "sigConfirmAction": "Confirm signature",
       "sigCancel": "Cancel",
+      "sigCanvasLabel": "Signature",
+      "sigCanvasClear": "Clear",
+      "sigCanvasPlaceholder": "Sign here with finger or mouse",
       "revokeModal": {
         "title": "Revoke certificate?",
         "body": "Certificate {certNumber} will be set to Revoked status and current signatures will be deleted. Signers will be notified.",
