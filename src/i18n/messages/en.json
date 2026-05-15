@@ -1764,5 +1764,129 @@
       "offlinePending": "Offline · {count, plural, =1 {# pending} other {# pending}}",
       "forceSync": "Force sync"
     }
+  },
+  "Landing": {
+    "nav": {
+      "features": "Features",
+      "modules": "Modules",
+      "industries": "Industries",
+      "contact": "Contact",
+      "clientAccess": "Client Access"
+    },
+    "hero": {
+      "badge": "Industrial Commissioning Platform",
+      "headline": "Commissioning without paper.",
+      "headlineAccent": "In real time.",
+      "subheadline": "Manage ITRs, Punch Lists and Certificates from the field — with NFC and QR. Purpose-built for Oil & Gas and industrial projects.",
+      "ctaDemo": "Request a demo",
+      "ctaAccess": "Client Access",
+      "liveTag": "Live",
+      "statItrs": "ITRs completed",
+      "statPunches": "Open punches",
+      "statCerts": "Certificates issued",
+      "statPhase": "Phase progress"
+    },
+    "problem": {
+      "title": "Sound familiar on site?",
+      "card1Title": "\"The ITR is on paper and nobody can find it\"",
+      "card1Desc": "Checklists scattered between folders, binders, and WhatsApp photos.",
+      "card2Title": "\"I don't know how many open punches are left in the system\"",
+      "card2Desc": "Multiple Excel files, no single source of truth, status unknown.",
+      "card3Title": "\"That punch was never closed and the certificate was already signed\"",
+      "card3Desc": "No automatic blocking. Critical deficiencies slip through to operations."
+    },
+    "howItWorks": {
+      "title": "From field to certificate in 4 steps",
+      "step1Label": "Physical Tag",
+      "step1Desc": "Each piece of equipment is registered with a live tag in CommUp.",
+      "step2Label": "Scan NFC / QR",
+      "step2Desc": "The technician scans on their phone — no additional app needed.",
+      "step3Label": "Execute ITR",
+      "step3Desc": "Fill out the checklist, attach photos, capture signature on screen.",
+      "step4Label": "Issue Certificate",
+      "step4Desc": "Auto-blocked until all Cat A punches are resolved. One click, full dossier."
+    },
+    "modules": {
+      "title": "Explore the modules",
+      "tabs": {
+        "itrs": "ITRs",
+        "punches": "Punch List",
+        "certs": "Certificates",
+        "kpis": "KPIs",
+        "preservation": "Preservation"
+      },
+      "itrs": {
+        "title": "Inspection & Test Records",
+        "bullet1": "Configurable templates per discipline and phase",
+        "bullet2": "Field execution on tablet or mobile with offline support",
+        "bullet3": "Digital signature, photos, and automatic traceability"
+      },
+      "punches": {
+        "title": "Punch List",
+        "bullet1": "Categories A, B and C with automatic certificate blocking",
+        "bullet2": "Photo evidence, comments and complete history",
+        "bullet3": "Real-time tracking by system, area and discipline"
+      },
+      "certs": {
+        "title": "Certificates MC / RFPC / RFC / RFSU",
+        "bullet1": "Auto-blocked until all Cat A punches are closed",
+        "bullet2": "Automatic handover dossier with all ITRs and exceptions",
+        "bullet3": "Digital signature with full audit trail"
+      },
+      "kpis": {
+        "title": "KPIs & Control Tower",
+        "bullet1": "Real-time progress by phase, area and discipline",
+        "bullet2": "Configurable dashboards for different roles",
+        "bullet3": "Export to Excel and executive PDF reports"
+      },
+      "preservation": {
+        "title": "Preservation",
+        "bullet1": "Scheduled procedures with automatic next-due-date",
+        "bullet2": "Overdue and upcoming alerts by tag",
+        "bullet3": "Complete history of maintenance during idle periods"
+      }
+    },
+    "differentiators": {
+      "title": "Technology built for the field",
+      "nfcTitle": "NFC & QR Scanning",
+      "nfcDesc": "Scan any tag directly from the browser. No extra app. Instant access to all history.",
+      "cloudTitle": "100% Cloud SaaS",
+      "cloudDesc": "No installation, no servers to manage. Always updated, accessible from anywhere.",
+      "realtimeTitle": "Real-time KPIs",
+      "realtimeDesc": "Live dashboards. Every completed ITR and closed punch reflected instantly.",
+      "securityTitle": "Isolated Multi-tenant",
+      "securityDesc": "Each company and project isolated via Postgres RLS. Your data belongs to you only."
+    },
+    "industries": {
+      "title": "Built for industrial projects",
+      "og": "Oil & Gas",
+      "renewables": "Renewables",
+      "lng": "LNG Plants",
+      "offshore": "Offshore",
+      "mining": "Mining",
+      "industrial": "Industrial Plants"
+    },
+    "cta": {
+      "title": "Ready to bring your project to CommUp?",
+      "subtitle": "Join companies that have eliminated paper from their commissioning process.",
+      "btnAccess": "Client Access",
+      "btnDemo": "Request demo"
+    },
+    "footer": {
+      "tagline": "Industrial Commissioning Platform",
+      "modules": "Modules",
+      "company": "Company",
+      "legal": "Legal",
+      "itrs": "ITRs",
+      "punchList": "Punch List",
+      "certificates": "Certificates",
+      "kpis": "KPIs",
+      "preservation": "Preservation",
+      "about": "About",
+      "contact": "Contact",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "rights": "All rights reserved."
+    }
   }
 }

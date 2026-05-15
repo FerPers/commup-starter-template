@@ -253,3 +253,21 @@ a:focus-visible,
   outline-offset: 2px;
   box-shadow: var(--focus-ring);
 }
+
+/* ==========================================================================
+   Landing page — responsive overrides
+   ========================================================================== */
+@media (max-width: 768px) {
+  .landing-nav-links { display: none !important; }
+  .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+  .hero-mockup { display: none !important; }
+  .how-connector { display: none !important; }
+  .how-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .modules-grid { grid-template-columns: 1fr !important; }
+  .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+}
+
+@media (max-width: 480px) {
+  .how-grid { grid-template-columns: 1fr !important; }
+  .footer-grid { grid-template-columns: 1fr !important; }
+}
