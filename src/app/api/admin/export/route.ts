@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import * as XLSX from 'xlsx'
+import { sanitizeRow } from '@/lib/excel/sanitize'
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
     Discipline: (t.disciplines as unknown as WithCode)?.code ?? '',
     'Equipment Type': (t.equipment_types as unknown as WithName)?.name ?? '',
   }))
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tagsRows), 'Tags')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tagsRows.map(sanitizeRow)), 'Tags')
 
   // ── ITRs sheet ──────────────────────────────────────────────
   const itrsRows = (itrs ?? []).map(i => ({
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
     'Progress %': i.progress_pct,
     'Scheduled Date': i.scheduled_date ?? '',
   }))
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(itrsRows), 'ITRs')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(itrsRows.map(sanitizeRow)), 'ITRs')
 
   // ── Punches sheet ───────────────────────────────────────────
   const punchRows = (punches ?? []).map(p => ({
@@ -103,7 +104,7 @@ export async function GET(req: NextRequest) {
     'Raised At': p.raised_at ? new Date(p.raised_at).toLocaleDateString() : '',
     'Closed Date': p.closed_date ?? '',
   }))
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(punchRows), 'Punches')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(punchRows.map(sanitizeRow)), 'Punches')
 
   // ── Preservation sheet ──────────────────────────────────────
   const preservRows = (preservation ?? []).map(p => ({
@@ -113,7 +114,7 @@ export async function GET(req: NextRequest) {
     Frequency: p.frequency,
     'Next Due Date': p.next_due_date ?? '',
   }))
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(preservRows), 'Preservation')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(preservRows.map(sanitizeRow)), 'Preservation')
 
   // ── Certificates sheet ──────────────────────────────────────
   const certRows = (certificates ?? []).map(c => ({
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest) {
     'Issued Date': c.issued_date ?? '',
     Subsystem: (c.subsystems as unknown as WithCode)?.code ?? '',
   }))
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(certRows), 'Certificates')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(certRows.map(sanitizeRow)), 'Certificates')
 
   const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
   const filename = `${project.name.replace(/[^a-zA-Z0-9_-]/g, '_')}_export.xlsx`

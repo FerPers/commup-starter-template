@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import * as XLSX from 'xlsx'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
+import { sanitizeRow } from '@/lib/excel/sanitize'
 
 export async function GET(
   _request: Request,
@@ -64,7 +65,7 @@ export async function GET(
       '% Completado': pct,
     }
   })
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(phaseRows), 'KPI por Fase')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(phaseRows.map(sanitizeRow)), 'KPI por Fase')
 
   // Sheet 2: Completamiento por Subsistema
   const ssRows = subsystemKpis.map(ss => ({
@@ -79,7 +80,7 @@ export async function GET(
   }))
   XLSX.utils.book_append_sheet(
     wb,
-    XLSX.utils.json_to_sheet(ssRows.length > 0 ? ssRows : [{ Nota: 'Sin subsistemas registrados' }]),
+    XLSX.utils.json_to_sheet(ssRows.length > 0 ? ssRows.map(sanitizeRow) : [{ Nota: 'Sin subsistemas registrados' }]),
     'Subsistemas'
   )
 
@@ -94,7 +95,7 @@ export async function GET(
   }))
   XLSX.utils.book_append_sheet(
     wb,
-    XLSX.utils.json_to_sheet(snapshotRows.length > 0 ? snapshotRows : [{ Nota: 'Sin snapshots registrados' }]),
+    XLSX.utils.json_to_sheet(snapshotRows.length > 0 ? snapshotRows.map(sanitizeRow) : [{ Nota: 'Sin snapshots registrados' }]),
     'Histórico'
   )
 

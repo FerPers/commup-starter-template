@@ -166,6 +166,10 @@ export function parsePagination(req: NextRequest): { limit: number; offset: numb
 
 // ── Standard API response headers ────────────────────────────────────────────
 
+// CORS `*` is intentional for /api/v1: machine-to-machine API authenticated via
+// `Authorization: Bearer <api_key>` (no cookies, no implicit credentials), so
+// CSRF does not apply. Any browser origin is allowed to script against the API
+// as long as it presents a valid key. Audited 2026-05-15 (SEC-002, F3).
 export function apiHeaders(): HeadersInit {
   return {
     'Content-Type': 'application/json',

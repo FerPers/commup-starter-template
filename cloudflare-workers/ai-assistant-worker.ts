@@ -422,13 +422,26 @@ async function checkRateLimit(userId: string, env: Env): Promise<boolean> {
 
 // ─── Request Handler ──────────────────────────────────────────────────────
 
+// Production origins allowed to call this worker. Keep in sync with the
+// allowlist in push-dispatcher.ts; new stagings must be added explicitly.
+const ALLOWED_ORIGINS = new Set<string>([
+  'https://commup.app',
+  'https://www.commup.app',
+]);
+
+function corsHeadersFor(origin: string | null): Record<string, string> {
+  const allowed = origin && ALLOWED_ORIGINS.has(origin) ? origin : 'https://commup.app';
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Vary': 'Origin',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
+    const corsHeaders = corsHeadersFor(request.headers.get('Origin'));
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
     if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
