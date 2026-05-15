@@ -157,9 +157,14 @@ CREATE TABLE tags (
   serial_number       TEXT,
   status              tag_status NOT NULL DEFAULT 'not_started',
   preservation_required BOOLEAN NOT NULL DEFAULT FALSE,
+  nfc_uid             TEXT,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(project_id, tag_number)
 );
+
+CREATE UNIQUE INDEX tags_project_nfc_uid_uq
+  ON tags (project_id, nfc_uid)
+  WHERE nfc_uid IS NOT NULL;
 
 CREATE TABLE cables (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

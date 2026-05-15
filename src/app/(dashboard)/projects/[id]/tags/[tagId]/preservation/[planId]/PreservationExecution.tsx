@@ -8,6 +8,7 @@ import {
   upsertRecordResponse,
   finalizeRecord,
 } from '@/app/actions/preservation'
+import PreservationPhotosSection from './PreservationPhotosSection'
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -114,6 +115,7 @@ export default function PreservationExecution({
 
   // Active record ID (created on first response)
   const [recordId, setRecordId] = useState<string | null>(openRecord?.id ?? null)
+  const [photoCount, setPhotoCount] = useState<number>(0)
 
   // Responses map: item_id → { bool, numeric, text, passed }
   const [responses, setResponses] = useState<Record<string, {
@@ -221,6 +223,11 @@ export default function PreservationExecution({
         labels: missing.map(i => i.label).slice(0, 2).join(', '),
       }))
       return
+    }
+
+    // Soft warning: procedure requires photo and none uploaded
+    if (procedure.requires_photo && photoCount === 0) {
+      if (!confirm(t('photos.confirmFinalizeWithoutPhotos'))) return
     }
 
     setSubmitError(null)
@@ -466,6 +473,17 @@ export default function PreservationExecution({
             style={{ width: '100%', padding: '9px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
           />
         </div>
+
+        {procedure.requires_photo && (
+          <PreservationPhotosSection
+            recordId={recordId}
+            planId={plan.id}
+            projectId={projectId}
+            tagId={tagId}
+            required
+            onCountChange={setPhotoCount}
+          />
+        )}
 
         {result === 'nok' && (
           <div style={{ marginBottom: '14px', padding: '10px 14px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>

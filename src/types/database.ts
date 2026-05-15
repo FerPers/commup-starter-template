@@ -139,6 +139,7 @@ export interface Tag {
   status: TagStatus
   preservation_required: boolean
   pid_drawing: string | null
+  nfc_uid: string | null
   // Engineering parameters (Sprint 2)
   range_min: number | null
   range_max: number | null

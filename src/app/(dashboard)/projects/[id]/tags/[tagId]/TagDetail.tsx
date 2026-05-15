@@ -6,6 +6,9 @@ import { updateTag, deleteTag } from '@/app/actions/tags'
 import TagItrTab from './TagItrTab'
 import TagPunchTab, { type TagPunch, type OrgMemberForPunch } from './TagPunchTab'
 import TagPreservationTab, { type PreservationPlanRow, type PreservationProcedureOption } from './TagPreservationTab'
+import TagPhotosTab from './TagPhotosTab'
+import NfcSection from './NfcSection'
+import type { ConsolidatedTagPhoto } from '@/lib/tag-photos'
 
 // ── ITR prop types ───────────────────────────────────────────────────
 
@@ -53,6 +56,7 @@ type Tag = {
   serial_number: string | null
   preservation_required: boolean
   pid_drawing: string | null
+  nfc_uid: string | null
   range_min: number | null
   range_max: number | null
   eng_unit: string | null
@@ -72,7 +76,7 @@ type Tag = {
   subsystems: Subsystem
 }
 
-type Tab = 'overview' | 'itrs' | 'punches' | 'docs' | 'preservation'
+type Tab = 'overview' | 'itrs' | 'punches' | 'photos' | 'docs' | 'preservation'
 
 // ── Status config ────────────────────────────────────────────────
 
@@ -107,6 +111,7 @@ export default function TagDetail({
   tagPunches,
   preservationPlans,
   preservationProcedures,
+  tagPhotos,
 }: {
   tag: Tag
   projectId: string
@@ -123,6 +128,7 @@ export default function TagDetail({
   tagPunches: TagPunch[]
   preservationPlans: PreservationPlanRow[]
   preservationProcedures: PreservationProcedureOption[]
+  tagPhotos: ConsolidatedTagPhoto[]
 }) {
   const t = useTranslations('Tags')
   const [activeTab, setActiveTab] = useState<Tab>('overview')
@@ -147,6 +153,7 @@ export default function TagDetail({
     { key: 'overview',     label: t('detail.tabs.overview') },
     { key: 'itrs',         label: t('detail.tabs.itrs'),         badge: tagItrs.length },
     { key: 'punches',      label: t('detail.tabs.punches'),      badge: tagPunches.length > 0 ? tagPunches.length : undefined },
+    { key: 'photos',       label: t('detail.tabs.photos'),       badge: tagPhotos.length > 0 ? tagPhotos.length : undefined },
     { key: 'docs',         label: t('detail.tabs.docs') },
     { key: 'preservation', label: t('detail.tabs.preservation') },
   ]
@@ -376,7 +383,7 @@ export default function TagDetail({
           <EditForm tag={tag} projectId={projectId} onCancel={() => setEditMode(false)} canDelete={canEdit} />
         ) : (
           <>
-            {activeTab === 'overview'     && <OverviewTab tag={tag} area={area} sys={sys} sub={sub} pidSignedUrl={pidSignedUrl} />}
+            {activeTab === 'overview'     && <OverviewTab tag={tag} area={area} sys={sys} sub={sub} pidSignedUrl={pidSignedUrl} projectId={projectId} canEdit={canEdit} />}
             {activeTab === 'itrs'         && (
               <TagItrTab
                 projectId={projectId}
@@ -398,6 +405,7 @@ export default function TagDetail({
                 currentUserRole={currentUserRole}
               />
             )}
+            {activeTab === 'photos'       && <TagPhotosTab photos={tagPhotos} />}
             {activeTab === 'docs'         && <DocsTab tag={tag} pidSignedUrl={pidSignedUrl} pidDocId={pidDocId} projectId={projectId} />}
             {activeTab === 'preservation' && (
               <TagPreservationTab
@@ -419,12 +427,14 @@ export default function TagDetail({
 
 // ── Overview Tab ─────────────────────────────────────────────────
 
-function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
+function OverviewTab({ tag, area, sys, sub, pidSignedUrl, projectId, canEdit }: {
   tag: Tag
   area: Area | undefined
   sys: System | undefined
   sub: Subsystem | undefined
   pidSignedUrl: string | null
+  projectId: string
+  canEdit: boolean
 }) {
   const t = useTranslations('Tags')
   const d = tag.disciplines
@@ -481,6 +491,9 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl }: {
 
       {/* Right column */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+        {/* NFC binding (D2) */}
+        <NfcSection projectId={projectId} tagId={tag.id} nfcUid={tag.nfc_uid} canEdit={canEdit} />
 
         {/* Location */}
         <div style={cardStyle}>

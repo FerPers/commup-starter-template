@@ -610,3 +610,99 @@ export async function cloneProcedureToActiveOrg(
   revalidatePath('/admin/templates/preservation')
   return { id: cloned.id }
 }
+
+// ═══════════════════════════════════════════════════════════
+// PRESERVATION RECORD ATTACHMENTS
+// ═══════════════════════════════════════════════════════════
+
+export type PreservationAttachmentRow = {
+  id: string
+  file_url: string
+  signed_url: string | null
+  file_type: string
+  captured_at: string
+}
+
+export async function listPreservationAttachments(input: {
+  recordId: string
+}): Promise<{ attachments?: PreservationAttachmentRow[]; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { data: rows, error } = await ctx.supabase
+    .from('preservation_attachments')
+    .select('id, file_url, file_type, captured_at')
+    .eq('record_id', input.recordId)
+    .order('captured_at', { ascending: true })
+
+  if (error) return { error: error.message }
+
+  const attachments = await Promise.all(
+    (rows ?? []).map(async row => {
+      const { data: signed } = await ctx.supabase.storage
+        .from('preservation-attachments')
+        .createSignedUrl(row.file_url, 3600)
+      return {
+        id: row.id,
+        file_url: row.file_url,
+        signed_url: signed?.signedUrl ?? null,
+        file_type: row.file_type,
+        captured_at: row.captured_at,
+      }
+    })
+  )
+
+  return { attachments }
+}
+
+export async function addPreservationAttachment(input: {
+  recordId: string
+  storagePath: string
+  fileType: string
+  projectId: string
+  tagId: string
+  planId: string
+}): Promise<{ id?: string; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { data, error } = await ctx.supabase
+    .from('preservation_attachments')
+    .insert({
+      record_id: input.recordId,
+      file_url: input.storagePath,
+      file_type: input.fileType,
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}/preservation/${input.planId}`)
+  return { id: data.id }
+}
+
+export async function deletePreservationAttachment(input: {
+  attachmentId: string
+  storagePath: string
+  projectId: string
+  tagId: string
+  planId: string
+}): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { error: storageError } = await ctx.supabase.storage
+    .from('preservation-attachments')
+    .remove([input.storagePath])
+  if (storageError) return { error: storageError.message }
+
+  const { error } = await ctx.supabase
+    .from('preservation_attachments')
+    .delete()
+    .eq('id', input.attachmentId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}/preservation/${input.planId}`)
+  return {}
+}

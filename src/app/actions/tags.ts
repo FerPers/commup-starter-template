@@ -90,3 +90,65 @@ export async function updateTag(
   revalidatePath(`/projects/${projectId}/tags`)
   return {}
 }
+
+// ── NFC binding ─────────────────────────────────────────────────────────
+
+export async function linkNfcToTag(input: {
+  projectId: string
+  tagId: string
+  nfcUid: string
+}): Promise<{ error?: string; conflictTagNumber?: string }> {
+  const ctx = await getActiveMembership()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const trimmed = input.nfcUid.trim()
+  if (!trimmed) return { error: 'NFC UID vacío' }
+
+  const { data: project } = await ctx.supabase
+    .from('projects')
+    .select('id')
+    .eq('id', input.projectId)
+    .eq('org_id', ctx.orgId)
+    .single()
+  if (!project) return { error: 'Proyecto no encontrado' }
+
+  // Pre-check uniqueness within the project to give a friendlier error than the
+  // raw 23505 constraint violation (and surface which tag already has it).
+  const { data: existing } = await ctx.supabase
+    .from('tags')
+    .select('id, tag_number')
+    .eq('project_id', input.projectId)
+    .eq('nfc_uid', trimmed)
+    .maybeSingle()
+  if (existing && existing.id !== input.tagId) {
+    return { error: 'NFC ya vinculado a otro tag', conflictTagNumber: existing.tag_number }
+  }
+
+  const { error } = await ctx.supabase
+    .from('tags')
+    .update({ nfc_uid: trimmed })
+    .eq('id', input.tagId)
+    .eq('project_id', input.projectId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
+  return {}
+}
+
+export async function unlinkNfc(input: {
+  projectId: string
+  tagId: string
+}): Promise<{ error?: string }> {
+  const ctx = await getActiveMembership()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { error } = await ctx.supabase
+    .from('tags')
+    .update({ nfc_uid: null })
+    .eq('id', input.tagId)
+    .eq('project_id', input.projectId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
+  return {}
+}

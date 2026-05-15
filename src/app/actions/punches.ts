@@ -310,3 +310,109 @@ export async function deletePunch(input: {
 
   return {}
 }
+
+// ── Punch Attachments ──────────────────────────────────────────────────────
+
+export type PunchAttachmentRow = {
+  id: string
+  file_url: string
+  signed_url: string | null
+  uploaded_by: string
+  uploaded_by_name: string | null
+  created_at: string
+  is_own: boolean
+}
+
+export async function listPunchAttachments(input: {
+  punchId: string
+}): Promise<{ attachments?: PunchAttachmentRow[]; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { supabase, userId } = ctx
+
+  const { data: rows, error } = await supabase
+    .from('punch_attachments')
+    .select('id, file_url, uploaded_by, created_at, profiles:uploaded_by(full_name)')
+    .eq('punch_id', input.punchId)
+    .order('created_at', { ascending: true })
+
+  if (error) return { error: error.message }
+
+  const attachments = await Promise.all(
+    (rows ?? []).map(async row => {
+      const { data: signed } = await supabase.storage
+        .from('punch-attachments')
+        .createSignedUrl(row.file_url, 3600)
+      const profile = row.profiles as unknown as { full_name: string } | null
+      return {
+        id: row.id,
+        file_url: row.file_url,
+        signed_url: signed?.signedUrl ?? null,
+        uploaded_by: row.uploaded_by,
+        uploaded_by_name: profile?.full_name ?? null,
+        created_at: row.created_at,
+        is_own: row.uploaded_by === userId,
+      }
+    })
+  )
+
+  return { attachments }
+}
+
+export async function addPunchAttachment(input: {
+  punchId: string
+  storagePath: string
+  projectId: string
+  tagId?: string | null
+}): Promise<{ id?: string; error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { data, error } = await ctx.supabase
+    .from('punch_attachments')
+    .insert({
+      punch_id: input.punchId,
+      file_url: input.storagePath,
+      uploaded_by: ctx.userId,
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${input.projectId}/punches`)
+  if (input.tagId) {
+    revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
+  }
+
+  return { id: data.id }
+}
+
+export async function deletePunchAttachment(input: {
+  attachmentId: string
+  storagePath: string
+  projectId: string
+  tagId?: string | null
+}): Promise<{ error?: string }> {
+  const ctx = await getCtx()
+  if (!ctx) return { error: 'No autenticado' }
+
+  const { error: storageError } = await ctx.supabase.storage
+    .from('punch-attachments')
+    .remove([input.storagePath])
+  if (storageError) return { error: storageError.message }
+
+  const { error } = await ctx.supabase
+    .from('punch_attachments')
+    .delete()
+    .eq('id', input.attachmentId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${input.projectId}/punches`)
+  if (input.tagId) {
+    revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
+  }
+
+  return {}
+}

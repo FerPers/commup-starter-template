@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
+import { fetchConsolidatedTagPhotos } from '@/lib/tag-photos'
 import TagDetail from './TagDetail'
 
 export default async function TagDetailPage({
@@ -38,6 +39,7 @@ export default async function TagDetailPage({
         id, tag_number, description, status,
         manufacturer, model, serial_number,
         preservation_required, pid_drawing,
+        nfc_uid,
         range_min, range_max, eng_unit,
         sp_h, sp_hh, sp_l, sp_ll,
         signal_type, sil_level, io_address, junction_box, datasheet_number, revision,
@@ -115,6 +117,15 @@ export default async function TagDetailPage({
   const prevTagId = tagIndex > 0 ? allTagIds![tagIndex - 1].id : null
   const nextTagId = tagIndex < (allTagIds?.length ?? 0) - 1 ? allTagIds![tagIndex + 1].id : null
 
+  // Consolidated photos across ITR + Punch + Preservation (D1c)
+  const tagPhotos = await fetchConsolidatedTagPhotos(supabase, {
+    tagId,
+    projectId,
+    itrIds: (tagItrs ?? []).map(i => ({ id: i.id, itr_number: i.itr_number })),
+    punchIds: (tagPunches ?? []).map(p => ({ id: p.id, punch_number: p.punch_number })),
+    planIds: (preservationPlans ?? []).map(p => p.id),
+  })
+
   // P&ID signed URL + doc id
   let pidSignedUrl: string | null = null
   let pidDocId: string | null = null
@@ -159,6 +170,7 @@ export default async function TagDetailPage({
       preservationPlans={(preservationPlans ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       preservationProcedures={(preservationProcedures ?? []) as any}
+      tagPhotos={tagPhotos}
     />
   )
 }

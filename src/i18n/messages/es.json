@@ -1120,6 +1120,7 @@
         "overview": "Resumen",
         "itrs": "ITRs",
         "punches": "Punch List",
+        "photos": "Fotos",
         "docs": "Documentos",
         "preservation": "Preservación"
       }
@@ -1199,6 +1200,37 @@
       "emptyTitle": "Sin documentos vinculados",
       "emptyMsg": "Este tag no tiene un P&ID de referencia asignado. Puedes editarlo para agregarlo."
     },
+    "photosTab": {
+      "emptyTitle": "Sin fotos para este tag",
+      "emptyMsg": "Las fotos se capturan durante la ejecución de ITRs, en punches o en preservaciones que las exijan.",
+      "emptyFilter": "Ninguna foto coincide con el filtro actual.",
+      "filterAll": "Todas",
+      "sourceItr": "ITR",
+      "sourcePunch": "Punch",
+      "sourcePreservation": "Preservación"
+    },
+    "nfc": {
+      "cardLabel": "Etiqueta NFC",
+      "notLinkedHint": "No hay etiqueta NFC vinculada a este tag.",
+      "linkBtn": "Vincular",
+      "manageBtn": "Gestionar",
+      "modalTitleLink": "Vincular etiqueta NFC",
+      "modalTitleEdit": "Gestionar etiqueta NFC",
+      "modalDescription": "Asocia un UID de NFC para que escaneos en campo abran directamente este tag.",
+      "modalClose": "Cerrar",
+      "labelUid": "UID del NFC",
+      "placeholderUid": "Ej. 04:2A:B3:1C:9F:80",
+      "scanWithPhone": "Leer NFC con el teléfono",
+      "scanning": "Acerca el teléfono al NFC…",
+      "webNfcUnavailable": "Lectura NFC desde navegador disponible solo en Chrome Android. Pega o tipea el UID manualmente.",
+      "btnUnlink": "Desvincular",
+      "btnCancel": "Cancelar",
+      "btnSave": "Guardar",
+      "btnSaving": "Guardando…",
+      "confirmUnlink": "¿Quitar la asociación NFC de este tag?",
+      "errReadFailed": "No se pudo leer el NFC. Revisa permisos o vuelve a intentarlo.",
+      "errConflict": "Ese UID ya está vinculado al tag {tag}."
+    },
     "punches": {
       "emptyTitle": "Sin punches registrados",
       "emptyMsg": "Los punches se generan durante la ejecución de ITRs o manualmente.",
@@ -1242,6 +1274,16 @@
         "reassignBtn": "↻ Reasignar",
         "reassignSubmitting": "Reasignando...",
         "reassignNoop": "Ya está asignado a esa persona"
+      },
+      "photos": {
+        "label": "Fotos ({count})",
+        "upload": "Subir foto",
+        "uploading": "Subiendo…",
+        "loading": "Cargando fotos…",
+        "empty": "Sin fotos. Captura evidencia antes de cerrar el punch.",
+        "delete": "Eliminar",
+        "confirmDelete": "¿Eliminar esta foto?",
+        "confirmCloseWithoutPhotos": "No has añadido fotos a este punch. Es recomendable adjuntar evidencia antes de cerrar. ¿Cerrar de todas formas?"
       }
     }
   },
@@ -1343,7 +1385,21 @@
     "sectionHistory": "Historial reciente",
     "punchRaised": "Punch levantado",
     "errCreateRecord": "Error al crear el registro",
-    "errMissingItems": "{count, plural, one {Falta # ítem requerido: {labels}…} other {Faltan # ítems requeridos: {labels}…}}"
+    "errMissingItems": "{count, plural, one {Falta # ítem requerido: {labels}…} other {Faltan # ítems requeridos: {labels}…}}",
+    "photos": {
+      "labelRequired": "Fotos requeridas ({count})",
+      "labelOptional": "Fotos ({count})",
+      "hintStartRecord": "Las fotos se habilitan tras responder el primer ítem.",
+      "upload": "Subir foto",
+      "uploading": "Subiendo…",
+      "loading": "Cargando fotos…",
+      "emptyRequired": "Este procedimiento exige al menos una foto de evidencia.",
+      "emptyOptional": "Sin fotos. Puedes adjuntar evidencia si lo consideras necesario.",
+      "delete": "Eliminar",
+      "confirmDelete": "¿Eliminar esta foto?",
+      "confirmFinalizeWithoutPhotos": "Este procedimiento exige fotos de evidencia y aún no has subido ninguna. ¿Confirmar la ejecución de todos modos?",
+      "errNoRecord": "Inicia el registro respondiendo un ítem antes de subir fotos."
+    }
   },
   "Signals": {
     "title": "Lista de Señales (I&C)",

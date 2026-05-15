@@ -1120,6 +1120,7 @@
         "overview": "Overview",
         "itrs": "ITRs",
         "punches": "Punch List",
+        "photos": "Photos",
         "docs": "Documents",
         "preservation": "Preservation"
       }
@@ -1199,6 +1200,37 @@
       "emptyTitle": "No linked documents",
       "emptyMsg": "This tag has no P&ID reference assigned. You can edit it to add one."
     },
+    "photosTab": {
+      "emptyTitle": "No photos for this tag",
+      "emptyMsg": "Photos are captured during ITR execution, in punches, or in preservations that require them.",
+      "emptyFilter": "No photos match the current filter.",
+      "filterAll": "All",
+      "sourceItr": "ITR",
+      "sourcePunch": "Punch",
+      "sourcePreservation": "Preservation"
+    },
+    "nfc": {
+      "cardLabel": "NFC tag",
+      "notLinkedHint": "No NFC tag linked to this asset.",
+      "linkBtn": "Link",
+      "manageBtn": "Manage",
+      "modalTitleLink": "Link NFC tag",
+      "modalTitleEdit": "Manage NFC tag",
+      "modalDescription": "Bind an NFC UID so field scans open this tag directly.",
+      "modalClose": "Close",
+      "labelUid": "NFC UID",
+      "placeholderUid": "e.g. 04:2A:B3:1C:9F:80",
+      "scanWithPhone": "Read NFC with phone",
+      "scanning": "Tap the NFC to your phone…",
+      "webNfcUnavailable": "Browser NFC reading is only available on Chrome Android. Paste or type the UID manually.",
+      "btnUnlink": "Unlink",
+      "btnCancel": "Cancel",
+      "btnSave": "Save",
+      "btnSaving": "Saving…",
+      "confirmUnlink": "Remove the NFC binding from this tag?",
+      "errReadFailed": "Failed to read NFC. Check permissions or try again.",
+      "errConflict": "That UID is already linked to tag {tag}."
+    },
     "punches": {
       "emptyTitle": "No punches registered",
       "emptyMsg": "Punches are generated during ITR execution or manually.",
@@ -1242,6 +1274,16 @@
         "reassignBtn": "↻ Reassign",
         "reassignSubmitting": "Reassigning...",
         "reassignNoop": "Already assigned to that person"
+      },
+      "photos": {
+        "label": "Photos ({count})",
+        "upload": "Upload photo",
+        "uploading": "Uploading…",
+        "loading": "Loading photos…",
+        "empty": "No photos. Capture evidence before closing the punch.",
+        "delete": "Delete",
+        "confirmDelete": "Delete this photo?",
+        "confirmCloseWithoutPhotos": "You haven't added any photos to this punch. Attaching evidence is recommended before closing. Close anyway?"
       }
     }
   },
@@ -1343,7 +1385,21 @@
     "sectionHistory": "Recent history",
     "punchRaised": "Punch raised",
     "errCreateRecord": "Error creating record",
-    "errMissingItems": "{count, plural, one {# required item missing: {labels}…} other {# required items missing: {labels}…}}"
+    "errMissingItems": "{count, plural, one {# required item missing: {labels}…} other {# required items missing: {labels}…}}",
+    "photos": {
+      "labelRequired": "Required photos ({count})",
+      "labelOptional": "Photos ({count})",
+      "hintStartRecord": "Photos become available once you've answered the first item.",
+      "upload": "Upload photo",
+      "uploading": "Uploading…",
+      "loading": "Loading photos…",
+      "emptyRequired": "This procedure requires at least one evidence photo.",
+      "emptyOptional": "No photos. You may attach evidence if needed.",
+      "delete": "Delete",
+      "confirmDelete": "Delete this photo?",
+      "confirmFinalizeWithoutPhotos": "This procedure requires evidence photos and none have been uploaded yet. Confirm execution anyway?",
+      "errNoRecord": "Start the record by answering one item before uploading photos."
+    }
   },
   "Signals": {
     "title": "Signal List (I&C)",

@@ -21,15 +21,21 @@ export default async function Tag360Resolver({
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decoded)
 
   // Tags están scoped por project_id, no por org_id directamente — joineamos.
-  const query = supabase
+  const baseQuery = () => supabase
     .from('tags')
     .select('id, project_id, projects!inner(id, org_id)')
     .eq('projects.org_id', membership.org_id)
     .limit(1)
 
-  const { data: tag } = isUuid
-    ? await query.eq('id', decoded).maybeSingle()
-    : await query.eq('tag_number', decoded).maybeSingle()
+  let { data: tag } = isUuid
+    ? await baseQuery().eq('id', decoded).maybeSingle()
+    : await baseQuery().eq('tag_number', decoded).maybeSingle()
+
+  // NFC UID fallback: scanners emiten UIDs hex que no calzan con tag_number.
+  if (!tag && !isUuid) {
+    const { data: nfcTag } = await baseQuery().eq('nfc_uid', decoded).maybeSingle()
+    tag = nfcTag
+  }
 
   if (!tag) notFound()
 

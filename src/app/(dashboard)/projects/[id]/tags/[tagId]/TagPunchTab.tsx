@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createPunch, updatePunchStatus, closePunch, addPunchComment, reassignPunch } from '@/app/actions/punches'
+import PunchPhotosSection from './PunchPhotosSection'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 
@@ -341,6 +342,7 @@ function PunchDetailModal({
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [reassignTo, setReassignTo] = useState<string>(punch.assigned_to ?? '')
+  const [photoCount, setPhotoCount] = useState<number | null>(null)
 
   const catCfg = CATEGORY_CFG[punch.category]
   const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
@@ -349,6 +351,9 @@ function PunchDetailModal({
   const reassignDirty = (reassignTo || null) !== (punch.assigned_to ?? null)
 
   function handleStatusChange(newStatus: 'open' | 'in_progress' | 'closed' | 'cancelled') {
+    if (newStatus === 'closed' && photoCount === 0) {
+      if (!confirm(t('punches.photos.confirmCloseWithoutPhotos'))) return
+    }
     startTransition(async () => {
       let res: { error?: string }
       if (newStatus === 'closed') {
@@ -412,6 +417,14 @@ function PunchDetailModal({
           {punch.target_date && <span><strong>{t('punches.detail.targetDate')}</strong> {punch.target_date}</span>}
           {punch.closed_date && <span><strong>{t('punches.detail.closedDate')}</strong> {punch.closed_date}</span>}
         </div>
+
+        {/* Photos */}
+        <PunchPhotosSection
+          punchId={punch.id}
+          projectId={projectId}
+          tagId={tagId}
+          onCountChange={setPhotoCount}
+        />
 
         {/* Status actions */}
         {!isClosed && (
