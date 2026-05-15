@@ -215,6 +215,17 @@ export default function KpiDashboard({
             </a>
           )}
           <a
+            href={`/projects/${projectId}/reports/phase-progress/pdf`}
+            target="_blank"
+            style={{
+              padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+              borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+              textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
+            }}
+          >
+            {t('phaseProgressPdf')}
+          </a>
+          <a
             href={`/projects/${projectId}/kpis/export`}
             style={{
               padding: '9px 16px', background: '#3b82f6', color: '#fff',
