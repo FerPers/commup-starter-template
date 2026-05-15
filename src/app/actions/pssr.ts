@@ -408,7 +408,7 @@ export async function rejectPssrReview(reviewId: string, projectId: string, reas
     orgId: review.org_id as string,
     rejecterUserId: ctx.userId,
     createdBy: (review.created_by as string | null) ?? null,
-    reason: reason?.trim() || null,
+    reason: reason?.trim() ?? null,
     reviewId,
     reviewNumber: review.review_number as string,
     projectId,

@@ -102,7 +102,7 @@ export function Modal({
           ...style,
         }}
       >
-        {(title || !hideCloseButton) && (
+        {(title ?? !hideCloseButton) && (
           <div style={{
             display: 'flex',
             alignItems: 'flex-start',

@@ -259,7 +259,7 @@ export default function DataQualityView({
             ))}
           </select>
 
-          {(activeFilters.severity || activeFilters.category || activeFilters.projectId) && (
+          {(activeFilters.severity ?? activeFilters.category ?? activeFilters.projectId) && (
             <button
               onClick={() => router.push('/admin/data-quality')}
               style={{

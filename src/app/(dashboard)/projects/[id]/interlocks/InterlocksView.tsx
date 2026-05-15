@@ -159,10 +159,10 @@ export default function InterlocksView({
                       </td>
 
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                        {il.set_point || '—'}
+                        {il.set_point ?? '—'}
                       </td>
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {il.action || '—'}
+                        {il.action ?? '—'}
                       </td>
                     </tr>
                   )

@@ -259,7 +259,7 @@ function MultiSelectField({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {(item.options || []).map((opt) => (
+      {(item.options ?? []).map((opt) => (
         <button
           key={opt}
           onClick={() => toggle(opt)}
@@ -372,7 +372,7 @@ export default function SwipeCaptureFlow({
         };
 
         updateItem({
-          photos: [...(currentItem.photos || []), newPhoto],
+          photos: [...(currentItem.photos ?? []), newPhoto],
           status: 'ok',
         });
       };
@@ -516,13 +516,13 @@ export default function SwipeCaptureFlow({
                   )}
                 </button>
 
-                {(currentItem.photos || []).length > 0 && (
+                {(currentItem.photos ?? []).length > 0 && (
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {currentItem.photos!.map((photo, i) => (
                       <div key={photo.id} className="relative flex-shrink-0">
                         {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL with rotating token, Image cache would break */}
                         <img
-                          src={photo.thumbnail_url || photo.url}
+                          src={photo.thumbnail_url ?? photo.url}
                           alt={`Foto ${i + 1}`}
                           className="w-20 h-20 object-cover rounded-xl border border-[var(--gray-700)]"
                         />
@@ -539,7 +539,7 @@ export default function SwipeCaptureFlow({
 
           {/* Notes */}
           <VoiceInput
-            value={currentItem.notes || ''}
+            value={currentItem.notes ?? ''}
             onChange={(notes) => updateItem({ notes })}
             label="Notas / Observaciones"
             placeholder="Agregar nota de campo..."

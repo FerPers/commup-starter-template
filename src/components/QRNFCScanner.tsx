@@ -102,7 +102,7 @@ function useNFCScan(
             raw = decoder.decode(record.data);
             break;
           } else if (record.recordType === 'text') {
-            const decoder = new TextDecoder(record.encoding || 'utf-8');
+            const decoder = new TextDecoder(record.encoding ?? 'utf-8');
             raw = decoder.decode(record.data);
             break;
           }
@@ -169,7 +169,7 @@ function useQRScan(
         c.label.toLowerCase().includes('back') ||
         c.label.toLowerCase().includes('rear') ||
         c.label.toLowerCase().includes('environment')
-      ) || cameras[cameras.length - 1];
+      ) ?? cameras[cameras.length - 1];
 
       await scanner.start(
         { deviceId: backCamera.id },
@@ -203,7 +203,7 @@ function useQRScan(
       const m = (err as { message?: string })?.message;
       const msg = m?.includes('permission')
         ? 'Permiso de cámara denegado. Habilítelo en el navegador.'
-        : m || 'Error iniciando cámara';
+        : m ?? 'Error iniciando cámara';
       setCameraError(msg);
       onError(msg);
     }
@@ -222,7 +222,7 @@ function useQRScan(
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => { stopQR(); };
+    return () => { void stopQR(); };
   }, [stopQR]);
 
   return { qrActive, cameraError, startQR, stopQR };
@@ -282,16 +282,16 @@ export default function QRNFCScanner() {
   useEffect(() => {
     if (mode === 'QR') {
       stopNFC();
-      startQR();
+      void startQR();
     } else if (mode === 'NFC') {
-      stopQR();
-      startNFC();
+      void stopQR();
+      void startNFC();
     } else {
-      stopQR();
+      void stopQR();
       stopNFC();
     }
     return () => {
-      stopQR();
+      void stopQR();
       stopNFC();
     };
   }, [mode, startNFC, startQR, stopNFC, stopQR]);
@@ -369,9 +369,9 @@ export default function QRNFCScanner() {
       </div>
 
       {/* Error Banner */}
-      {(error || cameraError) && (
+      {(error ?? cameraError) && (
         <div style={{ margin: '12px 16px 0', padding: 12, background: 'rgba(127, 29, 29, 0.5)', border: '1px solid var(--danger-500)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }}>
-          ⚠️ {error || cameraError}
+          ⚠️ {error ?? cameraError}
         </div>
       )}
 

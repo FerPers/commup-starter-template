@@ -91,8 +91,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       }}>
         {[
           { label: 'Código', value: project.code },
-          { label: 'Cliente', value: project.client || '—' },
-          { label: 'Ubicación', value: project.location || '—' },
+          { label: 'Cliente', value: project.client ?? '—' },
+          { label: 'Ubicación', value: project.location ?? '—' },
           { label: 'Inicio', value: formatDate(project.start_date) },
           { label: 'Objetivo', value: formatDate(project.end_date) },
         ].map((item, i, arr) => (

@@ -90,7 +90,7 @@ export default function NotificationsBell({
       )
       .subscribe()
     return () => {
-      supabase.removeChannel(channel)
+      void supabase.removeChannel(channel)
     }
   }, [userId, orgId])
 
@@ -108,7 +108,7 @@ export default function NotificationsBell({
   function handleToggle() {
     const next = !open
     setOpen(next)
-    if (next) loadItems()
+    if (next) void loadItems()
   }
 
   function handleClick(n: NotificationRow) {

@@ -15,7 +15,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
 
   useEffect(() => {
     let cancelled = false
-    listImportablePssrTemplates().then(res => {
+    void listImportablePssrTemplates().then(res => {
       if (cancelled) return
       if (res.error) setError(res.error)
       setTemplates(res.templates)

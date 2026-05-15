@@ -72,7 +72,7 @@ export async function importSignals(
 
   const areaRows = areaKeys.map(code => ({
     project_id: projectId, code,
-    name: rows.find(r => r.area_code.toUpperCase() === code)?.area_name || code,
+    name: rows.find(r => r.area_code.toUpperCase() === code)?.area_name ?? code,
     description: null,
   }))
   const { data: areas } = await admin
@@ -87,7 +87,7 @@ export async function importSignals(
     const areaId = areaIdMap.get(areaCode)
     if (!areaId) continue
     const row = rows.find(r => r.area_code.toUpperCase() === areaCode && r.system_code.toUpperCase() === sysCode)
-    systemInserts.push({ project_id: projectId, area_id: areaId, code: sysCode, name: row?.system_name || sysCode, description: null })
+    systemInserts.push({ project_id: projectId, area_id: areaId, code: sysCode, name: row?.system_name ?? sysCode, description: null })
   }
   const { data: systems } = await admin
     .from('systems')
@@ -101,7 +101,7 @@ export async function importSignals(
     const sysId = systemIdMap.get(sysCode)
     if (!sysId) continue
     const row = rows.find(r => r.system_code.toUpperCase() === sysCode && r.subsystem_code.toUpperCase() === subCode)
-    subInserts.push({ project_id: projectId, system_id: sysId, code: subCode, name: row?.subsystem_name || subCode, description: null })
+    subInserts.push({ project_id: projectId, system_id: sysId, code: subCode, name: row?.subsystem_name ?? subCode, description: null })
   }
   const { data: subsystems } = await admin
     .from('subsystems')

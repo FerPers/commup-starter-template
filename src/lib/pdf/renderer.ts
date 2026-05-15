@@ -5,7 +5,7 @@
  * the OpenNext Worker bundle. Used by certificate, ITR, and handover PDFs.
  */
 
-import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, RGB } from 'pdf-lib'
+import { PDFDocument, type PDFPage, type PDFFont, StandardFonts, rgb, type RGB } from 'pdf-lib'
 
 export const A4_W = 595.28
 export const A4_H = 841.89

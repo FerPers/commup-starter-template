@@ -51,7 +51,7 @@ export default function PunchPhotosSection({
 
   useEffect(() => {
     setLoading(true)
-    reload().finally(() => setLoading(false))
+    void reload().finally(() => setLoading(false))
   }, [reload])
 
   async function handleFile(file: File) {
@@ -59,7 +59,7 @@ export default function PunchPhotosSection({
     setUploading(true)
     try {
       const supabase = createClient()
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+      const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase()
       const path = `${punchId}/${crypto.randomUUID()}.${ext}`
 
       const { error: upErr } = await supabase.storage

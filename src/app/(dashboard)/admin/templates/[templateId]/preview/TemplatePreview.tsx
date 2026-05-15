@@ -438,7 +438,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                 // `description_es` is the Spanish translation. Fall back to the
                 // primary when a translation isn't filled in yet.
                 const visibleDesc = lang === 'es'
-                  ? (item.description_es?.trim() || item.description)
+                  ? (item.description_es?.trim() ?? item.description)
                   : item.description
 
                 return (

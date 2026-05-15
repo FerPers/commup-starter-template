@@ -57,7 +57,7 @@ export function useOfflineSync(itrId = '', templateId = '') {
 
   // Listen to browser online/offline events
   useEffect(() => {
-    const onOnline = () => { setIsOffline(false); sync() }
+    const onOnline = () => { setIsOffline(false); void sync() }
     const onOffline = () => setIsOffline(true)
     window.addEventListener('online', onOnline)
     window.addEventListener('offline', onOffline)

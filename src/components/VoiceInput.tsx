@@ -88,14 +88,14 @@ export function useVoiceInput(options: {
 
   useEffect(() => {
     const w = window as unknown as SpeechWindow;
-    const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition;
+    const SpeechRecognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Web Speech API detection requires window access, only available client-side
     setIsAvailable(!!SpeechRecognition);
   }, []);
 
   const start = useCallback(async () => {
     const w = window as unknown as SpeechWindow;
-    const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition;
+    const SpeechRecognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       onError('Dictado no disponible en este navegador. Use Chrome o Edge.');
@@ -120,7 +120,7 @@ export function useVoiceInput(options: {
 
     // Grammar opcional (Chrome desktop)
     if ('SpeechGrammarList' in window || 'webkitSpeechGrammarList' in window) {
-      const GrammarList = w.SpeechGrammarList || w.webkitSpeechGrammarList;
+      const GrammarList = w.SpeechGrammarList ?? w.webkitSpeechGrammarList;
       if (GrammarList) {
         const grammarList = new GrammarList();
         const grammar = `#JSGF V1.0; grammar oilgas; public <term> = ${ONG_GRAMMAR_WORDS.join(' | ')};`;
@@ -277,7 +277,7 @@ export default function VoiceInput({
       stop();
     } else {
       setError(null);
-      start();
+      void start();
     }
   };
 

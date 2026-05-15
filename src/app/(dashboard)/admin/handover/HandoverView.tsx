@@ -273,7 +273,7 @@ export default function HandoverView({
                         {pkg.signature_hash ? pkg.signature_hash.slice(0, 12) + '…' : '—'}
                       </td>
                       <td style={{ padding: 8 }}>
-                        {(pkg.json_path || pkg.pdf_path) && (
+                        {(pkg.json_path ?? pkg.pdf_path) && (
                           <Button variant="outline" size="sm" onClick={() => handleRefreshUrls(pkg.id)} disabled={isPending}>
                             {t('history.download')}
                           </Button>

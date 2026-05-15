@@ -218,9 +218,9 @@ export default function TagDetail({
                 {tag.tag_number}
               </h1>
               <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0', lineHeight: '1.4' }}>
-                {tag.description || '—'}
+                {tag.description ?? '—'}
               </p>
-              {(tag.manufacturer || tag.model || tag.serial_number) && (
+              {(tag.manufacturer ?? tag.model ?? tag.serial_number) && (
                 <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '5px 0 0', fontFamily: 'ui-monospace, monospace' }}>
                   {[tag.manufacturer, tag.model].filter(Boolean).join(' · ')}
                   {tag.serial_number && (
@@ -449,9 +449,9 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl, projectId, canEdit }: 
   const infoFields = [
     { label: t('overview.fieldStatus'),       value: STATUS_LABELS[tag.status] ?? tag.status },
     { label: t('overview.fieldDiscipline'),   value: `${d.code} — ${d.name}` },
-    { label: t('overview.fieldManufacturer'), value: tag.manufacturer || '—' },
-    { label: t('overview.fieldModel'),        value: tag.model || '—' },
-    { label: t('overview.fieldSerial'),       value: tag.serial_number || '—' },
+    { label: t('overview.fieldManufacturer'), value: tag.manufacturer ?? '—' },
+    { label: t('overview.fieldModel'),        value: tag.model ?? '—' },
+    { label: t('overview.fieldSerial'),       value: tag.serial_number ?? '—' },
     { label: t('overview.fieldPreservation'), value: tag.preservation_required ? t('overview.yesPreservation') : t('overview.noPreservation') },
   ]
 
@@ -459,13 +459,13 @@ function OverviewTab({ tag, area, sys, sub, pidSignedUrl, projectId, canEdit }: 
     { label: t('overview.fieldArea'),       value: area ? `${area.code} — ${area.name}` : '—' },
     { label: t('overview.fieldSystem'),     value: sys  ? `${sys.code} — ${sys.name}`   : '—' },
     { label: t('overview.fieldSubsystem'),  value: sub  ? `${sub.code} — ${sub.name}`   : '—' },
-    { label: t('overview.fieldPid'),        value: tag.pid_drawing || '—', link: pidSignedUrl ?? undefined },
+    { label: t('overview.fieldPid'),        value: tag.pid_drawing ?? '—', link: pidSignedUrl ?? undefined },
   ]
 
   const isInst = INST_DISCIPLINES.includes(tag.disciplines.code)
-  const hasEngParams = tag.range_min != null || tag.range_max != null || tag.datasheet_number || tag.revision ||
-    tag.fluid_type || tag.mounting_typical ||
-    (isInst && (tag.signal_type || (tag.sil_level && tag.sil_level !== 'None') || tag.io_address || tag.junction_box || tag.sp_h != null || tag.sp_hh != null || tag.sp_l != null || tag.sp_ll != null))
+  const hasEngParams = tag.range_min != null || tag.range_max != null || !!(tag.datasheet_number ?? tag.revision) ||
+    !!(tag.fluid_type ?? tag.mounting_typical) ||
+    (isInst && (!!(tag.signal_type ?? (tag.sil_level && tag.sil_level !== 'None') ?? tag.io_address ?? tag.junction_box) || tag.sp_h != null || tag.sp_hh != null || tag.sp_l != null || tag.sp_ll != null))
 
   const fmt = (v: number | null) => v != null ? String(v) : '—'
 

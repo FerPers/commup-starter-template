@@ -46,7 +46,7 @@ interface PushNotificationManagerProps {
 
 // ─── VAPID public key ─────────────────────────────────────────────────────
 // Pública por diseño (se envía al browser). Override opcional vía env si se rota.
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BBQUEtX69_ZQkpAsgIOxmlokvU31Uizx99xL4MkJsKV_qNGxDHNkDaZv-DuHyp4yfMPB2b0q8LeJv4OceDkTq2Y';
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? 'BBQUEtX69_ZQkpAsgIOxmlokvU31Uizx99xL4MkJsKV_qNGxDHNkDaZv-DuHyp4yfMPB2b0q8LeJv4OceDkTq2Y';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -71,7 +71,7 @@ export function usePushNotifications(userId: string) {
 
   useEffect(() => {
     setPermission(Notification.permission);
-    checkSubscription();
+    void checkSubscription();
   }, []);
 
   const checkSubscription = async () => {
@@ -135,7 +135,7 @@ export function usePushNotifications(userId: string) {
 
       if (!response.ok) {
         const detail = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(detail.error || `HTTP ${response.status} registrando subscription`);
+        throw new Error(detail.error ?? `HTTP ${response.status} registrando subscription`);
       }
 
       setIsSubscribed(true);
@@ -204,7 +204,7 @@ export function usePushNotifications(userId: string) {
       });
       const json = (await res.json().catch(() => ({}))) as { sent?: number; total?: number; error?: string };
       if (!res.ok) {
-        setTestStatus({ kind: 'error', msg: json.error || `HTTP ${res.status}` });
+        setTestStatus({ kind: 'error', msg: json.error ?? `HTTP ${res.status}` });
         return;
       }
       const sent = json.sent ?? 0;
@@ -415,7 +415,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
                       const next = topics.includes(topic)
                         ? topics.filter((t) => t !== topic)
                         : [...topics, topic];
-                      updateTopics(next);
+                      void updateTopics(next);
                     }}
                   />
                   <div className="w-9 h-5 bg-[var(--gray-700)] rounded-full peer peer-checked:bg-[var(--primary-600)] transition-colors

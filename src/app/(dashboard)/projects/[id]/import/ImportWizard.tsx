@@ -445,8 +445,8 @@ export default function ImportWizard({
                         </span>
                       </td>
                       <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '11px' }}>{[row.area_code, row.system_code, row.subsystem_code].join(' / ')}</span></td>
-                      {hasPid && <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontSize: '11px', fontFamily: 'monospace' }}>{row.pid_drawing || '—'}</span></td>}
-                      <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.manufacturer || '—'}</span></td>
+                      {hasPid && <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontSize: '11px', fontFamily: 'monospace' }}>{row.pid_drawing ?? '—'}</span></td>}
+                      <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.manufacturer ?? '—'}</span></td>
                     </tr>
                   )
                 })}

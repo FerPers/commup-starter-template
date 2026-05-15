@@ -29,7 +29,7 @@ export default function ThemeToggle() {
     setThemeState(next)
     // Persist cookie for future SSR; do NOT refresh — keeps current page state.
     startTransition(() => {
-      setTheme(next)
+      void setTheme(next)
     })
   }
 

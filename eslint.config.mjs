@@ -12,6 +12,8 @@ const eslintConfig = [
 			"audit-package/**",
 			".agents/**",
 			"supabase/functions/**",
+			"cloudflare-workers/**",
+			"src/pwa/sw.ts",
 			"public/**/*.min.js",
 			"public/**/*.min.mjs",
 			"public/**/*.min.css",
@@ -29,6 +31,26 @@ const eslintConfig = [
 					destructuredArrayIgnorePattern: "^_",
 				},
 			],
+			"@typescript-eslint/consistent-type-imports": [
+				"error",
+				{ prefer: "type-imports", fixStyle: "inline-type-imports" },
+			],
+		},
+	},
+	{
+		files: ["src/**/*.{ts,tsx}"],
+		languageOptions: {
+			parserOptions: {
+				project: true,
+				tsconfigRootDir: import.meta.dirname,
+			},
+		},
+		rules: {
+			"@typescript-eslint/no-floating-promises": [
+				"error",
+				{ ignoreVoid: true },
+			],
+			"@typescript-eslint/prefer-nullish-coalescing": "error",
 		},
 	},
 ];

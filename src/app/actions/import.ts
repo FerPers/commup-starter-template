@@ -69,7 +69,7 @@ export async function importTags(
   const areaRows = areaKeys.map(code => ({
     project_id: projectId,
     code,
-    name: rows.find(r => r.area_code.toUpperCase() === code)?.area_name || code,
+    name: rows.find(r => r.area_code.toUpperCase() === code)?.area_name ?? code,
     description: null,
   }))
   const { data: areas } = await admin
@@ -90,7 +90,7 @@ export async function importTags(
       project_id: projectId,
       area_id: areaId,
       code: sysCode,
-      name: row?.system_name || sysCode,
+      name: row?.system_name ?? sysCode,
       description: null,
     })
   }
@@ -112,7 +112,7 @@ export async function importTags(
       project_id: projectId,
       system_id: sysId,
       code: subCode,
-      name: row?.subsystem_name || subCode,
+      name: row?.subsystem_name ?? subCode,
       description: null,
     })
   }
@@ -149,13 +149,13 @@ export async function importTags(
       discipline_id: disciplineId,
       tag_number: row.tag_number.trim(),
       description: row.description.trim(),
-      manufacturer: row.manufacturer?.trim() || null,
-      model: row.model?.trim() || null,
-      serial_number: row.serial_number?.trim() || null,
+      manufacturer: row.manufacturer?.trim() ?? null,
+      model: row.model?.trim() ?? null,
+      serial_number: row.serial_number?.trim() ?? null,
       preservation_required: row.preservation_required ?? false,
-      pid_drawing: row.pid_drawing?.trim() || null,
-      fluid_type: row.fluid_type?.trim() || null,
-      mounting_typical: row.mounting_typical?.trim() || null,
+      pid_drawing: row.pid_drawing?.trim() ?? null,
+      fluid_type: row.fluid_type?.trim() ?? null,
+      mounting_typical: row.mounting_typical?.trim() ?? null,
       status: 'not_started',
     }, { onConflict: 'project_id,tag_number', ignoreDuplicates: false })
 

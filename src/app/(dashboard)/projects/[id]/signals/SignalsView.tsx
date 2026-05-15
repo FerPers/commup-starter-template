@@ -297,12 +297,12 @@ export default function SignalsView({
 
                       {/* Service */}
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {sig.service || '—'}
+                        {sig.service ?? '—'}
                       </td>
 
                       {/* P&ID */}
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: '12px', fontFamily: 'monospace' }}>
-                        {sig.pid_drawing || '—'}
+                        {sig.pid_drawing ?? '—'}
                       </td>
 
                       {/* Expand */}
@@ -337,18 +337,18 @@ export default function SignalsView({
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
                 {[
-                  { label: t('detail.description'), value: selected.description || '—' },
+                  { label: t('detail.description'), value: selected.description ?? '—' },
                   { label: t('detail.instrument'),  value: selected.tags.tag_number },
                   { label: t('detail.subsystem'),   value: `${selected.tags.subsystems.code} — ${selected.tags.subsystems.name}` },
-                  { label: t('detail.service'),     value: selected.service || '—' },
+                  { label: t('detail.service'),     value: selected.service ?? '—' },
                   { label: t('detail.range'),       value: selected.range_min !== null && selected.range_max !== null ? `${selected.range_min} – ${selected.range_max} ${selected.eng_unit ?? ''}` : '—' },
-                  { label: t('detail.alarms'),      value: selected.alarm_setpoints || '—' },
-                  { label: t('detail.origin'),      value: selected.origin || '—' },
-                  { label: t('detail.destination'), value: selected.destination || '—' },
-                  { label: t('detail.pid'),         value: selected.pid_drawing || '—' },
-                  { label: t('detail.loopDiagram'), value: selected.loop_diagram || '—' },
-                  { label: t('detail.wiringDiagram'), value: selected.wiring_diagram || '—' },
-                  { label: t('detail.notes'),       value: selected.notes || '—' },
+                  { label: t('detail.alarms'),      value: selected.alarm_setpoints ?? '—' },
+                  { label: t('detail.origin'),      value: selected.origin ?? '—' },
+                  { label: t('detail.destination'), value: selected.destination ?? '—' },
+                  { label: t('detail.pid'),         value: selected.pid_drawing ?? '—' },
+                  { label: t('detail.loopDiagram'), value: selected.loop_diagram ?? '—' },
+                  { label: t('detail.wiringDiagram'), value: selected.wiring_diagram ?? '—' },
+                  { label: t('detail.notes'),       value: selected.notes ?? '—' },
                 ].map(item => (
                   <div key={item.label} style={{ background: 'var(--card-bg)', borderRadius: '8px', padding: '10px 12px', border: '1px solid var(--border)' }}>
                     <div style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>{item.label}</div>

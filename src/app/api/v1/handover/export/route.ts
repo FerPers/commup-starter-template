@@ -5,7 +5,7 @@
  * Required scopes: handover:write / handover:read
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders, parsePagination } from '@/lib/api/auth'
 import { requireProjectAccess, requireSystemsAccess } from '@/lib/api/access'

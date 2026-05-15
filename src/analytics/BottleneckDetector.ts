@@ -200,7 +200,7 @@ export class BottleneckDetector {
       }
 
       // Edges de dependencias entre sistemas
-      for (const depId of sys.dependencies || []) {
+      for (const depId of sys.dependencies ?? []) {
         this.addEdge(sys.id, depId, 'depends_on', 0.8);
       }
     }
@@ -269,7 +269,7 @@ export class BottleneckDetector {
   private getDownstream(nodeId: string, visited = new Set<string>()): Set<string> {
     if (visited.has(nodeId)) return visited;
     visited.add(nodeId);
-    const neighbors = this.adjacency.get(nodeId) || new Set();
+    const neighbors = this.adjacency.get(nodeId) ?? new Set();
     for (const neighbor of neighbors) {
       this.getDownstream(neighbor, visited);
     }
@@ -348,7 +348,7 @@ export class BottleneckDetector {
             action_type: 'clear_punch',
             entity_id: node.id,
             entity_type: node.type,
-            label: `Cerrar Punch Cat A en ${node.tag || node.label}`,
+            label: `Cerrar Punch Cat A en ${node.tag ?? node.label}`,
             url: `/punches?system=${node.id}&category=A`,
             urgency: 'immediate',
           });

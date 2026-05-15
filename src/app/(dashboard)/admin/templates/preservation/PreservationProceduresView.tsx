@@ -216,7 +216,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   </div>
                   {canEdit && (
                     <button
-                      onClick={e => { e.stopPropagation(); handleDelete(proc.id) }}
+                      onClick={e => { e.stopPropagation(); void handleDelete(proc.id) }}
                       disabled={deletingId === proc.id}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px', padding: '4px', flexShrink: 0 }}
                       title="Eliminar"

@@ -8,7 +8,7 @@
  *   // auth.orgId, auth.keyId, auth.scopes are available
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // ── Types ────────────────────────────────────────────────────────────────────

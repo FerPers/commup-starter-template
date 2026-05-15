@@ -23,7 +23,7 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
 
   useEffect(() => {
     let cancelled = false
-    listImportableProcedures().then(res => {
+    void listImportableProcedures().then(res => {
       if (cancelled) return
       if (res.error) setError(res.error)
       setProcedures(res.procedures)

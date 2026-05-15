@@ -33,7 +33,7 @@ export async function getActiveMembership(): Promise<ActiveContext | null> {
   const cookieStore = await cookies()
   const activeOrgId = cookieStore.get(ACTIVE_ORG_COOKIE)?.value
 
-  const active = (activeOrgId && memberships.find(m => m.org_id === activeOrgId)) || memberships[0]
+  const active = (activeOrgId ? memberships.find(m => m.org_id === activeOrgId) : undefined) ?? memberships[0]
 
   return {
     supabase,

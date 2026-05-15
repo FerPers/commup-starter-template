@@ -205,7 +205,7 @@ function DocRow({
         </span>
       </td>
       <td style={tdStyle}>
-        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{doc.title || '—'}</span>
+        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{doc.title ?? '—'}</span>
       </td>
       <td style={tdStyle}>
         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{doc.file_name}</span>

@@ -58,7 +58,7 @@ export default function PreservationPhotosSection({
   useEffect(() => {
     if (!recordId) return
     setLoading(true)
-    reload().finally(() => setLoading(false))
+    void reload().finally(() => setLoading(false))
   }, [reload, recordId])
 
   async function handleFile(file: File) {
@@ -67,7 +67,7 @@ export default function PreservationPhotosSection({
     setUploading(true)
     try {
       const supabase = createClient()
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+      const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase()
       const path = `${recordId}/${crypto.randomUUID()}.${ext}`
 
       const { error: upErr } = await supabase.storage

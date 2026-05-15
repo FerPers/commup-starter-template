@@ -70,7 +70,7 @@ export default function ProjectCard({ project, phases, inactive = false }: {
         </div>
 
         {/* Dates */}
-        {(project.start_date || project.end_date) && (
+        {(project.start_date ?? project.end_date) && (
           <div style={{ display: 'flex', gap: 16, paddingTop: 12, borderTop: '1px solid var(--gray-100)' }}>
             {project.start_date && (
               <div>

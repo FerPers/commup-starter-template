@@ -150,7 +150,7 @@ function detectConflict(
 
   // Hay conflicto: comparar timestamps
   const localTs = new Date(localItem.client_updated_at).getTime();
-  const remoteTs = new Date(remoteEntity.server_updated_at || remoteEntity.client_updated_at).getTime();
+  const remoteTs = new Date(remoteEntity.server_updated_at ?? remoteEntity.client_updated_at).getTime();
 
   const winner: 'local' | 'remote' = localTs >= remoteTs ? 'local' : 'remote';
 
@@ -190,10 +190,10 @@ export function useSyncConflictResolution({
 
   // Inicializar DB
   useEffect(() => {
-    openDB().then((db) => {
+    void openDB().then((db) => {
       dbRef.current = db;
-      refreshPendingCount(db);
-      loadConflicts(db);
+      void refreshPendingCount(db);
+      void loadConflicts(db);
     });
   }, []);
 

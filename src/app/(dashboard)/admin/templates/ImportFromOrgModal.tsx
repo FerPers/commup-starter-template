@@ -15,7 +15,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
 
   useEffect(() => {
     let cancelled = false
-    listImportableTemplates().then(res => {
+    void listImportableTemplates().then(res => {
       if (cancelled) return
       if (res.error) setError(res.error)
       setTemplates(res.templates)

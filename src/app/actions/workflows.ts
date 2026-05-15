@@ -50,7 +50,7 @@ export async function createWorkflowRule(
     .insert({
       org_id: ctx.orgId,
       name: input.name.trim(),
-      description: input.description?.trim() || null,
+      description: input.description?.trim() ?? null,
       trigger_event: input.triggerEvent.trim(),
       condition_jsonlogic: input.conditionJsonlogic,
       action_type: input.actionType,
@@ -82,7 +82,7 @@ export async function updateWorkflowRule(
     .from('workflow_rules')
     .update({
       name: input.name.trim(),
-      description: input.description?.trim() || null,
+      description: input.description?.trim() ?? null,
       trigger_event: input.triggerEvent.trim(),
       condition_jsonlogic: input.conditionJsonlogic,
       action_type: input.actionType,

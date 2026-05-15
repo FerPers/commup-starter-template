@@ -73,7 +73,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
 
   // Load plans + disciplines on mount
   useEffect(() => {
-    getProjectPlanContext(projectId).then(data => {
+    void getProjectPlanContext(projectId).then(data => {
       setPlans(data.plans)
       setDisciplines(data.disciplines)
       setLoading(false)

@@ -83,7 +83,7 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
 
       if (!response.ok) {
         const err = await response.json() as { error?: string };
-        throw new Error(err.error || `HTTP ${response.status}`);
+        throw new Error(err.error ?? `HTTP ${response.status}`);
       }
 
       const data = await response.json() as { answer: string };
@@ -109,7 +109,7 @@ export default function AIAssistantChat({ userId }: { userId: string }) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage(input);
+      void sendMessage(input);
     }
   };
 

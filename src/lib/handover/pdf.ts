@@ -7,7 +7,7 @@
  * dynamic chunk inside the OpenNext Worker bundle.
  */
 
-import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, RGB } from 'pdf-lib'
+import { PDFDocument, type PDFPage, type PDFFont, StandardFonts, rgb, type RGB } from 'pdf-lib'
 import type { HandoverPackageData } from './types'
 
 const A4_W = 595.28
@@ -289,8 +289,8 @@ export async function renderHandoverPdf(
   r.section('Project')
   r.kv('Name',        pkg.project.name)
   r.kv('Code',        pkg.project.code)
-  r.kv('Client',      pkg.project.client || '—')
-  r.kv('Location',    pkg.project.location || '—')
+  r.kv('Client',      pkg.project.client ?? '—')
+  r.kv('Location',    pkg.project.location ?? '—')
   r.kv('Status',      pkg.project.status)
   r.kv('Start / End', `${pkg.project.start_date ?? '—'} -> ${pkg.project.end_date ?? '—'}`)
 

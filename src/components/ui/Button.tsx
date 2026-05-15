@@ -76,7 +76,7 @@ export function Button({
 }: ButtonProps) {
   const [hover, setHover] = useState(false);
   const [focus, setFocus] = useState(false);
-  const isDisabled = disabled || loading;
+  const isDisabled = (disabled ?? false) || loading;
 
   const merged: CSSProperties = {
     display: 'inline-flex',

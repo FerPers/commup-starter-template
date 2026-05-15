@@ -445,7 +445,7 @@ export async function signCertificate(input: {
   const { supabase, userId } = ctx
 
   // Cap signature payload at ~256 KB to avoid abuse (canvas PNG ~5-20 KB typical).
-  const sigImage = input.signatureImage?.trim() || null
+  const sigImage = input.signatureImage?.trim() ?? null
   if (sigImage) {
     if (!sigImage.startsWith('data:image/')) return { error: 'Firma inválida' }
     if (sigImage.length > 256 * 1024) return { error: 'La firma excede el tamaño permitido' }
@@ -466,7 +466,7 @@ export async function signCertificate(input: {
       certificate_id: input.certId,
       user_id: userId,
       role: input.role,
-      comments: input.comments?.trim() || null,
+      comments: input.comments?.trim() ?? null,
       signature_image: sigImage,
     } as never)
 

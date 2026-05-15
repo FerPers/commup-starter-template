@@ -594,7 +594,7 @@ export default function PssrReviewForm({
                           </div>
                         )}
                         {/* Read-only details */}
-                        {(readonly || !isItemExpanded) && (item.responsible || item.actions) && item.status !== 'pending' && (
+                        {(readonly || !isItemExpanded) && (item.responsible ?? item.actions) && item.status !== 'pending' && (
                           <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
                             {item.responsible && <span>👤 {item.responsible}</span>}
                             {item.responsible && item.actions && <span> · </span>}

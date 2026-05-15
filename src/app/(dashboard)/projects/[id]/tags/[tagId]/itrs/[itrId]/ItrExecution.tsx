@@ -116,11 +116,7 @@ function isItemVisible(item: Item, responses: Record<string, Response>): boolean
   const condResp = responses[item.condition_item_id]
   if (!condResp) return false
   const actual = String(
-    condResp.value_bool !== null ? condResp.value_bool
-    : condResp.value_option !== null ? condResp.value_option
-    : condResp.value_text !== null ? condResp.value_text
-    : condResp.value_numeric !== null ? condResp.value_numeric
-    : '',
+    condResp.value_bool ?? condResp.value_option ?? condResp.value_text ?? condResp.value_numeric ?? '',
   )
   return actual === item.condition_value
 }
@@ -200,7 +196,7 @@ export default function ItrExecution({
   // Persist a full snapshot to IndexedDB so the ITR can be viewed offline
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      import('@/lib/offline-queue').then(({ saveItrSnapshot }) => {
+      void import('@/lib/offline-queue').then(({ saveItrSnapshot }) => {
         saveItrSnapshot(itr.id, itr).catch(() => {})
       })
     }
@@ -466,7 +462,7 @@ export default function ItrExecution({
               {t('criticalBlocked', { count: criticalBlocked.length })}
             </p>
             {criticalBlocked.map(item => {
-              const desc = itemLang === 'es' ? (item.description_es?.trim() || item.description) : item.description
+              const desc = itemLang === 'es' ? (item.description_es?.trim() ?? item.description) : item.description
               return (
                 <p key={item.id} style={{ fontSize: '11px', color: '#7f1d1d', margin: '2px 0' }}>
                   • {item.item_number ? `${item.item_number} ` : ''}{desc}
@@ -1179,7 +1175,7 @@ function MicAppend({
       webkitSpeechRecognition?: new () => WebSpeechRecognizer
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Web Speech API detection requires window access, only available client-side
-    setSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition))
+    setSupported(Boolean(w.SpeechRecognition ?? w.webkitSpeechRecognition))
   }, [])
 
   if (!supported || disabled) return null
@@ -1277,7 +1273,7 @@ function ItemRow({
   // `description` is the primary text (typically EN). `description_es` is the
   // Spanish translation. Pick the chosen lang; if empty, fall back to primary.
   const visibleDesc = lang === 'es'
-    ? (item.description_es?.trim() || item.description)
+    ? (item.description_es?.trim() ?? item.description)
     : item.description
 
   return (

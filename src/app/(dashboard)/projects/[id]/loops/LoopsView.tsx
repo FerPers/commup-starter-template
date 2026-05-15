@@ -153,7 +153,7 @@ export default function LoopsView({
                         {loop.loop_number}
                       </td>
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {loop.description || '—'}
+                        {loop.description ?? '—'}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         {sub ? (
