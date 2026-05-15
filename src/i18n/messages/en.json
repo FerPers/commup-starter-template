@@ -1677,5 +1677,30 @@
       "confirm": "Confirm signature",
       "saving": "Saving..."
     }
+  },
+  "Pwa": {
+    "install": {
+      "installed": "CommUp is installed on this device.",
+      "chromeTitle": "Install CommUp on this device",
+      "chromeSubtitle": "Quick access from your desktop, full-screen mode and offline support.",
+      "chromeCta": "Install",
+      "iosTitle": "Install CommUp on your iPhone or iPad",
+      "iosSubtitle": "Add it to your home screen for quick access and full-screen mode.",
+      "iosCta": "How to install",
+      "iosModalTitle": "Add to home screen",
+      "iosModalDescription": "In Safari on iOS, follow these steps:",
+      "iosStep1": "Tap the Share button in the Safari toolbar.",
+      "iosStep2": "Scroll and choose «Add to Home Screen».",
+      "iosStep3": "Confirm with «Add». The CommUp icon will appear on your home screen.",
+      "iosNote": "Requires Safari. Chrome and Firefox on iOS cannot add apps to the home screen.",
+      "dismiss": "Dismiss"
+    },
+    "sync": {
+      "loading": "…",
+      "online": "Online",
+      "syncing": "Syncing {count}…",
+      "offlinePending": "Offline · {count, plural, =1 {# pending} other {# pending}}",
+      "forceSync": "Force sync"
+    }
   }
 }

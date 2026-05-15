@@ -1677,5 +1677,30 @@
       "confirm": "Confirmar firma",
       "saving": "Guardando..."
     }
+  },
+  "Pwa": {
+    "install": {
+      "installed": "CommUp está instalada en este dispositivo.",
+      "chromeTitle": "Instalar CommUp en este dispositivo",
+      "chromeSubtitle": "Acceso directo desde el escritorio, modo pantalla completa y soporte offline.",
+      "chromeCta": "Instalar",
+      "iosTitle": "Instalar CommUp en tu iPhone o iPad",
+      "iosSubtitle": "Añádela a la pantalla de inicio para acceso rápido y modo pantalla completa.",
+      "iosCta": "Cómo instalar",
+      "iosModalTitle": "Añadir a pantalla de inicio",
+      "iosModalDescription": "En Safari iOS, sigue estos pasos:",
+      "iosStep1": "Pulsa el botón Compartir en la barra de Safari.",
+      "iosStep2": "Desplázate y elige «Añadir a pantalla de inicio».",
+      "iosStep3": "Confirma con «Añadir». El icono de CommUp aparecerá en tu pantalla de inicio.",
+      "iosNote": "Requiere Safari. Chrome y Firefox en iOS no pueden añadir apps a la pantalla de inicio.",
+      "dismiss": "Descartar"
+    },
+    "sync": {
+      "loading": "…",
+      "online": "Online",
+      "syncing": "Sincronizando {count}…",
+      "offlinePending": "Offline · {count, plural, =1 {# pendiente} other {# pendientes}}",
+      "forceSync": "Forzar sincronización"
+    }
   }
 }

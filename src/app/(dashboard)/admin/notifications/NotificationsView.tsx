@@ -8,6 +8,11 @@ const PushNotificationManager = dynamic(
   { ssr: false }
 )
 
+const InstallPwaCard = dynamic(
+  () => import('@/components/pwa/InstallPwaCard'),
+  { ssr: false }
+)
+
 type Sub = {
   id: string
   endpoint: string
@@ -37,6 +42,10 @@ export default function NotificationsView({
           Gestiona notificaciones push de campo: ITRs devueltos, punches Cat A, certificados listos.
         </p>
       </header>
+
+      <div style={{ marginBottom: '20px' }}>
+        <InstallPwaCard />
+      </div>
 
       <PushNotificationManager userId={userId} />
 

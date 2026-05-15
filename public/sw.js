@@ -31,7 +31,7 @@ const API_PATTERNS = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_STATIC)
-      .then(cache => cache.addAll(PRECACHE).catch(() => {}))
+      .then(cache => cache.addAll(PRECACHE).catch(err => console.warn('[SW] Precache failed:', err)))
       .then(() => self.skipWaiting())
   )
 })

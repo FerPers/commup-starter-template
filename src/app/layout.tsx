@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} data-theme={theme} suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#7c3aed" />
-        <link rel="apple-touch-icon" href="/icons/icon.svg" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body>
         <NextIntlClientProvider messages={messages}>

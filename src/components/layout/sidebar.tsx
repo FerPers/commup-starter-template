@@ -8,6 +8,7 @@ import {
   Settings, Users, ScanLine, ClipboardCheck, Flag, Wrench, CalendarDays,
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
   Bell, Database, History, Tag, Activity, Boxes, FolderTree, LogOut,
+  RotateCw,
   type LucideIcon,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -16,8 +17,9 @@ import ThemeToggle from '@/components/ThemeToggle'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 
 function SyncIndicator() {
+  const t = useTranslations('Pwa.sync')
   const mounted = useMounted()
-  const { isOnline, pendingCount } = useOfflineSync()
+  const { isOnline, pendingCount, syncing, sync } = useOfflineSync()
 
   // Antes de hidratar mostramos un estado neutral para evitar mismatch
   // (useOfflineSync depende de navigator.onLine, que difiere SSR vs client).
@@ -27,10 +29,12 @@ function SyncIndicator() {
       ? pendingCount > 0 ? '#f59e0b' : '#22c55e'
       : '#ef4444'
   const label = !mounted
-    ? '…'
+    ? t('loading')
     : isOnline
-      ? pendingCount > 0 ? `Syncing ${pendingCount}…` : 'Online'
-      : `Offline · ${pendingCount} pending`
+      ? pendingCount > 0 ? t('syncing', { count: pendingCount }) : t('online')
+      : t('offlinePending', { count: pendingCount })
+
+  const canForceSync = mounted && isOnline && pendingCount > 0
 
   return (
     <div style={{
@@ -45,7 +49,29 @@ function SyncIndicator() {
         boxShadow: `0 0 8px ${dotColor}`,
         border: '1px solid rgba(255,255,255,0.15)',
       }} />
-      <span style={{ fontSize: 'var(--text-xs)', color: '#e2e8f0', fontWeight: 500 }}>{label}</span>
+      <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: '#e2e8f0', fontWeight: 500 }}>{label}</span>
+      {canForceSync && (
+        <button
+          type="button"
+          onClick={() => { void sync() }}
+          disabled={syncing}
+          aria-label={t('forceSync')}
+          title={t('forceSync')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            padding: 4,
+            color: '#e2e8f0',
+            cursor: syncing ? 'wait' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            opacity: syncing ? 0.4 : 0.8,
+            flexShrink: 0,
+          }}
+        >
+          <RotateCw size={12} aria-hidden="true" />
+        </button>
+      )}
     </div>
   )
 }
