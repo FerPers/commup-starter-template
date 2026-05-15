@@ -56,7 +56,7 @@ src/app/
 | `src/types/database.ts` | Full TypeScript interfaces for all 35 DB tables + enum types |
 | `src/components/layout/sidebar.tsx` | `'use client'` sidebar with nav groups, active state, logout |
 | `src/lib/utils.ts` | `cn()`, `formatPercent()`, `formatDate()`, `getPunchCategoryColor()` |
-| `supabase-schema.sql` | Canonical Postgres schema — run this in Supabase SQL editor |
+| `supabase/migrations/00000000000000_baseline.sql` | Canonical Postgres schema (pg_dump of prod 2026-05-15). See `supabase/README.md` for migration workflow. |
 | `wrangler.jsonc` | Cloudflare Workers config pointing to `.open-next/worker.js` |
 
 ## Next.js 16 — Critical Quirks
