@@ -1,8 +1,8 @@
 import { getTranslations } from 'next-intl/server'
-import { Tag, QrCode, ClipboardCheck, FileCheck2 } from 'lucide-react'
+import { Tag, QrCode, ClipboardCheck, FileCheck2, FolderArchive } from 'lucide-react'
 
-const STEP_ICONS = [Tag, QrCode, ClipboardCheck, FileCheck2]
-const STEP_COLORS = ['#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95']
+const STEP_ICONS = [Tag, QrCode, ClipboardCheck, FileCheck2, FolderArchive]
+const STEP_COLORS = ['#0B1D3A', '#0e3561', '#005A8D', '#00B5A8', '#009e92']
 
 export default async function HowItWorks() {
   const t = await getTranslations('Landing.howItWorks')
@@ -12,6 +12,7 @@ export default async function HowItWorks() {
     { label: t('step2Label'), desc: t('step2Desc') },
     { label: t('step3Label'), desc: t('step3Desc') },
     { label: t('step4Label'), desc: t('step4Desc') },
+    { label: t('step5Label'), desc: t('step5Desc') },
   ]
 
   return (
@@ -37,12 +38,12 @@ export default async function HowItWorks() {
         <div style={{ position: 'relative' }}>
           {/* Connector line */}
           <div style={{
-            position: 'absolute', top: 36, left: '12.5%', right: '12.5%', height: 2,
-            background: 'linear-gradient(90deg, #7c3aed, #4c1d95)',
+            position: 'absolute', top: 36, left: '10%', right: '10%', height: 2,
+            background: 'linear-gradient(90deg, #0B1D3A, #00B5A8)',
             opacity: 0.5,
           }} className="how-connector" />
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }} className="how-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 24 }} className="how-grid">
             {steps.map(({ label, desc }, i) => {
               const Icon = STEP_ICONS[i]
               const color = STEP_COLORS[i]

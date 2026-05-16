@@ -1,58 +1,61 @@
 import { getTranslations } from 'next-intl/server'
+import { Smartphone, Cloud, Zap, ShieldCheck } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 export default async function DifferentiatorsSection() {
   const t = await getTranslations('Landing.differentiators')
 
-  const items = [
+  const items: { Icon: LucideIcon; title: string; desc: string; color: string; highlight: string }[] = [
     {
-      icon: '📱',
+      Icon: Smartphone,
       title: t('nfcTitle'),
       desc: t('nfcDesc'),
-      color: '#7c3aed',
+      color: '#0B1D3A',
       highlight: 'NFC + QR',
     },
     {
-      icon: '☁️',
+      Icon: Cloud,
       title: t('cloudTitle'),
       desc: t('cloudDesc'),
       color: '#0ea5e9',
       highlight: 'Zero-install',
     },
     {
-      icon: '⚡',
+      Icon: Zap,
       title: t('realtimeTitle'),
       desc: t('realtimeDesc'),
       color: '#10b981',
       highlight: 'Live',
     },
     {
-      icon: '🔒',
+      Icon: ShieldCheck,
       title: t('securityTitle'),
       desc: t('securityDesc'),
       color: '#f59e0b',
-      highlight: 'RLS',
+      highlight: 'Enterprise',
     },
   ]
 
   return (
     <section style={{
-      background: '#0a0a14',
+      background: '#F8FAFC',
       padding: '100px 24px',
-      borderTop: '1px solid rgba(255,255,255,0.05)',
+      borderTop: '1px solid #E9EDF1',
     }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <h2 style={{
-          fontSize: 36, fontWeight: 800, color: '#f1f5f9',
+          fontSize: 36, fontWeight: 800, color: '#0B1D3A',
           textAlign: 'center', margin: '0 0 56px', letterSpacing: '-0.02em',
         }}>
           {t('title')}
         </h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
-          {items.map(({ icon, title, desc, color, highlight }) => (
+          {items.map(({ Icon, title, desc, color, highlight }) => (
             <div key={title} style={{
-              background: '#0d0d1a',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: '#FFFFFF',
+              border: '1px solid #E9EDF1',
+              boxShadow: '0 2px 12px rgba(11,29,58,0.06)',
               borderRadius: 16, padding: 28,
               display: 'flex', flexDirection: 'column', gap: 16,
               transition: 'border-color 0.2s',
@@ -63,9 +66,8 @@ export default async function DifferentiatorsSection() {
                 background: `${color}18`,
                 border: `1px solid ${color}30`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24,
               }}>
-                {icon}
+                <Icon size={24} color={color} strokeWidth={1.75} />
               </div>
 
               {/* Highlight badge */}
@@ -81,10 +83,10 @@ export default async function DifferentiatorsSection() {
               </div>
 
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0', margin: '0 0 8px' }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0B1D3A', margin: '0 0 8px' }}>
                   {title}
                 </h3>
-                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.65, margin: 0 }}>
+                <p style={{ fontSize: 14, color: '#64707C', lineHeight: 1.65, margin: 0 }}>
                   {desc}
                 </p>
               </div>

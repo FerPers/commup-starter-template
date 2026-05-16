@@ -1811,9 +1811,9 @@
     },
     "hero": {
       "badge": "Plataforma de Commissioning Industrial",
-      "headline": "Commissioning sin papel.",
-      "headlineAccent": "y en tiempo real.",
-      "subheadline": "Elimina Excel, carpetas y WhatsApp. Gestiona ITRs, Punch Lists y Certificados desde tu celular con NFC/QR. Diseñado para proyectos Oil & Gas, renovables, LNG, minería y plantas industriales.",
+      "headline": "Commissioning industrial,",
+      "headlineAccent": "con trazabilidad total.",
+      "subheadline": "Digitaliza ITRs, Punch Lists, Certificados, Preservación y KPIs en una sola plataforma cloud-native — diseñada para proyectos Oil & Gas, LNG, renovables, minería y planta industrial.",
       "ctaDemo": "Solicitar demo personalizada",
       "ctaAccess": "Acceso a Clientes",
       "liveTag": "En vivo",
@@ -1821,19 +1821,19 @@
       "statPunches": "Punches abiertos",
       "statCerts": "Certificados emitidos",
       "statPhase": "Avance de fase",
-      "ctaLive": "Ver demo en vivo"
+      "ctaLive": "Solicitar demo guiada"
     },
     "problem": {
-      "title": "¿Te suena familiar esto en campo?",
-      "card1Title": "\"El ITR está en papel y nadie lo encuentra\"",
-      "card1Desc": "Checklists dispersos entre carpetas, cuadernos, fotos de WhatsApp y correos. Tiempo perdido y errores constantes.",
-      "card2Title": "\"No sé cuántos punches abiertos quedan en el sistema\"",
-      "card2Desc": "Múltiples Excel, información desactualizada y sin fuente única de verdad. El avance real es desconocido.",
-      "card3Title": "\"Ese punch nunca se cerró y ya se firmó el certificado\"",
-      "card3Desc": "Sin bloqueo automático. Las deficiencias llegan a operaciones y generan retrasos costosos."
+      "title": "El commissioning aún se gestiona con herramientas que no fueron diseñadas para campo.",
+      "card1Title": "ITRs dispersos sin control documental confiable",
+      "card1Desc": "Checklists entre carpetas, cuadernos, fotos de WhatsApp y correos. Sin trazabilidad, sin fuente única, sin auditoría.",
+      "card2Title": "Punch Lists sin una única fuente de verdad",
+      "card2Desc": "Múltiples Excel, datos desactualizados y sin seguimiento unificado. El avance real del proyecto es desconocido hasta que es tarde.",
+      "card3Title": "Certificados emitidos sin bloquear deficiencias críticas",
+      "card3Desc": "Sin lógica de bloqueo automático. Punches Cat A llegando a operaciones — generando retrabajos costosos y retrasos en el arranque."
     },
     "howItWorks": {
-      "title": "De campo al certificado en 4 pasos",
+      "title": "De la ejecución en campo al dossier de transferencia",
       "step1Label": "Tag Físico",
       "step1Desc": "Cada equipo se registra con un tag vivo en CommUp.",
       "step2Label": "Escanea NFC / QR",
@@ -1841,7 +1841,9 @@
       "step3Label": "Ejecuta el ITR",
       "step3Desc": "Completa el checklist, adjunta fotos, captura firma en pantalla.",
       "step4Label": "Emite el Certificado",
-      "step4Desc": "Bloqueado automáticamente hasta cerrar todos los punches Cat A. Un clic, dossier completo."
+      "step4Desc": "Bloqueado automáticamente hasta cerrar todos los punches Cat A. Un clic, trazabilidad completa.",
+      "step5Label": "Dossier de Transferencia",
+      "step5Desc": "Paquete completo: ITRs, certificados, historial de punches y firmas digitales — listo para entrega al cliente."
     },
     "modules": {
       "title": "Explora los módulos",
@@ -1882,10 +1884,10 @@
         "bullet2": "Alertas de vencidos y próximos por tag",
         "bullet3": "Historial completo de mantenimiento en períodos de inactividad"
       },
-      "subtitle": "Explora los módulos en vivo (datos reales de un proyecto activo)"
+      "subtitle": "Explora los módulos de la plataforma con demos interactivas"
     },
     "differentiators": {
-      "title": "Tecnología diseñada por y para gente de campo",
+      "title": "Construido para gente de campo. Confiable para la gobernanza del proyecto.",
       "nfcTitle": "Escaneo NFC & QR",
       "nfcDesc": "Accede al historial completo del tag en un segundo. Cero fricción.",
       "cloudTitle": "SaaS 100% en la nube",
@@ -1893,7 +1895,7 @@
       "realtimeTitle": "KPIs y dashboards en tiempo real",
       "realtimeDesc": "Cada ITR completado o punch cerrado se refleja al instante para todo el equipo.",
       "securityTitle": "Multi-tenant seguro",
-      "securityDesc": "Postgres RLS: cada empresa y proyecto totalmente aislado. Tus datos son solo tuyos."
+      "securityDesc": "Cada empresa y proyecto completamente aislado por diseño. Tus datos son solo tuyos — con control de acceso por rol y trazabilidad de auditoría completa."
     },
     "industries": {
       "title": "Construido para los proyectos más exigentes",
@@ -1902,13 +1904,15 @@
       "lng": "Plantas LNG",
       "offshore": "Offshore",
       "mining": "Minería",
-      "industrial": "Plantas Industriales"
+      "industrial": "Plantas Industriales",
+      "refining": "Refinación & Petroquímica"
     },
     "cta": {
-      "title": "¿Listo para eliminar el papel de tu commissioning?",
-      "subtitle": "Únete a los equipos que ya están terminando proyectos más rápido, con menos errores y total trazabilidad.",
+      "title": "Inicia tu próximo proyecto de commissioning con trazabilidad completa desde el primer día.",
+      "subtitle": "Únete a los equipos que entregan proyectos más rápido, con menos errores y documentación de handover completa.",
       "btnAccess": "Acceso a Clientes",
-      "btnDemo": "Solicitar demo gratuita de 15 días"
+      "btnDemo": "Solicitar demo guiada",
+      "trustLine": "Demo guiada · Configuración inicial asistida · Sin compromiso comercial"
     },
     "footer": {
       "tagline": "Plataforma de Commissioning Industrial",
@@ -1933,19 +1937,16 @@
       "social": "Síguenos"
     },
     "socialProof": {
-      "title": "Ya lo están usando equipos que odiaban el papeleo",
-      "t1Quote": "Antes pasábamos horas buscando ITRs en papel. Con CommUp, el técnico escanea el tag y tiene todo en pantalla en segundos.",
-      "t1Author": "Carlos M.",
-      "t1Role": "Superintendent de Commissioning",
-      "t1Company": "Proyecto Gasífero Norte",
-      "t2Quote": "Los punches Cat A bloqueando certificados automáticamente nos salvó de un problema serio en el arranque de planta.",
-      "t2Author": "Ana R.",
-      "t2Role": "Ingeniería de Completación",
-      "t2Company": "Planta Industrial Centro",
-      "t3Quote": "Ahora el gerente de proyecto tiene visibilidad en tiempo real sin esperar reportes manuales del lunes.",
-      "t3Author": "Miguel P.",
-      "t3Role": "Project Manager",
-      "t3Company": "Parque Eólico Patagonia"
+      "title": "Desafíos comunes de commissioning que CommUp está construido para resolver",
+      "s1Title": "ITRs dispersos en múltiples medios",
+      "s1Desc": "Checklists en papel, fotos en teléfonos, firmas por correo — sin trazabilidad. CommUp centraliza cada ITR con trazabilidad digital completa, accesible desde cualquier dispositivo.",
+      "s1Module": "Gestión de ITRs",
+      "s2Title": "Punch Lists sin bloqueo automático de certificados",
+      "s2Desc": "Deficiencias Cat A llegando a operaciones porque nada impedía la emisión del certificado. CommUp aplica bloqueos duros: ningún certificado hasta resolver todos los punches críticos.",
+      "s2Module": "Certificación",
+      "s3Title": "Sin visibilidad en tiempo real para la gerencia",
+      "s3Desc": "Gerentes de proyecto esperando los reportes manuales del lunes en Excel. CommUp entrega dashboards KPI en vivo por sistema, área, disciplina y fase — siempre actualizados.",
+      "s3Module": "KPIs & Torre de Control"
     }
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import ItrMockup from './mockups/ItrMockup'
 import PunchMockup from './mockups/PunchMockup'
 import KpiMockup from './mockups/KpiMockup'
@@ -12,7 +12,7 @@ type TabKey = 'itrs' | 'punches' | 'certs' | 'kpis' | 'preservation'
 interface Tab {
   key: TabKey
   label: string
-  icon: string
+  icon: ReactNode
   title: string
   bullets: string[]
 }
@@ -38,20 +38,20 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
 
   return (
     <section id="modules" style={{
-      background: '#080810',
+      background: '#FFFFFF',
       padding: '100px 24px',
-      borderTop: '1px solid rgba(255,255,255,0.05)',
+      borderTop: '1px solid #E9EDF1',
     }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <h2 style={{
-          fontSize: 36, fontWeight: 800, color: '#f1f5f9',
+          fontSize: 36, fontWeight: 800, color: '#0B1D3A',
           textAlign: 'center', margin: '0 0 12px', letterSpacing: '-0.02em',
         }}>
           {sectionTitle}
         </h2>
         {sectionSubtitle && (
           <p style={{
-            fontSize: 15, color: '#64748b', textAlign: 'center',
+            fontSize: 15, color: '#64707C', textAlign: 'center',
             margin: '0 0 48px', lineHeight: 1.6,
           }}>
             {sectionSubtitle}
@@ -60,8 +60,8 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
 
         {/* Tab bar */}
         <div style={{
-          display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12,
+          display: 'flex', gap: 4, background: '#F1F5F9',
+          border: '1px solid #E9EDF1', borderRadius: 12,
           padding: 6, marginBottom: 32, overflowX: 'auto',
         }}>
           {tabs.map(tab => (
@@ -72,9 +72,9 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
                 flex: '1 1 auto', minWidth: 100,
                 padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
                 fontSize: 13, fontWeight: 600, transition: 'all 0.18s',
-                background: active === tab.key ? 'rgba(124,58,237,0.25)' : 'transparent',
-                color: active === tab.key ? '#a78bfa' : '#64748b',
-                boxShadow: active === tab.key ? '0 0 0 1px rgba(124,58,237,0.4)' : 'none',
+                background: active === tab.key ? 'rgba(0,181,168,0.12)' : 'transparent',
+                color: active === tab.key ? '#00B5A8' : '#64707C',
+                boxShadow: active === tab.key ? '0 0 0 1px rgba(0,181,168,0.4)' : 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
             >
@@ -88,10 +88,10 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 300px', gap: 32, alignItems: 'start',
         }} className="modules-grid">
-          {/* Mockup panel */}
+          {/* Mockup panel — dark navy for app preview contrast */}
           <div style={{
-            background: '#0d0d1a',
-            border: '1px solid rgba(124,58,237,0.2)',
+            background: '#0B1D3A',
+            border: '1px solid rgba(0,181,168,0.25)',
             borderRadius: 14, padding: 20, overflow: 'hidden',
           }}>
             {/* Fake topbar */}
@@ -100,7 +100,7 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
               paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}>
               <div style={{
-                background: 'rgba(124,58,237,0.2)', color: '#a78bfa',
+                background: 'rgba(0,181,168,0.15)', color: '#00B5A8',
                 padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600,
               }}>
                 {activeTab.icon} {activeTab.label}
@@ -124,7 +124,7 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
           {/* Description panel */}
           <div>
             <h3 style={{
-              fontSize: 22, fontWeight: 700, color: '#e2e8f0',
+              fontSize: 22, fontWeight: 700, color: '#0B1D3A',
               margin: '0 0 16px', lineHeight: 1.3,
             }}>
               {activeTab.title}
@@ -134,13 +134,13 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
                 <li key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <span style={{
                     width: 22, height: 22, borderRadius: '50%',
-                    background: 'rgba(124,58,237,0.2)', color: '#a78bfa',
+                    background: 'rgba(0,181,168,0.12)', color: '#00B5A8',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 12, fontWeight: 700, flexShrink: 0, marginTop: 1,
                   }}>
                     ✓
                   </span>
-                  <span style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6 }}>{b}</span>
+                  <span style={{ fontSize: 14, color: '#64707C', lineHeight: 1.6 }}>{b}</span>
                 </li>
               ))}
             </ul>
@@ -151,9 +151,9 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
                 href="mailto:contacto@commup.app?subject=Demo CommUp"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(124,58,237,0.15)',
-                  border: '1px solid rgba(124,58,237,0.3)',
-                  color: '#a78bfa', borderRadius: 8, padding: '9px 18px',
+                  background: 'rgba(0,181,168,0.1)',
+                  border: '1px solid rgba(0,181,168,0.3)',
+                  color: '#00B5A8', borderRadius: 8, padding: '9px 18px',
                   fontSize: 13, fontWeight: 600, textDecoration: 'none',
                   transition: 'background 0.15s',
                 }}

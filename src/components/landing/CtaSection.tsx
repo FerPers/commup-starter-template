@@ -9,19 +9,19 @@ export default async function CtaSection() {
       padding: '120px 24px',
       borderTop: '1px solid rgba(255,255,255,0.05)',
       position: 'relative', overflow: 'hidden',
-      background: '#06040e',
+      background: '#0B1D3A',
     }}>
-      {/* Purple radial glow */}
+      {/* Teal radial glow */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(124,58,237,0.22) 0%, transparent 65%)',
+        backgroundImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,181,168,0.15) 0%, transparent 65%)',
       }} />
 
       {/* Grid texture */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: `linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px)`,
+        backgroundImage: `linear-gradient(rgba(0,181,168,0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,181,168,0.05) 1px, transparent 1px)`,
         backgroundSize: '60px 60px',
       }} />
 
@@ -68,8 +68,8 @@ export default async function CtaSection() {
         </div>
 
         {/* Trust line */}
-        <p style={{ fontSize: 13, color: '#334155', marginTop: 28 }}>
-          Sin tarjeta de crédito · Configuración en 5 minutos · Cancela cuando quieras
+        <p style={{ fontSize: 13, color: '#64748b', marginTop: 28 }}>
+          {t('trustLine')}
         </p>
       </div>
     </section>

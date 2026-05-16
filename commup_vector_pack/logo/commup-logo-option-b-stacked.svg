@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 260" fill="none" aria-label="CommUP stacked logo">
+<style>:root{--commup-navy:#0B1D3A;--commup-teal:#00B5A8;--commup-orange:#FF8A00;--commup-gray:#64707C;} .navy{stroke:var(--commup-navy,#0B1D3A);} .teal{stroke:var(--commup-teal,#00B5A8);} .orange{stroke:var(--commup-orange,#FF8A00);} .fill-teal{fill:var(--commup-teal,#00B5A8);} .fill-orange{fill:var(--commup-orange,#FF8A00);} .fill-navy{fill:var(--commup-navy,#0B1D3A);} .fill-gray{fill:var(--commup-gray,#64707C);}</style>
+<g transform="translate(123 20)" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+<rect class="navy" x="13" y="9" width="38" height="46" rx="7"/><path class="navy" d="M25 9h14v6H25z"/><path class="navy" d="M22 24h7v7h-7zM36 24h7v7h-7zM22 38h7v7h-7zM36 38h3M43 38h3M36 42h10M40 34v12"/><path class="teal" d="M24 50l7 7 14-17"/><path class="teal" d="M53 12c4 2 7 5 9 10M54 3c8 3 14 10 17 18"/>
+</g>
+<text x="46" y="160" font-family="Space Grotesk, Inter, Arial, sans-serif" font-size="48" font-weight="700" letter-spacing="1.5" fill="#0B1D3A">Comm</text>
+<text x="206" y="160" font-family="Space Grotesk, Inter, Arial, sans-serif" font-size="48" font-weight="700" letter-spacing="1.5" fill="#FF8A00">UP</text>
+<path d="M126 187h68" stroke="#FF8A00" stroke-width="3" stroke-linecap="round"/>
+<text x="44" y="215" font-family="Space Grotesk, Inter, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="3" fill="#64707C">SMART TAG + TRACEABILITY</text>
+</svg>

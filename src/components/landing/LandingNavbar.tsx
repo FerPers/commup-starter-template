@@ -23,9 +23,9 @@ export default function LandingNavbar() {
     right: 0,
     zIndex: 50,
     transition: 'background 0.25s, box-shadow 0.25s, backdrop-filter 0.25s',
-    background: scrolled ? 'rgba(10, 10, 20, 0.92)' : 'transparent',
+    background: scrolled ? 'rgba(255,255,255,0.96)' : 'transparent',
     backdropFilter: scrolled ? 'blur(12px)' : 'none',
-    boxShadow: scrolled ? '0 1px 0 rgba(255,255,255,0.06)' : 'none',
+    boxShadow: scrolled ? '0 1px 0 rgba(11,29,58,0.08), 0 2px 8px rgba(11,29,58,0.05)' : 'none',
   }
 
   const innerStyle: React.CSSProperties = {
@@ -42,7 +42,7 @@ export default function LandingNavbar() {
   const navLinkStyle: React.CSSProperties = {
     fontSize: 14,
     fontWeight: 500,
-    color: '#94a3b8',
+    color: scrolled ? '#64707C' : '#94a3b8',
     textDecoration: 'none',
     transition: 'color 0.15s',
     whiteSpace: 'nowrap',
@@ -57,8 +57,8 @@ export default function LandingNavbar() {
 
   const loginBtnStyle: React.CSSProperties = {
     background: 'transparent',
-    color: '#94a3b8',
-    border: '1px solid rgba(255,255,255,0.12)',
+    color: scrolled ? '#64707C' : '#94a3b8',
+    border: scrolled ? '1px solid rgba(11,29,58,0.18)' : '1px solid rgba(255,255,255,0.12)',
     borderRadius: 8,
     padding: '7px 16px',
     fontSize: 13,
@@ -104,7 +104,7 @@ export default function LandingNavbar() {
       <div style={innerStyle}>
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
-          <CommUpLogo size={32} variant="full" theme="dark" />
+          <CommUpLogo size={32} variant="full" theme={scrolled ? 'light' : 'dark'} />
         </Link>
 
         {/* Nav links — hidden on mobile via media (handled in globals) */}
@@ -123,7 +123,7 @@ export default function LandingNavbar() {
 
         {/* Right side */}
         <div style={rightStyle}>
-          <LocaleSwitcher variant="dark" />
+          <LocaleSwitcher variant={scrolled ? 'light' : 'dark'} />
           <Link href="/login" style={loginBtnStyle} className="landing-nav-links">
             {t('login')}
           </Link>

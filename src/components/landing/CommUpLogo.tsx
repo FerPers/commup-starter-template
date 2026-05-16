@@ -5,21 +5,31 @@ interface Props {
 }
 
 export default function CommUpLogo({ size = 32, variant = 'mark', theme = 'dark' }: Props) {
-  const textColor = theme === 'dark' ? '#f1f5f9' : '#0f172a'
-  const subColor = theme === 'dark' ? '#64748b' : '#64748b'
+  const markColor = theme === 'dark' ? '#FFFFFF' : '#0B1D3A'
+  const tealColor = '#00B5A8'
+  const orangeColor = '#FF8A00'
+  const textColor = theme === 'dark' ? '#F1F5F9' : '#0B1D3A'
+  const subColor = theme === 'dark' ? '#64748B' : '#64707C'
 
   if (variant === 'mark') {
-    return <LogoMark size={size} />
+    return <LogoMark size={size} markColor={markColor} tealColor={tealColor} />
   }
 
   if (variant === 'full-stacked') {
     return (
       <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-        <LogoMark size={size} />
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: size * 0.44, fontWeight: 800, color: textColor, letterSpacing: '-0.03em', lineHeight: 1 }}>
-            Comm<span style={{ background: 'linear-gradient(90deg, #a78bfa, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Up</span>
-          </div>
+        <LogoMark size={size} markColor={markColor} tealColor={tealColor} />
+        <div style={{ textAlign: 'center', lineHeight: 1 }}>
+          <span style={{
+            fontFamily: 'Space Grotesk, Inter, Arial, sans-serif',
+            fontSize: size * 0.44, fontWeight: 700,
+            color: textColor, letterSpacing: '0.03em',
+          }}>Comm</span>
+          <span style={{
+            fontFamily: 'Space Grotesk, Inter, Arial, sans-serif',
+            fontSize: size * 0.44, fontWeight: 700,
+            color: orangeColor, letterSpacing: '0.03em',
+          }}>UP</span>
         </div>
       </div>
     )
@@ -27,23 +37,26 @@ export default function CommUpLogo({ size = 32, variant = 'mark', theme = 'dark'
 
   // full — horizontal
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: Math.round(size * 0.35) }}>
-      <LogoMark size={size} />
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: Math.round(size * 0.4) }}>
+      <LogoMark size={size} markColor={markColor} tealColor={tealColor} />
       <div>
-        <div style={{
-          fontSize: size * 0.56, fontWeight: 800, color: textColor,
-          letterSpacing: '-0.03em', lineHeight: 1,
-        }}>
-          Comm<span style={{
-            background: 'linear-gradient(90deg, #a78bfa, #7c3aed)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>Up</span>
+        <div style={{ lineHeight: 1 }}>
+          <span style={{
+            fontFamily: 'Space Grotesk, Inter, Arial, sans-serif',
+            fontSize: size * 0.52, fontWeight: 700,
+            color: textColor, letterSpacing: '0.03em',
+          }}>Comm</span>
+          <span style={{
+            fontFamily: 'Space Grotesk, Inter, Arial, sans-serif',
+            fontSize: size * 0.52, fontWeight: 700,
+            color: orangeColor, letterSpacing: '0.03em',
+          }}>UP</span>
         </div>
         {size >= 36 && (
           <div style={{
-            fontSize: size * 0.24, fontWeight: 500, color: subColor,
-            letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: 1.2,
-            marginTop: 2,
+            fontSize: size * 0.18, fontWeight: 600, color: subColor,
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            lineHeight: 1.2, marginTop: 3,
           }}>
             Commissioning Platform
           </div>
@@ -53,71 +66,32 @@ export default function CommUpLogo({ size = 32, variant = 'mark', theme = 'dark'
   )
 }
 
-function LogoMark({ size }: { size: number }) {
-  const s = size
+function LogoMark({ size, markColor, tealColor }: { size: number; markColor: string; tealColor: string }) {
+  // viewBox 0 0 74 64 — preserve aspect ratio from the pack
+  const w = Math.round(size * 74 / 64)
   return (
     <svg
-      width={s}
-      height={s}
-      viewBox="0 0 64 64"
+      width={w}
+      height={size}
+      viewBox="0 0 74 64"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
     >
-      <defs>
-        <linearGradient id="cu-grad-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#5b21b6" />
-          <stop offset="100%" stopColor="#7c3aed" />
-        </linearGradient>
-        <linearGradient id="cu-grad-mark" x1="16" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-          <stop offset="100%" stopColor="#ddd6fe" stopOpacity="0.9" />
-        </linearGradient>
-        <linearGradient id="cu-grad-glow" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
-        </linearGradient>
-        <filter id="cu-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#7c3aed" floodOpacity="0.5" />
-        </filter>
-      </defs>
-
-      {/* Background rounded square */}
-      <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#cu-grad-bg)" filter="url(#cu-shadow)" />
-
-      {/* Top shine */}
-      <rect x="2" y="2" width="60" height="30" rx="16" fill="url(#cu-grad-glow)" />
-
-      {/* Border */}
-      <rect x="2" y="2" width="60" height="60" rx="16" stroke="rgba(167,139,250,0.3)" strokeWidth="1.5" fill="none" />
-
-      {/* Inner mark: stylized "C" opening right + upward check arrow
-          The "C" arc represents commissioning scope
-          The arrow through it = completion going UP */}
-
-      {/* C arc — left side open bracket */}
-      <path
-        d="M38 16 C24 16 16 22 16 32 C16 42 24 48 38 48"
-        stroke="url(#cu-grad-mark)"
-        strokeWidth="5.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-
-      {/* Upward arrow shaft */}
-      <line x1="32" y1="44" x2="32" y2="22" stroke="url(#cu-grad-mark)" strokeWidth="5" strokeLinecap="round" />
-
-      {/* Arrowhead up */}
-      <path
-        d="M24 30 L32 20 L40 30"
-        stroke="url(#cu-grad-mark)"
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-
-      {/* Small dot accent bottom right — NFC/tag reference */}
-      <circle cx="46" cy="46" r="4" fill="#a78bfa" opacity="0.8" />
+      <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="3">
+        {/* Smart tag body */}
+        <rect stroke={markColor} x="13" y="9" width="38" height="46" rx="7" />
+        {/* Clip / tab at top */}
+        <path stroke={markColor} d="M25 9h14v6H25z" />
+        {/* ITR grid cells — 3 boxes */}
+        <path stroke={markColor} d="M22 24h7v7h-7zM36 24h7v7h-7zM22 38h7v7h-7z" />
+        {/* Plus sign in 4th cell */}
+        <path stroke={markColor} d="M36 38h3M43 38h3M36 42h10M40 34v12" />
+        {/* Check mark — completion signal */}
+        <path stroke={tealColor} d="M24 50l7 7 14-17" />
+        {/* NFC / signal arcs — traceability */}
+        <path stroke={tealColor} d="M53 12c4 2 7 5 9 10M54 3c8 3 14 10 17 18" />
+      </g>
     </svg>
   )
 }

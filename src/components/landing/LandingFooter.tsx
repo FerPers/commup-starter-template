@@ -7,7 +7,7 @@ export default async function LandingFooter() {
 
   return (
     <footer style={{
-      background: '#050508',
+      background: '#0B1D3A',
       borderTop: '1px solid rgba(255,255,255,0.06)',
       padding: '60px 24px 32px',
     }}>
@@ -23,15 +23,15 @@ export default async function LandingFooter() {
             <div style={{ marginBottom: 14 }}>
               <CommUpLogo size={30} variant="full" theme="dark" />
             </div>
-            <p style={{ fontSize: 12, color: '#334155', lineHeight: 1.5, margin: '0 0 4px' }}>
+            <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5, margin: '0 0 4px' }}>
               Completion Management System
             </p>
-            <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.65, margin: '0 0 16px', maxWidth: 240 }}>
+            <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.65, margin: '0 0 16px', maxWidth: 240 }}>
               {t('tagline')}
             </p>
             <a
               href="mailto:contacto@commup.app"
-              style={{ fontSize: 13, color: '#7c3aed', textDecoration: 'none', fontWeight: 500 }}
+              style={{ fontSize: 13, color: '#00B5A8', textDecoration: 'none', fontWeight: 500 }}
             >
               contacto@commup.app
             </a>
@@ -39,26 +39,26 @@ export default async function LandingFooter() {
 
           {/* Product */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
               {t('product')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <li><a href="#modules" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('modules')}</a></li>
-              <li><a href="#how-it-works" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('howItWorks')}</a></li>
-              <li><a href="#contact" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('demo')}</a></li>
-              <li><a href="#pricing" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('pricing')}</a></li>
+              <li><a href="#modules" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('modules')}</a></li>
+              <li><a href="#how-it-works" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('howItWorks')}</a></li>
+              <li><a href="#contact" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('demo')}</a></li>
+              <li><a href="#pricing" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('pricing')}</a></li>
             </ul>
           </div>
 
           {/* Modules */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
               {t('modules')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {(['itrs', 'punchList', 'certificates', 'kpis', 'preservation'] as const).map(k => (
                 <li key={k}>
-                  <span style={{ fontSize: 13, color: '#475569' }}>{t(k)}</span>
+                  <span style={{ fontSize: 13, color: '#94a3b8' }}>{t(k)}</span>
                 </li>
               ))}
             </ul>
@@ -66,19 +66,19 @@ export default async function LandingFooter() {
 
           {/* Company */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
               {t('company')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <li><span style={{ fontSize: 13, color: '#475569' }}>{t('about')}</span></li>
-              <li><a href="#contact" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('blog')}</a></li>
+              <li><span style={{ fontSize: 13, color: '#94a3b8' }}>{t('about')}</span></li>
+              <li><a href="#contact" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('blog')}</a></li>
               <li>
-                <a href="mailto:contacto@commup.app" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>
+                <a href="mailto:contacto@commup.app" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
                   {t('contact')}
                 </a>
               </li>
               <li>
-                <Link href="/login" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>
+                <Link href="/login" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
                   {t('demo')}
                 </Link>
               </li>
@@ -87,14 +87,14 @@ export default async function LandingFooter() {
 
           {/* Legal */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
               {t('legal')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <li><span style={{ fontSize: 13, color: '#475569' }}>{t('privacy')}</span></li>
-              <li><span style={{ fontSize: 13, color: '#475569' }}>{t('terms')}</span></li>
+              <li><span style={{ fontSize: 13, color: '#94a3b8' }}>{t('privacy')}</span></li>
+              <li><span style={{ fontSize: 13, color: '#94a3b8' }}>{t('terms')}</span></li>
               <li>
-                <Link href="/login" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>
+                <Link href="/login" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
                   Client Access
                 </Link>
               </li>
@@ -109,23 +109,23 @@ export default async function LandingFooter() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           flexWrap: 'wrap', gap: 12,
         }}>
-          <p style={{ fontSize: 12, color: '#334155', margin: 0 }}>
+          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
             © 2026 CommUp. {t('rights')}
           </p>
           <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
             <a
               href="https://www.linkedin.com/company/commup"
-              style={{ fontSize: 12, color: '#334155', textDecoration: 'none' }}
+              style={{ fontSize: 12, color: '#64748b', textDecoration: 'none' }}
             >
               LinkedIn
             </a>
             <a
               href="https://twitter.com/commupapp"
-              style={{ fontSize: 12, color: '#334155', textDecoration: 'none' }}
+              style={{ fontSize: 12, color: '#64748b', textDecoration: 'none' }}
             >
               Twitter / X
             </a>
-            <span style={{ fontSize: 12, color: '#1e293b' }}>commup.app</span>
+            <span style={{ fontSize: 12, color: '#64748b' }}>commup.app</span>
           </div>
         </div>
       </div>

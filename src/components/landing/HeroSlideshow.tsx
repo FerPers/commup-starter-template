@@ -80,7 +80,7 @@ export default function HeroSlideshow() {
               border: 'none',
               cursor: 'pointer',
               padding: 0,
-              background: i === current ? '#a78bfa' : 'rgba(255,255,255,0.25)',
+              background: i === current ? '#00B5A8' : 'rgba(255,255,255,0.25)',
               transition: 'all 0.3s ease',
             }}
             aria-label={`Slide ${i + 1}`}

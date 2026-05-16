@@ -14,7 +14,7 @@ export default async function HeroSection() {
       paddingBottom: 80,
       position: 'relative',
       overflow: 'hidden',
-      background: '#06040e',
+      background: '#0B1D3A',
     }}>
       {/* Rotating photo slideshow */}
       <HeroSlideshow />
@@ -22,20 +22,20 @@ export default async function HeroSection() {
       {/* Dark gradient over photos — keeps text readable */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1,
-        background: 'linear-gradient(160deg, rgba(6,4,14,0.80) 0%, rgba(10,6,22,0.65) 45%, rgba(6,4,14,0.78) 100%)',
+        background: 'linear-gradient(160deg, rgba(11,29,58,0.85) 0%, rgba(11,29,58,0.70) 45%, rgba(11,29,58,0.82) 100%)',
       }} />
 
-      {/* Purple glow */}
+      {/* Teal glow */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2,
-        backgroundImage: 'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(124,58,237,0.18) 0%, transparent 70%)',
+        backgroundImage: 'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(0,181,168,0.12) 0%, transparent 70%)',
       }} />
 
-      {/* Purple grid */}
+      {/* Subtle grid */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2,
-        backgroundImage: `linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px)`,
+        backgroundImage: `linear-gradient(rgba(0,181,168,0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,181,168,0.04) 1px, transparent 1px)`,
         backgroundSize: '60px 60px',
       }} />
 
@@ -47,11 +47,11 @@ export default async function HeroSection() {
             {/* Badge */}
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)',
+              background: 'rgba(0,181,168,0.15)', border: '1px solid rgba(0,181,168,0.3)',
               borderRadius: 999, padding: '5px 14px', marginBottom: 24,
             }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#a78bfa', display: 'inline-block' }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#a78bfa', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#00B5A8', display: 'inline-block' }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#00B5A8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                 {t('badge')}
               </span>
             </div>
@@ -60,7 +60,7 @@ export default async function HeroSection() {
             <h1 style={{ fontSize: 56, fontWeight: 800, lineHeight: 1.08, margin: '0 0 16px', letterSpacing: '-0.03em' }}>
               <span style={{ color: '#f1f5f9' }}>{t('headline')}</span>
               <br />
-              <span style={{ background: 'linear-gradient(90deg, #a78bfa, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span style={{ background: 'linear-gradient(90deg, #00B5A8, #00d4c8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 {t('headlineAccent')}
               </span>
             </h1>
@@ -88,7 +88,7 @@ export default async function HeroSection() {
               <a
                 href="mailto:contacto@commup.app?subject=Demo CommUp"
                 style={{
-                  background: 'rgba(15,23,42,0.8)', color: '#e2e8f0',
+                  background: 'rgba(255,255,255,0.08)', color: '#e2e8f0',
                   border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10,
                   padding: '13px 26px', fontSize: 15, fontWeight: 600,
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -104,10 +104,10 @@ export default async function HeroSection() {
               {[
                 { value: '100%', label: 'Paperless' },
                 { value: 'NFC + QR', label: 'Field scanning' },
-                { value: 'RLS', label: 'Multi-tenant isolation' },
+                { value: 'Multi-tenant', label: 'Secure isolation' },
               ].map(({ value, label }) => (
                 <div key={label}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#a78bfa' }}>{value}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#00B5A8' }}>{value}</div>
                   <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{label}</div>
                 </div>
               ))}
@@ -127,22 +127,22 @@ export default async function HeroSection() {
 function DashboardMockup({ t }: { t: (key: string) => string }) {
   const phases = [
     { name: 'Phase A', pct: 94, color: '#10b981' },
-    { name: 'Phase B', pct: 67, color: '#7c3aed' },
+    { name: 'Phase B', pct: 67, color: '#0ea5e9' },
     { name: 'Phase C', pct: 31, color: '#f59e0b' },
   ]
 
   return (
     <div style={{
       width: '100%', maxWidth: 460,
-      background: '#0d0d1a',
-      border: '1px solid rgba(124,58,237,0.25)',
+      background: '#0d1b2e',
+      border: '1px solid rgba(0,181,168,0.25)',
       borderRadius: 16,
       overflow: 'hidden',
-      boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.1)',
+      boxShadow: '0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,181,168,0.1)',
     }}>
       {/* Browser chrome */}
       <div style={{
-        background: '#131320', padding: '10px 16px',
+        background: '#0a1525', padding: '10px 16px',
         display: 'flex', alignItems: 'center', gap: 8,
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
@@ -172,10 +172,10 @@ function DashboardMockup({ t }: { t: (key: string) => string }) {
         {/* Top stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
-            { val: '1,247', label: t('statItrs'), color: '#7c3aed', icon: '✓' },
-            { val: '18', label: t('statPunches'), color: '#f59e0b', icon: '!' },
-            { val: '4', label: t('statCerts'), color: '#10b981', icon: '📄' },
-          ].map(({ val, label, color, icon }) => (
+            { val: '1,247', label: t('statItrs'), color: '#00B5A8' },
+            { val: '18', label: t('statPunches'), color: '#f59e0b' },
+            { val: '4', label: t('statCerts'), color: '#10b981' },
+          ].map(({ val, label, color }) => (
             <div key={label} style={{
               background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
               borderRadius: 10, padding: '12px 14px',
@@ -213,7 +213,7 @@ function DashboardMockup({ t }: { t: (key: string) => string }) {
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {[
             { tag: 'PV-101', action: 'ITR-MECH-001 completed', time: '2m ago', dot: '#10b981' },
-            { tag: 'FCV-205', action: 'Punch A-087 closed', time: '8m ago', dot: '#a78bfa' },
+            { tag: 'FCV-205', action: 'Punch A-087 closed', time: '8m ago', dot: '#00B5A8' },
             { tag: 'LT-330', action: 'Certificate MC issued', time: '1h ago', dot: '#f59e0b' },
           ].map(({ tag, action, time, dot }) => (
             <div key={tag} style={{
@@ -221,7 +221,7 @@ function DashboardMockup({ t }: { t: (key: string) => string }) {
               background: 'rgba(255,255,255,0.02)', borderRadius: 7, padding: '7px 10px',
             }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: dot, flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, minWidth: 54 }}>{tag}</span>
+              <span style={{ fontSize: 11, color: '#00B5A8', fontWeight: 600, minWidth: 54 }}>{tag}</span>
               <span style={{ fontSize: 11, color: '#64748b', flex: 1 }}>{action}</span>
               <span style={{ fontSize: 10, color: '#334155' }}>{time}</span>
             </div>
