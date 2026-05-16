@@ -72,31 +72,31 @@ export default async function HeroSection() {
 
             {/* CTAs */}
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              <a
-                href="mailto:contacto@commup.app?subject=Demo CommUp"
-                style={{
-                  background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                  color: '#fff', border: 'none', borderRadius: 10,
-                  padding: '13px 26px', fontSize: 15, fontWeight: 600,
-                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
-                  boxShadow: '0 4px 24px rgba(124,58,237,0.4)',
-                  transition: 'transform 0.15s, box-shadow 0.15s',
-                }}
-              >
-                {t('ctaDemo')}
-              </a>
               <Link
                 href="/login"
                 style={{
-                  background: 'rgba(255,255,255,0.05)', color: '#e2e8f0',
-                  border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10,
+                  background: 'linear-gradient(135deg, #ea580c, #dc2626)',
+                  color: '#fff', border: 'none', borderRadius: 10,
+                  padding: '13px 26px', fontSize: 15, fontWeight: 600,
+                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
+                  boxShadow: '0 4px 24px rgba(234,88,12,0.4)',
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                }}
+              >
+                {t('ctaLive')} →
+              </Link>
+              <a
+                href="mailto:contacto@commup.app?subject=Demo CommUp"
+                style={{
+                  background: 'rgba(15,23,42,0.8)', color: '#e2e8f0',
+                  border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10,
                   padding: '13px 26px', fontSize: 15, fontWeight: 600,
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
                   transition: 'background 0.15s',
                 }}
               >
-                {t('ctaAccess')} →
-              </Link>
+                {t('ctaDemo')}
+              </a>
             </div>
 
             {/* Trust indicators */}

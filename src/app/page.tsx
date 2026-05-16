@@ -8,6 +8,7 @@ import HowItWorks from '@/components/landing/HowItWorks'
 import ModulesTabs from '@/components/landing/ModulesTabs'
 import DifferentiatorsSection from '@/components/landing/DifferentiatorsSection'
 import IndustriesSection from '@/components/landing/IndustriesSection'
+import SocialProofSection from '@/components/landing/SocialProofSection'
 import CtaSection from '@/components/landing/CtaSection'
 import LandingFooter from '@/components/landing/LandingFooter'
 
@@ -62,9 +63,14 @@ export default async function RootPage() {
       <HeroSection />
       <ProblemSection />
       <HowItWorks />
-      <ModulesTabs sectionTitle={t('modules.title')} tabs={tabs} />
+      <ModulesTabs
+        sectionTitle={t('modules.title')}
+        sectionSubtitle={t('modules.subtitle')}
+        tabs={tabs}
+      />
       <DifferentiatorsSection />
       <IndustriesSection />
+      <SocialProofSection />
       <CtaSection />
       <LandingFooter />
     </div>

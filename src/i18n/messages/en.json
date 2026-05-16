@@ -151,16 +151,46 @@
       "catAMore": "+ {count} more"
     },
     "widgets": {
-      "inspectorSummary": { "title": "Daily summary", "desc": "Quick indicators for your ITRs and punches" },
-      "myItrs": { "title": "My assigned ITRs", "desc": "ITRs pending execution assigned to you" },
-      "myPunches": { "title": "My assigned punches", "desc": "Open or in-progress punches under your responsibility" },
-      "clientSummary": { "title": "Project summary", "desc": "Active projects and pending signatures" },
-      "clientSignatures": { "title": "Pending signatures", "desc": "Completed ITRs awaiting your signature as Client" },
-      "clientProjects": { "title": "Active projects", "desc": "Read-only list of the organization's active projects" },
-      "catAAlerts": { "title": "Cat A alerts", "desc": "Blocking punches with no assignee" },
-      "kpiSummary": { "title": "Main KPIs", "desc": "Phase progress, open punches and preservation" },
-      "projectsActive": { "title": "Active projects", "desc": "Active projects in the organization" },
-      "disciplines": { "title": "Disciplines", "desc": "Disciplines configured for projects" }
+      "inspectorSummary": {
+        "title": "Daily summary",
+        "desc": "Quick indicators for your ITRs and punches"
+      },
+      "myItrs": {
+        "title": "My assigned ITRs",
+        "desc": "ITRs pending execution assigned to you"
+      },
+      "myPunches": {
+        "title": "My assigned punches",
+        "desc": "Open or in-progress punches under your responsibility"
+      },
+      "clientSummary": {
+        "title": "Project summary",
+        "desc": "Active projects and pending signatures"
+      },
+      "clientSignatures": {
+        "title": "Pending signatures",
+        "desc": "Completed ITRs awaiting your signature as Client"
+      },
+      "clientProjects": {
+        "title": "Active projects",
+        "desc": "Read-only list of the organization's active projects"
+      },
+      "catAAlerts": {
+        "title": "Cat A alerts",
+        "desc": "Blocking punches with no assignee"
+      },
+      "kpiSummary": {
+        "title": "Main KPIs",
+        "desc": "Phase progress, open punches and preservation"
+      },
+      "projectsActive": {
+        "title": "Active projects",
+        "desc": "Active projects in the organization"
+      },
+      "disciplines": {
+        "title": "Disciplines",
+        "desc": "Disciplines configured for projects"
+      }
     },
     "customizer": {
       "customize": "Customize",
@@ -1771,29 +1801,36 @@
       "modules": "Modules",
       "industries": "Industries",
       "contact": "Contact",
-      "clientAccess": "Client Access"
+      "clientAccess": "Client Access",
+      "howItWorks": "How it works",
+      "pricing": "Pricing",
+      "demo": "Live demo",
+      "resources": "Resources",
+      "login": "Sign in",
+      "requestDemo": "Request demo"
     },
     "hero": {
       "badge": "Industrial Commissioning Platform",
       "headline": "Commissioning without paper.",
-      "headlineAccent": "In real time.",
-      "subheadline": "Manage ITRs, Punch Lists and Certificates from the field — with NFC and QR. Purpose-built for Oil & Gas and industrial projects.",
-      "ctaDemo": "Request a demo",
+      "headlineAccent": "in real time.",
+      "subheadline": "Eliminate Excel, folders and WhatsApp. Manage ITRs, Punch Lists and Certificates from your phone with NFC/QR. Purpose-built for Oil & Gas, renewables, LNG, mining and industrial projects.",
+      "ctaDemo": "Request a personalized demo",
       "ctaAccess": "Client Access",
       "liveTag": "Live",
       "statItrs": "ITRs completed",
       "statPunches": "Open punches",
       "statCerts": "Certificates issued",
-      "statPhase": "Phase progress"
+      "statPhase": "Phase progress",
+      "ctaLive": "See live demo"
     },
     "problem": {
       "title": "Sound familiar on site?",
       "card1Title": "\"The ITR is on paper and nobody can find it\"",
-      "card1Desc": "Checklists scattered between folders, binders, and WhatsApp photos.",
+      "card1Desc": "Checklists scattered between folders, binders, WhatsApp photos and emails. Wasted time and constant errors.",
       "card2Title": "\"I don't know how many open punches are left in the system\"",
-      "card2Desc": "Multiple Excel files, no single source of truth, status unknown.",
+      "card2Desc": "Multiple Excel files, outdated information and no single source of truth. The real progress is unknown.",
       "card3Title": "\"That punch was never closed and the certificate was already signed\"",
-      "card3Desc": "No automatic blocking. Critical deficiencies slip through to operations."
+      "card3Desc": "No automatic blocking. Deficiencies reach operations and cause costly delays."
     },
     "howItWorks": {
       "title": "From field to certificate in 4 steps",
@@ -1844,21 +1881,22 @@
         "bullet1": "Scheduled procedures with automatic next-due-date",
         "bullet2": "Overdue and upcoming alerts by tag",
         "bullet3": "Complete history of maintenance during idle periods"
-      }
+      },
+      "subtitle": "Explore the modules live (real data from an active project)"
     },
     "differentiators": {
-      "title": "Technology built for the field",
+      "title": "Technology designed by and for field teams",
       "nfcTitle": "NFC & QR Scanning",
-      "nfcDesc": "Scan any tag directly from the browser. No extra app. Instant access to all history.",
+      "nfcDesc": "Access the full tag history in one second. Zero friction.",
       "cloudTitle": "100% Cloud SaaS",
-      "cloudDesc": "No installation, no servers to manage. Always updated, accessible from anywhere.",
-      "realtimeTitle": "Real-time KPIs",
-      "realtimeDesc": "Live dashboards. Every completed ITR and closed punch reflected instantly.",
-      "securityTitle": "Isolated Multi-tenant",
-      "securityDesc": "Each company and project isolated via Postgres RLS. Your data belongs to you only."
+      "cloudDesc": "No servers, no installations, always updated. Works from anywhere.",
+      "realtimeTitle": "Real-time KPIs & dashboards",
+      "realtimeDesc": "Every completed ITR or closed punch reflected instantly for the whole team.",
+      "securityTitle": "Secure multi-tenant",
+      "securityDesc": "Postgres RLS: each company and project fully isolated. Your data belongs only to you."
     },
     "industries": {
-      "title": "Built for industrial projects",
+      "title": "Built for the most demanding projects",
       "og": "Oil & Gas",
       "renewables": "Renewables",
       "lng": "LNG Plants",
@@ -1867,10 +1905,10 @@
       "industrial": "Industrial Plants"
     },
     "cta": {
-      "title": "Ready to bring your project to CommUp?",
-      "subtitle": "Join companies that have eliminated paper from their commissioning process.",
+      "title": "Ready to eliminate paper from your commissioning?",
+      "subtitle": "Join the teams already finishing projects faster, with fewer errors and full traceability.",
       "btnAccess": "Client Access",
-      "btnDemo": "Request demo"
+      "btnDemo": "Request a free 15-day demo"
     },
     "footer": {
       "tagline": "Industrial Commissioning Platform",
@@ -1886,7 +1924,28 @@
       "contact": "Contact",
       "privacy": "Privacy",
       "terms": "Terms",
-      "rights": "All rights reserved."
+      "rights": "All rights reserved.",
+      "howItWorks": "How it works",
+      "pricing": "Pricing",
+      "blog": "Blog",
+      "demo": "Demo",
+      "product": "Product",
+      "social": "Follow us"
+    },
+    "socialProof": {
+      "title": "Teams that hated paperwork are already using it",
+      "t1Quote": "We used to spend hours searching for paper ITRs. With CommUp, the technician scans the tag and has everything on screen in seconds.",
+      "t1Author": "Carlos M.",
+      "t1Role": "Commissioning Superintendent",
+      "t1Company": "Northern Gas Project",
+      "t2Quote": "Cat A punches automatically blocking certificates saved us from a serious problem at plant startup.",
+      "t2Author": "Ana R.",
+      "t2Role": "Completions Engineer",
+      "t2Company": "Central Industrial Plant",
+      "t3Quote": "Now the project manager has real-time visibility without waiting for manual Monday reports.",
+      "t3Author": "Miguel P.",
+      "t3Role": "Project Manager",
+      "t3Company": "Patagonia Wind Farm"
     }
   }
 }

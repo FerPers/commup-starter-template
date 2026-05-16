@@ -19,10 +19,11 @@ interface Tab {
 
 interface Props {
   sectionTitle: string
+  sectionSubtitle?: string
   tabs: Tab[]
 }
 
-export default function ModulesTabs({ sectionTitle, tabs }: Props) {
+export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Props) {
   const [active, setActive] = useState<TabKey>('itrs')
 
   const activeTab = tabs.find(t => t.key === active)!
@@ -44,10 +45,18 @@ export default function ModulesTabs({ sectionTitle, tabs }: Props) {
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <h2 style={{
           fontSize: 36, fontWeight: 800, color: '#f1f5f9',
-          textAlign: 'center', margin: '0 0 48px', letterSpacing: '-0.02em',
+          textAlign: 'center', margin: '0 0 12px', letterSpacing: '-0.02em',
         }}>
           {sectionTitle}
         </h2>
+        {sectionSubtitle && (
+          <p style={{
+            fontSize: 15, color: '#64748b', textAlign: 'center',
+            margin: '0 0 48px', lineHeight: 1.6,
+          }}>
+            {sectionSubtitle}
+          </p>
+        )}
 
         {/* Tab bar */}
         <div style={{

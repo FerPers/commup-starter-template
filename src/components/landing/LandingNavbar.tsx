@@ -36,43 +36,7 @@ export default function LandingNavbar() {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 32,
-  }
-
-  const logoStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    textDecoration: 'none',
-  }
-
-  const logoMarkStyle: React.CSSProperties = {
-    width: 32,
-    height: 32,
-    background: 'linear-gradient(135deg, #7c3aed, #a78bfa)',
-    borderRadius: 8,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 16,
-    fontWeight: 800,
-    color: '#fff',
-  }
-
-  const logoTextStyle: React.CSSProperties = {
-    fontSize: 18,
-    fontWeight: 700,
-    color: '#f1f5f9',
-    letterSpacing: '-0.01em',
-  }
-
-  const navLinksStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 32,
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
+    gap: 24,
   }
 
   const navLinkStyle: React.CSSProperties = {
@@ -81,16 +45,35 @@ export default function LandingNavbar() {
     color: '#94a3b8',
     textDecoration: 'none',
     transition: 'color 0.15s',
+    whiteSpace: 'nowrap',
   }
 
   const rightStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 20,
+    gap: 12,
+    flexShrink: 0,
   }
 
-  const ctaBtnStyle: React.CSSProperties = {
-    background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+  const loginBtnStyle: React.CSSProperties = {
+    background: 'transparent',
+    color: '#94a3b8',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 8,
+    padding: '7px 16px',
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: 'pointer',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    transition: 'color 0.15s, border-color 0.15s',
+    whiteSpace: 'nowrap',
+  }
+
+  const demoBtnStyle: React.CSSProperties = {
+    background: 'linear-gradient(135deg, #ea580c, #dc2626)',
     color: '#fff',
     border: 'none',
     borderRadius: 8,
@@ -105,26 +88,34 @@ export default function LandingNavbar() {
     letterSpacing: '0.01em',
     transition: 'opacity 0.15s, transform 0.1s',
     whiteSpace: 'nowrap',
+    boxShadow: '0 2px 12px rgba(234,88,12,0.35)',
   }
+
+  const navLinks = [
+    { key: 'features' as const, href: '#features' },
+    { key: 'modules' as const, href: '#modules' },
+    { key: 'howItWorks' as const, href: '#how-it-works' },
+    { key: 'industries' as const, href: '#industries' },
+    { key: 'pricing' as const, href: '#pricing' },
+  ]
 
   return (
     <nav style={navStyle}>
       <div style={innerStyle}>
         {/* Logo */}
-        <Link href="/" style={logoStyle}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
           <CommUpLogo size={32} variant="full" theme="dark" />
         </Link>
 
         {/* Nav links — hidden on mobile via media (handled in globals) */}
-        <ul style={navLinksStyle} className="landing-nav-links">
-          {(['features', 'modules', 'industries', 'contact'] as const).map(k => (
-            <li key={k}>
-              <a
-                href={`#${k}`}
-                style={navLinkStyle}
-                className="landing-nav-link"
-              >
-                {t(k)}
+        <ul style={{
+          display: 'flex', alignItems: 'center', gap: 28,
+          listStyle: 'none', margin: 0, padding: 0, flex: 1,
+        }} className="landing-nav-links">
+          {navLinks.map(({ key, href }) => (
+            <li key={key}>
+              <a href={href} style={navLinkStyle} className="landing-nav-link">
+                {t(key)}
               </a>
             </li>
           ))}
@@ -133,9 +124,15 @@ export default function LandingNavbar() {
         {/* Right side */}
         <div style={rightStyle}>
           <LocaleSwitcher variant="dark" />
-          <Link href="/login" style={ctaBtnStyle}>
-            {t('clientAccess')} →
+          <Link href="/login" style={loginBtnStyle} className="landing-nav-links">
+            {t('login')}
           </Link>
+          <a
+            href="mailto:contacto@commup.app?subject=Demo CommUp"
+            style={demoBtnStyle}
+          >
+            {t('requestDemo')} →
+          </a>
         </div>
       </div>
     </nav>

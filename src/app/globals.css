@@ -264,10 +264,13 @@ a:focus-visible,
   .how-connector { display: none !important; }
   .how-grid { grid-template-columns: repeat(2, 1fr) !important; }
   .modules-grid { grid-template-columns: 1fr !important; }
+  .industries-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .testimonials-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
   .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
 }
 
 @media (max-width: 480px) {
   .how-grid { grid-template-columns: 1fr !important; }
+  .industries-grid { grid-template-columns: 1fr !important; }
   .footer-grid { grid-template-columns: 1fr !important; }
 }

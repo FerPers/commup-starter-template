@@ -151,16 +151,46 @@
       "catAMore": "+ {count} más"
     },
     "widgets": {
-      "inspectorSummary": { "title": "Resumen del día", "desc": "Indicadores rápidos de tus ITRs y punches" },
-      "myItrs": { "title": "Mis ITRs asignadas", "desc": "ITRs pendientes de ejecución que tienes asignadas" },
-      "myPunches": { "title": "Mis punches asignados", "desc": "Punches abiertos o en proceso bajo tu responsabilidad" },
-      "clientSummary": { "title": "Resumen del proyecto", "desc": "Proyectos activos y firmas pendientes" },
-      "clientSignatures": { "title": "Firmas pendientes", "desc": "ITRs completados que esperan tu firma como Cliente" },
-      "clientProjects": { "title": "Proyectos activos", "desc": "Lista de proyectos activos de la organización (solo lectura)" },
-      "catAAlerts": { "title": "Alertas Cat A", "desc": "Punches bloqueantes sin responsable asignado" },
-      "kpiSummary": { "title": "KPIs principales", "desc": "Avance por fase, punches abiertos y preservación" },
-      "projectsActive": { "title": "Proyectos activos", "desc": "Lista de proyectos activos de la organización" },
-      "disciplines": { "title": "Disciplinas", "desc": "Disciplinas configuradas para los proyectos" }
+      "inspectorSummary": {
+        "title": "Resumen del día",
+        "desc": "Indicadores rápidos de tus ITRs y punches"
+      },
+      "myItrs": {
+        "title": "Mis ITRs asignadas",
+        "desc": "ITRs pendientes de ejecución que tienes asignadas"
+      },
+      "myPunches": {
+        "title": "Mis punches asignados",
+        "desc": "Punches abiertos o en proceso bajo tu responsabilidad"
+      },
+      "clientSummary": {
+        "title": "Resumen del proyecto",
+        "desc": "Proyectos activos y firmas pendientes"
+      },
+      "clientSignatures": {
+        "title": "Firmas pendientes",
+        "desc": "ITRs completados que esperan tu firma como Cliente"
+      },
+      "clientProjects": {
+        "title": "Proyectos activos",
+        "desc": "Lista de proyectos activos de la organización (solo lectura)"
+      },
+      "catAAlerts": {
+        "title": "Alertas Cat A",
+        "desc": "Punches bloqueantes sin responsable asignado"
+      },
+      "kpiSummary": {
+        "title": "KPIs principales",
+        "desc": "Avance por fase, punches abiertos y preservación"
+      },
+      "projectsActive": {
+        "title": "Proyectos activos",
+        "desc": "Lista de proyectos activos de la organización"
+      },
+      "disciplines": {
+        "title": "Disciplinas",
+        "desc": "Disciplinas configuradas para los proyectos"
+      }
     },
     "customizer": {
       "customize": "Personalizar",
@@ -1771,29 +1801,36 @@
       "modules": "Módulos",
       "industries": "Industrias",
       "contact": "Contacto",
-      "clientAccess": "Acceso a Clientes"
+      "clientAccess": "Acceso a Clientes",
+      "howItWorks": "Cómo funciona",
+      "pricing": "Precios",
+      "demo": "Demo en vivo",
+      "resources": "Recursos",
+      "login": "Iniciar sesión",
+      "requestDemo": "Solicitar demo"
     },
     "hero": {
       "badge": "Plataforma de Commissioning Industrial",
       "headline": "Commissioning sin papel.",
-      "headlineAccent": "En tiempo real.",
-      "subheadline": "Gestiona ITRs, Punch Lists y Certificados desde campo — con NFC y QR. Diseñado para Oil & Gas y proyectos industriales.",
-      "ctaDemo": "Solicitar demo",
+      "headlineAccent": "y en tiempo real.",
+      "subheadline": "Elimina Excel, carpetas y WhatsApp. Gestiona ITRs, Punch Lists y Certificados desde tu celular con NFC/QR. Diseñado para proyectos Oil & Gas, renovables, LNG, minería y plantas industriales.",
+      "ctaDemo": "Solicitar demo personalizada",
       "ctaAccess": "Acceso a Clientes",
       "liveTag": "En vivo",
       "statItrs": "ITRs completados",
       "statPunches": "Punches abiertos",
       "statCerts": "Certificados emitidos",
-      "statPhase": "Avance de fase"
+      "statPhase": "Avance de fase",
+      "ctaLive": "Ver demo en vivo"
     },
     "problem": {
       "title": "¿Te suena familiar esto en campo?",
       "card1Title": "\"El ITR está en papel y nadie lo encuentra\"",
-      "card1Desc": "Checklists dispersos entre carpetas, cuadernos y fotos de WhatsApp.",
+      "card1Desc": "Checklists dispersos entre carpetas, cuadernos, fotos de WhatsApp y correos. Tiempo perdido y errores constantes.",
       "card2Title": "\"No sé cuántos punches abiertos quedan en el sistema\"",
-      "card2Desc": "Múltiples Excel, ninguna fuente de verdad, estado desconocido.",
+      "card2Desc": "Múltiples Excel, información desactualizada y sin fuente única de verdad. El avance real es desconocido.",
       "card3Title": "\"Ese punch nunca se cerró y ya se firmó el certificado\"",
-      "card3Desc": "Sin bloqueo automático. Las deficiencias críticas llegan a operaciones."
+      "card3Desc": "Sin bloqueo automático. Las deficiencias llegan a operaciones y generan retrasos costosos."
     },
     "howItWorks": {
       "title": "De campo al certificado en 4 pasos",
@@ -1844,21 +1881,22 @@
         "bullet1": "Procedimientos programados con próxima fecha automática",
         "bullet2": "Alertas de vencidos y próximos por tag",
         "bullet3": "Historial completo de mantenimiento en períodos de inactividad"
-      }
+      },
+      "subtitle": "Explora los módulos en vivo (datos reales de un proyecto activo)"
     },
     "differentiators": {
-      "title": "Tecnología diseñada para campo",
+      "title": "Tecnología diseñada por y para gente de campo",
       "nfcTitle": "Escaneo NFC & QR",
-      "nfcDesc": "Escanea cualquier tag directamente desde el navegador. Sin app extra. Acceso inmediato a todo el historial.",
-      "cloudTitle": "SaaS 100% Cloud",
-      "cloudDesc": "Sin instalación, sin servidores que administrar. Siempre actualizado, accesible desde cualquier lugar.",
-      "realtimeTitle": "KPIs en tiempo real",
-      "realtimeDesc": "Dashboards en vivo. Cada ITR completado y punch cerrado reflejado al instante.",
-      "securityTitle": "Multi-tenant aislado",
-      "securityDesc": "Cada empresa y proyecto aislado con Postgres RLS. Tus datos son solo tuyos."
+      "nfcDesc": "Accede al historial completo del tag en un segundo. Cero fricción.",
+      "cloudTitle": "SaaS 100% en la nube",
+      "cloudDesc": "Sin servidores, sin instalaciones, siempre actualizado. Funciona en cualquier lugar.",
+      "realtimeTitle": "KPIs y dashboards en tiempo real",
+      "realtimeDesc": "Cada ITR completado o punch cerrado se refleja al instante para todo el equipo.",
+      "securityTitle": "Multi-tenant seguro",
+      "securityDesc": "Postgres RLS: cada empresa y proyecto totalmente aislado. Tus datos son solo tuyos."
     },
     "industries": {
-      "title": "Construido para proyectos industriales",
+      "title": "Construido para los proyectos más exigentes",
       "og": "Oil & Gas",
       "renewables": "Renovables",
       "lng": "Plantas LNG",
@@ -1867,10 +1905,10 @@
       "industrial": "Plantas Industriales"
     },
     "cta": {
-      "title": "¿Listo para llevar tu proyecto a CommUp?",
-      "subtitle": "Únete a empresas que eliminaron el papel de su proceso de commissioning.",
+      "title": "¿Listo para eliminar el papel de tu commissioning?",
+      "subtitle": "Únete a los equipos que ya están terminando proyectos más rápido, con menos errores y total trazabilidad.",
       "btnAccess": "Acceso a Clientes",
-      "btnDemo": "Solicitar demo"
+      "btnDemo": "Solicitar demo gratuita de 15 días"
     },
     "footer": {
       "tagline": "Plataforma de Commissioning Industrial",
@@ -1886,7 +1924,28 @@
       "contact": "Contacto",
       "privacy": "Privacidad",
       "terms": "Términos",
-      "rights": "Todos los derechos reservados."
+      "rights": "Todos los derechos reservados.",
+      "howItWorks": "Cómo funciona",
+      "pricing": "Precios",
+      "blog": "Blog",
+      "demo": "Demo",
+      "product": "Producto",
+      "social": "Síguenos"
+    },
+    "socialProof": {
+      "title": "Ya lo están usando equipos que odiaban el papeleo",
+      "t1Quote": "Antes pasábamos horas buscando ITRs en papel. Con CommUp, el técnico escanea el tag y tiene todo en pantalla en segundos.",
+      "t1Author": "Carlos M.",
+      "t1Role": "Superintendent de Commissioning",
+      "t1Company": "Proyecto Gasífero Norte",
+      "t2Quote": "Los punches Cat A bloqueando certificados automáticamente nos salvó de un problema serio en el arranque de planta.",
+      "t2Author": "Ana R.",
+      "t2Role": "Ingeniería de Completación",
+      "t2Company": "Planta Industrial Centro",
+      "t3Quote": "Ahora el gerente de proyecto tiene visibilidad en tiempo real sin esperar reportes manuales del lunes.",
+      "t3Author": "Miguel P.",
+      "t3Role": "Project Manager",
+      "t3Company": "Parque Eólico Patagonia"
     }
   }
 }

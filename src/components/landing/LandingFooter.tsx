@@ -15,15 +15,18 @@ export default async function LandingFooter() {
         {/* Top row */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1fr',
-          gap: 48, marginBottom: 48,
+          gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+          gap: 40, marginBottom: 48,
         }} className="footer-grid">
           {/* Brand */}
           <div>
             <div style={{ marginBottom: 14 }}>
               <CommUpLogo size={30} variant="full" theme="dark" />
             </div>
-            <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.65, margin: '0 0 16px', maxWidth: 260 }}>
+            <p style={{ fontSize: 12, color: '#334155', lineHeight: 1.5, margin: '0 0 4px' }}>
+              Completion Management System
+            </p>
+            <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.65, margin: '0 0 16px', maxWidth: 240 }}>
               {t('tagline')}
             </p>
             <a
@@ -32,6 +35,19 @@ export default async function LandingFooter() {
             >
               contacto@commup.app
             </a>
+          </div>
+
+          {/* Product */}
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+              {t('product')}
+            </p>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <li><a href="#modules" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('modules')}</a></li>
+              <li><a href="#how-it-works" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('howItWorks')}</a></li>
+              <li><a href="#contact" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('demo')}</a></li>
+              <li><a href="#pricing" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('pricing')}</a></li>
+            </ul>
           </div>
 
           {/* Modules */}
@@ -55,6 +71,7 @@ export default async function LandingFooter() {
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <li><span style={{ fontSize: 13, color: '#475569' }}>{t('about')}</span></li>
+              <li><a href="#contact" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>{t('blog')}</a></li>
               <li>
                 <a href="mailto:contacto@commup.app" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>
                   {t('contact')}
@@ -62,7 +79,7 @@ export default async function LandingFooter() {
               </li>
               <li>
                 <Link href="/login" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>
-                  Client Access
+                  {t('demo')}
                 </Link>
               </li>
             </ul>
@@ -76,6 +93,11 @@ export default async function LandingFooter() {
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <li><span style={{ fontSize: 13, color: '#475569' }}>{t('privacy')}</span></li>
               <li><span style={{ fontSize: 13, color: '#475569' }}>{t('terms')}</span></li>
+              <li>
+                <Link href="/login" style={{ fontSize: 13, color: '#475569', textDecoration: 'none' }}>
+                  Client Access
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -90,9 +112,21 @@ export default async function LandingFooter() {
           <p style={{ fontSize: 12, color: '#334155', margin: 0 }}>
             © 2026 CommUp. {t('rights')}
           </p>
-          <p style={{ fontSize: 12, color: '#1e293b', margin: 0 }}>
-            commup.app
-          </p>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+            <a
+              href="https://www.linkedin.com/company/commup"
+              style={{ fontSize: 12, color: '#334155', textDecoration: 'none' }}
+            >
+              LinkedIn
+            </a>
+            <a
+              href="https://twitter.com/commupapp"
+              style={{ fontSize: 12, color: '#334155', textDecoration: 'none' }}
+            >
+              Twitter / X
+            </a>
+            <span style={{ fontSize: 12, color: '#1e293b' }}>commup.app</span>
+          </div>
         </div>
       </div>
     </footer>
