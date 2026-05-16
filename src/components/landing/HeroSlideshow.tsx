@@ -7,7 +7,7 @@ const IMAGES = [
   '/images/hero-2.jpg',
   '/images/hero-3.jpg',
   '/images/hero-4.jpg',
-  '/images/hero-5.png',
+  '/images/hero-5.jpg',
 ]
 
 const INTERVAL_MS = 7000
