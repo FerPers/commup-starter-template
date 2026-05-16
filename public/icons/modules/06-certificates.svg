@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+
+  <style>
+    .navy { stroke:#0B1D3A; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .teal { stroke:#00B5A8; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .orange { stroke:#FF6A00; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .navyFill { fill:#0B1D3A; stroke:none; }
+    .tealFill { fill:#00B5A8; stroke:none; }
+    .orangeFill { fill:#FF6A00; stroke:none; }
+    .grayFill { fill:#64707C; stroke:none; }
+  </style>
+
+
+  <path class="navy" d="M34 24h40l18 18v56a8 8 0 0 1-8 8H34a8 8 0 0 1-8-8V32a8 8 0 0 1 8-8Z"/>
+  <path class="navy" d="M74 24v18h18"/>
+  <line class="navy" x1="40" y1="52" x2="78" y2="52"/>
+  <line class="navy" x1="40" y1="64" x2="70" y2="64"/>
+  <circle class="orange" cx="84" cy="84" r="10"/>
+  <path class="navy" d="M80 93l-4 11 8-4 8 4-4-11"/>
+  <path class="orange" d="M79 84l3 3 6-8"/>
+
+</svg>

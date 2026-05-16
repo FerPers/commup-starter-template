@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+
+  <style>
+    .navy { stroke:#0B1D3A; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .teal { stroke:#00B5A8; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .orange { stroke:#FF6A00; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .navyFill { fill:#0B1D3A; stroke:none; }
+    .tealFill { fill:#00B5A8; stroke:none; }
+    .orangeFill { fill:#FF6A00; stroke:none; }
+    .grayFill { fill:#64707C; stroke:none; }
+  </style>
+
+
+  <path class="navy" d="M30 28h60a8 8 0 0 1 8 8v44H22V36a8 8 0 0 1 8-8Z"/>
+  <path class="navy" d="M26 80h68v18H26z"/>
+  <path class="navy" d="M32 20h56"/>
+  <line class="navy" x1="88" y1="30" x2="88" y2="80"/>
+  <path class="teal" d="M64 44c5 8 10 13 10 20a10 10 0 0 1-20 0c0-7 5-12 10-20Z"/>
+
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+
+  <style>
+    .navy { stroke:#0B1D3A; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .teal { stroke:#00B5A8; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .orange { stroke:#FF6A00; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .navyFill { fill:#0B1D3A; stroke:none; }
+    .tealFill { fill:#00B5A8; stroke:none; }
+    .orangeFill { fill:#FF6A00; stroke:none; }
+    .grayFill { fill:#64707C; stroke:none; }
+  </style>
+
+
+  <rect class="orange" x="54" y="18" width="20" height="16" rx="3"/>
+  <line class="navy" x1="64" y1="34" x2="64" y2="52"/>
+  <line class="navy" x1="34" y1="52" x2="94" y2="52"/>
+  <line class="navy" x1="34" y1="52" x2="34" y2="68"/>
+  <line class="navy" x1="64" y1="52" x2="64" y2="68"/>
+  <line class="navy" x1="94" y1="52" x2="94" y2="68"/>
+  <rect class="teal" x="24" y="68" width="20" height="16" rx="3"/>
+  <rect class="teal" x="54" y="68" width="20" height="16" rx="3"/>
+  <rect class="teal" x="84" y="68" width="20" height="16" rx="3"/>
+
+</svg>

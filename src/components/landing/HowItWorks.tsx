@@ -1,8 +1,12 @@
 import { getTranslations } from 'next-intl/server'
-import { Tag, QrCode, ClipboardCheck, FileCheck2, FolderArchive } from 'lucide-react'
 
-const STEP_ICONS = [Tag, QrCode, ClipboardCheck, FileCheck2, FolderArchive]
-const STEP_COLORS = ['#0B1D3A', '#0e3561', '#005A8D', '#00B5A8', '#009e92']
+const STEP_SRCS = [
+  '/icons/modules/01-tag-register.svg',
+  '/icons/modules/13-qr-nfc-scan.svg',
+  '/icons/modules/04-itr.svg',
+  '/icons/modules/06-certificates.svg',
+  '/icons/modules/09-dossier.svg',
+]
 
 export default async function HowItWorks() {
   const t = await getTranslations('Landing.howItWorks')
@@ -28,6 +32,20 @@ export default async function HowItWorks() {
       backgroundPosition: 'center, center 30%',
     }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        {/* Section label */}
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'rgba(0,181,168,0.15)', color: '#00B5A8',
+            border: '1px solid rgba(0,181,168,0.35)',
+            borderRadius: 20, padding: '5px 14px',
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}>
+            FLUJO DE TRABAJO
+          </div>
+        </div>
+
         <h2 style={{
           fontSize: 36, fontWeight: 800, color: '#f1f5f9',
           textAlign: 'center', margin: '0 0 64px', letterSpacing: '-0.02em',
@@ -39,31 +57,31 @@ export default async function HowItWorks() {
           {/* Connector line */}
           <div style={{
             position: 'absolute', top: 36, left: '10%', right: '10%', height: 2,
-            background: 'linear-gradient(90deg, #0B1D3A, #00B5A8)',
-            opacity: 0.5,
+            background: 'linear-gradient(90deg, transparent, #00B5A8 20%, rgba(255,255,255,0.5) 50%, #00B5A8 80%, transparent)',
           }} className="how-connector" />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 24 }} className="how-grid">
             {steps.map(({ label, desc }, i) => {
-              const Icon = STEP_ICONS[i]
-              const color = STEP_COLORS[i]
+              const src = STEP_SRCS[i]
               return (
                 <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  {/* Step circle — solid background so icon always reads */}
+                  {/* Step card — white background so SVG strokes are always visible */}
                   <div style={{
-                    width: 72, height: 72, borderRadius: '50%',
-                    background: color,
-                    boxShadow: `0 0 24px ${color}66`,
+                    width: 72, height: 72, borderRadius: 16,
+                    background: '#FFFFFF',
+                    border: '1px solid rgba(11,29,58,0.15)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     marginBottom: 20, position: 'relative', zIndex: 1,
                     flexShrink: 0,
                   }}>
-                    <Icon size={28} color="#fff" strokeWidth={1.75} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} width={44} height={44} alt="" />
                     {/* Step number */}
                     <div style={{
                       position: 'absolute', top: -6, right: -6,
                       width: 22, height: 22, borderRadius: '50%',
-                      background: '#0f172a', border: `2px solid ${color}`,
+                      background: '#0f172a', border: '2px solid #00B5A8',
                       color: '#fff', fontSize: 11, fontWeight: 700,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>

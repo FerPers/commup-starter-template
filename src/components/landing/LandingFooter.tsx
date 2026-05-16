@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import CommUpLogo from './CommUpLogo'
 
 export default async function LandingFooter() {
   const t = await getTranslations('Landing.footer')
@@ -21,7 +20,8 @@ export default async function LandingFooter() {
           {/* Brand */}
           <div>
             <div style={{ marginBottom: 14 }}>
-              <CommUpLogo size={30} variant="full" theme="dark" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logos/compact-dark-transparent.svg" height={15} alt="CommUp" style={{ display: 'block' }} />
             </div>
             <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5, margin: '0 0 4px' }}>
               Completion Management System

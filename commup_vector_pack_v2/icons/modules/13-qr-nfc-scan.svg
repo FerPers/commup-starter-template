@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+
+  <style>
+    .navy { stroke:#0B1D3A; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .teal { stroke:#00B5A8; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .orange { stroke:#FF6A00; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .navyFill { fill:#0B1D3A; stroke:none; }
+    .tealFill { fill:#00B5A8; stroke:none; }
+    .orangeFill { fill:#FF6A00; stroke:none; }
+    .grayFill { fill:#64707C; stroke:none; }
+  </style>
+
+
+  <path class="orange" d="M22 42V28h14"/>
+  <path class="orange" d="M106 42V28H92"/>
+  <path class="orange" d="M22 86v14h14"/>
+  <path class="orange" d="M106 86v14H92"/>
+  <rect class="navy" x="32" y="38" width="18" height="18"/>
+  <rect class="navy" x="78" y="38" width="18" height="18"/>
+  <rect class="navy" x="32" y="72" width="18" height="18"/>
+  <path class="navy" d="M60 40h8v8h-8zM68 48h8v8h-8zM60 56h8v8h-8zM76 56h8v8h-8zM60 72h8v8h-8zM68 80h8v8h-8zM84 72h8v8h-8zM76 88h8v8h-8z"/>
+  <path class="teal" d="M100 66c4 2 6 5 6 10s-2 8-6 10"/>
+  <path class="teal" d="M94 70c2 1 3 3 3 6s-1 5-3 6"/>
+
+</svg>

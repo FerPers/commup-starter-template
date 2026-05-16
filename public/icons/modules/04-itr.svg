@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+
+  <style>
+    .navy { stroke:#0B1D3A; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .teal { stroke:#00B5A8; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .orange { stroke:#FF6A00; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .navyFill { fill:#0B1D3A; stroke:none; }
+    .tealFill { fill:#00B5A8; stroke:none; }
+    .orangeFill { fill:#FF6A00; stroke:none; }
+    .grayFill { fill:#64707C; stroke:none; }
+  </style>
+
+
+  <rect class="navy" x="34" y="22" width="60" height="82" rx="8"/>
+  <rect class="navy" x="50" y="16" width="28" height="12" rx="4"/>
+  <path class="orange" d="M44 38h12M44 44h12M44 50h12"/>
+  <path class="teal" d="M46 61l4 4 7-9"/>
+  <path class="teal" d="M46 74l4 4 7-9"/>
+  <path class="teal" d="M46 87l4 4 7-9"/>
+  <line class="navy" x1="62" y1="62" x2="82" y2="62"/>
+  <line class="navy" x1="62" y1="75" x2="82" y2="75"/>
+  <line class="navy" x1="62" y1="88" x2="82" y2="88"/>
+
+</svg>

@@ -1,28 +1,26 @@
 import { getTranslations } from 'next-intl/server'
-import { ClipboardList, AlertOctagon, BarChart2 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 
 export default async function SocialProofSection() {
   const t = await getTranslations('Landing.socialProof')
 
-  const scenarios: { Icon: LucideIcon; color: string; title: string; desc: string; module: string }[] = [
+  const scenarios: { src: string; color: string; title: string; desc: string; module: string }[] = [
     {
-      Icon: ClipboardList,
+      src: '/icons/modules/04-itr.svg',
       color: '#0B1D3A',
       title: t('s1Title'),
       desc: t('s1Desc'),
       module: t('s1Module'),
     },
     {
-      Icon: AlertOctagon,
-      color: '#ef4444',
+      src: '/icons/modules/05-punch-list.svg',
+      color: '#FF8A00',
       title: t('s2Title'),
       desc: t('s2Desc'),
       module: t('s2Module'),
     },
     {
-      Icon: BarChart2,
-      color: '#10b981',
+      src: '/icons/modules/08-kpis.svg',
+      color: '#00B5A8',
       title: t('s3Title'),
       desc: t('s3Desc'),
       module: t('s3Module'),
@@ -36,6 +34,20 @@ export default async function SocialProofSection() {
       borderTop: '1px solid #E9EDF1',
     }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {/* Section label */}
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'rgba(0,181,168,0.10)', color: '#00B5A8',
+            border: '1px solid rgba(0,181,168,0.25)',
+            borderRadius: 20, padding: '5px 14px',
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}>
+            CASOS DE USO
+          </div>
+        </div>
+
         <h2 style={{
           fontSize: 36, fontWeight: 800, color: '#0B1D3A',
           textAlign: 'center', margin: '0 0 64px', letterSpacing: '-0.02em',
@@ -48,7 +60,7 @@ export default async function SocialProofSection() {
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 24,
         }} className="testimonials-grid">
-          {scenarios.map(({ Icon, color, title, desc, module }) => (
+          {scenarios.map(({ src, color, title, desc, module }) => (
             <div key={title} style={{
               background: '#FFFFFF',
               border: '1px solid #E9EDF1',
@@ -61,13 +73,14 @@ export default async function SocialProofSection() {
             }}>
               {/* Icon */}
               <div style={{
-                width: 52, height: 52, borderRadius: 14,
-                background: `${color}18`,
-                border: `1px solid ${color}30`,
+                width: 88, height: 88, borderRadius: 20,
+                background: `${color}12`,
+                border: `1px solid ${color}25`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}>
-                <Icon size={24} color={color} strokeWidth={1.75} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} width={60} height={60} alt="" />
               </div>
 
               {/* Title */}
@@ -89,8 +102,8 @@ export default async function SocialProofSection() {
               {/* Module badge */}
               <div style={{
                 display: 'inline-flex', alignItems: 'center',
-                background: `${color}15`, color,
-                border: `1px solid ${color}30`,
+                background: `${color}12`, color,
+                border: `1px solid ${color}25`,
                 borderRadius: 6, padding: '4px 10px',
                 fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
                 alignSelf: 'flex-start',

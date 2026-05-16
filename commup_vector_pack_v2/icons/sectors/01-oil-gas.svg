@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+
+  <style>
+    .navy { stroke:#0B1D3A; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .teal { stroke:#00B5A8; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .orange { stroke:#FF6A00; stroke-width:4.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .navyFill { fill:#0B1D3A; stroke:none; }
+    .tealFill { fill:#00B5A8; stroke:none; }
+    .orangeFill { fill:#FF6A00; stroke:none; }
+    .grayFill { fill:#64707C; stroke:none; }
+  </style>
+
+
+  <line class="navy" x1="18" y1="100" x2="110" y2="100"/>
+  <rect class="navy" x="24" y="42" width="18" height="58" rx="3"/>
+  <path class="orange" d="M33 26c6 7 8 12 8 16a8 8 0 0 1-16 0c0-4 2-9 8-16Z"/>
+  <rect class="navy" x="52" y="54" width="28" height="46" rx="8"/>
+  <path class="navy" d="M80 68h16v32"/>
+  <path class="navy" d="M52 76H40V58"/>
+  <path class="teal" d="M58 70h16"/>
+  <path class="teal" d="M28 54h10"/>
+
+</svg>

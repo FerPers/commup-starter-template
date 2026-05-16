@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import LocaleSwitcher from '@/components/LocaleSwitcher'
-import CommUpLogo from './CommUpLogo'
 
 export default function LandingNavbar() {
   const t = useTranslations('Landing.nav')
@@ -103,8 +102,14 @@ export default function LandingNavbar() {
     <nav style={navStyle}>
       <div style={innerStyle}>
         {/* Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
-          <CommUpLogo size={32} variant="full" theme={scrolled ? 'light' : 'dark'} />
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={scrolled ? '/logos/compact-light.svg' : '/logos/compact-dark-transparent.svg'}
+            height={30}
+            alt="CommUp"
+            style={{ display: 'block' }}
+          />
         </Link>
 
         {/* Nav links — hidden on mobile via media (handled in globals) */}
