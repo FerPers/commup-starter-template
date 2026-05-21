@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" width="420" height="120">
+<rect width="100%" height="100%" fill="#0B1D3A"/>
+  <g transform="translate(18,16) scale(0.72)">
+    <path d="M18 12h18v53l14 14 20-20V42H56l22-24v-6h18v57l-44 44L18 79V12Z" fill="#FFFFFF"/>
+    <rect x="83" y="12" width="17" height="17" fill="#FF6A00" rx="1"/>
+  </g>
+  <text x="120" y="78" font-family="Sora, Arial, Helvetica, sans-serif" font-size="58" font-weight="700" fill="#FFFFFF">Comm</text>
+  <text x="258" y="78" font-family="Sora, Arial, Helvetica, sans-serif" font-size="58" font-weight="700" fill="#FF6A00">UP</text>
+</svg>

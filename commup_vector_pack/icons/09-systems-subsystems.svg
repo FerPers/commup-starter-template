@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-<style>:root{--commup-navy:#0B1D3A;--commup-teal:#00B5A8;--commup-orange:#FF8A00;--commup-gray:#64707C;} .navy{stroke:var(--commup-navy,#0B1D3A);} .teal{stroke:var(--commup-teal,#00B5A8);} .orange{stroke:var(--commup-orange,#FF8A00);} .fill-teal{fill:var(--commup-teal,#00B5A8);} .fill-orange{fill:var(--commup-orange,#FF8A00);} .fill-navy{fill:var(--commup-navy,#0B1D3A);} .fill-gray{fill:var(--commup-gray,#64707C);}</style>
-<g stroke-linecap="round" stroke-linejoin="round" stroke-width="3">
-<path class="navy" d="M32 7l10 6v12l-10 6-10-6V13l10-6Z"/><path class="teal" d="M32 31v9M18 40h28"/><path class="navy" d="M11 42h14v14H11zM25 42h14v14H25zM39 42h14v14H39z"/><path class="teal" d="M18 40v2M32 40v2M46 40v2"/>
-</g>
-</svg>
