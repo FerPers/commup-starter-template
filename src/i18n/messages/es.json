@@ -363,6 +363,29 @@
       "targetDate": "Fecha límite",
       "status": "Estado",
       "priority": "Prioridad"
+    },
+    "create": {
+      "button": "+ Nuevo punch",
+      "modalTitle": "Nuevo punch",
+      "labelTag": "Tag",
+      "tagPlaceholder": "Buscar tag por número o descripción…",
+      "tagRequired": "Selecciona un tag",
+      "labelCategory": "Categoría",
+      "labelDescription": "Descripción",
+      "descriptionPlaceholder": "Describe la deficiencia encontrada…",
+      "descriptionRequired": "La descripción es obligatoria",
+      "labelPriority": "Prioridad",
+      "priority": {
+        "critical": "Crítica",
+        "major": "Mayor",
+        "minor": "Menor"
+      },
+      "labelAssignee": "Asignar a",
+      "assigneePlaceholder": "Sin asignar",
+      "labelTargetDate": "Fecha objetivo",
+      "submit": "Crear punch",
+      "submitting": "Creando…",
+      "cancel": "Cancelar"
     }
   },
   "Preservation": {

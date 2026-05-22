@@ -31,7 +31,8 @@
   <div class="badge">
     🔄 Datos pendientes de sync: <span id="pending">calculando...</span>
   </div>
-  <button onclick="location.reload()">Reintentar conexión</button>
+  <button id="retry" type="button" aria-label="Reintentar conexión" onclick="location.reload()">Reintentar conexión</button>
+  <p id="status" style="font-size:13px;color:#475569;min-height:18px"></p>
   <script>
     // Leer pending de IndexedDB
     const req = indexedDB.open('commup-sync-v2', 2);
@@ -46,6 +47,22 @@
         document.getElementById('pending').textContent = n === 0 ? '0 items (todo sync)' : `${n} item${n > 1 ? 's' : ''} pendiente${n > 1 ? 's' : ''}`;
       };
     };
+
+    // Auto-recuperación: cuando el navegador detecta red, recarga.
+    window.addEventListener('online', () => location.reload());
+
+    // Sondeo activo: el evento 'online' no garantiza que el servidor responda
+    // (p.ej. WiFi sin internet). Verificamos el servidor cada 5s y recargamos
+    // en cuanto contesta. Backoff implícito: nos detenemos al recargar.
+    const statusEl = document.getElementById('status');
+    async function probe() {
+      try {
+        const res = await fetch('/manifest.json', { method: 'HEAD', cache: 'no-store' });
+        if (res && (res.ok || res.status === 304)) { statusEl.textContent = '✓ Conexión restablecida, recargando…'; location.reload(); return; }
+      } catch (_) { /* sigue offline */ }
+    }
+    setInterval(probe, 5000);
+    probe();
   </script>
 </body>
 </html>

@@ -3,13 +3,14 @@
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { updatePunchStatus, closePunch, addPunchComment, reassignPunch } from '@/app/actions/punches'
+import { updatePunchStatus, closePunch, addPunchComment, reassignPunch, createPunch } from '@/app/actions/punches'
 import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 type OrgMember = { user_id: string; profiles: { full_name: string } | null }
+type TagOption = { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } | null }
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ export default function PunchListView({
   systems,
   orgMembers,
   currentUserRole,
+  tags,
 }: {
   projectId: string
   projectName: string
@@ -70,6 +72,7 @@ export default function PunchListView({
   systems: System[]
   orgMembers: OrgMember[]
   currentUserRole: string
+  tags: TagOption[]
 }) {
   const t = useTranslations('PunchList')
   const router = useRouter()
@@ -79,6 +82,7 @@ export default function PunchListView({
   const [filterDisc, setFilterDisc] = useState('')
   const [filterSystem, setFilterSystem] = useState('')
   const [selectedPunch, setSelectedPunch] = useState<Punch | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
 
   // ── Bulk selection ───────────────────────────────────────────────────
   const [selected, setSelected]      = useState<Set<string>>(new Set())
@@ -148,6 +152,7 @@ export default function PunchListView({
   }
 
   const canDelete = EDITOR_ROLES.includes(currentUserRole)
+  const canCreate = EDITOR_ROLES.includes(currentUserRole)
 
   function handleBulkDelete() {
     if (!selected.size) return
@@ -186,6 +191,18 @@ export default function PunchListView({
           >
             {t('exportExcel')}
           </a>
+          {canCreate && (
+            <button
+              onClick={() => setShowCreate(true)}
+              style={{
+                padding: '7px 14px', background: 'var(--primary-500)', border: '1px solid var(--primary-500)',
+                borderRadius: '8px', fontSize: '13px', color: '#fff',
+                whiteSpace: 'nowrap', fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              {t('create.button')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -404,6 +421,17 @@ export default function PunchListView({
           onUpdated={() => { setSelectedPunch(null); refresh() }}
         />
       )}
+
+      {/* Create modal */}
+      {showCreate && (
+        <CreatePunchModal
+          projectId={projectId}
+          tags={tags}
+          orgMembers={orgMembers}
+          onClose={() => setShowCreate(false)}
+          onCreated={() => { setShowCreate(false); refresh() }}
+        />
+      )}
     </div>
   )
 }
@@ -608,4 +636,208 @@ function PunchDetailModal({
       </div>
     </div>
   )
+}
+
+// ── Create Punch Modal ────────────────────────────────────────────────────
+
+function CreatePunchModal({
+  projectId,
+  tags,
+  orgMembers,
+  onClose,
+  onCreated,
+}: {
+  projectId: string
+  tags: TagOption[]
+  orgMembers: OrgMember[]
+  onClose: () => void
+  onCreated: () => void
+}) {
+  const t = useTranslations('PunchList')
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  const [tagSearch, setTagSearch] = useState('')
+  const [tagId, setTagId] = useState<string>('')
+  const [tagOpen, setTagOpen] = useState(false)
+  const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
+  const [description, setDescription] = useState('')
+  const [priority, setPriority] = useState<'critical' | 'major' | 'minor'>('major')
+  const [assignedTo, setAssignedTo] = useState('')
+  const [targetDate, setTargetDate] = useState('')
+
+  const selectedTag = tags.find(tg => tg.id === tagId) ?? null
+
+  const tagMatches = useMemo(() => {
+    const q = tagSearch.trim().toLowerCase()
+    const pool = q
+      ? tags.filter(tg => tg.tag_number.toLowerCase().includes(q) || tg.description?.toLowerCase().includes(q))
+      : tags
+    return pool.slice(0, 50)
+  }, [tagSearch, tags])
+
+  const canSubmit = !!tagId && !!description.trim() && !isPending
+
+  function handleSubmit() {
+    setError(null)
+    if (!tagId) { setError(t('create.tagRequired')); return }
+    if (!description.trim()) { setError(t('create.descriptionRequired')); return }
+    startTransition(async () => {
+      const res = await createPunch({
+        projectId,
+        tagId,
+        category,
+        description: description.trim(),
+        assignedTo: assignedTo || null,
+        targetDate: targetDate || null,
+        priority,
+      })
+      if (res.error) { setError(res.error); return }
+      onCreated()
+    })
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('create.modalTitle')}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#94a3b8', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        {/* Tag picker */}
+        <div style={{ marginBottom: '16px', position: 'relative' }}>
+          <label style={createLabelStyle}>{t('create.labelTag')}</label>
+          {selectedTag ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--gray-50)' }}>
+              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: selectedTag.disciplines?.color ?? 'var(--text-strong)' }}>{selectedTag.tag_number}</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedTag.description}</span>
+              <button onClick={() => { setTagId(''); setTagSearch(''); setTagOpen(true) }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '13px' }}>✕</button>
+            </div>
+          ) : (
+            <>
+              <input
+                type="text"
+                value={tagSearch}
+                onChange={e => { setTagSearch(e.target.value); setTagOpen(true) }}
+                onFocus={() => setTagOpen(true)}
+                placeholder={t('create.tagPlaceholder')}
+                style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+              />
+              {tagOpen && tagMatches.length > 0 && (
+                <div style={{ position: 'absolute', zIndex: 10, left: 0, right: 0, marginTop: '4px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', maxHeight: '220px', overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+                  {tagMatches.map(tg => (
+                    <div
+                      key={tg.id}
+                      onClick={() => { setTagId(tg.id); setTagOpen(false) }}
+                      style={{ padding: '8px 11px', cursor: 'pointer', borderBottom: '1px solid var(--gray-50)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--gray-50)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                    >
+                      <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: tg.disciplines?.color ?? 'var(--text-strong)' }}>{tg.tag_number}</span>
+                      <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '8px' }}>{tg.description}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Category */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={createLabelStyle}>{t('create.labelCategory')}</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {(['A', 'B', 'C'] as const).map(c => {
+              const cfg = CATEGORY_CFG[c]
+              const active = category === c
+              return (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  style={{
+                    flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
+                    background: active ? cfg.bg : 'var(--card-bg)',
+                    color: active ? cfg.color : 'var(--text-muted)',
+                    border: `1px solid ${active ? cfg.color + '60' : 'var(--border)'}`,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {cfg.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Description */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={createLabelStyle}>{t('create.labelDescription')}</label>
+          <textarea
+            rows={3}
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder={t('create.descriptionPlaceholder')}
+            style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        {/* Priority + Target date */}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ flex: 1 }}>
+            <label style={createLabelStyle}>{t('create.labelPriority')}</label>
+            <select value={priority} onChange={e => setPriority(e.target.value as 'critical' | 'major' | 'minor')} style={{ ...selStyle, width: '100%' }}>
+              <option value="critical">{t('create.priority.critical')}</option>
+              <option value="major">{t('create.priority.major')}</option>
+              <option value="minor">{t('create.priority.minor')}</option>
+            </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={createLabelStyle}>{t('create.labelTargetDate')}</label>
+            <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} style={{ ...selStyle, width: '100%', boxSizing: 'border-box' }} />
+          </div>
+        </div>
+
+        {/* Assignee */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={createLabelStyle}>{t('create.labelAssignee')}</label>
+          <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} style={{ ...selStyle, width: '100%' }}>
+            <option value="">{t('create.assigneePlaceholder')}</option>
+            {orgMembers.map(m => (
+              <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name ?? m.user_id}</option>
+            ))}
+          </select>
+        </div>
+
+        {error && (
+          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', marginBottom: '12px' }}>{error}</p>
+        )}
+
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} disabled={isPending} style={{ padding: '9px 16px', background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+            {t('create.cancel')}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            style={{
+              padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none',
+              background: canSubmit ? 'var(--primary-500)' : 'var(--gray-100)',
+              color: canSubmit ? '#fff' : 'var(--gray-400)',
+              cursor: canSubmit ? 'pointer' : 'default',
+            }}
+          >
+            {isPending ? t('create.submitting') : t('create.submit')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const createLabelStyle: React.CSSProperties = {
+  fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px',
 }

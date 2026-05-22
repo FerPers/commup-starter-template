@@ -21,6 +21,7 @@ export default async function PunchListPage({
     { data: disciplines },
     { data: systems },
     { data: orgMembers },
+    { data: tags },
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -60,6 +61,11 @@ export default async function PunchListPage({
       .select('user_id, profiles(full_name)')
       .eq('org_id', membership.org_id)
       .order('role'),
+    supabase
+      .from('tags')
+      .select('id, tag_number, description, disciplines(code, name, color)')
+      .eq('project_id', projectId)
+      .order('tag_number'),
   ])
 
   if (!project) notFound()
@@ -79,6 +85,8 @@ export default async function PunchListPage({
       systems={(systems ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       orgMembers={(orgMembers ?? []) as any}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      tags={(tags ?? []) as any}
     />
   )
 }

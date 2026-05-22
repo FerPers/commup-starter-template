@@ -363,6 +363,29 @@
       "targetDate": "Due date",
       "status": "Status",
       "priority": "Priority"
+    },
+    "create": {
+      "button": "+ New punch",
+      "modalTitle": "New punch",
+      "labelTag": "Tag",
+      "tagPlaceholder": "Search tag by number or description…",
+      "tagRequired": "Select a tag",
+      "labelCategory": "Category",
+      "labelDescription": "Description",
+      "descriptionPlaceholder": "Describe the deficiency found…",
+      "descriptionRequired": "Description is required",
+      "labelPriority": "Priority",
+      "priority": {
+        "critical": "Critical",
+        "major": "Major",
+        "minor": "Minor"
+      },
+      "labelAssignee": "Assign to",
+      "assigneePlaceholder": "Unassigned",
+      "labelTargetDate": "Target date",
+      "submit": "Create punch",
+      "submitting": "Creating…",
+      "cancel": "Cancel"
     }
   },
   "Preservation": {

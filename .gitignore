@@ -205,3 +205,6 @@ next-env.d.ts
 
 ### Claude Code / skills ###
 skills-lock.json
+
+# TestSprite — test artifacts may contain credentials
+testsprite_tests/
