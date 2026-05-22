@@ -1,5 +1,4 @@
 export default function PreservationMockup() {
-  const today = '2026-05-15'
   const rows = [
     { tag: 'PV-101', procedure: 'Monthly N₂ blanket check', freq: 'Monthly', nextDue: '2026-05-18', status: 'upcoming', responsible: 'R. Torres' },
     { tag: 'MOV-440', procedure: 'Weekly actuator stroke test', freq: 'Weekly', nextDue: '2026-05-12', status: 'overdue', responsible: 'J. García' },
