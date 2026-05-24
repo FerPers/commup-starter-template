@@ -81,7 +81,8 @@
       "inspector": "Inspector",
       "client": "Client"
     },
-    "roleAria": "Role: {role} in {org}"
+    "roleAria": "Role: {role} in {org}",
+    "openMenu": "Open menu"
   },
   "Breadcrumbs": {
     "label": "Breadcrumbs"

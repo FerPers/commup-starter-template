@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/layout/sidebar'
 import Topbar from '@/components/layout/Topbar'
+import DashboardShell from '@/components/layout/DashboardShell'
+import MobileMenuButton from '@/components/layout/MobileMenuButton'
 import { ToastProvider } from '@/components/ui'
 import { getActiveMembership, listMemberships } from '@/lib/supabase/membership'
 import type { OrgMemberRole } from '@/types/database'
@@ -81,9 +83,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <ToastProvider>
-      <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)' }}>
-        <Sidebar notifCounts={notifCounts} />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <DashboardShell
+        sidebar={<Sidebar notifCounts={notifCounts} />}
+        topbar={
           <Topbar
             role={role}
             orgName={orgName}
@@ -92,12 +94,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
             userEmail={ctx.userEmail}
             userId={ctx.userId}
             unreadNotifications={unreadNotificationsCount ?? 0}
-          />
-          <main style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
-            {children}
-          </main>
-        </div>
-      </div>
+          >
+            <MobileMenuButton />
+          </Topbar>
+        }
+      >
+        {children}
+      </DashboardShell>
     </ToastProvider>
   )
 }

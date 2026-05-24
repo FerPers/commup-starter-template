@@ -188,7 +188,7 @@ function badgeFor(href: string, n?: NotifCounts): number {
   }
 }
 
-export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) {
+export default function Sidebar({ notifCounts, isOpen = false }: { notifCounts?: NotifCounts; isOpen?: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
   const t = useTranslations('Sidebar')
@@ -205,6 +205,7 @@ export default function Sidebar({ notifCounts }: { notifCounts?: NotifCounts }) 
   return (
     <aside
       aria-label="Primary navigation"
+      className={`app-sidebar${isOpen ? ' is-open' : ''}`}
       style={{
         width: 240, minWidth: 240, height: '100vh',
         background: 'var(--sidebar-bg)',

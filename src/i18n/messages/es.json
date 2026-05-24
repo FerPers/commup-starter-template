@@ -81,7 +81,8 @@
       "inspector": "Inspector",
       "client": "Cliente"
     },
-    "roleAria": "Rol: {role} en {org}"
+    "roleAria": "Rol: {role} en {org}",
+    "openMenu": "Abrir menú"
   },
   "Breadcrumbs": {
     "label": "Migas de pan"

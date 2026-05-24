@@ -18,9 +18,10 @@ interface TopbarProps {
   userEmail: string | null
   userId: string
   unreadNotifications: number
+  children?: React.ReactNode
 }
 
-export default async function Topbar({ role, orgName, activeOrgId, memberships, userEmail, userId, unreadNotifications }: TopbarProps) {
+export default async function Topbar({ role, orgName, activeOrgId, memberships, userEmail, userId, unreadNotifications, children }: TopbarProps) {
   const t = await getTranslations('Topbar')
   const roleLabels: Record<string, string> = {
     owner:     t('role.owner'),
@@ -47,6 +48,7 @@ export default async function Topbar({ role, orgName, activeOrgId, memberships, 
         zIndex: 20,
       }}
     >
+      {children}
       <Breadcrumbs />
 
       {role && (
