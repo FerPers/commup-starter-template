@@ -1,7 +1,8 @@
 'use server'
 
-import { getActiveMembership } from '@/lib/supabase/membership'
-import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
+import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
+import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
+import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
 
 export interface TagUpdatePayload {
@@ -30,124 +31,111 @@ export interface TagUpdatePayload {
   mounting_typical?: string | null
 }
 
-export async function deleteTag(
-  projectId: string,
-  tagId: string
-): Promise<{ error?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos para eliminar' }
+export const deleteTag = withAuthOnly(
+  { role: PRIVILEGED_ROLES },
+  async (ctx, projectId: string, tagId: string): Promise<{ error?: string }> => {
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
 
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id')
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
-    .single()
+    const { error } = await ctx.supabase
+      .from('tags')
+      .delete()
+      .eq('id', tagId)
+      .eq('project_id', projectId)
 
-  if (!project) return { error: 'Proyecto no encontrado' }
+    if (error) return { error: error.message }
 
-  const { error } = await ctx.supabase
-    .from('tags')
-    .delete()
-    .eq('id', tagId)
-    .eq('project_id', projectId)
+    revalidatePath(`/projects/${projectId}/tags`)
+    return {}
+  },
+)
 
-  if (error) return { error: error.message }
+export const updateTag = withAuthOnly(
+  { role: PRIVILEGED_ROLES },
+  async (
+    ctx,
+    projectId: string,
+    tagId: string,
+    payload: TagUpdatePayload,
+  ): Promise<{ error?: string }> => {
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
 
-  revalidatePath(`/projects/${projectId}/tags`)
-  return {}
-}
+    const { error } = await ctx.supabase
+      .from('tags')
+      .update(payload)
+      .eq('id', tagId)
+      .eq('project_id', projectId)
 
-export async function updateTag(
-  projectId: string,
-  tagId: string,
-  payload: TagUpdatePayload
-): Promise<{ error?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos para editar' }
+    if (error) return { error: error.message }
 
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id')
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
-    .single()
-
-  if (!project) return { error: 'Proyecto no encontrado' }
-
-  const { error } = await ctx.supabase
-    .from('tags')
-    .update(payload)
-    .eq('id', tagId)
-    .eq('project_id', projectId)
-
-  if (error) return { error: error.message }
-
-  revalidatePath(`/projects/${projectId}/tags/${tagId}`)
-  revalidatePath(`/projects/${projectId}/tags`)
-  return {}
-}
+    revalidatePath(`/projects/${projectId}/tags/${tagId}`)
+    revalidatePath(`/projects/${projectId}/tags`)
+    return {}
+  },
+)
 
 // ── NFC binding ─────────────────────────────────────────────────────────
 
-export async function linkNfcToTag(input: {
-  projectId: string
-  tagId: string
-  nfcUid: string
-}): Promise<{ error?: string; conflictTagNumber?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
+export const linkNfcToTag = withAuth(
+  {
+    role: EDITOR_ROLES,
+    guards: [
+      { resource: 'project', field: 'projectId' },
+      { resource: 'tag', field: 'tagId', scopeField: 'projectId' },
+    ],
+  },
+  async (
+    ctx,
+    input: { projectId: string; tagId: string; nfcUid: string },
+  ): Promise<{ error?: string; conflictTagNumber?: string }> => {
+    const trimmed = input.nfcUid.trim()
+    if (!trimmed) return { error: 'NFC UID vacío' }
 
-  const trimmed = input.nfcUid.trim()
-  if (!trimmed) return { error: 'NFC UID vacío' }
+    // Pre-check uniqueness within the project to give a friendlier error than the
+    // raw 23505 constraint violation (and surface which tag already has it).
+    const { data: existing } = await ctx.supabase
+      .from('tags')
+      .select('id, tag_number')
+      .eq('project_id', input.projectId)
+      .eq('nfc_uid', trimmed)
+      .maybeSingle()
+    if (existing && existing.id !== input.tagId) {
+      return { error: 'NFC ya vinculado a otro tag', conflictTagNumber: existing.tag_number }
+    }
 
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id')
-    .eq('id', input.projectId)
-    .eq('org_id', ctx.orgId)
-    .single()
-  if (!project) return { error: 'Proyecto no encontrado' }
+    const { error } = await ctx.supabase
+      .from('tags')
+      .update({ nfc_uid: trimmed })
+      .eq('id', input.tagId)
+      .eq('project_id', input.projectId)
+    if (error) return { error: error.message }
 
-  // Pre-check uniqueness within the project to give a friendlier error than the
-  // raw 23505 constraint violation (and surface which tag already has it).
-  const { data: existing } = await ctx.supabase
-    .from('tags')
-    .select('id, tag_number')
-    .eq('project_id', input.projectId)
-    .eq('nfc_uid', trimmed)
-    .maybeSingle()
-  if (existing && existing.id !== input.tagId) {
-    return { error: 'NFC ya vinculado a otro tag', conflictTagNumber: existing.tag_number }
-  }
+    revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
+    return {}
+  },
+)
 
-  const { error } = await ctx.supabase
-    .from('tags')
-    .update({ nfc_uid: trimmed })
-    .eq('id', input.tagId)
-    .eq('project_id', input.projectId)
-  if (error) return { error: error.message }
+export const unlinkNfc = withAuth(
+  {
+    role: EDITOR_ROLES,
+    guards: [
+      { resource: 'project', field: 'projectId' },
+      { resource: 'tag', field: 'tagId', scopeField: 'projectId' },
+    ],
+  },
+  async (
+    ctx,
+    input: { projectId: string; tagId: string },
+  ): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase
+      .from('tags')
+      .update({ nfc_uid: null })
+      .eq('id', input.tagId)
+      .eq('project_id', input.projectId)
+    if (error) return { error: error.message }
 
-  revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
-  return {}
-}
-
-export async function unlinkNfc(input: {
-  projectId: string
-  tagId: string
-}): Promise<{ error?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-
-  const { error } = await ctx.supabase
-    .from('tags')
-    .update({ nfc_uid: null })
-    .eq('id', input.tagId)
-    .eq('project_id', input.projectId)
-  if (error) return { error: error.message }
-
-  revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
-  return {}
-}
+    revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
+    return {}
+  },
+)
