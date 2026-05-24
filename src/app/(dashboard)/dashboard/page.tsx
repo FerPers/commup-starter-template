@@ -5,6 +5,7 @@ import type { OrgMemberRole } from '@/types/database'
 import type { DashboardLayout, WidgetId } from '@/types/dashboard'
 import { resolveLayout, WIDGET_REGISTRY, widgetsForRole } from '@/lib/dashboard/registry'
 import DashboardCustomizer from '@/components/dashboard/DashboardCustomizer'
+import DashboardStatusPill from '@/components/dashboard/DashboardStatusPill'
 import InspectorSummaryWidget from '@/components/dashboard/widgets/InspectorSummaryWidget'
 import MyItrsWidget from '@/components/dashboard/widgets/MyItrsWidget'
 import MyPunchesWidget from '@/components/dashboard/widgets/MyPunchesWidget'
@@ -15,6 +16,19 @@ import CatAAlertsWidget from '@/components/dashboard/widgets/CatAAlertsWidget'
 import KpiSummaryWidget from '@/components/dashboard/widgets/KpiSummaryWidget'
 import ProjectsActiveWidget from '@/components/dashboard/widgets/ProjectsActiveWidget'
 import DisciplinesWidget from '@/components/dashboard/widgets/DisciplinesWidget'
+
+const RIBBON_COLORS: Record<WidgetId, string> = {
+  inspector_summary: 'var(--primary-500)',
+  my_itrs: 'var(--primary-500)',
+  my_punches: 'var(--warning-500)',
+  client_summary: 'var(--primary-500)',
+  client_signatures: 'var(--accent-500)',
+  client_projects: 'var(--primary-500)',
+  cat_a_alerts: 'var(--danger-500)',
+  kpi_summary: 'var(--primary-500)',
+  projects_active: 'var(--success-500)',
+  disciplines: 'var(--accent-500)',
+}
 
 function renderWidget(id: WidgetId, ctx: { userId: string; orgId: string; role: OrgMemberRole }) {
   switch (id) {
@@ -76,6 +90,9 @@ export default async function DashboardPage() {
           <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: isCompact ? 'var(--text-sm)' : 'var(--text-base)', textTransform: isCompact ? 'capitalize' : 'none', margin: '4px 0 0' }}>
             {isCompact ? `${todayLabel} · ${org?.name ?? ''}` : (org?.name ?? t('subtitle'))}
           </p>
+          <div style={{ marginTop: 12 }}>
+            <DashboardStatusPill />
+          </div>
         </div>
         {customizerOptions.length > 0 && (
           <DashboardCustomizer layout={layout} options={customizerOptions} />
@@ -89,7 +106,8 @@ export default async function DashboardPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {visible.map(w => (
-            <div key={w.id}>
+            <div key={w.id} className="widget-card">
+              <span className="widget-ribbon" style={{ background: RIBBON_COLORS[w.id] }} aria-hidden="true" />
               {renderWidget(w.id, ctx)}
             </div>
           ))}

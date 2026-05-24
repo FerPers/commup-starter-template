@@ -325,9 +325,9 @@ function SidebarLink({ href, label, Icon, active, badge, accent }: SidebarLinkPr
         background: active ? activeBg : 'transparent',
         color: active ? activeFg : 'var(--sidebar-text)',
         fontSize: 'var(--text-base)',
-        fontWeight: active ? 500 : 400,
+        fontWeight: active ? 600 : 400,
         transition: 'background 0.15s, color 0.15s',
-        borderLeft: active ? `2px solid ${activeBorder}` : '2px solid transparent',
+        borderLeft: active ? `3px solid ${activeBorder}` : '3px solid transparent',
       }}
       onMouseEnter={(e) => {
         if (!active) {
@@ -342,7 +342,7 @@ function SidebarLink({ href, label, Icon, active, badge, accent }: SidebarLinkPr
         }
       }}
     >
-      <Icon size={16} strokeWidth={2} aria-hidden="true" style={{ flexShrink: 0, opacity: active ? 1 : 0.85 }} />
+      <Icon size={16} strokeWidth={2} aria-hidden="true" style={{ flexShrink: 0, color: active ? activeFg : undefined, opacity: active ? 1 : 0.85 }} />
       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {label}
       </span>
@@ -385,7 +385,7 @@ function NavGroupBlock({
   notifCounts?: NotifCounts
 }) {
   return (
-    <div style={{ marginBottom: 4 }}>
+    <div className="nav-group" style={{ marginBottom: 4 }}>
       <GroupHeader>{label}</GroupHeader>
       {group.items.map((item) => {
         const active = pathname === item.href || pathname.startsWith(item.href + '/')
@@ -414,7 +414,7 @@ function ProjectContextGroup({
 }) {
   const items = projectGroupItems(projectId)
   return (
-    <div style={{
+    <div className="nav-group" style={{
       marginBottom: 12, paddingBottom: 8,
       borderBottom: '1px solid rgba(255,255,255,0.08)',
     }}>

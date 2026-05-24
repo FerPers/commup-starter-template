@@ -255,6 +255,73 @@ a:focus-visible,
 }
 
 /* ==========================================================================
+   Dashboard polish — Sprint visual (widget hover, ribbons, status pill, nav)
+   ========================================================================== */
+
+/* Widget card wrapper: micro-elevation on hover */
+.widget-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.widget-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Semantic ribbon overlayed on the widget's left edge */
+.widget-ribbon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Status pill (dashboard header) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.status-pill .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--gray-400);
+}
+.status-pill[data-state="online"] .status-dot {
+  background: var(--success-500);
+  box-shadow: 0 0 6px var(--success-500);
+}
+.status-pill[data-state="syncing"] .status-dot {
+  background: var(--warning-500);
+  box-shadow: 0 0 6px var(--warning-500);
+}
+.status-pill[data-state="offline"] .status-dot {
+  background: var(--danger-500);
+  box-shadow: 0 0 6px var(--danger-500);
+}
+
+/* Sidebar nav groups: subtle separator between groups */
+.nav-group:not(:first-child) {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+/* ==========================================================================
    Landing page — responsive overrides
    ========================================================================== */
 @media (max-width: 768px) {
