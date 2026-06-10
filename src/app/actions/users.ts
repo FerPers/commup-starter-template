@@ -1,8 +1,8 @@
 'use server'
 
-import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
 import type { OrgMemberRole } from '@/types/database'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
+import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
@@ -16,14 +16,12 @@ function generateTempPassword(): string {
 
 const INVITABLE_ROLES: OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client']
 
-export async function inviteUser(input: {
-  email: string
-  role: string
-}): Promise<{ error?: string; tempPassword?: string }> {
-  const ctx = await getCtx()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos para invitar usuarios' }
-
+export const inviteUser = withAuth(
+  { role: ADMIN_ROLES },
+  async (
+    ctx,
+    input: { email: string; role: string },
+  ): Promise<{ error?: string; tempPassword?: string }> => {
   const { email } = input
   const role = input.role as OrgMemberRole
   if (!INVITABLE_ROLES.includes(role)) return { error: 'Rol inválido' }
@@ -125,18 +123,17 @@ export async function inviteUser(input: {
 
   revalidatePath('/admin/users')
   return { tempPassword }
-}
+  },
+)
 
 // ── updateMemberRole ───────────────────────────────────────────────────────
 
-export async function updateMemberRole(input: {
-  memberId: string
-  role: string
-}): Promise<{ error?: string }> {
-  const ctx = await getCtx()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos para cambiar roles' }
-
+export const updateMemberRole = withAuth(
+  { role: ADMIN_ROLES },
+  async (
+    ctx,
+    input: { memberId: string; role: string },
+  ): Promise<{ error?: string }> => {
   const { data: member } = await ctx.supabase
     .from('org_members')
     .select('user_id, role')
@@ -186,17 +183,17 @@ export async function updateMemberRole(input: {
 
   revalidatePath('/admin/users')
   return {}
-}
+  },
+)
 
 // ── removeMember ───────────────────────────────────────────────────────────
 
-export async function removeMember(input: {
-  memberId: string
-}): Promise<{ error?: string }> {
-  const ctx = await getCtx()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos para remover miembros' }
-
+export const removeMember = withAuth(
+  { role: ADMIN_ROLES },
+  async (
+    ctx,
+    input: { memberId: string },
+  ): Promise<{ error?: string }> => {
   const { data: member } = await ctx.supabase
     .from('org_members')
     .select('user_id, role')
@@ -235,4 +232,5 @@ export async function removeMember(input: {
 
   revalidatePath('/admin/users')
   return {}
-}
+  },
+)

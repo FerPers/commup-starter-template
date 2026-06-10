@@ -1,7 +1,8 @@
 'use server'
 
-import { getActiveMembership } from '@/lib/supabase/membership'
 import { OWNER_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
+import { withAuthOnly } from '@/lib/auth/withAuth'
+import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
 import type { ProjectStatus } from '@/types/database'
 
@@ -13,57 +14,44 @@ export interface ProjectUpdatePayload {
   status?: ProjectStatus
 }
 
-export async function updateProject(
-  projectId: string,
-  payload: ProjectUpdatePayload
-): Promise<{ error?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos para editar' }
+export const updateProject = withAuthOnly(
+  { role: PRIVILEGED_ROLES },
+  async (
+    ctx,
+    projectId: string,
+    payload: ProjectUpdatePayload,
+  ): Promise<{ error?: string }> => {
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
 
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id')
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
-    .single()
+    const { error } = await ctx.supabase
+      .from('projects')
+      .update(payload)
+      .eq('id', projectId)
+      .eq('org_id', ctx.orgId)
 
-  if (!project) return { error: 'Proyecto no encontrado' }
+    if (error) return { error: error.message }
 
-  const { error } = await ctx.supabase
-    .from('projects')
-    .update(payload)
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
+    revalidatePath(`/projects/${projectId}`)
+    return {}
+  },
+)
 
-  if (error) return { error: error.message }
+export const deleteProject = withAuthOnly(
+  { role: OWNER_ROLES },
+  async (ctx, projectId: string): Promise<{ error?: string }> => {
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
 
-  revalidatePath(`/projects/${projectId}`)
-  return {}
-}
+    const { error } = await ctx.supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId)
+      .eq('org_id', ctx.orgId)
 
-export async function deleteProject(projectId: string): Promise<{ error?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!OWNER_ROLES.includes(ctx.role)) return { error: 'Solo el owner puede eliminar proyectos' }
+    if (error) return { error: error.message }
 
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id')
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
-    .single()
-
-  if (!project) return { error: 'Proyecto no encontrado' }
-
-  const { error } = await ctx.supabase
-    .from('projects')
-    .delete()
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
-
-  if (error) return { error: error.message }
-
-  revalidatePath('/projects')
-  return {}
-}
+    revalidatePath('/projects')
+    return {}
+  },
+)
