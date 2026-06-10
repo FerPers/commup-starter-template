@@ -1,6 +1,6 @@
 'use server'
 
-import { getActiveMembership as getOrgCtx } from '@/lib/supabase/membership'
+import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 
 export type DQSeverity = 'critical' | 'error' | 'warning'
@@ -23,40 +23,41 @@ export type DQSummaryRow = {
   count: number
 }
 
-export async function getDataQualitySummary(): Promise<
-  { error?: string; summary?: DQSummaryRow[] }
-> {
-  const ctx = await getOrgCtx()
-  if (!ctx) return { error: 'No autenticado' }
+export const getDataQualitySummary = withAuthOnly(
+  {},
+  async (ctx): Promise<{ error?: string; summary?: DQSummaryRow[] }> => {
+    const { data, error } = await ctx.supabase.rpc('data_quality_summary', {
+      p_org_id: ctx.orgId,
+    })
+    if (error) return { error: error.message }
+    return { summary: (data ?? []) as DQSummaryRow[] }
+  },
+)
 
-  const { data, error } = await ctx.supabase.rpc('data_quality_summary', {
-    p_org_id: ctx.orgId,
-  })
-  if (error) return { error: error.message }
-  return { summary: (data ?? []) as DQSummaryRow[] }
-}
-
-export async function listDataQualityIssues(params: {
-  category?: string
-  severity?: DQSeverity
-  projectId?: string
-  limit?: number
-  offset?: number
-}): Promise<{ error?: string; issues?: DQIssue[] }> {
-  const ctx = await getOrgCtx()
-  if (!ctx) return { error: 'No autenticado' }
-
-  const { data, error } = await ctx.supabase.rpc('data_quality_list', {
-    p_org_id: ctx.orgId,
-    p_category: params.category ?? null,
-    p_severity: params.severity ?? null,
-    p_project_id: params.projectId ?? null,
-    p_limit: params.limit ?? 200,
-    p_offset: params.offset ?? 0,
-  })
-  if (error) return { error: error.message }
-  return { issues: (data ?? []) as DQIssue[] }
-}
+export const listDataQualityIssues = withAuth(
+  { guards: [{ resource: 'project', field: 'projectId', optional: true }] },
+  async (
+    ctx,
+    params: {
+      category?: string
+      severity?: DQSeverity
+      projectId?: string
+      limit?: number
+      offset?: number
+    },
+  ): Promise<{ error?: string; issues?: DQIssue[] }> => {
+    const { data, error } = await ctx.supabase.rpc('data_quality_list', {
+      p_org_id: ctx.orgId,
+      p_category: params.category ?? null,
+      p_severity: params.severity ?? null,
+      p_project_id: params.projectId ?? null,
+      p_limit: params.limit ?? 200,
+      p_offset: params.offset ?? 0,
+    })
+    if (error) return { error: error.message }
+    return { issues: (data ?? []) as DQIssue[] }
+  },
+)
 
 export type ProjectForecast = {
   project_id: string
@@ -71,23 +72,24 @@ export type ProjectForecast = {
   blockers: number
 }
 
-export async function getProjectForecast(
-  projectId: string,
-): Promise<{ error?: string; forecast?: ProjectForecast }> {
-  const ctx = await getOrgCtx()
-  if (!ctx) return { error: 'No autenticado' }
+export const getProjectForecast = withAuthOnly(
+  {},
+  async (
+    ctx,
+    projectId: string,
+  ): Promise<{ error?: string; forecast?: ProjectForecast }> => {
+    // SEC-006: el RPC es SECURITY DEFINER — verificar ownership antes de llamarlo
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
 
-  // SEC-006: el RPC es SECURITY DEFINER — verificar ownership antes de llamarlo
-  const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-  if (!access.ok) return { error: access.error }
-
-  const { data, error } = await ctx.supabase.rpc('analytics_project_forecast', {
-    p_project_id: projectId,
-  })
-  if (error) return { error: error.message }
-  const rows = (data ?? []) as ProjectForecast[]
-  return { forecast: rows[0] }
-}
+    const { data, error } = await ctx.supabase.rpc('analytics_project_forecast', {
+      p_project_id: projectId,
+    })
+    if (error) return { error: error.message }
+    const rows = (data ?? []) as ProjectForecast[]
+    return { forecast: rows[0] }
+  },
+)
 
 export type Bottleneck = {
   subsystem_id: string
@@ -107,27 +109,30 @@ export type Bottleneck = {
   reasons: string[]
 }
 
-export async function listBottlenecks(params: {
-  projectId?: string
-  minScore?: number
-  limit?: number
-}): Promise<{ error?: string; bottlenecks?: Bottleneck[] }> {
-  const ctx = await getOrgCtx()
-  if (!ctx) return { error: 'No autenticado' }
+export const listBottlenecks = withAuth(
+  { guards: [{ resource: 'project', field: 'projectId', optional: true }] },
+  async (
+    ctx,
+    params: {
+      projectId?: string
+      minScore?: number
+      limit?: number
+    },
+  ): Promise<{ error?: string; bottlenecks?: Bottleneck[] }> => {
+    let q = ctx.supabase
+      .from('analytics_bottlenecks')
+      .select(
+        'subsystem_id, project_id, subsystem_code, subsystem_name, system_id, system_name, itrs_remaining, punch_a_open, punch_b_open, punch_c_open, recent_rejects, total_itrs, itrs_approved, bottleneck_score, reasons',
+      )
+      .eq('org_id', ctx.orgId)
+      .gte('bottleneck_score', params.minScore ?? 1)
+      .order('bottleneck_score', { ascending: false })
+      .limit(params.limit ?? 50)
 
-  let q = ctx.supabase
-    .from('analytics_bottlenecks')
-    .select(
-      'subsystem_id, project_id, subsystem_code, subsystem_name, system_id, system_name, itrs_remaining, punch_a_open, punch_b_open, punch_c_open, recent_rejects, total_itrs, itrs_approved, bottleneck_score, reasons',
-    )
-    .eq('org_id', ctx.orgId)
-    .gte('bottleneck_score', params.minScore ?? 1)
-    .order('bottleneck_score', { ascending: false })
-    .limit(params.limit ?? 50)
+    if (params.projectId) q = q.eq('project_id', params.projectId)
 
-  if (params.projectId) q = q.eq('project_id', params.projectId)
-
-  const { data, error } = await q
-  if (error) return { error: error.message }
-  return { bottlenecks: (data ?? []) as Bottleneck[] }
-}
+    const { data, error } = await q
+    if (error) return { error: error.message }
+    return { bottlenecks: (data ?? []) as Bottleneck[] }
+  },
+)

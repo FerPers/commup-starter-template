@@ -74,10 +74,11 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
   // Load plans + disciplines on mount
   useEffect(() => {
     void getProjectPlanContext(projectId).then(data => {
-      setPlans(data.plans)
-      setDisciplines(data.disciplines)
+      // el wrapper withAuth devuelve solo { error } si falla auth — arrays opcionales
+      setPlans(data.plans ?? [])
+      setDisciplines(data.disciplines ?? [])
       setLoading(false)
-      if (data.plans.length === 0) setMode('new')
+      if ((data.plans ?? []).length === 0) setMode('new')
     })
   }, [projectId])
 
