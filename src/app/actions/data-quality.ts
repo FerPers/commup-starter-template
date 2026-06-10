@@ -1,6 +1,7 @@
 'use server'
 
 import { getActiveMembership as getOrgCtx } from '@/lib/supabase/membership'
+import { checkProjectAccess } from '@/lib/auth/access'
 
 export type DQSeverity = 'critical' | 'error' | 'warning'
 
@@ -75,6 +76,10 @@ export async function getProjectForecast(
 ): Promise<{ error?: string; forecast?: ProjectForecast }> {
   const ctx = await getOrgCtx()
   if (!ctx) return { error: 'No autenticado' }
+
+  // SEC-006: el RPC es SECURITY DEFINER — verificar ownership antes de llamarlo
+  const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+  if (!access.ok) return { error: access.error }
 
   const { data, error } = await ctx.supabase.rpc('analytics_project_forecast', {
     p_project_id: projectId,
