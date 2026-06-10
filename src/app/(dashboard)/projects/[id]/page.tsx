@@ -196,7 +196,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         })()}
       </div>
 
-      {/* Disciplines + Coming soon modules */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
         {/* Disciplines */}

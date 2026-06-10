@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CommUp is a SaaS Completion & Commissioning Management System for industrial projects (Oil & Gas, renewables, any industry). It rivals ICAPS, WinPCS, bluerithm, Intergraph and OperCom. The platform is multi-tenant: multiple companies, multiple projects, each isolated via Postgres RLS.
 
+This is a **mature, near-feature-complete product** (~300 source files, ~62k LOC, 53 dashboard pages, 33 server-action modules, a public REST API). It is NOT a scaffold or starter — treat every module as live production code.
+
 **Live domain:** commup.app (Cloudflare Workers)
 **Supabase project:** mdyljpgzvigzjpqluket.supabase.co
 **GitHub:** https://github.com/FerPers/commup-starter-template
@@ -16,6 +18,8 @@ CommUp is a SaaS Completion & Commissioning Management System for industrial pro
 npm run dev          # Local dev server at http://localhost:3000
 npm run build        # Next.js production build
 npm run lint         # ESLint
+npm run typecheck    # tsc --noEmit
+npm run check        # lint + typecheck + build
 npm run deploy       # Build for Cloudflare + deploy to commup.app
 npm run preview      # Build for Cloudflare + local Wrangler preview
 npm run cf-typegen   # Regenerate env.d.ts from Wrangler bindings
@@ -25,23 +29,40 @@ npm run cf-typegen   # Regenerate env.d.ts from Wrangler bindings
 
 - **Next.js 16** — App Router, Server Components, React 19
 - **TypeScript** — strict mode throughout
-- **Tailwind CSS 4** — utility classes; inline styles also used in existing components
-- **Supabase** — Postgres (35 tables), Auth, Storage, Realtime, RLS
+- **Tailwind CSS 4** — utility classes; inline styles dominate existing components
+- **Supabase** — Postgres (65 tables, RLS on all), Auth, Storage, Realtime
 - **Cloudflare Workers** — deployed via `@opennextjs/cloudflare` (OpenNext)
 - **`@supabase/ssr`** — SSR-safe Supabase client with cookie-based sessions
+- **pdf-lib** for server-side PDFs (NOT @react-pdf/renderer — not Workers-compatible); shared renderer in `src/lib/pdf/renderer.ts`
+- **xlsx** for Excel import/export (with formula-injection guard)
+- **next-intl** for i18n; **web-push** for notifications; PWA installable
 
 ## Route Architecture
 
 ```
 src/app/
-  (auth)/           # Route group — no shared layout, just passthrough
-    login/page.tsx  # 'use client' — Supabase signInWithPassword
-  (dashboard)/      # Route group — wraps all authenticated pages
-    layout.tsx      # Sidebar + main content flex layout
-    dashboard/      # Main overview page (Server Component)
-  admin/            # Admin panel (currently placeholder)
-  layout.tsx        # Root layout — metadata, globals.css
-  page.tsx          # Redirects to /dashboard
+  (auth)/login/            # 'use client' — Supabase signInWithPassword
+  (setup)/setup/           # Org/project creation wizard
+  (dashboard)/             # All authenticated pages (auth gate in layout.tsx)
+    dashboard/             # KPI overview (real queries)
+    projects/[id]/         # Project hub: tags, itrs, punches, certificates,
+                           #   loops, signals, interlocks, work-plans, kpis,
+                           #   pssr, import, import-signals, pid-documents,
+                           #   explorer, twin, reports
+    projects/[id]/tags/[tagId]/itrs/[itrId]/  # Field ITR execution
+    admin/                 # users, config, templates (ITR + PSSR), api-keys,
+                           #   webhooks, audit, data-quality, workflows,
+                           #   handover, notifications, organizations
+    control-tower/ ops/ inbox/ scan/ tag_360/ kpis/
+    preservation/ punch-list/ certificates/ work-plans/
+  actions/                 # 33 server-action modules (all DB writes)
+  api/v1/                  # Public REST API (API-key auth): tags, itrs,
+                           #   punches, certificates, systems, signals,
+                           #   events, handover, openapi
+  api/cron/                # snapshot, preservation-overdue,
+                           #   pssr-review-overdue, push-dispatch (CRON_SECRET)
+  api/push/                # Web-push subscribe/unsubscribe/topics
+  offline/                 # PWA offline fallback
 ```
 
 ## Key Files
@@ -49,22 +70,27 @@ src/app/
 | File | Purpose |
 |------|---------|
 | `src/app/(dashboard)/layout.tsx` | Auth gate for all authenticated pages — redirects to `/login` (no user) or `/setup` (user without org membership) |
-| `src/app/(auth)/layout.tsx` | Inverse gate — redirects authenticated users out of `/login` |
-| `src/app/(setup)/layout.tsx` | Setup wizard gate — auth + role check |
-| `src/lib/supabase/client.ts` | Browser Supabase client (`createBrowserClient`) |
-| `src/lib/supabase/server.ts` | Server Supabase client (`createServerClient` with cookies) |
-| `src/types/database.ts` | Full TypeScript interfaces for all 35 DB tables + enum types |
-| `src/components/layout/sidebar.tsx` | `'use client'` sidebar with nav groups, active state, logout |
+| `src/lib/auth/withAuth.ts` | **Server Action security wrapper** (`withAuth`/`withAuthOnly`): auth + active membership + role + declarative FK ownership guards. Use for ALL new/modified actions |
+| `src/lib/auth/access.ts` | FK ownership guards (`checkProjectAccess`, etc.) — verify client-supplied IDs belong to the caller's org |
+| `src/lib/supabase/membership.ts` | `getActiveMembership()` — legacy shared auth helper (pre-wrapper actions still use it) |
+| `src/lib/supabase/server.ts` / `client.ts` / `admin.ts` | Server / browser / service-role Supabase clients |
+| `src/lib/api/auth.ts` | Public API v1 auth — hashed API keys (SHA-256), scopes, expiry |
+| `src/lib/permissions.ts` + `src/lib/constants/` | Centralized role constants & permission checks |
+| `src/lib/pdf/renderer.ts` | Shared server-side PDF renderer (pdf-lib) |
+| `src/types/database.ts` | Hand-maintained TS interfaces for DB tables (goal: generate from schema) |
 | `src/lib/utils.ts` | `cn()`, `formatPercent()`, `formatDate()`, `getPunchCategoryColor()` |
-| `supabase/migrations/00000000000000_baseline.sql` | Canonical Postgres schema (pg_dump of prod 2026-05-15). See `supabase/README.md` for migration workflow. |
+| `supabase/migrations/00000000000000_baseline.sql` | Canonical Postgres schema (pg_dump of prod 2026-05-15). See `supabase/README.md` for migration workflow |
+| `public/sw.js` | **Hand-maintained** service worker (the real one — edit the .js directly) |
+| `.github/workflows/cron.yml` | Cron triggers for /api/cron/* (OpenNext doesn't emit `scheduled()` — do NOT use wrangler.jsonc triggers) |
 | `wrangler.jsonc` | Cloudflare Workers config pointing to `.open-next/worker.js` |
 
 ## Next.js 16 — Critical Quirks
 
 - **No `middleware.ts` and no `proxy.ts`.** Next.js 16 forces `proxy.ts` to Node.js runtime, but OpenNext Cloudflare rejects Node.js middleware — these two are incompatible today. Auth gating lives in route-group layouts (`(auth)/layout.tsx`, `(setup)/layout.tsx`, `(dashboard)/layout.tsx`) instead. Do not reintroduce a middleware/proxy file.
 - **`@opennextjs/cloudflare` is pinned to `1.18.1`** (no caret) in `package.json`. 1.19+ has additional checks that break the build. Do not bump without first verifying the build locally.
+- **`'use server'` files may only export async functions** — constants live in `src/lib/constants/`.
 
-## Database Modules (35 tables)
+## Database Modules (65 tables)
 
 1. **Multi-tenancy** — `organizations`, `profiles`, `org_members`
 2. **Configuration** — `project_phases`, `disciplines`, `equipment_types` (all org-scoped, nothing hardcoded)
@@ -76,10 +102,18 @@ src/app/
 8. **Punch List** — `punches`, `comments`, `attachments` (Cat A = hard blocker, Cat B = transferable with exception, Cat C = minor)
 9. **Certificates** — `certificates`, `punch_exceptions` (MC, RFPC, RFC, RFSU — auto-blocked until punches cleared)
 10. **Work Plans & KPIs** — `work_plans`, `work_plan_items`, `kpi_snapshots`
+11. **PSSR** — pre-startup safety review templates + project reviews
+12. **Platform** — API keys, webhooks, audit log, notifications/push subscriptions, P&ID documents/hotspots, handover, workflows, data-quality
 
 ## Multi-Tenancy & Security
 
-All tables are isolated by `org_id` via **Postgres Row Level Security**. Users only see data for orgs they belong to via `org_members`. Every new page/query must respect this — always filter through an authenticated Supabase client, never the service role key in client code.
+All 65 tables have **Postgres Row Level Security** enabled (199 policies routed through `SECURITY DEFINER` helpers: `is_org_member`, `is_project_member`, etc.). Users only see data for orgs they belong to via `org_members`.
+
+Rules for every new page/query/action:
+- Always go through an authenticated Supabase client; never the service-role key in client code.
+- **New/modified server actions must use `withAuth`/`withAuthOnly`** (`src/lib/auth/withAuth.ts`). Legacy actions still hand-roll `getActiveMembership()` + role checks — migrate opportunistically (multi-session plan S2-S8 in progress).
+- Any client-supplied ID (`projectId`, `tagId`, …) must be ownership-verified against the caller's org (`src/lib/auth/access.ts`) before use — especially before any admin-client (service-role) query or `SECURITY DEFINER` RPC.
+- New `SECURITY DEFINER` functions must check `is_project_member`/`is_org_member` internally — they bypass RLS.
 
 ## Styling Convention
 
@@ -92,10 +126,16 @@ Existing components use **inline styles** (React `style={{}}`) rather than Tailw
 - **Punch** — a deficiency found during inspection; must be resolved before certificates are issued
 - **Certificate** — formal completion document (MC = Mechanical Completion, RFPC = Ready for Pre-Commissioning, etc.)
 - **Preservation** — scheduled maintenance tasks during idle periods before operations
+- **PSSR** — Pre-Startup Safety Review
 - **Phase** — configurable per org (default A/B/C/D but can be anything)
 
-## What's Built vs. What's Next
+## State of the Product
 
-**Done:** Auth flow, dashboard shell (hardcoded 0% KPIs), sidebar navigation, full DB schema in Supabase, all TypeScript types.
+**Built and functional** (real DB reads+writes): auth + setup wizard, dashboard with real KPIs, full project hierarchy, Excel import (hierarchy + signals), ITR template builder, field ITR execution (photos, signatures, autosave), punch list lifecycle, preservation, certificates with punch blocking, PSSR, work plans, loops/signals/interlocks, P&ID documents with hotspots, digital twin/explorer views, reports (PDF via pdf-lib + Excel), public API v1, admin suite (users, config, api-keys, webhooks, audit, data-quality, workflows, handover), control tower, inbox, QR scan, PWA + web push, i18n, landing page.
 
-**Not yet built:** Organization/project creation wizard, hierarchy import (Excel), ITR template builder, field ITR execution, punch list module, preservation module, certificates, real KPI queries, work plans, user management.
+**Known gaps / active backlog:**
+- KPI history is project-level only (no per-phase snapshots → no S-curves yet)
+- `withAuth` wrapper adopted in only ~2 of 33 action files (migration in progress)
+- `src/types/database.ts` hand-maintained → ~131 `any`/`as unknown as` casts at query boundaries (goal: generate from schema)
+- A handful of 800–1500-line client components pending decomposition (`ItrExecution.tsx`, `TemplateBuilder.tsx`, `TagDetail.tsx`)
+- Performance unvalidated at industrial scale (50k+ tags)
