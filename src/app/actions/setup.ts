@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
+import { withAuth } from '@/lib/auth/withAuth'
 import { DEFAULT_PSSR_ITEMS } from '@/lib/constants/pssr'
 
 interface PhaseInput {
@@ -124,45 +125,36 @@ interface ProjectInput {
   start_date: string; end_date: string
 }
 
-export async function createProject(input: ProjectInput): Promise<{ error?: string; project_id?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
+// Nota: antes usaba la PRIMERA membership del usuario; con el wrapper usa la
+// org ACTIVA (cookie-aware via getActiveMembership) — comportamiento más correcto
+// para usuarios multi-org.
+export const createProject = withAuth(
+  { role: PRIVILEGED_ROLES },
+  async (ctx, input: ProjectInput): Promise<{ error?: string; project_id?: string }> => {
+    const admin = createAdminClient()
 
-  // Get membership + role
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
+    const { data: project, error: projectError } = await admin
+      .from('projects')
+      .insert({
+        org_id: ctx.orgId,
+        name: input.name,
+        code: input.code.toUpperCase(),
+        location: input.location || null,
+        client: input.client || null,
+        start_date: input.start_date || null,
+        end_date: input.end_date || null,
+        status: 'active',
+      })
+      .select()
+      .single()
 
-  if (!membership) return { error: 'No perteneces a ninguna organización' }
-  if (!PRIVILEGED_ROLES.includes(membership.role)) {
-    return { error: 'No tienes permisos para crear proyectos' }
-  }
+    if (projectError) return { error: projectError.message }
+    return { project_id: project.id }
+  },
+)
 
-  const admin = createAdminClient()
-
-  const { data: project, error: projectError } = await admin
-    .from('projects')
-    .insert({
-      org_id: membership.org_id,
-      name: input.name,
-      code: input.code.toUpperCase(),
-      location: input.location || null,
-      client: input.client || null,
-      start_date: input.start_date || null,
-      end_date: input.end_date || null,
-      status: 'active',
-    })
-    .select()
-    .single()
-
-  if (projectError) return { error: projectError.message }
-  return { project_id: project.id }
-}
-
+// Manual a propósito: devuelve string|null (no satisface ActionResult) y se usa
+// en el flujo de setup donde puede no haber membership aún.
 export async function getUserOrg(): Promise<string | null> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { ACTIVE_ORG_COOKIE } from '@/lib/supabase/membership'
 
+// Manual a propósito (caso especial del plan wrapper): verifica membership en la
+// org DESTINO, no en la activa — getActiveMembership/withAuth no aplican aquí.
 export async function switchOrg(targetOrgId: string): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

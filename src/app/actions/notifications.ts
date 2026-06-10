@@ -1,6 +1,6 @@
 'use server'
 
-import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import { withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 
 export type NotificationRow = {
@@ -13,12 +13,13 @@ export type NotificationRow = {
   created_at: string
 }
 
-export async function listMyNotifications(limit = 20): Promise<{
-  items: NotificationRow[]
-  unreadCount: number
-}> {
-  const ctx = await getCtx()
-  if (!ctx) return { items: [], unreadCount: 0 }
+export const listMyNotifications = withAuthOnly(
+  {},
+  async (ctx, limit: number = 20): Promise<{
+    items?: NotificationRow[]
+    unreadCount?: number
+    error?: string
+  }> => {
 
   const [{ data: items }, { count }] = await Promise.all([
     ctx.supabase
@@ -36,18 +37,20 @@ export async function listMyNotifications(limit = 20): Promise<{
       .is('read_at', null),
   ])
 
-  return {
-    items: (items ?? []) as NotificationRow[],
-    unreadCount: count ?? 0,
-  }
-}
+    return {
+      items: (items ?? []) as NotificationRow[],
+      unreadCount: count ?? 0,
+    }
+  },
+)
 
-export async function fetchMoreNotifications(
-  cursor: string,
-  limit = 50,
-): Promise<{ items: NotificationRow[]; hasMore: boolean }> {
-  const ctx = await getCtx()
-  if (!ctx) return { items: [], hasMore: false }
+export const fetchMoreNotifications = withAuthOnly(
+  {},
+  async (
+    ctx,
+    cursor: string,
+    limit: number = 50,
+  ): Promise<{ items?: NotificationRow[]; hasMore?: boolean; error?: string }> => {
 
   const { data } = await ctx.supabase
     .from('notifications')
@@ -58,14 +61,15 @@ export async function fetchMoreNotifications(
     .order('created_at', { ascending: false })
     .limit(limit + 1)
 
-  const rows = (data ?? []) as NotificationRow[]
-  const hasMore = rows.length > limit
-  return { items: hasMore ? rows.slice(0, limit) : rows, hasMore }
-}
+    const rows = (data ?? []) as NotificationRow[]
+    const hasMore = rows.length > limit
+    return { items: hasMore ? rows.slice(0, limit) : rows, hasMore }
+  },
+)
 
-export async function markNotificationRead(id: string): Promise<{ error?: string }> {
-  const ctx = await getCtx()
-  if (!ctx) return { error: 'No autenticado' }
+export const markNotificationRead = withAuthOnly(
+  {},
+  async (ctx, id: string): Promise<{ error?: string }> => {
 
   const { error } = await ctx.supabase
     .from('notifications')
@@ -74,14 +78,15 @@ export async function markNotificationRead(id: string): Promise<{ error?: string
     .eq('recipient_user_id', ctx.userId)
     .is('read_at', null)
 
-  if (error) return { error: error.message }
-  revalidatePath('/', 'layout')
-  return {}
-}
+    if (error) return { error: error.message }
+    revalidatePath('/', 'layout')
+    return {}
+  },
+)
 
-export async function markAllNotificationsRead(): Promise<{ error?: string }> {
-  const ctx = await getCtx()
-  if (!ctx) return { error: 'No autenticado' }
+export const markAllNotificationsRead = withAuthOnly(
+  {},
+  async (ctx): Promise<{ error?: string }> => {
 
   const { error } = await ctx.supabase
     .from('notifications')
@@ -90,7 +95,8 @@ export async function markAllNotificationsRead(): Promise<{ error?: string }> {
     .eq('org_id', ctx.orgId)
     .is('read_at', null)
 
-  if (error) return { error: error.message }
-  revalidatePath('/', 'layout')
-  return {}
-}
+    if (error) return { error: error.message }
+    revalidatePath('/', 'layout')
+    return {}
+  },
+)

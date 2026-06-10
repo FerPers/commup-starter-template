@@ -98,8 +98,8 @@ export default function NotificationsBell({
     setLoading(true)
     try {
       const res = await listMyNotifications(20)
-      setItems(res.items)
-      setUnread(res.unreadCount)
+      setItems(res.items ?? [])
+      setUnread(res.unreadCount ?? 0)
     } finally {
       setLoading(false)
     }

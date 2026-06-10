@@ -36,6 +36,8 @@ function plannedPctForToday(startDate: string | null, endDate: string | null): n
 
 // ── getProjectAlerts ────────────────────────────────────────────────────────
 
+// Manual a propósito (S8): devuelve array pelado (no satisface ActionResult del
+// wrapper). Auth + FK guard ya centralizados via getActiveMembership/checkProjectAccess.
 export async function getProjectAlerts(projectId: string): Promise<ProjectAlert[]> {
   const ctx = await getActiveMembership()
   if (!ctx) return []

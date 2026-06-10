@@ -2,7 +2,13 @@
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
+import { withAuthOnly } from '@/lib/auth/withAuth'
+import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
+
+// getSubsystemKpis / getProjectSnapshots devuelven arrays pelados (no satisfacen
+// el constraint ActionResult del wrapper) — quedan manuales con getCtx; son
+// lecturas RLS-bound. takeProjectSnapshot (escritura) sí usa el wrapper.
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -103,22 +109,16 @@ export async function getProjectSnapshots(projectId: string): Promise<SnapshotRo
 
 // ── takeProjectSnapshot ────────────────────────────────────────────────────
 
-export async function takeProjectSnapshot(
-  projectId: string
-): Promise<{ success: boolean; error?: string }> {
-  const ctx = await getCtx()
-  if (!ctx) return { success: false, error: 'Sin sesión' }
-  if (!EDITOR_ROLES.includes(ctx.role)) return { success: false, error: 'Sin permisos' }
+export const takeProjectSnapshot = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (
+    ctx,
+    projectId: string,
+  ): Promise<{ success?: boolean; error?: string }> => {
+    const { supabase } = ctx
 
-  const { supabase } = ctx
-
-  const { data: project } = await supabase
-    .from('projects')
-    .select('id')
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
-    .single()
-  if (!project) return { success: false, error: 'Proyecto no encontrado' }
+    const access = await checkProjectAccess(supabase, ctx.orgId, projectId)
+    if (!access.ok) return { success: false, error: access.error }
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -217,6 +217,7 @@ export async function takeProjectSnapshot(
     if (phaseErr) return { success: false, error: `Snapshot de proyecto OK pero fases fallaron: ${phaseErr.message}` }
   }
 
-  revalidatePath(`/projects/${projectId}/kpis`)
-  return { success: true }
-}
+    revalidatePath(`/projects/${projectId}/kpis`)
+    return { success: true }
+  },
+)

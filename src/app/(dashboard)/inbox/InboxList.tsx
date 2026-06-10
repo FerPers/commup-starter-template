@@ -89,8 +89,8 @@ export default function InboxList({
     if (!cursor) return
     setIsLoadingMore(true)
     const { items: more, hasMore: nextHasMore } = await fetchMoreNotifications(cursor)
-    setItems(prev => [...prev, ...more])
-    setHasMore(nextHasMore)
+    setItems(prev => [...prev, ...(more ?? [])])
+    setHasMore(nextHasMore ?? false)
     setIsLoadingMore(false)
   }
 

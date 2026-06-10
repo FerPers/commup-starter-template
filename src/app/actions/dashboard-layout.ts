@@ -3,6 +3,8 @@
 // User-scoped UI preference (no org/project context) — same pattern as
 // locale.ts / theme.ts. The layout is stored on profiles.dashboard_layout
 // keyed by the authenticated user, so raw auth.getUser() is intentional here.
+// EXCLUIDO del wrapper withAuth a propósito (S8): no requiere membership de org,
+// igual que theme/locale. RLS de profiles gobierna el update.
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
