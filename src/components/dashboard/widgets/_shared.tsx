@@ -53,13 +53,43 @@ export function TaskSection({ title, count, children, emptyText, style }: {
   )
 }
 
-export function KpiCard({ label, value, color, sub, danger = false, progress = 0 }: {
-  label: string; value: string; color: string; sub: string; danger?: boolean; progress?: number
+/**
+ * Delta vs hace 7 días. `goodWhenUp=false` para métricas donde bajar es bueno
+ * (punches abiertos). `value: null` → historial aún insuficiente → chip "—".
+ */
+export type KpiDelta = { value: number | null; goodWhenUp: boolean }
+
+function DeltaChip({ delta }: { delta: KpiDelta }) {
+  if (delta.value === null) {
+    return (
+      <span title="Sin historial de 7 días aún" style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-400)', background: 'var(--gray-100)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>—</span>
+    )
+  }
+  const up = delta.value > 0
+  const flat = delta.value === 0
+  const good = flat ? null : (up === delta.goodWhenUp)
+  const color = flat ? 'var(--gray-500)' : good ? 'var(--success-500)' : 'var(--danger-500)'
+  const bg = flat ? 'var(--gray-100)' : good ? 'var(--success-50)' : 'var(--danger-50)'
+  const arrow = flat ? '＝' : up ? '▲' : '▼'
+  const num = Math.abs(delta.value)
+  const txt = Number.isInteger(num) ? String(num) : num.toFixed(1)
+  return (
+    <span title="vs hace 7 días" style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color, background: bg, padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
+      {arrow} {up ? '+' : flat ? '' : '-'}{txt}
+    </span>
+  )
+}
+
+export function KpiCard({ label, value, color, sub, danger = false, progress = 0, delta }: {
+  label: string; value: string; color: string; sub: string; danger?: boolean; progress?: number; delta?: KpiDelta
 }) {
   return (
     <Card padding="md" style={{ borderTop: `3px solid ${color}` }}>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 500 }}>{label}</p>
-      <p style={{ fontSize: 36, fontWeight: 700, color: danger ? color : 'var(--text-strong)', margin: '8px 0 4px', letterSpacing: '-1px' }}>{value}</p>
+      <p style={{ fontSize: 36, fontWeight: 700, color: danger ? color : 'var(--text-strong)', margin: '8px 0 4px', letterSpacing: '-1px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        {value}
+        {delta ? <DeltaChip delta={delta} /> : null}
+      </p>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)' }}>{sub}</p>
       <div style={{ marginTop: 12, height: 6, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden' }}>
         <div style={{ width: `${progress}%`, height: '100%', background: color, borderRadius: 3 }} />

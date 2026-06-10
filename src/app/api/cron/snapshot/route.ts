@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         { count: tagCount },
         { data: preservationPlans },
       ] = await Promise.all([
-        supabase.from('itrs').select('id, status').eq('project_id', pid),
+        supabase.from('itrs').select('id, status, phase_id').eq('project_id', pid),
         supabase.from('punches').select('id, category, status').eq('project_id', pid),
         supabase.from('tags').select('id', { count: 'exact', head: true }).eq('project_id', pid),
         supabase
@@ -101,7 +101,48 @@ export async function POST(req: NextRequest) {
         snapshot_date: today,
       })
 
-      results.push({ projectId: pid, ok: !insertErr, error: insertErr?.message })
+      // ── Per-phase snapshots (KPI history → S-curves / delta chips) ────
+      // Solo métricas de ITRs: punches/tags/preservación no tienen fase.
+      const phaseIds = [...new Set((itrs ?? []).map(i => i.phase_id).filter((p): p is string => !!p))]
+
+      await supabase
+        .from('kpi_snapshots')
+        .delete()
+        .eq('project_id', pid)
+        .eq('snapshot_date', today)
+        .not('phase_id', 'is', null)
+
+      let phaseErr: string | undefined
+      if (phaseIds.length > 0) {
+        const phaseRows = phaseIds.map(phaseId => {
+          const phaseItrs = (itrs ?? []).filter(i => i.phase_id === phaseId)
+          const phaseTotal = phaseItrs.length
+          const phaseDone = phaseItrs.filter(i => i.status === 'approved').length
+          return {
+            project_id: pid,
+            area_id: null,
+            system_id: null,
+            subsystem_id: null,
+            phase_id: phaseId,
+            total_itrs: phaseTotal,
+            completed_itrs: phaseDone,
+            total_punches_a: 0,
+            open_punches_a: 0,
+            total_punches_b: 0,
+            open_punches_b: 0,
+            total_tags: 0,
+            total_preservation: 0,
+            overdue_preservation: 0,
+            completion_pct: phaseTotal > 0 ? Number(((phaseDone / phaseTotal) * 100).toFixed(2)) : 0,
+            snapshot_date: today,
+          }
+        })
+        const { error: phaseInsertErr } = await supabase.from('kpi_snapshots').insert(phaseRows)
+        phaseErr = phaseInsertErr?.message
+      }
+
+      const errMsg = insertErr?.message ?? phaseErr
+      results.push({ projectId: pid, ok: !errMsg, error: errMsg })
     } catch (err) {
       results.push({ projectId: pid, ok: false, error: String(err) })
     }

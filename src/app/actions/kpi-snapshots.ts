@@ -128,7 +128,7 @@ export async function takeProjectSnapshot(
     { count: tagCount },
     { data: preservationPlans },
   ] = await Promise.all([
-    supabase.from('itrs').select('id, status').eq('project_id', projectId),
+    supabase.from('itrs').select('id, status, phase_id').eq('project_id', projectId),
     supabase.from('punches').select('id, category, status').eq('project_id', projectId),
     supabase.from('tags').select('id', { count: 'exact', head: true }).eq('project_id', projectId),
     supabase
@@ -178,6 +178,45 @@ export async function takeProjectSnapshot(
   })
 
   if (error) return { success: false, error: error.message }
+
+  // ── Per-phase snapshots (mismo criterio que /api/cron/snapshot) ──────────
+  const phaseIds = [...new Set((itrs ?? []).map(i => i.phase_id).filter((p): p is string => !!p))]
+
+  await supabase
+    .from('kpi_snapshots')
+    .delete()
+    .eq('project_id', projectId)
+    .eq('snapshot_date', today)
+    .not('phase_id', 'is', null)
+
+  if (phaseIds.length > 0) {
+    const phaseRows = phaseIds.map(phaseId => {
+      const phaseItrs = (itrs ?? []).filter(i => i.phase_id === phaseId)
+      const phaseTotal = phaseItrs.length
+      const phaseDone = phaseItrs.filter(i => i.status === 'approved').length
+      return {
+        project_id: projectId,
+        area_id: null,
+        system_id: null,
+        subsystem_id: null,
+        phase_id: phaseId,
+        total_itrs: phaseTotal,
+        completed_itrs: phaseDone,
+        total_punches_a: 0,
+        open_punches_a: 0,
+        total_punches_b: 0,
+        open_punches_b: 0,
+        total_tags: 0,
+        total_preservation: 0,
+        overdue_preservation: 0,
+        completion_pct: phaseTotal > 0 ? Number(((phaseDone / phaseTotal) * 100).toFixed(2)) : 0,
+        snapshot_date: today,
+      }
+    })
+    const { error: phaseErr } = await supabase.from('kpi_snapshots').insert(phaseRows)
+    if (phaseErr) return { success: false, error: `Snapshot de proyecto OK pero fases fallaron: ${phaseErr.message}` }
+  }
+
   revalidatePath(`/projects/${projectId}/kpis`)
   return { success: true }
 }
