@@ -18,7 +18,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
     void listImportablePssrTemplates().then(res => {
       if (cancelled) return
       if (res.error) setError(res.error)
-      setTemplates(res.templates)
+      setTemplates(res.templates ?? [])
       setLoading(false)
     })
     return () => { cancelled = true }

@@ -26,7 +26,7 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
     void listImportableProcedures().then(res => {
       if (cancelled) return
       if (res.error) setError(res.error)
-      setProcedures(res.procedures)
+      setProcedures(res.procedures ?? [])
       setLoading(false)
     })
     return () => { cancelled = true }

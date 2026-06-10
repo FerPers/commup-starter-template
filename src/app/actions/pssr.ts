@@ -1,10 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getActiveMembership } from '@/lib/supabase/membership'
-import { EDITOR_ROLES } from '@/lib/auth/permissions'
+import {
+  requireAuth,
+  requireRole,
+  isAuthError,
+  EDITOR_ROLES,
+  type ActiveContext,
+} from '@/lib/auth/permissions'
+import { withAuthOnly } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
 import { DEFAULT_PSSR_ITEMS, PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
 import {
@@ -13,13 +18,27 @@ import {
   notifyPssrRejected,
 } from '@/lib/notifications/pssr'
 
+// CONVENCIÓN DE ESTE ARCHIVO: las actions PSSR lanzan (throw) en vez de devolver
+// { error } — los callers (PssrReviewForm, PssrListView, etc.) usan try/catch.
+// El wrapper withAuth devuelve { error } en fallo de auth, lo que aquí pasaría
+// silenciosamente como éxito. requireCtx centraliza auth+rol preservando throw.
+// Pendiente: convertir archivo+callers al contrato { error } cuando se descomponga
+// PssrReviewForm. Las 2 fns que ya usan { error } (list/clone) sí van con wrapper.
+//
+// Roles: la EJECUCIÓN del review (items, firmas, submit) es auth-only — los
+// representantes de disciplina que firman pueden ser inspectores (no EDITOR).
+// Template CRUD y aprobación/rechazo exigen EDITOR.
+
+async function requireCtx(roles?: readonly string[]): Promise<ActiveContext> {
+  const res = roles ? await requireRole(roles) : await requireAuth()
+  if (isAuthError(res)) throw new Error(res.error)
+  return res
+}
+
 // ── Template CRUD ─────────────────────────────────────────────
 
 export async function createPssrTemplate(data: { name: string; description?: string }) {
-  const ctx = await getActiveMembership()
-  if (!ctx) throw new Error('No autenticado')
-  if (!['owner','admin','architect','leader'].includes(ctx.role))
-    throw new Error('Sin permisos')
+  const ctx = await requireCtx(EDITOR_ROLES)
 
   const { data: template, error } = await ctx.supabase.from('pssr_templates').insert({
     org_id: ctx.orgId,
@@ -34,13 +53,13 @@ export async function createPssrTemplate(data: { name: string; description?: str
 }
 
 export async function seedDefaultPssrTemplate(templateId: string) {
-  const supabase = await createClient()
+  const ctx = await requireCtx(EDITOR_ROLES)
   const items = DEFAULT_PSSR_ITEMS.map((item, i) => ({
     template_id: templateId,
     item_order: i + 1,
     ...item,
   }))
-  const { error } = await supabase.from('pssr_template_items').insert(items)
+  const { error } = await ctx.supabase.from('pssr_template_items').insert(items)
   if (error) throw new Error(error.message)
   revalidatePath(`/admin/templates/pssr/${templateId}`)
 }
@@ -55,7 +74,7 @@ export async function upsertPssrTemplateItem(data: {
   notesHint?: string
   isRequired?: boolean
 }) {
-  const supabase = await createClient()
+  const ctx = await requireCtx(EDITOR_ROLES)
   const payload = {
     template_id: data.templateId,
     item_order: data.itemOrder,
@@ -66,22 +85,22 @@ export async function upsertPssrTemplateItem(data: {
     is_required: data.isRequired ?? true,
   }
   const { error } = data.id
-    ? await supabase.from('pssr_template_items').update(payload).eq('id', data.id)
-    : await supabase.from('pssr_template_items').insert(payload)
+    ? await ctx.supabase.from('pssr_template_items').update(payload).eq('id', data.id)
+    : await ctx.supabase.from('pssr_template_items').insert(payload)
   if (error) throw new Error(error.message)
   revalidatePath(`/admin/templates/pssr/${data.templateId}`)
 }
 
 export async function deletePssrTemplateItem(itemId: string, templateId: string) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('pssr_template_items').delete().eq('id', itemId)
+  const ctx = await requireCtx(EDITOR_ROLES)
+  const { error } = await ctx.supabase.from('pssr_template_items').delete().eq('id', itemId)
   if (error) throw new Error(error.message)
   revalidatePath(`/admin/templates/pssr/${templateId}`)
 }
 
 export async function deletePssrTemplate(templateId: string) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('pssr_templates').delete().eq('id', templateId)
+  const ctx = await requireCtx(EDITOR_ROLES)
+  const { error } = await ctx.supabase.from('pssr_templates').delete().eq('id', templateId)
   if (error) throw new Error(error.message)
   revalidatePath('/admin/templates/pssr')
 }
@@ -95,8 +114,8 @@ export async function createPssrReview(data: {
   title?: string
   reviewDueDate?: string | null
 }) {
-  const ctx = await getActiveMembership()
-  if (!ctx) throw new Error('No autenticado')
+  // Antes no exigía rol — política 2026-05-24: crear un review es planificación → EDITOR
+  const ctx = await requireCtx(EDITOR_ROLES)
   const supabase = ctx.supabase
 
   // Verify project belongs to the active org
@@ -160,8 +179,7 @@ export async function updatePssrReviewItem(data: {
   actions?: string
   completionDate?: string | null
 }) {
-  const ctx = await getActiveMembership()
-  if (!ctx) throw new Error('No autenticado')
+  const ctx = await requireCtx()
   const supabase = ctx.supabase
 
   const payload: Record<string, unknown> = { updated_by: ctx.userId, updated_at: new Date().toISOString() }
@@ -184,8 +202,8 @@ export async function updatePssrReviewItem(data: {
 }
 
 export async function updatePssrReviewNotes(reviewId: string, projectId: string, notes: string) {
-  const supabase = await createClient()
-  const { error } = await supabase
+  const ctx = await requireCtx()
+  const { error } = await ctx.supabase
     .from('pssr_reviews')
     .update({ notes, updated_at: new Date().toISOString() })
     .eq('id', reviewId)
@@ -194,8 +212,9 @@ export async function updatePssrReviewNotes(reviewId: string, projectId: string,
 }
 
 export async function updatePssrReviewDueDate(reviewId: string, projectId: string, reviewDueDate: string | null) {
-  const supabase = await createClient()
-  const { error } = await supabase
+  // Antes no exigía rol — fecha límite es planificación → EDITOR
+  const ctx = await requireCtx(EDITOR_ROLES)
+  const { error } = await ctx.supabase
     .from('pssr_reviews')
     .update({ review_due_date: reviewDueDate, last_overdue_notif_at: null, updated_at: new Date().toISOString() })
     .eq('id', reviewId)
@@ -205,8 +224,7 @@ export async function updatePssrReviewDueDate(reviewId: string, projectId: strin
 }
 
 export async function submitPssrForApproval(reviewId: string, projectId: string) {
-  const ctx = await getActiveMembership()
-  if (!ctx) throw new Error('No autenticado')
+  const ctx = await requireCtx()
   const supabase = ctx.supabase
 
   // Verify all items are si or na
@@ -252,8 +270,7 @@ export async function addPssrSignature(data: {
   discipline: string
   signatureData: string
 }) {
-  const ctx = await getActiveMembership()
-  if (!ctx) throw new Error('No autenticado')
+  const ctx = await requireCtx()
   const supabase = ctx.supabase
 
   const { error } = await supabase.from('pssr_signatures').insert({
@@ -273,8 +290,9 @@ export async function addPssrSignature(data: {
 }
 
 export async function removePssrSignature(signatureId: string, reviewId: string, projectId: string) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('pssr_signatures').delete().eq('id', signatureId)
+  // Identidad/admin la gobierna RLS sobre pssr_signatures; aquí solo auth
+  const ctx = await requireCtx()
+  const { error } = await ctx.supabase.from('pssr_signatures').delete().eq('id', signatureId)
   if (error) throw new Error(error.message)
   revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
 }
@@ -282,10 +300,7 @@ export async function removePssrSignature(signatureId: string, reviewId: string,
 // ── Approve PSSR + Issue RFSU Certificate ────────────────────
 
 export async function approvePssrAndIssueRfsu(reviewId: string, projectId: string) {
-  const ctx = await getActiveMembership()
-  if (!ctx) throw new Error('No autenticado')
-  if (!['owner','admin','architect','leader'].includes(ctx.role))
-    throw new Error('Solo líderes o superiores pueden aprobar el PSSR')
+  const ctx = await requireCtx(EDITOR_ROLES)
   const supabase = ctx.supabase
 
   // Verify signatures exist
@@ -375,10 +390,7 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
 }
 
 export async function rejectPssrReview(reviewId: string, projectId: string, reason?: string) {
-  const ctx = await getActiveMembership()
-  if (!ctx) throw new Error('No autenticado')
-  if (!['owner','admin','architect','leader'].includes(ctx.role))
-    throw new Error('Solo líderes o superiores pueden rechazar el PSSR')
+  const ctx = await requireCtx(EDITOR_ROLES)
   const supabase = ctx.supabase
 
   const { data: review, error: fetchErr } = await supabase
@@ -434,118 +446,114 @@ export type ImportablePssrTemplate = {
   itemCount: number
 }
 
-export async function listImportablePssrTemplates(): Promise<{
-  templates: ImportablePssrTemplate[]
-  error?: string
-}> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { templates: [], error: 'No autenticado' }
-  if (!EDITOR_ROLES.includes(ctx.role)) return { templates: [], error: 'Sin permisos' }
+export const listImportablePssrTemplates = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (ctx): Promise<{ templates?: ImportablePssrTemplate[]; error?: string }> => {
+    const { data: orgs } = await ctx.supabase
+      .from('organizations')
+      .select('id, name, settings')
+      .neq('id', ctx.orgId)
 
-  const { data: orgs } = await ctx.supabase
-    .from('organizations')
-    .select('id, name, settings')
-    .neq('id', ctx.orgId)
-
-  const orgInfo = new Map<string, { name: string; isCatalog: boolean }>()
-  for (const o of orgs ?? []) {
-    const settings = (o.settings as Record<string, unknown> | null) ?? {}
-    orgInfo.set(o.id as string, {
-      name: o.name as string,
-      isCatalog: !!settings.is_template_catalog,
-    })
-  }
-
-  const otherOrgIds = [...orgInfo.keys()]
-  if (otherOrgIds.length === 0) return { templates: [] }
-
-  const { data, error } = await ctx.supabase
-    .from('pssr_templates')
-    .select(`
-      id, name, description, is_active, org_id,
-      pssr_template_items(id)
-    `)
-    .in('org_id', otherOrgIds)
-    .order('name')
-
-  if (error) return { templates: [], error: error.message }
-
-  const templates: ImportablePssrTemplate[] = (data ?? []).map(t => {
-    const items = (t.pssr_template_items ?? []) as Array<{ id: string }>
-    const info = orgInfo.get(t.org_id as string)
-    return {
-      id: t.id as string,
-      name: t.name as string,
-      description: (t.description as string | null) ?? null,
-      isActive: t.is_active as boolean,
-      sourceOrgId: t.org_id as string,
-      sourceOrgName: info?.name ?? '—',
-      sourceOrgIsCatalog: info?.isCatalog ?? false,
-      itemCount: items.length,
+    const orgInfo = new Map<string, { name: string; isCatalog: boolean }>()
+    for (const o of orgs ?? []) {
+      const settings = (o.settings as Record<string, unknown> | null) ?? {}
+      orgInfo.set(o.id as string, {
+        name: o.name as string,
+        isCatalog: !!settings.is_template_catalog,
+      })
     }
-  })
 
-  return { templates }
-}
+    const otherOrgIds = [...orgInfo.keys()]
+    if (otherOrgIds.length === 0) return { templates: [] }
 
-export async function clonePssrTemplateToActiveOrg(
-  sourceTemplateId: string,
-  options?: { nameSuffix?: string }
-): Promise<{ id?: string; error?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!EDITOR_ROLES.includes(ctx.role)) return { error: 'Sin permisos' }
+    const { data, error } = await ctx.supabase
+      .from('pssr_templates')
+      .select(`
+        id, name, description, is_active, org_id,
+        pssr_template_items(id)
+      `)
+      .in('org_id', otherOrgIds)
+      .order('name')
 
-  const { data: source } = await ctx.supabase
-    .from('pssr_templates')
-    .select(`
-      id, name, description, is_active, org_id,
-      pssr_template_items(
-        item_order, category, element, requirement, notes_hint, is_required
-      )
-    `)
-    .eq('id', sourceTemplateId)
-    .single()
+    if (error) return { templates: [], error: error.message }
 
-  if (!source) return { error: 'Template origen no encontrado o sin acceso' }
-  if (source.org_id === ctx.orgId) return { error: 'El template ya está en la org activa' }
-
-  const newName = `${source.name}${options?.nameSuffix ?? ''}`
-
-  const { data: existing } = await ctx.supabase
-    .from('pssr_templates')
-    .select('id')
-    .eq('org_id', ctx.orgId)
-    .eq('name', newName)
-    .maybeSingle()
-
-  if (existing) {
-    return { error: `Ya existe un template con nombre "${newName}" en esta org` }
-  }
-
-  const { data: cloned, error: tplErr } = await ctx.supabase
-    .from('pssr_templates')
-    .insert({
-      org_id: ctx.orgId,
-      name: newName,
-      description: source.description,
-      is_active: source.is_active,
-      created_by: ctx.userId,
+    const templates: ImportablePssrTemplate[] = (data ?? []).map(t => {
+      const items = (t.pssr_template_items ?? []) as Array<{ id: string }>
+      const info = orgInfo.get(t.org_id as string)
+      return {
+        id: t.id as string,
+        name: t.name as string,
+        description: (t.description as string | null) ?? null,
+        isActive: t.is_active as boolean,
+        sourceOrgId: t.org_id as string,
+        sourceOrgName: info?.name ?? '—',
+        sourceOrgIsCatalog: info?.isCatalog ?? false,
+        itemCount: items.length,
+      }
     })
-    .select('id')
-    .single()
 
-  if (tplErr || !cloned) return { error: tplErr?.message ?? 'No se pudo crear el template' }
+    return { templates }
+  },
+)
 
-  const items = (source.pssr_template_items ?? []) as Array<Record<string, unknown>>
-  if (items.length > 0) {
-    const itemRows = items.map(item => ({ ...item, template_id: cloned.id }))
-    const { error: itemErr } = await ctx.supabase
-      .from('pssr_template_items')
-      .insert(itemRows)
-    if (itemErr) return { error: `Template clonado pero items fallaron: ${itemErr.message}` }
-  }
+export const clonePssrTemplateToActiveOrg = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (
+    ctx,
+    sourceTemplateId: string,
+    options?: { nameSuffix?: string },
+  ): Promise<{ id?: string; error?: string }> => {
+    const { data: source } = await ctx.supabase
+      .from('pssr_templates')
+      .select(`
+        id, name, description, is_active, org_id,
+        pssr_template_items(
+          item_order, category, element, requirement, notes_hint, is_required
+        )
+      `)
+      .eq('id', sourceTemplateId)
+      .single()
 
-  revalidatePath('/admin/templates/pssr')
-  return { id: cloned.id }
-}
+    if (!source) return { error: 'Template origen no encontrado o sin acceso' }
+    if (source.org_id === ctx.orgId) return { error: 'El template ya está en la org activa' }
+
+    const newName = `${source.name}${options?.nameSuffix ?? ''}`
+
+    const { data: existing } = await ctx.supabase
+      .from('pssr_templates')
+      .select('id')
+      .eq('org_id', ctx.orgId)
+      .eq('name', newName)
+      .maybeSingle()
+
+    if (existing) {
+      return { error: `Ya existe un template con nombre "${newName}" en esta org` }
+    }
+
+    const { data: cloned, error: tplErr } = await ctx.supabase
+      .from('pssr_templates')
+      .insert({
+        org_id: ctx.orgId,
+        name: newName,
+        description: source.description,
+        is_active: source.is_active,
+        created_by: ctx.userId,
+      })
+      .select('id')
+      .single()
+
+    if (tplErr || !cloned) return { error: tplErr?.message ?? 'No se pudo crear el template' }
+
+    const items = (source.pssr_template_items ?? []) as Array<Record<string, unknown>>
+    if (items.length > 0) {
+      const itemRows = items.map(item => ({ ...item, template_id: cloned.id }))
+      const { error: itemErr } = await ctx.supabase
+        .from('pssr_template_items')
+        .insert(itemRows)
+      if (itemErr) return { error: `Template clonado pero items fallaron: ${itemErr.message}` }
+    }
+
+    revalidatePath('/admin/templates/pssr')
+    return { id: cloned.id }
+  },
+)
