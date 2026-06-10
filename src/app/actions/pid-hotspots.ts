@@ -1,27 +1,29 @@
 'use server'
 
-import { getActiveMembership } from '@/lib/supabase/membership'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
+import { withAuth } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 
-export async function upsertHotspot(input: {
-  pid_document_id: string
-  tag_id: string
-  project_id: string
-  page_num: number
-  x_pct: number
-  y_pct: number
-}): Promise<{ id?: string; error?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id, org_id')
-    .eq('id', input.project_id)
-    .eq('org_id', ctx.orgId)
-    .single()
-
-  if (!project) return { error: 'Proyecto no encontrado' }
+// Antes no exigían rol — política 2026-05-24: posicionar tags en P&ID → EDITOR
+export const upsertHotspot = withAuth(
+  {
+    role: EDITOR_ROLES,
+    guards: [
+      { resource: 'project', field: 'project_id' },
+      { resource: 'tag', field: 'tag_id', scopeField: 'project_id' },
+    ],
+  },
+  async (
+    ctx,
+    input: {
+      pid_document_id: string
+      tag_id: string
+      project_id: string
+      page_num: number
+      x_pct: number
+      y_pct: number
+    },
+  ): Promise<{ id?: string; error?: string }> => {
 
   const { data, error } = await ctx.supabase
     .from('pid_hotspots')
@@ -29,7 +31,7 @@ export async function upsertHotspot(input: {
       pid_document_id: input.pid_document_id,
       tag_id: input.tag_id,
       project_id: input.project_id,
-      org_id: project.org_id,
+      org_id: ctx.orgId,
       page_num: input.page_num,
       x_pct: input.x_pct,
       y_pct: input.y_pct,
@@ -40,26 +42,22 @@ export async function upsertHotspot(input: {
 
   if (error) return { error: error.message }
 
-  revalidatePath(`/projects/${input.project_id}/pid-documents/${input.pid_document_id}/viewer`)
-  return { id: data.id }
-}
+    revalidatePath(`/projects/${input.project_id}/pid-documents/${input.pid_document_id}/viewer`)
+    return { id: data.id }
+  },
+)
 
-export async function deleteHotspot(input: {
-  hotspot_id: string
-  project_id: string
-  pid_document_id: string
-}): Promise<{ error?: string }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id')
-    .eq('id', input.project_id)
-    .eq('org_id', ctx.orgId)
-    .single()
-
-  if (!project) return { error: 'Proyecto no encontrado' }
+// Sin role tier: el delete lo gobierna RLS (created_by = user OR privileged)
+export const deleteHotspot = withAuth(
+  { guards: [{ resource: 'project', field: 'project_id' }] },
+  async (
+    ctx,
+    input: {
+      hotspot_id: string
+      project_id: string
+      pid_document_id: string
+    },
+  ): Promise<{ error?: string }> => {
 
   // RLS policy allows delete if created_by = user OR user is privileged
   const { error } = await ctx.supabase
@@ -72,4 +70,5 @@ export async function deleteHotspot(input: {
 
   revalidatePath(`/projects/${input.project_id}/pid-documents/${input.pid_document_id}/viewer`)
   return {}
-}
+  },
+)

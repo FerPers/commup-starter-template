@@ -1,7 +1,8 @@
 'use server'
 
-import { getActiveMembership } from '@/lib/supabase/membership'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
+import { withAuthOnly } from '@/lib/auth/withAuth'
+import { checkProjectAccess } from '@/lib/auth/access'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { TablesInsert } from '@/types/supabase.generated'
 
@@ -31,23 +32,15 @@ export interface ImportResult {
   errors: { row: number; tag: string; reason: string }[]
 }
 
-export async function importTags(
-  projectId: string,
-  rows: TagRow[]
-): Promise<{ error?: string; result?: ImportResult }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos para importar' }
-
-  // Verify project belongs to org
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id')
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
-    .single()
-
-  if (!project) return { error: 'Proyecto no encontrado' }
+export const importTags = withAuthOnly(
+  { role: PRIVILEGED_ROLES },
+  async (
+    ctx,
+    projectId: string,
+    rows: TagRow[],
+  ): Promise<{ error?: string; result?: ImportResult }> => {
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
 
   const admin = createAdminClient()
 
@@ -169,4 +162,5 @@ export async function importTags(
   }
 
   return { result }
-}
+  },
+)

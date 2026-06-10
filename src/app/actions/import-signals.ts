@@ -1,7 +1,8 @@
 'use server'
 
-import { getActiveMembership } from '@/lib/supabase/membership'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
+import { withAuthOnly } from '@/lib/auth/withAuth'
+import { checkProjectAccess } from '@/lib/auth/access'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Enums, TablesInsert } from '@/types/supabase.generated'
 
@@ -39,22 +40,15 @@ export interface SignalImportResult {
 
 const VALID_SIGNAL_TYPES: Enums<'signal_type'>[] = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
 
-export async function importSignals(
-  projectId: string,
-  rows: SignalRow[]
-): Promise<{ error?: string; result?: SignalImportResult }> {
-  const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
-  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Sin permisos para importar' }
-
-  const { data: project } = await ctx.supabase
-    .from('projects')
-    .select('id')
-    .eq('id', projectId)
-    .eq('org_id', ctx.orgId)
-    .single()
-
-  if (!project) return { error: 'Proyecto no encontrado' }
+export const importSignals = withAuthOnly(
+  { role: PRIVILEGED_ROLES },
+  async (
+    ctx,
+    projectId: string,
+    rows: SignalRow[],
+  ): Promise<{ error?: string; result?: SignalImportResult }> => {
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
 
   const admin = createAdminClient()
 
@@ -185,4 +179,5 @@ export async function importSignals(
   }
 
   return { result }
-}
+  },
+)

@@ -1,7 +1,7 @@
 'use server'
 
-import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
+import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { generateHandoverPackage } from '@/lib/handover/generate'
@@ -20,19 +20,13 @@ export type GenerateHandoverResult = {
   pdfUrl?:        string | null
 }
 
-export async function generateHandoverPackageAction(
-  input: GenerateHandoverInput,
-): Promise<GenerateHandoverResult> {
-  const ctx = await getCtx()
-  if (!ctx) return { error: 'Not authenticated' }
-  if (!PRIVILEGED_ROLES.includes(ctx.role)) return { error: 'Insufficient permissions' }
-
-  if (!input.projectId)                      return { error: 'projectId is required' }
-  if (!input.formats || input.formats.length === 0) return { error: 'Select at least one format' }
-
-  const { data: project } = await ctx.supabase
-    .from('projects').select('id').eq('id', input.projectId).eq('org_id', ctx.orgId).maybeSingle()
-  if (!project) return { error: 'Project not found' }
+export const generateHandoverPackageAction = withAuth(
+  {
+    role: PRIVILEGED_ROLES,
+    guards: [{ resource: 'project', field: 'projectId' }],
+  },
+  async (ctx, input: GenerateHandoverInput): Promise<GenerateHandoverResult> => {
+    if (!input.formats || input.formats.length === 0) return { error: 'Select at least one format' }
 
   const admin = createAdminClient()
   try {
@@ -62,15 +56,17 @@ export async function generateHandoverPackageAction(
     } else {
       try { message = JSON.stringify(err) } catch { message = String(err) }
     }
-    return { error: message }
-  }
-}
+      return { error: message }
+    }
+  },
+)
 
-export async function getSignedHandoverUrlsAction(
-  packageId: string,
-): Promise<{ error?: string; jsonUrl?: string | null; pdfUrl?: string | null }> {
-  const ctx = await getCtx()
-  if (!ctx) return { error: 'Not authenticated' }
+export const getSignedHandoverUrlsAction = withAuthOnly(
+  {},
+  async (
+    ctx,
+    packageId: string,
+  ): Promise<{ error?: string; jsonUrl?: string | null; pdfUrl?: string | null }> => {
 
   const admin = createAdminClient()
   const { data: pkg } = await admin
@@ -90,4 +86,5 @@ export async function getSignedHandoverUrlsAction(
     jsonUrl: j?.data?.signedUrl ?? null,
     pdfUrl:  p?.data?.signedUrl ?? null,
   }
-}
+  },
+)
