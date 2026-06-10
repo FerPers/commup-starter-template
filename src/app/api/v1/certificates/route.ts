@@ -7,6 +7,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, parsePagination, apiHeaders } from '@/lib/api/auth'
+import type { Enums } from '@/types/supabase.generated'
+
+const CERT_STATUSES: Enums<'certificate_status'>[] = ['pending', 'in_review', 'issued', 'rejected']
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -44,7 +47,15 @@ export async function GET(req: NextRequest) {
     .range(offset, offset + limit - 1)
 
   if (subsystemId) query = query.eq('subsystem_id', subsystemId)
-  if (status)      query = query.eq('status', status)
+  if (status) {
+    if (!CERT_STATUSES.includes(status as Enums<'certificate_status'>)) {
+      return NextResponse.json(
+        { error: `status must be one of: ${CERT_STATUSES.join(', ')}` },
+        { status: 422, headers: apiHeaders() },
+      )
+    }
+    query = query.eq('status', status as Enums<'certificate_status'>)
+  }
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: apiHeaders() })

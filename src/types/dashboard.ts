@@ -12,12 +12,14 @@ export type WidgetId =
   | 'projects_active'
   | 'disciplines'
 
-export interface WidgetConfig {
+// type (no interface): los aliases tienen index signature implícita y por
+// tanto son asignables a Json al persistir en profiles.dashboard_layout
+export type WidgetConfig = {
   id: WidgetId
   hidden: boolean
 }
 
-export interface DashboardLayout {
+export type DashboardLayout = {
   widgets: WidgetConfig[]
 }
 

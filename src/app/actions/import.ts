@@ -3,6 +3,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { TablesInsert } from '@/types/supabase.generated'
 
 export interface TagRow {
   tag_number: string
@@ -80,7 +81,7 @@ export async function importTags(
   const areaIdMap = new Map((areas ?? []).map(a => [a.code, a.id]))
 
   // Upsert systems
-  const systemInserts: object[] = []
+  const systemInserts: TablesInsert<'systems'>[] = []
   for (const key of systemKeys) {
     const [areaCode, sysCode] = key.split('||')
     const areaId = areaIdMap.get(areaCode)
@@ -102,7 +103,7 @@ export async function importTags(
   const systemIdMap = new Map((systems ?? []).map(s => [s.code, s.id]))
 
   // Upsert subsystems
-  const subInserts: object[] = []
+  const subInserts: TablesInsert<'subsystems'>[] = []
   for (const key of subKeys) {
     const [sysCode, subCode] = key.split('||')
     const sysId = systemIdMap.get(sysCode)

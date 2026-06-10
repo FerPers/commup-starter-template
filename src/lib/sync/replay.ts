@@ -7,6 +7,7 @@
  */
 
 import { getAllQueued, removeFromQueue } from '@/lib/offline-queue'
+import type { Json } from '@/types/supabase.generated'
 import { createClient } from '@/lib/supabase/client'
 import { upsertResponse } from '@/app/actions/itr-instances'
 
@@ -24,21 +25,22 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
     for (const item of items) {
       try {
         let winner: 'local' | 'remote' = 'local'
-        let remotePayload: Record<string, unknown> | null = null
+        let remotePayload: Json | null = null
         let remoteTs: string | null = null
 
         if (item.updatedAt) {
+          // itr_responses no tiene updated_at — responded_at es el timestamp de escritura
           const { data: serverRow } = await supabase
             .from('itr_responses')
-            .select('updated_at, value_text, value_numeric, value_bool, value_option, remarks, is_passed')
+            .select('responded_at, value_text, value_numeric, value_bool, value_option, remarks, is_passed')
             .eq('itr_id', item.itrId)
             .eq('item_id', item.itemId)
             .maybeSingle()
 
-          if (serverRow?.updated_at && serverRow.updated_at > item.updatedAt) {
+          if (serverRow?.responded_at && serverRow.responded_at > item.updatedAt) {
             winner = 'remote'
-            remotePayload = serverRow as Record<string, unknown>
-            remoteTs = serverRow.updated_at as string
+            remotePayload = serverRow
+            remoteTs = serverRow.responded_at
           }
         }
 
@@ -55,9 +57,9 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
               remarks: item.remarks,
               isPassed: item.isPassed,
             },
-            p_remote_payload: remotePayload,
+            p_remote_payload: remotePayload ?? {},
             p_local_ts: item.updatedAt ?? item.queuedAt,
-            p_remote_ts: remoteTs,
+            p_remote_ts: remoteTs ?? item.queuedAt,
             p_winner: 'remote',
             p_notes: 'Auto LWW: server tenía versión más reciente',
           })
@@ -94,9 +96,9 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
                 remarks: item.remarks,
                 isPassed: item.isPassed,
               },
-              p_remote_payload: remotePayload,
+              p_remote_payload: remotePayload ?? {},
               p_local_ts: item.updatedAt ?? item.queuedAt,
-              p_remote_ts: remoteTs,
+              p_remote_ts: remoteTs ?? item.queuedAt,
               p_winner: 'local',
               p_notes: 'Auto LWW: cliente tenía versión más reciente',
             })

@@ -51,11 +51,11 @@ export async function GET(req: NextRequest) {
       .eq('project_id', projectId),
     supabase
       .from('punches')
-      .select('punch_number, category, description, status, priority, raised_at, closed_date, tags(tag_number)')
+      .select('punch_number, category, description, status, priority, created_at, closed_date, tags(tag_number)')
       .eq('project_id', projectId),
     supabase
       .from('preservation_plans')
-      .select('tags(tag_number), procedures(name), status, next_due_date, frequency')
+      .select('tags(tag_number), preservation_procedures(title, frequency), status, next_due_date')
       .eq('project_id', projectId),
     supabase
       .from('certificates')
@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
     Status: p.status,
     Priority: p.priority ?? '',
     Tag: (p.tags as unknown as WithTagNumber)?.tag_number ?? '',
-    'Raised At': p.raised_at ? new Date(p.raised_at).toLocaleDateString() : '',
+    'Raised At': p.created_at ? new Date(p.created_at).toLocaleDateString() : '',
     'Closed Date': p.closed_date ?? '',
   }))
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(punchRows.map(sanitizeRow)), 'Punches')
@@ -109,9 +109,9 @@ export async function GET(req: NextRequest) {
   // ── Preservation sheet ──────────────────────────────────────
   const preservRows = (preservation ?? []).map(p => ({
     Tag: (p.tags as unknown as WithTagNumber)?.tag_number ?? '',
-    Procedure: (p.procedures as unknown as WithName)?.name ?? '',
+    Procedure: p.preservation_procedures?.title ?? '',
     Status: p.status,
-    Frequency: p.frequency,
+    Frequency: p.preservation_procedures?.frequency ?? '',
     'Next Due Date': p.next_due_date ?? '',
   }))
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(preservRows.map(sanitizeRow)), 'Preservation')

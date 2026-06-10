@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import type { Json } from '@/types/supabase.generated'
 
 /**
  * POST /api/push/subscribe — registra/upsertea una PushSubscription para el usuario actual.
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     p256dh?: string
     auth?: string
     topics?: string[]
-    device_info?: Record<string, unknown>
+    device_info?: { [key: string]: Json | undefined }
   }
 
   if (!body.endpoint || !body.p256dh || !body.auth) {

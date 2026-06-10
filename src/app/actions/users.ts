@@ -1,6 +1,7 @@
 'use server'
 
 import { getActiveMembership as getCtx } from '@/lib/supabase/membership'
+import type { OrgMemberRole } from '@/types/database'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -13,6 +14,8 @@ function generateTempPassword(): string {
   return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }
 
+const INVITABLE_ROLES: OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client']
+
 export async function inviteUser(input: {
   email: string
   role: string
@@ -21,7 +24,9 @@ export async function inviteUser(input: {
   if (!ctx) return { error: 'No autenticado' }
   if (!ADMIN_ROLES.includes(ctx.role)) return { error: 'Sin permisos para invitar usuarios' }
 
-  const { email, role } = input
+  const { email } = input
+  const role = input.role as OrgMemberRole
+  if (!INVITABLE_ROLES.includes(role)) return { error: 'Rol inválido' }
   if (role === 'owner' && ctx.role !== 'owner') {
     return { error: 'Solo un owner puede invitar a otro owner' }
   }
@@ -64,7 +69,7 @@ export async function inviteUser(input: {
 
   if (!inviteErr && invited?.user) {
     const { error: profileErr } = await admin.from('profiles').upsert(
-      { id: invited.user.id, email, full_name: email.split('@')[0] },
+      { id: invited.user.id, full_name: email.split('@')[0] },
       { onConflict: 'id' }
     )
     if (profileErr) {
@@ -103,7 +108,7 @@ export async function inviteUser(input: {
   if (!created?.user) return { error: 'Error al crear usuario' }
 
   await admin.from('profiles').upsert(
-    { id: created.user.id, email, full_name: email.split('@')[0] },
+    { id: created.user.id, full_name: email.split('@')[0] },
     { onConflict: 'id' }
   )
   const { error: memberErr } = await admin

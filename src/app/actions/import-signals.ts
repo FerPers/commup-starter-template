@@ -3,6 +3,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { Enums, TablesInsert } from '@/types/supabase.generated'
 
 export interface SignalRow {
   signal_tag:      string
@@ -36,7 +37,7 @@ export interface SignalImportResult {
   errors:   { row: number; tag: string; reason: string }[]
 }
 
-const VALID_SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
+const VALID_SIGNAL_TYPES: Enums<'signal_type'>[] = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
 
 export async function importSignals(
   projectId: string,
@@ -81,7 +82,7 @@ export async function importSignals(
     .select('id, code')
   const areaIdMap = new Map((areas ?? []).map(a => [a.code, a.id]))
 
-  const systemInserts: object[] = []
+  const systemInserts: TablesInsert<'systems'>[] = []
   for (const key of systemKeys) {
     const [areaCode, sysCode] = key.split('||')
     const areaId = areaIdMap.get(areaCode)
@@ -95,7 +96,7 @@ export async function importSignals(
     .select('id, code')
   const systemIdMap = new Map((systems ?? []).map(s => [s.code, s.id]))
 
-  const subInserts: object[] = []
+  const subInserts: TablesInsert<'subsystems'>[] = []
   for (const key of subKeys) {
     const [sysCode, subCode] = key.split('||')
     const sysId = systemIdMap.get(sysCode)
@@ -119,7 +120,7 @@ export async function importSignals(
 
     const discId    = disciplineMap.get(row.discipline_code.toUpperCase())
     const subId     = subsystemIdMap.get(row.subsystem_code.toUpperCase())
-    const signalType = row.signal_type.toUpperCase()
+    const signalType = row.signal_type.toUpperCase() as Enums<'signal_type'>
 
     if (!discId) {
       result.errors.push({ row: rowNum, tag: row.signal_tag, reason: `Disciplina "${row.discipline_code}" no existe` })

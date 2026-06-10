@@ -41,8 +41,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { error } = await admin.rpc('transfer_punch_to_ops', {
     p_punch_id:        punchId,
     p_transferred_to:  body.transferred_to,
-    p_ops_target_date: body.ops_target_date ?? null,
-    p_notes:           body.notes ?? null,
+    p_ops_target_date: body.ops_target_date ?? undefined,
+    p_notes:           body.notes ?? undefined,
   })
 
   if (error) {

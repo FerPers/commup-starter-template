@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { Bell } from 'lucide-react'
+import type { Json } from '@/types/supabase.generated'
 
 const PushNotificationManager = dynamic(
   () => import('@/components/PushNotificationManager'),
@@ -20,7 +21,7 @@ type Sub = {
   enabled: boolean
   failure_count: number
   last_success_at: string | null
-  device_info: Record<string, unknown>
+  device_info: Json
   created_at: string
 }
 
@@ -74,7 +75,7 @@ export default function NotificationsView({
                 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>
-                    {(sub.device_info?.platform as string) || 'Dispositivo'} ·{' '}
+                    {((sub.device_info as Record<string, unknown> | null)?.platform as string) || 'Dispositivo'} ·{' '}
                     {sub.topics.length} topic{sub.topics.length !== 1 ? 's' : ''}
                   </div>
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>

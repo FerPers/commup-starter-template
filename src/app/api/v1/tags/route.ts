@@ -9,6 +9,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, parsePagination, apiHeaders } from '@/lib/api/auth'
+import type { Enums } from '@/types/supabase.generated'
+
+const TAG_STATUSES: Enums<'tag_status'>[] = ['not_started', 'in_progress', 'completed', 'on_hold']
 import {
   requireProjectAccess,
   requireSubsystemAccess,
@@ -123,6 +126,14 @@ export async function POST(req: NextRequest) {
   const disciplineCheck = await requireDisciplineAccess(admin, auth.orgId, discipline_id as string)
   if (!disciplineCheck.ok) return disciplineCheck.response
 
+  const tagStatus = ((status as string | undefined) ?? 'not_started') as Enums<'tag_status'>
+  if (!TAG_STATUSES.includes(tagStatus)) {
+    return NextResponse.json(
+      { error: `status must be one of: ${TAG_STATUSES.join(', ')}` },
+      { status: 422, headers: apiHeaders() },
+    )
+  }
+
   const { data, error } = await admin
     .from('tags')
     .insert({
@@ -130,8 +141,8 @@ export async function POST(req: NextRequest) {
       tag_number:    tag_number    as string,
       subsystem_id:  subsystem_id  as string,
       discipline_id: discipline_id as string,
-      description:   description   as string | null ?? null,
-      status:        status        as string ?? 'not_started',
+      description:   (description as string | undefined) ?? '', // NOT NULL en DB
+      status:        tagStatus,
     })
     .select('id, tag_number, description, status, subsystem_id, discipline_id')
     .single()
@@ -147,7 +158,7 @@ export async function POST(req: NextRequest) {
     aggregate_type: 'tag',
     aggregate_id:   data.id,
     event_type:     'tag.created',
-    payload:        { tag_number, source: 'api_v1', key_id: auth.keyId },
+    payload:        { tag_number: tag_number as string, source: 'api_v1', key_id: auth.keyId },
     actor_id:       null,
   })
 

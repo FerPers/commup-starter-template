@@ -41,8 +41,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { error } = await admin.rpc('update_punch_ops_status', {
     p_punch_id:    punchId,
     p_new_status:  body.status,
-    p_notes:       body.notes ?? null,
-    p_target_date: body.target_date ?? null,
+    p_notes:       body.notes ?? undefined,
+    p_target_date: body.target_date ?? undefined,
   })
 
   if (error) {

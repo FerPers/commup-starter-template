@@ -14,6 +14,9 @@ import {
   requireTemplateAccess,
   requirePhaseAccess,
 } from '@/lib/api/access'
+import type { Enums } from '@/types/supabase.generated'
+
+const ITR_STATUSES: Enums<'itr_status'>[] = ['not_started', 'in_progress', 'completed', 'rejected', 'approved']
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -55,8 +58,16 @@ export async function GET(req: NextRequest) {
     .order('itr_number')
     .range(offset, offset + limit - 1)
 
-  if (tagId)  query = query.eq('tag_id', tagId)
-  if (status) query = query.eq('status', status)
+  if (tagId) query = query.eq('tag_id', tagId)
+  if (status) {
+    if (!ITR_STATUSES.includes(status as Enums<'itr_status'>)) {
+      return NextResponse.json(
+        { error: `status must be one of: ${ITR_STATUSES.join(', ')}` },
+        { status: 422, headers: apiHeaders() },
+      )
+    }
+    query = query.eq('status', status as Enums<'itr_status'>)
+  }
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: apiHeaders() })
@@ -102,15 +113,36 @@ export async function POST(req: NextRequest) {
     if (!phaseCheck.ok) return phaseCheck.response
   }
 
+  // subsystem_id y phase_id son NOT NULL — se resuelven del tag y el template,
+  // y el itr_number sigue el formato CODE/TAG de createItrInstance (itr-instances.ts)
+  const [{ data: tag }, { data: template }] = await Promise.all([
+    admin.from('tags').select('tag_number, subsystem_id').eq('id', tag_id as string).single(),
+    admin.from('itr_templates').select('code, phase_id').eq('id', template_id as string).single(),
+  ])
+  if (!tag?.subsystem_id) {
+    return NextResponse.json(
+      { error: 'Tag has no subsystem — cannot create ITR' },
+      { status: 422, headers: apiHeaders() },
+    )
+  }
+  const resolvedPhaseId = (phase_id as string | undefined) ?? template?.phase_id
+  if (!resolvedPhaseId) {
+    return NextResponse.json(
+      { error: 'phase_id is required (template has no default phase)' },
+      { status: 422, headers: apiHeaders() },
+    )
+  }
+
   const { data, error } = await admin
     .from('itrs')
     .insert({
-      project_id:      project_id     as string,
-      tag_id:          tag_id         as string,
-      template_id:     template_id    as string,
-      itr_number:      itr_number     as string ?? '',
-      scheduled_date:  scheduled_date as string ?? null,
-      phase_id:        phase_id       as string ?? null,
+      project_id:      project_id as string,
+      tag_id:          tag_id as string,
+      template_id:     template_id as string,
+      subsystem_id:    tag.subsystem_id,
+      itr_number:      (itr_number as string | undefined) ?? `${template?.code ?? 'ITR'}/${tag.tag_number}`,
+      scheduled_date:  (scheduled_date as string | undefined) ?? null,
+      phase_id:        resolvedPhaseId,
       status:          'not_started',
       progress_pct:    0,
     })
@@ -123,7 +155,7 @@ export async function POST(req: NextRequest) {
     org_id: auth.orgId, project_id: project_id as string,
     aggregate_type: 'itr', aggregate_id: data.id,
     event_type: 'itr.created',
-    payload: { itr_number, tag_id, source: 'api_v1', key_id: auth.keyId },
+    payload: { itr_number: data.itr_number, tag_id: tag_id as string, source: 'api_v1', key_id: auth.keyId },
     actor_id: null,
   })
 

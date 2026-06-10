@@ -73,8 +73,9 @@ export async function POST(req: NextRequest) {
   const { data, error } = await admin.rpc('ingest_signal_samples', {
     p_org_id:          auth.orgId,
     p_source:          source,
-    p_source_system:   sourceSystem,
-    p_idempotency_key: batchKey,
+    // los args text del RPC aceptan SQL NULL aunque el tipo generado diga string
+    p_source_system:   sourceSystem as unknown as string,
+    p_idempotency_key: batchKey as unknown as string,
     p_api_key_id:      auth.keyId,
     p_samples:         samples,
   })
