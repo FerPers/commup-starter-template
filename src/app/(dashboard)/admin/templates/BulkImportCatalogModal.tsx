@@ -3,7 +3,7 @@
 import { useState, useTransition, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import { FileSpreadsheet } from 'lucide-react'
-import { bulkImportCatalog, type CatalogRow, type BulkImportResult } from '@/app/actions/itr-templates'
+import { bulkImportCatalog, type CatalogRow } from '@/app/actions/itr-templates'
 import { detectItrPhase } from '@/lib/utils'
 
 interface Discipline { id: string; code: string; name: string; color: string }
@@ -76,7 +76,7 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
   const [discMap, setDiscMap] = useState<Record<string, string>>({})
   // phase mapping: 'A'|'B'|'C' → phase_id (auto-detect from phase codes)
   const [phaseMap, setPhaseMap] = useState<Record<string, string>>({})
-  const [importResult, setImportResult] = useState<BulkImportResult | null>(null)
+  const [importResult, setImportResult] = useState<{ templatesCreated: number; templatesSkipped: number; itemsCreated: number; errors: string[] } | null>(null)
 
   // Auto-set phase map when phases are available
   function buildDefaultPhaseMap(): Record<string, string> {
@@ -146,7 +146,13 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
     if (!parsed) return
     startTransition(async () => {
       const res = await bulkImportCatalog(parsed.rows, discMap, phaseMap)
-      setImportResult(res)
+      // el wrapper withAuth puede devolver solo { error } — normalizar
+      setImportResult({
+        templatesCreated: res.templatesCreated ?? 0,
+        templatesSkipped: res.templatesSkipped ?? 0,
+        itemsCreated: res.itemsCreated ?? 0,
+        errors: res.error ? [res.error, ...(res.errors ?? [])] : (res.errors ?? []),
+      })
       setStep('done')
     })
   }

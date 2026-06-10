@@ -18,7 +18,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
     void listImportableTemplates().then(res => {
       if (cancelled) return
       if (res.error) setError(res.error)
-      setTemplates(res.templates)
+      setTemplates(res.templates ?? [])
       setLoading(false)
     })
     return () => { cancelled = true }

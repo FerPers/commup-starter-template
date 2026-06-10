@@ -188,7 +188,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
     startTransition(async () => {
       const res = await importTemplateItems(templateId, parsed.sections, replace)
       if (res.error) { setParseError(res.error); return }
-      setImportResult({ sectionsCreated: res.sectionsCreated, itemsCreated: res.itemsCreated })
+      setImportResult({ sectionsCreated: res.sectionsCreated ?? 0, itemsCreated: res.itemsCreated ?? 0 })
       setStep('done')
     })
   }

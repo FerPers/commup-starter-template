@@ -126,11 +126,13 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
         phases: taxonomyPreview.missingPhases,
         equipmentTypes: taxonomyPreview.missingEquipmentTypes,
       })
-      if (res.errors.length > 0) {
-        setTaxonomyMsg(`Errores: ${res.errors.join(' · ')}`)
+      // el wrapper withAuth puede devolver solo { error } — normalizar
+      const errs = [...(res.error ? [res.error] : []), ...(res.errors ?? [])]
+      if (errs.length > 0) {
+        setTaxonomyMsg(`Errores: ${errs.join(' · ')}`)
       } else {
         setTaxonomyMsg(
-          `Creadas: ${res.created.disciplines} disciplinas · ${res.created.phases} fases · ${res.created.equipmentTypes} tipos de equipo`
+          `Creadas: ${res.created?.disciplines ?? 0} disciplinas · ${res.created?.phases ?? 0} fases · ${res.created?.equipmentTypes ?? 0} tipos de equipo`
         )
       }
       // Re-run preflight to confirm everything is now in place.
