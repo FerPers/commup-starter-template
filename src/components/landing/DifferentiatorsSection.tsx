@@ -5,25 +5,25 @@ export default async function DifferentiatorsSection() {
 
   const items: { src: string; title: string; desc: string; highlight: string }[] = [
     {
-      src: '/icons/modules/13-qr-nfc-scan.svg',
+      src: '/icons/3d/nfc-tag.webp',
       title: t('nfcTitle'),
       desc: t('nfcDesc'),
       highlight: 'NFC + QR',
     },
     {
-      src: '/icons/modules/12-mobile-field-execution.svg',
+      src: '/icons/3d/cloud.webp',
       title: t('cloudTitle'),
       desc: t('cloudDesc'),
       highlight: 'Zero-install',
     },
     {
-      src: '/icons/modules/08-kpis.svg',
+      src: '/icons/3d/kpi-dashboard.webp',
       title: t('realtimeTitle'),
       desc: t('realtimeDesc'),
       highlight: 'Live',
     },
     {
-      src: '/icons/modules/10-roles-permissions.svg',
+      src: '/icons/3d/multi-tenant.webp',
       title: t('securityTitle'),
       desc: t('securityDesc'),
       highlight: 'Enterprise',
@@ -68,16 +68,14 @@ export default async function DifferentiatorsSection() {
               display: 'flex', flexDirection: 'column', gap: 16,
               transition: 'border-color 0.2s',
             }}>
-              {/* Icon container */}
-              <div style={{
-                width: 88, height: 88, borderRadius: 20,
-                background: 'rgba(0,181,168,0.08)',
-                border: '1px solid rgba(0,181,168,0.20)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} width={60} height={60} alt="" />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src} width={88} height={88} alt="" loading="lazy"
+                style={{
+                  width: 88, height: 88, borderRadius: 20, objectFit: 'cover', display: 'block',
+                  border: '1px solid rgba(0,181,168,0.20)',
+                }}
+              />
 
               {/* Highlight badge */}
               <div style={{

@@ -4,13 +4,13 @@ export default async function IndustriesSection() {
   const t = await getTranslations('Landing.industries')
 
   const industries = [
-    { key: 'og',         label: t('og'),         src: '/icons/sectors/01-oil-gas.svg' },
-    { key: 'renewables', label: t('renewables'),  src: '/icons/sectors/02-renewable-energies.svg' },
-    { key: 'lng',        label: t('lng'),         src: '/icons/sectors/03-lng-plants.svg' },
-    { key: 'offshore',   label: t('offshore'),    src: '/icons/sectors/04-offshore.svg' },
-    { key: 'mining',     label: t('mining'),      src: '/icons/sectors/05-mining.svg' },
-    { key: 'industrial', label: t('industrial'),  src: '/icons/sectors/06-industrial-plants.svg' },
-    { key: 'refining',   label: t('refining'),    src: '/icons/sectors/07-refining-petrochemical.svg' },
+    { key: 'og',         label: t('og'),         src: '/icons/3d/oil-gas.webp' },
+    { key: 'renewables', label: t('renewables'),  src: '/icons/3d/renewables.webp' },
+    { key: 'lng',        label: t('lng'),         src: '/icons/3d/lng.webp' },
+    { key: 'offshore',   label: t('offshore'),    src: '/icons/3d/offshore.webp' },
+    { key: 'mining',     label: t('mining'),      src: '/icons/3d/mining.webp' },
+    { key: 'industrial', label: t('industrial'),  src: '/icons/3d/industrial.webp' },
+    { key: 'refining',   label: t('refining'),    src: '/icons/3d/refining.webp' },
   ]
 
   return (
@@ -62,15 +62,11 @@ export default async function IndustriesSection() {
               borderRadius: 16,
               transition: 'border-color 0.2s, background 0.2s',
             }}>
-              <div style={{
-                width: 88, height: 88, borderRadius: 20,
-                background: '#FFFFFF',
-                border: '1px solid #E9EDF1',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} width={60} height={60} alt="" />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src} width={112} height={112} alt="" loading="lazy"
+                style={{ width: 112, height: 112, borderRadius: 20, border: '1px solid #E9EDF1', objectFit: 'cover', display: 'block' }}
+              />
               <span style={{
                 fontSize: 16, fontWeight: 700, color: '#0B1D3A',
                 textAlign: 'center', lineHeight: 1.3,

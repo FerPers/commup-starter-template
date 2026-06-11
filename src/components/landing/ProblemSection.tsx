@@ -5,19 +5,19 @@ export default async function ProblemSection() {
 
   const cards: { src: string; title: string; desc: string; accent: string }[] = [
     {
-      src: '/icons/modules/04-itr.svg',
+      src: '/icons/3d/itr.webp',
       title: t('card1Title'),
       desc: t('card1Desc'),
       accent: '#0B1D3A',
     },
     {
-      src: '/icons/modules/05-punch-list.svg',
+      src: '/icons/3d/punch-list.webp',
       title: t('card2Title'),
       desc: t('card2Desc'),
       accent: '#FF8A00',
     },
     {
-      src: '/icons/modules/14-audit-trail.svg',
+      src: '/icons/3d/dossier.webp',
       title: t('card3Title'),
       desc: t('card3Desc'),
       accent: '#00B5A8',
@@ -69,15 +69,14 @@ export default async function ProblemSection() {
                 background: `linear-gradient(90deg, ${accent}, transparent)`,
               }} />
 
-              <div style={{
-                width: 88, height: 88, borderRadius: 20,
-                background: `${accent}12`, border: `1px solid ${accent}25`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: 16,
-              }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} width={60} height={60} alt="" />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src} width={88} height={88} alt="" loading="lazy"
+                style={{
+                  width: 88, height: 88, borderRadius: 20, objectFit: 'cover', display: 'block',
+                  border: `1px solid ${accent}25`, marginBottom: 16,
+                }}
+              />
               <h3 style={{
                 fontSize: 17, fontWeight: 700, color: '#0B1D3A',
                 margin: '0 0 10px', lineHeight: 1.4,

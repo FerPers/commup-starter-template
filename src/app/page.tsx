@@ -51,6 +51,7 @@ export default async function RootPage() {
     {
       key: 'itrs' as const,
       iconSrc: '/icons/modules/04-itr.svg',
+      spotSrc: '/icons/3d/itr.webp',
       label: t('modules.tabs.itrs'),
       title: t('modules.itrs.title'),
       bullets: [t('modules.itrs.bullet1'), t('modules.itrs.bullet2'), t('modules.itrs.bullet3')],
@@ -58,6 +59,7 @@ export default async function RootPage() {
     {
       key: 'punches' as const,
       iconSrc: '/icons/modules/05-punch-list.svg',
+      spotSrc: '/icons/3d/punch-list.webp',
       label: t('modules.tabs.punches'),
       title: t('modules.punches.title'),
       bullets: [t('modules.punches.bullet1'), t('modules.punches.bullet2'), t('modules.punches.bullet3')],
@@ -65,6 +67,7 @@ export default async function RootPage() {
     {
       key: 'certs' as const,
       iconSrc: '/icons/modules/06-certificates.svg',
+      spotSrc: '/icons/3d/certificate.webp',
       label: t('modules.tabs.certs'),
       title: t('modules.certs.title'),
       bullets: [t('modules.certs.bullet1'), t('modules.certs.bullet2'), t('modules.certs.bullet3')],
@@ -72,6 +75,7 @@ export default async function RootPage() {
     {
       key: 'kpis' as const,
       iconSrc: '/icons/modules/08-kpis.svg',
+      spotSrc: '/icons/3d/kpi-dashboard.webp',
       label: t('modules.tabs.kpis'),
       title: t('modules.kpis.title'),
       bullets: [t('modules.kpis.bullet1'), t('modules.kpis.bullet2'), t('modules.kpis.bullet3')],
@@ -79,6 +83,7 @@ export default async function RootPage() {
     {
       key: 'preservation' as const,
       iconSrc: '/icons/modules/07-preservation.svg',
+      spotSrc: '/icons/3d/preservation.webp',
       label: t('modules.tabs.preservation'),
       title: t('modules.preservation.title'),
       bullets: [t('modules.preservation.bullet1'), t('modules.preservation.bullet2'), t('modules.preservation.bullet3')],

@@ -14,6 +14,7 @@ interface Tab {
   key: TabKey
   label: string
   iconSrc: string
+  spotSrc: string
   title: string
   bullets: string[]
 }
@@ -170,16 +171,14 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
           <div>
             {/* Module header: big icon + title */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-              <div style={{
-                width: 80, height: 80, borderRadius: 18,
-                background: 'rgba(0,181,168,0.08)',
-                border: '1px solid rgba(0,181,168,0.20)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={activeTab.iconSrc} width={52} height={52} alt="" style={{ display: 'block' }} />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={activeTab.spotSrc} width={80} height={80} alt="" loading="lazy"
+                style={{
+                  width: 80, height: 80, borderRadius: 18, objectFit: 'cover', display: 'block',
+                  border: '1px solid rgba(0,181,168,0.20)', flexShrink: 0,
+                }}
+              />
               <h3 style={{
                 fontSize: 20, fontWeight: 700, color: '#0B1D3A',
                 margin: 0, lineHeight: 1.3,

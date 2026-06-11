@@ -1,11 +1,11 @@
 import { getTranslations } from 'next-intl/server'
 
 const STEP_SRCS = [
-  '/icons/modules/01-tag-register.svg',
-  '/icons/modules/13-qr-nfc-scan.svg',
-  '/icons/modules/04-itr.svg',
-  '/icons/modules/06-certificates.svg',
-  '/icons/modules/09-dossier.svg',
+  '/icons/3d/tag.webp',
+  '/icons/3d/tag-scan.webp',
+  '/icons/3d/itr.webp',
+  '/icons/3d/certificate-issue.webp',
+  '/icons/3d/dossier.webp',
 ]
 
 export default async function HowItWorks() {
@@ -65,7 +65,7 @@ export default async function HowItWorks() {
               const src = STEP_SRCS[i]
               return (
                 <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  {/* Step card — white background so SVG strokes are always visible */}
+                  {/* Step card — el render 3D llena el tile; el badge numerado queda fuera del recorte */}
                   <div style={{
                     width: 72, height: 72, borderRadius: 16,
                     background: '#FFFFFF',
@@ -76,7 +76,7 @@ export default async function HowItWorks() {
                     flexShrink: 0,
                   }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} width={44} height={44} alt="" />
+                    <img src={src} width={70} height={70} alt="" loading="lazy" style={{ width: 70, height: 70, borderRadius: 15, objectFit: 'cover', display: 'block' }} />
                     {/* Step number */}
                     <div style={{
                       position: 'absolute', top: -6, right: -6,

@@ -5,21 +5,21 @@ export default async function SocialProofSection() {
 
   const scenarios: { src: string; color: string; title: string; desc: string; module: string }[] = [
     {
-      src: '/icons/modules/04-itr.svg',
+      src: '/icons/3d/saas-tablet.webp',
       color: '#0B1D3A',
       title: t('s1Title'),
       desc: t('s1Desc'),
       module: t('s1Module'),
     },
     {
-      src: '/icons/modules/05-punch-list.svg',
+      src: '/icons/3d/certificate-rejected.webp',
       color: '#FF8A00',
       title: t('s2Title'),
       desc: t('s2Desc'),
       module: t('s2Module'),
     },
     {
-      src: '/icons/modules/08-kpis.svg',
+      src: '/icons/3d/kpi-console.webp',
       color: '#00B5A8',
       title: t('s3Title'),
       desc: t('s3Desc'),
@@ -71,17 +71,14 @@ export default async function SocialProofSection() {
               flexDirection: 'column',
               gap: 18,
             }}>
-              {/* Icon */}
-              <div style={{
-                width: 88, height: 88, borderRadius: 20,
-                background: `${color}12`,
-                border: `1px solid ${color}25`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} width={60} height={60} alt="" />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src} width={88} height={88} alt="" loading="lazy"
+                style={{
+                  width: 88, height: 88, borderRadius: 20, objectFit: 'cover', display: 'block',
+                  border: `1px solid ${color}25`, flexShrink: 0,
+                }}
+              />
 
               {/* Title */}
               <h3 style={{
