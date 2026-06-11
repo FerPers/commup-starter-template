@@ -99,22 +99,19 @@ export default function PssrTemplateEditor({
     }
     setFormError(null)
     startTransition(async () => {
-      try {
-        await upsertPssrTemplateItem({
-          id: editingItem?.id,
-          templateId: template.id,
-          itemOrder: editingItem?.item_order ?? (items.length + 1),
-          category: form.category.trim(),
-          element: form.element.trim(),
-          requirement: form.requirement.trim(),
-          notesHint: form.notes_hint.trim() || undefined,
-          isRequired: form.is_required,
-        })
-        setShowModal(false)
-        router.refresh()
-      } catch (e: unknown) {
-        setFormError(e instanceof Error ? e.message : 'Error al guardar')
-      }
+      const res = await upsertPssrTemplateItem({
+        id: editingItem?.id,
+        templateId: template.id,
+        itemOrder: editingItem?.item_order ?? (items.length + 1),
+        category: form.category.trim(),
+        element: form.element.trim(),
+        requirement: form.requirement.trim(),
+        notesHint: form.notes_hint.trim() || undefined,
+        isRequired: form.is_required,
+      })
+      if (res.error) { setFormError(res.error); return }
+      setShowModal(false)
+      router.refresh()
     })
   }
 
@@ -122,8 +119,10 @@ export default function PssrTemplateEditor({
     if (!confirm(`¿Eliminar "${item.element}"?`)) return
     setDeletingId(item.id)
     startTransition(async () => {
-      try { await deletePssrTemplateItem(item.id, template.id); router.refresh() }
-      finally { setDeletingId(null) }
+      const res = await deletePssrTemplateItem(item.id, template.id)
+      setDeletingId(null)
+      if (res.error) { setFormError(res.error); return }
+      router.refresh()
     })
   }
 

@@ -1,46 +1,25 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+// Review PSSR — orquestador (Q4). Estado de items/firmas + handlers contra el
+// contrato { error } de actions/pssr.ts; la UI vive en PssrReviewHeader,
+// PssrItemsChecklist, PssrSignaturesPanel y PssrSignModal.
+
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
   updatePssrReviewItem,
   updatePssrReviewNotes,
-  updatePssrReviewDueDate,
   submitPssrForApproval,
-  addPssrSignature,
   removePssrSignature,
   approvePssrAndIssueRfsu,
   rejectPssrReview,
 } from '@/app/actions/pssr'
-import { PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
-
-// ── Types ──────────────────────────────────────────────────────────
-
-type ItemStatus = 'pending' | 'si' | 'no' | 'na'
-type ReviewStatus = 'draft' | 'in_progress' | 'pending_approval' | 'approved' | 'rejected'
-
-interface ReviewItem {
-  id: string
-  item_order: number
-  category: string
-  element: string
-  requirement: string
-  notes_hint: string | null
-  status: ItemStatus
-  responsible: string | null
-  actions: string | null
-  completion_date: string | null
-}
-
-interface Signature {
-  id: string
-  user_id: string
-  discipline: string | null
-  signature_data: string
-  signed_at: string
-  profiles: { full_name: string; id: string } | null
-}
+import PssrReviewHeader from './PssrReviewHeader'
+import PssrItemsChecklist from './PssrItemsChecklist'
+import PssrSignaturesPanel from './PssrSignaturesPanel'
+import PssrSignModal from './PssrSignModal'
+import type { ItemStatus, ReviewItem, ReviewStatus, Signature } from './pssr-review-shared'
 
 interface Props {
   projectId: string
@@ -64,41 +43,6 @@ interface Props {
   totalItems: number
 }
 
-// ── Config ─────────────────────────────────────────────────────────
-
-type StatusKey = 'draft' | 'inProgress' | 'pendingApproval' | 'approvedDone' | 'rejected'
-const STATUS_KEY_MAP: Record<ReviewStatus, StatusKey> = {
-  draft: 'draft',
-  in_progress: 'inProgress',
-  pending_approval: 'pendingApproval',
-  approved: 'approvedDone',
-  rejected: 'rejected',
-}
-const STATUS_STYLES: Record<StatusKey, { color: string; bg: string }> = {
-  draft:           { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  inProgress:      { color: '#3b82f6',           bg: '#eff6ff' },
-  pendingApproval: { color: '#f59e0b',           bg: '#fffbeb' },
-  approvedDone:    { color: '#10b981',           bg: '#ecfdf5' },
-  rejected:        { color: '#ef4444',           bg: '#fee2e2' },
-}
-
-const CAT_COLORS: Record<string, string> = {
-  'Ingeniería y Diseño': '#3b82f6',
-  'Documentación': '#8b5cf6',
-  'Mecánica y Tuberías': '#f59e0b',
-  'Electricidad': '#ef4444',
-  'Instrumentación y Control': '#06b6d4',
-  'Seguridad de Procesos': '#f97316',
-  'Seguridad / HSE': '#10b981',
-  'Operaciones y Capacitación': '#6366f1',
-  'Mantenimiento': 'var(--text-muted)',
-  'Medio Ambiente': '#22c55e',
-  'Construcción y Comisionamiento': '#d97706',
-}
-function catColor(cat: string) { return CAT_COLORS[cat] ?? 'var(--text-muted)' }
-
-// ── Main Component ─────────────────────────────────────────────────
-
 export default function PssrReviewForm({
   projectId, review, items: initialItems, signatures: initialSigs,
   project, currentUserId, currentUserName, canApprove,
@@ -110,316 +54,109 @@ export default function PssrReviewForm({
   const [items, setItems] = useState(initialItems)
   const [sigs, setSigs] = useState(initialSigs)
   const [notes, setNotes] = useState(review.notes ?? '')
-  const [dueDate, setDueDate] = useState(review.review_due_date ?? '')
-  const [editingDueDate, setEditingDueDate] = useState(false)
-  const [savedDueDate, setSavedDueDate] = useState(review.review_due_date ?? '')
-  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [showSignModal, setShowSignModal] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
   const readonly = review.status === 'approved'
 
-  // Group items by category preserving order
-  const grouped: [string, ReviewItem[]][] = []
-  const catOrder: string[] = []
-  for (const item of items) {
-    if (!catOrder.includes(item.category)) catOrder.push(item.category)
-  }
-  for (const cat of catOrder) {
-    grouped.push([cat, items.filter(i => i.category === cat)])
-  }
-
   // Computed progress from local state
   const localResolved = items.filter(i => i.status === 'si' || i.status === 'na').length
   const localPct = totalItems > 0 ? Math.round((localResolved / totalItems) * 100) : 0
   const localAllResolved = totalItems > 0 && localResolved === totalItems
 
-  function toggleCat(cat: string) {
-    setExpandedCats(prev => {
-      const next = new Set(prev)
-      if (next.has(cat)) next.delete(cat); else next.add(cat)
-      return next
-    })
-  }
-
-  function toggleItem(itemId: string) {
-    setExpandedItems(prev => {
-      const next = new Set(prev)
-      if (next.has(itemId)) next.delete(itemId); else next.add(itemId)
-      return next
-    })
-  }
-
-  async function handleStatusChange(item: ReviewItem, status: ItemStatus) {
+  function handleStatusChange(item: ReviewItem, status: ItemStatus) {
     if (readonly) return
     // Optimistic update
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, status } : i))
-    // Detail editor only renders for si/no — collapse on transitions away
-    if (status === 'na' || status === 'pending') {
-      setExpandedItems(prev => {
-        if (!prev.has(item.id)) return prev
-        const next = new Set(prev)
-        next.delete(item.id)
-        return next
-      })
-    }
     startTransition(async () => {
-      try {
-        await updatePssrReviewItem({ itemId: item.id, reviewId: review.id, projectId, status })
-      } catch {
+      const res = await updatePssrReviewItem({ itemId: item.id, reviewId: review.id, projectId, status })
+      if (res.error) {
         // Revert
         setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: item.status } : i))
       }
     })
   }
 
-  async function handleFieldSave(item: ReviewItem, field: 'responsible' | 'actions' | 'completion_date', value: string) {
+  function handleFieldSave(item: ReviewItem, field: 'responsible' | 'actions' | 'completion_date', value: string) {
     if (readonly) return
     startTransition(async () => {
-      await updatePssrReviewItem({
+      const res = await updatePssrReviewItem({
         itemId: item.id, reviewId: review.id, projectId,
         [field === 'responsible' ? 'responsible' : field === 'actions' ? 'actions' : 'completionDate']: value || null,
       })
+      if (res.error) setActionError(res.error)
     })
   }
 
-  async function handleSaveNotes() {
+  function handleSaveNotes() {
     startTransition(async () => {
-      await updatePssrReviewNotes(review.id, projectId, notes)
+      const res = await updatePssrReviewNotes(review.id, projectId, notes)
+      if (res.error) setActionError(res.error)
     })
   }
 
-  async function handleSaveDueDate() {
-    const value = dueDate || null
-    startTransition(async () => {
-      try {
-        await updatePssrReviewDueDate(review.id, projectId, value)
-        setSavedDueDate(value ?? '')
-        setEditingDueDate(false)
-      } catch (e: unknown) {
-        setActionError(e instanceof Error ? e.message : t('review.errorDate'))
-      }
-    })
-  }
-
-  async function handleSubmitForApproval() {
+  function handleSubmitForApproval() {
     setActionError(null)
     startTransition(async () => {
-      try {
-        await submitPssrForApproval(review.id, projectId)
-        router.refresh()
-      } catch (e: unknown) {
-        setActionError(e instanceof Error ? e.message : t('review.errorGeneric'))
-      }
+      const res = await submitPssrForApproval(review.id, projectId)
+      if (res.error) { setActionError(res.error); return }
+      router.refresh()
     })
   }
 
-  async function handleApprove() {
+  function handleApprove() {
     setActionError(null)
     if (sigs.length === 0) {
       setActionError(t('review.errorNeedsSignature'))
       return
     }
     startTransition(async () => {
-      try {
-        const cert = await approvePssrAndIssueRfsu(review.id, projectId)
-        setActionSuccess(t('review.approveSuccess', { certNumber: cert.certificate_number }))
-        router.refresh()
-      } catch (e: unknown) {
-        setActionError(e instanceof Error ? e.message : t('review.errorGeneric'))
+      const res = await approvePssrAndIssueRfsu(review.id, projectId)
+      if (res.error ?? !res.cert) {
+        setActionError(res.error ?? t('review.errorGeneric'))
+        return
       }
+      setActionSuccess(t('review.approveSuccess', { certNumber: res.cert.certificate_number }))
+      router.refresh()
     })
   }
 
-  async function handleReject() {
+  function handleReject() {
     if (!confirm(t('review.rejectConfirm'))) return
     const reason = window.prompt(t('review.rejectReasonPrompt')) ?? undefined
     startTransition(async () => {
-      try {
-        await rejectPssrReview(review.id, projectId, reason)
-        router.refresh()
-      } catch (e: unknown) {
-        setActionError(e instanceof Error ? e.message : t('review.errorGeneric'))
-      }
+      const res = await rejectPssrReview(review.id, projectId, reason)
+      if (res.error) { setActionError(res.error); return }
+      router.refresh()
     })
   }
 
-  async function handleRemoveSig(sigId: string) {
+  function handleRemoveSig(sigId: string) {
     startTransition(async () => {
-      await removePssrSignature(sigId, review.id, projectId)
+      const res = await removePssrSignature(sigId, review.id, projectId)
+      if (res.error) { setActionError(res.error); return }
       setSigs(prev => prev.filter(s => s.id !== sigId))
     })
   }
 
-  const statusKey = STATUS_KEY_MAP[review.status]
-  const statusSty = STATUS_STYLES[statusKey]
-  const system = review.systems
-
   return (
     <>
       {/* Back + Header ───────────────────────────────────────── */}
-      <div style={{ marginBottom: '24px' }}>
-        <a href={`/projects/${projectId}/pssr`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
-          {t('backToList', { projectName: project.name })}
-        </a>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginTop: '10px', flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-                {review.review_number}
-              </h1>
-              <span style={{
-                padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                background: statusSty.bg, color: statusSty.color,
-              }}>
-                {t(`status.${statusKey}`)}
-              </span>
-              {system && (
-                <span style={{
-                  padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                  background: 'var(--gray-100)', color: 'var(--text-muted)',
-                }}>
-                  {system.code} — {system.name}
-                </span>
-              )}
-            </div>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>{review.title}</p>
-
-            {/* Due date chip / editor */}
-            {(() => {
-              const today = new Date().toISOString().split('T')[0]
-              const isOverdue = !!(savedDueDate && savedDueDate < today && review.status !== 'approved')
-              const canEditDate = canApprove && review.status !== 'approved'
-
-              if (editingDueDate && canEditDate) {
-                return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-                    <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      {t('review.dueDateLabel')}
-                    </label>
-                    <input
-                      type="date"
-                      value={dueDate}
-                      onChange={e => setDueDate(e.target.value)}
-                      style={{ padding: '4px 8px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit' }}
-                    />
-                    <button
-                      onClick={handleSaveDueDate}
-                      disabled={isPending}
-                      style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: '#10b981', color: '#fff', border: 'none', cursor: 'pointer' }}
-                    >
-                      {t('review.saveDate')}
-                    </button>
-                    <button
-                      onClick={() => { setDueDate(savedDueDate); setEditingDueDate(false) }}
-                      disabled={isPending}
-                      style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', border: 'none', cursor: 'pointer' }}
-                    >
-                      {t('review.cancelDate')}
-                    </button>
-                  </div>
-                )
-              }
-
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {t('review.dueDateLabel')}
-                  </span>
-                  {savedDueDate ? (
-                    <span style={{
-                      padding: '2px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                      background: isOverdue ? '#fee2e2' : '#f1f5f9',
-                      color: isOverdue ? '#dc2626' : 'var(--text-muted)',
-                      border: `1px solid ${isOverdue ? '#fecaca' : 'var(--border)'}`,
-                    }}>
-                      {savedDueDate}{isOverdue ? t('review.overdueSuffix') : ''}
-                    </span>
-                  ) : (
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</span>
-                  )}
-                  {canEditDate && (
-                    <button
-                      onClick={() => { setDueDate(savedDueDate); setEditingDueDate(true) }}
-                      style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'transparent', color: 'var(--primary-500)', border: '1px solid var(--border)', cursor: 'pointer' }}
-                    >
-                      {savedDueDate ? t('review.editDate') : t('review.setDate')}
-                    </button>
-                  )}
-                </div>
-              )
-            })()}
-          </div>
-
-          {/* Action buttons */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <a
-              href={`/projects/${projectId}/pssr/${review.id}/pdf`}
-              style={{
-                padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--gray-700)',
-                textDecoration: 'none',
-              }}
-            >
-              {t('review.downloadPdf')}
-            </a>
-            {review.status === 'approved' && review.rfsu_certificate_id && (
-              <a
-                href={`/projects/${projectId}/certificates/${review.rfsu_certificate_id}`}
-                style={{
-                  padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46',
-                  textDecoration: 'none',
-                }}
-              >
-                {t('review.viewRfsu')}
-              </a>
-            )}
-            {(review.status === 'draft' || review.status === 'in_progress' || review.status === 'rejected') && !readonly && localAllResolved && (
-              <button
-                onClick={handleSubmitForApproval}
-                disabled={isPending}
-                style={{
-                  padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: '#f59e0b', color: '#fff', border: 'none',
-                  cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
-                }}
-              >
-                {t('review.submitForApproval')}
-              </button>
-            )}
-            {review.status === 'pending_approval' && canApprove && (
-              <>
-                <button
-                  onClick={handleReject}
-                  disabled={isPending}
-                  style={{
-                    padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                    background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626',
-                    cursor: isPending ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {t('review.reject')}
-                </button>
-                <button
-                  onClick={handleApprove}
-                  disabled={isPending || sigs.length === 0}
-                  title={sigs.length === 0 ? t('review.needsSignatureTooltip') : undefined}
-                  style={{
-                    padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                    background: sigs.length === 0 ? '#d1fae5' : '#10b981', color: '#fff', border: 'none',
-                    cursor: isPending || sigs.length === 0 ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
-                  }}
-                >
-                  {t('review.approve')}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+      <PssrReviewHeader
+        projectId={projectId}
+        review={review}
+        projectName={project.name}
+        canApprove={canApprove}
+        readonly={readonly}
+        allResolved={localAllResolved}
+        sigsCount={sigs.length}
+        isPending={isPending}
+        onSubmitForApproval={handleSubmitForApproval}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onError={setActionError}
+      />
 
       {/* Progress bar ────────────────────────────────────────── */}
       <div style={{
@@ -471,179 +208,12 @@ export default function PssrReviewForm({
       )}
 
       {/* Checklist items ─────────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-        {grouped.map(([category, catItems]) => {
-          const catResolved = catItems.filter(i => i.status === 'si' || i.status === 'na').length
-          const catDone = catResolved === catItems.length
-          const isExpanded = !expandedCats.has(category) // open by default
-
-          return (
-            <div key={category} style={{
-              background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
-              overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}>
-              {/* Category header — click to collapse */}
-              <button
-                onClick={() => toggleCat(category)}
-                style={{
-                  width: '100%', textAlign: 'left', background: 'var(--gray-50)', border: 'none', cursor: 'pointer',
-                  padding: '14px 20px', borderLeft: `4px solid ${catColor(category)}`,
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%',
-                  background: catDone ? '#10b981' : catColor(category), flexShrink: 0,
-                }} />
-                <span style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>
-                  {category}
-                </span>
-                <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
-                  {catResolved}/{catItems.length}
-                </span>
-                <span style={{ color: 'var(--gray-400)', fontSize: '14px', marginLeft: '4px' }}>
-                  {isExpanded ? '▾' : '▸'}
-                </span>
-              </button>
-
-              {/* Items */}
-              {isExpanded && catItems.map(item => {
-                const isItemExpanded = expandedItems.has(item.id)
-                const statusColors = {
-                  pending: { bg: 'var(--gray-100)', color: 'var(--text-muted)', border: 'var(--border)' },
-                  si:      { bg: '#ecfdf5', color: '#10b981', border: '#a7f3d0' },
-                  no:      { bg: '#fee2e2', color: '#ef4444', border: '#fecaca' },
-                  na:      { bg: 'var(--gray-50)', color: 'var(--gray-400)', border: 'var(--border)' },
-                }
-                const sc = statusColors[item.status]
-
-                return (
-                  <div key={item.id} style={{
-                    borderTop: '1px solid #f1f5f9',
-                    borderLeft: `4px solid ${sc.border}`,
-                    background: item.status === 'si' ? '#fafffe' : item.status === 'no' ? '#fffafa' : 'var(--card-bg)',
-                  }}>
-                    {/* Item row */}
-                    <div style={{ padding: '14px 20px', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                      {/* Order */}
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gray-300)', paddingTop: '2px', flexShrink: 0, minWidth: '22px' }}>
-                        {item.item_order}
-                      </span>
-
-                      {/* Content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--gray-700)', marginBottom: '3px' }}>
-                          {item.element}
-                        </div>
-                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                          {item.requirement}
-                        </div>
-                        {item.notes_hint && (
-                          <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '4px', fontStyle: 'italic' }}>
-                            💡 {item.notes_hint}
-                          </div>
-                        )}
-
-                        {/* Expand details toggle */}
-                        {(item.status === 'si' || item.status === 'no') && (
-                          <button
-                            onClick={() => toggleItem(item.id)}
-                            style={{
-                              background: 'none', border: 'none', padding: '4px 0 0', cursor: 'pointer',
-                              fontSize: '11px', color: '#3b82f6', fontWeight: 600,
-                            }}
-                          >
-                            {isItemExpanded ? t('review.itemHideDetails') : t('review.itemShowDetails')}
-                          </button>
-                        )}
-
-                        {/* Detail fields — only for si/no (toggle button matches) */}
-                        {isItemExpanded && !readonly && (item.status === 'si' || item.status === 'no') && (
-                          <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <input
-                              defaultValue={item.responsible ?? ''}
-                              onBlur={e => handleFieldSave(item, 'responsible', e.target.value)}
-                              placeholder={t('review.responsiblePlaceholder')}
-                              style={{
-                                width: '100%', padding: '7px 10px', borderRadius: '6px',
-                                border: '1px solid var(--border)', fontSize: '12px', outline: 'none',
-                                boxSizing: 'border-box', fontFamily: 'inherit',
-                              }}
-                            />
-                            <textarea
-                              defaultValue={item.actions ?? ''}
-                              onBlur={e => handleFieldSave(item, 'actions', e.target.value)}
-                              placeholder={t('review.actionsPlaceholder')}
-                              rows={2}
-                              style={{
-                                width: '100%', padding: '7px 10px', borderRadius: '6px',
-                                border: '1px solid var(--border)', fontSize: '12px', outline: 'none',
-                                resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit',
-                              }}
-                            />
-                            <input
-                              type="date"
-                              defaultValue={item.completion_date ?? ''}
-                              onBlur={e => handleFieldSave(item, 'completion_date', e.target.value)}
-                              style={{
-                                width: '160px', padding: '7px 10px', borderRadius: '6px',
-                                border: '1px solid var(--border)', fontSize: '12px', outline: 'none',
-                                fontFamily: 'inherit',
-                              }}
-                            />
-                          </div>
-                        )}
-                        {/* Read-only details */}
-                        {(readonly || !isItemExpanded) && (item.responsible ?? item.actions) && item.status !== 'pending' && (
-                          <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                            {item.responsible && <span>👤 {item.responsible}</span>}
-                            {item.responsible && item.actions && <span> · </span>}
-                            {item.actions && <span>{item.actions}</span>}
-                            {item.completion_date && <span> · {item.completion_date}</span>}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Status buttons */}
-                      {!readonly && (
-                        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                          {(['si', 'no', 'na'] as ItemStatus[]).map(s => (
-                            <button
-                              key={s}
-                              onClick={() => handleStatusChange(item, item.status === s ? 'pending' : s)}
-                              style={{
-                                padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-                                border: '1.5px solid',
-                                borderColor: item.status === s ? sc.border : 'var(--border)',
-                                background: item.status === s ? sc.bg : 'var(--card-bg)',
-                                color: item.status === s ? sc.color : 'var(--gray-400)',
-                                cursor: 'pointer', transition: 'all 0.1s',
-                                textTransform: 'uppercase',
-                              }}
-                            >
-                              {s === 'si' ? t('review.yes') : s === 'no' ? t('review.no') : t('review.na')}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      {/* Read-only status */}
-                      {readonly && (
-                        <span style={{
-                          padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-                          background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
-                          flexShrink: 0, textTransform: 'uppercase',
-                        }}>
-                          {item.status === 'si' ? t('review.yes') : item.status === 'no' ? t('review.no') : item.status === 'na' ? t('review.na') : '—'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        })}
-      </div>
+      <PssrItemsChecklist
+        items={items}
+        readonly={readonly}
+        onStatusChange={handleStatusChange}
+        onFieldSave={handleFieldSave}
+      />
 
       {/* Notes ───────────────────────────────────────────────── */}
       {!readonly && (
@@ -670,87 +240,18 @@ export default function PssrReviewForm({
       )}
 
       {/* Signatures ──────────────────────────────────────────── */}
-      <div style={{
-        background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
-        padding: '20px 24px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-              {t('review.signaturesTitle')}
-            </h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-              {t('review.signaturesSubtitle')}
-            </p>
-          </div>
-          {!readonly && review.status !== 'draft' && (
-            <button
-              onClick={() => setShowSignModal(true)}
-              style={{
-                padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer',
-              }}
-            >
-              {t('review.signBtn')}
-            </button>
-          )}
-        </div>
-
-        {sigs.length === 0 ? (
-          <div style={{
-            padding: '28px', textAlign: 'center', background: 'var(--gray-50)',
-            borderRadius: '8px', border: '1.5px dashed #e2e8f0',
-          }}>
-            <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>
-              {review.status === 'draft'
-                ? t('review.signEmptyDraft')
-                : t('review.signEmpty')}
-            </p>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
-            {sigs.map(sig => (
-              <div key={sig.id} style={{
-                border: '1px solid var(--border)', borderRadius: '10px', padding: '12px',
-                background: 'var(--gray-50)',
-              }}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- signature_data is a base64 data: URL, next/image doesn't handle data URLs without a custom loader */}
-                <img
-                  src={sig.signature_data}
-                  alt="Firma"
-                  style={{ width: '100%', height: '80px', objectFit: 'contain', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid #f1f5f9' }}
-                />
-                <div style={{ marginTop: '8px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>
-                    {sig.profiles?.full_name ?? t('review.signUserFallback')}
-                  </div>
-                  {sig.discipline && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sig.discipline}</div>
-                  )}
-                  <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginTop: '2px' }}>
-                    {new Date(sig.signed_at).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-                {!readonly && sig.user_id === currentUserId && (
-                  <button
-                    onClick={() => handleRemoveSig(sig.id)}
-                    style={{
-                      marginTop: '6px', padding: '3px 8px', borderRadius: '5px', fontSize: '10px',
-                      background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer',
-                    }}
-                  >
-                    {t('review.removeSig')}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <PssrSignaturesPanel
+        sigs={sigs}
+        reviewStatus={review.status}
+        readonly={readonly}
+        currentUserId={currentUserId}
+        onOpenSign={() => setShowSignModal(true)}
+        onRemoveSig={handleRemoveSig}
+      />
 
       {/* Sign Modal ──────────────────────────────────────────── */}
       {showSignModal && (
-        <SignModal
+        <PssrSignModal
           reviewId={review.id}
           projectId={projectId}
           currentUserName={currentUserName}
@@ -759,172 +260,5 @@ export default function PssrReviewForm({
         />
       )}
     </>
-  )
-}
-
-// ── Sign Modal ─────────────────────────────────────────────────────
-
-function SignModal({
-  reviewId, projectId, currentUserName, onSigned, onClose,
-}: {
-  reviewId: string
-  projectId: string
-  currentUserName: string
-  onSigned: (sig: Signature) => void
-  onClose: () => void
-}) {
-  const t = useTranslations('PSSR')
-  const [isPending, startTransition] = useTransition()
-  const [discipline, setDiscipline] = useState('')
-  const [isDrawing, setIsDrawing] = useState(false)
-  const [hasDrawn, setHasDrawn] = useState(false)
-  const [signError, setSignError] = useState<string | null>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const lastPoint = useRef<{ x: number; y: number } | null>(null)
-
-  useEffect(() => {
-    const ctx = canvasRef.current?.getContext('2d')
-    if (!ctx) return
-    ctx.strokeStyle = '#0f172a'
-    ctx.lineWidth = 2.5
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-  }, [])
-
-  function getPoint(e: React.PointerEvent<HTMLCanvasElement>) {
-    const canvas = canvasRef.current!
-    const rect = canvas.getBoundingClientRect()
-    return {
-      x: (e.clientX - rect.left) * (canvas.width / rect.width),
-      y: (e.clientY - rect.top) * (canvas.height / rect.height),
-    }
-  }
-
-  function onPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
-    setIsDrawing(true); setHasDrawn(true)
-    const pt = getPoint(e)
-    lastPoint.current = pt
-    const ctx = canvasRef.current!.getContext('2d')!
-    ctx.beginPath(); ctx.arc(pt.x, pt.y, 1.2, 0, Math.PI * 2); ctx.fill()
-  }
-
-  function onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
-    if (!isDrawing) return
-    const ctx = canvasRef.current!.getContext('2d')!
-    const pt = getPoint(e)
-    ctx.beginPath(); ctx.moveTo(lastPoint.current!.x, lastPoint.current!.y)
-    ctx.lineTo(pt.x, pt.y); ctx.stroke()
-    lastPoint.current = pt
-  }
-
-  function clearCanvas() {
-    canvasRef.current!.getContext('2d')!.clearRect(0, 0, 392, 160)
-    setHasDrawn(false)
-  }
-
-  function handleSign() {
-    setSignError(null)
-    const signatureData = canvasRef.current!.toDataURL('image/png')
-    startTransition(async () => {
-      try {
-        await addPssrSignature({ reviewId, projectId, discipline, signatureData })
-        onSigned({
-          id: crypto.randomUUID(),
-          user_id: '', discipline, signature_data: signatureData,
-          signed_at: new Date().toISOString(),
-          profiles: { full_name: currentUserName, id: '' },
-        })
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'Error'
-        setSignError(msg === PSSR_ALREADY_SIGNED ? t('review.errorAlreadySigned') : msg)
-      }
-    })
-  }
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
-    }} onClick={onClose}>
-      <div style={{
-        background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
-        width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-      }} onClick={e => e.stopPropagation()}>
-        <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 16px' }}>
-          {t('signModal.title')}
-        </h3>
-
-        <div style={{ marginBottom: '14px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-            {t('signModal.disciplineLabel')}
-          </label>
-          <input
-            value={discipline}
-            onChange={e => setDiscipline(e.target.value)}
-            placeholder={t('signModal.disciplinePlaceholder')}
-            list="pssr-disciplines"
-            style={{
-              width: '100%', padding: '9px 12px', borderRadius: '8px',
-              border: '1.5px solid #d1d5db', fontSize: '13px', outline: 'none',
-              boxSizing: 'border-box', fontFamily: 'inherit',
-            }}
-          />
-          <datalist id="pssr-disciplines">
-            {['Process Engineer','HSE Lead','Operations Manager','Maintenance Lead',
-              'Commissioning Lead','Electrical Engineer','Instrument Engineer',
-              'Mechanical Engineer','Project Manager','QAQC Lead'].map(d => <option key={d} value={d} />)}
-          </datalist>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</label>
-          <button onClick={clearCanvas} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--gray-400)', cursor: 'pointer' }}>
-            {t('signModal.clear')}
-          </button>
-        </div>
-        <div style={{ border: '1.5px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: 'var(--gray-50)', marginBottom: '20px' }}>
-          <canvas
-            ref={canvasRef}
-            width={432}
-            height={160}
-            style={{ display: 'block', width: '100%', height: '160px', cursor: 'crosshair', touchAction: 'none' }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={() => setIsDrawing(false)}
-            onPointerLeave={() => setIsDrawing(false)}
-          />
-        </div>
-
-        {signError && (
-          <div style={{
-            padding: '10px 12px', borderRadius: '8px', background: '#fef2f2',
-            border: '1px solid #fecaca', color: '#dc2626', fontSize: '12px', fontWeight: 500,
-            marginBottom: '14px',
-          }}>
-            {signError}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{
-            padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-            background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
-          }}>
-            {t('signModal.cancel')}
-          </button>
-          <button
-            onClick={handleSign}
-            disabled={isPending || !hasDrawn}
-            style={{
-              padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: isPending || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none',
-              cursor: isPending || !hasDrawn ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {isPending ? t('signModal.saving') : t('signModal.confirm')}
-          </button>
-        </div>
-      </div>
-    </div>
   )
 }

@@ -65,19 +65,19 @@ export default function PssrListView({
     if (!form.templateId) { setFormError(t('createModal.errorSelectTemplate')); return }
     setFormError(null)
     startTransition(async () => {
-      try {
-        const review = await createPssrReview({
-          projectId,
-          systemId: form.systemId,
-          templateId: form.templateId,
-          title: form.title || undefined,
-          reviewDueDate: form.reviewDueDate || null,
-        })
-        setShowModal(false)
-        router.push(`/projects/${projectId}/pssr/${review.id}`)
-      } catch (e: unknown) {
-        setFormError(e instanceof Error ? e.message : t('createModal.errorGeneric'))
+      const res = await createPssrReview({
+        projectId,
+        systemId: form.systemId,
+        templateId: form.templateId,
+        title: form.title || undefined,
+        reviewDueDate: form.reviewDueDate || null,
+      })
+      if (res.error ?? !res.review) {
+        setFormError(res.error ?? t('createModal.errorGeneric'))
+        return
       }
+      setShowModal(false)
+      router.push(`/projects/${projectId}/pssr/${res.review.id}`)
     })
   }
 

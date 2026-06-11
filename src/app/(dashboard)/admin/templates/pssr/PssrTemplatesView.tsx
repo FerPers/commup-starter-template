@@ -34,32 +34,32 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
     if (!form.name.trim()) { setFormError('El nombre es requerido'); return }
     setFormError(null)
     startTransition(async () => {
-      try {
-        const tmpl = await createPssrTemplate({ name: form.name, description: form.description || undefined })
-        setShowModal(false)
-        setForm({ name: '', description: '' })
-        router.push(`/admin/templates/pssr/${tmpl.id}`)
-      } catch (e: unknown) {
-        setFormError(e instanceof Error ? e.message : 'Error al crear')
+      const res = await createPssrTemplate({ name: form.name, description: form.description || undefined })
+      if (res.error ?? !res.template) {
+        setFormError(res.error ?? 'Error al crear')
+        return
       }
+      setShowModal(false)
+      setForm({ name: '', description: '' })
+      router.push(`/admin/templates/pssr/${res.template.id}`)
     })
   }
 
   async function handleSeedDefault(templateId: string) {
     setSeedingId(templateId)
-    try {
-      await seedDefaultPssrTemplate(templateId)
-      router.refresh()
-    } finally {
-      setSeedingId(null)
-    }
+    const res = await seedDefaultPssrTemplate(templateId)
+    setSeedingId(null)
+    if (res.error) { setPreviewError(res.error); return }
+    router.refresh()
   }
 
   async function handleDelete(id: string) {
     setDeletingId(id)
     startTransition(async () => {
-      try { await deletePssrTemplate(id); router.refresh() }
-      finally { setDeletingId(null) }
+      const res = await deletePssrTemplate(id)
+      setDeletingId(null)
+      if (res.error) { setPreviewError(res.error); return }
+      router.refresh()
     })
   }
 
