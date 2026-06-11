@@ -102,13 +102,13 @@ export default async function HeroSection() {
             {/* Trust indicators */}
             <div style={{ display: 'flex', gap: 28, marginTop: 40, flexWrap: 'wrap' }}>
               {[
-                { value: '100%', label: 'Paperless' },
-                { value: 'NFC + QR', label: 'Field scanning' },
-                { value: 'Multi-tenant', label: 'Secure isolation' },
+                { value: '100%', label: t('trustPaperless') },
+                { value: 'NFC + QR', label: t('trustScanning') },
+                { value: 'Multi-tenant', label: t('trustIsolation') },
               ].map(({ value, label }) => (
                 <div key={label}>
                   <div style={{ fontSize: 20, fontWeight: 700, color: '#00B5A8' }}>{value}</div>
-                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{label}</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{label}</div>
                 </div>
               ))}
             </div>

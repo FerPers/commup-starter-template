@@ -1844,7 +1844,12 @@
       "statItrs": "ITRs completados",
       "statPunches": "Punches abiertos",
       "statCerts": "Certificados emitidos",
-      "statPhase": "Avance de fase"
+      "statPhase": "Avance de fase",
+      "trustPaperless": "Sin papel",
+      "trustScanning": "Escaneo en campo",
+      "trustIsolation": "Aislamiento seguro",
+      "pause": "Pausar presentación",
+      "play": "Reanudar presentación"
     },
     "problem": {
       "title": "El commissioning aún se gestiona con herramientas que no fueron diseñadas para campo.",
@@ -1853,7 +1858,8 @@
       "card2Title": "Punch Lists sin una única fuente de verdad",
       "card2Desc": "Múltiples Excel, datos desactualizados y sin seguimiento unificado. El avance real del proyecto es desconocido hasta que es tarde.",
       "card3Title": "Certificados emitidos sin bloquear deficiencias críticas",
-      "card3Desc": "Sin lógica de bloqueo automático. Punches Cat A llegando a operaciones — generando retrabajos costosos y retrasos en el arranque."
+      "card3Desc": "Sin lógica de bloqueo automático. Punches Cat A llegando a operaciones — generando retrabajos costosos y retrasos en el arranque.",
+      "label": "Características"
     },
     "howItWorks": {
       "title": "De la ejecución en campo al dossier de transferencia",
@@ -1866,7 +1872,8 @@
       "step4Label": "Emite el Certificado",
       "step4Desc": "Bloqueado automáticamente hasta cerrar todos los punches Cat A. Un clic, trazabilidad completa.",
       "step5Label": "Dossier de Transferencia",
-      "step5Desc": "Paquete completo: ITRs, certificados, historial de punches y firmas digitales — listo para entrega al cliente."
+      "step5Desc": "Paquete completo: ITRs, certificados, historial de punches y firmas digitales — listo para entrega al cliente.",
+      "label": "Flujo de trabajo"
     },
     "modules": {
       "title": "Explora los módulos",
@@ -1907,7 +1914,8 @@
         "bullet2": "Alertas de vencidos y próximos por tag",
         "bullet3": "Historial completo de mantenimiento en períodos de inactividad"
       },
-      "subtitle": "Explora los módulos de la plataforma con demos interactivas"
+      "subtitle": "Explora los módulos de la plataforma con demos interactivas",
+      "label": "Módulos"
     },
     "differentiators": {
       "title": "Construido para gente de campo. Confiable para la gobernanza del proyecto.",
@@ -1918,7 +1926,8 @@
       "realtimeTitle": "KPIs y dashboards en tiempo real",
       "realtimeDesc": "Cada ITR completado o punch cerrado se refleja al instante para todo el equipo.",
       "securityTitle": "Multi-tenant seguro",
-      "securityDesc": "Cada empresa y proyecto completamente aislado por diseño. Tus datos son solo tuyos — con control de acceso por rol y trazabilidad de auditoría completa."
+      "securityDesc": "Cada empresa y proyecto completamente aislado por diseño. Tus datos son solo tuyos — con control de acceso por rol y trazabilidad de auditoría completa.",
+      "label": "Diferenciadores"
     },
     "industries": {
       "title": "Construido para los proyectos más exigentes",
@@ -1928,7 +1937,8 @@
       "offshore": "Offshore",
       "mining": "Minería",
       "industrial": "Plantas Industriales",
-      "refining": "Refinación & Petroquímica"
+      "refining": "Refinación & Petroquímica",
+      "label": "Industrias"
     },
     "leadForm": {
       "namePh": "Nombre completo",
@@ -1984,7 +1994,9 @@
       "blog": "Blog",
       "demo": "Demo",
       "product": "Producto",
-      "social": "Síguenos"
+      "social": "Síguenos",
+      "subtitle": "Sistema de gestión de completion",
+      "clientAccess": "Acceso a Clientes"
     },
     "socialProof": {
       "title": "Desafíos comunes de commissioning que CommUp está construido para resolver",
@@ -1996,7 +2008,8 @@
       "s2Module": "Certificación",
       "s3Title": "Sin visibilidad en tiempo real para la gerencia",
       "s3Desc": "Gerentes de proyecto esperando los reportes manuales del lunes en Excel. CommUp entrega dashboards KPI en vivo por sistema, área, disciplina y fase — siempre actualizados.",
-      "s3Module": "KPIs & Torre de Control"
+      "s3Module": "KPIs & Torre de Control",
+      "label": "Casos de uso"
     }
   }
 }

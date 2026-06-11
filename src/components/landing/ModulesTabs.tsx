@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import ItrMockup from './mockups/ItrMockup'
 import PunchMockup from './mockups/PunchMockup'
 import KpiMockup from './mockups/KpiMockup'
@@ -24,9 +25,24 @@ interface Props {
 }
 
 export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Props) {
+  const t = useTranslations('Landing')
   const [active, setActive] = useState<TabKey>('itrs')
 
-  const activeTab = tabs.find(t => t.key === active)!
+  const activeTab = tabs.find(tab => tab.key === active)!
+
+  // Tabs accesibles: flechas para moverse, Home/End para extremos
+  function onTabKeyDown(e: React.KeyboardEvent, index: number) {
+    const last = tabs.length - 1
+    let next: number | null = null
+    if (e.key === 'ArrowRight') next = index === last ? 0 : index + 1
+    else if (e.key === 'ArrowLeft') next = index === 0 ? last : index - 1
+    else if (e.key === 'Home') next = 0
+    else if (e.key === 'End') next = last
+    if (next === null) return
+    e.preventDefault()
+    setActive(tabs[next].key)
+    document.getElementById(`modules-tab-${tabs[next].key}`)?.focus()
+  }
 
   const mockups: Record<TabKey, React.ReactNode> = {
     itrs: <ItrMockup />,
@@ -53,7 +69,7 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
             fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
             textTransform: 'uppercase',
           }}>
-            MÓDULOS
+            {t('modules.label')}
           </div>
         </div>
 
@@ -73,15 +89,25 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
         )}
 
         {/* Tab bar — text only, no icons */}
-        <div style={{
-          display: 'flex', gap: 4, background: '#F1F5F9',
-          border: '1px solid #E9EDF1', borderRadius: 12,
-          padding: 6, marginBottom: 32, overflowX: 'auto',
-        }}>
-          {tabs.map(tab => (
+        <div
+          role="tablist"
+          aria-label={t('modules.label')}
+          style={{
+            display: 'flex', gap: 4, background: '#F1F5F9',
+            border: '1px solid #E9EDF1', borderRadius: 12,
+            padding: 6, marginBottom: 32, overflowX: 'auto',
+          }}
+        >
+          {tabs.map((tab, i) => (
             <button
               key={tab.key}
+              id={`modules-tab-${tab.key}`}
+              role="tab"
+              aria-selected={active === tab.key}
+              aria-controls={`modules-panel-${tab.key}`}
+              tabIndex={active === tab.key ? 0 : -1}
               onClick={() => setActive(tab.key)}
+              onKeyDown={e => onTabKeyDown(e, i)}
               style={{
                 flex: '1 1 auto', minWidth: 100,
                 padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
@@ -97,9 +123,13 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
         </div>
 
         {/* Content: mockup + description */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 300px', gap: 32, alignItems: 'start',
-        }} className="modules-grid">
+        <div
+          id={`modules-panel-${active}`}
+          role="tabpanel"
+          aria-labelledby={`modules-tab-${active}`}
+          style={{
+            display: 'grid', gridTemplateColumns: '1fr 300px', gap: 32, alignItems: 'start',
+          }} className="modules-grid">
           {/* Mockup panel — dark navy for app preview contrast */}
           <div style={{
             background: '#0B1D3A',
@@ -187,7 +217,7 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
                   transition: 'background 0.15s',
                 }}
               >
-                Request demo →
+                {t('nav.requestDemo')} →
               </a>
             </div>
           </div>

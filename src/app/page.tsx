@@ -1,7 +1,30 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Script from 'next/script'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
+
+// Metadata del landing localizada (la global del layout queda en EN para el resto)
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale()
+  if (locale !== 'es') return {}
+  const title = 'CommUp — Software de Commissioning y Completions'
+  const description = 'Plataforma cloud para completion & commissioning industrial: ITRs digitales, punch lists, certificados MC/RFC/RFSU, preservación y KPIs en tiempo real. Para Oil & Gas, LNG, renovables, minería y planta industrial.'
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: 'https://commup.app',
+      siteName: 'CommUp',
+      type: 'website',
+      locale: 'es_ES',
+      images: [{ url: '/images/og-image.jpg', width: 1200, height: 630, alt: 'CommUp — plataforma de commissioning industrial' }],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: ['/images/og-image.jpg'] },
+  }
+}
 import LandingNavbar from '@/components/landing/LandingNavbar'
 import HeroSection from '@/components/landing/HeroSection'
 import ProblemSection from '@/components/landing/ProblemSection'

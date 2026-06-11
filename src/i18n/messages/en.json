@@ -1844,7 +1844,12 @@
       "statItrs": "ITRs completed",
       "statPunches": "Open punches",
       "statCerts": "Certificates issued",
-      "statPhase": "Phase progress"
+      "statPhase": "Phase progress",
+      "trustPaperless": "Paperless",
+      "trustScanning": "Field scanning",
+      "trustIsolation": "Secure isolation",
+      "pause": "Pause slideshow",
+      "play": "Resume slideshow"
     },
     "problem": {
       "title": "Commissioning is still managed with tools that weren't designed for the field.",
@@ -1853,7 +1858,8 @@
       "card2Title": "Punch Lists without a single source of truth",
       "card2Desc": "Multiple Excel files, outdated data and no unified tracking. Real project progress is unknown until it's too late.",
       "card3Title": "Certificates issued without blocking critical deficiencies",
-      "card3Desc": "No automatic blocking logic. Cat A punches reaching operations — causing costly rework and startup delays."
+      "card3Desc": "No automatic blocking logic. Cat A punches reaching operations — causing costly rework and startup delays.",
+      "label": "Features"
     },
     "howItWorks": {
       "title": "From Field Execution to Handover Dossier",
@@ -1866,7 +1872,8 @@
       "step4Label": "Issue Certificate",
       "step4Desc": "Auto-blocked until all Cat A punches are resolved. One click, full traceability.",
       "step5Label": "Handover Dossier",
-      "step5Desc": "Complete package: ITRs, certificates, punch history and digital signatures — ready for client handover."
+      "step5Desc": "Complete package: ITRs, certificates, punch history and digital signatures — ready for client handover.",
+      "label": "Workflow"
     },
     "modules": {
       "title": "Explore the modules",
@@ -1907,7 +1914,8 @@
         "bullet2": "Overdue and upcoming alerts by tag",
         "bullet3": "Complete history of maintenance during idle periods"
       },
-      "subtitle": "Explore the platform modules with interactive demos"
+      "subtitle": "Explore the platform modules with interactive demos",
+      "label": "Modules"
     },
     "differentiators": {
       "title": "Built for field teams. Trusted by project governance.",
@@ -1918,7 +1926,8 @@
       "realtimeTitle": "Real-time KPIs & dashboards",
       "realtimeDesc": "Every completed ITR or closed punch reflected instantly for the whole team.",
       "securityTitle": "Secure multi-tenant",
-      "securityDesc": "Each company and project completely isolated by design. Your data is yours alone — with full role-based access control and audit trail."
+      "securityDesc": "Each company and project completely isolated by design. Your data is yours alone — with full role-based access control and audit trail.",
+      "label": "Differentiators"
     },
     "industries": {
       "title": "Built for the most demanding projects",
@@ -1928,7 +1937,8 @@
       "offshore": "Offshore",
       "mining": "Mining",
       "industrial": "Industrial Plants",
-      "refining": "Refining & Petrochemical"
+      "refining": "Refining & Petrochemical",
+      "label": "Industries"
     },
     "leadForm": {
       "namePh": "Full name",
@@ -1984,7 +1994,9 @@
       "blog": "Blog",
       "demo": "Demo",
       "product": "Product",
-      "social": "Follow us"
+      "social": "Follow us",
+      "subtitle": "Completion Management System",
+      "clientAccess": "Client Access"
     },
     "socialProof": {
       "title": "Common commissioning challenges CommUp is built to solve",
@@ -1996,7 +2008,8 @@
       "s2Module": "Certification",
       "s3Title": "No real-time visibility for project management",
       "s3Desc": "Project managers waiting for Monday's manual Excel reports. CommUp delivers live KPI dashboards by system, area, discipline and phase — always current.",
-      "s3Module": "KPIs & Control Tower"
+      "s3Module": "KPIs & Control Tower",
+      "label": "Use cases"
     }
   }
 }

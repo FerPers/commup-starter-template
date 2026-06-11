@@ -1,71 +1,75 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useTranslations } from 'next-intl'
 
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
+function subscribeReducedMotion(callback: () => void) {
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY)
+  mq.addEventListener('change', callback)
+  return () => mq.removeEventListener('change', callback)
+}
+
+// Solo imágenes landscape reales (las retrato 784×1168 se estiraban y pesaban 1.3MB en JPEG)
 const IMAGES = [
-  '/images/hero-1.jpg',
-  '/images/hero-2.jpg',
-  '/images/hero-3.jpg',
-  '/images/hero-4.jpg',
-  '/images/hero-5.jpg',
+  '/images/hero-1.webp',
+  '/images/hero-5.webp',
 ]
 
-const INTERVAL_MS = 7000
+const INTERVAL_MS = 8000
 const FADE_MS = 1200
 
 export default function HeroSlideshow() {
+  const t = useTranslations('Landing.hero')
   const [current, setCurrent] = useState(0)
-  const [prev, setPrev] = useState<number | null>(null)
-  const [fading, setFading] = useState(false)
+  // WCAG 2.3.3: sin auto-rotación si el usuario prefiere menos movimiento,
+  // salvo que pulse play explícitamente (userPaused null = sin elección)
+  const prefersReduced = useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false,
+  )
+  const [userPaused, setUserPaused] = useState<boolean | null>(null)
+  const paused = userPaused ?? prefersReduced
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setFading(true)
-      setPrev(current)
-      const next = (current + 1) % IMAGES.length
-      setTimeout(() => {
-        setCurrent(next)
-        setFading(false)
-        setPrev(null)
-      }, FADE_MS)
-    }, INTERVAL_MS)
-
+    if (paused) return
+    const timer = setInterval(() => setCurrent(c => (c + 1) % IMAGES.length), INTERVAL_MS)
     return () => clearInterval(timer)
-  }, [current])
-
-  const baseStyle: React.CSSProperties = {
-    position: 'absolute',
-    inset: 0,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    transition: `opacity ${FADE_MS}ms ease-in-out`,
-  }
+  }, [paused])
 
   return (
     <>
-      {/* Previous image — fades out */}
-      {prev !== null && (
-        <div style={{
-          ...baseStyle,
-          backgroundImage: `url(${IMAGES[prev]})`,
-          opacity: fading ? 0 : 1,
-        }} />
-      )}
+      {IMAGES.map((src, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={src}
+          src={src}
+          alt=""
+          aria-hidden="true"
+          fetchPriority={i === 0 ? 'high' : 'low'}
+          decoding="async"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: i === current ? 1 : 0,
+            transition: `opacity ${FADE_MS}ms ease-in-out`,
+          }}
+        />
+      ))}
 
-      {/* Current image — fades in */}
-      <div style={{
-        ...baseStyle,
-        backgroundImage: `url(${IMAGES[current]})`,
-        opacity: fading ? 0 : 1,
-      }} />
-
-      {/* Dot indicators */}
+      {/* Controles: dots + pausa (WCAG 2.2.2) */}
       <div style={{
         position: 'absolute',
         bottom: 32,
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
+        alignItems: 'center',
         gap: 8,
         zIndex: 10,
       }}>
@@ -86,6 +90,30 @@ export default function HeroSlideshow() {
             aria-label={`Slide ${i + 1}`}
           />
         ))}
+        <button
+          onClick={() => setUserPaused(!paused)}
+          aria-label={paused ? t('play') : t('pause')}
+          style={{
+            width: 22,
+            height: 22,
+            marginLeft: 4,
+            borderRadius: '50%',
+            border: '1px solid rgba(255,255,255,0.3)',
+            background: 'rgba(0,0,0,0.25)',
+            color: '#e2e8f0',
+            cursor: 'pointer',
+            padding: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {paused ? (
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><path d="M2 1l7 4-7 4z" /></svg>
+          ) : (
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><path d="M2 1h2.4v8H2zM5.6 1H8v8H5.6z" /></svg>
+          )}
+        </button>
       </div>
     </>
   )

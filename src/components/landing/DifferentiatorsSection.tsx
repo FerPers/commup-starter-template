@@ -47,7 +47,7 @@ export default async function DifferentiatorsSection() {
             fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
             textTransform: 'uppercase',
           }}>
-            DIFERENCIADORES
+            {t('label')}
           </div>
         </div>
 

@@ -26,7 +26,7 @@ export default async function HowItWorks() {
       position: 'relative', overflow: 'hidden',
       backgroundImage: [
         'linear-gradient(to bottom, rgba(8,8,18,0.78) 0%, rgba(8,8,18,0.65) 50%, rgba(8,8,18,0.80) 100%)',
-        'url(/images/how-it-works.jpg)',
+        'url(/images/how-it-works.webp)',
       ].join(', '),
       backgroundSize: 'auto, cover',
       backgroundPosition: 'center, center 30%',
@@ -42,7 +42,7 @@ export default async function HowItWorks() {
             fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
             textTransform: 'uppercase',
           }}>
-            FLUJO DE TRABAJO
+            {t('label')}
           </div>
         </div>
 

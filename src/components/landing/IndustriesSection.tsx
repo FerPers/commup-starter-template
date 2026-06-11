@@ -30,7 +30,7 @@ export default async function IndustriesSection() {
             fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
             textTransform: 'uppercase',
           }}>
-            INDUSTRIAS
+            {t('label')}
           </div>
         </div>
 

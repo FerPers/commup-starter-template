@@ -21,10 +21,10 @@ export default async function LandingFooter() {
           <div>
             <div style={{ marginBottom: 14 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logos/compact-dark-transparent.svg" height={15} alt="CommUp" style={{ display: 'block' }} />
+              <img src="/logos/compact-dark-transparent.svg" height={15} alt="CommUp" style={{ display: 'block', height: 15, width: 'auto' }} />
             </div>
-            <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5, margin: '0 0 4px' }}>
-              Completion Management System
+            <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, margin: '0 0 4px' }}>
+              {t('subtitle')}
             </p>
             <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.65, margin: '0 0 16px', maxWidth: 240 }}>
               {t('tagline')}
@@ -39,7 +39,7 @@ export default async function LandingFooter() {
 
           {/* Product */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
               {t('product')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -52,7 +52,7 @@ export default async function LandingFooter() {
 
           {/* Modules */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
               {t('modules')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -66,7 +66,7 @@ export default async function LandingFooter() {
 
           {/* Company */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
               {t('company')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -87,7 +87,7 @@ export default async function LandingFooter() {
 
           {/* Legal */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>
               {t('legal')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -95,7 +95,7 @@ export default async function LandingFooter() {
               <li><Link href="/terms" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('terms')}</Link></li>
               <li>
                 <Link href="/login" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
-                  Client Access
+                  {t('clientAccess')}
                 </Link>
               </li>
             </ul>
@@ -109,12 +109,12 @@ export default async function LandingFooter() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           flexWrap: 'wrap', gap: 12,
         }}>
-          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
             © 2026 CommUp. {t('rights')}
           </p>
           {/* Redes sociales retiradas hasta tener cuentas reales (audit L1) */}
           <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: '#64748b' }}>commup.app</span>
+            <span style={{ fontSize: 12, color: '#94a3b8' }}>commup.app</span>
           </div>
         </div>
       </div>

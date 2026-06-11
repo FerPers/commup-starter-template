@@ -41,7 +41,7 @@ export default async function ProblemSection() {
             fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
             textTransform: 'uppercase',
           }}>
-              CARACTERÍSTICAS
+              {t('label')}
           </div>
         </div>
 
