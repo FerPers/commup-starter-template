@@ -6,13 +6,33 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 
 export const metadata: Metadata = {
-  title: 'CommUp — Completion Management System',
-  description: 'Industrial project completion, commissioning and start-up management platform',
+  metadataBase: new URL('https://commup.app'),
+  title: {
+    default: 'CommUp — Commissioning & Completions Management Software',
+    template: '%s · CommUp',
+  },
+  description: 'Cloud platform for industrial completion & commissioning management: digital ITRs, punch lists, MC/RFC/RFSU certificates, preservation and real-time KPIs. Built for Oil & Gas, LNG, renewables, mining and industrial plants.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'CommUp',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://commup.app',
+    siteName: 'CommUp',
+    title: 'CommUp — Commissioning & Completions Management Software',
+    description: 'Digital ITRs, punch lists, certificates, preservation and real-time KPIs for industrial commissioning projects.',
+    images: [{ url: '/images/og-image.jpg', width: 1200, height: 630, alt: 'CommUp — industrial commissioning platform' }],
+    locale: 'es_ES',
+    alternateLocale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CommUp — Commissioning & Completions Management Software',
+    description: 'Digital ITRs, punch lists, certificates, preservation and real-time KPIs for industrial commissioning projects.',
+    images: ['/images/og-image.jpg'],
   },
 }
 
@@ -20,7 +40,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#7c3aed',
+  themeColor: '#0B1D3A',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

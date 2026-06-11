@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import Script from 'next/script'
 import { getTranslations } from 'next-intl/server'
-import { createClient } from '@/lib/supabase/server'
 import LandingNavbar from '@/components/landing/LandingNavbar'
 import HeroSection from '@/components/landing/HeroSection'
 import ProblemSection from '@/components/landing/ProblemSection'
@@ -15,9 +15,12 @@ import CtaSection from '@/components/landing/CtaSection'
 import LandingFooter from '@/components/landing/LandingFooter'
 
 export default async function RootPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) redirect('/dashboard')
+  // Check barato de sesión: solo presencia de la cookie de Supabase, sin llamada
+  // de red a Auth por cada visita anónima. La validación real la hace el layout
+  // del dashboard; una cookie stale solo provoca un rebote /dashboard → /login.
+  const cookieStore = await cookies()
+  const hasSession = cookieStore.getAll().some(c => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
+  if (hasSession) redirect('/dashboard')
 
   const t = await getTranslations('Landing')
 
@@ -76,6 +79,33 @@ export default async function RootPage() {
       <PricingSection />
       <CtaSection />
       <LandingFooter />
+      {/* JSON-LD para resultados enriquecidos (SoftwareApplication + Organization) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'SoftwareApplication',
+                name: 'CommUp',
+                applicationCategory: 'BusinessApplication',
+                operatingSystem: 'Web',
+                url: 'https://commup.app',
+                description: 'Commissioning & completions management software: digital ITRs, punch lists, certificates, preservation and real-time KPIs for industrial projects.',
+                offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', description: 'Demo on request' },
+              },
+              {
+                '@type': 'Organization',
+                name: 'CommUp',
+                url: 'https://commup.app',
+                logo: 'https://commup.app/icons/icon-512x512.png',
+                email: 'contacto@commup.app',
+              },
+            ],
+          }),
+        }}
+      />
       {/* Cloudflare Web Analytics — cookieless; solo activo si el token está configurado */}
       {process.env.NEXT_PUBLIC_CF_BEACON_TOKEN && (
         <Script

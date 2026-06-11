@@ -7,10 +7,14 @@
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0f172a",
-  "theme_color": "#0ea5e9",
+  "theme_color": "#0B1D3A",
   "lang": "es",
   "dir": "ltr",
-  "categories": ["business", "utilities", "productivity"],
+  "categories": [
+    "business",
+    "utilities",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -48,7 +52,10 @@
       "files": [
         {
           "name": "media",
-          "accept": ["image/*", "application/pdf"]
+          "accept": [
+            "image/*",
+            "application/pdf"
+          ]
         }
       ]
     }
