@@ -1,11 +1,14 @@
 'use client'
 
+// Builder de templates ITR — orquestador (Q3). Estado de secciones/ítems +
+// operaciones de servidor; la UI vive en TemplateHeaderCard,
+// TemplateSectionCard, TemplateItemForm y TemplatePublishModal.
+
 import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
-  updateTemplateHeader,
   publishTemplateVersion,
   createSection, updateSection, deleteSection, reorderSections,
   createItem, updateItem, deleteItem, reorderItems,
@@ -13,73 +16,23 @@ import {
 } from '@/app/actions/itr-templates'
 import { exportItrTemplate } from '@/app/actions/templates-backup'
 import type { TemplatesBackup } from '@/lib/constants/templates-backup'
-import type { ItrItemType } from '@/types/database'
 import ImportItemsModal from './ImportItemsModal'
 import BackupDocumentView from '@/components/templates/BackupDocumentView'
-
-function downloadJsonFile(filename: string, payload: unknown) {
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
-}
-
-function dateStamp() {
-  const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-}
-
-// ── Types ──────────────────────────────────────────────────────
-
-interface BuilderItem {
-  id: string
-  item_number: string | null
-  description: string
-  description_es: string | null
-  item_type: ItrItemType
-  is_required: boolean
-  is_critical: boolean
-  requires_photo: boolean
-  requires_measurement: boolean
-  unit: string | null
-  acceptance_min: number | null
-  acceptance_max: number | null
-  acceptance_text: string | null
-  order_index: number
-  condition_item_id: string | null
-  condition_value: string | null
-}
-
-interface BuilderSection {
-  id: string
-  title: string
-  order_index: number
-  items: BuilderItem[]
-}
-
-interface TemplateData {
-  id: string
-  code: string
-  title: string
-  description: string | null
-  version: number
-  is_active: boolean
-  disciplines: { id: string; code: string; name: string; color: string } | null
-  project_phases: { id: string; code: string; name: string; color: string } | null
-  itr_template_sections: Array<{
-    id: string; title: string; order_index: number
-    itr_template_items: BuilderItem[]
-  }>
-}
-
-interface Discipline { id: string; code: string; name: string; color: string }
-interface Phase { id: string; code: string; name: string; color: string; order_index: number }
+import TemplateHeaderCard from './TemplateHeaderCard'
+import TemplateSectionCard from './TemplateSectionCard'
+import TemplatePublishModal from './TemplatePublishModal'
+import {
+  buildSections,
+  dateStamp,
+  downloadJsonFile,
+  fieldInput,
+  type BuilderItem,
+  type BuilderSection,
+  type Discipline,
+  type ItemFormValues,
+  type Phase,
+  type TemplateData,
+} from './template-builder-shared'
 
 interface Props {
   template: TemplateData
@@ -88,68 +41,10 @@ interface Props {
   canEdit: boolean
 }
 
-// ── Default item form ──────────────────────────────────────────
-
-const DEFAULT_ITEM: Omit<ItemPayload, 'order_index'> = {
-  item_number: '',
-  description: '',
-  description_es: '',
-  item_type: 'checkbox',
-  is_required: true,
-  is_critical: false,
-  requires_photo: false,
-  requires_measurement: false,
-  unit: '',
-  acceptance_min: null,
-  acceptance_max: null,
-  acceptance_text: '',
-  condition_item_id: null,
-  condition_value: null,
-}
-
-// ── Helpers (outside component to avoid dep array issues) ────────
-
-function buildSections(raw: TemplateData['itr_template_sections']): BuilderSection[] {
-  return [...raw]
-    .sort((a, b) => a.order_index - b.order_index)
-    .map(s => ({
-      ...s,
-      items: [...s.itr_template_items].sort((a, b) => a.order_index - b.order_index),
-    }))
-}
-
-// ── Main component ─────────────────────────────────────────────
-
 export default function TemplateBuilder({ template, canEdit }: Props) {
   const router = useRouter()
   const t = useTranslations('ItrTemplates.builder')
   const [isPending, startTransition] = useTransition()
-
-  // Item type config — labels resolved via i18n
-  const ITEM_TYPES: { value: ItrItemType; label: string; color: string }[] = [
-    { value: 'checkbox',    label: t('itemTypeCheckbox'),    color: '#3b82f6' },
-    { value: 'yes_no',      label: t('itemTypeYesNo'),       color: '#10b981' },
-    { value: 'number',      label: t('itemTypeNumber'),      color: '#f59e0b' },
-    { value: 'measurement', label: t('itemTypeMeasurement'), color: '#8b5cf6' },
-    { value: 'text',        label: t('itemTypeText'),        color: 'var(--text-muted)' },
-    { value: 'select',      label: t('itemTypeSelect'),      color: '#14b8a6' },
-    { value: 'photo',       label: t('itemTypePhoto'),       color: '#ec4899' },
-    { value: 'signature',   label: t('itemTypeSignature'),   color: '#6366f1' },
-    { value: 'date',        label: t('itemTypeDate'),        color: '#f97316' },
-  ]
-
-  function TypeBadge({ type }: { type: string }) {
-    const cfg = ITEM_TYPES.find(it => it.value === type) ?? { label: type, color: 'var(--gray-400)' }
-    return (
-      <span style={{
-        padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
-        background: `${cfg.color}18`, color: cfg.color, border: `1px solid ${cfg.color}30`,
-        whiteSpace: 'nowrap',
-      }}>
-        {cfg.label}
-      </span>
-    )
-  }
 
   // ── Template data state
   const [sections, setSections] = useState<BuilderSection[]>(() => buildSections(template.itr_template_sections))
@@ -167,49 +62,10 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
   const [publishResult, setPublishResult] = useState<string | null>(null)
 
-  // ── Header state
-  const [headerEditing, setHeaderEditing] = useState(false)
-  const [headerForm, setHeaderForm] = useState({
-    code: template.code,
-    title: template.title,
-    description: template.description ?? '',
-    is_active: template.is_active,
-  })
-  const [headerError, setHeaderError] = useState<string | null>(null)
-
-  // ── Section state
+  // ── Add-section state
   const [showAddSection, setShowAddSection] = useState(false)
   const [newSectionTitle, setNewSectionTitle] = useState('')
-  const [editingSectionId, setEditingSectionId] = useState<string | null>(null)
-  const [editingSectionTitle, setEditingSectionTitle] = useState('')
-
-  // ── Item state
-  const [addingItemSectionId, setAddingItemSectionId] = useState<string | null>(null)
-  const [editingItemId, setEditingItemId] = useState<string | null>(null)
-  const [itemForm, setItemForm] = useState<Omit<ItemPayload, 'order_index'>>(DEFAULT_ITEM)
-  const [itemError, setItemError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
-
-  // ── Header save ────────────────────────────────────────────────
-
-  function saveHeader() {
-    if (!headerForm.code.trim() || !headerForm.title.trim()) {
-      setHeaderError(t('errCodeTitleRequired'))
-      return
-    }
-    setHeaderError(null)
-    startTransition(async () => {
-      const res = await updateTemplateHeader(template.id, {
-        code: headerForm.code.trim().toUpperCase(),
-        title: headerForm.title.trim(),
-        description: headerForm.description.trim() || null,
-        is_active: headerForm.is_active,
-      })
-      if (res.error) { setHeaderError(res.error); return }
-      setHeaderEditing(false)
-      router.refresh()
-    })
-  }
 
   // ── Publish version ───────────────────────────────────────────
 
@@ -248,16 +104,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
     })
   }
 
-  function handleSaveSection(sectionId: string) {
-    if (!editingSectionTitle.trim()) return
-    startTransition(async () => {
-      const res = await updateSection(sectionId, editingSectionTitle.trim())
-      if (res.error) { setActionError(res.error); return }
-      setSections(prev => prev.map(s =>
-        s.id === sectionId ? { ...s, title: editingSectionTitle.trim() } : s
-      ))
-      setEditingSectionId(null)
-    })
+  async function handleRenameSection(sectionId: string, title: string): Promise<string | null> {
+    const res = await updateSection(sectionId, title)
+    if (res.error) { setActionError(res.error); return res.error }
+    setSections(prev => prev.map(s =>
+      s.id === sectionId ? { ...s, title } : s
+    ))
+    return null
   }
 
   function handleDeleteSection(sectionId: string, title: string) {
@@ -291,91 +144,48 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
   // ── Item operations ───────────────────────────────────────────
 
-  function openAddItem(sectionId: string) {
-    setEditingItemId(null)
-    setItemError(null)
-    setItemForm(DEFAULT_ITEM)
-    setAddingItemSectionId(sectionId)
+  // '' → null (un `??` preservaría el string vacío)
+  function trimOrNull(s: string | null | undefined): string | null {
+    const v = s?.trim()
+    return v?.length ? v : null
   }
 
-  function openEditItem(item: BuilderItem) {
-    setAddingItemSectionId(null)
-    setItemError(null)
-    setItemForm({
-      item_number: item.item_number ?? '',
-      description: item.description,
-      description_es: item.description_es ?? '',
-      item_type: item.item_type,
-      is_required: item.is_required,
-      is_critical: item.is_critical,
-      requires_photo: item.requires_photo,
-      requires_measurement: item.requires_measurement,
-      unit: item.unit ?? '',
-      acceptance_min: item.acceptance_min,
-      acceptance_max: item.acceptance_max,
-      acceptance_text: item.acceptance_text ?? '',
-      condition_item_id: item.condition_item_id,
-      condition_value: item.condition_value,
-    })
-    setEditingItemId(item.id)
-  }
-
-  function handleSaveNewItem(sectionId: string) {
-    if (!itemForm.description.trim()) {
-      setItemError(t('errDescriptionRequired'))
-      return
+  function normalizeForm(form: ItemFormValues): Omit<ItemPayload, 'order_index'> {
+    return {
+      ...form,
+      item_number: trimOrNull(form.item_number),
+      description: form.description.trim(),
+      description_es: trimOrNull(form.description_es),
+      unit: trimOrNull(form.unit),
+      acceptance_text: trimOrNull(form.acceptance_text),
     }
-    setItemError(null)
+  }
+
+  async function handleCreateItem(sectionId: string, form: ItemFormValues): Promise<string | null> {
     const section = sections.find(s => s.id === sectionId)
     const orderIndex = section ? section.items.length : 0
-    startTransition(async () => {
-      const payload: ItemPayload = {
-        ...itemForm,
-        item_number: (itemForm.item_number as string)?.trim() || null,
-        description: (itemForm.description as string).trim(),
-        description_es: (itemForm.description_es as string)?.trim() || null,
-        unit: (itemForm.unit as string)?.trim() || null,
-        acceptance_text: (itemForm.acceptance_text as string)?.trim() || null,
-        order_index: orderIndex,
-      }
-      const res = await createItem(sectionId, template.id, payload)
-      if (res.error) { setItemError(res.error); return }
-      setSections(prev => prev.map(s =>
-        s.id === sectionId
-          ? { ...s, items: [...s.items, { id: res.id!, ...payload } as BuilderItem] }
-          : s
-      ))
-      setAddingItemSectionId(null)
-      setItemForm(DEFAULT_ITEM)
-    })
+    const payload: ItemPayload = { ...normalizeForm(form), order_index: orderIndex }
+    const res = await createItem(sectionId, template.id, payload)
+    if (res.error) return res.error
+    setSections(prev => prev.map(s =>
+      s.id === sectionId
+        ? { ...s, items: [...s.items, { id: res.id!, ...payload } as BuilderItem] }
+        : s
+    ))
+    return null
   }
 
-  function handleSaveEditItem() {
-    if (!editingItemId) return
-    if (!itemForm.description.trim()) {
-      setItemError(t('errDescriptionRequired'))
-      return
-    }
-    setItemError(null)
-    startTransition(async () => {
-      const payload: Partial<ItemPayload> = {
-        ...itemForm,
-        item_number: (itemForm.item_number as string)?.trim() || null,
-        description: (itemForm.description as string).trim(),
-        description_es: (itemForm.description_es as string)?.trim() || null,
-        unit: (itemForm.unit as string)?.trim() || null,
-        acceptance_text: (itemForm.acceptance_text as string)?.trim() || null,
-      }
-      const res = await updateItem(editingItemId, payload)
-      if (res.error) { setItemError(res.error); return }
-      setSections(prev => prev.map(s => ({
-        ...s,
-        items: s.items.map(it =>
-          it.id === editingItemId ? { ...it, ...payload } as BuilderItem : it
-        ),
-      })))
-      setEditingItemId(null)
-    })
+  async function handleUpdateItem(itemId: string, form: ItemFormValues): Promise<string | null> {
+    const payload: Partial<ItemPayload> = normalizeForm(form)
+    const res = await updateItem(itemId, payload)
+    if (res.error) return res.error
+    setSections(prev => prev.map(s => ({
+      ...s,
+      items: s.items.map(it =>
+        it.id === itemId ? { ...it, ...payload } as BuilderItem : it
+      ),
+    })))
+    return null
   }
 
   function handleDeleteItem(itemId: string, sectionId: string) {
@@ -408,231 +218,28 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
     }))
   }
 
-  // ── Item form component (shared for add/edit) ─────────────────
+  // ── Export / preview ──────────────────────────────────────────
 
-  function ItemForm({ onSave, onCancel, sectionId, currentItemId }: {
-    onSave: () => void
-    onCancel: () => void
-    sectionId?: string
-    currentItemId?: string
-  }) {
-    const isMeasurement = itemForm.item_type === 'measurement'
+  function handlePreviewDoc() {
+    startTransition(async () => {
+      const res = await exportItrTemplate(template.id)
+      if (res.error || !res.backup) { setActionError(res.error ?? 'Error al previsualizar'); return }
+      setDocPreview(res.backup)
+    })
+  }
 
-    // All items in this template (for condition dropdown), excluding the item being edited
-    const allTemplateItems = sections.flatMap(s => s.items).filter(it => it.id !== currentItemId)
-
-    // Determine appropriate condition_value UI based on the condition item's type
-    const condItem = allTemplateItems.find(it => it.id === itemForm.condition_item_id)
-    const condType = condItem?.item_type ?? null
-    const useBooleanValues = condType === 'yes_no' || condType === 'checkbox'
-
-    const FLAGS = [
-      { key: 'is_critical',          label: t('flagCritical'),          color: '#ef4444' },
-      { key: 'is_required',          label: t('flagRequired'),          color: '#f59e0b' },
-      { key: 'requires_photo',       label: t('flagRequiresPhoto'),     color: '#3b82f6' },
-      { key: 'requires_measurement', label: t('flagRequiresMeasurement'), color: '#8b5cf6' },
-    ] as const
-
-    return (
-      <div style={{
-        margin: '0 0 2px', padding: '16px 18px',
-        background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '10px',
-      }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '10px', marginBottom: '10px' }}>
-          <label style={fieldLabel}>
-            {t('fieldItemNumber')}
-            <input
-              value={itemForm.item_number as string ?? ''}
-              onChange={e => setItemForm(f => ({ ...f, item_number: e.target.value }))}
-              placeholder="1.0"
-              style={{ ...fieldInput, fontFamily: 'monospace' }}
-            />
-          </label>
-          <label style={fieldLabel}>
-            {t('fieldType')}
-            <select
-              value={itemForm.item_type as string}
-              onChange={e => setItemForm(f => ({ ...f, item_type: e.target.value as ItrItemType }))}
-              style={fieldInput}
-            >
-              {ITEM_TYPES.map(tp => (
-                <option key={tp.value} value={tp.value}>{tp.label}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <label style={{ ...fieldLabel, marginBottom: '10px' }}>
-          {t('fieldDescriptionEn')} <span style={{ color: '#ef4444' }}>*</span>
-          <input
-            value={itemForm.description as string}
-            onChange={e => setItemForm(f => ({ ...f, description: e.target.value }))}
-            placeholder="Verify wiring connections..."
-            style={fieldInput}
-          />
-        </label>
-
-        <label style={{ ...fieldLabel, marginBottom: '10px' }}>
-          {t('fieldDescriptionEs')}
-          <input
-            value={itemForm.description_es as string ?? ''}
-            onChange={e => setItemForm(f => ({ ...f, description_es: e.target.value }))}
-            placeholder="Verificar conexiones de cableado..."
-            style={fieldInput}
-          />
-        </label>
-
-        {isMeasurement && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', gap: '10px', marginBottom: '10px' }}>
-            <label style={fieldLabel}>
-              {t('fieldUnit')}
-              <input
-                value={itemForm.unit as string ?? ''}
-                onChange={e => setItemForm(f => ({ ...f, unit: e.target.value }))}
-                placeholder="mA, psi, °C..."
-                style={fieldInput}
-              />
-            </label>
-            <label style={fieldLabel}>
-              {t('fieldMinAcceptable')}
-              <input
-                type="number"
-                value={itemForm.acceptance_min ?? ''}
-                onChange={e => setItemForm(f => ({ ...f, acceptance_min: e.target.value ? Number(e.target.value) : null }))}
-                style={fieldInput}
-              />
-            </label>
-            <label style={fieldLabel}>
-              {t('fieldMaxAcceptable')}
-              <input
-                type="number"
-                value={itemForm.acceptance_max ?? ''}
-                onChange={e => setItemForm(f => ({ ...f, acceptance_max: e.target.value ? Number(e.target.value) : null }))}
-                style={fieldInput}
-              />
-            </label>
-          </div>
-        )}
-
-        <label style={{ ...fieldLabel, marginBottom: '12px' }}>
-          {t('fieldAcceptanceCriteria')}
-          <input
-            value={itemForm.acceptance_text as string ?? ''}
-            onChange={e => setItemForm(f => ({ ...f, acceptance_text: e.target.value }))}
-            placeholder="Ej: Lectura dentro del ±0.1% del span"
-            style={fieldInput}
-          />
-        </label>
-
-        {/* Flags */}
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '14px', flexWrap: 'wrap' }}>
-          {FLAGS.map(flag => (
-            <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)' }}>
-              <input
-                type="checkbox"
-                checked={itemForm[flag.key] as boolean}
-                onChange={e => setItemForm(f => ({ ...f, [flag.key]: e.target.checked }))}
-                style={{ accentColor: flag.color, width: '14px', height: '14px' }}
-              />
-              <span style={{ color: (itemForm[flag.key] as boolean) ? flag.color : 'var(--text-muted)' }}>{flag.label}</span>
-            </label>
-          ))}
-        </div>
-
-        {/* Conditional logic */}
-        {allTemplateItems.length > 0 && (
-          <div style={{
-            padding: '12px 14px', background: '#fffbeb', border: '1px solid #fef3c7',
-            borderRadius: '8px', marginBottom: '12px',
-          }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-              {t('conditionSectionLabel')}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: '8px' }}>
-              <label style={fieldLabel}>
-                {t('conditionItemLabel')}
-                <select
-                  value={itemForm.condition_item_id ?? ''}
-                  onChange={e => setItemForm(f => ({
-                    ...f,
-                    condition_item_id: e.target.value || null,
-                    condition_value: null,
-                  }))}
-                  style={fieldInput}
-                >
-                  <option value="">{t('conditionItemNone')}</option>
-                  {allTemplateItems.map(it => (
-                    <option key={it.id} value={it.id}>
-                      {it.item_number ? `${it.item_number} — ` : ''}{it.description.slice(0, 60)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {itemForm.condition_item_id && (
-                <label style={fieldLabel}>
-                  {t('conditionValueLabel')}
-                  {useBooleanValues ? (
-                    <select
-                      value={itemForm.condition_value ?? ''}
-                      onChange={e => setItemForm(f => ({ ...f, condition_value: e.target.value || null }))}
-                      style={fieldInput}
-                    >
-                      <option value="">{t('conditionItemNone')}</option>
-                      <option value="true">{t('conditionValueTrue')}</option>
-                      <option value="false">{t('conditionValueFalse')}</option>
-                    </select>
-                  ) : (
-                    <input
-                      value={itemForm.condition_value ?? ''}
-                      onChange={e => setItemForm(f => ({ ...f, condition_value: e.target.value || null }))}
-                      placeholder={t('conditionValuePlaceholder')}
-                      style={fieldInput}
-                    />
-                  )}
-                </label>
-              )}
-            </div>
-          </div>
-        )}
-
-        {itemError && (
-          <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 10px', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px' }}>
-            {itemError}
-          </p>
-        )}
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={onSave}
-            disabled={isPending}
-            style={{
-              padding: '7px 16px', background: '#3b82f6', color: '#fff',
-              borderRadius: '7px', fontSize: '12px', fontWeight: 500,
-              border: 'none', cursor: isPending ? 'not-allowed' : 'pointer',
-              opacity: isPending ? 0.6 : 1,
-            }}
-          >
-            {isPending ? t('btnSavingItem') : sectionId ? t('btnAddItemSave') : t('btnSaveChanges')}
-          </button>
-          <button
-            onClick={onCancel}
-            style={{
-              padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
-              borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
-            }}
-          >
-            {t('btnCancel')}
-          </button>
-        </div>
-      </div>
-    )
+  function handleExportJson() {
+    startTransition(async () => {
+      const res = await exportItrTemplate(template.id)
+      if (res.error || !res.backup) { setActionError(res.error ?? 'Error al exportar'); return }
+      downloadJsonFile(`commup-itr-${template.code}-${dateStamp()}.json`, res.backup)
+    })
   }
 
   // ── Render ────────────────────────────────────────────────────
 
-  const disc = template.disciplines
-  const phase = template.project_phases
   const totalItems = sections.reduce((sum, s) => sum + s.items.length, 0)
+  const allItems: BuilderItem[] = sections.flatMap(s => s.items)
 
   return (
     <div style={{ padding: '32px', maxWidth: '1000px' }}>
@@ -646,224 +253,18 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       </Link>
 
       {/* Header card */}
-      <div style={{
-        background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
-        padding: '22px 24px', marginBottom: '24px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-      }}>
-        {!headerEditing ? (
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 320px', minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                <span style={{
-                  fontSize: '22px', fontWeight: 800, color: 'var(--text-strong)',
-                  fontFamily: 'monospace', letterSpacing: '-0.5px',
-                }}>
-                  {template.code}
-                </span>
-                {disc && (
-                  <span style={{
-                    padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                    background: `${disc.color}15`, color: disc.color,
-                  }}>
-                    {disc.code} — {disc.name}
-                  </span>
-                )}
-                {phase && (
-                  <span style={{
-                    padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-                    background: `${phase.color}18`, color: phase.color,
-                  }}>
-                    {t('headerPhaseLabel', { code: phase.code })}
-                  </span>
-                )}
-                <span style={{
-                  padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
-                  background: '#eff6ff', color: '#3b82f6',
-                  border: '1px solid #bfdbfe',
-                }}>
-                  v{template.version}
-                </span>
-                <span style={{
-                  padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                  background: template.is_active ? '#10b98115' : '#94a3b815',
-                  color: template.is_active ? '#10b981' : 'var(--gray-400)',
-                  border: `1px solid ${template.is_active ? '#10b98130' : 'var(--border)'}`,
-                }}>
-                  {template.is_active ? t('statusActive') : t('statusInactive')}
-                </span>
-              </div>
-              <p style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', margin: '0 0 4px' }}>{template.title}</p>
-              {template.description && (
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{template.description}</p>
-              )}
-              <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '8px 0 0' }}>
-                {t('versionMeta', {
-                  version: template.version,
-                  items: totalItems,
-                  itemsPlural: totalItems !== 1 ? 's' : '',
-                  sections: sections.length,
-                  sectionsPlural: sections.length !== 1 ? 'es' : '',
-                })}
-              </p>
-              {publishResult && (() => {
-                const isErr = publishResult.startsWith('error:')
-                return (
-                  <p style={{ fontSize: '12px', margin: '8px 0 0', padding: '6px 10px', borderRadius: '5px',
-                    background: isErr ? '#fee2e2' : '#ecfdf5', color: isErr ? '#dc2626' : '#16a34a' }}>
-                    {publishResult.slice(6)}
-                  </p>
-                )
-              })()}
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              <a
-                href={`/admin/templates/${template.id}/preview`}
-                style={{
-                  padding: '7px 14px', background: '#f5f3ff', border: '1px solid #ddd6fe',
-                  borderRadius: '8px', fontSize: '12px', color: '#7c3aed', cursor: 'pointer',
-                  fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px',
-                }}
-              >
-                {t('btnFieldView')}
-              </a>
-              {canEdit && (
-                <>
-                  <button
-                    onClick={() => setShowImport(true)}
-                    style={{
-                      padding: '7px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0',
-                      borderRadius: '8px', fontSize: '12px', color: '#16a34a', cursor: 'pointer',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {t('btnImportExcel')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      startTransition(async () => {
-                        const res = await exportItrTemplate(template.id)
-                        if (res.error || !res.backup) { setActionError(res.error ?? 'Error al previsualizar'); return }
-                        setDocPreview(res.backup)
-                      })
-                    }}
-                    disabled={isPending}
-                    style={{
-                      padding: '7px 14px', background: '#eff6ff', border: '1px solid #bfdbfe',
-                      borderRadius: '8px', fontSize: '12px', color: '#1e40af', cursor: isPending ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                    }}
-                    title="Renderiza el template como documento imprimible"
-                  >
-                    Ver como documento
-                  </button>
-                  <button
-                    onClick={() => {
-                      startTransition(async () => {
-                        const res = await exportItrTemplate(template.id)
-                        if (res.error || !res.backup) { setActionError(res.error ?? 'Error al exportar'); return }
-                        downloadJsonFile(`commup-itr-${template.code}-${dateStamp()}.json`, res.backup)
-                      })
-                    }}
-                    disabled={isPending}
-                    style={{
-                      padding: '7px 14px', background: '#fef3c7', border: '1px solid #fde68a',
-                      borderRadius: '8px', fontSize: '12px', color: '#a16207', cursor: isPending ? 'not-allowed' : 'pointer',
-                      fontWeight: 500,
-                    }}
-                    title="Descargar este template como JSON (backup individual)"
-                  >
-                    Exportar JSON
-                  </button>
-                  <button
-                    onClick={() => setShowPublishConfirm(true)}
-                    disabled={isPending}
-                    style={{
-                      padding: '7px 14px', background: '#1e40af', border: 'none',
-                      borderRadius: '8px', fontSize: '12px', color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer',
-                      fontWeight: 600, opacity: isPending ? 0.7 : 1,
-                    }}
-                  >
-                    {t('btnPublishVersion')}
-                  </button>
-                  <button
-                    onClick={() => setHeaderEditing(true)}
-                    style={{
-                      padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
-                      borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
-                    }}
-                  >
-                    {t('btnEditHeader')}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 16px' }}>
-              {t('headerEditTitle')}
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px', marginBottom: '12px' }}>
-              <label style={fieldLabel}>
-                {t('fieldCode')} <span style={{ color: '#ef4444' }}>*</span>
-                <input
-                  value={headerForm.code}
-                  onChange={e => setHeaderForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                  style={{ ...fieldInput, fontFamily: 'monospace', fontWeight: 700 }}
-                  maxLength={20}
-                />
-              </label>
-              <label style={fieldLabel}>
-                {t('fieldTitle')} <span style={{ color: '#ef4444' }}>*</span>
-                <input
-                  value={headerForm.title}
-                  onChange={e => setHeaderForm(f => ({ ...f, title: e.target.value }))}
-                  style={fieldInput}
-                />
-              </label>
-            </div>
-            <label style={{ ...fieldLabel, marginBottom: '12px' }}>
-              {t('fieldDescription')}
-              <input
-                value={headerForm.description}
-                onChange={e => setHeaderForm(f => ({ ...f, description: e.target.value }))}
-                placeholder={t('placeholderDescription')}
-                style={fieldInput}
-              />
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '16px' }}>
-              <input
-                type="checkbox"
-                checked={headerForm.is_active}
-                onChange={e => setHeaderForm(f => ({ ...f, is_active: e.target.checked }))}
-                style={{ accentColor: '#10b981', width: '14px', height: '14px' }}
-              />
-              <span style={{ fontSize: '13px', color: 'var(--gray-700)' }}>{t('flagActiveLabel')}</span>
-            </label>
-            {headerError && (
-              <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 12px', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px' }}>
-                {headerError}
-              </p>
-            )}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={saveHeader}
-                disabled={isPending}
-                style={{ padding: '8px 18px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
-              >
-                {isPending ? t('btnSaving') : t('btnSave')}
-              </button>
-              <button
-                onClick={() => { setHeaderEditing(false); setHeaderError(null) }}
-                style={{ padding: '8px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                {t('btnCancel')}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <TemplateHeaderCard
+        template={template}
+        canEdit={canEdit}
+        totalItems={totalItems}
+        sectionsCount={sections.length}
+        busy={isPending}
+        publishResult={publishResult}
+        onImportClick={() => setShowImport(true)}
+        onPreviewDoc={handlePreviewDoc}
+        onExportJson={handleExportJson}
+        onPublishClick={() => setShowPublishConfirm(true)}
+      />
 
       {/* Global error */}
       {actionError && (
@@ -890,165 +291,22 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       )}
 
       {sections.map((section, sIdx) => (
-        <div key={section.id} style={{
-          background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
-          marginBottom: '12px', overflow: 'hidden',
-        }}>
-          {/* Section header */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '12px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)',
-          }}>
-            {editingSectionId === section.id ? (
-              <>
-                <input
-                  value={editingSectionTitle}
-                  onChange={e => setEditingSectionTitle(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSaveSection(section.id); if (e.key === 'Escape') setEditingSectionId(null) }}
-                  autoFocus
-                  style={{ ...fieldInput, flex: 1, fontSize: '13px', fontWeight: 600 }}
-                />
-                <button onClick={() => handleSaveSection(section.id)} style={iconBtn('#3b82f6')}>✓</button>
-                <button onClick={() => setEditingSectionId(null)} style={iconBtn('var(--gray-400)')}>✕</button>
-              </>
-            ) : (
-              <>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', flex: 1 }}>
-                  {section.title}
-                </span>
-                <span style={{ fontSize: '11px', color: 'var(--gray-400)', marginRight: '8px' }}>
-                  {t('sectionItemCount', { count: section.items.length, plural: section.items.length !== 1 ? 's' : '' })}
-                </span>
-                {canEdit && (
-                  <>
-                    <button
-                      onClick={() => handleMoveSection(section.id, 'up')}
-                      disabled={sIdx === 0 || isPending}
-                      style={{ ...iconBtn('var(--text-muted)'), opacity: sIdx === 0 ? 0.3 : 1 }}
-                      title={t('tooltipMoveUp')}
-                    >▲</button>
-                    <button
-                      onClick={() => handleMoveSection(section.id, 'down')}
-                      disabled={sIdx === sections.length - 1 || isPending}
-                      style={{ ...iconBtn('var(--text-muted)'), opacity: sIdx === sections.length - 1 ? 0.3 : 1 }}
-                      title={t('tooltipMoveDown')}
-                    >▼</button>
-                    <button
-                      onClick={() => { setEditingSectionId(section.id); setEditingSectionTitle(section.title) }}
-                      style={iconBtn('#3b82f6')}
-                      title={t('tooltipRename')}
-                    >✎</button>
-                    <button
-                      onClick={() => handleDeleteSection(section.id, section.title)}
-                      style={iconBtn('#ef4444')}
-                      title={t('tooltipDeleteSection')}
-                    >✕</button>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Items */}
-          <div style={{ padding: '8px 0' }}>
-            {section.items.length === 0 && addingItemSectionId !== section.id && (
-              <p style={{ fontSize: '12px', color: 'var(--gray-400)', padding: '12px 18px', margin: 0 }}>
-                {t('emptySectionHint')}
-              </p>
-            )}
-
-            {section.items.map((item, iIdx) => (
-              editingItemId === item.id ? (
-                <div key={item.id} style={{ padding: '8px 12px' }}>
-                  <ItemForm
-                    currentItemId={item.id}
-                    onSave={handleSaveEditItem}
-                    onCancel={() => { setEditingItemId(null); setItemError(null) }}
-                  />
-                </div>
-              ) : (
-                <div
-                  key={item.id}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '55px 1fr 100px 36px 36px 36px 80px',
-                    gap: '8px',
-                    padding: '9px 16px',
-                    borderBottom: iIdx < section.items.length - 1 ? '1px solid #f8fafc' : 'none',
-                    alignItems: 'center', fontSize: '12px',
-                  }}
-                >
-                  <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontWeight: 600, fontSize: '11px' }}>
-                    {item.item_number ?? '—'}
-                  </span>
-                  <div>
-                    <div style={{ color: 'var(--text-strong)', fontWeight: 500 }}>{item.description}</div>
-                    {item.description_es && (
-                      <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '1px' }}>{item.description_es}</div>
-                    )}
-                    {item.condition_item_id && (() => {
-                      const condItem = sections.flatMap(s => s.items).find(it => it.id === item.condition_item_id)
-                      return condItem ? (
-                        <div style={{ fontSize: '10px', color: '#92400e', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                          <span style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '3px', padding: '0 4px' }}>
-                            {t('conditionBadgePrefix')} &ldquo;{condItem.item_number ?? condItem.description.slice(0, 25)}&rdquo; = {item.condition_value}
-                          </span>
-                        </div>
-                      ) : null
-                    })()}
-                  </div>
-                  <TypeBadge type={item.item_type} />
-                  <span title={t('tooltipCritical')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                    {item.is_critical ? <span style={{ color: '#ef4444' }}>●</span> : <span style={{ color: 'var(--border)' }}>○</span>}
-                  </span>
-                  <span title={t('tooltipRequired')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                    {item.is_required ? <span style={{ color: '#f59e0b' }}>●</span> : <span style={{ color: 'var(--border)' }}>○</span>}
-                  </span>
-                  <span title={t('tooltipPhoto')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                    {item.requires_photo ? <span style={{ color: '#3b82f6' }}>⊙</span> : <span style={{ color: 'var(--border)' }}>○</span>}
-                  </span>
-                  {canEdit ? (
-                    <div style={{ display: 'flex', gap: '2px', justifyContent: 'flex-end' }}>
-                      <button onClick={() => handleMoveItem(item.id, section.id, 'up')} disabled={iIdx === 0} style={{ ...miniBtn, opacity: iIdx === 0 ? 0.3 : 1 }}>▲</button>
-                      <button onClick={() => handleMoveItem(item.id, section.id, 'down')} disabled={iIdx === section.items.length - 1} style={{ ...miniBtn, opacity: iIdx === section.items.length - 1 ? 0.3 : 1 }}>▼</button>
-                      <button onClick={() => openEditItem(item)} style={{ ...miniBtn, color: '#3b82f6' }}>✎</button>
-                      <button onClick={() => handleDeleteItem(item.id, section.id)} style={{ ...miniBtn, color: '#ef4444' }}>✕</button>
-                    </div>
-                  ) : <span />}
-                </div>
-              )
-            ))}
-
-            {/* Add item form */}
-            {addingItemSectionId === section.id && (
-              <div style={{ padding: '8px 12px' }}>
-                <ItemForm
-                  sectionId={section.id}
-                  onSave={() => handleSaveNewItem(section.id)}
-                  onCancel={() => { setAddingItemSectionId(null); setItemError(null) }}
-                />
-              </div>
-            )}
-
-            {/* Add item button */}
-            {canEdit && addingItemSectionId !== section.id && (
-              <div style={{ padding: '6px 14px' }}>
-                <button
-                  onClick={() => openAddItem(section.id)}
-                  style={{
-                    padding: '6px 14px', background: 'transparent', border: '1px dashed #cbd5e1',
-                    borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
-                    transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLElement).style.color = '#3b82f6' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gray-300)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
-                >
-                  {t('btnAddItem')}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <TemplateSectionCard
+          key={section.id}
+          section={section}
+          index={sIdx}
+          total={sections.length}
+          canEdit={canEdit}
+          busy={isPending}
+          allItems={allItems}
+          onRenameSection={handleRenameSection}
+          onDeleteSection={handleDeleteSection}
+          onMoveSection={handleMoveSection}
+          onCreateItem={handleCreateItem}
+          onUpdateItem={handleUpdateItem}
+          onDeleteItem={handleDeleteItem}
+          onMoveItem={handleMoveItem}
+        />
       ))}
 
       {/* Add section */}
@@ -1130,65 +388,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
       {/* Publish version confirm modal */}
       {showPublishConfirm && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
-          onClick={e => { if (e.target === e.currentTarget) setShowPublishConfirm(false) }}
-        >
-          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
-            <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
-              {t('publishVersionTitle')}
-            </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 6px' }}>
-              {t('publishVersionDesc', { version: template.version + 1 })}
-            </p>
-            <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '0 0 22px' }}>
-              {t('publishVersionNote')}
-            </p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowPublishConfirm(false)}
-                style={{ padding: '8px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                {t('btnCancel')}
-              </button>
-              <button
-                onClick={handlePublishVersion}
-                disabled={isPending}
-                style={{ padding: '8px 20px', background: '#1e40af', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
-              >
-                {isPending ? t('btnSaving') : t('btnPublishVersionConfirm', { version: template.version + 1 })}
-              </button>
-            </div>
-          </div>
-        </div>
+        <TemplatePublishModal
+          nextVersion={template.version + 1}
+          isPending={isPending}
+          onConfirm={handlePublishVersion}
+          onClose={() => setShowPublishConfirm(false)}
+        />
       )}
     </div>
   )
-}
-
-// ── Shared styles ──────────────────────────────────────────────
-
-const fieldLabel: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', gap: '5px',
-  fontSize: '11px', fontWeight: 600, color: 'var(--gray-700)', textTransform: 'uppercase', letterSpacing: '0.04em',
-}
-
-const fieldInput: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px',
-  fontSize: '13px', color: 'var(--text-strong)', background: 'var(--card-bg)', outline: 'none',
-  fontFamily: 'inherit', width: '100%', boxSizing: 'border-box',
-}
-
-function iconBtn(color: string): React.CSSProperties {
-  return {
-    width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    borderRadius: '6px', border: 'none', background: `${color}12`, color,
-    cursor: 'pointer', fontSize: '12px', fontWeight: 700, flexShrink: 0,
-  }
-}
-
-const miniBtn: React.CSSProperties = {
-  width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--gray-400)',
-  cursor: 'pointer', fontSize: '10px', padding: 0,
 }
