@@ -53,8 +53,8 @@ export default async function ProblemSection() {
         </h2>
 
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24,
-        }}>
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24,
+        }} className="problem-grid">
           {cards.map(({ src, title, desc, accent }) => (
             <div key={title} style={{
               background: '#FFFFFF',

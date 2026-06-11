@@ -324,8 +324,15 @@ a:focus-visible,
 /* ==========================================================================
    Landing page — responsive overrides
    ========================================================================== */
+.landing-burger { display: none; }
+
+@media (max-width: 900px) {
+  .problem-grid { grid-template-columns: 1fr !important; }
+}
+
 @media (max-width: 768px) {
   .landing-nav-links { display: none !important; }
+  .landing-burger { display: inline-flex !important; }
   .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
   .hero-mockup { display: none !important; }
   .how-connector { display: none !important; }
@@ -337,6 +344,7 @@ a:focus-visible,
 }
 
 @media (max-width: 480px) {
+  .landing-nav-demo { display: none !important; }
   .how-grid { grid-template-columns: 1fr !important; }
   .industries-grid { grid-template-columns: 1fr !important; }
   .footer-grid { grid-template-columns: 1fr !important; }

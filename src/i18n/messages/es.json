@@ -1931,6 +1931,13 @@
       "industrial": "Plantas Industriales",
       "refining": "Refinación & Petroquímica"
     },
+    "pricing": {
+      "label": "Precios",
+      "title": "Precios adaptados a tu proyecto",
+      "subtitle": "Cada proyecto de commissioning es distinto: número de tags, fases, equipos en campo, duración. Cuéntanos el tuyo y preparamos una propuesta a medida.",
+      "cta": "Hablemos de tu proyecto",
+      "trustLine": "Sin compromiso · Propuesta en 48 h"
+    },
     "cta": {
       "title": "Inicia tu próximo proyecto de commissioning con trazabilidad completa desde el primer día.",
       "subtitle": "Únete a los equipos que entregan proyectos más rápido, con menos errores y documentación de handover completa.",

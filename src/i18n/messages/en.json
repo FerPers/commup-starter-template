@@ -1931,6 +1931,13 @@
       "industrial": "Industrial Plants",
       "refining": "Refining & Petrochemical"
     },
+    "pricing": {
+      "label": "Pricing",
+      "title": "Pricing that fits your project",
+      "subtitle": "Every commissioning project is different: tag count, phases, field crews, duration. Tell us about yours and we'll put together a tailored proposal.",
+      "cta": "Let's talk about your project",
+      "trustLine": "No commitment \u00b7 Proposal within 48 h"
+    },
     "cta": {
       "title": "Start your next commissioning project with full traceability from day one.",
       "subtitle": "Join the teams delivering projects faster, with fewer errors and complete handover documentation.",

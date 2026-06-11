@@ -20,7 +20,7 @@ export default async function HowItWorks() {
   ]
 
   return (
-    <section style={{
+    <section id="how-it-works" style={{
       padding: '100px 24px',
       borderTop: '1px solid rgba(255,255,255,0.05)',
       position: 'relative', overflow: 'hidden',

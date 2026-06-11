@@ -8,12 +8,16 @@ import LocaleSwitcher from '@/components/LocaleSwitcher'
 export default function LandingNavbar() {
   const t = useTranslations('Landing.nav')
   const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // With the menu open the bar needs a solid background so the panel reads as one piece
+  const solid = scrolled || menuOpen
 
   const navStyle: React.CSSProperties = {
     position: 'fixed',
@@ -22,9 +26,9 @@ export default function LandingNavbar() {
     right: 0,
     zIndex: 50,
     transition: 'background 0.25s, box-shadow 0.25s, backdrop-filter 0.25s',
-    background: scrolled ? 'rgba(255,255,255,0.96)' : 'transparent',
-    backdropFilter: scrolled ? 'blur(12px)' : 'none',
-    boxShadow: scrolled ? '0 1px 0 rgba(11,29,58,0.08), 0 2px 8px rgba(11,29,58,0.05)' : 'none',
+    background: solid ? 'rgba(255,255,255,0.96)' : 'transparent',
+    backdropFilter: solid ? 'blur(12px)' : 'none',
+    boxShadow: solid ? '0 1px 0 rgba(11,29,58,0.08), 0 2px 8px rgba(11,29,58,0.05)' : 'none',
   }
 
   const innerStyle: React.CSSProperties = {
@@ -41,7 +45,7 @@ export default function LandingNavbar() {
   const navLinkStyle: React.CSSProperties = {
     fontSize: 14,
     fontWeight: 500,
-    color: scrolled ? '#64707C' : '#94a3b8',
+    color: solid ? '#64707C' : '#94a3b8',
     textDecoration: 'none',
     transition: 'color 0.15s',
     whiteSpace: 'nowrap',
@@ -56,8 +60,8 @@ export default function LandingNavbar() {
 
   const loginBtnStyle: React.CSSProperties = {
     background: 'transparent',
-    color: scrolled ? '#64707C' : '#94a3b8',
-    border: scrolled ? '1px solid rgba(11,29,58,0.18)' : '1px solid rgba(255,255,255,0.12)',
+    color: solid ? '#64707C' : '#94a3b8',
+    border: solid ? '1px solid rgba(11,29,58,0.18)' : '1px solid rgba(255,255,255,0.12)',
     borderRadius: 8,
     padding: '7px 16px',
     fontSize: 13,
@@ -90,6 +94,17 @@ export default function LandingNavbar() {
     boxShadow: '0 2px 12px rgba(234,88,12,0.35)',
   }
 
+  const burgerStyle: React.CSSProperties = {
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 8,
+    margin: -8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: solid ? '#0B1D3A' : '#e2e8f0',
+  }
+
   const navLinks = [
     { key: 'features' as const, href: '#features' },
     { key: 'modules' as const, href: '#modules' },
@@ -105,10 +120,10 @@ export default function LandingNavbar() {
         <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={scrolled ? '/logos/compact-light.svg' : '/logos/compact-dark-transparent.svg'}
+            src={solid ? '/logos/compact-light.svg' : '/logos/compact-dark-transparent.svg'}
             height={30}
             alt="CommUp"
-            style={{ display: 'block' }}
+            style={{ display: 'block', height: 30, width: 'auto' }}
           />
         </Link>
 
@@ -128,18 +143,89 @@ export default function LandingNavbar() {
 
         {/* Right side */}
         <div style={rightStyle}>
-          <LocaleSwitcher variant={scrolled ? 'light' : 'dark'} />
+          <LocaleSwitcher variant={solid ? 'light' : 'dark'} />
           <Link href="/login" style={loginBtnStyle} className="landing-nav-links">
             {t('login')}
           </Link>
           <a
             href="mailto:contacto@commup.app?subject=Demo CommUp"
             style={demoBtnStyle}
+            className="landing-nav-demo"
           >
             {t('requestDemo')} →
           </a>
+          <button
+            type="button"
+            className="landing-burger"
+            style={burgerStyle}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(open => !open)}
+          >
+            {menuOpen ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile menu panel */}
+      {menuOpen && (
+        <div style={{
+          background: 'rgba(255,255,255,0.98)',
+          borderTop: '1px solid #E9EDF1',
+          boxShadow: '0 16px 32px rgba(11,29,58,0.12)',
+          padding: '8px 24px 20px',
+        }}>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {navLinks.map(({ key, href }) => (
+              <li key={key}>
+                <a
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    display: 'block', padding: '13px 0',
+                    fontSize: 15, fontWeight: 600, color: '#1e293b',
+                    textDecoration: 'none',
+                    borderBottom: '1px solid #F1F5F9',
+                  }}
+                >
+                  {t(key)}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+            <Link
+              href="/login"
+              onClick={() => setMenuOpen(false)}
+              style={{
+                ...loginBtnStyle,
+                color: '#0B1D3A',
+                border: '1px solid rgba(11,29,58,0.18)',
+                justifyContent: 'center',
+                padding: '11px 16px',
+                fontSize: 14,
+              }}
+            >
+              {t('login')}
+            </Link>
+            <a
+              href="mailto:contacto@commup.app?subject=Demo CommUp"
+              onClick={() => setMenuOpen(false)}
+              style={{ ...demoBtnStyle, justifyContent: 'center', padding: '12px 18px', fontSize: 14 }}
+            >
+              {t('requestDemo')} →
+            </a>
+          </div>
+        </div>
+      )}
     </nav>
   )
 }

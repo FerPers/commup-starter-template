@@ -57,7 +57,7 @@ export default async function HeroSection() {
             </div>
 
             {/* Headline */}
-            <h1 style={{ fontSize: 56, fontWeight: 800, lineHeight: 1.08, margin: '0 0 16px', letterSpacing: '-0.03em' }}>
+            <h1 style={{ fontSize: 'clamp(32px, 8.5vw, 56px)', fontWeight: 800, lineHeight: 1.08, margin: '0 0 16px', letterSpacing: '-0.03em' }}>
               <span style={{ color: '#f1f5f9' }}>{t('headline')}</span>
               <br />
               <span style={{ background: 'linear-gradient(90deg, #00B5A8, #00d4c8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -66,7 +66,7 @@ export default async function HeroSection() {
             </h1>
 
             {/* Subheadline */}
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: '#94a3b8', margin: '0 0 36px', maxWidth: 480 }}>
+            <p style={{ fontSize: 'clamp(15px, 4vw, 17px)', lineHeight: 1.7, color: '#94a3b8', margin: '0 0 36px', maxWidth: 480 }}>
               {t('subheadline')}
             </p>
 

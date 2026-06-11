@@ -9,6 +9,7 @@ import ModulesTabs from '@/components/landing/ModulesTabs'
 import DifferentiatorsSection from '@/components/landing/DifferentiatorsSection'
 import IndustriesSection from '@/components/landing/IndustriesSection'
 import SocialProofSection from '@/components/landing/SocialProofSection'
+import PricingSection from '@/components/landing/PricingSection'
 import CtaSection from '@/components/landing/CtaSection'
 import LandingFooter from '@/components/landing/LandingFooter'
 
@@ -71,6 +72,7 @@ export default async function RootPage() {
       <DifferentiatorsSection />
       <IndustriesSection />
       <SocialProofSection />
+      <PricingSection />
       <CtaSection />
       <LandingFooter />
     </div>
