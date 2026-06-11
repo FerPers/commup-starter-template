@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Script from 'next/script'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import LandingNavbar from '@/components/landing/LandingNavbar'
@@ -75,6 +76,14 @@ export default async function RootPage() {
       <PricingSection />
       <CtaSection />
       <LandingFooter />
+      {/* Cloudflare Web Analytics — cookieless; solo activo si el token está configurado */}
+      {process.env.NEXT_PUBLIC_CF_BEACON_TOKEN && (
+        <Script
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: process.env.NEXT_PUBLIC_CF_BEACON_TOKEN })}
+          strategy="afterInteractive"
+        />
+      )}
     </div>
   )
 }

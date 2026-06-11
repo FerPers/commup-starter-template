@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
+import LeadForm from './LeadForm'
 
 export default async function CtaSection() {
   const t = await getTranslations('Landing.cta')
@@ -30,46 +31,27 @@ export default async function CtaSection() {
         textAlign: 'center', position: 'relative', zIndex: 2,
       }}>
         <h2 style={{
-          fontSize: 42, fontWeight: 800, color: '#f1f5f9',
+          fontSize: 'clamp(30px, 7vw, 42px)', fontWeight: 800, color: '#f1f5f9',
           margin: '0 0 16px', lineHeight: 1.12, letterSpacing: '-0.03em',
         }}>
           {t('title')}
         </h2>
-        <p style={{ fontSize: 17, color: '#64748b', margin: '0 0 44px', lineHeight: 1.65 }}>
+        <p style={{ fontSize: 17, color: '#94a3b8', margin: '0 0 44px', lineHeight: 1.65 }}>
           {t('subtitle')}
         </p>
 
-        <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a
-            href="mailto:contacto@commup.app?subject=Demo CommUp"
-            style={{
-              background: 'linear-gradient(135deg, #ea580c, #dc2626)',
-              color: '#fff', border: 'none', borderRadius: 12,
-              padding: '15px 32px', fontSize: 16, fontWeight: 700,
-              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
-              boxShadow: '0 4px 28px rgba(234,88,12,0.45)',
-              transition: 'transform 0.15s, box-shadow 0.15s',
-              letterSpacing: '-0.01em',
-            }}
-          >
-            {t('btnDemo')}
-          </a>
-          <Link href="/login" style={{
-            background: 'rgba(255,255,255,0.06)',
-            color: '#e2e8f0',
-            border: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: 12, padding: '15px 28px',
-            fontSize: 16, fontWeight: 600, textDecoration: 'none',
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            transition: 'background 0.15s',
-          }}>
-            {t('btnAccess')} →
-          </Link>
+        <div style={{ maxWidth: 560, margin: '0 auto' }}>
+          <LeadForm source="cta" />
         </div>
 
-        {/* Trust line */}
-        <p style={{ fontSize: 13, color: '#64748b', marginTop: 28 }}>
+        {/* Trust line + acceso clientes */}
+        <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 28 }}>
           {t('trustLine')}
+        </p>
+        <p style={{ fontSize: 13, marginTop: 8 }}>
+          <Link href="/login" style={{ color: '#00B5A8', textDecoration: 'none', fontWeight: 600 }}>
+            {t('btnAccess')} →
+          </Link>
         </p>
       </div>
     </section>

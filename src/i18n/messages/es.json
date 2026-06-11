@@ -1838,14 +1838,13 @@
       "headline": "Commissioning industrial,",
       "headlineAccent": "con trazabilidad total.",
       "subheadline": "Digitaliza ITRs, Punch Lists, Certificados, Preservación y KPIs en una sola plataforma cloud-native — diseñada para proyectos Oil & Gas, LNG, renovables, minería y planta industrial.",
-      "ctaDemo": "Solicitar demo personalizada",
+      "ctaDemo": "Solicitar demo",
       "ctaAccess": "Acceso a Clientes",
       "liveTag": "En vivo",
       "statItrs": "ITRs completados",
       "statPunches": "Punches abiertos",
       "statCerts": "Certificados emitidos",
-      "statPhase": "Avance de fase",
-      "ctaLive": "Solicitar demo guiada"
+      "statPhase": "Avance de fase"
     },
     "problem": {
       "title": "El commissioning aún se gestiona con herramientas que no fueron diseñadas para campo.",
@@ -1930,6 +1929,26 @@
       "mining": "Minería",
       "industrial": "Plantas Industriales",
       "refining": "Refinación & Petroquímica"
+    },
+    "leadForm": {
+      "namePh": "Nombre completo",
+      "companyPh": "Empresa",
+      "emailPh": "Email corporativo",
+      "projectTypePh": "Tipo de proyecto",
+      "typeOilGas": "Oil & Gas",
+      "typeLng": "LNG",
+      "typeRenewables": "Renovables",
+      "typeMining": "Minería",
+      "typeIndustrial": "Planta industrial",
+      "typeOther": "Otro",
+      "messagePh": "Cuéntanos brevemente de tu proyecto (opcional)",
+      "submit": "Solicitar demo",
+      "submitting": "Enviando…",
+      "successTitle": "¡Recibido!",
+      "successBody": "Gracias por tu interés. Te contactamos en 24-48 h para coordinar la demo.",
+      "errInvalid": "Revisa los campos: nombre, empresa y un email válido son obligatorios.",
+      "errRateLimited": "Demasiados envíos recientes. Inténtalo más tarde o escríbenos a contacto@commup.app.",
+      "errServer": "No pudimos guardar tu solicitud. Inténtalo de nuevo o escríbenos a contacto@commup.app."
     },
     "pricing": {
       "label": "Precios",

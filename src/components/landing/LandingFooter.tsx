@@ -73,7 +73,7 @@ export default async function LandingFooter() {
               <li><span style={{ fontSize: 13, color: '#94a3b8' }}>{t('about')}</span></li>
               <li><a href="#contact" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('blog')}</a></li>
               <li>
-                <a href="mailto:contacto@commup.app" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
+                <a href="#contact" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
                   {t('contact')}
                 </a>
               </li>
@@ -91,8 +91,8 @@ export default async function LandingFooter() {
               {t('legal')}
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <li><span style={{ fontSize: 13, color: '#94a3b8' }}>{t('privacy')}</span></li>
-              <li><span style={{ fontSize: 13, color: '#94a3b8' }}>{t('terms')}</span></li>
+              <li><Link href="/privacy" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('privacy')}</Link></li>
+              <li><Link href="/terms" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('terms')}</Link></li>
               <li>
                 <Link href="/login" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
                   Client Access
@@ -112,19 +112,8 @@ export default async function LandingFooter() {
           <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
             © 2026 CommUp. {t('rights')}
           </p>
+          {/* Redes sociales retiradas hasta tener cuentas reales (audit L1) */}
           <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <a
-              href="https://www.linkedin.com/company/commup"
-              style={{ fontSize: 12, color: '#64748b', textDecoration: 'none' }}
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://twitter.com/commupapp"
-              style={{ fontSize: 12, color: '#64748b', textDecoration: 'none' }}
-            >
-              Twitter / X
-            </a>
             <span style={{ fontSize: 12, color: '#64748b' }}>commup.app</span>
           </div>
         </div>

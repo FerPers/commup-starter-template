@@ -148,7 +148,7 @@ export default function LandingNavbar() {
             {t('login')}
           </Link>
           <a
-            href="mailto:contacto@commup.app?subject=Demo CommUp"
+            href="#contact"
             style={demoBtnStyle}
             className="landing-nav-demo"
           >
@@ -217,7 +217,7 @@ export default function LandingNavbar() {
               {t('login')}
             </Link>
             <a
-              href="mailto:contacto@commup.app?subject=Demo CommUp"
+              href="#contact"
               onClick={() => setMenuOpen(false)}
               style={{ ...demoBtnStyle, justifyContent: 'center', padding: '12px 18px', fontSize: 14 }}
             >

@@ -177,7 +177,7 @@ export default function ModulesTabs({ sectionTitle, sectionSubtitle, tabs }: Pro
             {/* CTA */}
             <div style={{ marginTop: 28 }}>
               <a
-                href="mailto:contacto@commup.app?subject=Demo CommUp"
+                href="#contact"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   background: 'rgba(0,181,168,0.1)',

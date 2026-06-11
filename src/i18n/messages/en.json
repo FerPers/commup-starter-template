@@ -1838,14 +1838,13 @@
       "headline": "Industrial Commissioning,",
       "headlineAccent": "fully traceable.",
       "subheadline": "Digitize ITRs, Punch Lists, Certificates, Preservation and KPIs in a single cloud-native platform — built for Oil & Gas, LNG, renewables, mining and heavy industry projects.",
-      "ctaDemo": "Request a personalized demo",
+      "ctaDemo": "Request a demo",
       "ctaAccess": "Client Access",
       "liveTag": "Live",
       "statItrs": "ITRs completed",
       "statPunches": "Open punches",
       "statCerts": "Certificates issued",
-      "statPhase": "Phase progress",
-      "ctaLive": "Request guided demo"
+      "statPhase": "Phase progress"
     },
     "problem": {
       "title": "Commissioning is still managed with tools that weren't designed for the field.",
@@ -1931,12 +1930,32 @@
       "industrial": "Industrial Plants",
       "refining": "Refining & Petrochemical"
     },
+    "leadForm": {
+      "namePh": "Full name",
+      "companyPh": "Company",
+      "emailPh": "Work email",
+      "projectTypePh": "Project type",
+      "typeOilGas": "Oil & Gas",
+      "typeLng": "LNG",
+      "typeRenewables": "Renewables",
+      "typeMining": "Mining",
+      "typeIndustrial": "Industrial plant",
+      "typeOther": "Other",
+      "messagePh": "Tell us briefly about your project (optional)",
+      "submit": "Request demo",
+      "submitting": "Sending…",
+      "successTitle": "Got it!",
+      "successBody": "Thanks for your interest. We'll get back to you within 24-48 h to set up the demo.",
+      "errInvalid": "Check the fields: name, company and a valid email are required.",
+      "errRateLimited": "Too many recent submissions. Try again later or email contacto@commup.app.",
+      "errServer": "We couldn't save your request. Try again or email contacto@commup.app."
+    },
     "pricing": {
       "label": "Pricing",
       "title": "Pricing that fits your project",
       "subtitle": "Every commissioning project is different: tag count, phases, field crews, duration. Tell us about yours and we'll put together a tailored proposal.",
       "cta": "Let's talk about your project",
-      "trustLine": "No commitment \u00b7 Proposal within 48 h"
+      "trustLine": "No commitment · Proposal within 48 h"
     },
     "cta": {
       "title": "Start your next commissioning project with full traceability from day one.",

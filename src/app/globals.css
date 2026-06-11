@@ -345,6 +345,7 @@ a:focus-visible,
 
 @media (max-width: 480px) {
   .landing-nav-demo { display: none !important; }
+  .leadform-grid { grid-template-columns: 1fr !important; }
   .how-grid { grid-template-columns: 1fr !important; }
   .industries-grid { grid-template-columns: 1fr !important; }
   .footer-grid { grid-template-columns: 1fr !important; }

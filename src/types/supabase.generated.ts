@@ -1795,6 +1795,51 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          company: string
+          created_at: string
+          email: string
+          id: string
+          ip_hash: string | null
+          locale: string | null
+          message: string | null
+          name: string
+          project_type: string | null
+          source: string | null
+          status: string
+          user_agent: string | null
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_hash?: string | null
+          locale?: string | null
+          message?: string | null
+          name: string
+          project_type?: string | null
+          source?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          locale?: string | null
+          message?: string | null
+          name?: string
+          project_type?: string | null
+          source?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       loop_tags: {
         Row: {
           id: string

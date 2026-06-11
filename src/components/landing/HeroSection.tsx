@@ -72,8 +72,8 @@ export default async function HeroSection() {
 
             {/* CTAs */}
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              <Link
-                href="/login"
+              <a
+                href="#contact"
                 style={{
                   background: 'linear-gradient(135deg, #ea580c, #dc2626)',
                   color: '#fff', border: 'none', borderRadius: 10,
@@ -83,10 +83,10 @@ export default async function HeroSection() {
                   transition: 'transform 0.15s, box-shadow 0.15s',
                 }}
               >
-                {t('ctaLive')} →
-              </Link>
-              <a
-                href="mailto:contacto@commup.app?subject=Demo CommUp"
+                {t('ctaDemo')} →
+              </a>
+              <Link
+                href="/login"
                 style={{
                   background: 'rgba(255,255,255,0.08)', color: '#e2e8f0',
                   border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10,
@@ -95,8 +95,8 @@ export default async function HeroSection() {
                   transition: 'background 0.15s',
                 }}
               >
-                {t('ctaDemo')}
-              </a>
+                {t('ctaAccess')}
+              </Link>
             </div>
 
             {/* Trust indicators */}
