@@ -109,7 +109,7 @@ export default async function TagDetailPage({
     .select('id, code, title, phase_id, project_phases(id, code, name, color)')
     .eq('org_id', membership.org_id)
     .eq('is_active', true)
-    .eq('discipline_id', (tag.disciplines as unknown as { id: string }).id)
+    .eq('discipline_id', tag.disciplines.id)
     .order('code')
 
   // Prev / next tag navigation
@@ -148,8 +148,7 @@ export default async function TagDetailPage({
 
   return (
     <TagDetail
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      tag={tag as any}
+      tag={tag}
       projectId={projectId}
       projectName={project.name}
       pidSignedUrl={pidSignedUrl}
@@ -158,18 +157,12 @@ export default async function TagDetailPage({
       nextTagId={nextTagId}
       canEdit={canEdit}
       currentUserRole={membership.role}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      tagItrs={(tagItrs ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      templates={(templates ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      orgMembers={(orgMembers ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      tagPunches={(tagPunches ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      preservationPlans={(preservationPlans ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      preservationProcedures={(preservationProcedures ?? []) as any}
+      tagItrs={tagItrs ?? []}
+      templates={templates ?? []}
+      orgMembers={orgMembers ?? []}
+      tagPunches={tagPunches ?? []}
+      preservationPlans={preservationPlans ?? []}
+      preservationProcedures={preservationProcedures ?? []}
       tagPhotos={tagPhotos}
     />
   )

@@ -46,17 +46,14 @@ export default async function ProjectItrsPage({
 
   if (!project) notFound()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const users = (members ?? []).map(m => ({ user_id: m.user_id, full_name: (m as any).profiles?.full_name as string ?? '' })).filter(u => u.full_name)
+  const users = (members ?? []).map(m => ({ user_id: m.user_id, full_name: m.profiles?.full_name ?? '' })).filter(u => u.full_name)
 
   return (
     <ItrListView
       projectId={projectId}
       projectName={project.name}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      itrs={(itrs ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      phases={(phases ?? []) as any}
+      itrs={itrs ?? []}
+      phases={phases ?? []}
       users={users}
       userRole={membership.role}
     />

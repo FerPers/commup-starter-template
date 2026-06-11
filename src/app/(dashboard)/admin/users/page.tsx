@@ -60,10 +60,8 @@ export default async function AdminUsersPage() {
     userId: m.user_id,
     role: m.role,
     joinedAt: m.joined_at,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fullName: (m.profiles as any)?.full_name ?? '—',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    avatarUrl: (m.profiles as any)?.avatar_url ?? null,
+    fullName: m.profiles?.full_name ?? '—',
+    avatarUrl: m.profiles?.avatar_url ?? null,
     email: emailMap.get(m.user_id) ?? '—',
     lastActive: lastActiveMap.get(m.user_id) ?? null,
   }))

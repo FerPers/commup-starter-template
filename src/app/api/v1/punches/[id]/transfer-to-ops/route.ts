@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { data: punch } = await admin
     .from('punches').select('id, project_id, projects!inner(org_id)')
     .eq('id', punchId).maybeSingle()
-  const orgId = (punch?.projects as unknown as { org_id: string } | null)?.org_id
+  const orgId = punch?.projects?.org_id
   if (!punch || orgId !== auth.orgId) {
     return NextResponse.json({ error: 'Punch not found' }, { status: 404, headers: apiHeaders() })
   }

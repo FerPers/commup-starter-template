@@ -61,10 +61,8 @@ export async function GET(
     return new Response('Certificate not found', { status: 404 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const subsystemId = (cert as any).subsystems?.id
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const phaseId = (cert as any).project_phases?.id
+  const subsystemId = cert.subsystems?.id
+  const phaseId = cert.project_phases?.id
 
   const { data: itrs } = subsystemId && phaseId
     ? await supabase
@@ -81,17 +79,13 @@ export async function GET(
     : { data: [] }
 
   const certData: CertPdfData = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(cert as any),
+    ...cert,
     projectName: project?.name ?? '',
     projectCode: project?.code ?? '',
     projectClient: project?.client ?? null,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    exceptions: (exceptions ?? []) as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    itrs: (itrs ?? []) as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    signatures: (signatures ?? []) as any,
+    exceptions: exceptions ?? [],
+    itrs: itrs ?? [],
+    signatures: signatures ?? [],
   }
 
   const bytes = await renderCertificatePdf(certData)

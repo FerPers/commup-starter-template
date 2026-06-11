@@ -41,12 +41,9 @@ export default async function GlobalItrsPage() {
 
   return (
     <ItrListGlobal
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      projects={(projects ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      itrs={(itrs ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      phases={(phases ?? []) as any}
+      projects={projects ?? []}
+      itrs={itrs ?? []}
+      phases={phases ?? []}
     />
   )
 }

@@ -3,29 +3,6 @@ import { buildPunchListWorkbook, type PunchExportRow } from '@/lib/excel/punch-l
 
 export const dynamic = 'force-dynamic'
 
-type RawPunch = {
-  punch_number: string
-  category: 'A' | 'B' | 'C'
-  status: string
-  priority: string
-  description: string
-  target_date: string | null
-  closed_date: string | null
-  created_at: string
-  raised_by_profile: { full_name: string } | { full_name: string }[] | null
-  assigned_to_profile: { full_name: string } | { full_name: string }[] | null
-  projects: { code: string } | { code: string }[] | null
-  tags: { tag_number: string; disciplines: { code: string } | { code: string }[] | null } | null
-  subsystems: {
-    code: string
-    name: string
-    systems: {
-      code: string
-      name: string
-      areas: { code: string; name: string } | { code: string; name: string }[] | null
-    } | null
-  } | null
-}
 
 function pickOne<T>(v: T | T[] | null | undefined): T | null {
   if (!v) return null
@@ -62,7 +39,7 @@ export async function GET() {
     .in('project_id', projectIds)
     .order('created_at', { ascending: false })
 
-  const punchList = (punches ?? []) as unknown as RawPunch[]
+  const punchList = punches ?? []
 
   const rows: PunchExportRow[] = punchList.map(p => {
     const sub = p.subsystems

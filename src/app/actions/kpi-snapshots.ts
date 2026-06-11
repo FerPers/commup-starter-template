@@ -60,8 +60,7 @@ export async function getSubsystemKpis(projectId: string): Promise<SubsystemKpi[
   ])
 
   return (subsystems ?? []).map(ss => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sys = (ss as any).systems
+    const sys = ss.systems
     const ssItrs = (itrs ?? []).filter(i => i.subsystem_id === ss.id)
     const totalItrs = ssItrs.length
     const approvedItrs = ssItrs.filter(i => i.status === 'approved').length

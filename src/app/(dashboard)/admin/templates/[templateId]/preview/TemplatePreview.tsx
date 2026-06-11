@@ -1,5 +1,6 @@
 'use client'
 
+import type { Json } from '@/types/supabase.generated'
 import { useState } from 'react'
 
 type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no'
@@ -18,7 +19,7 @@ interface PreviewItem {
   acceptance_min: number | null
   acceptance_max: number | null
   acceptance_text: string | null
-  options: string[] | null
+  options: Json
   order_index: number
 }
 
@@ -140,7 +141,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
   }
 
   if (item.item_type === 'select') {
-    const opts = item.options ?? []
+    const opts = Array.isArray(item.options) ? item.options.filter((o): o is string => typeof o === 'string') : []
     return (
       <select disabled style={{ ...inputBase, width: 'auto', minWidth: '200px' }}>
         <option value="">— Seleccionar —</option>

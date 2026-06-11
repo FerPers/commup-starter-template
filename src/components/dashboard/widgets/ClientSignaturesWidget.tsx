@@ -13,19 +13,9 @@ export default async function ClientSignaturesWidget({ userId }: { userId: strin
     .eq('user_id', userId)
     .eq('role', 'client')
 
-  type ItrWithRel = {
-    id: string
-    itr_number: string
-    status: string | null
-    project_id: string
-    tags: { id: string; tag_number: string; description: string | null } | null
-    projects: { id: string; name: string; code: string } | null
-    project_phases: { code: string; color: string; name: string } | null
-    itr_signatures: Array<{ role: string }>
-  } | null
 
   const pendingSignature = (clientAssignments ?? []).filter(a => {
-    const itr = a.itrs as unknown as ItrWithRel
+    const itr = a.itrs
     return itr && itr.status === 'completed' && !itr.itr_signatures.some(s => s.role === 'client')
   })
 
@@ -42,7 +32,7 @@ export default async function ClientSignaturesWidget({ userId }: { userId: strin
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {pendingSignature.map(a => {
-          const itr = a.itrs as unknown as ItrWithRel
+          const itr = a.itrs
           if (!itr) return null
           const phase = itr.project_phases
           return (

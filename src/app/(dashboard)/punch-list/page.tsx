@@ -18,7 +18,7 @@ export default async function GlobalPunchListPage() {
 
   const [{ data: punches }, { data: disciplines }, { data: orgMembers }] = await Promise.all([
     projectIds.length === 0
-      ? Promise.resolve({ data: [] as unknown as null })
+      ? Promise.resolve({ data: null })
       : supabase
           .from('punches')
           .select(`
@@ -47,14 +47,10 @@ export default async function GlobalPunchListPage() {
   return (
     <PunchListGlobal
       currentUserRole={membership.role}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      projects={(projects ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      punches={(punches ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      disciplines={(disciplines ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      orgMembers={(orgMembers ?? []) as any}
+      projects={projects ?? []}
+      punches={punches ?? []}
+      disciplines={disciplines ?? []}
+      orgMembers={orgMembers ?? []}
     />
   )
 }

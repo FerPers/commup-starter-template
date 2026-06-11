@@ -35,6 +35,5 @@ export default async function TemplatePreviewPage({
 
   if (!template) notFound()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return <TemplatePreview template={template as any} />
+  return <TemplatePreview template={template} />
 }

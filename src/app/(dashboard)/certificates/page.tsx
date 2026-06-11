@@ -38,12 +38,9 @@ export default async function GlobalCertificatesPage() {
 
   return (
     <CertificatesGlobal
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      projects={(projects ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      certificates={(certificates ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      phases={(phases ?? []) as any}
+      projects={projects ?? []}
+      certificates={certificates ?? []}
+      phases={phases ?? []}
     />
   )
 }

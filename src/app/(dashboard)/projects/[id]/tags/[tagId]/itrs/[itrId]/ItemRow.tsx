@@ -179,7 +179,7 @@ export default function ItemRow({
           style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit', minWidth: '200px' }}
         >
           <option value="">{t('item.selectPlaceholder')}</option>
-          {(item.options ?? (item.acceptance_text ? item.acceptance_text.split(',').map(s => s.trim()) : [])).map((opt: string) => (
+          {(Array.isArray(item.options) ? item.options.filter((o): o is string => typeof o === 'string') : (item.acceptance_text ? item.acceptance_text.split(',').map(s => s.trim()) : [])).map(opt => (
             <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>

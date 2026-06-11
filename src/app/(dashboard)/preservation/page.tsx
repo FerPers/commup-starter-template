@@ -31,10 +31,8 @@ export default async function GlobalPreservationPage() {
 
   return (
     <PreservationGlobal
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      projects={(projects ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      plans={(plans ?? []) as any}
+      projects={projects ?? []}
+      plans={plans ?? []}
     />
   )
 }

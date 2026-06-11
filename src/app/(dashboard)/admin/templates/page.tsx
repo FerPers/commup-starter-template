@@ -45,8 +45,7 @@ export default async function ItrTemplatesPage() {
       </div>
 
       <ItrTemplatesView
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        templates={(templates ?? []) as any[]}
+        templates={templates ?? []}
         disciplines={disciplines ?? []}
         phases={phases ?? []}
         canEdit={canEdit}

@@ -67,5 +67,5 @@ export default async function GlobalKpiPage() {
     }
   })
 
-  return <KpiGlobal projectKpis={projectKpis as any} /> // eslint-disable-line @typescript-eslint/no-explicit-any
+  return <KpiGlobal projectKpis={projectKpis} />
 }

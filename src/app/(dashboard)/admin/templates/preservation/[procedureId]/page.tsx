@@ -48,8 +48,7 @@ export default async function ProcedureDetailPage({
 
   return (
     <ProcedureItemEditor
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      procedure={{ ...(procedure as any), preservation_procedure_items: sortedItems }}
+      procedure={{ ...procedure, preservation_procedure_items: sortedItems }}
       disciplines={disciplines ?? []}
       canEdit={canEdit}
     />

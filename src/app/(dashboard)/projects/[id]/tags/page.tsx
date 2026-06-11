@@ -121,8 +121,7 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
           )}
         </div>
       ) : (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <TagsView projectId={id} tags={(tags ?? []) as any} canEdit={canEdit} pidUrlMap={pidUrlMap} />
+        <TagsView projectId={id} tags={tags ?? []} canEdit={canEdit} pidUrlMap={pidUrlMap} />
       )}
 
     </div>

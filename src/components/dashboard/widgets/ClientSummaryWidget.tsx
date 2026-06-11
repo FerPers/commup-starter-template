@@ -19,9 +19,8 @@ export default async function ClientSummaryWidget({ userId, orgId }: { userId: s
       .eq('role', 'client'),
   ])
 
-  type ItrWithSigs = { id: string; status: string | null; itr_signatures: Array<{ role: string }> } | null
   const pendingSignature = (clientAssignments ?? []).filter(a => {
-    const itr = a.itrs as unknown as ItrWithSigs
+    const itr = a.itrs
     return itr && itr.status === 'completed' && !itr.itr_signatures.some(s => s.role === 'client')
   }).length
 

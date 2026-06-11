@@ -1,5 +1,6 @@
 'use client'
 
+import type { Json } from '@/types/supabase.generated'
 import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
@@ -9,7 +10,7 @@ type LogEntry = {
   entity_type: string
   entity_id: string | null
   action: string
-  payload: Record<string, unknown> | null
+  payload: Json
   created_at: string
   profiles: { full_name: string } | null
 }

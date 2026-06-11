@@ -75,18 +75,12 @@ export default async function PunchListPage({
       projectId={projectId}
       projectName={project.name}
       currentUserRole={membership.role}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      punches={(punches ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      phases={(phases ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      disciplines={(disciplines ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      systems={(systems ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      orgMembers={(orgMembers ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      tags={(tags ?? []) as any}
+      punches={punches ?? []}
+      phases={phases ?? []}
+      disciplines={disciplines ?? []}
+      systems={systems ?? []}
+      orgMembers={orgMembers ?? []}
+      tags={tags ?? []}
     />
   )
 }

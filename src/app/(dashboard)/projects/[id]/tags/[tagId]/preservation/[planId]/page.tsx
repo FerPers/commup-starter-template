@@ -58,23 +58,17 @@ export default async function PreservationExecutionPage({
     .limit(10)
 
   // Sort items
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const proc = plan.preservation_procedures as any
+  const proc = plan.preservation_procedures
   const sortedItems = (proc?.preservation_procedure_items ?? [])
     .slice()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .sort((a: any, b: any) => a.order_index - b.order_index)
+    .sort((a, b) => a.order_index - b.order_index)
 
   return (
     <PreservationExecution
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      plan={plan as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      procedure={{ ...(proc ?? {}), preservation_procedure_items: sortedItems } as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      openRecord={openRecord as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      history={(history ?? []) as any}
+      plan={plan}
+      procedure={{ ...proc, preservation_procedure_items: sortedItems }}
+      openRecord={openRecord}
+      history={history ?? []}
       projectId={projectId}
       tagId={tagId}
     />

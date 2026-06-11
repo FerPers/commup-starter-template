@@ -18,8 +18,8 @@ export async function GET(req: NextRequest) {
     .limit(500)
 
   const result = (data ?? []).map(itr => {
-    const tag = itr.tags as unknown as { tag_number: string } | null
-    const tpl = itr.itr_templates as unknown as { title: string } | null
+    const tag = itr.tags
+    const tpl = itr.itr_templates
     return {
       id: itr.id,
       itr_number: itr.itr_number,

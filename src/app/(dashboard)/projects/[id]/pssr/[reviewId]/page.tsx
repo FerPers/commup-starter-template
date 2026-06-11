@@ -1,7 +1,7 @@
-import type { ComponentProps } from 'react'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import PssrReviewForm from './PssrReviewForm'
+import type { ItemStatus, ReviewStatus } from './pssr-review-shared'
 
 export default async function PssrReviewPage({
   params,
@@ -51,9 +51,9 @@ export default async function PssrReviewPage({
     <div style={{ padding: '32px' }}>
       <PssrReviewForm
         projectId={projectId}
-        review={review as unknown as ComponentProps<typeof PssrReviewForm>['review']}
-        items={(items ?? []) as ComponentProps<typeof PssrReviewForm>['items']}
-        signatures={(signatures ?? []) as unknown as ComponentProps<typeof PssrReviewForm>['signatures']}
+        review={{ ...review, status: review.status as ReviewStatus }}
+        items={(items ?? []).map(i => ({ ...i, status: i.status as ItemStatus }))}
+        signatures={signatures ?? []}
         project={project}
         currentUserId={ctx.userId}
         currentUserName={profile?.full_name ?? ctx.userEmail ?? 'Usuario'}

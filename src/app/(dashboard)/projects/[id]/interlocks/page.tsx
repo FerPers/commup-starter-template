@@ -40,8 +40,7 @@ export default async function InterlocksPage({ params }: { params: Promise<{ id:
     <InterlocksView
       projectId={project.id}
       projectName={project.name}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      interlocks={(interlocks ?? []) as any}
+      interlocks={interlocks ?? []}
     />
   )
 }

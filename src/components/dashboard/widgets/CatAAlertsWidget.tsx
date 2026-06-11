@@ -40,7 +40,7 @@ export default async function CatAAlertsWidget({ orgId }: { orgId: string }) {
         <a href="/punch-list" style={{ fontSize: 'var(--text-sm)', color: '#ea580c', fontWeight: 600, textDecoration: 'none' }}>{t('architect.catAViewAll')}</a>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {(unassignedCatA as unknown as Array<{ id: string; punch_number: string; description: string | null; project_id: string; projects: { code: string; name: string } | null }>).slice(0, 5).map(p => (
+        {(unassignedCatA ?? []).slice(0, 5).map(p => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--card-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid #fed7aa' }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#9a3412', background: 'var(--danger-50)', padding: '1px 6px', borderRadius: 'var(--radius-sm)', whiteSpace: 'nowrap' }}>Cat A</span>
             <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-700)', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</span>

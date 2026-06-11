@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { renderItrPdf, type ItrPdfData } from '@/lib/pdf/itr'
+import { renderItrPdf } from '@/lib/pdf/itr'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,8 +75,7 @@ export async function GET(
     return new Response('ITR not found', { status: 404 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const bytes = await renderItrPdf(itr as any as ItrPdfData)
+  const bytes = await renderItrPdf(itr)
   const filename = `ITR-${itr.itr_number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`
 
   return new Response(bytes as BodyInit, {

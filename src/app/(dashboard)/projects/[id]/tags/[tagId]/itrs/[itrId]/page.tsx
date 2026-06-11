@@ -75,15 +75,13 @@ export default async function ItrExecutionPage({
         <SuggestionsBar suggestions={(suggestions ?? []) as ItrSuggestion[]} />
       </div>
       <ItrExecution
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        itr={itr as any}
+        itr={itr}
         projectId={projectId}
         tagId={tagId}
         currentUserId={ctx.userId}
         currentUserRole={membership.role}
         canEdit={canEdit}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        attachments={attachments as any}
+        attachments={attachments}
       />
     </>
   )

@@ -89,10 +89,8 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
       totalApproved={totalApproved}
       openCatA={openCatA}
       openCatB={openCatB}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      phaseKpis={phaseKpis as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      subsystemKpis={subsystemKpis as any}
+      phaseKpis={phaseKpis}
+      subsystemKpis={subsystemKpis}
     />
   )
 }

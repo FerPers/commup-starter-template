@@ -1,4 +1,3 @@
-import type { ComponentProps } from 'react'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import WorkPlansView from './WorkPlansView'
@@ -62,8 +61,8 @@ export default async function ProjectWorkPlansPage({
       projectName={project.name}
       projectCode={project.code}
       disciplines={discRes.data ?? []}
-      orgMembers={(membersRes.data ?? []) as unknown as ComponentProps<typeof WorkPlansView>['orgMembers']}
-      workPlans={(plansRes.data ?? []) as unknown as ComponentProps<typeof WorkPlansView>['workPlans']}
+      orgMembers={membersRes.data ?? []}
+      workPlans={plansRes.data ?? []}
       canEdit={EDITOR_ROLES.includes(membership.role)}
       currentUserId={ctx.userId}
     />

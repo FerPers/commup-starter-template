@@ -1,6 +1,8 @@
 // Tipos y helpers compartidos por la pantalla de ejecución de ITR.
 // Extraído de ItrExecution.tsx (Q2) — sin cambios de comportamiento.
 
+import type { Json } from '@/types/supabase.generated'
+
 export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no'
 
 export type Item = {
@@ -17,7 +19,7 @@ export type Item = {
   acceptance_max: number | null
   acceptance_text: string | null
   unit: string | null
-  options: string[] | null
+  options: Json
   order_index: number
   condition_item_id: string | null
   condition_value: string | null

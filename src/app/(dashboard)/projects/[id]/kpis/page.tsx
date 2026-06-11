@@ -59,12 +59,9 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
       projectCode={project.code}
       startDate={project.start_date}
       endDate={project.end_date}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      phaseKpis={phaseKpis as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      subsystemKpis={subsystemKpis as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      snapshots={snapshots as any}
+      phaseKpis={phaseKpis}
+      subsystemKpis={subsystemKpis}
+      snapshots={snapshots}
       canEdit={canEdit}
       alerts={alerts}
     />

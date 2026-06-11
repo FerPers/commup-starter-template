@@ -97,13 +97,9 @@ export default async function PidViewerPage({
   }
 
   // Enrich hotspots
-  type HotspotTag = {
-    id: string; tag_number: string; description: string; status: string
-    disciplines: { id: string; code: string; name: string; color: string }
-  }
 
   const hotspots = (rawHotspots ?? []).map(h => {
-    const tag = h.tags as unknown as HotspotTag | null
+    const tag = h.tags
     const tagId = h.tag_id
     const total = itrTotalByTag.get(tagId) ?? 0
     const approved = itrApprovedByTag.get(tagId) ?? 0
@@ -136,7 +132,7 @@ export default async function PidViewerPage({
   }
 
   const tags: TagItem[] = (allTags ?? []).map(t => {
-    const disc = t.disciplines as unknown as { id: string; code: string; name: string; color: string } | null
+    const disc = t.disciplines
     return {
       id: t.id,
       tag_number: t.tag_number,

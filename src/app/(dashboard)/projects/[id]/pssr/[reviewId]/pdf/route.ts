@@ -55,16 +55,15 @@ export async function GET(
     return new Response('PSSR review not found', { status: 404 })
   }
 
+  // status es columna text en DB — casts estrechos a los unions del PDF
   const reviewData: PssrPdfData = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase typed join shape doesn't match PssrPdfData 1:1; field set verified above
-    ...(review as any),
+    ...review,
+    status: review.status as PssrPdfData['status'],
     projectName: project?.name ?? '',
     projectCode: project?.code ?? '',
     projectClient: project?.client ?? null,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase select shape passes through; PssrPdfData defines the validated subset
-    items: (items ?? []) as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase join (profiles) returns possibly-array shape; pssr.ts handles both
-    signatures: (signatures ?? []) as any,
+    items: (items ?? []).map(i => ({ ...i, status: i.status as PssrPdfData['items'][number]['status'] })),
+    signatures: signatures ?? [],
   }
 
   const bytes = await renderPssrPdf(reviewData)

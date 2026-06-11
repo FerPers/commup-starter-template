@@ -40,8 +40,7 @@ export default async function PreservationProceduresPage() {
       </div>
 
       <PreservationProceduresView
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        procedures={(procedures ?? []) as any[]}
+        procedures={procedures ?? []}
         disciplines={disciplines ?? []}
         canEdit={canEdit}
       />

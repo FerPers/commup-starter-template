@@ -373,13 +373,12 @@ export const listPunchAttachments = withAuth(
         const { data: signed } = await supabase.storage
           .from('punch-attachments')
           .createSignedUrl(row.file_url, 3600)
-        const profile = row.profiles as unknown as { full_name: string } | null
         return {
           id: row.id,
           file_url: row.file_url,
           signed_url: signed?.signedUrl ?? null,
           uploaded_by: row.uploaded_by,
-          uploaded_by_name: profile?.full_name ?? null,
+          uploaded_by_name: row.profiles?.full_name ?? null,
           created_at: row.created_at,
           is_own: row.uploaded_by === userId,
         }

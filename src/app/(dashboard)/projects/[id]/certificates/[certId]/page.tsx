@@ -63,10 +63,8 @@ export default async function CertificateDetailPage({
   if (!cert) notFound()
 
   // Fetch ITRs for this subsystem + phase
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const subsystemId = (cert as any).subsystems?.id
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const phaseId = (cert as any).project_phases?.id
+  const subsystemId = cert.subsystems?.id
+  const phaseId = cert.project_phases?.id
 
   const { data: itrs } = subsystemId && phaseId
     ? await supabase
@@ -91,14 +89,10 @@ export default async function CertificateDetailPage({
       projectName={project.name}
       projectCode={project.code}
       projectClient={project.client ?? null}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cert={cert as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      exceptions={(exceptions ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      itrs={(itrs ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      signatures={(signatures ?? []) as any}
+      cert={cert}
+      exceptions={exceptions ?? []}
+      itrs={itrs ?? []}
+      signatures={signatures ?? []}
       currentUserId={ctx.userId}
       canEdit={canEdit}
       isAdmin={isAdmin}

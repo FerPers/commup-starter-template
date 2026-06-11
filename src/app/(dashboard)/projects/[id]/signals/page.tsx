@@ -52,10 +52,8 @@ export default async function SignalsPage({ params }: { params: Promise<{ id: st
     <SignalsView
       projectId={project.id}
       projectName={project.name}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      signals={(signals ?? []) as any}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      subsystems={(subsystems ?? []) as any}
+      signals={signals ?? []}
+      subsystems={subsystems ?? []}
     />
   )
 }

@@ -72,7 +72,7 @@ export default async function PssrListPage({
       <PssrListView
         projectId={projectId}
         systems={(systems ?? []) as ListProps['systems']}
-        reviews={(reviews ?? []) as unknown as ListProps['reviews']}
+        reviews={reviews ?? []}
         templates={(templates ?? []) as ListProps['templates']}
         canEdit={canEdit}
       />

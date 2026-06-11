@@ -33,18 +33,8 @@ export default async function AuditLogPage({
 
   const { data: events, count } = await query
 
-  type DomainEventRow = {
-    id: string
-    aggregate_type: string
-    aggregate_id: string | null
-    event_type: string
-    payload: Record<string, unknown> | null
-    occurred_at: string
-    actor_id: string | null
-    profiles: { full_name: string } | null
-  }
 
-  const logs = ((events ?? []) as unknown as DomainEventRow[]).map(e => ({
+  const logs = (events ?? []).map(e => ({
     id: e.id,
     entity_type: e.aggregate_type,
     entity_id: e.aggregate_id,
@@ -61,7 +51,7 @@ export default async function AuditLogPage({
     .eq('org_id', orgId)
 
   const users = (members ?? []).flatMap(m => {
-    const p = m.profiles as unknown as { id: string; full_name: string } | null
+    const p = m.profiles
     return p ? [{ id: p.id, full_name: p.full_name }] : []
   })
 
