@@ -18,6 +18,7 @@ import {
   type TaxonomyPreview,
 } from '@/lib/constants/templates-backup'
 import type { ActiveContext } from '@/lib/auth/permissions'
+import type { Enums, Json } from '@/types/supabase.generated'
 
 // ═══════════════════════════════════════════════════════════
 // EXPORT
@@ -95,7 +96,7 @@ async function buildFullBackup(
             item_number: (it.item_number as string | null) ?? null,
             description: (it.description as string) ?? '',
             description_es: (it.description_es as string | null) ?? null,
-            item_type: (it.item_type as string) ?? 'checkbox',
+            item_type: (it.item_type as Enums<'itr_item_type'>) ?? 'checkbox',
             is_required: !!it.is_required,
             is_critical: !!it.is_critical,
             requires_photo: !!it.requires_photo,
@@ -104,7 +105,7 @@ async function buildFullBackup(
             acceptance_min: (it.acceptance_min as number | null) ?? null,
             acceptance_max: (it.acceptance_max as number | null) ?? null,
             acceptance_text: (it.acceptance_text as string | null) ?? null,
-            options: it.options ?? null,
+            options: (it.options as Json) ?? null,
             order_index: (it.order_index as number) ?? 0,
             condition_key: it.condition_item_id
               ? keyByItemId.get(it.condition_item_id as string) ?? null
@@ -142,7 +143,7 @@ async function buildFullBackup(
       code: p.code as string,
       title: p.title as string,
       description: (p.description as string | null) ?? null,
-      frequency: p.frequency as string,
+      frequency: p.frequency as Enums<'preservation_frequency'>,
       interval_days: p.interval_days as number,
       requires_photo: !!p.requires_photo,
       requires_signature: !!p.requires_signature,

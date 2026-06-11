@@ -1,5 +1,6 @@
 'use client'
 
+import type { OrgMemberRole } from '@/types/database'
 import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { inviteUser, updateMemberRole, removeMember } from '@/app/actions/users'
@@ -155,7 +156,7 @@ export default function UsersView({
     })
   }
 
-  async function handleRoleChange(memberId: string, role: string) {
+  async function handleRoleChange(memberId: string, role: OrgMemberRole) {
     setError(null)
     startTransition(async () => {
       const res = await updateMemberRole({ memberId, role })
@@ -447,7 +448,7 @@ export default function UsersView({
                         {canEdit && !isSelf ? (
                           <select
                             value={m.role}
-                            onChange={e => handleRoleChange(m.id, e.target.value)}
+                            onChange={e => handleRoleChange(m.id, e.target.value as OrgMemberRole)}
                             disabled={isPending}
                             style={{
                               padding: '4px 8px', border: '1px solid var(--border)',

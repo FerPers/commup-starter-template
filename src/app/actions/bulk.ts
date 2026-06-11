@@ -4,10 +4,11 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
 import { revalidatePath } from 'next/cache'
+import type { Enums } from '@/types/supabase.generated'
 
 export const bulkUpdateItrStatus = withAuthOnly(
   { role: EDITOR_ROLES },
-  async (ctx, ids: string[], status: string): Promise<{ error?: string }> => {
+  async (ctx, ids: string[], status: Enums<'itr_status'>): Promise<{ error?: string }> => {
     if (!ids.length) return {}
 
     const { error } = await ctx.supabase
@@ -23,7 +24,7 @@ export const bulkUpdateItrStatus = withAuthOnly(
 
 export const bulkUpdatePunchStatus = withAuthOnly(
   { role: EDITOR_ROLES },
-  async (ctx, ids: string[], status: string): Promise<{ error?: string }> => {
+  async (ctx, ids: string[], status: Enums<'punch_status'>): Promise<{ error?: string }> => {
     if (!ids.length) return {}
 
     const { error } = await ctx.supabase
@@ -39,7 +40,7 @@ export const bulkUpdatePunchStatus = withAuthOnly(
 
 export const bulkUpdateTagStatus = withAuthOnly(
   { role: EDITOR_ROLES },
-  async (ctx, ids: string[], status: string): Promise<{ error?: string }> => {
+  async (ctx, ids: string[], status: Enums<'tag_status'>): Promise<{ error?: string }> => {
     if (!ids.length) return {}
 
     const { error } = await ctx.supabase

@@ -5,6 +5,7 @@ import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
+import type { TablesUpdate } from '@/types/supabase.generated'
 
 // ── createPunch ────────────────────────────────────────────────────────────
 
@@ -54,6 +55,8 @@ export const createPunch = withAuth(
       .insert({
         project_id: input.projectId,
         subsystem_id: subsystemId,
+        // El trigger punch_number_before_insert asigna el número atómico cuando llega ''
+        punch_number: '',
         tag_id: input.tagId ?? null,
         itr_id: input.itrId ?? null,
         category: input.category,
@@ -196,7 +199,7 @@ export const updatePunchStatus = withAuth(
   ): Promise<{ error?: string }> => {
     const { supabase } = ctx
 
-    const update: Record<string, unknown> = { status: input.status }
+    const update: TablesUpdate<'punches'> = { status: input.status }
     if (input.status === 'closed' || input.status === 'cancelled') {
       update.closed_date = new Date().toISOString().split('T')[0]
     }

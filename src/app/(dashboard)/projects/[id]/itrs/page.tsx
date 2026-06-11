@@ -36,7 +36,7 @@ export default async function ProjectItrsPage({
     supabase
       .from('project_phases')
       .select('id, code, name, color, order_index')
-      .eq('project_id', projectId)
+      .eq('org_id', membership.org_id)
       .order('order_index'),
     supabase
       .from('org_members')

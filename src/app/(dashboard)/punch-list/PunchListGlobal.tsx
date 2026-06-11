@@ -1,5 +1,6 @@
 'use client'
 
+import type { Enums } from '@/types/supabase.generated'
 import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -88,7 +89,7 @@ export default function PunchListGlobal({
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [bulkStatus, setBulkStatus] = useState('')
+  const [bulkStatus, setBulkStatus] = useState<Enums<'punch_status'> | ''>('')
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkError, setBulkError] = useState('')
   const selectAllRef = useRef<HTMLInputElement>(null)
@@ -318,7 +319,7 @@ export default function PunchListGlobal({
           <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)' }}>{tc('changeStatusTo')}</span>
           <select
             value={bulkStatus}
-            onChange={(e) => setBulkStatus(e.target.value)}
+            onChange={(e) => setBulkStatus(e.target.value as Enums<'punch_status'> | '')}
             style={{
               padding: '6px 10px', borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--gray-700)', background: 'var(--gray-900)',

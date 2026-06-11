@@ -82,6 +82,7 @@ export default async function PidViewerPage({
   // Build enrichment maps
   const punchCountByTag = new Map<string, number>()
   for (const p of openPunchesA ?? []) {
+    if (!p.tag_id) continue
     punchCountByTag.set(p.tag_id, (punchCountByTag.get(p.tag_id) ?? 0) + 1)
   }
 

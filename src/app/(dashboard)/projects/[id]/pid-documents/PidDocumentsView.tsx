@@ -12,7 +12,7 @@ type PidDoc = {
   file_path: string
   file_name: string
   file_size: number | null
-  created_at: string
+  created_at: string | null
   signed_url: string | null
 }
 
@@ -40,7 +40,8 @@ export default function PidDocumentsView({
   const [docs, setDocs] = useState<PidDoc[]>(documents)
   const [missing, setMissing] = useState<string[]>(missingPids)
 
-  function formatDate(iso: string) {
+  function formatDate(iso: string | null) {
+    if (!iso) return '—'
     return new Date(iso).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })
   }
 
@@ -172,7 +173,7 @@ function DocRow({
   doc: PidDoc
   canEdit: boolean
   projectId: string
-  formatDate: (iso: string) => string
+  formatDate: (iso: string | null) => string
   onDeleted: (id: string, drawingNumber: string) => void
 }) {
   const t = useTranslations('PidDocuments')

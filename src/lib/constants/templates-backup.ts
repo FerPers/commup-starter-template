@@ -1,5 +1,7 @@
 // Backup format constants and types (no server-only logic — safe to import in client).
 
+import type { Enums, Json } from '@/types/supabase.generated'
+
 export const BACKUP_FORMAT = 'commup.templates.backup'
 export const BACKUP_VERSION = 1
 
@@ -19,7 +21,7 @@ export type ItrTemplateBackup = {
       item_number: string | null
       description: string
       description_es: string | null
-      item_type: string
+      item_type: Enums<'itr_item_type'>
       is_required: boolean
       is_critical: boolean
       requires_photo: boolean
@@ -28,7 +30,7 @@ export type ItrTemplateBackup = {
       acceptance_min: number | null
       acceptance_max: number | null
       acceptance_text: string | null
-      options: unknown
+      options: Json
       order_index: number
       condition_key: string | null   // section_index:item_order_index of conditioning item, or null
       condition_value: string | null
@@ -40,7 +42,7 @@ export type PreservationProcedureBackup = {
   code: string
   title: string
   description: string | null
-  frequency: string
+  frequency: Enums<'preservation_frequency'>
   interval_days: number
   requires_photo: boolean
   requires_signature: boolean

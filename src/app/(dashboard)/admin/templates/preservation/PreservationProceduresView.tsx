@@ -1,5 +1,6 @@
 'use client'
 
+import type { Enums } from '@/types/supabase.generated'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProcedure, deleteProcedure } from '@/app/actions/preservation'
@@ -46,7 +47,7 @@ const FREQ_COLORS: Record<string, string> = {
 
 const DEFAULT_FORM = {
   code: '', title: '', description: '',
-  disciplineId: '', frequency: 'monthly', intervalDays: '30',
+  disciplineId: '', frequency: 'monthly' as Enums<'preservation_frequency'>, intervalDays: '30',
   requiresPhoto: false, requiresSignature: true,
 }
 
@@ -108,7 +109,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
   }
 
   // Frequency selector auto-sets intervalDays
-  function handleFreqChange(freq: string) {
+  function handleFreqChange(freq: Enums<'preservation_frequency'>) {
     const defaults: Record<string, string> = {
       daily: '1', weekly: '7', biweekly: '14', monthly: '30', quarterly: '90',
     }
@@ -384,7 +385,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Frecuencia *</label>
                   <select
                     value={form.frequency}
-                    onChange={e => handleFreqChange(e.target.value)}
+                    onChange={e => handleFreqChange(e.target.value as Enums<'preservation_frequency'>)}
                     style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   >
                     <option value="daily">Diario</option>

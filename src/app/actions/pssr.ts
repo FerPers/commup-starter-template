@@ -11,6 +11,7 @@ import {
 } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
+import type { TablesInsert, TablesUpdate } from '@/types/supabase.generated'
 import { DEFAULT_PSSR_ITEMS, PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
 import {
   notifyPssrSubmittedForApproval,
@@ -131,7 +132,7 @@ export async function createPssrReview(data: {
     .eq('system_id', data.systemId)
   const reviewNumber = `PSSR-${String((count ?? 0) + 1).padStart(3, '0')}`
 
-  const insertRow: Record<string, unknown> = {
+  const insertRow: TablesInsert<'pssr_reviews'> = {
     org_id: ctx.orgId,
     project_id: data.projectId,
     system_id: data.systemId,
@@ -182,7 +183,7 @@ export async function updatePssrReviewItem(data: {
   const ctx = await requireCtx()
   const supabase = ctx.supabase
 
-  const payload: Record<string, unknown> = { updated_by: ctx.userId, updated_at: new Date().toISOString() }
+  const payload: TablesUpdate<'pssr_review_items'> = { updated_by: ctx.userId, updated_at: new Date().toISOString() }
   if (data.status !== undefined)         payload.status = data.status
   if (data.responsible !== undefined)    payload.responsible = data.responsible
   if (data.actions !== undefined)        payload.actions = data.actions
@@ -327,6 +328,7 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
     .order('order_index', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (!phaseD) throw new Error('No hay fases configuradas en la organización — crea las fases antes de aprobar el PSSR')
 
   // Auto-number RFSU certificate
   const { count: certCount } = await supabase
@@ -341,7 +343,7 @@ export async function approvePssrAndIssueRfsu(reviewId: string, projectId: strin
   const { data: cert, error: certError } = await supabase.from('certificates').insert({
     project_id: projectId,
     system_id: review.system_id,
-    phase_id: phaseD?.id ?? null,
+    phase_id: phaseD.id,
     certificate_number: certNumber,
     title: `RFSU — ${system?.name ?? 'Sistema'} (${system?.code ?? ''})`,
     status: 'issued',
@@ -544,7 +546,7 @@ export const clonePssrTemplateToActiveOrg = withAuthOnly(
 
     if (tplErr || !cloned) return { error: tplErr?.message ?? 'No se pudo crear el template' }
 
-    const items = (source.pssr_template_items ?? []) as Array<Record<string, unknown>>
+    const items = source.pssr_template_items ?? []
     if (items.length > 0) {
       const itemRows = items.map(item => ({ ...item, template_id: cloned.id }))
       const { error: itemErr } = await ctx.supabase

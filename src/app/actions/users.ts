@@ -132,7 +132,7 @@ export const updateMemberRole = withAuth(
   { role: ADMIN_ROLES },
   async (
     ctx,
-    input: { memberId: string; role: string },
+    input: { memberId: string; role: OrgMemberRole },
   ): Promise<{ error?: string }> => {
   const { data: member } = await ctx.supabase
     .from('org_members')

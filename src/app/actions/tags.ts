@@ -4,13 +4,14 @@ import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
+import type { Enums } from '@/types/supabase.generated'
 
 export interface TagUpdatePayload {
   description?: string
   manufacturer?: string | null
   model?: string | null
   serial_number?: string | null
-  status?: string
+  status?: Enums<'tag_status'>
   preservation_required?: boolean
   pid_drawing?: string | null
   // Engineering params

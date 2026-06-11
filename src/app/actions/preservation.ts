@@ -3,6 +3,7 @@
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
+import type { Enums } from '@/types/supabase.generated'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (createPreservationRecord,
 // upsertRecordResponse, finalizeRecord, attachments) son auth-only a propósito —
@@ -25,7 +26,7 @@ export const createProcedure = withAuth(
       title: string
       description?: string
       disciplineId?: string
-      frequency: string
+      frequency: Enums<'preservation_frequency'>
       intervalDays: number
       requiresPhoto: boolean
       requiresSignature: boolean
@@ -66,7 +67,7 @@ export const updateProcedure = withAuth(
       title: string
       description?: string
       disciplineId?: string
-      frequency: string
+      frequency: Enums<'preservation_frequency'>
       intervalDays: number
       requiresPhoto: boolean
       requiresSignature: boolean
@@ -635,7 +636,7 @@ export const cloneProcedureToActiveOrg = withAuthOnly(
 
     if (procErr || !cloned) return { error: procErr?.message ?? 'No se pudo crear el procedimiento' }
 
-    const items = (source.preservation_procedure_items ?? []) as Array<Record<string, unknown>>
+    const items = source.preservation_procedure_items ?? []
     if (items.length > 0) {
       const itemRows = items.map(item => ({ ...item, procedure_id: cloned.id }))
       const { error: itemErr } = await ctx.supabase

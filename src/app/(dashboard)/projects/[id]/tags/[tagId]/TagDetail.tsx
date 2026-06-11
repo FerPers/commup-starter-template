@@ -1,5 +1,6 @@
 'use client'
 
+import type { Enums } from '@/types/supabase.generated'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { updateTag, deleteTag } from '@/app/actions/tags'
@@ -50,7 +51,7 @@ type Tag = {
   id: string
   tag_number: string
   description: string
-  status: string
+  status: Enums<'tag_status'>
   manufacturer: string | null
   model: string | null
   serial_number: string | null
@@ -780,7 +781,7 @@ function EditForm({ tag, projectId, onCancel, canDelete }: {
           </FormField>
 
           <FormField label={t('edit.fieldStatus')}>
-            <select style={inputStyle} value={form.status} onChange={e => set('status', e.target.value)}>
+            <select style={inputStyle} value={form.status} onChange={e => set('status', e.target.value as Enums<'tag_status'>)}>
               <option value="not_started">{t('status.not_started')}</option>
               <option value="in_progress">{t('status.in_progress')}</option>
               <option value="completed">{t('status.completed')}</option>

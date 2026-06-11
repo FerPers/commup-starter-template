@@ -44,7 +44,7 @@ export default async function PunchListPage({
     supabase
       .from('project_phases')
       .select('id, code, name, color')
-      .eq('project_id', projectId)
+      .eq('org_id', membership.org_id)
       .order('order_index'),
     supabase
       .from('disciplines')

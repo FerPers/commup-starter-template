@@ -1,5 +1,6 @@
 'use client'
 
+import type { Json, Enums } from '@/types/supabase.generated'
 import { useState, useTransition, useMemo } from 'react'
 import {
   createWorkflowRule,
@@ -15,9 +16,9 @@ type Rule = {
   name: string
   description: string | null
   trigger_event: string
-  condition_jsonlogic: Record<string, unknown>
-  action_type: WorkflowActionType
-  action_payload: Record<string, unknown>
+  condition_jsonlogic: Json
+  action_type: Enums<'workflow_action_type'>
+  action_payload: Json
   priority: number
   enabled: boolean
   updated_at: string
@@ -27,7 +28,7 @@ type Execution = {
   id: string
   rule_id: string
   matched: boolean
-  action_result: Record<string, unknown> | null
+  action_result: Json | null
   error_message: string | null
   executed_at: string
 }
@@ -70,12 +71,12 @@ const OPERATORS: { value: string; label: string; jsonlogic: string }[] = [
 // ── JsonLogic helpers (simple row builder) ───────────────────
 type ConditionRow = { field: string; op: string; value: string }
 
-function rowsToJsonLogic(rows: ConditionRow[]): Record<string, unknown> {
+function rowsToJsonLogic(rows: ConditionRow[]): { [key: string]: Json } {
   const clean = rows.filter(r => r.field.trim())
   if (clean.length === 0) return {}
   const parts = clean.map(r => {
     const opDef = OPERATORS.find(o => o.value === r.op) ?? OPERATORS[0]
-    let v: unknown = r.value
+    let v: Json = r.value
     if (r.value === 'true') v = true
     else if (r.value === 'false') v = false
     else if (r.value !== '' && !isNaN(Number(r.value))) v = Number(r.value)
@@ -84,7 +85,8 @@ function rowsToJsonLogic(rows: ConditionRow[]): Record<string, unknown> {
   return parts.length === 1 ? parts[0] : { and: parts }
 }
 
-function jsonLogicToRows(logic: Record<string, unknown>): ConditionRow[] {
+function jsonLogicToRows(logicJson: Json): ConditionRow[] {
+  const logic = (logicJson && typeof logicJson === 'object' && !Array.isArray(logicJson) ? logicJson : {}) as Record<string, unknown>
   if (!logic || typeof logic !== 'object' || Object.keys(logic).length === 0) return []
   const parse = (node: Record<string, unknown>): ConditionRow | null => {
     const key = Object.keys(node)[0]
@@ -323,7 +325,7 @@ function RuleEditorModal({
   const [name, setName] = useState(rule?.name ?? '')
   const [description, setDescription] = useState(rule?.description ?? '')
   const [triggerEvent, setTriggerEvent] = useState(rule?.trigger_event ?? TRIGGER_EVENTS[0].value)
-  const [actionType, setActionType] = useState<WorkflowActionType>(rule?.action_type ?? 'notify_user')
+  const [actionType, setActionType] = useState<Enums<'workflow_action_type'>>(rule?.action_type ?? 'notify_user')
   const [priority, setPriority] = useState(rule?.priority ?? 100)
   const [enabled, setEnabled] = useState(rule?.enabled ?? true)
   const [conditionRows, setConditionRows] = useState<ConditionRow[]>(
@@ -342,7 +344,7 @@ function RuleEditorModal({
   const handleSave = async () => {
     setErr(null)
 
-    let conditionJsonlogic: unknown
+    let conditionJsonlogic: Json
     if (advancedMode) {
       try { conditionJsonlogic = JSON.parse(advancedJson) }
       catch { return setErr('JSON de condición inválido') }
@@ -350,7 +352,7 @@ function RuleEditorModal({
       conditionJsonlogic = rowsToJsonLogic(conditionRows)
     }
 
-    let actionPayload: Record<string, unknown>
+    let actionPayload: { [key: string]: Json }
     try { actionPayload = JSON.parse(payloadJson) }
     catch { return setErr('JSON de payload inválido') }
 
@@ -371,7 +373,7 @@ function RuleEditorModal({
       id: rule?.id ?? (res as { id: string }).id,
       name, description: description || null,
       trigger_event: triggerEvent,
-      condition_jsonlogic: conditionJsonlogic as Record<string, unknown>,
+      condition_jsonlogic: conditionJsonlogic,
       action_type: actionType,
       action_payload: actionPayload,
       priority, enabled,

@@ -292,7 +292,7 @@ export const revokeCertificate = withAuth(
 
     const { data: cert } = await supabase
       .from('certificates')
-      .select('id, code, status, project_id')
+      .select('id, certificate_number, status, project_id')
       .eq('id', input.certId)
       .single()
 
@@ -348,10 +348,10 @@ export const revokeCertificate = withAuth(
         org_id: ctx.orgId,
         recipient_user_id: uid,
         kind: 'certificate_revoked',
-        title: `El certificado ${cert.code} fue revocado`,
+        title: `El certificado ${cert.certificate_number} fue revocado`,
         body: reason,
         link_url: `/projects/${input.projectId}/certificates/${input.certId}`,
-        payload: { certId: input.certId, projectId: input.projectId, certCode: cert.code, reason },
+        payload: { certId: input.certId, projectId: input.projectId, certCode: cert.certificate_number, reason },
       }))
       const admin = createAdminClient()
       const { error: notifErr } = await admin.from('notifications').insert(rows)
@@ -384,7 +384,7 @@ export const reopenCertificate = withAuth(
 
     const { data: cert } = await supabase
       .from('certificates')
-      .select('id, code, status, project_id')
+      .select('id, certificate_number, status, project_id')
       .eq('id', input.certId)
       .single()
 
@@ -435,10 +435,10 @@ export const reopenCertificate = withAuth(
         org_id: ctx.orgId,
         recipient_user_id: uid,
         kind: 'certificate_reopened',
-        title: `El certificado ${cert.code} fue reabierto`,
+        title: `El certificado ${cert.certificate_number} fue reabierto`,
         body: reason,
         link_url: `/projects/${input.projectId}/certificates/${input.certId}`,
-        payload: { certId: input.certId, projectId: input.projectId, certCode: cert.code, reason },
+        payload: { certId: input.certId, projectId: input.projectId, certCode: cert.certificate_number, reason },
       }))
       const admin = createAdminClient()
       const { error: notifErr } = await admin.from('notifications').insert(rows)

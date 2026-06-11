@@ -217,7 +217,7 @@ export const addItrsToWorkPlan = withAuthOnly(
         work_plan_id: planId,
         itr_id: item.itrId,
         assigned_to: item.assignedTo,
-        status: 'not_started',
+        status: 'not_started' as const,
       })))
 
     if (error) return { error: error.message }
@@ -271,7 +271,7 @@ export const createWorkPlanAndAddItrs = withAuth(
           work_plan_id: data.id,
           itr_id: item.itrId,
           assigned_to: item.assignedTo,
-          status: 'not_started',
+          status: 'not_started' as const,
         })))
       if (itemsError) return { error: itemsError.message }
     }

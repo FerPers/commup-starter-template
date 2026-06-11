@@ -1,5 +1,6 @@
 'use client'
 
+import type { Enums } from '@/types/supabase.generated'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -51,7 +52,7 @@ interface Procedure {
   code: string
   title: string
   description: string | null
-  frequency: string
+  frequency: Enums<'preservation_frequency'>
   interval_days: number
   requires_photo: boolean
   requires_signature: boolean
@@ -349,7 +350,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>Frecuencia</label>
-                  <select value={hdrForm.frequency} onChange={e => setHdrForm(f => ({ ...f, frequency: e.target.value }))}
+                  <select value={hdrForm.frequency} onChange={e => setHdrForm(f => ({ ...f, frequency: e.target.value as Enums<'preservation_frequency'> }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
                     <option value="daily">Diario</option>
                     <option value="weekly">Semanal</option>

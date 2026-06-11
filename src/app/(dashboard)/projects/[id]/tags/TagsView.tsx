@@ -1,5 +1,6 @@
 'use client'
 
+import type { Enums } from '@/types/supabase.generated'
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -54,7 +55,7 @@ export default function TagsView({
 
   // ── Bulk ─────────────────────────────────────────────────────────────
   const [selected, setSelected]       = useState<Set<string>>(new Set())
-  const [bulkStatus, setBulkStatus]   = useState('')
+  const [bulkStatus, setBulkStatus]   = useState<Enums<'tag_status'> | ''>('')
   const [isPending, startTransition]  = useTransition()
   const [bulkError, setBulkError]     = useState<string | null>(null)
 
@@ -215,7 +216,7 @@ export default function TagsView({
           </span>
           <select
             value={bulkStatus}
-            onChange={e => setBulkStatus(e.target.value)}
+            onChange={e => setBulkStatus(e.target.value as Enums<'tag_status'> | '')}
             disabled={isPending}
             style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'var(--card-bg)' }}
           >

@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
+import type { TablesInsert, TablesUpdate } from '@/types/supabase.generated'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (upsertResponse,
 // saveItrAttachment, deleteItrAttachment, signItr) son auth-only a propósito —
@@ -77,7 +78,7 @@ export const createItrAssignment = withAuth(
 
     if (itrErr) return { error: itrErr.message }
 
-    const assignments: { itr_id: string; user_id: string; role: string }[] = [
+    const assignments: TablesInsert<'itr_assignments'>[] = [
       { itr_id: itr.id, user_id: inspectorId, role: 'executor' },
     ]
     if (supervisorId) assignments.push({ itr_id: itr.id, user_id: supervisorId, role: 'supervisor' })
@@ -163,7 +164,7 @@ export const upsertResponse = withAuth(
     }
 
     // Build patch with only the fields explicitly provided.
-    const patch: Record<string, unknown> = {
+    const patch: TablesUpdate<'itr_responses'> = {
       responded_at: new Date().toISOString(),
       responded_by: ctx.userId,
     }

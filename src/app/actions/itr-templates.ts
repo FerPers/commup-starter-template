@@ -4,6 +4,7 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 import { detectItrPhase } from '@/lib/utils'
+import type { Enums } from '@/types/supabase.generated'
 
 const TIPO_ESPECIAL = 'Especial / Matriz'
 
@@ -140,7 +141,7 @@ export interface ItemPayload {
   item_number?: string | null
   description: string
   description_es?: string | null
-  item_type: string
+  item_type: Enums<'itr_item_type'>
   is_required: boolean
   is_critical: boolean
   requires_photo: boolean
@@ -367,7 +368,7 @@ export interface ImportSection {
     item_number: string | null
     description: string
     description_es: string | null
-    item_type: string
+    item_type: Enums<'itr_item_type'>
     is_critical: boolean
     is_required: boolean
     requires_photo: boolean
@@ -556,7 +557,7 @@ export const bulkImportCatalog = withAuthOnly(
         item_number: row.itemNo === '-' ? null : (row.itemNo || null),
         description: row.description,
         description_es: null,
-        item_type: row.tipo === TIPO_ESPECIAL ? 'text' : 'checkbox',
+        item_type: row.tipo === TIPO_ESPECIAL ? ('text' as const) : ('checkbox' as const),
         is_required: true,
         is_critical: false,
         requires_photo: false,
@@ -753,11 +754,7 @@ export const cloneTemplateToActiveOrg = withAuthOnly(
 
     if (tplErr || !cloned) return { error: tplErr?.message ?? 'No se pudo crear el template' }
 
-    const sections = (source.itr_template_sections ?? []) as Array<{
-      title: string
-      order_index: number
-      itr_template_items: Array<Record<string, unknown>>
-    }>
+    const sections = source.itr_template_sections ?? []
 
     for (const sec of sections) {
       const { data: newSec, error: secErr } = await ctx.supabase

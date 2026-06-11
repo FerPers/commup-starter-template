@@ -29,7 +29,9 @@ export const createWebhookSubscription = withAuth(
 
     const { data, error } = await ctx.supabase.rpc('create_webhook_subscription', {
       p_org_id:       ctx.orgId,
-      p_project_id:   input.projectId ?? undefined,
+      // La función PG acepta NULL (webhook org-level) pero el typegen no expresa
+      // nullability de args. `undefined` se caería del JSON y rompería la llamada.
+      p_project_id:   (input.projectId ?? null) as unknown as string,
       p_name:         input.name.trim(),
       p_endpoint_url: input.endpointUrl.trim(),
       p_event_types:  input.eventTypes,

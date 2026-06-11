@@ -3,21 +3,17 @@
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
+import type { Enums, Json } from '@/types/supabase.generated'
 
-export type WorkflowActionType =
-  | 'block_certificate'
-  | 'notify_user'
-  | 'create_punch'
-  | 'change_system_state'
-  | 'webhook_call'
+export type WorkflowActionType = Enums<'workflow_action_type'>
 
 export type WorkflowRuleInput = {
   name: string
   description?: string | null
   triggerEvent: string
-  conditionJsonlogic: unknown
+  conditionJsonlogic: Json
   actionType: WorkflowActionType
-  actionPayload: Record<string, unknown>
+  actionPayload: { [key: string]: Json }
   priority?: number
   enabled?: boolean
 }

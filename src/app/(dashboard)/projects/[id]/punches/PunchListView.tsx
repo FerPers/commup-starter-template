@@ -1,5 +1,6 @@
 'use client'
 
+import type { Enums } from '@/types/supabase.generated'
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -141,7 +142,7 @@ export default function PunchListView({
 
   function clearSelection() { setSelected(new Set()); setBulkError(null) }
 
-  function applyBulk(status: string) {
+  function applyBulk(status: Enums<'punch_status'>) {
     setBulkError(null)
     startBulkTransition(async () => {
       const res = await bulkUpdatePunchStatus([...selected], status)

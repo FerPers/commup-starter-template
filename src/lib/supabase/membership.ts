@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { createClient } from './server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 
 export const ACTIVE_ORG_COOKIE = 'active_org_id'
 
@@ -10,7 +11,7 @@ export type Membership = {
 }
 
 export type ActiveContext = {
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
   userId: string
   userEmail: string | null
   orgId: string

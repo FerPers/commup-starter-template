@@ -48,9 +48,9 @@ export const listDataQualityIssues = withAuth(
   ): Promise<{ error?: string; issues?: DQIssue[] }> => {
     const { data, error } = await ctx.supabase.rpc('data_quality_list', {
       p_org_id: ctx.orgId,
-      p_category: params.category ?? null,
-      p_severity: params.severity ?? null,
-      p_project_id: params.projectId ?? null,
+      p_category: params.category ?? undefined,
+      p_severity: params.severity ?? undefined,
+      p_project_id: params.projectId ?? undefined,
       p_limit: params.limit ?? 200,
       p_offset: params.offset ?? 0,
     })
