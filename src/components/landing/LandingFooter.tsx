@@ -21,7 +21,7 @@ export default async function LandingFooter() {
           <div>
             <div style={{ marginBottom: 14 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logos/horizontal-white.png" height={24} alt="CommUp" style={{ display: 'block', height: 24, width: 'auto' }} />
+              <img src="/logos/horizontal-white.png" height={36} alt="CommUp" style={{ display: 'block', height: 36, width: 'auto' }} />
             </div>
             <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, margin: '0 0 4px' }}>
               {t('subtitle')}

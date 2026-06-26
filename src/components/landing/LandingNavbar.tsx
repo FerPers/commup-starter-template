@@ -121,9 +121,9 @@ export default function LandingNavbar() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={solid ? '/logos/horizontal-color.png' : '/logos/horizontal-white.png'}
-            height={38}
+            height={48}
             alt="CommUp"
-            style={{ display: 'block', height: 38, width: 'auto' }}
+            style={{ display: 'block', height: 48, width: 'auto' }}
           />
         </Link>
 
