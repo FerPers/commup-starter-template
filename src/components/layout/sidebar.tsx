@@ -220,17 +220,13 @@ export default function Sidebar({ notifCounts, isOpen = false }: { notifCounts?:
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 'var(--radius-md)',
-            background: 'linear-gradient(135deg, var(--primary-500), var(--primary-700))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="white" strokeWidth="2"/>
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logos/isotipo-white.png"
+            alt=""
+            aria-hidden="true"
+            style={{ width: 38, height: 'auto', flexShrink: 0, display: 'block' }}
+          />
           <div>
             <div style={{ color: '#fff', fontWeight: 700, fontSize: 'var(--text-md)', letterSpacing: '-0.3px' }}>CommUp</div>
             <div style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)' }}>{t('platform')}</div>

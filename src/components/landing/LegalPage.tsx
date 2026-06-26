@@ -18,7 +18,7 @@ export default function LegalPage({ title, updated, sections, backLabel }: {
         <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logos/compact-dark-transparent.svg" height={26} alt="CommUp" style={{ display: 'block', height: 26, width: 'auto' }} />
+            <img src="/logos/horizontal-white.png" height={32} alt="CommUp" style={{ display: 'block', height: 32, width: 'auto' }} />
           </Link>
           <Link href="/" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
             ← {backLabel}

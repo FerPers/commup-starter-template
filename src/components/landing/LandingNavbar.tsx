@@ -120,10 +120,10 @@ export default function LandingNavbar() {
         <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={solid ? '/logos/compact-light.svg' : '/logos/compact-dark-transparent.svg'}
-            height={30}
+            src={solid ? '/logos/horizontal-color.png' : '/logos/horizontal-white.png'}
+            height={38}
             alt="CommUp"
-            style={{ display: 'block', height: 30, width: 'auto' }}
+            style={{ display: 'block', height: 38, width: 'auto' }}
           />
         </Link>
 

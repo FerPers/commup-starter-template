@@ -13,6 +13,13 @@ export const metadata: Metadata = {
   },
   description: 'Cloud platform for industrial completion & commissioning management: digital ITRs, punch lists, MC/RFC/RFSU certificates, preservation and real-time KPIs. Built for Oil & Gas, LNG, renewables, mining and industrial plants.',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '48x48' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png' }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -40,7 +47,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#0B1D3A',
+  themeColor: '#12304A',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -51,9 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} data-theme={theme} suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-      </head>
+      <head />
       <body>
         <NextIntlClientProvider messages={messages}>
           {children}

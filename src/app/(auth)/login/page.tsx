@@ -60,18 +60,12 @@ export default function LoginPage() {
       <div style={{ width: '100%', maxWidth: 420 }}>
         {/* Logo & Brand */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 64, height: 64, borderRadius: 'var(--radius-lg)',
-            background: 'linear-gradient(135deg, var(--primary-500), var(--primary-700))',
-            marginBottom: 14, boxShadow: '0 4px 20px rgba(59,130,246,0.35)',
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logos/isotipo-color.png"
+            alt="CommUp"
+            style={{ display: 'block', height: 64, width: 'auto', margin: '0 auto 14px' }}
+          />
           <h1 style={{
             fontSize: 28, fontWeight: 700, color: 'var(--text-strong)',
             letterSpacing: '-0.5px', margin: 0,
