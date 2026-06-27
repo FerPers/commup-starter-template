@@ -19,9 +19,12 @@ export default async function LandingFooter() {
         }} className="footer-grid">
           {/* Brand */}
           <div>
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 9 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logos/horizontal-white.png" height={36} alt="CommUp" style={{ display: 'block', height: 36, width: 'auto' }} />
+              <img src="/logos/isotipo-white.png" height={30} alt="" aria-hidden="true" style={{ display: 'block', height: 30, width: 'auto' }} />
+              <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1, color: '#FFFFFF' }}>
+                Comm<span style={{ color: '#F47A20' }}>UP</span>
+              </span>
             </div>
             <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, margin: '0 0 4px' }}>
               {t('subtitle')}

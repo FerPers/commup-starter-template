@@ -117,14 +117,21 @@ export default function LandingNavbar() {
     <nav style={navStyle}>
       <div style={innerStyle}>
         {/* Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={solid ? '/logos/horizontal-color.png' : '/logos/horizontal-white.png'}
-            height={48}
-            alt="CommUp"
-            style={{ display: 'block', height: 48, width: 'auto' }}
+            src={solid ? '/logos/isotipo-color.png' : '/logos/isotipo-white.png'}
+            height={38}
+            alt=""
+            aria-hidden="true"
+            style={{ display: 'block', height: 38, width: 'auto' }}
           />
+          <span style={{
+            fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1,
+            color: solid ? '#12304A' : '#FFFFFF',
+          }}>
+            Comm<span style={{ color: '#F47A20' }}>UP</span>
+          </span>
         </Link>
 
         {/* Nav links — hidden on mobile via media (handled in globals) */}

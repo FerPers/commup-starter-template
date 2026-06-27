@@ -16,9 +16,12 @@ export default function LegalPage({ title, updated, sections, backLabel }: {
     <div style={{ background: '#FFFFFF', minHeight: '100vh', color: '#0B1D3A' }}>
       <header style={{ background: '#0B1D3A', padding: '20px 24px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logos/horizontal-white.png" height={40} alt="CommUp" style={{ display: 'block', height: 40, width: 'auto' }} />
+            <img src="/logos/isotipo-white.png" height={30} alt="" aria-hidden="true" style={{ display: 'block', height: 30, width: 'auto' }} />
+            <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1, color: '#FFFFFF' }}>
+              Comm<span style={{ color: '#F47A20' }}>UP</span>
+            </span>
           </Link>
           <Link href="/" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>
             ← {backLabel}
