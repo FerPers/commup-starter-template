@@ -15,16 +15,7 @@ import SignModal from './SignModal'
 import RevokeModal from './RevokeModal'
 import CreatePunchModal from './CreatePunchModal'
 import { isItemVisible, type Attachment, type ItrData } from './types'
-
-// ── Status config (colors only) ───────────────────────────────────────
-
-const ITR_STATUS: Record<string, { color: string; bg: string }> = {
-  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { color: '#10b981', bg: '#ecfdf5' },
-  approved:     { color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:     { color: '#ef4444', bg: '#fee2e2' },
-}
+import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
 export default function ItrExecution({
   itr,
@@ -97,7 +88,7 @@ export default function ItrExecution({
   const template = itr.itr_templates
   const tag = itr.tags
   const phase = itr.project_phases
-  const st = ITR_STATUS[itr.status] ?? ITR_STATUS.not_started
+  const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
 
   // Status + role labels (i18n)
   const STATUS_LABELS: Record<string, string> = {

@@ -4,6 +4,7 @@ import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeCertificate, reopenCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
+import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
 type CertSignatureRoleId = 'completion' | 'client' | 'authority'
 
@@ -50,15 +51,7 @@ type SignatureRow = {
   signer_profile: { id: string; full_name: string } | null
 }
 
-// ── Config (colors only) ───────────────────────────────────────────────────
-
-const ITR_STATUS_COLORS = {
-  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
-  completed:   { color: '#10b981', bg: '#ecfdf5' },
-  approved:    { color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:    { color: '#ef4444', bg: '#fee2e2' },
-} as const
+// ── Config (colors only) — ITR palette is shared; cert palette stays local ──
 
 const CERT_STATUS_COLORS = {
   pending:   { color: 'var(--text-muted)', bg: 'var(--gray-100)' },

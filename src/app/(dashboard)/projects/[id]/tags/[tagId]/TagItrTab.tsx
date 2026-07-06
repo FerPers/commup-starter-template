@@ -6,15 +6,16 @@ import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
 import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
+import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
 // ── Status config ────────────────────────────────────────────────────
 
-const ITR_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  not_started: { label: 'Sin iniciar', color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { label: 'Completado',  color: '#10b981', bg: '#ecfdf5' },
-  approved:     { label: 'Aprobado',    color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:     { label: 'Rechazado',   color: '#ef4444', bg: '#fee2e2' },
+const ITR_STATUS_LABELS: Record<string, string> = {
+  not_started: 'Sin iniciar',
+  in_progress: 'En progreso',
+  completed:   'Completado',
+  approved:    'Aprobado',
+  rejected:    'Rechazado',
 }
 
 const SIGN_LABELS: Record<string, string> = {
@@ -130,7 +131,8 @@ export default function TagItrTab({
       {tagItrs.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {tagItrs.map(itr => {
-            const st = ITR_STATUS[itr.status] ?? ITR_STATUS.not_started
+            const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
+            const stLabel = ITR_STATUS_LABELS[itr.status] ?? ITR_STATUS_LABELS.not_started
             const executor = itr.itr_assignments.find(a => a.role === 'executor')
             const tmpl = itr.itr_templates
             const phase = itr.project_phases
@@ -169,7 +171,7 @@ export default function TagItrTab({
 
                 {/* Status pill */}
                 <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
-                  {st.label}
+                  {stLabel}
                 </span>
 
                 {/* Signatures */}

@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import { bulkUpdateItrStatus, bulkApproveItrs } from '@/app/actions/bulk'
 import { bulkAssignItrs } from '@/app/actions/itr-assign'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
+import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -31,14 +32,6 @@ type SortKey = 'itr_number' | 'scheduled_date' | 'progress_pct' | 'status'
 type SortDir = 'asc' | 'desc'
 
 // ── Status config ─────────────────────────────────────────────────────
-
-const ITR_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { color: '#10b981', bg: '#ecfdf5' },
-  approved:     { color: '#7c3aed', bg: '#f5f3ff' },
-  rejected:     { color: '#ef4444', bg: '#fee2e2' },
-}
 
 const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', client: 'C' }
 
@@ -229,7 +222,7 @@ export default function ItrListView({
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '24px' }}>
         {itrStatusKeys.map(key => {
-          const cfg = ITR_STATUS_STYLE[key]
+          const cfg = ITR_STATUS_COLORS[key]
           return (
             <div
               key={key}
@@ -472,7 +465,7 @@ export default function ItrListView({
 
           {/* Rows */}
           {filtered.map(itr => {
-            const st = ITR_STATUS_STYLE[itr.status] ?? ITR_STATUS_STYLE.not_started
+            const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
             const executor = itr.itr_assignments.find(a => a.role === 'executor')
             const disc = itr.itr_templates?.disciplines
             const phase = itr.project_phases

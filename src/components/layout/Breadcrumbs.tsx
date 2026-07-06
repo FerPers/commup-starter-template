@@ -1,10 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevronRight, Home } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 interface Crumb {
   label: string
@@ -53,30 +51,15 @@ const PROJECT_SUBLABELS: Record<string, string> = {
   'pid-documents': 'pidDocuments',
 }
 
-export default function Breadcrumbs() {
+export default function Breadcrumbs({ projectNames }: { projectNames: Record<string, string> }) {
   const pathname = usePathname()
   const t = useTranslations('Sidebar.nav')
   const tBc = useTranslations('Breadcrumbs')
-  const [projectName, setProjectName] = useState<string | null>(null)
 
   const segments = pathname.split('/').filter(Boolean)
   const projectMatch = pathname.match(/\/projects\/([^/]+)/)
   const projectId = projectMatch ? projectMatch[1] : null
-
-  useEffect(() => {
-    if (!projectId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear stale name when leaving project context before next fetch resolves
-      setProjectName(null)
-      return
-    }
-    const supabase = createClient()
-    supabase
-      .from('projects')
-      .select('name')
-      .eq('id', projectId)
-      .maybeSingle()
-      .then(({ data }) => setProjectName(data?.name ?? null))
-  }, [projectId])
+  const projectName = projectId ? (projectNames[projectId] ?? null) : null
 
   const crumbs = buildCrumbs({
     segments,

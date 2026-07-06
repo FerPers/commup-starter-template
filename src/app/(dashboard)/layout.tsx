@@ -31,10 +31,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: orgProjects } = await supabase
     .from('projects')
-    .select('id')
+    .select('id, name')
     .eq('org_id', ctx.orgId)
 
   const projectIds = (orgProjects ?? []).map(p => p.id)
+  const projectNames: Record<string, string> = Object.fromEntries(
+    (orgProjects ?? []).map(p => [p.id, p.name])
+  )
 
   const [
     { count: punchCount },
@@ -94,6 +97,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             userEmail={ctx.userEmail}
             userId={ctx.userId}
             unreadNotifications={unreadNotificationsCount ?? 0}
+            projectNames={projectNames}
           >
             <MobileMenuButton />
           </Topbar>
