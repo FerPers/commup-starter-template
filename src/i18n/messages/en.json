@@ -727,6 +727,7 @@
       "snapshotSaved": "Snapshot saved — opening report...",
       "viewReport": "View report",
       "exportExcel": "↓ Export Excel",
+      "systemCompletionPdf": "↓ System Completion PDF",
       "phaseProgressPdf": "↓ Phase Progress PDF",
       "areaKpisPdf": "↓ Area KPIs PDF",
       "sCurveTitle": "S-curve — Project Progress",
