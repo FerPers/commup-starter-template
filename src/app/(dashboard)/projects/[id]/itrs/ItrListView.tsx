@@ -212,11 +212,24 @@ export default function ItrListView({
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
 
       {/* Breadcrumb + title */}
-      <div style={{ marginBottom: '24px' }}>
-        <a href={`/projects/${projectId}`} style={{ fontSize: '12px', color: 'var(--gray-400)', textDecoration: 'none' }}>
-          ← {projectName}
+      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px' }}>
+        <div>
+          <a href={`/projects/${projectId}`} style={{ fontSize: '12px', color: 'var(--gray-400)', textDecoration: 'none' }}>
+            ← {projectName}
+          </a>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>ITRs</h1>
+        </div>
+        <a
+          href={`/projects/${projectId}/reports/itr-test-pack/pdf`}
+          target="_blank"
+          style={{
+            padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+            textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
+          }}
+        >
+          {t('testPackPdf')}
         </a>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>ITRs</h1>
       </div>
 
       {/* Summary cards */}

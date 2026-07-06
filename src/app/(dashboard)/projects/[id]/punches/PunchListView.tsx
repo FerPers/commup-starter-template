@@ -192,6 +192,17 @@ export default function PunchListView({
           >
             {t('exportExcel')}
           </a>
+          <a
+            href={`/projects/${projectId}/punches/pdf`}
+            target="_blank"
+            style={{
+              padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+              borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+              textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
+            }}
+          >
+            {t('exportPdf')}
+          </a>
           {canCreate && (
             <button
               onClick={() => setShowCreate(true)}

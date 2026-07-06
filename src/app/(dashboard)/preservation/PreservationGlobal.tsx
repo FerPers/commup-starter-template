@@ -103,9 +103,22 @@ export default function PreservationGlobal({
 
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
-        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{tc('allOrg')}</p>
+      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+        <div>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{tc('allOrg')}</p>
+        </div>
+        <a
+          href="/preservation/pdf"
+          target="_blank"
+          style={{
+            padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+            textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
+          }}
+        >
+          {t('exportPdf')}
+        </a>
       </div>
 
       {/* Summary cards */}

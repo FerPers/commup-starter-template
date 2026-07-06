@@ -227,6 +227,7 @@
   },
   "ItrList": {
     "title": "ITRs",
+    "testPackPdf": "↓ Test Pack PDF",
     "itrStatus": {
       "not_started": "Not started",
       "in_progress": "In progress",
@@ -298,6 +299,7 @@
       "closed": "Closed"
     },
     "exportExcel": "↓ Excel",
+    "exportPdf": "↓ PDF",
     "filters": {
       "search": "Search punch, tag, description...",
       "allStatuses": "All statuses",
@@ -391,6 +393,7 @@
   },
   "Preservation": {
     "title": "Preservation",
+    "exportPdf": "↓ Status PDF",
     "planStatus": {
       "active": "Active",
       "suspended": "Suspended",
