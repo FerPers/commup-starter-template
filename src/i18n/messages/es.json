@@ -581,7 +581,8 @@
         "submitting": "Reabriendo...",
         "confirm": "Sí, reabrir"
       },
-      "pdfBtn": "Descargar PDF"
+      "pdfBtn": "Descargar PDF",
+      "dossierBtn": "Dossier"
     }
   },
   "Alerts": {

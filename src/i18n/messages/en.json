@@ -581,7 +581,8 @@
         "submitting": "Reopening...",
         "confirm": "Yes, reopen"
       },
-      "pdfBtn": "Download PDF"
+      "pdfBtn": "Download PDF",
+      "dossierBtn": "Dossier"
     }
   },
   "Alerts": {
