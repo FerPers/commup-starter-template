@@ -345,10 +345,8 @@ export default function KpiDashboard({
                 width={40}
               />
               <Tooltip
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(value: any, name: any) => [`${value}%`, name === 'planned' ? plannedLabel : actualLabel]}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                labelFormatter={(value: any) => formatDateTick(value as string)}
+                formatter={(value, name) => [`${value}%`, name === 'planned' ? plannedLabel : actualLabel]}
+                labelFormatter={value => formatDateTick(String(value))}
                 contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
               />
               <Legend

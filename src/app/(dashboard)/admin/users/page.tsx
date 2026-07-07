@@ -52,8 +52,7 @@ export default async function AdminUsersPage() {
   }
 
   // Merge email into member list
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const emailMap = new Map<string, string>((emails ?? []).map((e: any) => [e.user_id as string, e.email as string]))
+  const emailMap = new Map<string, string>((emails ?? []).map(e => [e.user_id, e.email]))
 
   const membersWithEmail = (members ?? []).map(m => ({
     id: m.id,

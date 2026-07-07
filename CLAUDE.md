@@ -78,7 +78,8 @@ src/app/
 | `src/lib/permissions.ts` + `src/lib/constants/` | Centralized role constants & permission checks |
 | `src/lib/pdf/renderer.ts` | Shared server-side PDF renderer (pdf-lib) |
 | `src/types/database.ts` | Hand-maintained TS interfaces for DB tables (goal: generate from schema) |
-| `src/lib/utils.ts` | `cn()`, `formatPercent()`, `formatDate()`, `getPunchCategoryColor()` |
+| `src/lib/utils.ts` | `cn()`, `formatPercent()`, `formatDate()`, `detectItrPhase()` |
+| `src/lib/constants/status-colors.ts` | Shared status palettes (ITR + punch) |
 | `supabase/migrations/00000000000000_baseline.sql` | Canonical Postgres schema (pg_dump of prod 2026-05-15). See `supabase/README.md` for migration workflow |
 | `public/sw.js` | **Hand-maintained** service worker (the real one — edit the .js directly) |
 | `.github/workflows/cron.yml` | Cron triggers for /api/cron/* (OpenNext doesn't emit `scheduled()` — do NOT use wrangler.jsonc triggers) |

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updatePunchStatus, closePunch, addPunchComment, reassignPunch, createPunch } from '@/app/actions/punches'
 import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
+import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
@@ -36,21 +37,6 @@ type Punch = {
 type Phase      = { id: string; code: string; name: string; color: string }
 type Discipline = { id: string; code: string; name: string; color: string }
 type System     = { id: string; code: string; name: string }
-
-// ── Config ──────────────────────────────────────────────────────────────
-
-const CATEGORY_CFG = {
-  A: { label: 'Cat A', color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
-  B: { label: 'Cat B', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  C: { label: 'Cat C', color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
-} as const
-
-const STATUS_COLORS = {
-  open:        { color: '#ef4444', bg: '#fee2e2' },
-  in_progress: { color: '#3b82f6', bg: '#eff6ff' },
-  closed:      { color: '#10b981', bg: '#ecfdf5' },
-  cancelled:   { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-} as const
 
 // ── Main component ──────────────────────────────────────────────────────
 
