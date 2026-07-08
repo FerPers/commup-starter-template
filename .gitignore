@@ -208,3 +208,5 @@ skills-lock.json
 
 # TestSprite — test artifacts may contain credentials
 testsprite_tests/
+
+testsprite_tests/tmp/config.json

@@ -28,7 +28,7 @@ export default async function TemplateBuilderPage({
           itr_template_items(
             id, item_number, description, description_es, item_type,
             is_required, is_critical, requires_photo, requires_measurement,
-            unit, acceptance_min, acceptance_max, acceptance_text, order_index,
+            unit, acceptance_min, acceptance_max, acceptance_text, options, order_index,
             condition_item_id, condition_value
           )
         )

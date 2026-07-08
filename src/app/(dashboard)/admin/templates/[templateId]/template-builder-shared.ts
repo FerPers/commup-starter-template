@@ -3,6 +3,7 @@
 
 import type { ItemPayload } from '@/app/actions/itr-templates'
 import type { ItrItemType } from '@/types/database'
+import type { Json } from '@/types/supabase.generated'
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ export interface BuilderItem {
   acceptance_min: number | null
   acceptance_max: number | null
   acceptance_text: string | null
+  options: Json | null
   order_index: number
   condition_item_id: string | null
   condition_value: string | null
@@ -68,6 +70,7 @@ export const DEFAULT_ITEM: ItemFormValues = {
   acceptance_min: null,
   acceptance_max: null,
   acceptance_text: '',
+  options: null,
   condition_item_id: null,
   condition_value: null,
 }

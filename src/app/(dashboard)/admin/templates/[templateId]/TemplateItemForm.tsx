@@ -36,9 +36,11 @@ export default function TemplateItemForm({
 }) {
   const t = useTranslations('ItrTemplates.builder')
   const [form, setForm] = useState<ItemFormValues>(initial)
+  const [optionsText, setOptionsText] = useState((initial.options ?? []).join(', '))
   const [error, setError] = useState<string | null>(null)
 
   const isMeasurement = form.item_type === 'measurement'
+  const isSelect = form.item_type === 'select'
 
   // Determine appropriate condition_value UI based on the condition item's type
   const condItem = allItems.find(it => it.id === form.condition_item_id)
@@ -57,8 +59,16 @@ export default function TemplateItemForm({
       setError(t('errDescriptionRequired'))
       return
     }
+    let options: string[] | null = null
+    if (isSelect) {
+      options = optionsText.split(',').map(s => s.trim()).filter(Boolean)
+      if (options.length === 0) {
+        setError(t('errSelectOptionsRequired'))
+        return
+      }
+    }
     setError(null)
-    const err = await onSave(form)
+    const err = await onSave({ ...form, options })
     if (err) setError(err)
   }
 
@@ -110,6 +120,18 @@ export default function TemplateItemForm({
           style={fieldInput}
         />
       </label>
+
+      {isSelect && (
+        <label style={{ ...fieldLabel, marginBottom: '10px' }}>
+          {t('fieldSelectOptions')} <span style={{ color: '#ef4444' }}>*</span>
+          <input
+            value={optionsText}
+            onChange={e => setOptionsText(e.target.value)}
+            placeholder="Pass, Fail, N/A"
+            style={fieldInput}
+          />
+        </label>
+      )}
 
       {isMeasurement && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', gap: '10px', marginBottom: '10px' }}>

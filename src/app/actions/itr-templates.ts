@@ -150,9 +150,14 @@ export interface ItemPayload {
   acceptance_min?: number | null
   acceptance_max?: number | null
   acceptance_text?: string | null
+  options?: string[] | null
   order_index: number
   condition_item_id?: string | null
   condition_value?: string | null
+}
+
+function selectItemMissingOptions(data: Partial<ItemPayload>): boolean {
+  return data.item_type === 'select' && !(Array.isArray(data.options) && data.options.length > 0)
 }
 
 export const createItem = withAuthOnly(
@@ -163,6 +168,7 @@ export const createItem = withAuthOnly(
     templateId: string,
     data: ItemPayload,
   ): Promise<{ id?: string; error?: string }> => {
+    if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
     const { data: item, error } = await ctx.supabase
       .from('itr_template_items')
       .insert({ ...data, section_id: sectionId, template_id: templateId })
@@ -177,6 +183,7 @@ export const createItem = withAuthOnly(
 export const updateItem = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, itemId: string, data: Partial<ItemPayload>): Promise<{ error?: string }> => {
+    if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
     const { error } = await ctx.supabase
       .from('itr_template_items')
       .update(data)
@@ -242,6 +249,15 @@ export const publishTemplateVersion = withAuthOnly(
       .single()
 
     if (!tpl) return { error: 'Template no encontrado' }
+
+    // Un select sin opciones deja el ITR de campo sin poder completarse — no publicable
+    const badSelects = tpl.itr_template_sections
+      .flatMap(s => s.itr_template_items)
+      .filter(it => it.item_type === 'select' && !(Array.isArray(it.options) && it.options.length > 0))
+    if (badSelects.length > 0) {
+      const names = badSelects.map(it => it.item_number ?? it.description.slice(0, 40)).join(', ')
+      return { error: `Ítems de tipo lista sin opciones (agrega opciones antes de publicar): ${names}` }
+    }
 
     // Check if any ITRs are already assigned to this template
     const { count: itrCount } = await ctx.supabase

@@ -113,6 +113,9 @@ export default function TemplateSectionCard({
       acceptance_min: item.acceptance_min,
       acceptance_max: item.acceptance_max,
       acceptance_text: item.acceptance_text ?? '',
+      options: Array.isArray(item.options)
+        ? item.options.filter((o): o is string => typeof o === 'string')
+        : null,
       condition_item_id: item.condition_item_id,
       condition_value: item.condition_value,
     }
