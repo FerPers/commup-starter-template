@@ -20,20 +20,22 @@ export const registerPidDocument = withAuth(
       file_name: string
       file_size: number
     },
-  ): Promise<{ error?: string }> => {
+  ): Promise<{ error?: string; id?: string }> => {
 
-  const { error } = await ctx.supabase
+  const { data: row, error } = await ctx.supabase
     .from('pid_documents')
     .upsert(
       { ...data, uploaded_by: ctx.userId },
       { onConflict: 'project_id,drawing_number' }
     )
+    .select('id')
+    .single()
 
   if (error) return { error: error.message }
 
     revalidatePath(`/projects/${data.project_id}/tags`)
     revalidatePath(`/projects/${data.project_id}/pid-documents`)
-    return {}
+    return { id: row?.id }
   },
 )
 

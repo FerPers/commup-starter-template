@@ -13,7 +13,35 @@
     "error": "Credenciales incorrectas. Verifica tu email y contraseña.",
     "loading": "Ingresando...",
     "submit": "Ingresar al proyecto",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
     "footer": "CommUp v1.0 · Industrial Commissioning Platform"
+  },
+  "AuthFlow": {
+    "setTitle": "Establece tu contraseña",
+    "setDesc": "Crea la contraseña con la que ingresarás a CommUp",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "errTooShort": "La contraseña debe tener al menos 8 caracteres",
+    "errMismatch": "Las contraseñas no coinciden",
+    "errUpdate": "No se pudo actualizar la contraseña. Intenta de nuevo.",
+    "saving": "Guardando...",
+    "saveBtn": "Guardar y entrar",
+    "checking": "Verificando enlace...",
+    "noSession": "El enlace no es válido o expiró",
+    "noSessionHint": "Solicita un nuevo enlace para continuar.",
+    "requestNew": "Solicitar nuevo enlace",
+    "backToLogin": "Volver a iniciar sesión",
+    "forgotTitle": "Recuperar contraseña",
+    "forgotDesc": "Te enviaremos un enlace para restablecerla",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@empresa.com",
+    "sendBtn": "Enviar enlace",
+    "sending": "Enviando...",
+    "sentMsg": "Si el correo está registrado, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.",
+    "linkErrorTitle": "Enlace inválido o expirado",
+    "linkErrorDesc": "El enlace que usaste ya no es válido. Solicita uno nuevo para continuar."
   },
   "Sidebar": {
     "groups": {
@@ -1405,7 +1433,12 @@
       "pdfError": "Error al cargar el PDF. Verifica que el archivo esté disponible.",
       "confirm": "Confirmar",
       "cancel": "Cancelar",
-      "removeHotspot": "Quitar hotspot"
+      "removeHotspot": "Quitar hotspot",
+      "legendTitle": "Estado",
+      "legendPunchA": "Punch Cat A abierto",
+      "legendComplete": "ITRs aprobados",
+      "legendProgress": "En progreso",
+      "legendPending": "Sin iniciar"
     }
   },
   "PreservationExecution": {

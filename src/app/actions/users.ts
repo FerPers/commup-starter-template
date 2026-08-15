@@ -16,6 +16,8 @@ function generateTempPassword(): string {
 
 const INVITABLE_ROLES: OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client']
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://commup.app'
+
 export const inviteUser = withAuth(
   { role: ADMIN_ROLES },
   async (
@@ -30,8 +32,8 @@ export const inviteUser = withAuth(
   }
   const admin = createAdminClient()
 
-  // Check if user already exists in auth
-  const { data: existingList } = await admin.auth.admin.listUsers()
+  // Check if user already exists in auth (default page size is 50 — insufficient)
+  const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
   const existingUser = existingList?.users.find(u => u.email === email)
 
   if (existingUser) {
@@ -63,6 +65,8 @@ export const inviteUser = withAuth(
   // New user — try email invitation first
   const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { org_id: ctx.orgId, invited_role: role },
+    // El enlace del correo autentica al invitado y aterriza aquí para fijar su contraseña
+    redirectTo: `${SITE_URL}/auth/set-password`,
   })
 
   if (!inviteErr && invited?.user) {

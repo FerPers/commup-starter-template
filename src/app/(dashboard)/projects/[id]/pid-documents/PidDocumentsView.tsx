@@ -348,9 +348,10 @@ function UploadForm({
         file_size: file.size,
       })
       if (res.error) throw new Error(res.error)
+      if (!res.id) throw new Error(t('upload.errUpload'))
 
       onUploaded({
-        id: crypto.randomUUID(),
+        id: res.id,
         drawing_number: drawingNumber.trim(),
         title: title.trim() || null,
         file_path: filePath,

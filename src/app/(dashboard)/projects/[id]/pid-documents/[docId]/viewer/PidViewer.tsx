@@ -18,6 +18,7 @@ type HotspotTag = {
   id: string; tag_number: string; description: string; status: string
   discipline: { id: string; code: string; name: string; color: string }
   open_punches_a: number
+  open_punches_b: number
   itr_completion_pct: number
 }
 
@@ -26,7 +27,24 @@ type Hotspot = {
   tag: Pick<HotspotTag, 'id' | 'tag_number' | 'description' | 'status'>
   discipline: { id: string; code: string; name: string; color: string }
   open_punches_a: number
+  open_punches_b: number
   itr_completion_pct: number
+}
+
+// Semáforo del pin: el estado de completamiento manda sobre la disciplina
+// (la disciplina queda como glifo interior). Rojo = bloqueante.
+const STATUS_COLORS = {
+  punchA: '#dc2626',
+  complete: '#16a34a',
+  progress: '#f59e0b',
+  pending: '#94a3b8',
+} as const
+
+function hotspotStatusColor(h: { open_punches_a: number; itr_completion_pct: number }): string {
+  if (h.open_punches_a > 0) return STATUS_COLORS.punchA
+  if (h.itr_completion_pct >= 100) return STATUS_COLORS.complete
+  if (h.itr_completion_pct > 0) return STATUS_COLORS.progress
+  return STATUS_COLORS.pending
 }
 
 type TagItem = {
@@ -177,9 +195,22 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
   const [isPending, startTransition] = useTransition()
   const [pageWidth, setPageWidth] = useState(900)
   const [dragCursor, setDragCursor] = useState(false)
+  const [isTouch, setIsTouch] = useState(false)
+  const [pinchPreview, setPinchPreview] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{ startX: number; startY: number; scrollLeft: number; scrollTop: number } | null>(null)
   const wasDraggingRef = useRef(false)
+  const pinchRef = useRef<{ startDist: number; startScale: number } | null>(null)
+
+  // Detect coarse pointer (tablet/phone) → larger touch targets
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)')
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- matchMedia solo existe en cliente; sincroniza tras montar para evitar mismatch de hidratación
+    setIsTouch(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsTouch(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   // Highlight tag hotspot from URL param on mount
   useEffect(() => {
@@ -241,6 +272,38 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
     if (wasDraggingRef.current) setDragCursor(false)
   }
 
+  // Pinch-to-zoom: preview via CSS transform durante el gesto (barato),
+  // commit del scale real (re-raster de react-pdf) solo al soltar.
+  function touchDist(touches: React.TouchList) {
+    const dx = touches[0].clientX - touches[1].clientX
+    const dy = touches[0].clientY - touches[1].clientY
+    return Math.hypot(dx, dy)
+  }
+
+  function handleTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+    if (e.touches.length === 2) {
+      pinchRef.current = { startDist: touchDist(e.touches), startScale: scale }
+    }
+  }
+
+  function handleTouchMove(e: React.TouchEvent<HTMLDivElement>) {
+    if (!pinchRef.current || e.touches.length !== 2) return
+    const factor = touchDist(e.touches) / pinchRef.current.startDist
+    const target = Math.min(3, Math.max(0.5, pinchRef.current.startScale * factor))
+    setPinchPreview(target / scale)
+  }
+
+  function handleTouchEnd(e: React.TouchEvent<HTMLDivElement>) {
+    if (pinchRef.current && e.touches.length < 2) {
+      const preview = pinchPreview
+      pinchRef.current = null
+      setPinchPreview(null)
+      if (preview) {
+        setScale(s => +Math.min(3, Math.max(0.5, s * preview)).toFixed(2))
+      }
+    }
+  }
+
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
     if (wasDraggingRef.current) {
       wasDraggingRef.current = false
@@ -267,6 +330,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
       tag: { id: tagData.id, tag_number: tagData.tag_number, description: tagData.description, status: tagData.status },
       discipline: tagData.discipline,
       open_punches_a: 0,
+      open_punches_b: 0,
       itr_completion_pct: 0,
     }
 
@@ -305,7 +369,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
     status: selectedHotspot.tag.status,
     discipline: selectedHotspot.discipline,
     open_punches_a: selectedHotspot.open_punches_a,
-    open_punches_b: 0,
+    open_punches_b: selectedHotspot.open_punches_b,
     itr_completion_pct: selectedHotspot.itr_completion_pct,
   } : null
 
@@ -358,6 +422,26 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
               onClick={() => setScale(s => Math.min(3, +(s + 0.25).toFixed(2)))}
               style={{ padding: '5px 10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px' }}
             >+</button>
+          </div>
+        </div>
+
+        {/* Status legend */}
+        <div>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+            {t('viewer.legendTitle')}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            {([
+              [STATUS_COLORS.punchA, t('viewer.legendPunchA')],
+              [STATUS_COLORS.complete, t('viewer.legendComplete')],
+              [STATUS_COLORS.progress, t('viewer.legendProgress')],
+              [STATUS_COLORS.pending, t('viewer.legendPending')],
+            ] as const).map(([color, label]) => (
+              <div key={color} style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block' }} />
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -415,7 +499,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                   onMouseEnter={e => { if (selectedHotspot?.id !== h.id) (e.currentTarget as HTMLElement).style.background = 'var(--gray-50)' }}
                   onMouseLeave={e => { if (selectedHotspot?.id !== h.id) (e.currentTarget as HTMLElement).style.background = 'var(--card-bg)' }}
                 >
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: h.discipline.color, flexShrink: 0, display: 'inline-block' }} />
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: hotspotStatusColor(h), flexShrink: 0, display: 'inline-block' }} />
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)' }}>{h.tag.tag_number}</span>
                 </div>
               ))}
@@ -427,12 +511,24 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
       {/* Main PDF area */}
       <div
         ref={containerRef}
-        style={{ flex: 1, overflow: 'auto', background: 'var(--text-muted)', padding: '16px' }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        style={{
+          flex: 1, overflow: 'auto', background: 'var(--text-muted)', padding: '16px',
+          // Un dedo = scroll/pan nativo; dos dedos = nuestro pinch-zoom (sin zoom del navegador)
+          touchAction: 'pan-x pan-y',
+        }}
       >
         {/* width:max-content can exceed the container (unlike fit-content which caps at it).
             margin:0 auto centers when PDF < container; resolves to 0 when PDF > container
             so the left edge is always at scrollLeft=0 — no inaccessible left overflow. */}
-        <div style={{ width: 'max-content', margin: '0 auto', position: 'relative', userSelect: 'none' }}>
+        <div style={{
+          width: 'max-content', margin: '0 auto', position: 'relative', userSelect: 'none',
+          transform: pinchPreview ? `scale(${pinchPreview})` : undefined,
+          transformOrigin: 'center top',
+        }}>
           {/* PDF Document */}
           <Document
             file={signedUrl}
@@ -471,35 +567,39 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
             }}
           />
 
-          {/* Hotspot pins */}
-          {pageHotspots.map(h => (
-            <div
-              key={h.id}
-              onClick={() => { setSelectedHotspot(h) }}
-              title={h.tag.tag_number}
-              style={{
-                position: 'absolute',
-                left: `${h.x_pct}%`,
-                top: `${h.y_pct}%`,
-                transform: 'translate(-50%, -50%)',
-                width: 20, height: 20,
-                borderRadius: '50%',
-                background: h.discipline.color,
-                border: `2px solid white`,
-                cursor: 'pointer',
-                zIndex: 10,
-                boxShadow: selectedHotspot?.id === h.id
-                  ? `0 0 0 3px ${h.discipline.color}60`
-                  : '0 2px 4px rgba(0,0,0,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'box-shadow 0.15s',
-              }}
-            >
-              <span style={{ fontSize: '8px', color: '#fff', fontWeight: 700, lineHeight: 1 }}>
-                {h.discipline.code.substring(0, 1)}
-              </span>
-            </div>
-          ))}
+          {/* Hotspot pins — color = estado (semáforo), glifo = disciplina */}
+          {pageHotspots.map(h => {
+            const statusColor = hotspotStatusColor(h)
+            const pinSize = isTouch ? 28 : 20
+            return (
+              <div
+                key={h.id}
+                onClick={() => { setSelectedHotspot(h) }}
+                title={`${h.tag.tag_number} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}`}
+                style={{
+                  position: 'absolute',
+                  left: `${h.x_pct}%`,
+                  top: `${h.y_pct}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: pinSize, height: pinSize,
+                  borderRadius: '50%',
+                  background: statusColor,
+                  border: `2px solid white`,
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  boxShadow: selectedHotspot?.id === h.id
+                    ? `0 0 0 3px ${statusColor}60`
+                    : '0 2px 4px rgba(0,0,0,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'box-shadow 0.15s',
+                }}
+              >
+                <span style={{ fontSize: isTouch ? '11px' : '8px', color: '#fff', fontWeight: 700, lineHeight: 1 }}>
+                  {h.discipline.code.substring(0, 1)}
+                </span>
+              </div>
+            )
+          })}
 
           {/* Pending hotspot pin (before confirm) */}
           {pendingPos && (

@@ -48,7 +48,7 @@ export default async function PidViewerPage({
   const [
     { data: rawHotspots },
     { data: allTags },
-    { data: openPunchesA },
+    { data: openPunches },
     { data: itrData },
   ] = await Promise.all([
     supabase
@@ -68,9 +68,9 @@ export default async function PidViewerPage({
       .order('tag_number'),
     supabase
       .from('punches')
-      .select('tag_id')
+      .select('tag_id, category')
       .eq('project_id', id)
-      .eq('category', 'A')
+      .in('category', ['A', 'B'])
       .in('status', ['open', 'in_progress']),
     supabase
       .from('itrs')
@@ -80,10 +80,12 @@ export default async function PidViewerPage({
   ])
 
   // Build enrichment maps
-  const punchCountByTag = new Map<string, number>()
-  for (const p of openPunchesA ?? []) {
+  const punchACountByTag = new Map<string, number>()
+  const punchBCountByTag = new Map<string, number>()
+  for (const p of openPunches ?? []) {
     if (!p.tag_id) continue
-    punchCountByTag.set(p.tag_id, (punchCountByTag.get(p.tag_id) ?? 0) + 1)
+    const map = p.category === 'A' ? punchACountByTag : punchBCountByTag
+    map.set(p.tag_id, (map.get(p.tag_id) ?? 0) + 1)
   }
 
   const itrTotalByTag = new Map<string, number>()
@@ -121,7 +123,8 @@ export default async function PidViewerPage({
         name: tag?.disciplines?.name ?? '',
         color: tag?.disciplines?.color ?? '#94a3b8',
       },
-      open_punches_a: punchCountByTag.get(tagId) ?? 0,
+      open_punches_a: punchACountByTag.get(tagId) ?? 0,
+      open_punches_b: punchBCountByTag.get(tagId) ?? 0,
       itr_completion_pct: total > 0 ? Math.round((approved / total) * 100) : 0,
     }
   })
@@ -148,7 +151,7 @@ export default async function PidViewerPage({
   })
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
       {/* Top bar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px',

@@ -13,7 +13,35 @@
     "error": "Invalid credentials. Check your email and password.",
     "loading": "Signing in...",
     "submit": "Sign in to project",
+    "forgotPassword": "Forgot your password?",
     "footer": "CommUp v1.0 · Industrial Commissioning Platform"
+  },
+  "AuthFlow": {
+    "setTitle": "Set your password",
+    "setDesc": "Create the password you will use to sign in to CommUp",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "errTooShort": "Password must be at least 8 characters",
+    "errMismatch": "Passwords do not match",
+    "errUpdate": "Could not update the password. Please try again.",
+    "saving": "Saving...",
+    "saveBtn": "Save and sign in",
+    "checking": "Verifying link...",
+    "noSession": "This link is invalid or has expired",
+    "noSessionHint": "Request a new link to continue.",
+    "requestNew": "Request new link",
+    "backToLogin": "Back to sign in",
+    "forgotTitle": "Reset password",
+    "forgotDesc": "We will send you a link to reset it",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@company.com",
+    "sendBtn": "Send link",
+    "sending": "Sending...",
+    "sentMsg": "If the email is registered, you will receive a link within a few minutes. Check your spam folder too.",
+    "linkErrorTitle": "Invalid or expired link",
+    "linkErrorDesc": "The link you used is no longer valid. Request a new one to continue."
   },
   "Sidebar": {
     "groups": {
@@ -1405,7 +1433,12 @@
       "pdfError": "Error loading PDF. Verify the file is available.",
       "confirm": "Confirm",
       "cancel": "Cancel",
-      "removeHotspot": "Remove hotspot"
+      "removeHotspot": "Remove hotspot",
+      "legendTitle": "Status",
+      "legendPunchA": "Open Cat A punch",
+      "legendComplete": "ITRs approved",
+      "legendProgress": "In progress",
+      "legendPending": "Not started"
     }
   },
   "PreservationExecution": {
