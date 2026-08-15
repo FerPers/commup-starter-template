@@ -48,6 +48,7 @@ export default async function LandingFooter() {
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <li><a href="#modules" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('modules')}</a></li>
               <li><a href="#how-it-works" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('howItWorks')}</a></li>
+              <li><a href="/guia.html" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('guide')}</a></li>
               <li><a href="#contact" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('demo')}</a></li>
               <li><a href="#pricing" style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'none' }}>{t('pricing')}</a></li>
             </ul>

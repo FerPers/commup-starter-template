@@ -2036,7 +2036,8 @@
       "product": "Product",
       "social": "Follow us",
       "subtitle": "Completion Management System",
-      "clientAccess": "Client Access"
+      "clientAccess": "Client Access",
+      "guide": "Getting started guide"
     },
     "socialProof": {
       "title": "Common commissioning challenges CommUp is built to solve",
