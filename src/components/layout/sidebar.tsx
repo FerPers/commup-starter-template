@@ -15,6 +15,14 @@ import { createClient } from '@/lib/supabase/client'
 import LocaleSwitcher from '@/components/LocaleSwitcher'
 import ThemeToggle from '@/components/ThemeToggle'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
+import type { OrgMemberRole } from '@/types/database'
+
+// Copia client-safe de los tiers de src/lib/auth/permissions.ts (ese módulo
+// arrastra código de servidor). La visibilidad espeja el gate server-side de
+// cada página — ocultar aquí es UX, la seguridad real vive en cada page.tsx.
+const ADMIN_ROLES: readonly OrgMemberRole[] = ['owner', 'admin']
+const PRIVILEGED_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect']
+const EDITOR_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader']
 
 function SyncIndicator() {
   const t = useTranslations('Pwa.sync')
@@ -80,6 +88,8 @@ interface NavItem {
   href: string
   labelKey: string
   icon: LucideIcon
+  /** Roles que ven el ítem; omitido = visible para todos */
+  roles?: readonly OrgMemberRole[]
 }
 
 interface NavGroup {
@@ -98,11 +108,11 @@ const NAV_GROUPS: NavGroup[] = [
   {
     groupKey: 'setup',
     items: [
-      { href: '/admin/templates',              labelKey: 'itrTemplates',          icon: FileCheck2 },
-      { href: '/admin/templates/preservation', labelKey: 'preservationTemplates', icon: ClipboardList },
-      { href: '/admin/templates/pssr',         labelKey: 'pssrTemplates',         icon: ShieldCheck },
-      { href: '/admin/config',                 labelKey: 'config',                icon: Settings },
-      { href: '/admin/users',                  labelKey: 'users',                 icon: Users },
+      { href: '/admin/templates',              labelKey: 'itrTemplates',          icon: FileCheck2,     roles: EDITOR_ROLES },
+      { href: '/admin/templates/preservation', labelKey: 'preservationTemplates', icon: ClipboardList,  roles: EDITOR_ROLES },
+      { href: '/admin/templates/pssr',         labelKey: 'pssrTemplates',         icon: ShieldCheck,    roles: EDITOR_ROLES },
+      { href: '/admin/config',                 labelKey: 'config',                icon: Settings,       roles: ADMIN_ROLES },
+      { href: '/admin/users',                  labelKey: 'users',                 icon: Users,          roles: ADMIN_ROLES },
     ],
   },
   {
@@ -126,7 +136,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     groupKey: 'closure',
     items: [
-      { href: '/admin/handover', labelKey: 'handover', icon: PackageCheck },
+      { href: '/admin/handover', labelKey: 'handover', icon: PackageCheck, roles: PRIVILEGED_ROLES },
     ],
   },
   {
@@ -138,17 +148,17 @@ const NAV_GROUPS: NavGroup[] = [
   {
     groupKey: 'integrations',
     items: [
-      { href: '/admin/workflows',     labelKey: 'workflows',     icon: Workflow },
-      { href: '/admin/api-keys',      labelKey: 'apiKeys',       icon: Key },
-      { href: '/admin/webhooks',      labelKey: 'webhooks',      icon: Webhook },
+      { href: '/admin/workflows',     labelKey: 'workflows',     icon: Workflow, roles: PRIVILEGED_ROLES },
+      { href: '/admin/api-keys',      labelKey: 'apiKeys',       icon: Key,      roles: PRIVILEGED_ROLES },
+      { href: '/admin/webhooks',      labelKey: 'webhooks',      icon: Webhook,  roles: PRIVILEGED_ROLES },
       { href: '/admin/notifications', labelKey: 'notifications', icon: Bell },
     ],
   },
   {
     groupKey: 'system',
     items: [
-      { href: '/admin/data-quality', labelKey: 'dataQuality', icon: Database },
-      { href: '/admin/audit',        labelKey: 'auditLog',    icon: History },
+      { href: '/admin/data-quality', labelKey: 'dataQuality', icon: Database, roles: PRIVILEGED_ROLES },
+      { href: '/admin/audit',        labelKey: 'auditLog',    icon: History,  roles: ADMIN_ROLES },
     ],
   },
 ]
@@ -188,7 +198,7 @@ function badgeFor(href: string, n?: NotifCounts): number {
   }
 }
 
-export default function Sidebar({ notifCounts, isOpen = false }: { notifCounts?: NotifCounts; isOpen?: boolean }) {
+export default function Sidebar({ notifCounts, isOpen = false, role }: { notifCounts?: NotifCounts; isOpen?: boolean; role?: OrgMemberRole }) {
   const pathname = usePathname()
   const router = useRouter()
   const t = useTranslations('Sidebar')
@@ -246,16 +256,24 @@ export default function Sidebar({ notifCounts, isOpen = false }: { notifCounts?:
           />
         )}
 
-        {NAV_GROUPS.map((group) => (
-          <NavGroupBlock
-            key={group.groupKey}
-            group={group}
-            pathname={pathname}
-            label={t(`groups.${group.groupKey}`)}
-            tNav={(k) => t(`nav.${k}`)}
-            notifCounts={notifCounts}
-          />
-        ))}
+        {NAV_GROUPS.map((group) => {
+          // Sin rol conocido se muestra todo (comportamiento previo); con rol,
+          // solo los ítems permitidos — y el grupo desaparece si queda vacío.
+          const items = role
+            ? group.items.filter((item) => !item.roles || item.roles.includes(role))
+            : group.items
+          if (items.length === 0) return null
+          return (
+            <NavGroupBlock
+              key={group.groupKey}
+              group={{ ...group, items }}
+              pathname={pathname}
+              label={t(`groups.${group.groupKey}`)}
+              tNav={(k) => t(`nav.${k}`)}
+              notifCounts={notifCounts}
+            />
+          )
+        })}
       </nav>
 
       {/* Footer */}

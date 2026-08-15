@@ -87,7 +87,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <ToastProvider>
       <DashboardShell
-        sidebar={<Sidebar notifCounts={notifCounts} />}
+        sidebar={<Sidebar notifCounts={notifCounts} role={role} />}
         topbar={
           <Topbar
             role={role}
