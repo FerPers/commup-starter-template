@@ -91,6 +91,7 @@
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
+    "guide": "Guía de arranque",
     "logout": "Cerrar sesión",
     "platform": "CMS Platform",
     "theme": {
@@ -1873,6 +1874,7 @@
       "clientAccess": "Acceso a Clientes",
       "howItWorks": "Cómo funciona",
       "pricing": "Precios",
+      "guide": "Guía",
       "demo": "Demo en vivo",
       "resources": "Recursos",
       "login": "Iniciar sesión",
@@ -1908,6 +1910,8 @@
     },
     "howItWorks": {
       "title": "De la ejecución en campo al dossier de transferencia",
+      "guideCta": "Ver la guía de arranque completa",
+      "guideHint": "Del Excel de ingeniería al certificado firmado, con capturas de cada pantalla.",
       "step1Label": "Tag Físico",
       "step1Desc": "Cada equipo se registra con un tag vivo en CommUp.",
       "step2Label": "Escanea NFC / QR",

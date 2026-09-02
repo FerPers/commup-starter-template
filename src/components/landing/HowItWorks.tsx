@@ -100,6 +100,23 @@ export default async function HowItWorks() {
             })}
           </div>
         </div>
+
+        {/* Guía de arranque: el recorrido completo, paso a paso, en /guia */}
+        <div style={{ textAlign: 'center', marginTop: 56 }}>
+          <a
+            href="/guia"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '12px 22px', borderRadius: 10,
+              background: 'rgba(255,255,255,0.06)', color: '#f1f5f9',
+              border: '1px solid rgba(255,255,255,0.18)',
+              fontSize: 14, fontWeight: 600, textDecoration: 'none',
+            }}
+          >
+            {t('guideCta')} →
+          </a>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: '10px 0 0' }}>{t('guideHint')}</p>
+        </div>
       </div>
     </section>
   )

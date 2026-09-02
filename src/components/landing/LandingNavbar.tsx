@@ -111,6 +111,7 @@ export default function LandingNavbar() {
     { key: 'howItWorks' as const, href: '#how-it-works' },
     { key: 'industries' as const, href: '#industries' },
     { key: 'pricing' as const, href: '#pricing' },
+    { key: 'guide' as const, href: '/guia' },
   ]
 
   return (

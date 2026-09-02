@@ -8,7 +8,7 @@ import {
   Settings, Users, ScanLine, ClipboardCheck, Flag, Wrench, CalendarDays,
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
   Bell, Database, History, Tag, Activity, Boxes, FolderTree, LogOut,
-  RotateCw,
+  RotateCw, BookOpen,
   type LucideIcon,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -283,6 +283,21 @@ export default function Sidebar({ notifCounts, isOpen = false, role }: { notifCo
         display: 'flex', flexDirection: 'column', gap: 10,
       }}>
         <SyncIndicator />
+        {/* Guía de arranque pública (/guia): visible para todos los roles */}
+        <a
+          href="/guia"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '8px 12px', borderRadius: 'var(--radius-md)',
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)',
+            color: '#cbd5e1', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none',
+          }}
+        >
+          <BookOpen size={14} aria-hidden="true" />
+          {t('guide')}
+        </a>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <LocaleSwitcher variant="dark" />
           <ThemeToggle />

@@ -91,6 +91,7 @@
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
+    "guide": "Getting started guide",
     "logout": "Sign out",
     "platform": "CMS Platform",
     "theme": {
@@ -1873,6 +1874,7 @@
       "clientAccess": "Client Access",
       "howItWorks": "How it works",
       "pricing": "Pricing",
+      "guide": "Guide",
       "demo": "Live demo",
       "resources": "Resources",
       "login": "Sign in",
@@ -1908,6 +1910,8 @@
     },
     "howItWorks": {
       "title": "From Field Execution to Handover Dossier",
+      "guideCta": "Read the full getting started guide",
+      "guideHint": "From the engineering spreadsheet to the signed certificate, with screenshots of every screen.",
       "step1Label": "Physical Tag",
       "step1Desc": "Each piece of equipment is registered with a live tag in CommUp.",
       "step2Label": "Scan NFC / QR",
