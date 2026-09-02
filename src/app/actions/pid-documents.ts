@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
+import { normalizePidRef } from '@/lib/excel/normalize'
 
 // Antes no exigían rol — política 2026-05-24: gestión de P&IDs → EDITOR
 export const registerPidDocument = withAuth(
@@ -22,10 +23,15 @@ export const registerPidDocument = withAuth(
     },
   ): Promise<{ error?: string; id?: string }> => {
 
+  // Mismo criterio que la columna P&ID de los importadores: así el plano
+  // subido coincide con lo que referencian tags y señales.
+  const drawingNumber = normalizePidRef(data.drawing_number)
+  if (!drawingNumber) return { error: 'El número de plano es requerido' }
+
   const { data: row, error } = await ctx.supabase
     .from('pid_documents')
     .upsert(
-      { ...data, uploaded_by: ctx.userId },
+      { ...data, drawing_number: drawingNumber, uploaded_by: ctx.userId },
       { onConflict: 'project_id,drawing_number' }
     )
     .select('id')

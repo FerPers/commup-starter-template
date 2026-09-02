@@ -210,3 +210,6 @@ skills-lock.json
 testsprite_tests/
 
 testsprite_tests/tmp/config.json
+
+### Codex CLI — config con API keys de MCP
+.codex/

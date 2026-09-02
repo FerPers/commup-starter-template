@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import * as XLSX from 'xlsx'
-import { importTags, type TagRow, type ImportResult } from '@/app/actions/import'
+import { importTags, findExistingTags, type TagRow, type ImportResult } from '@/app/actions/import'
 import { detectTagType } from '@/lib/tag-types'
+import { pickBestSheet, detectHeaderRow, cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
 
 // ── Column keyword mapping ──────────────────────────────────────
-const COL_KEYWORDS: Record<string, string[]> = {
+// Orden importante: cada columna se asigna una sola vez (exacta primero,
+// parcial después), así "AREA_CODE" no se la queda "AREA_NAME" y viceversa.
+const COL_KEYWORDS: ColumnKeywords = {
   tag:              ['TAG', 'ETIQUETA', 'TAG NUMBER', 'TAGNO', 'INSTRUMENT TAG'],
   description:      ['DESCRIPCION', 'DESCRIPCIÓN', 'DESCRIPTION', 'EQUIPO', 'NOMBRE', 'EQUIPMENT'],
   discipline:       ['DISCIPLINE', 'DISCIPLINA'],
@@ -23,40 +26,6 @@ const COL_KEYWORDS: Record<string, string[]> = {
   fluid_type:       ['FLUID TYPE', 'TIPO DE FLUIDO', 'TIPO FLUIDO', 'FLUIDO', 'FLUID'],
   mounting_typical: ['MOUNTING TYPICAL', 'TYPICAL', 'TIPICO DE MONTAJE', 'TIPICO MONTAJE', 'TÍPICO', 'TIPICO'],
 }
-const ALL_KEYWORDS = Object.values(COL_KEYWORDS).flat()
-
-// ── Smart header detection ──────────────────────────────────────
-// Scans first 15 rows and finds the one with the most column keyword matches.
-// Also peeks at the next row (handles 2-row headers like Instrument Index).
-function detectHeaderRow(rawRows: unknown[][]): {
-  headerRowIdx: number
-  colIndex: Record<string, number>
-} {
-  let bestRow = -1, bestScore = 0
-  for (let i = 0; i < Math.min(rawRows.length, 15); i++) {
-    const cells = rawRows[i].map(v => String(v ?? '').trim().toUpperCase())
-    const score = ALL_KEYWORDS.filter(kw => cells.some(c => c.includes(kw))).length
-    if (score > bestScore) { bestScore = score; bestRow = i }
-  }
-  if (bestRow < 0 || bestScore < 1) return { headerRowIdx: 0, colIndex: {} }
-
-  const h1 = rawRows[bestRow].map(v => String(v ?? '').trim().toUpperCase())
-  const h2 = bestRow + 1 < rawRows.length
-    ? rawRows[bestRow + 1].map(v => String(v ?? '').trim().toUpperCase())
-    : []
-
-  const colIndex: Record<string, number> = {}
-  for (const [field, keywords] of Object.entries(COL_KEYWORDS)) {
-    for (let col = 0; col < Math.max(h1.length, h2.length); col++) {
-      if (keywords.some(kw => (h1[col] ?? '').includes(kw) || (h2[col] ?? '').includes(kw))) {
-        colIndex[field] = col
-        break
-      }
-    }
-  }
-  return { headerRowIdx: bestRow, colIndex }
-}
-
 // A valid tag must contain at least one letter and one digit (e.g. FT-101, ESDV-7621001)
 function isValidTag(val: string): boolean {
   return /[A-Za-z]/.test(val) && /\d/.test(val)
@@ -71,10 +40,7 @@ function parseRows(
   const result: TagRow[] = []
   for (let i = dataStart; i < rawRows.length; i++) {
     const row = rawRows[i]
-    const get = (field: string) => {
-      const idx = colIndex[field]
-      return idx !== undefined ? String(row[idx] ?? '').trim() : ''
-    }
+    const get = (field: string) => cellText(row, colIndex[field])
     const tagNumber = get('tag')
     if (!tagNumber || !isValidTag(tagNumber)) continue
     const disciplineCode = (disciplinePrefill || get('discipline')).toUpperCase()
@@ -143,10 +109,23 @@ export default function ImportWizard({
   const [result, setResult]           = useState<ImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [manualDiscipline, setManualDiscipline] = useState<string>('')
+  // Tags del archivo que ya existen en el proyecto (null = consultando)
+  const [existingTags, setExistingTags] = useState<Set<string> | null>(null)
 
   const disciplineCodes  = useMemo(() => new Set(disciplines.map(d => d.code.toUpperCase())), [disciplines])
   const prefillCode      = disciplinePrefill?.code.toUpperCase() ?? ''
   const effectivePrefill = prefillCode || manualDiscipline
+
+  // Al entrar a la vista previa consultamos qué tags ya existen. El reset a
+  // null ocurre donde cambian las filas (parseFile / "Cambiar archivo").
+  useEffect(() => {
+    if (step !== 'preview' || rows.length === 0) return
+    let cancelled = false
+    void findExistingTags(projectId, rows.map(r => r.tag_number))
+      .then(res => { if (!cancelled) setExistingTags(new Set(res.existing ?? [])) })
+      .catch(() => { if (!cancelled) setExistingTags(new Set()) })
+    return () => { cancelled = true }
+  }, [step, rows, projectId])
 
   // ── File parsing ──────────────────────────────────────────────
 
@@ -157,27 +136,14 @@ export default function ImportWizard({
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const wb   = XLSX.read(data, { type: 'array' })
 
-        // Pick the sheet with the most keyword matches (avoids cover/index sheets)
-        let bestWs = wb.Sheets[wb.SheetNames[0]]
-        let bestWsScore = 0
-        for (const name of wb.SheetNames) {
-          const ws = wb.Sheets[name]
-          const testRows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
-          let score = 0
-          for (let i = 0; i < Math.min(testRows.length, 15); i++) {
-            const cells = testRows[i].map(v => String(v ?? '').trim().toUpperCase())
-            score += ALL_KEYWORDS.filter(kw => cells.some(c => c.includes(kw))).length
-          }
-          if (score > bestWsScore) { bestWsScore = score; bestWs = ws }
-        }
-
-        const rawRows: unknown[][] = XLSX.utils.sheet_to_json(bestWs, { header: 1, defval: '' })
+        // Hoja con más encabezados reconocibles (evita carátulas e índices)
+        const { rows: rawRows } = pickBestSheet(wb, COL_KEYWORDS)
 
         if (rawRows.length === 0) {
           setParseWarnings(['El archivo está vacío.']); return
         }
 
-        const { headerRowIdx, colIndex } = detectHeaderRow(rawRows)
+        const { headerRowIdx, colIndex } = detectHeaderRow(rawRows, COL_KEYWORDS)
         const warnings: string[] = []
 
         if (colIndex['tag'] === undefined) {
@@ -197,6 +163,7 @@ export default function ImportWizard({
 
         setParseWarnings(warnings)
         setFileName(file.name)
+        setExistingTags(null)
         setRows(parsed)
         setStep('preview')
       } catch {
@@ -403,12 +370,20 @@ export default function ImportWizard({
               <span style={{ color: '#10b981', fontWeight: 500 }}>{validRows.length} válidos</span>
               {invalidRows.length > 0 && <span style={{ color: '#ef4444', fontWeight: 500, marginLeft: '8px' }}>{invalidRows.length} omitidos</span>}
             </div>
-            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null) }} style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>← Cambiar archivo</button>
+            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null) }} style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>← Cambiar archivo</button>
           </div>
 
           {parseWarnings.length > 0 && (
             <div style={{ padding: '12px 16px', background: '#fef3c7', borderRadius: '10px', marginBottom: '14px', border: '1px solid #fde68a' }}>
               {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '13px', color: '#92400e', margin: '2px 0' }}>⚠ {w}</p>)}
+            </div>
+          )}
+
+          {existingTags && existingTags.size > 0 && (
+            <div style={{ padding: '12px 16px', background: '#eff6ff', borderRadius: '10px', marginBottom: '14px', border: '1px solid #bfdbfe' }}>
+              <p style={{ fontSize: '13px', color: '#1e40af', margin: 0 }}>
+                <strong>{existingTags.size} de {rows.length}</strong> tags ya existen en el proyecto: se actualizarán sus datos (descripción, jerarquía, fabricante, P&amp;ID) y <strong>conservarán su estado de avance</strong>. Los otros {rows.length - existingTags.size} se crearán.
+              </p>
             </div>
           )}
 
@@ -431,7 +406,12 @@ export default function ImportWizard({
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: isInvalid ? '#fff5f5' : undefined }}>
                       <td style={tdStyle}><span style={{ color: 'var(--gray-300)' }}>{i + 1}</span></td>
-                      <td style={tdStyle}><span style={{ fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'monospace' }}>{row.tag_number}</span></td>
+                      <td style={tdStyle}>
+                        <span style={{ fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'monospace' }}>{row.tag_number}</span>
+                        {existingTags?.has(row.tag_number.trim()) && (
+                          <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', verticalAlign: 'middle' }}>EXISTE</span>
+                        )}
+                      </td>
                       <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.description || '—'}</span></td>
                       <td style={tdStyle}>{(() => {
                         const t = detectTagType(row.tag_number)
@@ -475,11 +455,17 @@ export default function ImportWizard({
         <div style={{ textAlign: 'center', padding: '32px' }}>
           <div style={{ fontSize: '52px', marginBottom: '12px' }}>{result.errors.length === 0 ? '✅' : '⚠️'}</div>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 24px' }}>Importación completada</h2>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '32px', flexWrap: 'wrap' }}>
             <div style={{ padding: '20px 32px', background: '#ecfdf5', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
               <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>{result.imported}</div>
-              <div style={{ fontSize: '13px', color: '#059669', marginTop: '4px' }}>Importados</div>
+              <div style={{ fontSize: '13px', color: '#059669', marginTop: '4px' }}>Nuevos</div>
             </div>
+            {result.updated > 0 && (
+              <div style={{ padding: '20px 32px', background: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: '#2563eb' }}>{result.updated}</div>
+                <div style={{ fontSize: '13px', color: '#1e40af', marginTop: '4px' }}>Actualizados</div>
+              </div>
+            )}
             {result.skipped > 0 && (
               <div style={{ padding: '20px 32px', background: '#fef3c7', borderRadius: '12px', border: '1px solid #fde68a' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#d97706' }}>{result.skipped}</div>
@@ -487,6 +473,12 @@ export default function ImportWizard({
               </div>
             )}
           </div>
+          {result.warnings.length > 0 && (
+            <div style={{ textAlign: 'left', background: '#fef3c7', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid #fde68a' }}>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: '#92400e', margin: '0 0 8px' }}>Advertencias:</p>
+              {result.warnings.map((w, i) => <p key={i} style={{ fontSize: '12px', color: '#92400e', margin: '2px 0' }}>⚠ {w}</p>)}
+            </div>
+          )}
           {result.errors.length > 0 && (
             <div style={{ textAlign: 'left', background: '#fef2f2', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid #fca5a5' }}>
               <p style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626', margin: '0 0 8px' }}>Errores:</p>
@@ -495,7 +487,7 @@ export default function ImportWizard({
           )}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
             <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>Ver tags →</a>
-            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setResult(null) }} style={{ padding: '10px 22px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>Importar más</button>
+            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null); setResult(null) }} style={{ padding: '10px 22px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>Importar más</button>
           </div>
         </div>
       )}

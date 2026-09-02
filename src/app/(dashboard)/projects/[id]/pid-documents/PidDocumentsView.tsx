@@ -16,6 +16,34 @@ type PidDoc = {
   signed_url: string | null
 }
 
+/** Sistemas y subsistemas que cubre un plano, derivados de los tags que lo referencian. */
+export type PidCoverage = {
+  tags: number
+  systems: { code: string; subsystems: string[] }[]
+}
+
+function normalizeKey(drawingNumber: string) {
+  return drawingNumber.replace(/\s+/g, ' ').trim().toUpperCase()
+}
+
+function CoverageCell({ cov, emptyLabel }: { cov: PidCoverage | undefined; emptyLabel: string }) {
+  if (!cov || cov.systems.length === 0) {
+    return <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{emptyLabel}</span>
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+      {cov.systems.map(s => (
+        <div key={s.code} style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap' }}>
+          <span style={{ fontWeight: 700, color: 'var(--text-strong)' }}>{s.code}</span>
+          {s.subsystems.length > 0 && (
+            <span style={{ color: 'var(--text-muted)' }}> · {s.subsystems.join(', ')}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function formatBytes(bytes: number | null) {
   if (!bytes) return '—'
   if (bytes < 1024) return `${bytes} B`
@@ -27,11 +55,13 @@ export default function PidDocumentsView({
   projectId,
   documents,
   missingPids,
+  coverage,
   canEdit,
 }: {
   projectId: string
   documents: PidDoc[]
   missingPids: string[]
+  coverage: Record<string, PidCoverage>
   canEdit: boolean
 }) {
   const t = useTranslations('PidDocuments')
@@ -78,15 +108,25 @@ export default function PidDocumentsView({
             <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#92400e' }}>
               {t('list.missingAlert', { count: missing.length })}
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-              {missing.map(p => (
-                <span key={p} style={{
-                  padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600,
-                  background: '#fef3c7', color: '#92400e', fontFamily: 'ui-monospace, monospace',
-                }}>
-                  {p}
-                </span>
-              ))}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: '8px' }}>
+              {missing.map(p => {
+                const cov = coverage[normalizeKey(p)]
+                return (
+                  <span key={p} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600,
+                      background: '#fef3c7', color: '#92400e', fontFamily: 'ui-monospace, monospace',
+                    }}>
+                      {p}
+                    </span>
+                    {cov && (
+                      <span style={{ fontSize: '11px', color: '#92400e', fontFamily: 'ui-monospace, monospace' }}>
+                        {cov.systems.map(s => s.code).join(', ')} · {cov.tags} tags
+                      </span>
+                    )}
+                  </span>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -138,6 +178,8 @@ export default function PidDocumentsView({
               <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
                 <Th>{t('list.colDrawingNum')}</Th>
                 <Th>{t('list.colTitle')}</Th>
+                <Th><span title={t('list.coverageHint')}>{t('list.colCoverage')}</span></Th>
+                <Th>{t('list.colTags')}</Th>
                 <Th>{t('list.colFile')}</Th>
                 <Th>{t('list.colSize')}</Th>
                 <Th>{t('list.colUploaded')}</Th>
@@ -149,6 +191,7 @@ export default function PidDocumentsView({
                 <DocRow
                   key={doc.id}
                   doc={doc}
+                  coverage={coverage[normalizeKey(doc.drawing_number)]}
                   canEdit={canEdit}
                   projectId={projectId}
                   formatDate={formatDate}
@@ -165,12 +208,14 @@ export default function PidDocumentsView({
 
 function DocRow({
   doc,
+  coverage,
   canEdit,
   projectId,
   formatDate,
   onDeleted,
 }: {
   doc: PidDoc
+  coverage: PidCoverage | undefined
   canEdit: boolean
   projectId: string
   formatDate: (iso: string | null) => string
@@ -207,6 +252,12 @@ function DocRow({
       </td>
       <td style={tdStyle}>
         <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{doc.title ?? '—'}</span>
+      </td>
+      <td style={tdStyle}>
+        <CoverageCell cov={coverage} emptyLabel={t('list.noCoverage')} />
+      </td>
+      <td style={tdStyle}>
+        <span style={{ fontSize: '12px', color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums' }}>{coverage?.tags ?? 0}</span>
       </td>
       <td style={tdStyle}>
         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{doc.file_name}</span>

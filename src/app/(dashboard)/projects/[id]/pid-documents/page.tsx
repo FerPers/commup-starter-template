@@ -1,6 +1,15 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
-import PidDocumentsView from './PidDocumentsView'
+import { normalizePidRef } from '@/lib/excel/normalize'
+import PidDocumentsView, { type PidCoverage } from './PidDocumentsView'
+
+// Fila mínima que necesitamos de tags para armar "sistemas por plano".
+type TagPidRow = {
+  pid_drawing: string | null
+  subsystems: { code: string; systems: { code: string } | null } | null
+}
+
+const PAGE = 1000 // PostgREST limita a 1000 filas por respuesta; paginamos
 
 export default async function PidDocumentsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -12,7 +21,7 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
 
   const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
 
-  const [{ data: project }, { data: documents }, { data: tagPids }] = await Promise.all([
+  const [{ data: project }, { data: documents }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name')
@@ -24,15 +33,47 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
       .select('id, drawing_number, title, file_path, file_name, file_size, created_at')
       .eq('project_id', id)
       .order('drawing_number'),
-    // Fetch distinct pid_drawing values from tags so we can show which ones have no document yet
-    supabase
-      .from('tags')
-      .select('pid_drawing')
-      .eq('project_id', id)
-      .not('pid_drawing', 'is', null),
   ])
 
   if (!project) notFound()
+
+  // Tags con referencia a P&ID + su subsistema/sistema. De aquí se derivan
+  // (a) los planos referenciados pero sin PDF y (b) qué sistemas cubre cada plano.
+  const tagRows: TagPidRow[] = []
+  for (let from = 0; from < 50 * PAGE; from += PAGE) {
+    const { data } = await supabase
+      .from('tags')
+      .select('pid_drawing, subsystems:subsystem_id(code, systems:system_id(code))')
+      .eq('project_id', id)
+      .not('pid_drawing', 'is', null)
+      .order('id')
+      .range(from, from + PAGE - 1)
+    if (!data || data.length === 0) break
+    tagRows.push(...(data as TagPidRow[]))
+    if (data.length < PAGE) break
+  }
+
+  const agg = new Map<string, { tags: number; systems: Map<string, Set<string>> }>()
+  for (const t of tagRows) {
+    const key = normalizePidRef(t.pid_drawing)
+    if (!key) continue
+    const entry = agg.get(key) ?? { tags: 0, systems: new Map() }
+    entry.tags++
+    const sysCode = t.subsystems?.systems?.code ?? '—'
+    const subs = entry.systems.get(sysCode) ?? new Set<string>()
+    if (t.subsystems?.code) subs.add(t.subsystems.code)
+    entry.systems.set(sysCode, subs)
+    agg.set(key, entry)
+  }
+  const coverage: Record<string, PidCoverage> = {}
+  for (const [key, entry] of agg) {
+    coverage[key] = {
+      tags: entry.tags,
+      systems: [...entry.systems]
+        .map(([code, subs]) => ({ code, subsystems: [...subs].sort() }))
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    }
+  }
 
   // Generate signed URLs for each document (60 min expiry)
   const docs = documents ?? []
@@ -45,10 +86,9 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
     })
   )
 
-  // Unique P&IDs referenced in tags but without an uploaded document
-  const uploadedNumbers = new Set(docs.map(d => d.drawing_number))
-  const allTagPids = [...new Set((tagPids ?? []).map(t => t.pid_drawing as string))]
-  const missingPids = allTagPids.filter(p => !uploadedNumbers.has(p)).sort()
+  // P&IDs referenciados en tags pero sin documento subido (comparación normalizada)
+  const uploadedNumbers = new Set(docs.map(d => normalizePidRef(d.drawing_number)))
+  const missingPids = Object.keys(coverage).filter(p => !uploadedNumbers.has(p)).sort()
 
   return (
     <div style={{ padding: '32px' }}>
@@ -68,6 +108,7 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
             </h1>
             <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
               {project.name} · {docs.length === 0 ? 'Sin documentos subidos' : `${docs.length} PDF${docs.length !== 1 ? 's' : ''} subido${docs.length !== 1 ? 's' : ''}`}
+              {Object.keys(coverage).length > 0 && ` · ${Object.keys(coverage).length} planos referenciados en tags`}
             </p>
           </div>
         </div>
@@ -77,6 +118,7 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
         projectId={id}
         documents={signedDocs}
         missingPids={missingPids}
+        coverage={coverage}
         canEdit={canEdit}
       />
     </div>

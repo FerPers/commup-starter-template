@@ -4,6 +4,8 @@ import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
+import { normalizeCode, normalizePidRef, textOrNull, textOr } from '@/lib/excel/normalize'
 import type { TablesInsert } from '@/types/supabase.generated'
 
 export interface TagRow {
@@ -27,10 +29,38 @@ export interface TagRow {
 }
 
 export interface ImportResult {
-  imported: number
+  imported: number   // tags nuevos
+  updated: number    // tags que ya existían (datos actualizados, estado conservado)
   skipped: number
   errors: { row: number; tag: string; reason: string }[]
+  warnings: string[]
 }
+
+// Filas por lote: una sola sentencia por lote en vez de un round-trip por fila.
+// 300 mantiene la URL del SELECT `in(...)` de verificación bajo ~8 KB.
+const CHUNK = 300
+
+/** Tags del proyecto que ya existen entre los números dados (para la vista previa). */
+export const findExistingTags = withAuthOnly(
+  { role: PRIVILEGED_ROLES },
+  async (ctx, projectId: string, tagNumbers: string[]): Promise<{ error?: string; existing?: string[] }> => {
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
+
+    const existing: string[] = []
+    const unique = [...new Set(tagNumbers.map(t => t.trim()).filter(Boolean))]
+    for (let i = 0; i < unique.length; i += CHUNK) {
+      const { data, error } = await ctx.supabase
+        .from('tags')
+        .select('tag_number')
+        .eq('project_id', projectId)
+        .in('tag_number', unique.slice(i, i + CHUNK))
+      if (error) return { error: error.message }
+      existing.push(...(data ?? []).map(t => t.tag_number))
+    }
+    return { existing }
+  },
+)
 
 export const importTags = withAuthOnly(
   { role: PRIVILEGED_ROLES },
@@ -42,125 +72,115 @@ export const importTags = withAuthOnly(
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
     if (!access.ok) return { error: access.error }
 
-  const admin = createAdminClient()
+    const admin = createAdminClient()
+    const result: ImportResult = { imported: 0, updated: 0, skipped: 0, errors: [], warnings: [] }
 
-  // Load disciplines map: code → id
-  const { data: disciplinesData } = await admin
-    .from('disciplines')
-    .select('id, code')
-    .eq('org_id', ctx.orgId)
+    const { data: disciplinesData, error: discErr } = await admin
+      .from('disciplines')
+      .select('id, code')
+      .eq('org_id', ctx.orgId)
+    if (discErr) return { error: discErr.message }
+    const disciplineMap = new Map((disciplinesData ?? []).map(d => [d.code.toUpperCase(), d.id]))
 
-  const disciplineMap = new Map((disciplinesData ?? []).map(d => [d.code.toUpperCase(), d.id]))
-
-  // ── Auto-create hierarchy ──────────────────────────────────
-
-  // Collect unique area/system/subsystem codes
-  const areaKeys   = [...new Set(rows.map(r => r.area_code.toUpperCase() || 'GENERAL'))]
-  const systemKeys = [...new Set(rows.map(r => `${r.area_code.toUpperCase()}||${r.system_code.toUpperCase()}` || 'GENERAL||GEN-SYS'))]
-  const subKeys    = [...new Set(rows.map(r => `${r.system_code.toUpperCase()}||${r.subsystem_code.toUpperCase()}`))]
-
-  // Upsert areas
-  const areaRows = areaKeys.map(code => ({
-    project_id: projectId,
-    code,
-    name: rows.find(r => r.area_code.toUpperCase() === code)?.area_name ?? code,
-    description: null,
-  }))
-  const { data: areas } = await admin
-    .from('areas')
-    .upsert(areaRows, { onConflict: 'project_id,code', ignoreDuplicates: false })
-    .select('id, code')
-
-  const areaIdMap = new Map((areas ?? []).map(a => [a.code, a.id]))
-
-  // Upsert systems
-  const systemInserts: TablesInsert<'systems'>[] = []
-  for (const key of systemKeys) {
-    const [areaCode, sysCode] = key.split('||')
-    const areaId = areaIdMap.get(areaCode)
-    if (!areaId) continue
-    const row = rows.find(r => r.area_code.toUpperCase() === areaCode && r.system_code.toUpperCase() === sysCode)
-    systemInserts.push({
-      project_id: projectId,
-      area_id: areaId,
-      code: sysCode,
-      name: row?.system_name ?? sysCode,
-      description: null,
+    // ── Deduplicar por tag (última fila gana: es la revisión más reciente en la hoja) ──
+    const byTag = new Map<string, { row: TagRow; index: number }>()
+    const dupes = new Set<string>()
+    rows.forEach((row, index) => {
+      const key = row.tag_number.trim().toUpperCase()
+      if (!key) return
+      if (byTag.has(key)) dupes.add(row.tag_number.trim())
+      byTag.set(key, { row, index })
     })
-  }
-  const { data: systems } = await admin
-    .from('systems')
-    .upsert(systemInserts, { onConflict: 'project_id,code', ignoreDuplicates: false })
-    .select('id, code')
-
-  const systemIdMap = new Map((systems ?? []).map(s => [s.code, s.id]))
-
-  // Upsert subsystems
-  const subInserts: TablesInsert<'subsystems'>[] = []
-  for (const key of subKeys) {
-    const [sysCode, subCode] = key.split('||')
-    const sysId = systemIdMap.get(sysCode)
-    if (!sysId) continue
-    const row = rows.find(r => r.system_code.toUpperCase() === sysCode && r.subsystem_code.toUpperCase() === subCode)
-    subInserts.push({
-      project_id: projectId,
-      system_id: sysId,
-      code: subCode,
-      name: row?.subsystem_name ?? subCode,
-      description: null,
-    })
-  }
-  const { data: subsystems } = await admin
-    .from('subsystems')
-    .upsert(subInserts, { onConflict: 'project_id,code', ignoreDuplicates: false })
-    .select('id, code')
-
-  const subsystemIdMap = new Map((subsystems ?? []).map(s => [s.code, s.id]))
-
-  // ── Insert tags ────────────────────────────────────────────
-
-  const result: ImportResult = { imported: 0, skipped: 0, errors: [] }
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i]
-    const disciplineId = disciplineMap.get(row.discipline_code.toUpperCase())
-    const subsystemId  = subsystemIdMap.get(row.subsystem_code.toUpperCase())
-
-    if (!disciplineId) {
-      result.errors.push({ row: i + 2, tag: row.tag_number, reason: `Disciplina "${row.discipline_code}" no existe en la organización` })
-      result.skipped++
-      continue
+    if (dupes.size > 0) {
+      const list = [...dupes]
+      result.warnings.push(
+        `${dupes.size} tag(s) repetidos en el archivo; se usó la última fila de cada uno: ${list.slice(0, 5).join(', ')}${list.length > 5 ? '…' : ''}`,
+      )
     }
-    if (!subsystemId) {
-      result.errors.push({ row: i + 2, tag: row.tag_number, reason: `Subsistema "${row.subsystem_code}" no pudo crearse` })
-      result.skipped++
-      continue
+    const uniqueRows = [...byTag.values()]
+
+    // ── Jerarquía ──────────────────────────────────────────────
+    const hier = await upsertHierarchy(admin, projectId, uniqueRows.map(u => u.row))
+    if ('error' in hier) return { error: hier.error }
+    result.warnings.push(...hier.warnings)
+
+    // ── Payloads ───────────────────────────────────────────────
+    type Pending = { payload: TablesInsert<'tags'>; index: number; tag: string }
+    const pending: Pending[] = []
+
+    for (const { row, index } of uniqueRows) {
+      const disciplineId = disciplineMap.get(row.discipline_code.trim().toUpperCase())
+      const subsystemId = hier.subsystemIdMap.get(normalizeCode(row.subsystem_code, DEFAULT_SUBSYSTEM))
+      const tagNumber = row.tag_number.trim()
+
+      if (!disciplineId) {
+        result.errors.push({ row: index + 2, tag: tagNumber, reason: `Disciplina "${row.discipline_code}" no existe en la organización` })
+        result.skipped++
+        continue
+      }
+      if (!subsystemId) {
+        result.errors.push({ row: index + 2, tag: tagNumber, reason: `Subsistema "${row.subsystem_code}" no pudo crearse` })
+        result.skipped++
+        continue
+      }
+
+      // Sin `status` a propósito: un tag existente conserva su avance
+      // (ITRs en curso, punches); los nuevos toman el default 'not_started'.
+      pending.push({
+        index,
+        tag: tagNumber,
+        payload: {
+          project_id: projectId,
+          subsystem_id: subsystemId,
+          discipline_id: disciplineId,
+          tag_number: tagNumber,
+          description: textOr(row.description, tagNumber),
+          manufacturer: textOrNull(row.manufacturer),
+          model: textOrNull(row.model),
+          serial_number: textOrNull(row.serial_number),
+          preservation_required: row.preservation_required ?? false,
+          pid_drawing: normalizePidRef(row.pid_drawing),
+          fluid_type: textOrNull(row.fluid_type),
+          mounting_typical: textOrNull(row.mounting_typical),
+        },
+      })
     }
 
-    const { error } = await admin.from('tags').upsert({
-      project_id: projectId,
-      subsystem_id: subsystemId,
-      discipline_id: disciplineId,
-      tag_number: row.tag_number.trim(),
-      description: row.description.trim(),
-      manufacturer: row.manufacturer?.trim() ?? null,
-      model: row.model?.trim() ?? null,
-      serial_number: row.serial_number?.trim() ?? null,
-      preservation_required: row.preservation_required ?? false,
-      pid_drawing: row.pid_drawing?.trim() ?? null,
-      fluid_type: row.fluid_type?.trim() ?? null,
-      mounting_typical: row.mounting_typical?.trim() ?? null,
-      status: 'not_started',
-    }, { onConflict: 'project_id,tag_number', ignoreDuplicates: false })
+    // ── Upsert por lotes (fallback fila a fila solo si el lote falla) ──
+    for (let i = 0; i < pending.length; i += CHUNK) {
+      const chunk = pending.slice(i, i + CHUNK)
 
-    if (error) {
-      result.errors.push({ row: i + 2, tag: row.tag_number, reason: error.message })
-      result.skipped++
-    } else {
-      result.imported++
+      const { data: existingRows, error: exErr } = await admin
+        .from('tags')
+        .select('tag_number')
+        .eq('project_id', projectId)
+        .in('tag_number', chunk.map(c => c.payload.tag_number))
+      if (exErr) return { error: exErr.message }
+      const existing = new Set((existingRows ?? []).map(t => t.tag_number))
+      const count = (tag: string) => { if (existing.has(tag)) result.updated++; else result.imported++ }
+
+      const { error: batchErr } = await admin
+        .from('tags')
+        .upsert(chunk.map(c => c.payload), { onConflict: 'project_id,tag_number', ignoreDuplicates: false })
+
+      if (!batchErr) {
+        chunk.forEach(c => count(c.payload.tag_number))
+        continue
+      }
+
+      for (const c of chunk) {
+        const { error } = await admin
+          .from('tags')
+          .upsert(c.payload, { onConflict: 'project_id,tag_number', ignoreDuplicates: false })
+        if (error) {
+          result.errors.push({ row: c.index + 2, tag: c.tag, reason: error.message })
+          result.skipped++
+        } else {
+          count(c.payload.tag_number)
+        }
+      }
     }
-  }
 
-  return { result }
+    return { result }
   },
 )

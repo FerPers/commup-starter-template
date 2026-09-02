@@ -3,8 +3,38 @@
 import { useState } from 'react'
 import * as XLSX from 'xlsx'
 import { importSignals, type SignalRow, type SignalImportResult } from '@/app/actions/import-signals'
+import { pickBestSheet, detectHeaderRow, cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
 
 const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
+
+// Misma detección de hoja/encabezado que el importador de tags: el encabezado
+// puede estar en cualquiera de las primeras 15 filas y la hoja correcta se
+// elige por coincidencias. Orden importante: "TAG INSTRUMENTO" se asigna antes
+// de que "TAG" (parcial) pueda quedarse con esa columna.
+const SIGNAL_COLS: ColumnKeywords = {
+  instrument_tag:  ['TAG INSTRUMENTO', 'INSTRUMENT TAG', 'INSTRUMENTO', 'TAG EQUIPO'],
+  signal_tag:      ['TAG DE SEÑAL', 'TAG SEÑAL', 'SIGNAL TAG', 'TAG'],
+  description:     ['DESCRIPCION', 'DESCRIPTION', 'DESC'],
+  signal_type:     ['TIPO DE SEÑAL', 'TIPO SEÑAL', 'SIGNAL TYPE', 'I/O TYPE', 'IO TYPE', 'TIPO'],
+  discipline:      ['DISCIPLINA', 'DISCIPLINE'],
+  service:         ['SERVICIO', 'SERVICE'],
+  range_min:       ['INF.', 'INF', 'RANGE MIN', 'RANGO INF', 'LRV'],
+  range_max:       ['SUP.', 'SUP', 'RANGE MAX', 'RANGO SUP', 'URV'],
+  eng_unit:        ['UNIDAD', 'UNIT', 'ENG UNIT', 'UNITS'],
+  alarms:          ['ALARMAS / SET POINT', 'ALARMAS', 'SETPOINT', 'SET POINT'],
+  origin:          ['ORIGEN DE LA SEÑAL', 'ORIGEN', 'ORIGIN'],
+  destination:     ['DESTINO DE LA SEÑAL', 'DESTINO', 'DESTINATION'],
+  pid:             ['P&ID', 'PID', 'PLANO P&ID'],
+  loop_diagram:    ['DIAGRAMA DE LAZO', 'LOOP DIAGRAM'],
+  wiring_diagram:  ['DIAGRAMA DE CABLEADO', 'WIRING DIAGRAM'],
+  notes:           ['NOTAS', 'NOTES', 'OBSERVACIONES'],
+  area_code:       ['AREA CODE', 'AREA', 'SITIO', 'UBICACION', 'LOCATION'],
+  area_name:       ['AREA NAME', 'NOMBRE AREA'],
+  system_code:     ['SYSTEM CODE', 'SISTEMA', 'SYSTEM'],
+  system_name:     ['SYSTEM NAME', 'NOMBRE SISTEMA'],
+  subsystem_code:  ['SUBSYSTEM CODE', 'SUBSISTEMA', 'SUBSYSTEM'],
+  subsystem_name:  ['SUBSYSTEM NAME', 'NOMBRE SUBSISTEMA'],
+}
 
 type Step = 'upload' | 'preview' | 'result'
 
@@ -43,63 +73,52 @@ export default function ImportSignalsWizard({
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const wb = XLSX.read(data, { type: 'array' })
-        const ws = wb.Sheets[wb.SheetNames[0]]
-        const json: Record<string, string>[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+        const { rows: rawRows } = pickBestSheet(wb, SIGNAL_COLS)
 
-        if (json.length === 0) {
+        if (rawRows.length === 0) {
           setValidationErrors(['El archivo está vacío.'])
           return
         }
 
-        // Normalize headers
-        const normalized = json.map(row => {
-          const out: Record<string, string> = {}
-          for (const [k, v] of Object.entries(row)) {
-            out[k.trim().toUpperCase().replace(/\s+/g, '_')] = String(v).trim()
-          }
-          return out
-        })
+        const { headerRowIdx, colIndex } = detectHeaderRow(rawRows, SIGNAL_COLS)
 
-        const first = normalized[0]
-        const hasSignalTag = 'TAG_DE_SEÑAL' in first || 'SIGNAL_TAG' in first || 'TAG' in first
-        const hasType      = 'TIPO_DE_SEÑAL' in first || 'SIGNAL_TYPE' in first || 'TIPO' in first
-
-        if (!hasSignalTag || !hasType) {
-          setValidationErrors([`Columnas requeridas no encontradas. Se esperan: TAG_DE_SEÑAL, TIPO_DE_SEÑAL, DISCIPLINA (o sus equivalentes en inglés)`])
+        if (colIndex.signal_tag === undefined || colIndex.signal_type === undefined) {
+          setValidationErrors([`Columnas requeridas no encontradas. Se esperan: TAG DE SEÑAL, TIPO DE SEÑAL, DISCIPLINA (o sus equivalentes en inglés). El encabezado puede estar en cualquiera de las primeras 15 filas.`])
           return
         }
 
         const errors: string[] = []
         const parsed: SignalRow[] = []
 
-        normalized.forEach((row, i) => {
-          const rowNum = i + 2
+        rawRows.slice(headerRowIdx + 1).forEach((row, i) => {
+          const rowNum = headerRowIdx + i + 2
+          const get = (field: string) => cellText(row, colIndex[field])
 
-          // Flexible column name resolution
-          const signalTag    = row['TAG_DE_SEÑAL'] || row['SIGNAL_TAG'] || row['TAG'] || ''
-          const instrTag     = row['TAG_INSTRUMENTO'] || row['INSTRUMENT_TAG'] || signalTag
-          const description  = row['DESCRIPCION'] || row['DESCRIPTION'] || row['DESC'] || ''
-          const signalType   = (row['TIPO_DE_SEÑAL'] || row['SIGNAL_TYPE'] || row['TIPO'] || '').toUpperCase()
-          const discipline   = (row['DISCIPLINA'] || row['DISCIPLINE'] || 'INST').toUpperCase()
-          const service      = row['SERVICIO'] || row['SERVICE'] || ''
-          const rangeInf     = row['INF.'] || row['RANGE_MIN'] || row['RANGO_INF'] || ''
-          const rangeSup     = row['SUP.'] || row['RANGE_MAX'] || row['RANGO_SUP'] || ''
-          const unit         = row['UNIDAD'] || row['UNIT'] || row['ENG_UNIT'] || ''
-          const alarms       = row['ALARMAS_/_SET_POINT'] || row['ALARMAS'] || row['SETPOINT'] || row['SET_POINT'] || ''
-          const origin       = row['ORIGEN_DE_LA_SEÑAL'] || row['ORIGEN'] || row['ORIGIN'] || ''
-          const destination  = row['DESTINO_DE_LA_SEÑAL'] || row['DESTINO'] || row['DESTINATION'] || ''
-          const pid          = row['P&ID'] || row['PID'] || ''
-          const loopDiag     = row['DIAGRAMA_DE_LAZO'] || row['LOOP_DIAGRAM'] || ''
-          const wiringDiag   = row['DIAGRAMA_DE_CABLEADO'] || row['WIRING_DIAGRAM'] || ''
-          const notes        = row['NOTAS'] || row['NOTES'] || ''
-          const areaCode     = row['AREA_CODE'] || row['AREA'] || 'GENERAL'
-          const areaName     = row['AREA_NAME'] || areaCode
-          const sysCode      = row['SYSTEM_CODE'] || row['SISTEMA'] || 'GEN-SYS'
-          const sysName      = row['SYSTEM_NAME'] || sysCode
-          const subCode      = row['SUBSYSTEM_CODE'] || row['SUBSISTEMA'] || 'GEN-SUB'
-          const subName      = row['SUBSYSTEM_NAME'] || subCode
+          const signalTag    = get('signal_tag')
+          const instrTag     = get('instrument_tag') || signalTag
+          const description  = get('description')
+          const signalType   = get('signal_type').toUpperCase()
+          const discipline   = (get('discipline') || 'INST').toUpperCase()
+          const service      = get('service')
+          const rangeInf     = get('range_min')
+          const rangeSup     = get('range_max')
+          const unit         = get('eng_unit')
+          const alarms       = get('alarms')
+          const origin       = get('origin')
+          const destination  = get('destination')
+          const pid          = get('pid')
+          const loopDiag     = get('loop_diagram')
+          const wiringDiag   = get('wiring_diagram')
+          const notes        = get('notes')
+          const areaCode     = get('area_code') || 'GENERAL'
+          const areaName     = get('area_name') || areaCode
+          const sysCode      = get('system_code') || 'GEN-SYS'
+          const sysName      = get('system_name') || sysCode
+          const subCode      = get('subsystem_code') || 'GEN-SUB'
+          const subName      = get('subsystem_name') || subCode
 
-          if (!signalTag) { errors.push(`Fila ${rowNum}: TAG_DE_SEÑAL vacío`); return }
+          // Filas vacías o de totales/notas al pie: sin tag, se ignoran en silencio
+          if (!signalTag) return
           if (!SIGNAL_TYPES.includes(signalType)) {
             errors.push(`Fila ${rowNum}: TIPO_DE_SEÑAL "${signalType}" inválido (válidos: ${SIGNAL_TYPES.join(', ')}) — tag: ${signalTag}`)
           }
@@ -330,6 +349,9 @@ export default function ImportSignalsWizard({
                 Disciplinas: {disciplines.map(d => d.code).join(', ')}
               </p>
             </div>
+            <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '10px 0 0' }}>
+              El encabezado puede estar en cualquier fila y la hoja se detecta automáticamente. Si el TAG INSTRUMENTO ya existe en el proyecto, se conserva tal cual.
+            </p>
           </div>
         </div>
       )}
@@ -440,11 +462,23 @@ export default function ImportSignalsWizard({
           <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', marginBottom: '6px' }}>
             {result.errors.length === 0 ? 'Importación completada' : 'Importación con advertencias'}
           </h2>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '24px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '24px 0', flexWrap: 'wrap' }}>
             <div style={{ padding: '16px 28px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
               <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>{result.imported}</div>
-              <div style={{ fontSize: '13px', color: '#166534' }}>Señales importadas</div>
+              <div style={{ fontSize: '13px', color: '#166534' }}>Señales nuevas</div>
             </div>
+            {result.updated > 0 && (
+              <div style={{ padding: '16px 28px', background: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: '#2563eb' }}>{result.updated}</div>
+                <div style={{ fontSize: '13px', color: '#1e40af' }}>Actualizadas</div>
+              </div>
+            )}
+            {result.tagsCreated > 0 && (
+              <div style={{ padding: '16px 28px', background: '#f5f3ff', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: '#7c3aed' }}>{result.tagsCreated}</div>
+                <div style={{ fontSize: '13px', color: '#5b21b6' }}>Tags instrumento creados</div>
+              </div>
+            )}
             {result.skipped > 0 && (
               <div style={{ padding: '16px 28px', background: '#fef2f2', borderRadius: '12px', border: '1px solid #fecaca' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#ef4444' }}>{result.skipped}</div>
@@ -452,6 +486,13 @@ export default function ImportSignalsWizard({
               </div>
             )}
           </div>
+          {result.warnings.length > 0 && (
+            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', padding: '14px', marginBottom: '12px', textAlign: 'left' }}>
+              {result.warnings.map((w, i) => (
+                <div key={i} style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>⚠ {w}</div>
+              ))}
+            </div>
+          )}
           {result.errors.length > 0 && (
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px', marginBottom: '20px', textAlign: 'left' }}>
               {result.errors.map((e, i) => (
