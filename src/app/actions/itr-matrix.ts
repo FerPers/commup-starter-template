@@ -8,7 +8,7 @@ import { withAuthOnly } from '@/lib/auth/withAuth'
 import { createClaudeClient, isAiConfigured, AI_NOT_CONFIGURED, CLAUDE_MODEL } from '@/lib/ai/claude'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
-import { textOr } from '@/lib/excel/normalize'
+import { textOr, textOrNull } from '@/lib/excel/normalize'
 
 // ── Matriz "tipo de equipo × plantilla ITR" (híbrida) ───────────────────────
 // La IA cura la matriz una vez por org (propone filas con motivo y confianza);
@@ -301,6 +301,72 @@ export const deleteMatrixRow = withAuthOnly(
     if (error) return { error: error.message }
     revalidatePath('/admin/templates/matrix')
     return {}
+  },
+)
+
+
+// ── Importación desde Excel (la "matriz mental" del usuario) ────────────────
+// Filas resueltas por código de tipo y código de plantilla. Entran como
+// aceptadas/manuales: son decisión humana, así que la IA no las pisa.
+
+export interface MatrixImportRow {
+  equipment_type_code: string
+  template_code: string
+  required?: boolean
+  condition?: string
+  notes?: string
+}
+
+export interface MatrixImportResult {
+  imported: number
+  updated: number
+  skipped: number
+  errors: { row: number; reason: string }[]
+}
+
+export const importMatrixRows = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (ctx, rows: MatrixImportRow[]): Promise<{ result?: MatrixImportResult; error?: string }> => {
+    const result: MatrixImportResult = { imported: 0, updated: 0, skipped: 0, errors: [] }
+    const [{ data: types }, { data: templates }, { data: existing }] = await Promise.all([
+      ctx.supabase.from('equipment_types').select('id, code').eq('org_id', ctx.orgId),
+      ctx.supabase.from('itr_templates').select('id, code').eq('org_id', ctx.orgId),
+      ctx.supabase.from('equipment_type_templates').select('equipment_type_id, itr_template_id').eq('org_id', ctx.orgId),
+    ])
+    const typeByCode = new Map((types ?? []).map(t => [t.code.toUpperCase(), t.id]))
+    const templateByCode = new Map((templates ?? []).map(t => [t.code.toUpperCase(), t.id]))
+    const existingKeys = new Set((existing ?? []).map(e => `${e.equipment_type_id}|${e.itr_template_id}`))
+
+    const payload = new Map<string, { org_id: string; equipment_type_id: string; itr_template_id: string; status: string; source: string; confidence: null; reason: string; model: null; reviewed_by: string; reviewed_at: string }>()
+    rows.forEach((r, i) => {
+      const typeId = typeByCode.get(r.equipment_type_code.trim().toUpperCase())
+      const templateId = templateByCode.get(r.template_code.trim().toUpperCase())
+      if (!typeId) { result.errors.push({ row: i + 2, reason: `Tipo de equipo "${r.equipment_type_code}" no existe en la org` }); result.skipped++; return }
+      if (!templateId) { result.errors.push({ row: i + 2, reason: `Plantilla "${r.template_code}" no existe en la org` }); result.skipped++; return }
+      const key = `${typeId}|${templateId}`
+      const parts = [r.required === false ? 'Opcional' : 'Obligatorio', textOrNull(r.condition), textOrNull(r.notes)].filter(Boolean)
+      payload.set(key, {
+        org_id: ctx.orgId, equipment_type_id: typeId, itr_template_id: templateId,
+        status: 'accepted', source: 'manual', confidence: null,
+        reason: `Matriz del usuario · ${parts.join(' · ')}`.slice(0, 300),
+        model: null, reviewed_by: ctx.userId, reviewed_at: new Date().toISOString(),
+      })
+    })
+    if (payload.size === 0) return { result }
+
+    const values = [...payload.values()]
+    for (let i = 0; i < values.length; i += 300) {
+      const chunk = values.slice(i, i + 300)
+      const { error } = await ctx.supabase
+        .from('equipment_type_templates')
+        .upsert(chunk, { onConflict: 'org_id,equipment_type_id,itr_template_id', ignoreDuplicates: false })
+      if (error) return { error: error.message }
+      for (const c of chunk) {
+        if (existingKeys.has(`${c.equipment_type_id}|${c.itr_template_id}`)) result.updated++; else result.imported++
+      }
+    }
+    revalidatePath('/admin/templates/matrix')
+    return { result }
   },
 )
 

@@ -3,6 +3,8 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import * as XLSX from 'xlsx'
+import ImportMatrixModal from './ImportMatrixModal'
 import {
   generateMatrixWithAi, reviewMatrixRows, addMatrixRow, deleteMatrixRow,
   type MatrixRow, type GenerateResult,
@@ -44,6 +46,7 @@ export default function MatrixView({
   const [category, setCategory] = useState('')
   const [addingFor, setAddingFor] = useState<string | null>(null)
   const [addTemplate, setAddTemplate] = useState('')
+  const [showImport, setShowImport] = useState(false)
 
   const rowsByType = useMemo(() => {
     const m = new Map<string, MatrixRow[]>()
@@ -115,6 +118,56 @@ export default function MatrixView({
     router.refresh()
   }
 
+
+  // Plantilla Excel para llenar la "matriz mental" a mano: tipos precargados,
+  // catálogo de plantillas y fórmulas de búsqueda. Se importa con "Importar desde Excel".
+  function downloadTemplate() {
+    const wb = XLSX.utils.book_new()
+    const instr = [
+      ['CommUp · Matriz ITR por tipo de equipo'],
+      ['Cada fila de la hoja Matriz = un tipo de equipo + una plantilla ITR que le aplica. Elige el CODIGO ITR del Catálogo ITR; título, disciplina y fase se rellenan solos.'],
+      ['OBLIGATORIO: S si siempre aplica; N si depende de una condición (escríbela en CONDICION). Puedes cruzar disciplinas (bomba → ITRs del motor).'],
+      ['Camino alterno: en la hoja Catálogo ITR, columna TIPOS QUE APLICAN, escribe códigos de tipo separados por coma.'],
+      ['Luego: Matriz por tipo de equipo → Importar desde Excel. Las filas entran como aceptadas.'],
+    ]
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(instr), 'Instrucciones')
+
+    const nEqt = equipmentTypes.length + 1
+    const nCat = templates.length + 1
+    const matrix: (string | { f: string })[][] = [['TIPO', 'NOMBRE TIPO', 'CODIGO ITR', 'TITULO ITR', 'DISCIPLINA', 'FASE', 'OBLIGATORIO (S/N)', 'CONDICION', 'NOTAS']]
+    let r = 2
+    for (const t of equipmentTypes) {
+      for (let i = 0; i < 6; i++) {
+        matrix.push([
+          t.code,
+          { f: `IF(A${r}="","",IFERROR(INDEX('Tipos de equipo'!$B$2:$B$${nEqt},MATCH(A${r},'Tipos de equipo'!$A$2:$A$${nEqt},0)),"¿tipo?"))` },
+          '',
+          { f: `IF(C${r}="","",IFERROR(INDEX('Catálogo ITR'!$B$2:$B$${nCat},MATCH(C${r},'Catálogo ITR'!$A$2:$A$${nCat},0)),"¿código?"))` },
+          { f: `IF(C${r}="","",IFERROR(INDEX('Catálogo ITR'!$C$2:$C$${nCat},MATCH(C${r},'Catálogo ITR'!$A$2:$A$${nCat},0)),""))` },
+          { f: `IF(C${r}="","",IFERROR(INDEX('Catálogo ITR'!$D$2:$D$${nCat},MATCH(C${r},'Catálogo ITR'!$A$2:$A$${nCat},0)),""))` },
+          '', '', '',
+        ])
+        r++
+      }
+    }
+    const wsM = XLSX.utils.aoa_to_sheet(matrix)
+    wsM['!cols'] = [9, 30, 12, 60, 11, 7, 14, 36, 36].map(w => ({ wch: w }))
+    XLSX.utils.book_append_sheet(wb, wsM, 'Matriz')
+
+    const wsT = XLSX.utils.aoa_to_sheet([['CODIGO', 'NOMBRE', 'CATEGORIA'], ...equipmentTypes.map(t => [t.code, t.name, t.category ?? ''])])
+    wsT['!cols'] = [12, 38, 22].map(w => ({ wch: w }))
+    XLSX.utils.book_append_sheet(wb, wsT, 'Tipos de equipo')
+
+    const wsC = XLSX.utils.aoa_to_sheet([
+      ['CODIGO', 'TITULO', 'DISCIPLINA', 'FASE', 'TIPOS QUE APLICAN (opcional, códigos separados por coma)'],
+      ...templates.map(t => [t.code, t.title, t.discipline_code ?? '', t.phase_code ?? '', '']),
+    ])
+    wsC['!cols'] = [10, 70, 12, 7, 44].map(w => ({ wch: w }))
+    XLSX.utils.book_append_sheet(wb, wsC, 'Catálogo ITR')
+
+    XLSX.writeFile(wb, 'CommUp_Matriz_ITR_por_tipo_de_equipo.xlsx')
+  }
+
   const busy = isPending || (progress !== null && progress.done < progress.total)
 
   return (
@@ -144,6 +197,12 @@ export default function MatrixView({
             style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', busy || !aiEnabled)}
           >
             Regenerar todo
+          </button>
+          <button onClick={downloadTemplate} title="Excel con tus tipos y el catálogo para llenar la matriz a mano" style={btn('#1e40af', 'var(--card-bg)', '#bfdbfe', false)}>
+            ↓ Plantilla Excel
+          </button>
+          <button disabled={busy} onClick={() => setShowImport(true)} title="Sube la plantilla llena: las filas entran como aceptadas" style={btn('#166534', '#dcfce7', '#bbf7d0', busy)}>
+            ↑ Importar desde Excel
           </button>
         </div>
       </div>
@@ -276,6 +335,8 @@ export default function MatrixView({
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Ningún tipo de equipo coincide con el filtro.</p>
         )}
       </div>
+
+      {showImport && <ImportMatrixModal onClose={() => setShowImport(false)} />}
     </div>
   )
 }
