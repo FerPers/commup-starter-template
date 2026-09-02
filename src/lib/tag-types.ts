@@ -112,12 +112,16 @@ export function sortTemplatesByRelevance<T extends { title: string; code: string
   templates: T[],
   tagType: TagTypeInfo | null,
   equipmentTypeId?: string | null,
+  matrixTemplateIds?: ReadonlySet<string> | string[] | null,
 ): (T & { recommended: boolean; exactType: boolean })[] {
   const kws = (tagType?.keywords ?? []).map(k => k.toLowerCase())
+  const matrix = matrixTemplateIds ? new Set(matrixTemplateIds) : null
   return templates
     .map(t => {
-      // Coincidencia fuerte: la plantilla está ligada al mismo tipo de equipo del tag.
-      const exactType = !!equipmentTypeId && t.equipment_type_id === equipmentTypeId
+      // Coincidencia fuerte: la matriz de la org (tipo de equipo × plantilla, aceptada
+      // por un editor) o la plantilla ligada directamente al mismo tipo de equipo.
+      const exactType = (!!matrix && 'id' in t && matrix.has((t as { id: string }).id))
+        || (!!equipmentTypeId && t.equipment_type_id === equipmentTypeId)
       const haystack = `${t.title} ${t.code}`.toLowerCase()
       const recommended = exactType || kws.some(kw => haystack.includes(kw))
       return { ...t, recommended, exactType }

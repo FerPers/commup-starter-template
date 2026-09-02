@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
+import { suggestItrsForTag, type TagAiSuggestion } from '@/app/actions/itr-matrix'
 import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
@@ -34,6 +35,7 @@ interface Props {
   subsystemId: string
   tagItrs: TagItr[]
   templates: ItrTemplate[]
+  matrixTemplateIds?: string[]
   orgMembers: OrgMember[]
   canEdit: boolean
 }
@@ -48,6 +50,7 @@ export default function TagItrTab({
   subsystemId,
   tagItrs,
   templates,
+  matrixTemplateIds,
   orgMembers,
   canEdit,
 }: Props) {
@@ -72,7 +75,20 @@ export default function TagItrTab({
 
   // Tag type detection for ITR recommendations
   const tagType = detectTagType(tagNumber)
-  const sortedTemplates = sortTemplatesByRelevance(templates, tagType, equipmentTypeId)
+  const sortedTemplates = sortTemplatesByRelevance(templates, tagType, equipmentTypeId, matrixTemplateIds)
+
+  // IA por tag (respaldo): propone, nunca asigna. El usuario elige y confirma.
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiSuggestions, setAiSuggestions] = useState<TagAiSuggestion[] | null>(null)
+
+  async function handleAiSuggest() {
+    setAiLoading(true); setAiError(null)
+    const res = await suggestItrsForTag(tagId)
+    setAiLoading(false)
+    if (res.error) { setAiError(res.error); return }
+    setAiSuggestions(res.suggestions ?? [])
+  }
   const recommended = sortedTemplates.filter(t => t.recommended)
   const others       = sortedTemplates.filter(t => !t.recommended)
 
@@ -120,14 +136,67 @@ export default function TagItrTab({
           {tagItrs.length === 0 ? 'No hay ITRs asignados a este tag.' : `${tagItrs.length} ITR${tagItrs.length > 1 ? 's' : ''} asignados`}
         </p>
         {canEdit && (
-          <button
-            onClick={() => setShowAssign(true)}
-            style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
-          >
-            + Asignar ITR
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={handleAiSuggest}
+              disabled={aiLoading}
+              title="Analiza el tag con IA y propone las plantillas que aplican por fase. Tú decides qué asignar."
+              style={{ padding: '8px 14px', background: '#f5f3ff', color: '#6d28d9', border: '1px solid #ddd6fe', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: aiLoading ? 'wait' : 'pointer' }}
+            >
+              {aiLoading ? 'Analizando…' : '✦ Sugerir con IA'}
+            </button>
+            <button
+              onClick={() => setShowAssign(true)}
+              style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+            >
+              + Asignar ITR
+            </button>
+          </div>
         )}
       </div>
+
+      {/* Sugerencias de IA (respaldo de la matriz) */}
+      {aiError && (
+        <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px', marginBottom: '14px' }}>{aiError}</div>
+      )}
+      {aiSuggestions && (
+        <div style={{ background: '#faf5ff', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#5b21b6' }}>
+              ✦ Propuesta de la IA para {tagNumber} · {aiSuggestions.length} plantilla{aiSuggestions.length !== 1 ? 's' : ''}
+            </p>
+            <button onClick={() => setAiSuggestions(null)} style={{ background: 'none', border: 'none', color: '#7c3aed', fontSize: '12px', cursor: 'pointer' }}>Cerrar</button>
+          </div>
+          {aiSuggestions.length === 0 && <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>La IA no encontró plantillas aplicables en el catálogo de la organización.</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {aiSuggestions.map(sg => {
+              const inList = templates.some(t => t.id === sg.template_id)
+              return (
+                <div key={sg.template_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                  <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: '#ede9fe', color: '#5b21b6', whiteSpace: 'nowrap' }}>Fase {sg.phase_code ?? '?'}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
+                      <span style={{ fontFamily: 'monospace' }}>{sg.template_code}</span> · {sg.title}
+                      {sg.discipline_code && <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>{sg.discipline_code}</span>}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{sg.reason}</div>
+                  </div>
+                  <span title="Confianza" style={{ fontSize: '11px', fontWeight: 700, color: sg.confidence >= 0.7 ? '#15803d' : sg.confidence >= 0.4 ? '#b45309' : '#dc2626', whiteSpace: 'nowrap' }}>{Math.round(sg.confidence * 100)}%</span>
+                  <button
+                    onClick={() => { setSelectedTemplate(sg.template_id); setShowAssign(true) }}
+                    disabled={!inList}
+                    title={inList ? 'Abre el formulario de asignación con esta plantilla' : 'Plantilla de otra disciplina: asígnala desde la lista completa'}
+                    style={{ padding: '5px 10px', fontSize: '12px', fontWeight: 600, background: inList ? '#3b82f6' : 'var(--gray-100)', color: inList ? '#fff' : 'var(--text-muted)', border: 'none', borderRadius: '6px', cursor: inList ? 'pointer' : 'not-allowed' }}
+                  >
+                    Usar
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+          <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>La IA propone; la asignación la confirmas tú en el formulario.</p>
+        </div>
+      )}
 
       {/* ITR list */}
       {tagItrs.length > 0 && (

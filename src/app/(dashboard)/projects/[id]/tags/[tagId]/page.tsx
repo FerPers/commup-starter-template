@@ -113,6 +113,17 @@ export default async function TagDetailPage({
     .eq('discipline_id', tag.disciplines.id)
     .order('code')
 
+  // Matriz de la org: plantillas aceptadas para el tipo de equipo de este tag
+  const { data: matrixRows } = tag.equipment_type_id
+    ? await supabase
+        .from('equipment_type_templates')
+        .select('itr_template_id')
+        .eq('org_id', membership.org_id)
+        .eq('equipment_type_id', tag.equipment_type_id)
+        .eq('status', 'accepted')
+    : { data: [] as { itr_template_id: string }[] }
+  const matrixTemplateIds = (matrixRows ?? []).map(r => r.itr_template_id)
+
   // Prev / next tag navigation
   const tagIndex = (allTagIds ?? []).findIndex(t => t.id === tagId)
   const prevTagId = tagIndex > 0 ? allTagIds![tagIndex - 1].id : null
@@ -160,6 +171,7 @@ export default async function TagDetailPage({
       currentUserRole={membership.role}
       tagItrs={tagItrs ?? []}
       templates={templates ?? []}
+      matrixTemplateIds={matrixTemplateIds}
       orgMembers={orgMembers ?? []}
       tagPunches={tagPunches ?? []}
       preservationPlans={preservationPlans ?? []}

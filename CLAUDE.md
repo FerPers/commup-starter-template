@@ -116,6 +116,11 @@ Rules for every new page/query/action:
 - Any client-supplied ID (`projectId`, `tagId`, …) must be ownership-verified against the caller's org (`src/lib/auth/access.ts`) before use — especially before any admin-client (service-role) query or `SECURITY DEFINER` RPC.
 - New `SECURITY DEFINER` functions must check `is_project_member`/`is_org_member` internally — they bypass RLS.
 
+## AI (Claude) — matriz ITR híbrida
+
+- `src/lib/ai/claude.ts` crea el cliente (`@anthropic-ai/sdk`, modelo `claude-opus-5`). Requiere el secreto `ANTHROPIC_API_KEY` (Wrangler secret en Cloudflare; `.env.local` en dev). Sin clave, las acciones de IA devuelven un error claro y la UI lo muestra.
+- `src/app/actions/itr-matrix.ts`: la IA **propone** filas en `equipment_type_templates` (tipo de equipo × plantilla ITR) con motivo y confianza; un editor acepta/rechaza en `/admin/templates/matrix`. Regenerar nunca pisa decisiones humanas. Respaldo por tag: `suggestItrsForTag` (no persiste). Reglas: la IA nunca asigna; sugiere por fase; puede cruzar disciplinas si lo justifica.
+
 ## Styling Convention
 
 Existing components use **inline styles** (React `style={{}}`) rather than Tailwind classes. Keep this pattern consistent within existing files. New modules may use either approach, but be consistent within a file.

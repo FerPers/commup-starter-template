@@ -141,6 +141,17 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
               Backup / Restore
             </button>
             <button
+              onClick={() => router.push('/admin/templates/matrix')}
+              style={{
+                padding: '9px 18px', background: '#f5f3ff', color: '#6d28d9',
+                borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                border: '1px solid #ddd6fe', cursor: 'pointer',
+              }}
+              title="Qué ITRs aplican a cada tipo de equipo (propuesto por IA, aprobado por ti)"
+            >
+              Matriz por tipo de equipo
+            </button>
+            <button
               onClick={() => setShowImportFromOrg(true)}
               style={{
                 padding: '9px 18px', background: '#eff6ff', color: '#2563eb',

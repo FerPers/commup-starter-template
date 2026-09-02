@@ -681,6 +681,73 @@ export type Database = {
           },
         ]
       }
+      equipment_type_templates: {
+        Row: {
+          confidence: number | null
+          equipment_type_id: string
+          id: string
+          itr_template_id: string
+          model: string | null
+          org_id: string
+          proposed_at: string
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          confidence?: number | null
+          equipment_type_id: string
+          id?: string
+          itr_template_id: string
+          model?: string | null
+          org_id: string
+          proposed_at?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          confidence?: number | null
+          equipment_type_id?: string
+          id?: string
+          itr_template_id?: string
+          model?: string | null
+          org_id?: string
+          proposed_at?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_type_templates_equipment_type_id_fkey"
+            columns: ["equipment_type_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_type_templates_itr_template_id_fkey"
+            columns: ["itr_template_id"]
+            isOneToOne: false
+            referencedRelation: "itr_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_type_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment_types: {
         Row: {
           category: string | null

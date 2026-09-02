@@ -51,6 +51,7 @@ export default function TagDetail({
   currentUserRole: string
   tagItrs: TagItr[]
   templates: ItrTemplate[]
+  matrixTemplateIds?: string[]
   orgMembers: OrgMember[]
   tagPunches: TagPunch[]
   preservationPlans: PreservationPlanRow[]
