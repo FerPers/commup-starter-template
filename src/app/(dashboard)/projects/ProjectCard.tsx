@@ -6,6 +6,7 @@ import { Card, Badge } from '@/components/ui'
 export interface ProjectCardData {
   id: string; name: string; code: string
   location: string | null; client: string | null
+  country: string | null; region: string | null
   start_date: string | null; end_date: string | null; status: string
 }
 
@@ -22,6 +23,7 @@ export default function ProjectCard({ project, phases, inactive = false }: {
   const locale = useLocale()
 
   const meta = [project.client, project.location].filter(Boolean).join(' · ')
+  const geo  = [project.country, project.region].filter(Boolean).join(' / ')
 
   function formatDate(d: string | null) {
     if (!d) return null
@@ -51,9 +53,16 @@ export default function ProjectCard({ project, phases, inactive = false }: {
               </div>
             </div>
           </div>
-          <Badge variant={inactive ? 'neutral' : 'success'} size="sm">
-            {inactive ? t('card.inactive') : t('card.active')}
-          </Badge>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+            <Badge variant={inactive ? 'neutral' : 'success'} size="sm">
+              {inactive ? t('card.inactive') : t('card.active')}
+            </Badge>
+            {geo && (
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
+                {geo}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Phases */}

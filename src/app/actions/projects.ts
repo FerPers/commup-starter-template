@@ -9,6 +9,8 @@ import type { ProjectStatus } from '@/types/database'
 export interface ProjectUpdatePayload {
   name?: string
   code?: string
+  country?: string | null
+  region?: string | null
   start_date?: string | null
   end_date?: string | null
   status?: ProjectStatus

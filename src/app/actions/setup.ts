@@ -23,7 +23,7 @@ interface DisciplineInput {
 interface SetupInput {
   userFullName: string
   org: { name: string; slug: string }
-  project: { name: string; code: string; location: string; client: string; start_date: string; end_date: string }
+  project: { name: string; code: string; location: string; client: string; country: string; region: string; start_date: string; end_date: string }
   phases: PhaseInput[]
   disciplines: DisciplineInput[]
 }
@@ -79,6 +79,8 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
       code: input.project.code.toUpperCase(),
       location: input.project.location || null,
       client: input.project.client || null,
+      country: input.project.country.trim() || null,
+      region: input.project.region.trim() || null,
       start_date: input.project.start_date || null,
       end_date: input.project.end_date || null,
       status: 'active',
@@ -122,6 +124,7 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
 
 interface ProjectInput {
   name: string; code: string; location: string; client: string
+  country: string; region: string
   start_date: string; end_date: string
 }
 
@@ -141,6 +144,8 @@ export const createProject = withAuth(
         code: input.code.toUpperCase(),
         location: input.location || null,
         client: input.client || null,
+        country: input.country.trim() || null,
+        region: input.region.trim() || null,
         start_date: input.start_date || null,
         end_date: input.end_date || null,
         status: 'active',

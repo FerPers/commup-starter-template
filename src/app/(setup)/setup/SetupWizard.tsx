@@ -68,6 +68,8 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
   const [projCode, setProjCode] = useState('')
   const [projLocation, setProjLocation] = useState('')
   const [projClient, setProjClient] = useState('')
+  const [projCountry, setProjCountry] = useState('')
+  const [projRegion, setProjRegion] = useState('')
   const [projStart, setProjStart] = useState('')
   const [projEnd, setProjEnd] = useState('')
 
@@ -95,6 +97,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         const result = await createProject({
           name: projName, code: projCode,
           location: projLocation, client: projClient,
+          country: projCountry, region: projRegion,
           start_date: projStart, end_date: projEnd,
         })
         if (result.error) {
@@ -107,7 +110,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         const result = await completeSetup({
           userFullName,
           org: { name: orgName, slug: orgSlug },
-          project: { name: projName, code: projCode, location: projLocation, client: projClient, start_date: projStart, end_date: projEnd },
+          project: { name: projName, code: projCode, location: projLocation, client: projClient, country: projCountry, region: projRegion, start_date: projStart, end_date: projEnd },
           phases,
           disciplines,
         })
@@ -264,6 +267,18 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
               <div>
                 <label style={labelStyle}>Cliente</label>
                 <input style={inputStyle} placeholder="Ej: PDVSA Gas" value={projClient} onChange={e => setProjClient(e.target.value)} />
+              </div>
+            </div>
+
+            {/* País / Región: jerarquía corporativa (País → Región → Campo). El proyecto es el Campo. */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={labelStyle}>País</label>
+                <input style={inputStyle} placeholder="Ej: Colombia" value={projCountry} onChange={e => setProjCountry(e.target.value)} />
+              </div>
+              <div>
+                <label style={labelStyle}>Región / Eje</label>
+                <input style={inputStyle} placeholder="Ej: Llanos" value={projRegion} onChange={e => setProjRegion(e.target.value)} />
               </div>
             </div>
 

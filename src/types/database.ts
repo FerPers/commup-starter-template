@@ -88,6 +88,8 @@ export interface Project {
   code: string
   location: string | null
   client: string | null
+  country: string | null
+  region: string | null
   start_date: string | null
   end_date: string | null
   status: ProjectStatus

@@ -800,6 +800,7 @@
       "desc": "Create your first project to start managing completion"
     },
     "active": "Active",
+    "noCountry": "No country",
     "inactive": "Inactive",
     "card": {
       "noMeta": "No client / location",

@@ -28,6 +28,8 @@ interface ProjectData {
   status: string
   client: string | null
   location: string | null
+  country: string | null
+  region: string | null
   start_date: string | null
   end_date: string | null
 }
@@ -49,6 +51,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
   const [name, setName] = useState(initial.name)
   const [code, setCode] = useState(initial.code)
   const [status, setStatus] = useState<ProjectStatus>(initial.status as ProjectStatus)
+  const [country, setCountry] = useState(initial.country ?? '')
+  const [region, setRegion] = useState(initial.region ?? '')
   const [startDate, setStartDate] = useState(initial.start_date?.slice(0, 10) ?? '')
   const [endDate, setEndDate] = useState(initial.end_date?.slice(0, 10) ?? '')
 
@@ -71,6 +75,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
     setName(project.name)
     setCode(project.code)
     setStatus(project.status as ProjectStatus)
+    setCountry(project.country ?? '')
+    setRegion(project.region ?? '')
     setStartDate(project.start_date?.slice(0, 10) ?? '')
     setEndDate(project.end_date?.slice(0, 10) ?? '')
     setError(null)
@@ -84,6 +90,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
         name: name.trim(),
         code: code.trim().toUpperCase(),
         status,
+        country: country.trim() || null,
+        region: region.trim() || null,
         start_date: startDate || null,
         end_date: endDate || null,
       })
@@ -96,6 +104,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
         name: name.trim(),
         code: code.trim().toUpperCase(),
         status,
+        country: country.trim() || null,
+        region: region.trim() || null,
         start_date: startDate || null,
         end_date: endDate || null,
       }))
@@ -138,7 +148,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                 </span>
               </div>
               <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
-                {[project.client, project.location].filter(Boolean).join(' · ') || 'Sin cliente / ubicación'}
+                {[project.country && [project.country, project.region].filter(Boolean).join(' / '), project.client, project.location].filter(Boolean).join(' · ') || 'Sin cliente / ubicación'}
               </p>
             </div>
           </div>
@@ -205,6 +215,14 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                   ))}
                 </select>
               </Field>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <Field label="País">
+                  <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Colombia" style={inputStyle} />
+                </Field>
+                <Field label="Región / Eje">
+                  <input value={region} onChange={e => setRegion(e.target.value)} placeholder="Llanos" style={inputStyle} />
+                </Field>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <Field label="Fecha inicio">
                   <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} />

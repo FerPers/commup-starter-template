@@ -800,6 +800,7 @@
       "desc": "Crea tu primer proyecto para comenzar a gestionar el completamiento"
     },
     "active": "Activos",
+    "noCountry": "Sin país",
     "inactive": "Inactivos",
     "card": {
       "noMeta": "Sin cliente / ubicación",

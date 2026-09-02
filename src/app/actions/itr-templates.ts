@@ -1,5 +1,8 @@
 'use server'
 
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
+
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
@@ -677,13 +680,15 @@ export const listImportableTemplates = withAuthOnly(
   },
 )
 
-export const cloneTemplateToActiveOrg = withAuthOnly(
-  { role: EDITOR_ROLES },
-  async (
-    ctx,
-    sourceTemplateId: string,
-    options?: { codeSuffix?: string },
-  ): Promise<{ id?: string; error?: string }> => {
+// Contexto mínimo que necesita la clonación (estructural: lo satisface el ctx
+// de withAuthOnly). Compartido por la importación unitaria y la masiva.
+type CloneCtx = { supabase: SupabaseClient<Database>; orgId: string }
+
+async function cloneTemplateInternal(
+  ctx: CloneCtx,
+  sourceTemplateId: string,
+  options?: { codeSuffix?: string },
+): Promise<{ id?: string; error?: string }> {
     // Verify the source template belongs to an org the user is a member of.
     const { data: source } = await ctx.supabase
       .from('itr_templates')
@@ -791,7 +796,61 @@ export const cloneTemplateToActiveOrg = withAuthOnly(
       }
     }
 
-    revalidatePath('/admin/templates')
     return { id: cloned.id }
+}
+
+export const cloneTemplateToActiveOrg = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (
+    ctx,
+    sourceTemplateId: string,
+    options?: { codeSuffix?: string },
+  ): Promise<{ id?: string; error?: string }> => {
+    const res = await cloneTemplateInternal(ctx, sourceTemplateId, options)
+    if (res.id) revalidatePath('/admin/templates')
+    return res
+  },
+)
+
+export interface BulkCloneResult {
+  created: number
+  skipped: number   // ya existían en la org activa (mismo código)
+  errors: { code: string; reason: string }[]
+}
+
+/**
+ * Importación masiva desde el catálogo / otra org: clona en secuencia todos
+ * los templates indicados. Los que ya existen (mismo código) se saltan sin
+ * error, para que "Importar todo" sea re-ejecutable.
+ */
+export const cloneTemplatesToActiveOrg = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (ctx, sourceTemplateIds: string[]): Promise<{ result?: BulkCloneResult; error?: string }> => {
+    const result: BulkCloneResult = { created: 0, skipped: 0, errors: [] }
+    const ids = [...new Set(sourceTemplateIds)].slice(0, 1000)
+
+    const { data: sources } = await ctx.supabase
+      .from('itr_templates')
+      .select('id, code')
+      .in('id', ids)
+    const codeById = new Map((sources ?? []).map(t => [t.id, t.code]))
+
+    const { data: existing } = await ctx.supabase
+      .from('itr_templates')
+      .select('code')
+      .eq('org_id', ctx.orgId)
+    const existingCodes = new Set((existing ?? []).map(t => t.code))
+
+    for (const id of ids) {
+      const code = codeById.get(id)
+      if (!code) { result.errors.push({ code: id, reason: 'Template origen no encontrado o sin acceso' }); continue }
+      if (existingCodes.has(code)) { result.skipped++; continue }
+      const res = await cloneTemplateInternal(ctx, id)
+      if (res.id) { result.created++; existingCodes.add(code) }
+      else result.errors.push({ code, reason: res.error ?? 'No se pudo clonar' })
+    }
+
+    if (result.created > 0) revalidatePath('/admin/templates')
+    return { result }
   },
 )

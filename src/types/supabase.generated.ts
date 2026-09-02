@@ -2658,36 +2658,42 @@ export type Database = {
         Row: {
           client: string | null
           code: string
+          country: string | null
           created_at: string
           end_date: string | null
           id: string
           location: string | null
           name: string
           org_id: string
+          region: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
         }
         Insert: {
           client?: string | null
           code: string
+          country?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
           location?: string | null
           name: string
           org_id: string
+          region?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
         }
         Update: {
           client?: string | null
           code?: string
+          country?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
           location?: string | null
           name?: string
           org_id?: string
+          region?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
         }

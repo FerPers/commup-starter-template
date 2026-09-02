@@ -29,7 +29,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   ] = await Promise.all([
     supabase
       .from('projects')
-      .select('id, name, code, location, client, start_date, end_date, status, created_at')
+      .select('id, name, code, location, client, country, region, start_date, end_date, status, created_at')
       .eq('id', id)
       .eq('org_id', membership.org_id)
       .single(),
