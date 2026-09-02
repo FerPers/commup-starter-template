@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import { importTags, findExistingTags, type TagRow, type ImportResult } from '@/app/actions/import'
 import { detectTagType } from '@/lib/tag-types'
+import { detectEquipmentTypeCode } from '@/lib/equipment-types'
 import { pickBestSheet, detectHeaderRow, cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
 
 // ── Column keyword mapping ──────────────────────────────────────
@@ -25,6 +26,8 @@ const COL_KEYWORDS: ColumnKeywords = {
   datasheet:        ['DATASHEET', 'DATA SHEET', 'DS NUMBER', 'DATASHEET NUMBER', 'NUMERO DATASHEET'],
   fluid_type:       ['FLUID TYPE', 'TIPO DE FLUIDO', 'TIPO FLUIDO', 'FLUIDO', 'FLUID'],
   mounting_typical: ['MOUNTING TYPICAL', 'TYPICAL', 'TIPICO DE MONTAJE', 'TIPICO MONTAJE', 'TÍPICO', 'TIPICO'],
+  // Va después de fluid_type/mounting_typical para que 'TIPO' (parcial) no se robe 'TIPO DE FLUIDO'
+  equipment_type:   ['EQUIPMENT TYPE', 'TIPO DE EQUIPO', 'TIPO EQUIPO', 'EQUIPMENT_TYPE', 'TIPO'],
 }
 // A valid tag must contain at least one letter and one digit (e.g. FT-101, ESDV-7621001)
 function isValidTag(val: string): boolean {
@@ -61,6 +64,7 @@ function parseRows(
       pid_drawing:          get('pid_drawing')        || undefined,
       fluid_type:           get('fluid_type')         || undefined,
       mounting_typical:     get('mounting_typical')   || undefined,
+      equipment_type_code:  get('equipment_type')     || undefined,
     })
   }
   return result
@@ -68,7 +72,7 @@ function parseRows(
 
 function downloadTemplate(disciplineCode: string) {
   const wb = XLSX.utils.book_new()
-  const baseHeaders = ['TAG', 'DESCRIPTION', 'AREA_CODE', 'AREA_NAME', 'SYSTEM_CODE', 'SYSTEM_NAME', 'SUBSYSTEM_CODE', 'SUBSYSTEM_NAME', 'P&ID', 'MANUFACTURER', 'MODEL', 'SERIAL', 'PRESERVATION', 'DATASHEET']
+  const baseHeaders = ['TAG', 'DESCRIPTION', 'EQUIPMENT TYPE', 'AREA_CODE', 'AREA_NAME', 'SYSTEM_CODE', 'SYSTEM_NAME', 'SUBSYSTEM_CODE', 'SUBSYSTEM_NAME', 'P&ID', 'MANUFACTURER', 'MODEL', 'SERIAL', 'PRESERVATION', 'DATASHEET']
   const isInst = disciplineCode === 'INST'
   const isMec  = !isInst && disciplineCode !== 'ELEC'
   const headers = [
@@ -78,10 +82,10 @@ function downloadTemplate(disciplineCode: string) {
   ]
   const sample =
     isInst
-      ? [['FT-101', 'Flow transmitter feed water', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO', 'DS-FT-101', 'TYP-INST-001']]
+      ? [['FT-101', 'Flow transmitter feed water', 'FT', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO', 'DS-FT-101', 'TYP-INST-001']]
       : disciplineCode === 'ELEC'
-        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO', 'DS-SWG-CPF-1']]
-        : [['P-101A', 'Booster Pump', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO', 'DS-P-101A', 'Gas Natural']]
+        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'SWG', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO', 'DS-SWG-CPF-1']]
+        : [['P-101A', 'Booster Pump', 'P', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO', 'DS-P-101A', 'Gas Natural']]
   const ws = XLSX.utils.aoa_to_sheet([headers, ...sample])
   XLSX.utils.book_append_sheet(wb, ws, 'Tags')
   XLSX.writeFile(wb, `CommUp_${disciplineCode || 'Tags'}_Template.xlsx`)
@@ -323,6 +327,7 @@ export default function ImportWizard({
             {[
               { key: 'TAG / ETIQUETA',           req: true,  note: 'ESDV-7621001, FT-101, P-762A' },
               { key: 'DESCRIPCION / EQUIPO',      req: true,  note: 'Descripción del instrumento' },
+              { key: 'TIPO EQUIPO / EQUIPMENT TYPE', req: false, note: 'Código o nombre del catálogo (P, TK, FT…). Si falta, se detecta por el prefijo del tag' },
               { key: 'P&ID',                      req: false, note: 'Número de plano P&ID' },
               { key: 'AREA_CODE / SE/Sitio',      req: false, note: 'Código de área' },
               { key: 'SYSTEM_CODE / SISTEMA',     req: false, note: 'Código de sistema' },
@@ -391,7 +396,7 @@ export default function ImportWizard({
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
                 <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
-                  <Th>#</Th><Th>TAG</Th><Th>Descripción</Th><Th>Tipo detectado</Th><Th>Disciplina</Th>
+                  <Th>#</Th><Th>TAG</Th><Th>Descripción</Th><Th>Tipo de equipo</Th><Th>Disciplina</Th>
                   <Th>Área / Sistema / Subsistema</Th>
                   {hasPid && <Th>P&ID</Th>}
                   <Th>Fabricante</Th>
@@ -414,9 +419,14 @@ export default function ImportWizard({
                       </td>
                       <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.description || '—'}</span></td>
                       <td style={tdStyle}>{(() => {
+                        // Tipo explícito del Excel (columna TIPO EQUIPO) o detectado por prefijo ISA
+                        if (row.equipment_type_code) {
+                          return <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', whiteSpace: 'nowrap' }}>{row.equipment_type_code}</span>
+                        }
                         const t = detectTagType(row.tag_number)
+                        const code = detectEquipmentTypeCode(row.tag_number)
                         return t
-                          ? <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>{t.typeName}</span>
+                          ? <span title="Detectado por el prefijo del tag" style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>{t.typeName}{code ? ` (${code})` : ''}</span>
                           : <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>—</span>
                       })()}</td>
                       <td style={tdStyle}>

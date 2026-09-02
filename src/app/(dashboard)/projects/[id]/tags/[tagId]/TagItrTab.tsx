@@ -30,6 +30,7 @@ interface Props {
   projectId: string
   tagId: string
   tagNumber: string
+  equipmentTypeId?: string | null
   subsystemId: string
   tagItrs: TagItr[]
   templates: ItrTemplate[]
@@ -43,6 +44,7 @@ export default function TagItrTab({
   projectId,
   tagId,
   tagNumber,
+  equipmentTypeId,
   subsystemId,
   tagItrs,
   templates,
@@ -70,7 +72,7 @@ export default function TagItrTab({
 
   // Tag type detection for ITR recommendations
   const tagType = detectTagType(tagNumber)
-  const sortedTemplates = sortTemplatesByRelevance(templates, tagType)
+  const sortedTemplates = sortTemplatesByRelevance(templates, tagType, equipmentTypeId)
   const recommended = sortedTemplates.filter(t => t.recommended)
   const others       = sortedTemplates.filter(t => !t.recommended)
 

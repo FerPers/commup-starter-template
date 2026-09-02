@@ -20,6 +20,7 @@ type Tag = {
   serial_number: string | null
   preservation_required: boolean
   pid_drawing: string | null
+  equipment_types?: { code: string; name: string } | null
   disciplines: Discipline
   subsystems: Subsystem
 }
@@ -319,6 +320,11 @@ export default function TagsView({
                     </td>
                     <td style={tdStyle}>
                       <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{tag.description || '—'}</span>
+                      {tag.equipment_types && (
+                        <span title={tag.equipment_types.name} style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {tag.equipment_types.name}
+                        </span>
+                      )}
                     </td>
                     <td style={tdStyle}>
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>

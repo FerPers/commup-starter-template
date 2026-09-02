@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { DEFAULT_PSSR_ITEMS } from '@/lib/constants/pssr'
+import { EQUIPMENT_TYPE_DEFAULTS } from '@/lib/equipment-types'
 
 interface PhaseInput {
   code: string
@@ -103,6 +104,12 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
     .insert(input.disciplines.map(d => ({ ...d, org_id: org.id })))
 
   if (disciplinesError) return { error: disciplinesError.message }
+
+  // 5b. Seed catálogo estándar de tipos de equipo (editable en Admin → Config)
+  const { error: eqtError } = await admin
+    .from('equipment_types')
+    .insert(EQUIPMENT_TYPE_DEFAULTS.map(t => ({ org_id: org.id, code: t.code, name: t.name, category: t.category })))
+  if (eqtError) return { error: eqtError.message }
 
   // 6. Seed default PSSR template
   const { data: pssrTemplate } = await admin

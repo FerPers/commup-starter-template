@@ -920,6 +920,25 @@
       "saving": "Saving…",
       "saved": "Saved!"
     },
+    "equipmentTypes": {
+      "title": "Equipment types",
+      "subtitle": "{count} types configured",
+      "help": "Catalog of pumps, filters, tanks, transmitters, valves… Assigned to each tag on import (EQUIPMENT TYPE column or ISA prefix detection) and used to suggest the applicable ITRs.",
+      "seedBtn": "Load standard catalog",
+      "seedHint": "Adds the missing standard types. Existing ones are untouched.",
+      "seeded": "{count} types added",
+      "newBtn": "+ New type",
+      "codePh": "Code (P, TK, FT…)",
+      "namePh": "Name (Pump, Tank…)",
+      "noCategory": "No category",
+      "save": "Save",
+      "saving": "Saving…",
+      "create": "Create type",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "empty": "No equipment types yet. Load the standard catalog or add the first one."
+    },
     "export": {
       "title": "Data Export",
       "subtitle": "Download all project data as an Excel workbook (Tags, ITRs, Punches, Preservation, Certificates).",

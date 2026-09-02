@@ -316,6 +316,7 @@ export default function TagDetail({
                 projectId={projectId}
                 tagId={tag.id}
                 tagNumber={tag.tag_number}
+                equipmentTypeId={tag.equipment_type_id ?? null}
                 subsystemId={tag.subsystems.id}
                 tagItrs={tagItrs}
                 templates={templates}

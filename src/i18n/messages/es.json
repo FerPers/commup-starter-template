@@ -920,6 +920,25 @@
       "saving": "Guardando…",
       "saved": "¡Guardado!"
     },
+    "equipmentTypes": {
+      "title": "Tipos de equipo",
+      "subtitle": "{count} tipos configurados",
+      "help": "Catálogo de bombas, filtros, tanques, transmisores, válvulas… Se asigna a cada tag al importar (columna TIPO EQUIPO o detección por prefijo ISA del tag) y sirve para sugerir los ITR que aplican.",
+      "seedBtn": "Cargar catálogo estándar",
+      "seedHint": "Agrega los tipos estándar que falten. No modifica los existentes.",
+      "seeded": "{count} tipos agregados",
+      "newBtn": "+ Nuevo tipo",
+      "codePh": "Código (P, TK, FT…)",
+      "namePh": "Nombre (Bomba, Tanque…)",
+      "noCategory": "Sin categoría",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "create": "Crear tipo",
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "empty": "No hay tipos de equipo. Carga el catálogo estándar o agrega el primero."
+    },
     "export": {
       "title": "Exportar Datos",
       "subtitle": "Descarga todos los datos del proyecto como archivo Excel (Tags, ITRs, Punches, Preservación, Certificados).",

@@ -2,6 +2,7 @@
 
 import { ADMIN_ROLES, OWNER_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
+import { EQUIPMENT_TYPE_DEFAULTS } from '@/lib/equipment-types'
 import { revalidatePath } from 'next/cache'
 
 // ═══════════════════════════════════════════════════════════
@@ -172,6 +173,91 @@ export const deleteDiscipline = withAuthOnly(
       .eq('id', disciplineId)
       .eq('org_id', ctx.orgId)
 
+    if (error) return { error: error.message }
+    revalidatePath('/admin/config')
+    return {}
+  },
+)
+
+// ═══════════════════════════════════════════════════════════
+// EQUIPMENT TYPES (catálogo por org: bombas, filtros, tanques, transmisores…)
+// ═══════════════════════════════════════════════════════════
+
+/** Siembra el catálogo estándar (solo los códigos que la org aún no tiene). */
+export const seedEquipmentTypes = withAuthOnly(
+  { role: ADMIN_ROLES },
+  async (ctx): Promise<{ error?: string; created?: number }> => {
+    const { data: existing, error: exErr } = await ctx.supabase
+      .from('equipment_types')
+      .select('code')
+      .eq('org_id', ctx.orgId)
+    if (exErr) return { error: exErr.message }
+    const have = new Set((existing ?? []).map(e => e.code.toUpperCase()))
+    const rows = EQUIPMENT_TYPE_DEFAULTS
+      .filter(t => !have.has(t.code))
+      .map(t => ({ org_id: ctx.orgId, code: t.code, name: t.name, category: t.category }))
+    if (rows.length === 0) return { created: 0 }
+    const { error } = await ctx.supabase.from('equipment_types').insert(rows)
+    if (error) return { error: error.message }
+    revalidatePath('/admin/config')
+    return { created: rows.length }
+  },
+)
+
+export const createEquipmentType = withAuth(
+  { role: ADMIN_ROLES },
+  async (
+    ctx,
+    input: { code: string; name: string; category: string },
+  ): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase.from('equipment_types').insert({
+      org_id: ctx.orgId,
+      code: input.code.trim().toUpperCase(),
+      name: input.name.trim(),
+      category: input.category.trim() || null,
+    })
+    if (error) return { error: error.message }
+    revalidatePath('/admin/config')
+    return {}
+  },
+)
+
+export const updateEquipmentType = withAuth(
+  { role: ADMIN_ROLES },
+  async (
+    ctx,
+    input: { equipmentTypeId: string; code: string; name: string; category: string },
+  ): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase
+      .from('equipment_types')
+      .update({
+        code: input.code.trim().toUpperCase(),
+        name: input.name.trim(),
+        category: input.category.trim() || null,
+      })
+      .eq('id', input.equipmentTypeId)
+      .eq('org_id', ctx.orgId)
+    if (error) return { error: error.message }
+    revalidatePath('/admin/config')
+    return {}
+  },
+)
+
+export const deleteEquipmentType = withAuthOnly(
+  { role: ADMIN_ROLES },
+  async (ctx, equipmentTypeId: string): Promise<{ error?: string }> => {
+    const { count } = await ctx.supabase
+      .from('tags')
+      .select('id', { count: 'exact', head: true })
+      .eq('equipment_type_id', equipmentTypeId)
+    if ((count ?? 0) > 0) {
+      return { error: `No se puede eliminar: ${count} tag(s) usan este tipo de equipo` }
+    }
+    const { error } = await ctx.supabase
+      .from('equipment_types')
+      .delete()
+      .eq('id', equipmentTypeId)
+      .eq('org_id', ctx.orgId)
     if (error) return { error: error.message }
     revalidatePath('/admin/config')
     return {}

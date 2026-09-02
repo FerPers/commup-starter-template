@@ -6,6 +6,7 @@ import { checkProjectAccess } from '@/lib/auth/access'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
 import { normalizeCode, normalizePidRef, textOrNull, textOr } from '@/lib/excel/normalize'
+import { detectEquipmentTypeCode, normalizeTypeKey } from '@/lib/equipment-types'
 import type { TablesInsert } from '@/types/supabase.generated'
 
 export interface TagRow {
@@ -82,6 +83,28 @@ export const importTags = withAuthOnly(
     if (discErr) return { error: discErr.message }
     const disciplineMap = new Map((disciplinesData ?? []).map(d => [d.code.toUpperCase(), d.id]))
 
+    // Tipos de equipo de la org: se resuelven por código o por nombre (columna
+    // TIPO EQUIPO); si el Excel no lo trae, por el prefijo ISA del tag.
+    const { data: eqtData } = await admin
+      .from('equipment_types')
+      .select('id, code, name')
+      .eq('org_id', ctx.orgId)
+    const eqtByKey = new Map<string, string>()
+    for (const e of eqtData ?? []) {
+      eqtByKey.set(normalizeTypeKey(e.code), e.id)
+      eqtByKey.set(normalizeTypeKey(e.name), e.id)
+    }
+    const unknownTypes = new Set<string>()
+    const resolveEquipmentType = (explicit: string | undefined, tagNumber: string): string | null => {
+      if (explicit?.trim()) {
+        const id = eqtByKey.get(normalizeTypeKey(explicit))
+        if (id) return id
+        unknownTypes.add(explicit.trim())
+      }
+      const detected = detectEquipmentTypeCode(tagNumber)
+      return detected ? eqtByKey.get(normalizeTypeKey(detected)) ?? null : null
+    }
+
     // ── Deduplicar por tag (última fila gana: es la revisión más reciente en la hoja) ──
     const byTag = new Map<string, { row: TagRow; index: number }>()
     const dupes = new Set<string>()
@@ -142,8 +165,17 @@ export const importTags = withAuthOnly(
           pid_drawing: normalizePidRef(row.pid_drawing),
           fluid_type: textOrNull(row.fluid_type),
           mounting_typical: textOrNull(row.mounting_typical),
+          equipment_type_id: resolveEquipmentType(row.equipment_type_code, tagNumber),
         },
       })
+    }
+
+    if (unknownTypes.size > 0) {
+      const list = [...unknownTypes]
+      result.warnings.push(`Tipos de equipo no reconocidos (se usó la detección por prefijo del tag): ${list.slice(0, 6).join(', ')}${list.length > 6 ? '…' : ''}. Créalos en Admin → Configuración → Tipos de equipo.`)
+    }
+    if ((eqtData ?? []).length === 0) {
+      result.warnings.push('La organización no tiene tipos de equipo configurados; los tags quedaron sin tipo. Carga el catálogo estándar en Admin → Configuración.')
     }
 
     // ── Upsert por lotes (fallback fila a fila solo si el lote falla) ──

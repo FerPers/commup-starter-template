@@ -108,20 +108,22 @@ export function detectTagType(tagNumber: string): TagTypeInfo | null {
  * Given a tag type and a list of templates, returns the templates sorted so
  * that matching ones come first, with a `recommended` flag on each.
  */
-export function sortTemplatesByRelevance<T extends { title: string; code: string }>(
+export function sortTemplatesByRelevance<T extends { title: string; code: string; equipment_type_id?: string | null }>(
   templates: T[],
   tagType: TagTypeInfo | null,
-): (T & { recommended: boolean })[] {
-  if (!tagType) return templates.map(t => ({ ...t, recommended: false }))
-
-  const kws = tagType.keywords.map(k => k.toLowerCase())
+  equipmentTypeId?: string | null,
+): (T & { recommended: boolean; exactType: boolean })[] {
+  const kws = (tagType?.keywords ?? []).map(k => k.toLowerCase())
   return templates
     .map(t => {
+      // Coincidencia fuerte: la plantilla está ligada al mismo tipo de equipo del tag.
+      const exactType = !!equipmentTypeId && t.equipment_type_id === equipmentTypeId
       const haystack = `${t.title} ${t.code}`.toLowerCase()
-      const recommended = kws.some(kw => haystack.includes(kw))
-      return { ...t, recommended }
+      const recommended = exactType || kws.some(kw => haystack.includes(kw))
+      return { ...t, recommended, exactType }
     })
     .sort((a, b) => {
+      if (a.exactType !== b.exactType) return a.exactType ? -1 : 1
       if (a.recommended === b.recommended) return 0
       return a.recommended ? -1 : 1
     })

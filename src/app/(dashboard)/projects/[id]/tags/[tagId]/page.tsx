@@ -44,6 +44,7 @@ export default async function TagDetailPage({
         sp_h, sp_hh, sp_l, sp_ll,
         signal_type, sil_level, io_address, junction_box, datasheet_number, revision,
         fluid_type, mounting_typical,
+        equipment_type_id, equipment_types(id, code, name),
         disciplines(id, code, name, color),
         subsystems(
           id, code, name,
@@ -106,7 +107,7 @@ export default async function TagDetailPage({
   // Templates for this tag's discipline (sequential — needs disciplineId)
   const { data: templates } = await supabase
     .from('itr_templates')
-    .select('id, code, title, phase_id, project_phases(id, code, name, color)')
+    .select('id, code, title, phase_id, equipment_type_id, project_phases(id, code, name, color)')
     .eq('org_id', membership.org_id)
     .eq('is_active', true)
     .eq('discipline_id', tag.disciplines.id)

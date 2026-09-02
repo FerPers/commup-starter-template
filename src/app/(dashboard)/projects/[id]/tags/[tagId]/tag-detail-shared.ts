@@ -19,6 +19,7 @@ export type TagItr = {
 }
 
 export type ItrTemplate = {
+  equipment_type_id?: string | null
   id: string
   code: string
   title: string
@@ -40,6 +41,8 @@ export type System     = { id: string; code: string; name: string; areas: Area }
 export type Subsystem  = { id: string; code: string; name: string; systems: System }
 
 export type Tag = {
+  equipment_type_id?: string | null
+  equipment_types?: { id: string; code: string; name: string } | null
   id: string
   tag_number: string
   description: string

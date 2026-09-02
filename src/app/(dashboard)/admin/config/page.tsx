@@ -11,7 +11,7 @@ export default async function AdminConfigPage() {
 
   const orgId = membership.org_id
 
-  const [{ data: org }, { data: phases }, { data: disciplines }, { data: projects }] = await Promise.all([
+  const [{ data: org }, { data: phases }, { data: disciplines }, { data: projects }, { data: equipmentTypes }] = await Promise.all([
     supabase
       .from('organizations')
       .select('id, name, logo_url, settings')
@@ -32,6 +32,12 @@ export default async function AdminConfigPage() {
       .select('id, name')
       .eq('org_id', orgId)
       .order('name'),
+    supabase
+      .from('equipment_types')
+      .select('id, code, name, category')
+      .eq('org_id', orgId)
+      .order('category')
+      .order('code'),
   ])
 
   const isCatalog = !!(org?.settings as Record<string, unknown> | null)?.is_template_catalog
@@ -41,6 +47,7 @@ export default async function AdminConfigPage() {
       org={org ?? { id: orgId, name: '', logo_url: null }}
       phases={phases ?? []}
       disciplines={disciplines ?? []}
+      equipmentTypes={equipmentTypes ?? []}
       projects={projects ?? []}
       isTemplateCatalog={isCatalog}
       isOwner={ctx.role === 'owner'}

@@ -5,12 +5,15 @@ import { useTranslations } from 'next-intl'
 import {
   createPhase, updatePhase, deletePhase,
   createDiscipline, updateDiscipline, deleteDiscipline,
+  seedEquipmentTypes, createEquipmentType, updateEquipmentType, deleteEquipmentType,
   updateOrgProfile, uploadOrgLogo, setOrgTemplateCatalog,
 } from '@/app/actions/config'
+import { EQUIPMENT_CATEGORIES } from '@/lib/equipment-types'
 
 type Org = { id: string; name: string; logo_url: string | null }
 type Phase = { id: string; code: string; name: string; color: string; order_index: number; certificate_name: string | null }
 type Discipline = { id: string; code: string; name: string; color: string }
+type EquipmentType = { id: string; code: string; name: string; category: string | null }
 type Project = { id: string; name: string }
 
 const PRESET_COLORS = [
@@ -155,12 +158,71 @@ function DisciplineRow({ disc, onSave, onDelete, isPending }: {
   )
 }
 
+// ── Equipment type row ─────────────────────────────────────────────────────
+
+function EquipmentTypeRow({ eqt, onSave, onDelete, isPending }: {
+  eqt: EquipmentType
+  onSave: (data: { code: string; name: string; category: string }) => void
+  onDelete: () => void
+  isPending: boolean
+}) {
+  const t = useTranslations('Config')
+  const [editing, setEditing] = useState(false)
+  const [code, setCode] = useState(eqt.code)
+  const [name, setName] = useState(eqt.name)
+  const [category, setCategory] = useState(eqt.category ?? '')
+
+  if (!editing) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 16px', borderBottom: '1px solid #f1f5f9' }}>
+        <span style={{
+          minWidth: '56px', textAlign: 'center', padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
+          fontFamily: 'ui-monospace, monospace', background: 'var(--gray-100)', color: 'var(--text-strong)',
+        }}>
+          {eqt.code}
+        </span>
+        <span style={{ fontSize: '13px', color: 'var(--text-strong)', flex: 1 }}>{eqt.name}</span>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button onClick={() => setEditing(true)} disabled={isPending} style={btnOutline}>{t('equipmentTypes.edit')}</button>
+          <button onClick={onDelete} disabled={isPending} style={btnDanger}>{t('equipmentTypes.delete')}</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', background: '#fafbfc' }}>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+        <input value={code} onChange={e => setCode(e.target.value)} placeholder={t('equipmentTypes.codePh')} maxLength={12}
+          style={{ ...inputStyle, width: '110px' }} />
+        <input value={name} onChange={e => setName(e.target.value)} placeholder={t('equipmentTypes.namePh')}
+          style={{ ...inputStyle, flex: '1 1 180px' }} />
+        <select value={category} onChange={e => setCategory(e.target.value)} style={{ ...inputStyle, width: '180px' }}>
+          <option value="">{t('equipmentTypes.noCategory')}</option>
+          {EQUIPMENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button
+          onClick={() => { onSave({ code, name, category }); setEditing(false) }}
+          disabled={isPending || !code.trim() || !name.trim()}
+          style={btnPrimary}
+        >
+          {isPending ? t('equipmentTypes.saving') : t('equipmentTypes.save')}
+        </button>
+        <button onClick={() => setEditing(false)} style={btnOutline}>{t('equipmentTypes.cancel')}</button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export default function OrgConfigView({
   org: initialOrg,
   phases: initialPhases,
   disciplines: initialDisciplines,
+  equipmentTypes: initialEquipmentTypes,
   projects,
   isTemplateCatalog: initialIsCatalog,
   isOwner,
@@ -168,6 +230,7 @@ export default function OrgConfigView({
   org: Org
   phases: Phase[]
   disciplines: Discipline[]
+  equipmentTypes: EquipmentType[]
   projects: Project[]
   isTemplateCatalog: boolean
   isOwner: boolean
@@ -188,6 +251,12 @@ export default function OrgConfigView({
   const [showNewPhase, setShowNewPhase] = useState(false)
 
   const [newDisc, setNewDisc] = useState({ code: '', name: '', color: '#10b981' })
+
+  const [showNewEqt, setShowNewEqt] = useState(false)
+
+  const [newEqt, setNewEqt] = useState({ code: '', name: '', category: '' })
+
+  const [seedMsg, setSeedMsg] = useState<string | null>(null)
   const [showNewDisc, setShowNewDisc] = useState(false)
 
   function act(fn: () => Promise<{ error?: string }>) {
@@ -481,6 +550,91 @@ export default function OrgConfigView({
                   onSave={data => act(() => updateDiscipline({ disciplineId: disc.id, ...data }))}
                   onDelete={() => act(() => deleteDiscipline(disc.id))}
                 />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* ── Equipment types ──────────────────────────────────── */}
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '8px', flexWrap: 'wrap' }}>
+            <div>
+              <h2 style={cardTitle}>{t('equipmentTypes.title')}</h2>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>
+                {t('equipmentTypes.subtitle', { count: initialEquipmentTypes.length })}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                disabled={isPending}
+                onClick={() => act(async () => {
+                  const res = await seedEquipmentTypes()
+                  if (!res.error) setSeedMsg(t('equipmentTypes.seeded', { count: res.created ?? 0 }))
+                  return res
+                })}
+                style={btnOutline}
+                title={t('equipmentTypes.seedHint')}
+              >
+                {t('equipmentTypes.seedBtn')}
+              </button>
+              <button onClick={() => setShowNewEqt(v => !v)} style={btnPrimary}>
+                {t('equipmentTypes.newBtn')}
+              </button>
+            </div>
+          </div>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px' }}>{t('equipmentTypes.help')}</p>
+          {seedMsg && <p style={{ fontSize: '12px', color: '#10b981', margin: '0 0 10px' }}>{seedMsg}</p>}
+
+          {showNewEqt && (
+            <div style={{ padding: '14px 16px', background: '#f0fdf4', borderRadius: '10px', border: '1px solid #bbf7d0', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                <input value={newEqt.code} onChange={e => setNewEqt(d => ({ ...d, code: e.target.value }))}
+                  placeholder={t('equipmentTypes.codePh')} maxLength={12} style={{ ...inputStyle, width: '110px' }} />
+                <input value={newEqt.name} onChange={e => setNewEqt(d => ({ ...d, name: e.target.value }))}
+                  placeholder={t('equipmentTypes.namePh')} style={{ ...inputStyle, flex: '1 1 160px' }} />
+                <select value={newEqt.category} onChange={e => setNewEqt(d => ({ ...d, category: e.target.value }))} style={{ ...inputStyle, width: '180px' }}>
+                  <option value="">{t('equipmentTypes.noCategory')}</option>
+                  {EQUIPMENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  disabled={isPending || !newEqt.code.trim() || !newEqt.name.trim()}
+                  onClick={() => act(async () => {
+                    const res = await createEquipmentType(newEqt)
+                    if (!res.error) { setNewEqt({ code: '', name: '', category: '' }); setShowNewEqt(false) }
+                    return res
+                  })}
+                  style={btnPrimary}
+                >
+                  {isPending ? t('equipmentTypes.saving') : t('equipmentTypes.create')}
+                </button>
+                <button onClick={() => setShowNewEqt(false)} style={btnOutline}>{t('equipmentTypes.cancel')}</button>
+              </div>
+            </div>
+          )}
+
+          <div style={{ border: '1px solid #f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+            {initialEquipmentTypes.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                {t('equipmentTypes.empty')}
+              </div>
+            ) : (
+              [...new Set(initialEquipmentTypes.map(e => e.category ?? ''))].map(cat => (
+                <div key={cat || '__none'}>
+                  <div style={{ padding: '6px 16px', background: 'var(--gray-50)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
+                    {cat || t('equipmentTypes.noCategory')}
+                  </div>
+                  {initialEquipmentTypes.filter(e => (e.category ?? '') === cat).map(eqt => (
+                    <EquipmentTypeRow
+                      key={eqt.id}
+                      eqt={eqt}
+                      isPending={isPending}
+                      onSave={data => act(() => updateEquipmentType({ equipmentTypeId: eqt.id, ...data }))}
+                      onDelete={() => act(() => deleteEquipmentType(eqt.id))}
+                    />
+                  ))}
+                </div>
               ))
             )}
           </div>

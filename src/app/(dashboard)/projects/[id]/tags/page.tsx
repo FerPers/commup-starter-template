@@ -23,6 +23,7 @@ export default async function TagsPage({ params }: { params: Promise<{ id: strin
       .from('tags')
       .select(`
         id, tag_number, description, status, manufacturer, model, serial_number, preservation_required, pid_drawing,
+        equipment_types(code, name),
         disciplines(id, code, name, color),
         subsystems(id, code, name, systems(id, code, name, areas(id, code, name)))
       `)
