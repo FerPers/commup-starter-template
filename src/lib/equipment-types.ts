@@ -41,6 +41,12 @@ function categoryFor(code: string, discipline: string): EquipmentCategory {
 }
 
 const EXTRA_TYPES: EquipmentTypeDefault[] = [
+  // Válvulas de control con nomenclatura ISA corta (FV/PV/LV/TV), muy comunes en Latinoamérica
+  { code: 'FV',   name: 'Válvula de Control de Flujo (FV)',      category: 'Válvulas',   discipline: 'INST' },
+  { code: 'PV',   name: 'Válvula de Control de Presión (PV)',    category: 'Válvulas',   discipline: 'INST' },
+  { code: 'LV',   name: 'Válvula de Control de Nivel (LV)',      category: 'Válvulas',   discipline: 'INST' },
+  { code: 'TV',   name: 'Válvula de Control de Temperatura (TV)', category: 'Válvulas',  discipline: 'INST' },
+  { code: 'GEN',  name: 'Generador (GEN)',        category: 'Eléctricos', discipline: 'ELEC' },
   { code: 'K',    name: 'Compresor (K)',          category: 'Rotativos',  discipline: 'MECH' },
   { code: 'HTR',  name: 'Calentador / Horno',     category: 'Estáticos',  discipline: 'MECH' },
   { code: 'AC',   name: 'Aeroenfriador',          category: 'Estáticos',  discipline: 'MECH' },
