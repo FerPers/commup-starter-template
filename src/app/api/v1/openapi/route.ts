@@ -22,7 +22,7 @@ const SPEC = {
     title:       'CommUp Public API',
     version:     '1.0.0',
     description: [
-      'REST API for Completion & Commissioning data. Integrates with P6, SAP, Maximo, and custom tools.',
+      'REST API for Completion & Commissioning data. Use it to build integrations with planning (Primavera P6), ERP/CMMS (SAP, Maximo) and custom tools.',
       '',
       '## Authentication',
       'All endpoints require a bearer token obtained from **Admin → API Keys** in the dashboard.',

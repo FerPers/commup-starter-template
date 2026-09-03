@@ -54,8 +54,7 @@ const ACTION_TYPES: { value: WorkflowActionType; label: string; description: str
   { value: 'block_certificate',   label: 'Bloquear certificado',   description: 'Marca el certificado como bloqueado con razón' },
   { value: 'notify_user',         label: 'Notificar usuario',      description: 'Crea alerta in-app para un rol o usuario' },
   { value: 'create_punch',        label: 'Crear punch',            description: 'Genera un punch automáticamente' },
-  { value: 'change_system_state', label: 'Cambiar estado sistema', description: 'Actualiza state del sistema/subsistema' },
-  { value: 'webhook_call',        label: 'Llamar webhook',         description: 'POST a URL externa con payload del evento' },
+  { value: 'webhook_call',        label: 'Llamar webhook',         description: 'POST a una URL https pública con el payload del evento' },
 ]
 
 const OPERATORS: { value: string; label: string; jsonlogic: string }[] = [

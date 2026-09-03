@@ -99,7 +99,6 @@ export default function UsersView({
   const [showInvite, setShowInvite] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [tempPassword, setTempPassword] = useState<{ email: string; password: string } | null>(null)
 
   const [filterRole, setFilterRole] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'pending'>('all')
@@ -148,11 +147,7 @@ export default function UsersView({
       if (res.error) { setError(res.error); return }
       setInviteEmail('')
       setShowInvite(false)
-      if (res.tempPassword) {
-        setTempPassword({ email, password: res.tempPassword })
-      } else {
-        notify(t('invite.successEmail'))
-      }
+      notify(t('invite.successEmail'))
     })
   }
 
@@ -216,36 +211,6 @@ export default function UsersView({
       {success && (
         <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: '8px', color: '#059669', fontSize: '13px' }}>
           {success}
-        </div>
-      )}
-
-      {/* Temp password box */}
-      {tempPassword && (
-        <div style={{
-          marginBottom: '16px', padding: '16px 20px', background: '#fffbeb',
-          border: '1px solid #fcd34d', borderRadius: '10px',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-            <div>
-              <p style={{ margin: '0 0 6px', fontSize: '13px', fontWeight: 600, color: '#92400e' }}>
-                {t('tempPassword.title')}
-              </p>
-              <p style={{ margin: '0 0 4px', fontSize: '13px', color: '#78350f' }}>
-                {t('tempPassword.emailLabel')} <strong>{tempPassword.email}</strong>
-              </p>
-              <p style={{ margin: 0, fontSize: '13px', color: '#78350f' }}>
-                {t('tempPassword.passwordLabel')} <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{tempPassword.password}</strong>
-              </p>
-              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#a16207' }}>
-                {t('tempPassword.hint')}
-              </p>
-            </div>
-            <button
-              onClick={() => setTempPassword(null)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a16207', fontSize: '18px', lineHeight: 1, padding: '2px' }}
-              aria-label={t('tempPassword.close')}
-            >×</button>
-          </div>
         </div>
       )}
 

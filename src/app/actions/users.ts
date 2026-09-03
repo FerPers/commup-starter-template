@@ -9,11 +9,6 @@ import { logActivity } from '@/lib/log-activity'
 
 // ── inviteUser ─────────────────────────────────────────────────────────────
 
-function generateTempPassword(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$'
-  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-}
-
 const INVITABLE_ROLES: OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client']
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://commup.app'
@@ -23,7 +18,7 @@ export const inviteUser = withAuth(
   async (
     ctx,
     input: { email: string; role: string },
-  ): Promise<{ error?: string; tempPassword?: string }> => {
+  ): Promise<{ error?: string }> => {
   const { email } = input
   const role = input.role as OrgMemberRole
   if (!INVITABLE_ROLES.includes(role)) return { error: 'Rol inválido' }
@@ -98,35 +93,9 @@ export const inviteUser = withAuth(
     return {}
   }
 
-  // Email invite failed (email provider not configured) — create with temp password
-  const tempPassword = generateTempPassword()
-  const { data: created, error: createErr } = await admin.auth.admin.createUser({
-    email,
-    password: tempPassword,
-    email_confirm: true,
-  })
-
-  if (createErr) return { error: createErr.message }
-  if (!created?.user) return { error: 'Error al crear usuario' }
-
-  await admin.from('profiles').upsert(
-    { id: created.user.id, full_name: email.split('@')[0] },
-    { onConflict: 'id' }
-  )
-  const { error: memberErr } = await admin
-    .from('org_members')
-    .insert({ org_id: ctx.orgId, user_id: created.user.id, role })
-
-  if (memberErr) return { error: memberErr.message }
-
-  await logActivity(ctx.supabase, {
-    orgId: ctx.orgId, userId: ctx.userId,
-    entityType: 'user', entityId: created.user.id,
-    action: 'invited', payload: { email, role },
-  })
-
-  revalidatePath('/admin/users')
-  return { tempPassword }
+  // Sin fallback de contraseña temporal (Sprint S): el SMTP está configurado
+  // y una clave generada en servidor y mostrada en pantalla es un riesgo.
+  return { error: `No se pudo enviar la invitación por correo: ${inviteErr?.message ?? 'error desconocido'}. Revisa la configuración SMTP en Supabase Auth.` }
   },
 )
 

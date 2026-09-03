@@ -825,13 +825,6 @@
       "cancel": "Cancelar",
       "successEmail": "Invitación enviada por email"
     },
-    "tempPassword": {
-      "title": "Usuario creado — comparte estas credenciales manualmente",
-      "hint": "El usuario puede cambiar su contraseña desde su perfil después de ingresar.",
-      "emailLabel": "Email:",
-      "passwordLabel": "Contraseña temporal:",
-      "close": "Cerrar"
-    },
     "table": {
       "colUser": "Usuario",
       "colEmail": "Email",

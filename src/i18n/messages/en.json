@@ -825,13 +825,6 @@
       "cancel": "Cancel",
       "successEmail": "Invitation sent by email"
     },
-    "tempPassword": {
-      "title": "User created — share these credentials manually",
-      "hint": "The user can change their password from their profile after signing in.",
-      "emailLabel": "Email:",
-      "passwordLabel": "Temporary password:",
-      "close": "Close"
-    },
     "table": {
       "colUser": "User",
       "colEmail": "Email",

@@ -29,12 +29,71 @@
 //   > 5        → abandoned
 //
 // Deploy: supabase functions deploy webhook-dispatcher --no-verify-jwt
+//   (verify_jwt off en gateway; la función exige Bearer service key — ver requireServiceCaller)
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
 const SUPABASE_URL      = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+// ── Auth: solo llamadas con service key (Sprint S 2026-09-03) ───────────────
+// verify_jwt=false en el gateway porque el trigger pg_net envía la service key
+// guardada en Vault (puede estar rotada). Validamos aquí: igualdad con la key
+// del runtime o, si difiere, prueba contra la Admin API (solo service_role).
+async function requireServiceCaller(req: Request): Promise<Response | null> {
+  const auth = req.headers.get('authorization') ?? ''
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  if (!token) return new Response('Unauthorized', { status: 401 })
+  if (token === SERVICE_ROLE_KEY) return null
+  try {
+    const probe = createClient(SUPABASE_URL, token, { auth: { persistSession: false } })
+    const { error } = await probe.auth.admin.listUsers({ page: 1, perPage: 1 })
+    if (!error) return null
+  } catch { /* cae al 401 */ }
+  return new Response('Unauthorized', { status: 401 })
+}
+
+// ── Anti-SSRF: endpoints solo https hacia hosts públicos ────────────────────
+const BLOCKED_HOST_RE = /^(localhost|.*\.localhost|.*\.local|.*\.internal|.*\.arpa|metadata\.google\.internal)$/i
+
+function isPrivateIp(ip: string): boolean {
+  const l = ip.toLowerCase()
+  if (l.includes(':')) {
+    return l === '::' || l === '::1' || l.startsWith('fc') || l.startsWith('fd') ||
+      l.startsWith('fe80') || l.startsWith('::ffff:')
+  }
+  const p = l.split('.').map(Number)
+  if (p.length !== 4 || p.some(n => Number.isNaN(n))) return true
+  return p[0] === 0 || p[0] === 10 || p[0] === 127 || p[0] >= 224 ||
+    (p[0] === 169 && p[1] === 254) ||
+    (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+    (p[0] === 192 && p[1] === 168) ||
+    (p[0] === 100 && p[1] >= 64 && p[1] <= 127)
+}
+
+async function assertPublicHttpsUrl(raw: string): Promise<void> {
+  let u: URL
+  try { u = new URL(raw) } catch { throw new Error('URL inválida') }
+  if (u.protocol !== 'https:') throw new Error('Solo se permiten URLs https')
+  if (u.username || u.password) throw new Error('URL con credenciales no permitida')
+  const host = u.hostname.replace(/^\[|\]$/g, '')
+  if (BLOCKED_HOST_RE.test(host)) throw new Error(`Host no permitido: ${host}`)
+  if (/^[\d.]+$/.test(host) || host.includes(':')) {
+    if (isPrivateIp(host)) throw new Error(`IP privada no permitida: ${host}`)
+    return
+  }
+  const addrs: string[] = []
+  try {
+    const [a, aaaa] = await Promise.allSettled([
+      Deno.resolveDns(host, 'A'),
+      Deno.resolveDns(host, 'AAAA'),
+    ])
+    if (a.status === 'fulfilled') addrs.push(...a.value)
+    if (aaaa.status === 'fulfilled') addrs.push(...aaaa.value)
+  } catch { /* runtime sin resolveDns: quedan los filtros por nombre */ }
+  if (addrs.some(isPrivateIp)) throw new Error(`Host resuelve a una IP privada: ${host}`)
+}
 const MAX_ATTEMPTS      = 5
 const DISPATCH_TIMEOUT  = 10_000   // 10 s per outbound request
 
@@ -83,8 +142,10 @@ async function dispatchDelivery(
   const timeout    = setTimeout(() => controller.abort(), DISPATCH_TIMEOUT)
 
   try {
+    await assertPublicHttpsUrl(delivery.endpoint_url)
     const res = await fetch(delivery.endpoint_url, {
       method:  'POST',
+      redirect: 'manual',
       headers: {
         'Content-Type':       'application/json',
         'X-CommUp-Event':     delivery.event_type,
@@ -189,6 +250,9 @@ Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
   }
+
+  const denied = await requireServiceCaller(req)
+  if (denied) return denied
 
   let body: { event_id?: string; mode?: string }
   try {

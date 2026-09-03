@@ -112,9 +112,12 @@ All 65 tables have **Postgres Row Level Security** enabled (199 policies routed 
 
 Rules for every new page/query/action:
 - Always go through an authenticated Supabase client; never the service-role key in client code.
-- **New/modified server actions must use `withAuth`/`withAuthOnly`** (`src/lib/auth/withAuth.ts`). Legacy actions still hand-roll `getActiveMembership()` + role checks — migrate opportunistically (multi-session plan S2-S8 in progress).
+- **All server actions use `withAuth`/`withAuthOnly`** (`src/lib/auth/withAuth.ts`) — 33/36 modules; the 3 exceptions (`alerts`, `locale`, `theme`) are user-scoped preferences with no org data. Keep it that way for every new action.
 - Any client-supplied ID (`projectId`, `tagId`, …) must be ownership-verified against the caller's org (`src/lib/auth/access.ts`) before use — especially before any admin-client (service-role) query or `SECURITY DEFINER` RPC.
-- New `SECURITY DEFINER` functions must check `is_project_member`/`is_org_member` internally — they bypass RLS.
+- New `SECURITY DEFINER` functions must check `is_project_member`/`is_org_member` internally — they bypass RLS. Revoke `EXECUTE` from `anon` on helpers (see migration `20260903150000`).
+- **Edge Functions** (`supabase/functions/evaluate-workflow`, `webhook-dispatcher`) are deployed with `verify_jwt=false` because the pg_net trigger sends the Vault-stored service key. Each function authenticates by itself (`requireServiceCaller`: Bearer must equal the runtime service key or pass the Auth Admin API probe). Every executor mutation is scoped to `event.project_id`/`event.org_id`; outbound `fetch` goes through `assertPublicHttpsUrl` (https only, no private/loopback/metadata hosts, `redirect: 'manual'`). Never add an action that takes a free table name or id.
+- **Security headers** live in `next.config.ts` (`headers()` + `poweredByHeader: false`): CSP, HSTS, nosniff, frame DENY, Referrer-Policy, Permissions-Policy. CSP has `'unsafe-inline'` for scripts because OpenNext has no per-request nonce (no middleware). If you add an external script/API host, add it to the CSP or it is silently blocked.
+- Invitations are email-only (Supabase SMTP). There is no temp-password fallback — do not reintroduce one.
 
 ## AI (Claude) — matriz ITR híbrida
 
@@ -141,7 +144,8 @@ Existing components use **inline styles** (React `style={{}}`) rather than Tailw
 
 **Known gaps / active backlog:**
 - KPI history is project-level only (no per-phase snapshots → no S-curves yet)
-- `withAuth` wrapper adopted in only ~2 of 33 action files (migration in progress)
-- `src/types/database.ts` hand-maintained → ~131 `any`/`as unknown as` casts at query boundaries (goal: generate from schema)
+- `src/types/supabase.generated.ts` is generated from the schema; `src/types/database.ts` keeps hand-written interfaces on top. Residual `as unknown as` casts remain at some query boundaries
 - A handful of 800–1500-line client components pending decomposition (`ItrExecution.tsx`, `TemplateBuilder.tsx`, `TagDetail.tsx`)
-- Performance unvalidated at industrial scale (50k+ tags)
+- Performance unvalidated at industrial scale (50k+ tags). List pages (tags, ITRs, punches, KPIs, explorer) load full datasets without pagination; Supabase caps at 1000 rows by default → Sprint E (paginación + agregados SQL) pending
+- No automated tests in repo (TestSprite E2E ran externally 2026-07). Sprint T pending
+- Offline queue covers ITR responses only (not photos, punches, signatures). Sell "offline ITR execution", not "full offline"
