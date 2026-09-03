@@ -34,7 +34,7 @@ npm run cf-typegen   # Regenerate env.d.ts from Wrangler bindings
 - **Cloudflare Workers** — deployed via `@opennextjs/cloudflare` (OpenNext)
 - **`@supabase/ssr`** — SSR-safe Supabase client with cookie-based sessions
 - **pdf-lib** for server-side PDFs (NOT @react-pdf/renderer — not Workers-compatible); shared renderer in `src/lib/pdf/renderer.ts`
-- **xlsx** for Excel import/export (with formula-injection guard)
+- **xlsx** (SheetJS CE 0.20.x, installed from the `https://cdn.sheetjs.com/xlsx-<ver>/xlsx-<ver>.tgz` tarball — the npm registry package is frozen at 0.18.5 with unfixed CVEs; do not `npm i xlsx@latest`) for Excel import/export (with formula-injection guard)
 - **next-intl** for i18n; **web-push** for notifications; PWA installable
 
 ## Route Architecture
