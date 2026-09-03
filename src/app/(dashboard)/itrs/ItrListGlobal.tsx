@@ -1,34 +1,20 @@
 'use client'
 
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X, Download } from 'lucide-react'
-import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } from '@/components/ui'
+import { Button, Input, Select, EmptyState, DataTable, Pagination, type DataTableColumn } from '@/components/ui'
 import { bulkUpdateItrStatus } from '@/app/actions/bulk'
+import { exportItrList } from '@/app/actions/itr-list'
+import { useUrlFilters } from '@/lib/list/useUrlFilters'
+import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
+import type { SortDir } from '@/lib/list/params'
 
-const PAGE_SIZE = 50
-
-type Project = { id: string; name: string; code: string }
-
-type ItrRow = {
-  id: string
-  itr_number: string
-  status: string
-  progress_pct: number
-  scheduled_date: string | null
-  created_at: string
-  project_id: string
-  projects: { id: string; name: string; code: string } | null
-  itr_templates: { code: string; title: string; disciplines: { code: string; name: string; color: string } } | null
-  tags: { id: string; tag_number: string; description: string } | null
-  project_phases: { code: string; name: string; color: string } | null
-  itr_assignments: Array<{ user_id: string; role: string; profiles: { full_name: string } | null }>
-  itr_signatures: Array<{ role: string; signed_at: string }>
-}
-
-type Phase = { id: string; code: string; name: string; color: string; order_index: number }
+type Project    = { id: string; name: string; code: string }
+type Phase      = { id: string; code: string; name: string; color: string; order_index: number }
+type Discipline = { code: string; name: string; color: string }
 
 const ITR_STYLE: Record<string, { color: string; bg: string }> = {
   not_started: { color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
@@ -39,20 +25,38 @@ const ITR_STYLE: Record<string, { color: string; bg: string }> = {
 }
 
 const ITR_STATUS_KEYS = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
-
 const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', client: 'C' }
 
+// Sprint E: lista global paginada en servidor; filtros/orden/página en la URL.
 export default function ItrListGlobal({
   projects,
-  itrs,
+  rows,
+  total,
+  page,
+  pageSize,
+  counts,
+  filters,
+  sort,
+  dir,
   phases,
+  disciplines,
 }: {
   projects: Project[]
-  itrs: ItrRow[]
+  rows: ItrListRow[]
+  total: number
+  page: number
+  pageSize: number
+  counts: ItrStatusCounts
+  filters: { status: string; phase: string; disc: string; q: string; project: string }
+  sort: ItrSortKey
+  dir: SortDir
   phases: Phase[]
+  disciplines: Discipline[]
 }) {
   const t  = useTranslations('ItrList')
   const tc = useTranslations('Common')
+  const router = useRouter()
+  const url = useUrlFilters()
 
   const itrStatusLabels: Record<string, string> = {
     not_started: t('itrStatus.not_started'),
@@ -62,81 +66,29 @@ export default function ItrListGlobal({
     rejected:    t('itrStatus.rejected'),
   }
 
-  const router = useRouter()
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterPhase, setFilterPhase] = useState('')
-  const [filterDisc, setFilterDisc] = useState('')
-  const [filterProject, setFilterProject] = useState('')
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
+  // Búsqueda con debounce → URL
+  const [search, setSearch] = useState(filters.q)
+  useEffect(() => {
+    const handle = setTimeout(() => { if (search !== filters.q) url.set({ q: search }) }, 350)
+    return () => clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe disparar cuando cambia lo que escribe el usuario
+  }, [search])
 
-  // Bulk selection
+  // Bulk selection (página visible)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkStatus, setBulkStatus] = useState<Enums<'itr_status'> | ''>('')
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkError, setBulkError] = useState('')
-  const selectAllRef = useRef<HTMLInputElement>(null)
+  const [isExporting, startExport] = useTransition()
 
-  const disciplines = useMemo(() => {
-    const seen = new Set<string>()
-    const list: { code: string; name: string; color: string }[] = []
-    for (const itr of itrs) {
-      const d = itr.itr_templates?.disciplines
-      if (d && !seen.has(d.code)) { seen.add(d.code); list.push(d) }
-    }
-    return list.sort((a, b) => a.code.localeCompare(b.code))
-  }, [itrs])
-
-  const filtered = useMemo(() => {
-    return itrs.filter(itr => {
-      if (filterProject && itr.project_id !== filterProject) return false
-      if (filterStatus && itr.status !== filterStatus) return false
-      if (filterPhase && itr.project_phases?.code !== filterPhase) return false
-      if (filterDisc && itr.itr_templates?.disciplines?.code !== filterDisc) return false
-      if (search) {
-        const q = search.toLowerCase()
-        if (
-          !itr.itr_number.toLowerCase().includes(q) &&
-          !(itr.tags?.tag_number ?? '').toLowerCase().includes(q) &&
-          !(itr.itr_templates?.title ?? '').toLowerCase().includes(q) &&
-          !(itr.projects?.name ?? '').toLowerCase().includes(q)
-        ) return false
-      }
-      return true
-    })
-  }, [itrs, filterStatus, filterPhase, filterDisc, filterProject, search])
-
-  const counts = useMemo(() => {
-    const c: Record<string, number> = {}
-    for (const itr of itrs) c[itr.status] = (c[itr.status] ?? 0) + 1
-    return c
-  }, [itrs])
-
-  const hasFilters = filterStatus || filterPhase || filterDisc || filterProject || search
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  // Reset selections when filters change
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Bulk selection must reset when filters narrow the list to avoid acting on items no longer visible
-    setSelectedIds(new Set())
-    setBulkError('')
-  }, [filterStatus, filterPhase, filterDisc, filterProject, search])
-
-  // Indeterminate state on select-all checkbox
-  const allFilteredSelected = filtered.length > 0 && filtered.every(i => selectedIds.has(i.id))
-  const someSelected = selectedIds.size > 0 && !allFilteredSelected
-  useEffect(() => {
-    if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected
-  }, [someSelected])
+  const selectedRows = useMemo(() => rows.filter(r => selectedIds.has(r.id)), [rows, selectedIds])
+  const allPageSelected = rows.length > 0 && selectedRows.length === rows.length
+  const totalAll = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts])
+  const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.project || filters.q)
+  const busy = url.isPending
 
   function toggleSelectAll() {
-    if (allFilteredSelected) {
-      setSelectedIds(new Set())
-    } else {
-      setSelectedIds(new Set(filtered.map(i => i.id)))
-    }
+    setSelectedIds(allPageSelected ? new Set() : new Set(rows.map(i => i.id)))
   }
 
   function toggleRow(id: string) {
@@ -149,10 +101,10 @@ export default function ItrListGlobal({
   }
 
   async function handleBulkApply() {
-    if (!bulkStatus || selectedIds.size === 0) return
+    if (!bulkStatus || selectedRows.length === 0) return
     setBulkLoading(true)
     setBulkError('')
-    const { error } = await bulkUpdateItrStatus(Array.from(selectedIds), bulkStatus)
+    const { error } = await bulkUpdateItrStatus(selectedRows.map(r => r.id), bulkStatus)
     setBulkLoading(false)
     if (error) { setBulkError(error); return }
     setSelectedIds(new Set())
@@ -161,41 +113,60 @@ export default function ItrListGlobal({
   }
 
   function exportCsv() {
-    const headers = [
-      t('exportHeaders.project'), t('exportHeaders.itr'), t('exportHeaders.tag'),
-      t('exportHeaders.tagDesc'), t('exportHeaders.template'), t('exportHeaders.phase'),
-      t('exportHeaders.discipline'), t('exportHeaders.inspector'), t('exportHeaders.scheduledDate'),
-      t('exportHeaders.progress'), t('exportHeaders.status'),
-      t('exportHeaders.signE'), t('exportHeaders.signS'), t('exportHeaders.signC'),
-    ]
-    const rows = filtered.map(itr => {
-      const executor = itr.itr_assignments.find(a => a.role === 'executor')
-      return [
-        itr.projects?.code ?? '',
-        itr.itr_number,
-        itr.tags?.tag_number ?? '',
-        itr.tags?.description ?? '',
-        itr.itr_templates?.title ?? '',
-        itr.project_phases?.code ?? '',
-        itr.itr_templates?.disciplines?.code ?? '',
-        executor?.profiles?.full_name ?? '',
-        itr.scheduled_date ?? '',
-        String(itr.progress_pct),
-        itr.status,
-        itr.itr_signatures.some(s => s.role === 'executor') ? 'S' : 'N',
-        itr.itr_signatures.some(s => s.role === 'supervisor') ? 'S' : 'N',
-        itr.itr_signatures.some(s => s.role === 'client') ? 'S' : 'N',
+    startExport(async () => {
+      const res = await exportItrList({ filters: { status: filters.status, phase: filters.phase, disc: filters.disc, q: filters.q, project: filters.project } })
+      if (res.error || !res.rows) { setBulkError(res.error ?? 'Export error'); return }
+      const headers = [
+        t('exportHeaders.project'), t('exportHeaders.itr'), t('exportHeaders.tag'),
+        t('exportHeaders.tagDesc'), t('exportHeaders.template'), t('exportHeaders.phase'),
+        t('exportHeaders.discipline'), t('exportHeaders.inspector'), t('exportHeaders.scheduledDate'),
+        t('exportHeaders.progress'), t('exportHeaders.status'),
+        t('exportHeaders.signE'), t('exportHeaders.signS'), t('exportHeaders.signC'),
       ]
+      const body = res.rows.map(itr => {
+        const executor = itr.assignments.find(a => a.role === 'executor')
+        return [
+          itr.project_code ?? '',
+          itr.itr_number,
+          itr.tag_number ?? '',
+          itr.tag_description ?? '',
+          itr.template_title ?? '',
+          itr.phase_code ?? '',
+          itr.discipline_code ?? '',
+          executor?.full_name ?? '',
+          itr.scheduled_date ?? '',
+          String(itr.progress_pct),
+          itr.status,
+          itr.signatures.some(s => s.role === 'executor') ? 'S' : 'N',
+          itr.signatures.some(s => s.role === 'supervisor') ? 'S' : 'N',
+          itr.signatures.some(s => s.role === 'client') ? 'S' : 'N',
+        ]
+      })
+      const csv = [headers, ...body].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+      const href = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = href
+      a.download = `itrs_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(href)
     })
-    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `itrs_${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
   }
+
+  function toggleSort(key: ItrSortKey) {
+    if (sort === key) url.set({ sort: key, dir: dir === 'asc' ? 'desc' : 'asc' }, { resetPage: false })
+    else url.set({ sort: key, dir: key === 'created_at' ? 'desc' : 'asc' }, { resetPage: false })
+  }
+
+  const sortable = (label: string, key: ItrSortKey) => (
+    <button
+      onClick={() => toggleSort(key)}
+      style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', gap: 4, alignItems: 'center', color: sort === key ? 'var(--primary-500)' : 'inherit' }}
+    >
+      {label}
+      <span style={{ fontSize: 10, opacity: sort === key ? 1 : 0.4 }}>{sort === key ? (dir === 'asc' ? '↑' : '↓') : '↕'}</span>
+    </button>
+  )
 
   return (
     <div style={{ padding: 32, maxWidth: 1400 }}>
@@ -204,15 +175,15 @@ export default function ItrListGlobal({
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: 0 }}>{tc('allOrg')}</p>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards (conteos en SQL) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 24 }}>
         {ITR_STATUS_KEYS.map(key => {
           const style = ITR_STYLE[key]
-          const active = filterStatus === key
+          const active = filters.status === key
           return (
             <button
               key={key}
-              onClick={() => setFilterStatus(active ? '' : key)}
+              onClick={() => url.set({ status: active ? null : key })}
               aria-pressed={active}
               style={{
                 padding: '14px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
@@ -229,118 +200,83 @@ export default function ItrListGlobal({
         })}
       </div>
 
-      {/* Filters */}
+      {/* Filters → URL */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <Input
           inputSize="sm"
           fullWidth={false}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={e => setSearch(e.target.value)}
           placeholder={t('filters.search')}
           aria-label={t('filters.search')}
           leftIcon={<Search size={14} />}
-          wrapperStyle={{ width: 260 }}
+          style={{ width: 240 }}
         />
-        <Select selectSize="sm" fullWidth={false} value={filterProject} onChange={(e) => { setFilterProject(e.target.value); setPage(1) }} style={{ width: 200 }}>
-          <option value="">{tc('allProjects')}</option>
+        <Select selectSize="sm" fullWidth={false} value={filters.project} onChange={e => url.set({ project: e.target.value })} style={{ minWidth: 160 }}>
+          <option value="">{tc('allOrg')}</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
         </Select>
-        <Select selectSize="sm" fullWidth={false} value={filterPhase} onChange={(e) => { setFilterPhase(e.target.value); setPage(1) }} style={{ width: 180 }}>
+        <Select selectSize="sm" fullWidth={false} value={filters.phase} onChange={e => url.set({ phase: e.target.value })} style={{ minWidth: 140 }}>
           <option value="">{t('filters.allPhases')}</option>
           {phases.map(p => <option key={p.id} value={p.code}>{p.code} — {p.name}</option>)}
         </Select>
-        <Select selectSize="sm" fullWidth={false} value={filterDisc} onChange={(e) => { setFilterDisc(e.target.value); setPage(1) }} style={{ width: 180 }}>
+        <Select selectSize="sm" fullWidth={false} value={filters.disc} onChange={e => url.set({ disc: e.target.value })} style={{ minWidth: 150 }}>
           <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </Select>
         {hasFilters && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => { setFilterStatus(''); setFilterPhase(''); setFilterDisc(''); setFilterProject(''); setSearch(''); setPage(1) }}
-          >
-            {tc('clearFilters')}
+          <Button variant="ghost" size="sm" leftIcon={<X size={13} />} onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'project', 'q']) }}>
+            {tc('clear')}
           </Button>
         )}
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginLeft: 'auto' }}>
-          {t('filters.count', { filtered: filtered.length, total: itrs.length })}
+        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginLeft: 'auto', opacity: busy ? 0.5 : 1 }}>
+          {t('filters.count', { filtered: total, total: totalAll })}
         </span>
-        {filtered.length > 0 && (
-          <Button variant="outline" size="sm" leftIcon={<Download size={14} />} onClick={exportCsv}>
-            {tc('exportCsv')}
+        {total > 0 && (
+          <Button variant="outline" size="sm" leftIcon={<Download size={13} />} onClick={exportCsv} loading={isExporting}>
+            {isExporting ? tc('exporting') : 'CSV'}
           </Button>
         )}
       </div>
 
-      {/* Bulk action bar */}
-      {selectedIds.size > 0 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '10px 16px', marginBottom: 8,
-          background: 'var(--gray-800)', borderRadius: 'var(--radius-md)', color: '#fff',
-        }}>
-          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>
-            {t('bulk.selected', { count: selectedIds.size })}
+      {/* Bulk toolbar */}
+      {selectedRows.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 14px', marginBottom: 12, background: 'var(--primary-50)', border: '1px solid var(--primary-100)', borderRadius: 'var(--radius-md)' }}>
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-700)' }}>
+            {t('bulk.selected', { count: selectedRows.length })}
           </span>
-          <span style={{ color: 'var(--gray-600)' }}>|</span>
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)' }}>{tc('changeStatusTo')}</span>
-          <select
-            value={bulkStatus}
-            onChange={(e) => setBulkStatus(e.target.value as Enums<'itr_status'> | '')}
-            style={{
-              padding: '6px 10px', borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--gray-700)', background: 'var(--gray-900)',
-              color: '#fff', fontSize: 'var(--text-sm)',
-              fontFamily: 'inherit', cursor: 'pointer',
-            }}
-          >
-            <option value="">{tc('choose')}</option>
-            {ITR_STATUS_KEYS.map(k => (
-              <option key={k} value={k}>{itrStatusLabels[k]}</option>
-            ))}
-          </select>
-          <Button
-            size="sm"
-            onClick={handleBulkApply}
-            disabled={!bulkStatus || bulkLoading}
-            loading={bulkLoading}
-          >
-            {tc('apply')}
-          </Button>
-          {bulkError && <span style={{ fontSize: 'var(--text-sm)', color: '#f87171' }}>{bulkError}</span>}
-          <button
-            onClick={() => { setSelectedIds(new Set()); setBulkStatus(''); setBulkError('') }}
-            aria-label={tc('deselectAll')}
-            title={tc('deselectAll')}
-            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--gray-400)', cursor: 'pointer', padding: '0 4px', display: 'inline-flex', alignItems: 'center' }}
-          >
-            <X size={16} />
-          </button>
+          <Select selectSize="sm" fullWidth={false} value={bulkStatus} onChange={e => setBulkStatus(e.target.value as Enums<'itr_status'> | '')} style={{ minWidth: 170 }}>
+            <option value="">{t('bulk.statusPlaceholder')}</option>
+            {ITR_STATUS_KEYS.map(k => <option key={k} value={k}>{itrStatusLabels[k]}</option>)}
+          </Select>
+          <Button size="sm" onClick={handleBulkApply} disabled={!bulkStatus} loading={bulkLoading}>{t('bulk.apply')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>{tc('deselectAll')}</Button>
+          {bulkError && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--danger-500)' }}>{bulkError}</span>}
         </div>
       )}
+      {bulkError && selectedRows.length === 0 && (
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--danger-500)', margin: '0 0 12px' }}>{bulkError}</p>
+      )}
 
-      {/* Table */}
-      <DataTable<ItrRow>
-        rows={paginated}
+      <div style={{ opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
+      <DataTable<ItrListRow>
+        rows={rows}
         rowKey={(itr) => itr.id}
-        responsive="stack"
         ariaLabel={t('title')}
+        responsive="stack"
         empty={<EmptyState title={t('empty')} />}
-        rowStyle={(itr) => selectedIds.has(itr.id) ? { background: 'var(--primary-50)' } : undefined}
         columns={[
           {
             key: 'select',
             width: 36,
-            sticky: 'left',
-            hideBelow: 768,
             header: (
               <input
                 type="checkbox"
-                ref={selectAllRef}
-                checked={allFilteredSelected}
+                checked={allPageSelected}
                 onChange={toggleSelectAll}
-                title={allFilteredSelected ? tc('deselectAll') : t('filters.selectAll', { count: filtered.length })}
-                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+                aria-label={allPageSelected ? tc('deselectAll') : t('filters.selectPage', { count: rows.length })}
+                title={allPageSelected ? tc('deselectAll') : t('filters.selectPage', { count: rows.length })}
+                style={{ width: 15, height: 15, cursor: 'pointer', accentColor: 'var(--primary-500)' }}
               />
             ),
             cell: (itr) => (
@@ -348,84 +284,77 @@ export default function ItrListGlobal({
                 type="checkbox"
                 checked={selectedIds.has(itr.id)}
                 onChange={() => toggleRow(itr.id)}
-                style={{ cursor: 'pointer', accentColor: 'var(--primary-500)', width: 15, height: 15 }}
+                onClick={e => e.stopPropagation()}
+                aria-label={itr.itr_number}
+                style={{ width: 15, height: 15, cursor: 'pointer', accentColor: 'var(--primary-500)' }}
               />
             ),
           },
           {
             key: 'project',
-            width: 110,
+            width: 120,
+            hideBelow: 900,
             header: t('table.colProject'),
-            cell: (itr) => itr.projects ? (
-              <a
-                href={`/projects/${itr.projects.id}`}
-                title={itr.projects.name}
-                style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-              >
-                {itr.projects.code}
-              </a>
-            ) : null,
+            cell: (itr) => (
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>
+                {itr.project_code ?? '—'}
+              </span>
+            ),
           },
           {
             key: 'itr',
-            header: t('table.colItr'),
-            cell: (itr) => {
-              const phase = itr.project_phases
-              return (
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {phase && (
-                      <span style={{ padding: '1px 6px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 700, background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>
-                    )}
-                    <a
-                      href={itr.tags ? `/projects/${itr.project_id}/tags/${itr.tags.id}/itrs/${itr.id}` : '#'}
-                      style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-500)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
-                    >
-                      {itr.itr_number}
-                    </a>
-                  </div>
-                  {itr.tags && (
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
-                      {itr.tags.tag_number} — {itr.tags.description}
-                    </div>
+            header: sortable(t('table.colItr'), 'itr_number'),
+            cell: (itr) => (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {itr.phase_code && (
+                    <span style={{ padding: '1px 6px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 700, background: `${itr.phase_color ?? '#64748b'}18`, color: itr.phase_color ?? '#64748b' }}>{itr.phase_code}</span>
                   )}
+                  <a
+                    href={itr.tag_id ? `/projects/${itr.project_id}/tags/${itr.tag_id}/itrs/${itr.id}` : `/projects/${itr.project_id}/itrs`}
+                    onClick={e => e.stopPropagation()}
+                    style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--primary-500)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
+                  >
+                    {itr.itr_number}
+                  </a>
                 </div>
-              )
-            },
+                {itr.tag_number && (
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
+                    {itr.tag_number} — {itr.tag_description}
+                  </div>
+                )}
+              </div>
+            ),
           },
           {
             key: 'template',
-            header: t('table.colTemplate'),
-            cell: (itr) => {
-              const disc = itr.itr_templates?.disciplines
-              return (
-                <div>
-                  {disc && (
-                    <span style={{ fontSize: 10, fontWeight: 600, color: disc.color, marginRight: 6, padding: '1px 5px', background: `${disc.color}15`, borderRadius: 'var(--radius-sm)' }}>{disc.code}</span>
-                  )}
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)' }}>{itr.itr_templates?.title ?? '—'}</span>
-                </div>
-              )
-            },
+            hideBelow: 1024,
+            header: sortable(t('table.colTemplate'), 'template_title'),
+            cell: (itr) => (
+              <div>
+                {itr.discipline_code && (
+                  <span style={{ fontSize: 10, fontWeight: 600, color: itr.discipline_color ?? '#64748b', marginRight: 6, padding: '1px 5px', background: `${itr.discipline_color ?? '#64748b'}15`, borderRadius: 'var(--radius-sm)' }}>{itr.discipline_code}</span>
+                )}
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-700)' }}>{itr.template_title ?? '—'}</span>
+              </div>
+            ),
           },
           {
             key: 'inspector',
             width: 140,
+            hideBelow: 1200,
             header: t('table.colInspector'),
-            cell: (itr) => {
-              const executor = itr.itr_assignments.find(a => a.role === 'executor')
-              return (
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {executor?.profiles?.full_name ?? '—'}
-                </div>
-              )
-            },
+            cell: (itr) => (
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                {itr.assignments.find(a => a.role === 'executor')?.full_name ?? '—'}
+              </span>
+            ),
           },
           {
             key: 'date',
             width: 100,
             hideBelow: 1024,
-            header: t('table.colDate'),
+            header: sortable(t('table.colDate'), 'scheduled_date'),
             cell: (itr) => (
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                 {itr.scheduled_date ?? '—'}
@@ -435,7 +364,7 @@ export default function ItrListGlobal({
           {
             key: 'progress',
             width: 110,
-            header: t('table.colProgress'),
+            header: sortable(t('table.colProgress'), 'progress_pct'),
             cell: (itr) => (
               <div>
                 <div style={{ fontSize: 10, color: 'var(--gray-400)', textAlign: 'right', marginBottom: 3 }}>{itr.progress_pct}%</div>
@@ -448,7 +377,7 @@ export default function ItrListGlobal({
           {
             key: 'status',
             width: 110,
-            header: t('table.colStatus'),
+            header: sortable(t('table.colStatus'), 'status'),
             cell: (itr) => {
               const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
               return (
@@ -466,7 +395,7 @@ export default function ItrListGlobal({
             cell: (itr) => (
               <div style={{ display: 'flex', gap: 2 }}>
                 {(['executor', 'supervisor', 'client'] as const).map(role => {
-                  const signed = itr.itr_signatures.some(s => s.role === role)
+                  const signed = itr.signatures.some(s => s.role === role)
                   return (
                     <span key={role} style={{ width: 18, height: 18, borderRadius: 'var(--radius-sm)', background: signed ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: signed ? 'var(--success-500)' : 'var(--gray-300)' }}>
                       {SIGN_LABELS[role]}
@@ -476,17 +405,11 @@ export default function ItrListGlobal({
               </div>
             ),
           },
-        ] satisfies DataTableColumn<ItrRow>[]}
+        ] satisfies DataTableColumn<ItrListRow>[]}
       />
+      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20, alignItems: 'center' }}>
-          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{tc('prevPage')}</Button>
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{tc('page', { page, total: totalPages })}</span>
-          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{tc('nextPage')}</Button>
-        </div>
-      )}
+      <Pagination page={page} total={total} pageSize={pageSize} onPage={p => url.set({ page: p }, { resetPage: false })} disabled={busy} />
     </div>
   )
 }

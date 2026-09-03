@@ -1,144 +1,102 @@
 'use client'
 
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useMemo, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { bulkUpdateItrStatus, bulkApproveItrs } from '@/app/actions/bulk'
 import { bulkAssignItrs } from '@/app/actions/itr-assign'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { Pagination } from '@/components/ui'
+import { useUrlFilters } from '@/lib/list/useUrlFilters'
+import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
+import type { SortDir } from '@/lib/list/params'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
-type ItrRow = {
-  id: string
-  itr_number: string
-  status: string
-  progress_pct: number
-  scheduled_date: string | null
-  created_at: string
-  itr_templates: { code: string; title: string; disciplines: { code: string; name: string; color: string } } | null
-  tags: { id: string; tag_number: string; description: string } | null
-  project_phases: { code: string; name: string; color: string } | null
-  itr_assignments: Array<{ user_id: string; role: string; profiles: { full_name: string } | null }>
-  itr_signatures: Array<{ role: string; signed_at: string }>
-}
-
-type Phase    = { id: string; code: string; name: string; color: string; order_index: number }
-type OrgUser  = { user_id: string; full_name: string }
-
-type SortKey = 'itr_number' | 'scheduled_date' | 'progress_pct' | 'status'
-type SortDir = 'asc' | 'desc'
-
-// ── Status config ─────────────────────────────────────────────────────
+type Phase      = { id: string; code: string; name: string; color: string; order_index: number }
+type Discipline = { code: string; name: string; color: string }
+type OrgUser    = { user_id: string; full_name: string }
 
 const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', client: 'C' }
-
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
+const ITR_STATUS_KEYS = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
 
 // ── Component ─────────────────────────────────────────────────────────
+// Sprint E: la página, los filtros y el orden viven en la URL; el servidor
+// devuelve solo la página visible (50 filas) y los conteos por estado en SQL.
 
 export default function ItrListView({
   projectId,
   projectName,
-  itrs,
+  rows,
+  total,
+  page,
+  pageSize,
+  counts,
+  filters,
+  sort,
+  dir,
   phases,
+  disciplines,
   users = [],
   userRole = '',
 }: {
   projectId: string
   projectName: string
-  itrs: ItrRow[]
+  rows: ItrListRow[]
+  total: number
+  page: number
+  pageSize: number
+  counts: ItrStatusCounts
+  filters: { status: string; phase: string; disc: string; q: string }
+  sort: ItrSortKey
+  dir: SortDir
   phases: Phase[]
+  disciplines: Discipline[]
   users?: OrgUser[]
   userRole?: string
 }) {
   const t = useTranslations('ItrList')
   const canEdit = EDITOR_ROLES.includes(userRole)
   const router = useRouter()
+  const url = useUrlFilters()
 
-  // ── Filters ──────────────────────────────────────────────────────────
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterPhase, setFilterPhase]   = useState('')
-  const [filterDisc, setFilterDisc]     = useState('')
-  const [search, setSearch]             = useState('')
+  // ── Búsqueda con debounce → URL ──────────────────────────────────────
+  const [search, setSearch] = useState(filters.q)
+  useEffect(() => {
+    const handle = setTimeout(() => { if (search !== filters.q) url.set({ q: search }) }, 350)
+    return () => clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe disparar cuando cambia lo que escribe el usuario
+  }, [search])
 
-  // ── Sorting ───────────────────────────────────────────────────────────
-  const [sortKey, setSortKey]   = useState<SortKey>('itr_number')
-  const [sortDir, setSortDir]   = useState<SortDir>('asc')
-
-  // ── Bulk selection ────────────────────────────────────────────────────
-  const [selected, setSelected]           = useState<Set<string>>(new Set())
-  const [bulkStatus, setBulkStatus]       = useState<Enums<'itr_status'> | ''>('')
-  const [bulkUserId, setBulkUserId]       = useState('')
-  const [isPending, startTransition]      = useTransition()
-  const [bulkError, setBulkError]         = useState<string | null>(null)
-
-  // ── Approve confirm modal ─────────────────────────────────────────────
+  // ── Bulk selection (acotada a la página visible) ─────────────────────
+  const [selected, setSelected]       = useState<Set<string>>(new Set())
+  const [bulkStatus, setBulkStatus]   = useState<Enums<'itr_status'> | ''>('')
+  const [bulkUserId, setBulkUserId]   = useState('')
+  const [isPending, startTransition]  = useTransition()
+  const [bulkError, setBulkError]     = useState<string | null>(null)
   const [showApproveConfirm, setShowApproveConfirm] = useState(false)
-
-  // ── Add to plan modal ─────────────────────────────────────────────────
   const [showPlanModal, setShowPlanModal] = useState(false)
+
   const planModalMembers = useMemo(
     () => users.map(u => ({ user_id: u.user_id, full_name: u.full_name })),
     [users],
   )
 
-  // ── Derived data ──────────────────────────────────────────────────────
-  const disciplines = useMemo(() => {
-    const seen = new Set<string>()
-    const list: { code: string; name: string; color: string }[] = []
-    for (const itr of itrs) {
-      const d = itr.itr_templates?.disciplines
-      if (d && !seen.has(d.code)) { seen.add(d.code); list.push(d) }
-    }
-    return list.sort((a, b) => a.code.localeCompare(b.code))
-  }, [itrs])
+  // Solo cuentan las selecciones que siguen en la página actual
+  const selectedRows = useMemo(() => rows.filter(r => selected.has(r.id)), [rows, selected])
+  const selectedCount = selectedRows.length
+  const allPageSelected = rows.length > 0 && selectedCount === rows.length
+  const allSelectedCompleted = selectedCount > 0 && selectedRows.every(r => r.status === 'completed')
 
-  const filtered = useMemo(() => {
-    const list = itrs.filter(itr => {
-      if (filterStatus && itr.status !== filterStatus) return false
-      if (filterPhase && itr.project_phases?.code !== filterPhase) return false
-      if (filterDisc && itr.itr_templates?.disciplines?.code !== filterDisc) return false
-      if (search) {
-        const q = search.toLowerCase()
-        if (
-          !itr.itr_number.toLowerCase().includes(q) &&
-          !(itr.tags?.tag_number ?? '').toLowerCase().includes(q) &&
-          !(itr.itr_templates?.title ?? '').toLowerCase().includes(q)
-        ) return false
-      }
-      return true
-    })
+  const totalAll = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts])
+  const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.q)
 
-    list.sort((a, b) => {
-      let av: string | number = ''
-      let bv: string | number = ''
-      if (sortKey === 'itr_number')     { av = a.itr_number;     bv = b.itr_number }
-      if (sortKey === 'scheduled_date') { av = a.scheduled_date ?? ''; bv = b.scheduled_date ?? '' }
-      if (sortKey === 'progress_pct')   { av = a.progress_pct;   bv = b.progress_pct }
-      if (sortKey === 'status')         { av = a.status;         bv = b.status }
-      if (av < bv) return sortDir === 'asc' ? -1 : 1
-      if (av > bv) return sortDir === 'asc' ? 1 : -1
-      return 0
-    })
-
-    return list
-  }, [itrs, filterStatus, filterPhase, filterDisc, search, sortKey, sortDir])
-
-  const counts = useMemo(() => {
-    const c: Record<string, number> = {}
-    for (const itr of itrs) c[itr.status] = (c[itr.status] ?? 0) + 1
-    return c
-  }, [itrs])
-
-  const filteredIds = useMemo(() => new Set(filtered.map(i => i.id)), [filtered])
-  const allFilteredSelected = filtered.length > 0 && filtered.every(i => selected.has(i.id))
-
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortKey(key); setSortDir('asc') }
+  function toggleSort(key: ItrSortKey) {
+    if (sort === key) url.set({ sort: key, dir: dir === 'asc' ? 'desc' : 'asc' }, { resetPage: false })
+    else url.set({ sort: key, dir: key === 'created_at' ? 'desc' : 'asc' }, { resetPage: false })
   }
 
   function toggleRow(id: string) {
@@ -150,11 +108,7 @@ export default function ItrListView({
   }
 
   function toggleAll() {
-    if (allFilteredSelected) {
-      setSelected(prev => { const next = new Set(prev); filteredIds.forEach(id => next.delete(id)); return next })
-    } else {
-      setSelected(prev => { const next = new Set(prev); filteredIds.forEach(id => next.add(id)); return next })
-    }
+    setSelected(allPageSelected ? new Set() : new Set(rows.map(r => r.id)))
   }
 
   function clearSelection() {
@@ -165,30 +119,32 @@ export default function ItrListView({
   }
 
   function applyBulkStatus() {
-    if (!bulkStatus || !selected.size) return
+    if (!bulkStatus || !selectedCount) return
     setBulkError(null)
     startTransition(async () => {
-      const res = await bulkUpdateItrStatus([...selected], bulkStatus)
+      const res = await bulkUpdateItrStatus(selectedRows.map(r => r.id), bulkStatus)
       if (res.error) { setBulkError(res.error); return }
       clearSelection()
+      router.refresh()
     })
   }
 
   function applyBulkAssign() {
-    if (!bulkUserId || !selected.size) return
+    if (!bulkUserId || !selectedCount) return
     setBulkError(null)
     startTransition(async () => {
-      const res = await bulkAssignItrs([...selected], bulkUserId, 'executor')
+      const res = await bulkAssignItrs(selectedRows.map(r => r.id), bulkUserId, 'executor')
       if (res.error) { setBulkError(res.error); return }
       clearSelection()
+      router.refresh()
     })
   }
 
   function applyBulkApprove() {
-    if (!selected.size) return
+    if (!selectedCount) return
     setBulkError(null)
     startTransition(async () => {
-      const res = await bulkApproveItrs([...selected], projectId)
+      const res = await bulkApproveItrs(selectedRows.map(r => r.id), projectId)
       if (res.error) { setBulkError(res.error); return }
       if (res.approved === 0) { setBulkError(t('bulk.approveNoneCompleted')); return }
       setShowApproveConfirm(false)
@@ -197,16 +153,7 @@ export default function ItrListView({
     })
   }
 
-  // Are all selected ITRs in 'completed' status?
-  const allSelectedCompleted = selected.size > 0 &&
-    [...selected].every(id => {
-      const itr = itrs.find(i => i.id === id)
-      return itr?.status === 'completed'
-    })
-
-  const hasFilters = !!(filterStatus || filterPhase || filterDisc || search)
-
-  const itrStatusKeys = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
+  const busy = isPending || url.isPending
 
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
@@ -232,40 +179,41 @@ export default function ItrListView({
         </a>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards (conteos en SQL) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '24px' }}>
-        {itrStatusKeys.map(key => {
+        {ITR_STATUS_KEYS.map(key => {
           const cfg = ITR_STATUS_COLORS[key]
+          const active = filters.status === key
           return (
-            <div
+            <button
               key={key}
-              onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
+              onClick={() => url.set({ status: active ? null : key })}
+              aria-pressed={active}
               style={{
-                padding: '14px 16px', borderRadius: '10px', cursor: 'pointer',
-                background: filterStatus === key ? cfg.bg : 'var(--card-bg)',
-                border: `1px solid ${filterStatus === key ? cfg.color + '40' : 'var(--border)'}`,
+                padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                background: active ? cfg.bg : 'var(--card-bg)',
+                border: `1px solid ${active ? cfg.color + '40' : 'var(--border)'}`,
                 transition: 'all 0.15s',
               }}
             >
               <div style={{ fontSize: '22px', fontWeight: 700, color: cfg.color }}>{counts[key] ?? 0}</div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t(`itrStatus.${key}`)}</div>
-            </div>
+            </button>
           )
         })}
       </div>
 
       {/* Bulk toolbar */}
-      {selected.size > 0 && (
+      {selectedCount > 0 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
           padding: '12px 16px', marginBottom: '12px',
           background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px',
         }}>
           <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', flexShrink: 0 }}>
-            {t('bulk.selected', { count: selected.size })}
+            {t('bulk.selected', { count: selectedCount })}
           </span>
 
-          {/* Change status */}
           <select
             value={bulkStatus}
             onChange={e => setBulkStatus(e.target.value as Enums<'itr_status'> | '')}
@@ -273,7 +221,7 @@ export default function ItrListView({
             style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'var(--card-bg)' }}
           >
             <option value="">{t('bulk.statusPlaceholder')}</option>
-            {itrStatusKeys.map(k => (
+            {ITR_STATUS_KEYS.map(k => (
               <option key={k} value={k}>{t(`itrStatus.${k}`)}</option>
             ))}
           </select>
@@ -290,7 +238,6 @@ export default function ItrListView({
             {t('bulk.changeStatus')}
           </button>
 
-          {/* Assign inspector */}
           {canEdit && users.length > 0 && (
             <>
               <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
@@ -320,7 +267,6 @@ export default function ItrListView({
             </>
           )}
 
-          {/* Add to work plan */}
           {canEdit && (
             <>
               <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
@@ -338,7 +284,6 @@ export default function ItrListView({
             </>
           )}
 
-          {/* Bulk approve */}
           {canEdit && allSelectedCompleted && (
             <>
               <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
@@ -369,7 +314,7 @@ export default function ItrListView({
         </div>
       )}
 
-      {/* Filters */}
+      {/* Filters → URL */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           value={search}
@@ -378,24 +323,24 @@ export default function ItrListView({
           aria-label={t('filters.search')}
           style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', width: '220px', fontFamily: 'inherit' }}
         />
-        <select value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={selStyle}>
+        <select value={filters.phase} onChange={e => url.set({ phase: e.target.value })} style={selStyle}>
           <option value="">{t('filters.allPhases')}</option>
           {phases.map(p => <option key={p.id} value={p.code}>{p.code} — {p.name}</option>)}
         </select>
-        <select value={filterDisc} onChange={e => setFilterDisc(e.target.value)} style={selStyle}>
+        <select value={filters.disc} onChange={e => url.set({ disc: e.target.value })} style={selStyle}>
           <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </select>
         {hasFilters && (
           <button
-            onClick={() => { setFilterStatus(''); setFilterPhase(''); setFilterDisc(''); setSearch('') }}
+            onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'q']) }}
             style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('filters.allPhases').replace('All ', '')} ×
           </button>
         )}
-        <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
-          {t('filters.count', { filtered: filtered.length, total: itrs.length })}
+        <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: 'auto', opacity: busy ? 0.5 : 1 }}>
+          {t('filters.count', { filtered: total, total: totalAll })}
         </span>
       </div>
 
@@ -410,7 +355,7 @@ export default function ItrListView({
               {t('bulk.approveConfirmTitle')}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 22px' }}>
-              {t('bulk.approveConfirmDesc', { count: selected.size })}
+              {t('bulk.approveConfirmDesc', { count: selectedCount })}
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
@@ -431,57 +376,51 @@ export default function ItrListView({
         </div>
       )}
 
-      {/* Table */}
       {/* Add to plan modal */}
-      {showPlanModal && (() => {
-        const selectedItrs: ModalItr[] = filtered
-          .filter(itr => selected.has(itr.id))
-          .map(itr => ({
+      {showPlanModal && (
+        <AddToWorkPlanModal
+          projectId={projectId}
+          itrs={selectedRows.map((itr): ModalItr => ({
             id: itr.id,
             itrNumber: itr.itr_number,
-            tagNumber: itr.tags?.tag_number,
-            defaultAssignedTo: itr.itr_assignments.find(a => a.role === 'executor')?.user_id,
-          }))
-        return (
-          <AddToWorkPlanModal
-            projectId={projectId}
-            itrs={selectedItrs}
-            members={planModalMembers}
-            onClose={() => setShowPlanModal(false)}
-            onSuccess={() => { setShowPlanModal(false); clearSelection(); router.refresh() }}
-          />
-        )
-      })()}
+            tagNumber: itr.tag_number ?? undefined,
+            defaultAssignedTo: itr.assignments.find(a => a.role === 'executor')?.user_id,
+          }))}
+          members={planModalMembers}
+          onClose={() => setShowPlanModal(false)}
+          onSuccess={() => { setShowPlanModal(false); clearSelection(); router.refresh() }}
+        />
+      )}
 
-      {filtered.length === 0 ? (
+      {/* Table */}
+      {rows.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
           <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{t('empty')}</p>
         </div>
       ) : (
-        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
           {/* Header */}
           <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', gap: '4px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
             <input
               type="checkbox"
-              checked={allFilteredSelected}
+              checked={allPageSelected}
               onChange={toggleAll}
+              title={t('filters.selectPage', { count: rows.length })}
               style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
             />
-            <SortHeader label={t('table.colItr')} sortKey="itr_number" current={sortKey} dir={sortDir} onSort={toggleSort} />
-            <span style={thStyle}>{t('table.colTemplate')}</span>
+            <SortHeader label={t('table.colItr')} sortKey="itr_number" current={sort} dir={dir} onSort={toggleSort} />
+            <SortHeader label={t('table.colTemplate')} sortKey="template_title" current={sort} dir={dir} onSort={toggleSort} />
             <span style={thStyle}>{t('table.colInspector')}</span>
-            <SortHeader label={t('table.colDate')} sortKey="scheduled_date" current={sortKey} dir={sortDir} onSort={toggleSort} />
-            <SortHeader label={t('table.colProgress')} sortKey="progress_pct" current={sortKey} dir={sortDir} onSort={toggleSort} />
-            <SortHeader label={t('table.colStatus')} sortKey="status" current={sortKey} dir={sortDir} onSort={toggleSort} />
+            <SortHeader label={t('table.colDate')} sortKey="scheduled_date" current={sort} dir={dir} onSort={toggleSort} />
+            <SortHeader label={t('table.colProgress')} sortKey="progress_pct" current={sort} dir={dir} onSort={toggleSort} />
+            <SortHeader label={t('table.colStatus')} sortKey="status" current={sort} dir={dir} onSort={toggleSort} />
             <span style={thStyle}>{t('table.colSignature')}</span>
           </div>
 
           {/* Rows */}
-          {filtered.map(itr => {
+          {rows.map(itr => {
             const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
-            const executor = itr.itr_assignments.find(a => a.role === 'executor')
-            const disc = itr.itr_templates?.disciplines
-            const phase = itr.project_phases
+            const executor = itr.assignments.find(a => a.role === 'executor')
             const isChecked = selected.has(itr.id)
 
             return (
@@ -496,7 +435,6 @@ export default function ItrListView({
                 onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = 'var(--gray-50)' }}
                 onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = 'transparent' }}
               >
-                {/* Checkbox */}
                 <input
                   type="checkbox"
                   checked={isChecked}
@@ -508,35 +446,35 @@ export default function ItrListView({
                 {/* ITR + Tag */}
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    {phase && (
-                      <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>
+                    {itr.phase_code && (
+                      <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: `${itr.phase_color ?? '#64748b'}18`, color: itr.phase_color ?? '#64748b' }}>{itr.phase_code}</span>
                     )}
                     <a
-                      href={itr.tags ? `/projects/${projectId}/tags/${itr.tags.id}/itrs/${itr.id}` : '#'}
+                      href={itr.tag_id ? `/projects/${projectId}/tags/${itr.tag_id}/itrs/${itr.id}` : '#'}
                       onClick={e => e.stopPropagation()}
                       style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
                     >
                       {itr.itr_number}
                     </a>
                   </div>
-                  {itr.tags && (
+                  {itr.tag_number && (
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      {itr.tags.tag_number} — {itr.tags.description}
+                      {itr.tag_number} — {itr.tag_description}
                     </div>
                   )}
                 </div>
 
                 {/* Template */}
                 <div>
-                  {disc && (
-                    <span style={{ fontSize: '10px', fontWeight: 600, color: disc.color, marginRight: '6px', padding: '1px 5px', background: `${disc.color}15`, borderRadius: '4px' }}>{disc.code}</span>
+                  {itr.discipline_code && (
+                    <span style={{ fontSize: '10px', fontWeight: 600, color: itr.discipline_color ?? '#64748b', marginRight: '6px', padding: '1px 5px', background: `${itr.discipline_color ?? '#64748b'}15`, borderRadius: '4px' }}>{itr.discipline_code}</span>
                   )}
-                  <span style={{ fontSize: '12px', color: 'var(--gray-700)' }}>{itr.itr_templates?.title ?? '—'}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--gray-700)' }}>{itr.template_title ?? '—'}</span>
                 </div>
 
                 {/* Inspector */}
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {executor?.profiles?.full_name ?? '—'}
+                  {executor?.full_name ?? '—'}
                 </div>
 
                 {/* Date */}
@@ -560,7 +498,7 @@ export default function ItrListView({
                 {/* Signatures */}
                 <div style={{ display: 'flex', gap: '2px' }}>
                   {(['executor', 'supervisor', 'client'] as const).map(role => {
-                    const signed = itr.itr_signatures.some(s => s.role === role)
+                    const signed = itr.signatures.some(s => s.role === role)
                     return (
                       <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? '#ecfdf5' : 'var(--gray-50)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: signed ? '#10b981' : 'var(--gray-300)' }}>
                         {SIGN_LABELS[role]}
@@ -573,6 +511,8 @@ export default function ItrListView({
           })}
         </div>
       )}
+
+      <Pagination page={page} total={total} pageSize={pageSize} onPage={p => url.set({ page: p }, { resetPage: false })} disabled={busy} />
     </div>
   )
 }
@@ -581,10 +521,10 @@ export default function ItrListView({
 
 function SortHeader({ label, sortKey, current, dir, onSort }: {
   label: string
-  sortKey: SortKey
-  current: SortKey
+  sortKey: ItrSortKey
+  current: ItrSortKey
   dir: SortDir
-  onSort: (k: SortKey) => void
+  onSort: (k: ItrSortKey) => void
 }) {
   const active = current === sortKey
   return (

@@ -252,7 +252,10 @@
     "choose": "— elegir —",
     "changeStatusTo": "Cambiar estado a:",
     "apply": "Aplicar",
-    "applying": "Aplicando…"
+    "applying": "Aplicando…",
+    "rangeInfo": "Mostrando {from}–{to} de {total}",
+    "exporting": "Exportando…",
+    "clear": "Limpiar"
   },
   "ItrList": {
     "title": "ITRs",
@@ -269,7 +272,8 @@
       "allPhases": "Todas las fases",
       "allDisciplines": "Todas las disciplinas",
       "count": "{filtered} de {total} ITRs",
-      "selectAll": "Seleccionar {count} ITRs"
+      "selectAll": "Seleccionar {count} ITRs",
+      "selectPage": "Seleccionar esta página ({count})"
     },
     "bulk": {
       "selected": "{count, plural, one {# ITR seleccionado} other {# ITRs seleccionados}}",

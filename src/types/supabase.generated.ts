@@ -18,6 +18,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       activity_log: {
@@ -1035,6 +1060,13 @@ export type Database = {
             foreignKeyName: "itr_assignments_itr_id_fkey"
             columns: ["itr_id"]
             isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_assignments_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
             referencedRelation: "itrs"
             referencedColumns: ["id"]
           },
@@ -1090,6 +1122,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "itr_template_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_attachments_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itr_list_v"
             referencedColumns: ["id"]
           },
           {
@@ -1167,6 +1206,13 @@ export type Database = {
             foreignKeyName: "itr_responses_itr_id_fkey"
             columns: ["itr_id"]
             isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_responses_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
             referencedRelation: "itrs"
             referencedColumns: ["id"]
           },
@@ -1208,6 +1254,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "itr_signatures_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "itr_signatures_itr_id_fkey"
             columns: ["itr_id"]
@@ -1286,6 +1339,13 @@ export type Database = {
           suggested_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "itr_suggestions_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "itr_suggestions_itr_id_fkey"
             columns: ["itr_id"]
@@ -3393,6 +3453,13 @@ export type Database = {
             foreignKeyName: "punches_itr_id_fkey"
             columns: ["itr_id"]
             isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
             referencedRelation: "itrs"
             referencedColumns: ["id"]
           },
@@ -4295,6 +4362,13 @@ export type Database = {
             foreignKeyName: "work_plan_items_itr_id_fkey"
             columns: ["itr_id"]
             isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_plan_items_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
             referencedRelation: "itrs"
             referencedColumns: ["id"]
           },
@@ -4601,6 +4675,115 @@ export type Database = {
           suggested_fix: string | null
         }
         Relationships: []
+      }
+      itr_list_v: {
+        Row: {
+          completed_date: string | null
+          created_at: string | null
+          discipline_code: string | null
+          discipline_color: string | null
+          discipline_name: string | null
+          id: string | null
+          itr_number: string | null
+          org_id: string | null
+          phase_code: string | null
+          phase_color: string | null
+          phase_id: string | null
+          phase_name: string | null
+          progress_pct: number | null
+          project_code: string | null
+          project_id: string | null
+          project_name: string | null
+          scheduled_date: string | null
+          search_text: string | null
+          status: Database["public"]["Enums"]["itr_status"] | null
+          subsystem_id: string | null
+          tag_description: string | null
+          tag_id: string | null
+          tag_number: string | null
+          template_code: string | null
+          template_id: string | null
+          template_title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itrs_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itrs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itrs_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "itrs_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "itrs_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_velocity"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "itrs_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "subsystems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itrs_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "itrs_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "itrs_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itrs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "itr_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ops_dashboard: {
         Row: {
@@ -4936,6 +5119,13 @@ export type Database = {
       is_org_editor: { Args: { p_org_id: string }; Returns: boolean }
       is_project_editor: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      itr_status_counts: {
+        Args: { p_org_id?: string; p_project_id?: string }
+        Returns: {
+          n: number
+          status: Database["public"]["Enums"]["itr_status"]
+        }[]
+      }
       log_sync_conflict: {
         Args: {
           p_entity_id: string
@@ -5066,12 +5256,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5095,11 +5285,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5120,11 +5310,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5145,11 +5335,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5162,11 +5352,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5176,6 +5366,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       alert_severity: ["info", "warning", "critical"],

@@ -252,7 +252,10 @@
     "choose": "— choose —",
     "changeStatusTo": "Change status to:",
     "apply": "Apply",
-    "applying": "Applying…"
+    "applying": "Applying…",
+    "rangeInfo": "Showing {from}–{to} of {total}",
+    "exporting": "Exporting…",
+    "clear": "Clear"
   },
   "ItrList": {
     "title": "ITRs",
@@ -269,7 +272,8 @@
       "allPhases": "All phases",
       "allDisciplines": "All disciplines",
       "count": "{filtered} of {total} ITRs",
-      "selectAll": "Select {count} ITRs"
+      "selectAll": "Select {count} ITRs",
+      "selectPage": "Select this page ({count})"
     },
     "bulk": {
       "selected": "{count, plural, one {# ITR selected} other {# ITRs selected}}",

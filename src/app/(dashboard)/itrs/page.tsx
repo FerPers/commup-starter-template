@@ -1,49 +1,45 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import ItrListGlobal from './ItrListGlobal'
+import { fetchItrPage, fetchItrStatusCounts } from '@/lib/list/itr-query'
+import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
+import { ITR_SORT_KEYS } from '@/lib/list/itr-types'
 
-export default async function GlobalItrsPage() {
+type Search = { page?: string; sort?: string; dir?: string; status?: string; phase?: string; disc?: string; q?: string; project?: string }
+
+export default async function GlobalItrsPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const sp = await searchParams
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
-  const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('id, name, code')
-    .eq('org_id', membership.org_id)
-    .order('name')
+  const page = parsePage(sp.page)
+  const sort = parseSort(sp.sort, ITR_SORT_KEYS, 'created_at')
+  const dir = parseDir(sp.dir, sort === 'created_at' ? 'desc' : 'asc')
+  const filters = { status: sp.status, phase: sp.phase, disc: sp.disc, q: sp.q, project: sp.project }
+  const scope = { orgId: ctx.orgId }
 
-  const projectIds = (projects ?? []).map(p => p.id)
-
-  const [{ data: itrs }, { data: phases }] = await Promise.all([
-    projectIds.length === 0
-      ? Promise.resolve({ data: [] })
-      : supabase
-          .from('itrs')
-          .select(`
-            id, itr_number, status, progress_pct, scheduled_date, created_at, project_id,
-            projects(id, name, code),
-            itr_templates(code, title, disciplines(code, name, color)),
-            tags(id, tag_number, description),
-            project_phases(code, name, color),
-            itr_assignments(user_id, role, profiles(full_name)),
-            itr_signatures(role, signed_at)
-          `)
-          .in('project_id', projectIds)
-          .order('created_at', { ascending: false }),
-    supabase
-      .from('project_phases')
-      .select('id, code, name, color, order_index')
-      .eq('org_id', membership.org_id)
-      .order('order_index'),
+  const [{ data: projects }, pageRes, counts, { data: phases }, { data: disciplines }] = await Promise.all([
+    supabase.from('projects').select('id, name, code').eq('org_id', ctx.orgId).order('name'),
+    fetchItrPage(supabase, scope, { filters, page, sort, dir }),
+    fetchItrStatusCounts(supabase, scope),
+    supabase.from('project_phases').select('id, code, name, color, order_index').eq('org_id', ctx.orgId).order('order_index'),
+    supabase.from('disciplines').select('code, name, color').eq('org_id', ctx.orgId).order('code'),
   ])
 
   return (
     <ItrListGlobal
       projects={projects ?? []}
-      itrs={itrs ?? []}
+      rows={pageRes.rows}
+      total={pageRes.total}
+      page={page}
+      pageSize={LIST_PAGE_SIZE}
+      counts={counts}
+      filters={{ status: sp.status ?? '', phase: sp.phase ?? '', disc: sp.disc ?? '', q: sp.q ?? '', project: sp.project ?? '' }}
+      sort={sort}
+      dir={dir}
       phases={phases ?? []}
+      disciplines={disciplines ?? []}
     />
   )
 }
