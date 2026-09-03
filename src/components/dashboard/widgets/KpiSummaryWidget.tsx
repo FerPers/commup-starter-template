@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { KpiCard, type KpiDelta } from './_shared'
+import { fetchItrPhaseCounts, fetchPunchCounts, sumItr, sumPunch, isOpenPunch } from '@/lib/list/kpi-query'
 
 export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
   const supabase = await createClient()
@@ -21,22 +22,17 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
   ago7.setDate(ago7.getDate() - 7)
   const ago7Str = ago7.toISOString().split('T')[0]
 
-  type ItrRow = { id: string; status: string | null; phase_id: string | null }
-  type PunchRow = { id: string; category: string | null; status: string | null }
   type PreservationRow = { id: string; next_due_date: string }
 
-  const [{ data: phases }, { data: orgItrs }, { data: orgPunches }, { data: orgPreservationDue }] = await Promise.all([
+  // Sprint E: conteos de ITRs y punches en SQL (antes: todas las filas de la org)
+  const [{ data: phases }, orgItrs, orgPunches, { data: orgPreservationDue }] = await Promise.all([
     supabase
       .from('project_phases')
       .select('id, name, code, color, order_index')
       .eq('org_id', orgId)
       .order('order_index'),
-    projectIds.length > 0
-      ? supabase.from('itrs').select('id, status, phase_id').in('project_id', projectIds)
-      : Promise.resolve({ data: [] as ItrRow[] }),
-    projectIds.length > 0
-      ? supabase.from('punches').select('id, category, status').in('project_id', projectIds)
-      : Promise.resolve({ data: [] as PunchRow[] }),
+    fetchItrPhaseCounts(supabase, { orgId }),
+    fetchPunchCounts(supabase, { orgId }),
     projectIds.length > 0
       ? supabase
           .from('preservation_plans')
@@ -47,10 +43,9 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
       : Promise.resolve({ data: [] as PreservationRow[] }),
   ])
 
-  const punchRows = (orgPunches ?? []) as PunchRow[]
-  const open = punchRows.filter(p => p.status !== 'closed' && p.status !== 'cancelled')
-  const catA = open.filter(p => p.category === 'A').length
-  const catB = open.filter(p => p.category === 'B').length
+  const openCount = sumPunch(orgPunches, isOpenPunch)
+  const catA = sumPunch(orgPunches, p => isOpenPunch(p) && p.category === 'A')
+  const catB = sumPunch(orgPunches, p => isOpenPunch(p) && p.category === 'B')
 
   const due = (orgPreservationDue ?? []) as PreservationRow[]
   const overdue = due.filter(p => p.next_due_date < today).length
@@ -137,15 +132,16 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
       {(phases ?? []).slice(0, 3).map(phase => {
-        const phaseItrs = ((orgItrs ?? []) as ItrRow[]).filter(i => i.phase_id === phase.id)
-        const total = phaseItrs.length
-        const approved = phaseItrs.filter(i => i.status === 'approved').length
+        const phaseTotal = sumItr(orgItrs, i => i.phase_id === phase.id)
+        const phaseApproved = sumItr(orgItrs, i => i.phase_id === phase.id && i.status === 'approved')
+        const total = phaseTotal
+        const approved = phaseApproved
         const pct = total > 0 ? Math.round((approved / total) * 100) : 0
         const ago = phasePctAgo.get(phase.id)
         const delta: KpiDelta = { value: ago === undefined ? null : pct - ago, goodWhenUp: true }
         return <KpiCard key={phase.id} label={phase.name} value={`${pct}%`} color={phase.color} sub={`${approved} / ${total} ITRs`} progress={pct} delta={delta} />
       })}
-      <KpiCard label={t('kpi.punchesOpen')} value={String(open.length)} color="var(--danger-500)" sub={t('kpi.punchesOpenSub', { catA, catB })} danger delta={punchDelta} />
+      <KpiCard label={t('kpi.punchesOpen')} value={String(openCount)} color="var(--danger-500)" sub={t('kpi.punchesOpenSub', { catA, catB })} danger delta={punchDelta} />
       <KpiCard
         label={t('kpi.preservation')}
         value={String(due.length)}

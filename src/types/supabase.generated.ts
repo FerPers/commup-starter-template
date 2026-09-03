@@ -5594,6 +5594,32 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: string
       }
+      project_cert_counts: {
+        Args: { p_org_id?: string; p_project_id?: string }
+        Returns: {
+          n: number
+          project_id: string
+          status: Database["public"]["Enums"]["certificate_status"]
+        }[]
+      }
+      project_itr_phase_counts: {
+        Args: { p_org_id?: string; p_project_id?: string }
+        Returns: {
+          n: number
+          phase_id: string
+          project_id: string
+          status: Database["public"]["Enums"]["itr_status"]
+        }[]
+      }
+      project_punch_counts: {
+        Args: { p_org_id?: string; p_project_id?: string }
+        Returns: {
+          category: Database["public"]["Enums"]["punch_category"]
+          n: number
+          project_id: string
+          status: Database["public"]["Enums"]["punch_status"]
+        }[]
+      }
       punch_summary_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {
@@ -5610,6 +5636,18 @@ export type Database = {
       set_webhook_enabled: {
         Args: { p_enabled: boolean; p_sub_id: string }
         Returns: undefined
+      }
+      subsystem_rollup: {
+        Args: { p_project_id: string }
+        Returns: {
+          itr_approved: number
+          itr_total: number
+          open_punches_a: number
+          open_punches_b: number
+          open_punches_c: number
+          subsystem_id: string
+          tag_count: number
+        }[]
       }
       tag_discipline_counts: {
         Args: { p_project_id: string; p_subsystem_id?: string }

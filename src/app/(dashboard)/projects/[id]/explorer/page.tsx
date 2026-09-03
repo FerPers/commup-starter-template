@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import ExplorerTree from './ExplorerTree'
 import type { ExplorerArea, ExplorerSubsystem, ExplorerSystem } from '@/types/database'
 import Link from 'next/link'
+import { fetchSubsystemRollup } from '@/lib/list/kpi-query'
 
 export default async function ExplorerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -21,47 +22,13 @@ export default async function ExplorerPage({ params }: { params: Promise<{ id: s
 
   if (!project) notFound()
 
-  const [
-    { data: areas },
-    { data: systems },
-    { data: subsystems },
-    { data: tags },
-    { data: itrs },
-    { data: punches },
-  ] = await Promise.all([
+  // Sprint E: rollup por subsistema en SQL (antes: todas las filas de tags/itrs/punches)
+  const [{ data: areas }, { data: systems }, { data: subsystems }, rollup] = await Promise.all([
     supabase.from('areas').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('systems').select('id, area_id, code, name').eq('project_id', id).order('code'),
     supabase.from('subsystems').select('id, system_id, code, name').eq('project_id', id).order('code'),
-    supabase.from('tags').select('id, subsystem_id').eq('project_id', id),
-    supabase.from('itrs').select('id, subsystem_id, status').eq('project_id', id),
-    supabase
-      .from('punches')
-      .select('id, subsystem_id, category, status')
-      .eq('project_id', id)
-      .in('status', ['open', 'in_progress']),
+    fetchSubsystemRollup(supabase, id),
   ])
-
-  // Build lookup maps
-  const tagsBySubsystem = new Map<string, number>()
-  for (const t of tags ?? []) {
-    tagsBySubsystem.set(t.subsystem_id, (tagsBySubsystem.get(t.subsystem_id) ?? 0) + 1)
-  }
-
-  const itrTotalBySubsystem = new Map<string, number>()
-  const itrApprovedBySubsystem = new Map<string, number>()
-  for (const itr of itrs ?? []) {
-    itrTotalBySubsystem.set(itr.subsystem_id, (itrTotalBySubsystem.get(itr.subsystem_id) ?? 0) + 1)
-    if (itr.status === 'approved') {
-      itrApprovedBySubsystem.set(itr.subsystem_id, (itrApprovedBySubsystem.get(itr.subsystem_id) ?? 0) + 1)
-    }
-  }
-
-  const punchABySubsystem = new Map<string, number>()
-  for (const p of punches ?? []) {
-    if (p.category === 'A') {
-      punchABySubsystem.set(p.subsystem_id, (punchABySubsystem.get(p.subsystem_id) ?? 0) + 1)
-    }
-  }
 
   // Build tree
   const explorerData: ExplorerArea[] = (areas ?? []).map(area => {
@@ -72,10 +39,10 @@ export default async function ExplorerPage({ params }: { params: Promise<{ id: s
         id: sub.id,
         code: sub.code,
         name: sub.name,
-        tag_count: tagsBySubsystem.get(sub.id) ?? 0,
-        itr_total: itrTotalBySubsystem.get(sub.id) ?? 0,
-        itr_approved: itrApprovedBySubsystem.get(sub.id) ?? 0,
-        open_punches_a: punchABySubsystem.get(sub.id) ?? 0,
+        tag_count: rollup.get(sub.id)?.tag_count ?? 0,
+        itr_total: rollup.get(sub.id)?.itr_total ?? 0,
+        itr_approved: rollup.get(sub.id)?.itr_approved ?? 0,
+        open_punches_a: rollup.get(sub.id)?.open_punches_a ?? 0,
       }))
       return { id: sys.id, code: sys.code, name: sys.name, subsystems: explorerSubs }
     })

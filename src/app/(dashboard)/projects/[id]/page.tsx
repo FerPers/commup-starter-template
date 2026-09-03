@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
+import { fetchItrPhaseCounts, fetchPunchCounts, fetchCertCounts, sumItr, sumPunch, sumCert, isOpenPunch } from '@/lib/list/kpi-query'
 import { Boxes, Award, TrendingUp } from 'lucide-react'
 import { Card } from '@/components/ui'
 import ProjectHeader from './ProjectHeader'
@@ -20,9 +21,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     { data: phases },
     { data: disciplines },
     { count: tagCount },
-    { data: itrCounts },
-    { data: punchCounts },
-    { data: certCounts },
+    itrCounts,
+    punchCounts,
+    certCounts,
     { count: signalCount },
     { count: loopCount },
     { count: interlockCount },
@@ -46,18 +47,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       .from('tags')
       .select('id', { count: 'exact', head: true })
       .eq('project_id', id),
-    supabase
-      .from('itrs')
-      .select('id, status, phase_id')
-      .eq('project_id', id),
-    supabase
-      .from('punches')
-      .select('id, category, status')
-      .eq('project_id', id),
-    supabase
-      .from('certificates')
-      .select('id, status')
-      .eq('project_id', id),
+    // Sprint E: agregados SQL en vez de traer todas las filas
+    fetchItrPhaseCounts(supabase, { projectId: id }),
+    fetchPunchCounts(supabase, { projectId: id }),
+    fetchCertCounts(supabase, { projectId: id }),
     supabase
       .from('signals')
       .select('id', { count: 'exact', head: true })
@@ -156,9 +149,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       {/* Phase KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
         {(phases ?? []).map(phase => {
-          const phaseItrs = (itrCounts ?? []).filter(i => i.phase_id === phase.id)
-          const total = phaseItrs.length
-          const approved = phaseItrs.filter(i => i.status === 'approved').length
+          const total = sumItr(itrCounts, i => i.phase_id === phase.id)
+          const approved = sumItr(itrCounts, i => i.phase_id === phase.id && i.status === 'approved')
           const pct = total > 0 ? Math.round((approved / total) * 100) : 0
           return (
           <Card key={phase.id} padding="md" style={{ borderTop: `3px solid ${phase.color}` }}>
@@ -183,13 +175,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           )
         })}
         {(() => {
-          const openPunches = (punchCounts ?? []).filter(p => p.status !== 'closed' && p.status !== 'cancelled')
-          const catA = openPunches.filter(p => p.category === 'A').length
-          const catB = openPunches.filter(p => p.category === 'B').length
+          const openTotal = sumPunch(punchCounts, isOpenPunch)
+          const catA = sumPunch(punchCounts, p => isOpenPunch(p) && p.category === 'A')
+          const catB = sumPunch(punchCounts, p => isOpenPunch(p) && p.category === 'B')
           return (
             <Card padding="md" style={{ borderTop: '3px solid var(--danger-500)' }}>
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 500, margin: '0 0 10px' }}>Punch List Abiertos</p>
-              <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--danger-500)', margin: '0 0 4px', letterSpacing: '-1px' }}>{openPunches.length}</p>
+              <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--danger-500)', margin: '0 0 4px', letterSpacing: '-1px' }}>{openTotal}</p>
               <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', margin: 0 }}>Cat A: {catA} · Cat B: {catB}</p>
             </Card>
           )
@@ -289,7 +281,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
       {/* Certificates badge */}
       {(() => {
-        const issued = (certCounts ?? []).filter(c => c.status === 'issued').length
+        const issued = sumCert(certCounts, c => c.status === 'issued')
         return (
           <div style={{ marginTop: 16, marginBottom: 16 }}>
             <a href={`/projects/${project.id}/certificates`} style={{ textDecoration: 'none' }}>
@@ -349,7 +341,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               Ver todos →
             </a>
           </div>
-          {(itrCounts ?? []).length === 0 ? (
+          {sumItr(itrCounts) === 0 ? (
             <div style={{ padding: 24, background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0 }}>
                 Sin ITRs asignados. Abre un tag y asigna un template.
@@ -363,7 +355,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 { key: 'completed',   label: 'Completados', color: 'var(--success-500)', bg: 'var(--success-50)' },
                 { key: 'approved',    label: 'Aprobados',   color: '#7c3aed',            bg: '#f5f3ff' },
               ].map(s => {
-                const cnt = (itrCounts ?? []).filter(i => i.status === s.key).length
+                const cnt = sumItr(itrCounts, i => i.status === s.key)
                 return cnt > 0 ? (
                   <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: 'var(--radius-md)', textAlign: 'center', minWidth: 70 }}>
                     <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: s.color }}>{cnt}</div>
@@ -383,7 +375,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               Ver todos →
             </a>
           </div>
-          {(punchCounts ?? []).length === 0 ? (
+          {sumPunch(punchCounts) === 0 ? (
             <div style={{ padding: 24, background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0 }}>
                 Sin punches registrados. Se crean desde la ejecución de ITRs.
@@ -396,8 +388,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 { key: 'B', label: 'Cat B', color: 'var(--warning-500)', bg: 'var(--warning-50)' },
                 { key: 'C', label: 'Cat C', color: 'var(--gray-500)',    bg: 'var(--gray-50)' },
               ].map(s => {
-                const open = (punchCounts ?? []).filter(p => p.category === s.key && p.status !== 'closed' && p.status !== 'cancelled').length
-                const closed = (punchCounts ?? []).filter(p => p.category === s.key && (p.status === 'closed' || p.status === 'cancelled')).length
+                const open = sumPunch(punchCounts, p => p.category === s.key && isOpenPunch(p))
+                const closed = sumPunch(punchCounts, p => p.category === s.key && !isOpenPunch(p))
                 return (
                   <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: 'var(--radius-md)', textAlign: 'center', minWidth: 70 }}>
                     <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: s.color }}>{open}</div>

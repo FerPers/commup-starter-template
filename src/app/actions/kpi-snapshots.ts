@@ -5,6 +5,7 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
+import { fetchSubsystemRollup } from '@/lib/list/kpi-query'
 
 // getSubsystemKpis / getProjectSnapshots devuelven arrays pelados (no satisfacen
 // el constraint ActionResult del wrapper) — quedan manuales con getCtx; son
@@ -42,30 +43,22 @@ export async function getSubsystemKpis(projectId: string): Promise<SubsystemKpi[
 
   const { supabase } = ctx
 
-  const [{ data: subsystems }, { data: itrs }, { data: punches }] = await Promise.all([
+  // Sprint E: rollup por subsistema en SQL
+  const [{ data: subsystems }, rollup] = await Promise.all([
     supabase
       .from('subsystems')
       .select('id, code, name, systems(id, code, name)')
       .eq('project_id', projectId)
       .order('code'),
-    supabase
-      .from('itrs')
-      .select('id, status, subsystem_id')
-      .eq('project_id', projectId),
-    supabase
-      .from('punches')
-      .select('id, subsystem_id, category, status')
-      .eq('project_id', projectId)
-      .not('status', 'in', '(closed,cancelled)'),
+    fetchSubsystemRollup(supabase, projectId),
   ])
 
   return (subsystems ?? []).map(ss => {
     const sys = ss.systems
-    const ssItrs = (itrs ?? []).filter(i => i.subsystem_id === ss.id)
-    const totalItrs = ssItrs.length
-    const approvedItrs = ssItrs.filter(i => i.status === 'approved').length
+    const r = rollup.get(ss.id)
+    const totalItrs = r?.itr_total ?? 0
+    const approvedItrs = r?.itr_approved ?? 0
     const completionPct = totalItrs > 0 ? Math.round((approvedItrs / totalItrs) * 100) : 0
-    const ssPunches = (punches ?? []).filter(p => p.subsystem_id === ss.id)
 
     return {
       id: ss.id,
@@ -76,8 +69,8 @@ export async function getSubsystemKpis(projectId: string): Promise<SubsystemKpi[
       totalItrs,
       approvedItrs,
       completionPct,
-      openCatA: ssPunches.filter(p => p.category === 'A').length,
-      openCatB: ssPunches.filter(p => p.category === 'B').length,
+      openCatA: r?.open_punches_a ?? 0,
+      openCatB: r?.open_punches_b ?? 0,
     }
   })
 }

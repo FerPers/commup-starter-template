@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import KpiDashboard from './KpiDashboard'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
 import { getProjectAlerts } from '@/app/actions/alerts'
+import { fetchItrPhaseCounts, sumItr } from '@/lib/list/kpi-query'
 
 export default async function KpiPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: projectId } = await params
@@ -15,7 +16,7 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
   const [
     { data: project },
     { data: phases },
-    { data: itrs },
+    itrCounts,
     subsystemKpis,
     snapshots,
     alerts,
@@ -31,10 +32,7 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
       .select('id, code, name, color, order_index')
       .eq('org_id', membership.org_id)
       .order('order_index'),
-    supabase
-      .from('itrs')
-      .select('id, status, phase_id')
-      .eq('project_id', projectId),
+    fetchItrPhaseCounts(supabase, { projectId }),
     getSubsystemKpis(projectId),
     getProjectSnapshots(projectId),
     getProjectAlerts(projectId),
@@ -45,9 +43,8 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
   const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(membership.role)
 
   const phaseKpis = (phases ?? []).map(phase => {
-    const phaseItrs = (itrs ?? []).filter(i => i.phase_id === phase.id)
-    const total = phaseItrs.length
-    const approved = phaseItrs.filter(i => i.status === 'approved').length
+    const total = sumItr(itrCounts, i => i.phase_id === phase.id)
+    const approved = sumItr(itrCounts, i => i.phase_id === phase.id && i.status === 'approved')
     const pct = total > 0 ? Math.round((approved / total) * 100) : 0
     return { id: phase.id, code: phase.code, name: phase.name, color: phase.color, total, approved, pct }
   })

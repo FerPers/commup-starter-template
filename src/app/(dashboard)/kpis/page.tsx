@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import KpiGlobal from './KpiGlobal'
+import { fetchItrPhaseCounts, fetchPunchCounts, fetchCertCounts, sumItr, sumPunch, sumCert, isOpenPunch } from '@/lib/list/kpi-query'
 
 export default async function GlobalKpiPage() {
   const ctx = await getActiveMembership()
@@ -14,40 +15,19 @@ export default async function GlobalKpiPage() {
     .eq('org_id', membership.org_id)
     .order('name')
 
-  const projectIds = (projects ?? []).map(p => p.id)
-
-  const [{ data: itrs }, { data: punches }, { data: certificates }] = await Promise.all([
-    projectIds.length === 0
-      ? Promise.resolve({ data: [] as Array<{ id: string; status: string; project_id: string }> })
-      : supabase
-          .from('itrs')
-          .select('id, status, project_id')
-          .in('project_id', projectIds),
-    projectIds.length === 0
-      ? Promise.resolve({ data: [] as Array<{ id: string; category: string; status: string; project_id: string }> })
-      : supabase
-          .from('punches')
-          .select('id, category, status, project_id')
-          .in('project_id', projectIds)
-          .not('status', 'in', '(closed,cancelled)'),
-    projectIds.length === 0
-      ? Promise.resolve({ data: [] as Array<{ id: string; status: string; project_id: string }> })
-      : supabase
-          .from('certificates')
-          .select('id, status, project_id')
-          .in('project_id', projectIds),
+  // Sprint E: agregados SQL por proyecto (una llamada por tabla, sin traer filas)
+  const scope = { orgId: ctx.orgId }
+  const [itrCounts, punchCounts, certCounts] = await Promise.all([
+    fetchItrPhaseCounts(supabase, scope),
+    fetchPunchCounts(supabase, scope),
+    fetchCertCounts(supabase, scope),
   ])
 
-  // Build per-project KPI summary server-side
   const projectKpis = (projects ?? []).map(p => {
-    const pItrs    = (itrs ?? []).filter(i => i.project_id === p.id)
-    const pPunches = (punches ?? []).filter(i => i.project_id === p.id)
-    const pCerts   = (certificates ?? []).filter(c => c.project_id === p.id)
-
-    const totalItrs    = pItrs.length
-    const approvedItrs = pItrs.filter(i => i.status === 'approved').length
-    const inProgressItrs = pItrs.filter(i => i.status === 'in_progress').length
-    const completionPct = totalItrs > 0 ? Math.round((approvedItrs / totalItrs) * 100) : 0
+    const totalItrs      = sumItr(itrCounts, i => i.project_id === p.id)
+    const approvedItrs   = sumItr(itrCounts, i => i.project_id === p.id && i.status === 'approved')
+    const inProgressItrs = sumItr(itrCounts, i => i.project_id === p.id && i.status === 'in_progress')
+    const completionPct  = totalItrs > 0 ? Math.round((approvedItrs / totalItrs) * 100) : 0
 
     return {
       id: p.id,
@@ -60,10 +40,10 @@ export default async function GlobalKpiPage() {
       approvedItrs,
       inProgressItrs,
       completionPct,
-      openCatA: pPunches.filter(p => p.category === 'A').length,
-      openCatB: pPunches.filter(p => p.category === 'B').length,
-      issuedCerts: pCerts.filter(c => c.status === 'issued').length,
-      totalCerts: pCerts.length,
+      openCatA: sumPunch(punchCounts, x => x.project_id === p.id && isOpenPunch(x) && x.category === 'A'),
+      openCatB: sumPunch(punchCounts, x => x.project_id === p.id && isOpenPunch(x) && x.category === 'B'),
+      issuedCerts: sumCert(certCounts, c => c.project_id === p.id && c.status === 'issued'),
+      totalCerts: sumCert(certCounts, c => c.project_id === p.id),
     }
   })
 
