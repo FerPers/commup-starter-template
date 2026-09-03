@@ -1,4 +1,4 @@
-name: Lint & Typecheck
+name: Lint, Typecheck & Test
 
 on:
   push:
@@ -34,3 +34,17 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -- --max-warnings=0
+
+  test:
+    name: Vitest
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test
