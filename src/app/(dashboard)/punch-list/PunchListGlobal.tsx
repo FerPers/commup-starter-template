@@ -1,7 +1,11 @@
 'use client'
 
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
+import { useState, useRef, useEffect, useTransition } from 'react'
+import { Pagination } from '@/components/ui'
+import { useUrlFilters } from '@/lib/list/useUrlFilters'
+import { exportPunchList } from '@/app/actions/punch-list'
+import type { PunchSummary } from '@/lib/list/punch-query'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X, Download } from 'lucide-react'
@@ -9,7 +13,6 @@ import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } fr
 import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 import { reassignPunch } from '@/app/actions/punches'
 
-const PAGE_SIZE = 50
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
@@ -52,18 +55,29 @@ const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
 
 const PUNCH_STATUS_KEYS = ['open', 'in_progress', 'closed', 'cancelled'] as const
 
+// Sprint E: lista global paginada en servidor; filtros/página en la URL.
 export default function PunchListGlobal({
   projects,
   punches,
   disciplines,
   orgMembers,
   currentUserRole,
+  total,
+  page,
+  pageSize,
+  summary,
+  filters,
 }: {
   projects: Project[]
   punches: Punch[]
   disciplines: Discipline[]
   orgMembers: OrgMember[]
   currentUserRole: string
+  total: number
+  page: number
+  pageSize: number
+  summary: PunchSummary
+  filters: { project: string; cat: string; status: string; disc: string; q: string }
 }) {
   const t  = useTranslations('PunchList')
   const tc = useTranslations('Common')
@@ -80,12 +94,15 @@ export default function PunchListGlobal({
   }
 
   const router = useRouter()
-  const [search, setSearch] = useState('')
-  const [filterProject, setFilterProject] = useState('')
-  const [filterCat, setFilterCat] = useState<'A' | 'B' | 'C' | ''>('')
-  const [filterStatus, setFilterStatus] = useState<string>('')
-  const [filterDisc, setFilterDisc] = useState('')
-  const [page, setPage] = useState(1)
+  const url = useUrlFilters()
+  const filterCat = filters.cat as 'A' | 'B' | 'C' | ''
+  const [search, setSearch] = useState(filters.q)
+  useEffect(() => {
+    const handle = setTimeout(() => { if (search !== filters.q) url.set({ q: search }) }, 350)
+    return () => clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe disparar cuando cambia lo que escribe el usuario
+  }, [search])
+  const [isExporting, startExport] = useTransition()
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -94,39 +111,14 @@ export default function PunchListGlobal({
   const [bulkError, setBulkError] = useState('')
   const selectAllRef = useRef<HTMLInputElement>(null)
 
-  const catACnt   = punches.filter(p => p.category === 'A' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const catBCnt   = punches.filter(p => p.category === 'B' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const catCCnt   = punches.filter(p => p.category === 'C' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const closedCnt = punches.filter(p => p.status === 'closed').length
+  const catACnt   = summary.catAOpen
+  const catBCnt   = summary.catBOpen
+  const catCCnt   = summary.catCOpen
+  const closedCnt = summary.closed
 
-  const filtered = useMemo(() => punches.filter(p => {
-    if (filterProject && p.project_id !== filterProject) return false
-    if (filterCat && p.category !== filterCat) return false
-    if (filterStatus && p.status !== filterStatus) return false
-    if (filterDisc && p.tags?.disciplines.code !== filterDisc) return false
-    if (search) {
-      const q = search.toLowerCase()
-      if (
-        !p.punch_number.toLowerCase().includes(q) &&
-        !p.description.toLowerCase().includes(q) &&
-        !(p.tags?.tag_number ?? '').toLowerCase().includes(q) &&
-        !(p.projects?.name ?? '').toLowerCase().includes(q)
-      ) return false
-    }
-    return true
-  }), [punches, filterProject, filterCat, filterStatus, filterDisc, search])
-
-  const hasFilters = filterProject || filterCat || filterStatus || filterDisc || search
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  // Reset selections when filters change
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Bulk selection must reset when filters narrow the list to avoid acting on items no longer visible
-    setSelectedIds(new Set())
-    setBulkError('')
-  }, [filterProject, filterCat, filterStatus, filterDisc, search])
+  const filtered = punches
+  const hasFilters = filters.project || filters.cat || filters.status || filters.disc || filters.q
+  const paginated = punches
 
   // Indeterminate state on select-all checkbox
   const allFilteredSelected = filtered.length > 0 && filtered.every(p => selectedIds.has(p.id))
@@ -178,34 +170,38 @@ export default function PunchListGlobal({
   }
 
   function exportCsv() {
-    const headers = [
-      t('exportHeaders.project'), t('exportHeaders.punch'), t('exportHeaders.category'),
-      t('exportHeaders.description'), t('exportHeaders.tag'), t('exportHeaders.discipline'),
-      t('exportHeaders.subsystem'), t('exportHeaders.raisedBy'), t('exportHeaders.assignedTo'),
-      t('exportHeaders.targetDate'), t('exportHeaders.status'), t('exportHeaders.priority'),
-    ]
-    const rows = filtered.map(p => [
-      p.projects?.code ?? '',
-      p.punch_number,
-      p.category,
-      p.description,
-      p.tags?.tag_number ?? '',
-      p.tags?.disciplines?.code ?? '',
-      p.subsystems?.code ?? '',
-      p.raised_by_profile?.full_name ?? '',
-      p.assigned_to_profile?.full_name ?? '',
-      p.target_date ?? '',
-      p.status,
-      p.priority,
-    ])
-    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `punches_${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+    startExport(async () => {
+      const res = await exportPunchList({ filters: { project: filters.project, cat: filters.cat, status: filters.status, disc: filters.disc, q: filters.q } })
+      if (res.error || !res.rows) { setBulkError(res.error ?? 'Export error'); return }
+      const headers = [
+        t('exportHeaders.project'), t('exportHeaders.punch'), t('exportHeaders.category'),
+        t('exportHeaders.description'), t('exportHeaders.tag'), t('exportHeaders.discipline'),
+        t('exportHeaders.subsystem'), t('exportHeaders.raisedBy'), t('exportHeaders.assignedTo'),
+        t('exportHeaders.targetDate'), t('exportHeaders.status'), t('exportHeaders.priority'),
+      ]
+      const rows = res.rows.map(p => [
+        p.project_code ?? '',
+        p.punch_number,
+        p.category,
+        p.description,
+        p.tag_number ?? '',
+        p.discipline_code ?? '',
+        p.subsystem_code ?? '',
+        p.raised_by_name ?? '',
+        p.assigned_to_name ?? '',
+        p.target_date ?? '',
+        p.status,
+        p.priority,
+      ])
+      const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+      const href = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = href
+      a.download = `punches_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(href)
+    })
   }
 
   const summaryCards = [
@@ -229,7 +225,7 @@ export default function PunchListGlobal({
           return (
             <button
               key={card.labelKey}
-              onClick={() => card.cat && setFilterCat(filterCat === card.cat ? '' : card.cat)}
+              onClick={() => card.cat && url.set({ cat: filterCat === card.cat ? null : card.cat })}
               aria-pressed={!!active}
               disabled={!card.cat}
               style={{
@@ -260,15 +256,15 @@ export default function PunchListGlobal({
           leftIcon={<Search size={14} />}
           wrapperStyle={{ width: 260 }}
         />
-        <Select selectSize="sm" fullWidth={false} value={filterProject} onChange={(e) => setFilterProject(e.target.value)} style={{ width: 200 }}>
+        <Select selectSize="sm" fullWidth={false} value={filters.project} onChange={(e) => url.set({ project: e.target.value })} style={{ width: 200 }}>
           <option value="">{tc('allProjects')}</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
         </Select>
-        <Select selectSize="sm" fullWidth={false} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ width: 160 }}>
+        <Select selectSize="sm" fullWidth={false} value={filters.status} onChange={(e) => url.set({ status: e.target.value })} style={{ width: 160 }}>
           <option value="">{t('filters.allStatuses')}</option>
           {PUNCH_STATUS_KEYS.map(k => <option key={k} value={k}>{punchStatusLabels[k]}</option>)}
         </Select>
-        <Select selectSize="sm" fullWidth={false} value={filterDisc} onChange={(e) => setFilterDisc(e.target.value)} style={{ width: 180 }}>
+        <Select selectSize="sm" fullWidth={false} value={filters.disc} onChange={(e) => url.set({ disc: e.target.value })} style={{ width: 180 }}>
           <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </Select>
@@ -276,17 +272,17 @@ export default function PunchListGlobal({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => { setFilterProject(''); setFilterCat(''); setFilterStatus(''); setFilterDisc(''); setSearch(''); setPage(1) }}
+            onClick={() => { setSearch(''); url.clear(['project', 'cat', 'status', 'disc', 'q']) }}
           >
             {tc('clearFilters')}
           </Button>
         )}
         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginLeft: 'auto' }}>
-          {t('filters.count', { filtered: filtered.length, total: punches.length })}
+          {t('filters.count', { filtered: total, total: summary.total })}
         </span>
-        {filtered.length > 0 && (
-          <Button variant="outline" size="sm" leftIcon={<Download size={14} />} onClick={exportCsv}>
-            {tc('exportCsv')}
+        {total > 0 && (
+          <Button variant="outline" size="sm" leftIcon={<Download size={14} />} onClick={exportCsv} loading={isExporting}>
+            {isExporting ? tc('exporting') : tc('exportCsv')}
           </Button>
         )}
         <a
@@ -533,14 +529,7 @@ export default function PunchListGlobal({
         />
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20, alignItems: 'center' }}>
-          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{tc('prevPage')}</Button>
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{tc('page', { page, total: totalPages })}</span>
-          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{tc('nextPage')}</Button>
-        </div>
-      )}
+      <Pagination page={page} total={total} pageSize={pageSize} onPage={p => url.set({ page: p }, { resetPage: false })} disabled={url.isPending} />
     </div>
   )
 }

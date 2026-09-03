@@ -1,18 +1,22 @@
 'use client'
 
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useMemo, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updatePunchStatus, closePunch, addPunchComment, reassignPunch, createPunch } from '@/app/actions/punches'
 import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
+import { Pagination } from '@/components/ui'
+import { useUrlFilters } from '@/lib/list/useUrlFilters'
+import { searchProjectTags, type TagSearchHit } from '@/app/actions/tag-search'
+import type { PunchSummary } from '@/lib/list/punch-query'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
 
 type OrgMember = { user_id: string; profiles: { full_name: string } | null }
-type TagOption = { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } | null }
+type TagOption = TagSearchHit
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -49,7 +53,11 @@ export default function PunchListView({
   systems,
   orgMembers,
   currentUserRole,
-  tags,
+  total,
+  page,
+  pageSize,
+  summary,
+  filters,
 }: {
   projectId: string
   projectName: string
@@ -59,15 +67,23 @@ export default function PunchListView({
   systems: System[]
   orgMembers: OrgMember[]
   currentUserRole: string
-  tags: TagOption[]
+  total: number
+  page: number
+  pageSize: number
+  summary: PunchSummary
+  filters: { cat: string; status: string; disc: string; system: string; q: string }
 }) {
   const t = useTranslations('PunchList')
   const router = useRouter()
-  const [search, setSearch] = useState('')
-  const [filterCat, setFilterCat] = useState<'A' | 'B' | 'C' | ''>('')
-  const [filterStatus, setFilterStatus] = useState<string>('')
-  const [filterDisc, setFilterDisc] = useState('')
-  const [filterSystem, setFilterSystem] = useState('')
+  // Sprint E: filtros/página en la URL; `punches` es la página visible.
+  const url = useUrlFilters()
+  const filterCat = filters.cat as 'A' | 'B' | 'C' | ''
+  const [search, setSearch] = useState(filters.q)
+  useEffect(() => {
+    const handle = setTimeout(() => { if (search !== filters.q) url.set({ q: search }) }, 350)
+    return () => clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe disparar cuando cambia lo que escribe el usuario
+  }, [search])
   const [selectedPunch, setSelectedPunch] = useState<Punch | null>(null)
   const [showCreate, setShowCreate] = useState(false)
 
@@ -85,31 +101,16 @@ export default function PunchListView({
 
   // ── Summary counts ───────────────────────────────────────────────────
 
-  const catACnt   = punches.filter(p => p.category === 'A' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const catBCnt   = punches.filter(p => p.category === 'B' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const catCCnt   = punches.filter(p => p.category === 'C' && p.status !== 'closed' && p.status !== 'cancelled').length
-  const closedCnt = punches.filter(p => p.status === 'closed').length
+  const catACnt   = summary.catAOpen
+  const catBCnt   = summary.catBOpen
+  const catCCnt   = summary.catCOpen
+  const closedCnt = summary.closed
 
   // ── Filter ───────────────────────────────────────────────────────────
 
-  const filtered = punches.filter(p => {
-    if (filterCat && p.category !== filterCat) return false
-    if (filterStatus && p.status !== filterStatus) return false
-    if (filterDisc && p.tags?.disciplines.code !== filterDisc) return false
-    if (filterSystem && p.subsystems?.systems.code !== filterSystem) return false
-    if (search) {
-      const q = search.toLowerCase()
-      if (
-        !p.punch_number.toLowerCase().includes(q) &&
-        !p.description.toLowerCase().includes(q) &&
-        !(p.tags?.tag_number.toLowerCase().includes(q)) &&
-        !(p.assigned_to_profile?.full_name.toLowerCase().includes(q))
-      ) return false
-    }
-    return true
-  })
+  const filtered = punches
 
-  const hasFilters = !!(search || filterCat || filterStatus || filterDisc || filterSystem)
+  const hasFilters = !!(filters.q || filters.cat || filters.status || filters.disc || filters.system)
 
   const filteredIds = useMemo(() => new Set(filtered.map(p => p.id)), [filtered])
   const allFilteredSelected = filtered.length > 0 && filtered.every(p => selected.has(p.id))
@@ -167,7 +168,7 @@ export default function PunchListView({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', color: '#94a3b8' }}>{t('filters.count', { filtered: filtered.length, total: punches.length })}</span>
+          <span style={{ fontSize: '13px', color: '#94a3b8' }}>{t('filters.count', { filtered: total, total: summary.total })}</span>
           <a
             href={`/projects/${projectId}/punches/export`}
             style={{
@@ -214,7 +215,7 @@ export default function PunchListView({
         ]).map(card => (
           <div
             key={card.labelKey}
-            onClick={() => card.filterVal && setFilterCat(prev => prev === card.filterVal ? '' : card.filterVal!)}
+            onClick={() => card.filterVal && url.set({ cat: filterCat === card.filterVal ? null : card.filterVal })}
             style={{
               padding: '16px 18px', borderRadius: '12px',
               background: filterCat === card.filterVal && card.filterVal ? card.bg : 'var(--card-bg)',
@@ -280,14 +281,14 @@ export default function PunchListView({
           style={{ flex: '1 1 220px', minWidth: '180px', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px' }}
         />
 
-        <select value={filterCat} onChange={e => setFilterCat(e.target.value as 'A' | 'B' | 'C' | '')} style={selStyle}>
+        <select value={filters.cat} onChange={e => url.set({ cat: e.target.value })} style={selStyle}>
           <option value="">{t('filters.allCategories')}</option>
           <option value="A">{t('catLabels.A')}</option>
           <option value="B">{t('catLabels.B')}</option>
           <option value="C">{t('catLabels.C')}</option>
         </select>
 
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={selStyle}>
+        <select value={filters.status} onChange={e => url.set({ status: e.target.value })} style={selStyle}>
           <option value="">{t('filters.allStatuses')}</option>
           {(['open', 'in_progress', 'closed', 'cancelled'] as const).map(k => (
             <option key={k} value={k}>{punchStatusLabels[k]}</option>
@@ -295,14 +296,14 @@ export default function PunchListView({
         </select>
 
         {disciplines.length > 0 && (
-          <select value={filterDisc} onChange={e => setFilterDisc(e.target.value)} style={selStyle}>
+          <select value={filters.disc} onChange={e => url.set({ disc: e.target.value })} style={selStyle}>
             <option value="">{t('filters.allDisciplines')}</option>
             {disciplines.map(d => <option key={d.id} value={d.code}>{d.code} — {d.name}</option>)}
           </select>
         )}
 
         {systems.length > 0 && (
-          <select value={filterSystem} onChange={e => setFilterSystem(e.target.value)} style={selStyle}>
+          <select value={filters.system} onChange={e => url.set({ system: e.target.value })} style={selStyle}>
             <option value="">{t('filters.allSystems')}</option>
             {systems.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
           </select>
@@ -310,7 +311,7 @@ export default function PunchListView({
 
         {hasFilters && (
           <button
-            onClick={() => { setSearch(''); setFilterCat(''); setFilterStatus(''); setFilterDisc(''); setFilterSystem('') }}
+            onClick={() => { setSearch(''); url.clear(['q', 'cat', 'status', 'disc', 'system']) }}
             style={{ padding: '8px 12px', background: 'var(--gray-100)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('filters.clear')}
@@ -408,6 +409,8 @@ export default function PunchListView({
         </div>
       )}
 
+      <Pagination page={page} total={total} pageSize={pageSize} onPage={p => url.set({ page: p }, { resetPage: false })} disabled={url.isPending} />
+
       {/* Detail modal */}
       {selectedPunch && (
         <PunchDetailModal
@@ -424,7 +427,6 @@ export default function PunchListView({
       {showCreate && (
         <CreatePunchModal
           projectId={projectId}
-          tags={tags}
           orgMembers={orgMembers}
           onClose={() => setShowCreate(false)}
           onCreated={() => { setShowCreate(false); refresh() }}
@@ -640,13 +642,11 @@ function PunchDetailModal({
 
 function CreatePunchModal({
   projectId,
-  tags,
   orgMembers,
   onClose,
   onCreated,
 }: {
   projectId: string
-  tags: TagOption[]
   orgMembers: OrgMember[]
   onClose: () => void
   onCreated: () => void
@@ -664,15 +664,17 @@ function CreatePunchModal({
   const [assignedTo, setAssignedTo] = useState('')
   const [targetDate, setTargetDate] = useState('')
 
-  const selectedTag = tags.find(tg => tg.id === tagId) ?? null
-
-  const tagMatches = useMemo(() => {
-    const q = tagSearch.trim().toLowerCase()
-    const pool = q
-      ? tags.filter(tg => tg.tag_number.toLowerCase().includes(q) || tg.description?.toLowerCase().includes(q))
-      : tags
-    return pool.slice(0, 50)
-  }, [tagSearch, tags])
+  // Sprint E: los tags se buscan en servidor (máx. 50) en vez de cargar todo el proyecto
+  const [tagMatches, setTagMatches] = useState<TagOption[]>([])
+  const [selectedTag, setSelectedTag] = useState<TagOption | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    const handle = setTimeout(async () => {
+      const res = await searchProjectTags({ projectId, q: tagSearch })
+      if (!cancelled && res.tags) setTagMatches(res.tags)
+    }, 250)
+    return () => { cancelled = true; clearTimeout(handle) }
+  }, [tagSearch, projectId])
 
   const canSubmit = !!tagId && !!description.trim() && !isPending
 
@@ -713,7 +715,7 @@ function CreatePunchModal({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--gray-50)' }}>
               <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: selectedTag.disciplines?.color ?? 'var(--text-strong)' }}>{selectedTag.tag_number}</span>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedTag.description}</span>
-              <button onClick={() => { setTagId(''); setTagSearch(''); setTagOpen(true) }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '13px' }}>✕</button>
+              <button onClick={() => { setTagId(''); setSelectedTag(null); setTagSearch(''); setTagOpen(true) }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '13px' }}>✕</button>
             </div>
           ) : (
             <>
@@ -730,7 +732,7 @@ function CreatePunchModal({
                   {tagMatches.map(tg => (
                     <div
                       key={tg.id}
-                      onClick={() => { setTagId(tg.id); setTagOpen(false) }}
+                      onClick={() => { setTagId(tg.id); setSelectedTag(tg); setTagOpen(false) }}
                       style={{ padding: '8px 11px', cursor: 'pointer', borderBottom: '1px solid var(--gray-50)' }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'var(--gray-50)' }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}

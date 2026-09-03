@@ -1,10 +1,13 @@
 'use client'
 
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useMemo, useTransition } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { bulkUpdateTagStatus } from '@/app/actions/bulk'
+import { Pagination } from '@/components/ui'
+import { useUrlFilters } from '@/lib/list/useUrlFilters'
+import type { TagDisciplineCount } from '@/lib/list/tag-query'
 
 type Discipline = { id: string; code: string; name: string; color: string }
 type Area       = { id: string; code: string; name: string }
@@ -35,24 +38,41 @@ const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
 
 const TAG_STATUS_KEYS = ['not_started', 'in_progress', 'complete', 'on_hold'] as const
 
+// Sprint E: página/filtros en la URL; `tags` es solo la página visible.
 export default function TagsView({
   projectId,
   tags,
+  total,
+  page,
+  pageSize,
+  disciplineCounts,
+  filters,
+  subsystemName,
   canEdit,
   pidUrlMap = {},
 }: {
   projectId: string
   tags: Tag[]
+  total: number
+  page: number
+  pageSize: number
+  disciplineCounts: TagDisciplineCount[]
+  filters: { disc: string; q: string; subsystem: string }
+  subsystemName: string | null
   canEdit: boolean
   pidUrlMap?: Record<string, string>
 }) {
   const t = useTranslations('Tags')
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const subsystemFilter = searchParams.get('subsystem')
+  const url = useUrlFilters()
+  const activeDiscipline = filters.disc || 'ALL'
 
-  const [activeDiscipline, setActiveDiscipline] = useState<string>('ALL')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(filters.q)
+  useEffect(() => {
+    const handle = setTimeout(() => { if (search !== filters.q) url.set({ q: search }) }, 350)
+    return () => clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe disparar cuando cambia lo que escribe el usuario
+  }, [search])
 
   // ── Bulk ─────────────────────────────────────────────────────────────
   const [selected, setSelected]       = useState<Set<string>>(new Set())
@@ -60,48 +80,13 @@ export default function TagsView({
   const [isPending, startTransition]  = useTransition()
   const [bulkError, setBulkError]     = useState<string | null>(null)
 
-  // Reset discipline when subsystem filter changes — React's "adjust state during render" pattern
-  // (https://react.dev/reference/react/useState#storing-information-from-previous-renders)
-  const [prevSubsystemFilter, setPrevSubsystemFilter] = useState(subsystemFilter)
-  if (prevSubsystemFilter !== subsystemFilter) {
-    setPrevSubsystemFilter(subsystemFilter)
-    if (subsystemFilter) setActiveDiscipline('ALL')
-  }
+  // Pestañas por disciplina: conteos calculados en SQL (acotados al subsistema si aplica)
+  const disciplines = disciplineCounts.map(d => ({ code: d.code, name: d.name, color: d.color, count: d.n }))
+  const scopeTotal = disciplineCounts.reduce((a, d) => a + d.n, 0)
 
-  // Build discipline summary
-  const subsystemFilteredTags = useMemo(() =>
-    subsystemFilter ? tags.filter(tag => tag.subsystems?.id === subsystemFilter) : tags,
-  [tags, subsystemFilter])
-
-  const disciplineMap = useMemo(() => {
-    const m = new Map<string, { code: string; name: string; color: string; count: number }>()
-    for (const tag of subsystemFilteredTags) {
-      const d = tag.disciplines
-      if (!m.has(d.code)) m.set(d.code, { code: d.code, name: d.name, color: d.color, count: 0 })
-      m.get(d.code)!.count++
-    }
-    return m
-  }, [subsystemFilteredTags])
-
-  const disciplines = [...disciplineMap.values()].sort((a, b) => a.code.localeCompare(b.code))
-
-  const filtered = useMemo(() => {
-    return subsystemFilteredTags.filter(tag => {
-      if (activeDiscipline !== 'ALL' && tag.disciplines.code !== activeDiscipline) return false
-      if (search) {
-        const q = search.toLowerCase()
-        if (!tag.tag_number.toLowerCase().includes(q) && !(tag.description ?? '').toLowerCase().includes(q)) return false
-      }
-      return true
-    })
-  }, [subsystemFilteredTags, activeDiscipline, search])
-
-  const filteredIds = useMemo(() => new Set(filtered.map(t => t.id)), [filtered])
+  const filtered = tags
   const allFilteredSelected = filtered.length > 0 && filtered.every(t => selected.has(t.id))
-
-  const subsystemName = subsystemFilter
-    ? tags.find(tag => tag.subsystems?.id === subsystemFilter)?.subsystems?.name ?? subsystemFilter
-    : null
+  const filteredIds = useMemo(() => new Set(filtered.map(t => t.id)), [filtered])
 
   const showPid = filtered.some(tag => tag.pid_drawing)
 
@@ -150,10 +135,10 @@ export default function TagsView({
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <FilterTab
             label={t('list.all')}
-            count={tags.length}
+            count={scopeTotal}
             active={activeDiscipline === 'ALL'}
             color="#3b82f6"
-            onClick={() => setActiveDiscipline('ALL')}
+            onClick={() => url.set({ disc: null })}
           />
           {disciplines.map(d => (
             <FilterTab
@@ -162,7 +147,7 @@ export default function TagsView({
               count={d.count}
               active={activeDiscipline === d.code}
               color={d.color}
-              onClick={() => setActiveDiscipline(d.code)}
+              onClick={() => url.set({ disc: d.code })}
             />
           ))}
         </div>
@@ -202,7 +187,7 @@ export default function TagsView({
       {/* Subsystem banner */}
       {subsystemName && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', marginBottom: '12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', fontSize: '13px', color: '#1d4ed8' }}>
-          <span>{t('list.filterBanner', { name: subsystemName, count: subsystemFilteredTags.length })}</span>
+          <span>{t('list.filterBanner', { name: subsystemName, count: scopeTotal })}</span>
           <a href={`/projects/${projectId}/tags`} style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
             {t('list.clearFilter')}
           </a>
@@ -306,7 +291,7 @@ export default function TagsView({
                       />
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>{i + 1}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>{(page - 1) * pageSize + i + 1}</span>
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -371,6 +356,8 @@ export default function TagsView({
           </table>
         </div>
       )}
+
+      <Pagination page={page} total={total} pageSize={pageSize} onPage={p => url.set({ page: p }, { resetPage: false })} disabled={url.isPending} />
     </div>
   )
 }

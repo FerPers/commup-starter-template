@@ -305,6 +305,13 @@ export type Database = {
             foreignKeyName: "cables_from_tag_id_fkey"
             columns: ["from_tag_id"]
             isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cables_from_tag_id_fkey"
+            columns: ["from_tag_id"]
+            isOneToOne: false
             referencedRelation: "tags"
             referencedColumns: ["id"]
           },
@@ -361,6 +368,13 @@ export type Database = {
             foreignKeyName: "cables_to_tag_id_fkey"
             columns: ["to_tag_id"]
             isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cables_to_tag_id_fkey"
+            columns: ["to_tag_id"]
+            isOneToOne: false
             referencedRelation: "tags"
             referencedColumns: ["id"]
           },
@@ -412,6 +426,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ops_dashboard"
             referencedColumns: ["punch_id"]
+          },
+          {
+            foreignKeyName: "certificate_punch_exceptions_punch_id_fkey"
+            columns: ["punch_id"]
+            isOneToOne: false
+            referencedRelation: "punch_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "certificate_punch_exceptions_punch_id_fkey"
@@ -972,6 +993,13 @@ export type Database = {
             foreignKeyName: "interlocks_cause_tag_id_fkey"
             columns: ["cause_tag_id"]
             isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interlocks_cause_tag_id_fkey"
+            columns: ["cause_tag_id"]
+            isOneToOne: false
             referencedRelation: "tags"
             referencedColumns: ["id"]
           },
@@ -981,6 +1009,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "interlocks_effect_tag_id_fkey"
+            columns: ["effect_tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "interlocks_effect_tag_id_fkey"
@@ -1764,6 +1799,13 @@ export type Database = {
             foreignKeyName: "itrs_tag_id_fkey"
             columns: ["tag_id"]
             isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itrs_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
             referencedRelation: "tags"
             referencedColumns: ["id"]
           },
@@ -2006,6 +2048,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "loop_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "loop_tags_tag_id_fkey"
@@ -2347,6 +2396,13 @@ export type Database = {
             foreignKeyName: "pid_hotspots_tag_id_fkey"
             columns: ["tag_id"]
             isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_hotspots_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
             referencedRelation: "tags"
             referencedColumns: ["id"]
           },
@@ -2455,6 +2511,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "preservation_plans_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "preservation_plans_tag_id_fkey"
@@ -2703,6 +2766,13 @@ export type Database = {
             foreignKeyName: "preservation_records_punch_id_fkey"
             columns: ["punch_id"]
             isOneToOne: false
+            referencedRelation: "punch_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preservation_records_punch_id_fkey"
+            columns: ["punch_id"]
+            isOneToOne: false
             referencedRelation: "punches"
             referencedColumns: ["id"]
           },
@@ -2712,6 +2782,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "preservation_records_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "preservation_records_tag_id_fkey"
@@ -3212,6 +3289,13 @@ export type Database = {
             foreignKeyName: "punch_attachments_punch_id_fkey"
             columns: ["punch_id"]
             isOneToOne: false
+            referencedRelation: "punch_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punch_attachments_punch_id_fkey"
+            columns: ["punch_id"]
+            isOneToOne: false
             referencedRelation: "punches"
             referencedColumns: ["id"]
           },
@@ -3253,6 +3337,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ops_dashboard"
             referencedColumns: ["punch_id"]
+          },
+          {
+            foreignKeyName: "punch_comments_punch_id_fkey"
+            columns: ["punch_id"]
+            isOneToOne: false
+            referencedRelation: "punch_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "punch_comments_punch_id_fkey"
@@ -3341,6 +3432,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ops_dashboard"
             referencedColumns: ["punch_id"]
+          },
+          {
+            foreignKeyName: "punch_post_handover_events_punch_id_fkey"
+            columns: ["punch_id"]
+            isOneToOne: false
+            referencedRelation: "punch_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "punch_post_handover_events_punch_id_fkey"
@@ -3525,6 +3623,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "punches_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "punches_tag_id_fkey"
@@ -3793,6 +3898,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "signals_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "signals_tag_id_fkey"
@@ -4766,6 +4878,13 @@ export type Database = {
             foreignKeyName: "itrs_tag_id_fkey"
             columns: ["tag_id"]
             isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itrs_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
             referencedRelation: "tags"
             referencedColumns: ["id"]
           },
@@ -4861,6 +4980,13 @@ export type Database = {
             foreignKeyName: "punches_tag_id_fkey"
             columns: ["tag_id"]
             isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
             referencedRelation: "tags"
             referencedColumns: ["id"]
           },
@@ -4870,6 +4996,184 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      punch_list_v: {
+        Row: {
+          assigned_to: string | null
+          assigned_to_name: string | null
+          category: Database["public"]["Enums"]["punch_category"] | null
+          closed_date: string | null
+          created_at: string | null
+          description: string | null
+          discipline_code: string | null
+          discipline_color: string | null
+          discipline_id: string | null
+          discipline_name: string | null
+          id: string | null
+          itr_id: string | null
+          org_id: string | null
+          priority: Database["public"]["Enums"]["punch_priority"] | null
+          project_code: string | null
+          project_id: string | null
+          project_name: string | null
+          punch_number: string | null
+          raised_by: string | null
+          raised_by_name: string | null
+          search_text: string | null
+          status: Database["public"]["Enums"]["punch_status"] | null
+          subsystem_code: string | null
+          subsystem_id: string | null
+          subsystem_name: string | null
+          system_code: string | null
+          system_id: string | null
+          system_name: string | null
+          tag_description: string | null
+          tag_id: string | null
+          tag_number: string | null
+          target_date: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["discipline_id"]
+          },
+          {
+            foreignKeyName: "punches_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itrs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_raised_by_fkey"
+            columns: ["raised_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "punches_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "punches_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_velocity"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "punches_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "subsystems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "punches_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "punches_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
           },
         ]
       }
@@ -4954,6 +5258,153 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      tag_list_v: {
+        Row: {
+          area_code: string | null
+          area_id: string | null
+          area_name: string | null
+          created_at: string | null
+          description: string | null
+          discipline_code: string | null
+          discipline_color: string | null
+          discipline_id: string | null
+          discipline_name: string | null
+          equipment_type_code: string | null
+          equipment_type_id: string | null
+          equipment_type_name: string | null
+          id: string | null
+          manufacturer: string | null
+          model: string | null
+          org_id: string | null
+          pid_drawing: string | null
+          preservation_required: boolean | null
+          project_id: string | null
+          search_text: string | null
+          serial_number: string | null
+          status: Database["public"]["Enums"]["tag_status"] | null
+          subsystem_code: string | null
+          subsystem_id: string | null
+          subsystem_name: string | null
+          system_code: string | null
+          system_id: string | null
+          system_name: string | null
+          tag_number: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "systems_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "systems_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["area_id"]
+          },
+          {
+            foreignKeyName: "tags_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tags_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["discipline_id"]
+          },
+          {
+            foreignKeyName: "tags_equipment_type_id_fkey"
+            columns: ["equipment_type_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tags_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tags_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "tags_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "tags_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_velocity"
+            referencedColumns: ["subsystem_id"]
+          },
+          {
+            foreignKeyName: "tags_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "subsystems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tags_subsystem_id_fkey"
+            columns: ["subsystem_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["subsystem_id"]
           },
         ]
       }
@@ -5143,6 +5594,14 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: string
       }
+      punch_summary_counts: {
+        Args: { p_org_id?: string; p_project_id?: string }
+        Returns: {
+          category: Database["public"]["Enums"]["punch_category"]
+          n: number
+          status: Database["public"]["Enums"]["punch_status"]
+        }[]
+      }
       reject_itr_suggestion: {
         Args: { p_note?: string; p_suggestion_id: string }
         Returns: string
@@ -5151,6 +5610,15 @@ export type Database = {
       set_webhook_enabled: {
         Args: { p_enabled: boolean; p_sub_id: string }
         Returns: undefined
+      }
+      tag_discipline_counts: {
+        Args: { p_project_id: string; p_subsystem_id?: string }
+        Returns: {
+          discipline_code: string
+          discipline_color: string
+          discipline_name: string
+          n: number
+        }[]
       }
       transfer_punch_to_ops: {
         Args: {
