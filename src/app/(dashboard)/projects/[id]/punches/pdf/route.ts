@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { renderPunchListPdf, type PunchListPdfData, type PunchPdfRow } from '@/lib/pdf/punch-list'
 
@@ -22,7 +23,7 @@ export async function GET(
 
   const [
     { data: project, error: projectErr },
-    { data: punches },
+    punches,
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -30,7 +31,7 @@ export async function GET(
       .eq('id', projectId)
       .eq('org_id', orgId)
       .single(),
-    supabase
+    fetchAllRows(() => supabase
       .from('punches')
       .select(`
         punch_number, category, status, description, target_date,
@@ -39,7 +40,7 @@ export async function GET(
         subsystems(code)
       `)
       .eq('project_id', projectId)
-      .order('punch_number'),
+      .order('punch_number')),
   ])
 
   if (projectErr || !project) {

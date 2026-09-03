@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import ReportPrint from './ReportPrint'
@@ -15,7 +16,7 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
     { data: project },
     { data: org },
     { data: phases },
-    { data: itrs },
+    itrs,
     { data: openPunches },
     subsystemKpis,
     snapshots,
@@ -36,10 +37,10 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
       .select('id, code, name, color, order_index')
       .eq('org_id', membership.org_id)
       .order('order_index'),
-    supabase
+    fetchAllRows(() => supabase
       .from('itrs')
       .select('id, status, phase_id')
-      .eq('project_id', projectId),
+      .eq('project_id', projectId)),
     supabase
       .from('punches')
       .select('id, category, status')

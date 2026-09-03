@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { renderPhaseProgressPdf, type PhaseProgressData, type PhaseProgressRow } from '@/lib/pdf/phase-progress'
 
@@ -22,10 +23,10 @@ export async function GET(
   const [
     { data: project, error: projectErr },
     { data: phases },
-    { data: itrs },
-    { data: certs },
-    { data: punches },
-    { data: subsystems },
+    itrs,
+    certs,
+    punches,
+    subsystems,
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -38,22 +39,22 @@ export async function GET(
       .select('id, code, name, color, order_index')
       .eq('org_id', orgId)
       .order('order_index'),
-    supabase
+    fetchAllRows(() => supabase
       .from('itrs')
       .select('id, status, phase_id')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('certificates')
       .select('id, status, phase_id')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('punches')
       .select('id, category, status, subsystem_id')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('subsystems')
       .select('id, current_phase_id')
-      .eq('project_id', projectId),
+      .eq('project_id', projectId)),
   ])
 
   if (projectErr || !project) {

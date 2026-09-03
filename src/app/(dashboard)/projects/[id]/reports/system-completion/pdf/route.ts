@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import {
   renderSystemCompletionPdf,
@@ -28,11 +29,11 @@ export async function GET(
   const [
     { data: project, error: projectErr },
     { data: systems },
-    { data: subsystems },
+    subsystems,
     { data: phases },
-    { data: itrs },
-    { data: punches },
-    { data: certs },
+    itrs,
+    punches,
+    certs,
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -45,27 +46,27 @@ export async function GET(
       .select('id, code, name')
       .eq('project_id', projectId)
       .order('code'),
-    supabase
+    fetchAllRows(() => supabase
       .from('subsystems')
       .select('id, code, name, system_id, current_phase_id')
       .eq('project_id', projectId)
-      .order('code'),
+      .order('code')),
     supabase
       .from('project_phases')
       .select('id, code')
       .eq('org_id', orgId),
-    supabase
+    fetchAllRows(() => supabase
       .from('itrs')
       .select('subsystem_id, status')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('punches')
       .select('subsystem_id, category, status')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('certificates')
       .select('subsystem_id, status')
-      .eq('project_id', projectId),
+      .eq('project_id', projectId)),
   ])
 
   if (projectErr || !project) {

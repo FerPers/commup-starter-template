@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { createClient } from '@/lib/supabase/server'
 import * as XLSX from 'xlsx'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
@@ -24,7 +25,7 @@ export async function GET(
   const [
     { data: project },
     { data: phases },
-    { data: itrs },
+    itrs,
     subsystemKpis,
     snapshots,
   ] = await Promise.all([
@@ -39,10 +40,10 @@ export async function GET(
       .select('id, code, name, order_index')
       .eq('org_id', membership.org_id)
       .order('order_index'),
-    supabase
+    fetchAllRows(() => supabase
       .from('itrs')
       .select('id, status, phase_id')
-      .eq('project_id', projectId),
+      .eq('project_id', projectId)),
     getSubsystemKpis(projectId),
     getProjectSnapshots(projectId),
   ])

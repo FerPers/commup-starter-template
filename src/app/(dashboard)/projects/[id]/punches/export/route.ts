@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { buildPunchListWorkbook, type PunchExportRow } from '@/lib/excel/punch-list'
 
@@ -21,7 +22,7 @@ export async function GET(
 
   const [
     { data: project, error: projectErr },
-    { data: punches },
+    punches,
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -29,7 +30,7 @@ export async function GET(
       .eq('id', projectId)
       .eq('org_id', orgId)
       .single(),
-    supabase
+    fetchAllRows(() => supabase
       .from('punches')
       .select(`
         punch_number, category, status, priority, description,
@@ -40,7 +41,7 @@ export async function GET(
         subsystems(code, name, systems(code, name, areas(code, name)))
       `)
       .eq('project_id', projectId)
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false })),
   ])
 
   if (projectErr || !project) {

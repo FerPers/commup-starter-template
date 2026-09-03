@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import {
   renderItrTestPackPdf,
@@ -25,8 +26,8 @@ export async function GET(
 
   const [
     { data: project, error: projectErr },
-    { data: subsystems },
-    { data: itrs },
+    subsystems,
+    itrs,
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -34,12 +35,12 @@ export async function GET(
       .eq('id', projectId)
       .eq('org_id', orgId)
       .single(),
-    supabase
+    fetchAllRows(() => supabase
       .from('subsystems')
       .select('id, code, name')
       .eq('project_id', projectId)
-      .order('code'),
-    supabase
+      .order('code')),
+    fetchAllRows(() => supabase
       .from('itrs')
       .select(`
         itr_number, subsystem_id, status, progress_pct, scheduled_date, completed_date,
@@ -47,7 +48,7 @@ export async function GET(
         tags(tag_number)
       `)
       .eq('project_id', projectId)
-      .order('itr_number'),
+      .order('itr_number')),
   ])
 
   if (projectErr || !project) {

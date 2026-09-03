@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import {
   renderAreaKpisPdf,
@@ -30,11 +31,11 @@ export async function GET(
     { data: project, error: projectErr },
     { data: areas },
     { data: systems },
-    { data: subsystems },
-    { data: tags },
-    { data: itrs },
-    { data: punches },
-    { data: certs },
+    subsystems,
+    tags,
+    itrs,
+    punches,
+    certs,
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -51,26 +52,26 @@ export async function GET(
       .from('systems')
       .select('id, code, name, area_id')
       .eq('project_id', projectId),
-    supabase
+    fetchAllRows(() => supabase
       .from('subsystems')
       .select('id, system_id')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('tags')
       .select('id, subsystem_id')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('itrs')
       .select('id, status, subsystem_id')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('punches')
       .select('id, category, status, subsystem_id')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)),
+    fetchAllRows(() => supabase
       .from('certificates')
       .select('id, status, system_id, subsystem_id')
-      .eq('project_id', projectId),
+      .eq('project_id', projectId)),
   ])
 
   if (projectErr || !project) {
