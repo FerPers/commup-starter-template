@@ -53,19 +53,33 @@ const VIEW_COLS =
 const CATS = ['A', 'B', 'C']
 const STATUSES = ['open', 'in_progress', 'closed', 'cancelled']
 
-function applyFilters<Q extends { eq: (c: string, v: string) => Q; ilike: (c: string, v: string) => Q }>(
-  query: Q, scope: { orgId: string; projectId?: string }, f: PunchListFilters,
+type FilterQ = { eq: (c: string, v: string) => FilterQ; or: (f: string) => FilterQ }
+
+function applyFilters<Q extends FilterQ>(
+  query: Q, scope: { orgId: string; projectId?: string }, f: PunchListFilters, tagIds: string[] | null,
 ): Q {
-  let q = query.eq('org_id', scope.orgId)
-  if (scope.projectId) q = q.eq('project_id', scope.projectId)
-  else if (f.project) q = q.eq('project_id', f.project)
-  if (f.cat && CATS.includes(f.cat)) q = q.eq('category', f.cat)
-  if (f.status && STATUSES.includes(f.status)) q = q.eq('status', f.status)
-  if (f.disc) q = q.eq('discipline_code', f.disc)
-  if (f.system) q = q.eq('system_code', f.system)
+  let q = query.eq('org_id', scope.orgId) as Q
+  if (scope.projectId) q = q.eq('project_id', scope.projectId) as Q
+  else if (f.project) q = q.eq('project_id', f.project) as Q
+  if (f.cat && CATS.includes(f.cat)) q = q.eq('category', f.cat) as Q
+  if (f.status && STATUSES.includes(f.status)) q = q.eq('status', f.status) as Q
+  if (f.disc) q = q.eq('discipline_code', f.disc) as Q
+  if (f.system) q = q.eq('system_code', f.system) as Q
   const search = normalizeSearch(f.q)
-  if (search) q = q.ilike('search_text', `%${search}%`)
+  if (search) {
+    const like = `%${search}%`
+    const parts = [`punch_number.ilike.${like}`, `description.ilike.${like}`]
+    if (tagIds?.length) parts.push(`tag_id.in.(${tagIds.join(',')})`)
+    q = q.or(parts.join(',')) as Q
+  }
   return q
+}
+
+async function resolveTagIds(supabase: Client, scope: { orgId: string; projectId?: string }, search: string): Promise<string[]> {
+  let q = supabase.from('tags').select('id').ilike('tag_number', `%${search}%`).limit(150)
+  if (scope.projectId) q = q.eq('project_id', scope.projectId)
+  const { data } = await q
+  return (data ?? []).map(t => t.id)
 }
 
 export async function fetchPunchPage(
@@ -75,8 +89,10 @@ export async function fetchPunchPage(
 ): Promise<{ rows: PunchListRow[]; total: number }> {
   const size = opts.pageSize ?? LIST_PAGE_SIZE
   const [from, to] = rangeFor(opts.page, size)
+  const search = normalizeSearch(opts.filters.q)
+  const tagIds = search ? await resolveTagIds(supabase, scope, search) : null
   const base = supabase.from('punch_list_v').select(VIEW_COLS, { count: 'exact' })
-  const { data, count, error } = await applyFilters(base, scope, opts.filters)
+  const { data, count, error } = await applyFilters(base, scope, opts.filters, tagIds)
     .order(opts.sort, { ascending: opts.dir === 'asc', nullsFirst: false })
     .order('id', { ascending: true })
     .range(from, to)

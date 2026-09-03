@@ -12,20 +12,46 @@ const VIEW_COLS =
 
 const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected']
 
-function applyFilters<Q extends { eq: (c: string, v: string) => Q; ilike: (c: string, v: string) => Q }>(
+type FilterQ = { eq: (c: string, v: string) => FilterQ; or: (f: string) => FilterQ }
+
+function applyFilters<Q extends FilterQ>(
   query: Q,
   scope: { orgId: string; projectId?: string },
   f: ItrListFilters,
+  searchIds: { tagIds: string[]; templateIds: string[] } | null,
 ): Q {
-  let q = query.eq('org_id', scope.orgId)
-  if (scope.projectId) q = q.eq('project_id', scope.projectId)
-  else if (f.project) q = q.eq('project_id', f.project)
-  if (f.status && ITR_STATUSES.includes(f.status)) q = q.eq('status', f.status)
-  if (f.phase) q = q.eq('phase_code', f.phase)
-  if (f.disc) q = q.eq('discipline_code', f.disc)
+  let q = query.eq('org_id', scope.orgId) as Q
+  if (scope.projectId) q = q.eq('project_id', scope.projectId) as Q
+  else if (f.project) q = q.eq('project_id', f.project) as Q
+  if (f.status && ITR_STATUSES.includes(f.status)) q = q.eq('status', f.status) as Q
+  if (f.phase) q = q.eq('phase_code', f.phase) as Q
+  if (f.disc) q = q.eq('discipline_code', f.disc) as Q
   const search = normalizeSearch(f.q)
-  if (search) q = q.ilike('search_text', `%${search}%`)
+  if (search) {
+    // Sprint E: ilike solo sobre columnas con índice trigram (itr_number) + ids
+    // resueltos antes (tags/plantillas). Evita concatenar 250k filas por búsqueda.
+    const parts = [`itr_number.ilike.%${search}%`]
+    if (searchIds?.tagIds.length) parts.push(`tag_id.in.(${searchIds.tagIds.join(',')})`)
+    if (searchIds?.templateIds.length) parts.push(`template_id.in.(${searchIds.templateIds.join(',')})`)
+    q = q.or(parts.join(',')) as Q
+  }
   return q
+}
+
+/** Resuelve ids de tags y plantillas que coinciden con la búsqueda (acotado) */
+async function resolveSearchIds(
+  supabase: Client,
+  scope: { orgId: string; projectId?: string },
+  search: string,
+): Promise<{ tagIds: string[]; templateIds: string[] }> {
+  const like = `%${search}%`
+  let tagQ = supabase.from('tags').select('id').or(`tag_number.ilike.${like},description.ilike.${like}`).limit(150)
+  if (scope.projectId) tagQ = tagQ.eq('project_id', scope.projectId)
+  const [{ data: tags }, { data: templates }] = await Promise.all([
+    tagQ,
+    supabase.from('itr_templates').select('id').eq('org_id', scope.orgId).or(`code.ilike.${like},title.ilike.${like}`).limit(100),
+  ])
+  return { tagIds: (tags ?? []).map(t => t.id), templateIds: (templates ?? []).map(t => t.id) }
 }
 
 /**
@@ -40,8 +66,10 @@ export async function fetchItrPage(
   const size = opts.pageSize ?? LIST_PAGE_SIZE
   const [from, to] = rangeFor(opts.page, size)
 
+  const search = normalizeSearch(opts.filters.q)
+  const searchIds = search ? await resolveSearchIds(supabase, scope, search) : null
   const base = supabase.from('itr_list_v').select(VIEW_COLS, { count: 'exact' })
-  const { data, count, error } = await applyFilters(base, scope, opts.filters)
+  const { data, count, error } = await applyFilters(base, scope, opts.filters, searchIds)
     .order(opts.sort, { ascending: opts.dir === 'asc', nullsFirst: false })
     .order('id', { ascending: true })
     .range(from, to)

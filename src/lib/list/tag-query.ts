@@ -46,15 +46,19 @@ const VIEW_COLS =
 
 const TAG_STATUSES = ['not_started', 'in_progress', 'complete', 'on_hold']
 
-function applyFilters<Q extends { eq: (c: string, v: string) => Q; ilike: (c: string, v: string) => Q }>(
-  query: Q, projectId: string, f: TagListFilters,
-): Q {
-  let q = query.eq('project_id', projectId)
-  if (f.subsystem) q = q.eq('subsystem_id', f.subsystem)
-  if (f.disc) q = q.eq('discipline_code', f.disc)
-  if (f.status && TAG_STATUSES.includes(f.status)) q = q.eq('status', f.status)
+type FilterQ = { eq: (c: string, v: string) => FilterQ; or: (f: string) => FilterQ }
+
+function applyFilters<Q extends FilterQ>(query: Q, projectId: string, f: TagListFilters): Q {
+  let q = query.eq('project_id', projectId) as Q
+  if (f.subsystem) q = q.eq('subsystem_id', f.subsystem) as Q
+  if (f.disc) q = q.eq('discipline_code', f.disc) as Q
+  if (f.status && TAG_STATUSES.includes(f.status)) q = q.eq('status', f.status) as Q
   const search = normalizeSearch(f.q)
-  if (search) q = q.ilike('search_text', `%${search}%`)
+  if (search) {
+    // Sprint E: columnas propias de tags (índices trigram) en vez de search_text concatenado
+    const like = `%${search}%`
+    q = q.or(`tag_number.ilike.${like},description.ilike.${like},manufacturer.ilike.${like},model.ilike.${like},pid_drawing.ilike.${like}`) as Q
+  }
   return q
 }
 
