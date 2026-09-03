@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { updateProject, deleteProject } from '@/app/actions/projects'
 import type { ProjectStatus } from '@/types/database'
 
@@ -44,6 +45,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
   const [project, setProject] = useState(initial)
   const [showModal, setShowModal] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -67,7 +69,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
         setShowDeleteConfirm(false)
         return
       }
-      window.location.href = '/projects'
+      router.replace('/projects')
+      router.refresh()
     })
   }
 

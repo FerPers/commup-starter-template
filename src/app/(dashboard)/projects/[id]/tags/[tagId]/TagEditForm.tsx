@@ -2,6 +2,7 @@
 
 import type { Enums } from '@/types/supabase.generated'
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updateTag, deleteTag } from '@/app/actions/tags'
 import { INST_DISCIPLINES, SIGNAL_TYPES, SIL_LEVELS, cardStyle, inputStyle, sectionLabel, type Tag } from './tag-detail-shared'
@@ -15,6 +16,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
   const t = useTranslations('Tags')
   const isInst = INST_DISCIPLINES.includes(tag.disciplines.code)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -57,7 +59,8 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
         setShowDeleteConfirm(false)
         return
       }
-      window.location.href = `/projects/${projectId}/tags`
+      router.replace(`/projects/${projectId}/tags`)
+      router.refresh()
     })
   }
 
