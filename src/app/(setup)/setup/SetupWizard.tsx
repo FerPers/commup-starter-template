@@ -19,7 +19,9 @@ const DEFAULT_PHASES = [
   { code: 'A', name: 'Mechanical Completion', order_index: 1, color: '#3b82f6', certificate_name: 'MC' },
   { code: 'B', name: 'Pre-Commissioning',     order_index: 2, color: '#f59e0b', certificate_name: 'RFPC' },
   { code: 'C', name: 'Commissioning',          order_index: 3, color: '#10b981', certificate_name: 'RFC' },
-  { code: 'D', name: 'Start-Up / Operations',  order_index: 4, color: '#8b5cf6', certificate_name: 'RFSU' },
+  // Start-Up no es una 4ª letra de ITR: son pruebas de desempeño ligadas al RFSU.
+  // La letra D queda reservada para Decomisionamiento (se crea desde Admin → Config cuando toque).
+  { code: 'SU', name: 'Start-Up / Puesta en marcha', order_index: 4, color: '#8b5cf6', certificate_name: 'RFSU' },
 ]
 
 // All known disciplines from industry reference (ITR catalog)

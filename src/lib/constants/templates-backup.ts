@@ -128,7 +128,9 @@ export const PHASE_DEFAULTS: Record<string, { name: string; color: string; order
   A: { name: 'Construcción',           color: '#3B82F6', order_index: 0, certificate_name: 'Mechanical Completion' },
   B: { name: 'Pre-comisionamiento',    color: '#F59E0B', order_index: 1, certificate_name: 'Ready for Pre-Commissioning' },
   C: { name: 'Comisionamiento',        color: '#10B981', order_index: 2, certificate_name: 'Ready for Commissioning' },
-  D: { name: 'Operaciones',            color: '#8B5CF6', order_index: 3, certificate_name: 'Ready for Start-Up' },
+  SU: { name: 'Start-Up / Puesta en marcha', color: '#8B5CF6', order_index: 3, certificate_name: 'Ready for Start-Up' },
+  // D reservada para Decomisionamiento (sin certificado por defecto); R = Recomisionamiento (visión, RFR)
+  D: { name: 'Decomisionamiento',      color: '#64748B', order_index: 4, certificate_name: null },
 }
 
 export const DEFAULT_DISCIPLINE_COLOR = '#6B7280'

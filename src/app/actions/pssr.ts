@@ -367,14 +367,24 @@ export const approvePssrAndIssueRfsu = withAuthOnly(
       .single()
     if (!review) return { error: 'PSSR no encontrado' }
 
-    // Find Phase D (Start-Up) for the RFSU certificate
-    const { data: phaseD } = await supabase
+    // Fase de arranque = la que emite el certificado RFSU (código SU por defecto).
+    // No se asume "la última fase": puede haber D (Decomisionamiento) o R después.
+    const orgId = (review.projects as { org_id: string }).org_id
+    const { data: rfsuPhase } = await supabase
       .from('project_phases')
       .select('id, certificate_name, code')
-      .eq('org_id', (review.projects as { org_id: string }).org_id)
-      .order('order_index', { ascending: false })
+      .eq('org_id', orgId)
+      .ilike('certificate_name', 'RFSU%')
+      .order('order_index', { ascending: true })
       .limit(1)
       .maybeSingle()
+    const phaseD = rfsuPhase ?? (await supabase
+      .from('project_phases')
+      .select('id, certificate_name, code')
+      .eq('org_id', orgId)
+      .order('order_index', { ascending: false })
+      .limit(1)
+      .maybeSingle()).data
     if (!phaseD) return { error: 'No hay fases configuradas en la organización — crea las fases antes de aprobar el PSSR' }
 
     // Auto-number RFSU certificate
