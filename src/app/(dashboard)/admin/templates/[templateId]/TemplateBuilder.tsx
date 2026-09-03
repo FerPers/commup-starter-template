@@ -245,12 +245,23 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
     <div style={{ padding: '32px', maxWidth: '1000px' }}>
 
       {/* Breadcrumb */}
-      <Link href="/admin/templates" style={{
-        display: 'inline-flex', alignItems: 'center', gap: '6px',
-        fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '20px',
-      }}>
-        {t('breadcrumb')}
-      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
+        <Link href="/admin/templates" style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none',
+        }}>
+          {t('breadcrumb')}
+        </Link>
+        {canEdit && (
+          <Link
+            href={`/admin/templates/${template.id}/translations`}
+            title="Revisar y traducir al español (con ayuda de IA)"
+            style={{ fontSize: '12px', fontWeight: 600, color: '#6d28d9', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '7px', padding: '6px 12px', textDecoration: 'none' }}
+          >
+            ES · Traducción
+          </Link>
+        )}
+      </div>
 
       {/* Header card */}
       <TemplateHeaderCard

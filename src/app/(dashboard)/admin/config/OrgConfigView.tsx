@@ -6,8 +6,9 @@ import {
   createPhase, updatePhase, deletePhase,
   createDiscipline, updateDiscipline, deleteDiscipline,
   seedEquipmentTypes, createEquipmentType, updateEquipmentType, deleteEquipmentType,
-  updateOrgProfile, uploadOrgLogo, setOrgTemplateCatalog,
+  updateOrgProfile, uploadOrgLogo, setOrgTemplateCatalog, saveOrgGlossary,
 } from '@/app/actions/config'
+import { DEFAULT_ITR_GLOSSARY } from '@/lib/constants/itr-glossary'
 import { EQUIPMENT_CATEGORIES } from '@/lib/equipment-types'
 
 type Org = { id: string; name: string; logo_url: string | null }
@@ -225,6 +226,7 @@ export default function OrgConfigView({
   equipmentTypes: initialEquipmentTypes,
   projects,
   isTemplateCatalog: initialIsCatalog,
+  glossary: initialGlossary,
   isOwner,
 }: {
   org: Org
@@ -233,6 +235,7 @@ export default function OrgConfigView({
   equipmentTypes: EquipmentType[]
   projects: Project[]
   isTemplateCatalog: boolean
+  glossary: string
   isOwner: boolean
 }) {
   const t = useTranslations('Config')
@@ -246,6 +249,8 @@ export default function OrgConfigView({
   const fileRef = useRef<HTMLInputElement>(null)
   const [isCatalog, setIsCatalog] = useState(initialIsCatalog)
   const [catalogMsg, setCatalogMsg] = useState<string | null>(null)
+  const [glossary, setGlossary] = useState(initialGlossary)
+  const [glossaryMsg, setGlossaryMsg] = useState<string | null>(null)
 
   const [newPhase, setNewPhase] = useState({ code: '', name: '', color: '#3b82f6', certName: '' })
   const [showNewPhase, setShowNewPhase] = useState(false)
@@ -430,6 +435,35 @@ export default function OrgConfigView({
           {catalogMsg && (
             <p style={{ fontSize: '12px', color: '#10b981', margin: '8px 0 0' }}>{catalogMsg}</p>
           )}
+
+          {/* ── Glosario de traducción ITR ── */}
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: '18px', paddingTop: '16px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '4px' }}>
+              Glosario de traducción de ITRs (inglés → español)
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '10px' }}>
+              La IA respeta estos términos al traducir plantillas. Una línea por término, formato <code>inglés = español</code>. Vacío = glosario estándar de CommUp.
+            </div>
+            <textarea
+              value={glossary}
+              onChange={e => setGlossary(e.target.value)}
+              placeholder={DEFAULT_ITR_GLOSSARY.split('\n').slice(0, 6).join('\n') + '\n…'}
+              rows={8}
+              spellCheck={false}
+              style={{ ...inputStyle, width: '100%', fontFamily: 'ui-monospace, monospace', fontSize: '12px', resize: 'vertical' }}
+            />
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+              <button
+                disabled={isPending}
+                onClick={() => act(async () => { const r = await saveOrgGlossary(glossary); if (!r.error) setGlossaryMsg('Glosario guardado'); return r })}
+                style={btnPrimary}
+              >
+                Guardar glosario
+              </button>
+              <button onClick={() => setGlossary(DEFAULT_ITR_GLOSSARY)} style={btnOutline}>Cargar glosario estándar</button>
+              {glossaryMsg && <span style={{ fontSize: '12px', color: '#10b981' }}>{glossaryMsg}</span>}
+            </div>
+          </div>
         </div>
       </div>
 

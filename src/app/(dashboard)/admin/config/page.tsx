@@ -41,6 +41,8 @@ export default async function AdminConfigPage() {
   ])
 
   const isCatalog = !!(org?.settings as Record<string, unknown> | null)?.is_template_catalog
+  const glossaryRaw = (org?.settings as Record<string, unknown> | null)?.itr_glossary
+  const glossary = typeof glossaryRaw === 'string' ? glossaryRaw : ''
 
   return (
     <OrgConfigView
@@ -50,6 +52,7 @@ export default async function AdminConfigPage() {
       equipmentTypes={equipmentTypes ?? []}
       projects={projects ?? []}
       isTemplateCatalog={isCatalog}
+      glossary={glossary}
       isOwner={ctx.role === 'owner'}
     />
   )

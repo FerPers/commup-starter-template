@@ -1339,6 +1339,7 @@ export type Database = {
           condition_value: string | null
           description: string
           description_es: string | null
+          description_es_source: string | null
           id: string
           is_critical: boolean
           is_required: boolean
@@ -1360,6 +1361,7 @@ export type Database = {
           condition_value?: string | null
           description: string
           description_es?: string | null
+          description_es_source?: string | null
           id?: string
           is_critical?: boolean
           is_required?: boolean
@@ -1381,6 +1383,7 @@ export type Database = {
           condition_value?: string | null
           description?: string
           description_es?: string | null
+          description_es_source?: string | null
           id?: string
           is_critical?: boolean
           is_required?: boolean
@@ -1526,6 +1529,7 @@ export type Database = {
           org_id: string
           phase_id: string
           title: string
+          title_es: string | null
           version: number
         }
         Insert: {
@@ -1540,6 +1544,7 @@ export type Database = {
           org_id: string
           phase_id: string
           title: string
+          title_es?: string | null
           version?: number
         }
         Update: {
@@ -1554,6 +1559,7 @@ export type Database = {
           org_id?: string
           phase_id?: string
           title?: string
+          title_es?: string | null
           version?: number
         }
         Relationships: [

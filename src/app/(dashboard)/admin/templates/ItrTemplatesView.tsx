@@ -6,10 +6,12 @@ import { useTranslations } from 'next-intl'
 import { createTemplate, deleteTemplate } from '@/app/actions/itr-templates'
 import BulkImportCatalogModal from './BulkImportCatalogModal'
 import ImportFromOrgModal from './ImportFromOrgModal'
+import { listTranslationGaps, translateTemplateMissing } from '@/app/actions/itr-translations'
 
 interface Discipline { id: string; code: string; name: string; color: string }
 interface Phase { id: string; code: string; name: string; color: string; order_index: number }
 interface Template {
+  title_es?: string | null
   id: string
   code: string
   title: string
@@ -39,6 +41,29 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
   const [showModal, setShowModal] = useState(false)
   const [showBulkImport, setShowBulkImport] = useState(false)
   const [showImportFromOrg, setShowImportFromOrg] = useState(false)
+  // Traducción ES masiva: solo rellena lo vacío (title_es, description_es) con source = 'ai'
+  const [trProgress, setTrProgress] = useState<{ done: number; total: number; items: number; log: string[] } | null>(null)
+
+  async function translateAllMissing() {
+    setTrProgress({ done: 0, total: 0, items: 0, log: ['Buscando plantillas con traducciones pendientes…'] })
+    const res = await listTranslationGaps()
+    if (res.error || !res.gaps) { setTrProgress({ done: 0, total: 0, items: 0, log: [res.error ?? 'Error'] }); return }
+    const gaps = res.gaps
+    if (gaps.length === 0) { setTrProgress({ done: 0, total: 0, items: 0, log: ['Todo el catálogo tiene título e ítems en español.'] }); return }
+    const log: string[] = []
+    let items = 0
+    setTrProgress({ done: 0, total: gaps.length, items, log: [...log] })
+    for (let i = 0; i < gaps.length; i++) {
+      const g = gaps[i]
+      const r = await translateTemplateMissing(g.id)
+      if (r.error) log.push(`✕ ${g.code}: ${r.error}`)
+      else { items += r.items; log.push(`✓ ${g.code}: ${r.items} ítems${r.title ? ' + título' : ''}`) }
+      setTrProgress({ done: i + 1, total: gaps.length, items, log: log.slice(-8) })
+    }
+    log.push(`Listo: ${items} ítems traducidos en ${gaps.length} plantillas. Revísalos en cada plantilla (ES · Traducción).`)
+    setTrProgress({ done: gaps.length, total: gaps.length, items, log: log.slice(-8) })
+    router.refresh()
+  }
   const [form, setForm] = useState(DEFAULT_FORM)
   const [formError, setFormError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -141,6 +166,18 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
               Backup / Restore
             </button>
             <button
+              onClick={translateAllMissing}
+              disabled={!!trProgress && trProgress.done < trProgress.total}
+              style={{
+                padding: '9px 18px', background: 'var(--card-bg)', color: '#6d28d9',
+                borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+                border: '1px solid #ddd6fe', cursor: 'pointer',
+              }}
+              title="Traduce con IA solo lo que falta (títulos e ítems sin español). Nada existente se toca."
+            >
+              ES · Traducir faltantes
+            </button>
+            <button
               onClick={() => router.push('/admin/templates/matrix')}
               style={{
                 padding: '9px 18px', background: '#f5f3ff', color: '#6d28d9',
@@ -215,6 +252,24 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
       {/* Template table */}
       {filtered.length > 0 && (
         <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+
+      {trProgress && (
+        <div style={{ padding: '12px 14px', background: '#faf5ff', border: '1px solid #ddd6fe', borderRadius: '8px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#5b21b6', fontWeight: 600, marginBottom: '6px' }}>
+            <span>{trProgress.total > 0 && trProgress.done < trProgress.total ? 'Traduciendo…' : 'Traducción'}</span>
+            {trProgress.total > 0 && <span>{trProgress.done} / {trProgress.total} plantillas · {trProgress.items} ítems</span>}
+          </div>
+          {trProgress.total > 0 && (
+            <div style={{ height: '6px', background: '#ede9fe', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ width: `${Math.round((trProgress.done / trProgress.total) * 100)}%`, height: '100%', background: '#7c3aed', transition: 'width .3s' }} />
+            </div>
+          )}
+          <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>
+            {trProgress.log.map((l, i) => <div key={i}>{l}</div>)}
+          </div>
+        </div>
+      )}
+
           {/* Table header */}
           <div style={{
             display: 'grid',
@@ -260,6 +315,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 {/* Title */}
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-strong)' }}>{tmpl.title}</div>
+                  {tmpl.title_es && (
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{tmpl.title_es}</div>
+                  )}
                   {tmpl.is_global && (
                     <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{t('global')}</span>
                   )}

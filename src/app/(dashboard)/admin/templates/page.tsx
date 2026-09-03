@@ -14,7 +14,7 @@ export default async function ItrTemplatesPage() {
     supabase
       .from('itr_templates')
       .select(`
-        id, code, title, version, is_active, is_global, created_at,
+        id, code, title, title_es, version, is_active, is_global, created_at,
         disciplines(id, code, name, color),
         project_phases(id, code, name, color, order_index),
         itr_template_sections(id, itr_template_items(id))

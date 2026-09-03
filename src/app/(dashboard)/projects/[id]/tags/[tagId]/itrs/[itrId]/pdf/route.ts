@@ -29,6 +29,7 @@ export async function GET(
       itr_templates (
         code,
         title,
+        title_es,
         description,
         itr_template_sections (
           id,
@@ -38,6 +39,7 @@ export async function GET(
             id,
             item_number,
             description,
+            description_es,
             item_type,
             is_critical,
             is_required,

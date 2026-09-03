@@ -19,6 +19,7 @@ export type TagItr = {
 }
 
 export type ItrTemplate = {
+  title_es?: string | null
   equipment_type_id?: string | null
   id: string
   code: string

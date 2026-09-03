@@ -13,6 +13,7 @@ type ItrItem = {
   id: string
   item_number: string | null
   description: string
+  description_es?: string | null
   item_type: string
   is_critical: boolean
   acceptance_min: number | null
@@ -53,6 +54,7 @@ export type ItrPdfData = {
   itr_templates: {
     code: string
     title: string
+    title_es?: string | null
     description: string | null
     itr_template_sections: ItrSection[]
   } | null
@@ -147,11 +149,15 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
   r.moveY(40)
 
   // Meta row (wrapped key:value pairs)
+  // Bilingüe: español primero cuando existe traducción; el inglés queda como
+  // referencia (título completo y, por ítem, en gris debajo de la instrucción).
+  const tplTitleEs = itr.itr_templates?.title_es?.trim()
   const metas: Array<[string, string | null | undefined]> = [
-    ['Project',  itr.projects ? `${itr.projects.code} — ${itr.projects.name}` : null],
-    ['Tag',      itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : null],
-    ['Date',     itr.scheduled_date],
-    ['Template', itr.itr_templates ? `${itr.itr_templates.code} — ${itr.itr_templates.title}` : null],
+    ['Proyecto / Project',  itr.projects ? `${itr.projects.code} — ${itr.projects.name}` : null],
+    ['Tag',                 itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : null],
+    ['Fecha / Date',        itr.scheduled_date],
+    ['Plantilla / Template', itr.itr_templates ? `${itr.itr_templates.code} — ${tplTitleEs ?? itr.itr_templates.title}` : null],
+    ...(tplTitleEs && tplTitleEs !== itr.itr_templates?.title ? [['Title (EN)', itr.itr_templates?.title] as [string, string | undefined]] : []),
   ]
   const metaTextSize = 9
   for (const [label, value] of metas) {
@@ -242,18 +248,22 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
 
       // Pre-compute height
       const descMaxW = COLS.desc.w - 16 - (item.is_critical ? 10 : 0)
-      const descLines = wrapText(item.description, r.fontRegular, 8.5, descMaxW)
+      const es = item.description_es?.trim() ? item.description_es.trim() : undefined
+      const primaryText = es ?? item.description
+      const secondaryText = es && es !== item.description.trim() ? item.description : null
+      const descLines = wrapText(primaryText, r.fontRegular, 8.5, descMaxW)
+      const enLines = secondaryText ? wrapText(secondaryText, r.fontOblique, 7, descMaxW) : []
       const acceptanceText = item.acceptance_text
-        ? `Criterion: ${item.acceptance_text}`
+        ? `Criterio / Criterion: ${item.acceptance_text}`
         : (item.acceptance_min !== null || item.acceptance_max !== null)
-          ? `Range: ${item.acceptance_min ?? '-'} - ${item.acceptance_max ?? '-'}${item.unit ? ` ${item.unit}` : ''}`
+          ? `Rango / Range: ${item.acceptance_min ?? '-'} - ${item.acceptance_max ?? '-'}${item.unit ? ` ${item.unit}` : ''}`
           : null
       const acceptanceLines = acceptanceText ? wrapText(acceptanceText, r.fontRegular, 7, descMaxW) : []
-      const remarksText = resp?.remarks ? `Remarks: ${resp.remarks}` : null
+      const remarksText = resp?.remarks ? `Observaciones / Remarks: ${resp.remarks}` : null
       const remarksLines = remarksText ? wrapText(remarksText, r.fontOblique, 7.5, descMaxW) : []
       const rowH = Math.max(
         18,
-        4 + descLines.length * 11 + acceptanceLines.length * 9 + remarksLines.length * 10 + 4
+        4 + descLines.length * 11 + enLines.length * 9 + acceptanceLines.length * 9 + remarksLines.length * 10 + 4
       )
 
       // Page break + redraw column headers if needed
@@ -287,6 +297,11 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
       for (const line of descLines) {
         r.drawText(line, { x: dx, y: ly, size: 8.5, color: COLOR.text })
         ly -= 11
+      }
+      // Original EN (gris, cursiva) debajo del español
+      for (const line of enLines) {
+        r.drawText(line, { x: dx, y: ly, size: 7, oblique: true, color: COLOR.empty })
+        ly -= 9
       }
       // Acceptance
       for (const line of acceptanceLines) {

@@ -324,6 +324,25 @@ export const setOrgTemplateCatalog = withAuthOnly(
   },
 )
 
+/** Glosario EN → ES para la traducción de ITRs (texto "en = es" por línea). */
+export const saveOrgGlossary = withAuthOnly(
+  { role: ADMIN_ROLES },
+  async (ctx, text: string): Promise<{ error?: string }> => {
+    const { data: org, error: fetchErr } = await ctx.supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', ctx.orgId)
+      .single()
+    if (fetchErr) return { error: fetchErr.message }
+    const settings = (org?.settings as Record<string, unknown> | null) ?? {}
+    const next = { ...settings, itr_glossary: text.trim().slice(0, 20000) }
+    const { error } = await ctx.supabase.from('organizations').update({ settings: next }).eq('id', ctx.orgId)
+    if (error) return { error: error.message }
+    revalidatePath('/admin/config')
+    return {}
+  },
+)
+
 export const uploadOrgLogo = withAuthOnly(
   { role: ADMIN_ROLES },
   async (

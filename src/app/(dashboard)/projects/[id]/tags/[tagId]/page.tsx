@@ -107,7 +107,7 @@ export default async function TagDetailPage({
   // Templates for this tag's discipline (sequential — needs disciplineId)
   const { data: templates } = await supabase
     .from('itr_templates')
-    .select('id, code, title, phase_id, equipment_type_id, project_phases(id, code, name, color)')
+    .select('id, code, title, title_es, phase_id, equipment_type_id, project_phases(id, code, name, color)')
     .eq('org_id', membership.org_id)
     .eq('is_active', true)
     .eq('discipline_id', tag.disciplines.id)

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
 import { suggestItrsForTag, type TagAiSuggestion } from '@/app/actions/itr-matrix'
 import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
@@ -55,6 +56,9 @@ export default function TagItrTab({
   canEdit,
 }: Props) {
   const router = useRouter()
+  const locale = useLocale()
+  // Título de plantilla según idioma del usuario (title_es si existe)
+  const tplTitle = (tpl: { title: string; title_es?: string | null }) => (locale === 'es' && tpl.title_es?.trim()) ? tpl.title_es : tpl.title
   const [isPending, startTransition] = useTransition()
   const [showAssign, setShowAssign] = useState(false)
   const [assignError, setAssignError] = useState<string | null>(null)
@@ -352,7 +356,7 @@ export default function TagItrTab({
                       <optgroup label={`⭐ Recomendados para ${tagType?.typeName ?? 'este tag'}`}>
                         {recommended.map(t => (
                           <option key={t.id} value={t.id}>
-                            {t.code} — {t.title} {t.project_phases ? `[${t.project_phases.code}]` : ''}
+                            {t.code} — {tplTitle(t)} {t.project_phases ? `[${t.project_phases.code}]` : ''}
                           </option>
                         ))}
                       </optgroup>
@@ -360,7 +364,7 @@ export default function TagItrTab({
                     <optgroup label={recommended.length > 0 ? 'Todos los templates' : 'Templates disponibles'}>
                       {others.map(t => (
                         <option key={t.id} value={t.id}>
-                          {t.code} — {t.title} {t.project_phases ? `[${t.project_phases.code}]` : ''}
+                          {t.code} — {tplTitle(t)} {t.project_phases ? `[${t.project_phases.code}]` : ''}
                         </option>
                       ))}
                     </optgroup>
