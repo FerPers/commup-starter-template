@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import UsersView from './UsersView'
 
@@ -77,6 +78,19 @@ export default async function AdminUsersPage() {
     const payloadEmail = payload && 'email' in payload ? String(payload.email) : '—'
     const payloadRole  = payload && 'role'  in payload ? String(payload.role)  : null
     seenInvites.set(row.entity_id, { email: payloadEmail, invitedAt: row.created_at, role: payloadRole })
+  }
+  // Drop invites whose auth user no longer exists (deleted from Supabase Auth →
+  // profiles row cascaded). RLS hides non-member profiles, so use the admin
+  // client; the ids come from this org's own activity_log rows (RLS-scoped).
+  if (seenInvites.size > 0) {
+    const { data: liveProfiles } = await createAdminClient()
+      .from('profiles')
+      .select('id')
+      .in('id', Array.from(seenInvites.keys()))
+    const liveIds = new Set((liveProfiles ?? []).map(p => p.id))
+    for (const id of Array.from(seenInvites.keys())) {
+      if (!liveIds.has(id)) seenInvites.delete(id)
+    }
   }
   const pendingInvites = Array.from(seenInvites.entries()).map(([userId, info]) => ({
     userId,
