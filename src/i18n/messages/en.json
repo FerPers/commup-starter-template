@@ -124,7 +124,15 @@
       "client": "Client"
     },
     "roleAria": "Role: {role} in {org}",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "menu": {
+      "switchOrg": "Switch organization",
+      "preferences": "Preferences",
+      "language": "Language",
+      "theme": "Theme",
+      "guide": "Getting started guide",
+      "logout": "Sign out"
+    }
   },
   "Breadcrumbs": {
     "label": "Breadcrumbs"

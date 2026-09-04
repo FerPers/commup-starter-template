@@ -124,7 +124,15 @@
       "client": "Cliente"
     },
     "roleAria": "Rol: {role} en {org}",
-    "openMenu": "Abrir menú"
+    "openMenu": "Abrir menú",
+    "menu": {
+      "switchOrg": "Cambiar organización",
+      "preferences": "Preferencias",
+      "language": "Idioma",
+      "theme": "Tema",
+      "guide": "Guía de arranque",
+      "logout": "Cerrar sesión"
+    }
   },
   "Breadcrumbs": {
     "label": "Migas de pan"

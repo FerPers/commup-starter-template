@@ -7,6 +7,7 @@ import {
   canSignCertificates, daysOverdue, dueState, parseCounts, seesPreservation, sortPunches, splitAssignments,
   type AssignmentRow, type DueState,
 } from '@/lib/my-work/queues'
+import { greetingName } from '@/lib/utils'
 import type { OrgMemberRole } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -109,7 +110,7 @@ export default async function MyWorkPage() {
   ].filter(Boolean))
   const personalTotal = counts.itrs_execute + counts.itrs_review + counts.punches + counts.plan_items + (signer ? counts.signatures : 0)
 
-  const firstName = profile?.full_name?.split(' ')[0] ?? ''
+  const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
   const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' })
   const roleLabel = t(`roles.${role}`)

@@ -2,21 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useMounted } from '@/hooks/useMounted'
 import {
   LayoutDashboard, FolderKanban, FileCheck2, ClipboardList, ShieldCheck,
   Settings, Users, ScanLine, ClipboardCheck, Flag, Wrench, CalendarDays,
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
-  Bell, Database, History, Tag, Activity, Boxes, FolderTree, LogOut,
-  RotateCw, BookOpen, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
+  Bell, Database, History, Tag, Activity, Boxes, FolderTree,
+  RotateCw, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
   ChevronDown, ChevronRight,
   type LucideIcon,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import LocaleSwitcher from '@/components/LocaleSwitcher'
-import ThemeToggle from '@/components/ThemeToggle'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 import { NAV_STORAGE } from '@/lib/constants/navigation'
 import type { OrgMemberRole } from '@/types/database'
@@ -33,27 +30,23 @@ const ADMIN_ROLES: readonly OrgMemberRole[] = ['owner', 'admin']
 const PRIVILEGED_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect']
 const EDITOR_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader']
 
-function SyncIndicator() {
+/**
+ * Pie del sidebar: solo el estado de sincronización, y solo cuando importa
+ * (sin conexión o con cola pendiente). Idioma, tema, guía y salir viven en el menú de usuario.
+ */
+function SidebarFooter() {
   const t = useTranslations('Pwa.sync')
   const mounted = useMounted()
   const { isOnline, pendingCount, syncing, sync } = useOfflineSync()
+  if (!mounted || (isOnline && pendingCount === 0)) return null
 
-  // Antes de hidratar mostramos un estado neutral para evitar mismatch
-  // (useOfflineSync depende de navigator.onLine, que difiere SSR vs client).
-  const dotColor = !mounted
-    ? '#94a3b8'
-    : isOnline
-      ? pendingCount > 0 ? '#f59e0b' : '#22c55e'
-      : '#ef4444'
-  const label = !mounted
-    ? t('loading')
-    : isOnline
-      ? pendingCount > 0 ? t('syncing', { count: pendingCount }) : t('online')
-      : t('offlinePending', { count: pendingCount })
-
-  const canForceSync = mounted && isOnline && pendingCount > 0
+  // Aquí ya estamos montados y hay algo que mostrar: cola pendiente (ámbar) o sin conexión (rojo).
+  const dotColor = isOnline ? '#f59e0b' : '#ef4444'
+  const label = isOnline ? t('syncing', { count: pendingCount }) : t('offlinePending', { count: pendingCount })
+  const canForceSync = isOnline && pendingCount > 0
 
   return (
+    <div style={{ padding: '12px 20px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8,
       padding: '6px 10px', borderRadius: 'var(--radius-sm)',
@@ -89,6 +82,7 @@ function SyncIndicator() {
           <RotateCw size={12} aria-hidden="true" />
         </button>
       )}
+    </div>
     </div>
   )
 }
@@ -180,7 +174,7 @@ const ORG_GROUP: NavGroup = {
     { href: '/control-tower', labelKey: 'controlTower',    icon: Radar,         badge: 'blockers' },
     { href: '/kpis',          labelKey: 'kpis',            icon: TrendingUp },
     { href: '/itrs',          labelKey: 'allItrs',         icon: ClipboardCheck },
-    { href: '/punch-list',    labelKey: 'allPunches',      icon: Flag,          badge: 'punches' },
+    { href: '/punch-list',    labelKey: 'allPunches',      icon: Flag },
     { href: '/certificates',  labelKey: 'allCertificates', icon: Award,         badge: 'certsPending' },
     { href: '/preservation',  labelKey: 'preservation',    icon: Wrench,        badge: 'preservation' },
     { href: '/work-plans',    labelKey: 'allWorkPlans',    icon: CalendarDays },
@@ -237,7 +231,6 @@ export default function Sidebar({
   projectNames?: Record<string, string>
 }) {
   const pathname = usePathname()
-  const router = useRouter()
   const t = useTranslations('Sidebar')
   const mounted = useMounted()
 
@@ -276,12 +269,6 @@ export default function Sidebar({
   const orgItems = visibleFor(ORG_GROUP.items, role)
   const adminItems = visibleFor(ADMIN_GROUP.items, role)
   const tNav = (k: string) => t(`nav.${k}`)
-
-  async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   return (
     <aside
@@ -425,52 +412,7 @@ export default function Sidebar({
         )}
       </nav>
 
-      {/* Footer */}
-      <div style={{
-        padding: '12px 20px 16px',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', flexDirection: 'column', gap: 10,
-      }}>
-        <SyncIndicator />
-        {/* Guía de arranque pública (/guia): visible para todos los roles */}
-        <a
-          href="/guia"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '8px 12px', borderRadius: 'var(--radius-md)',
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)',
-            color: '#cbd5e1', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none',
-          }}
-        >
-          <BookOpen size={14} aria-hidden="true" />
-          {t('guide')}
-        </a>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <LocaleSwitcher variant="dark" />
-          <ThemeToggle />
-        </div>
-        <button
-          onClick={handleLogout}
-          style={{
-            width: '100%', padding: '9px 12px',
-            background: 'rgba(239,68,68,0.10)',
-            border: '1px solid rgba(239,68,68,0.20)',
-            borderRadius: 'var(--radius-md)',
-            color: '#f87171',
-            fontSize: 'var(--text-sm)',
-            cursor: 'pointer', fontWeight: 500,
-            transition: 'background 0.15s',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.20)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.10)')}
-        >
-          <LogOut size={14} aria-hidden="true" />
-          {t('logout')}
-        </button>
-      </div>
+      <SidebarFooter />
     </aside>
   )
 }

@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import type { OrgMemberRole } from '@/types/database'
 import Breadcrumbs from './Breadcrumbs'
-import OrgSwitcher from './OrgSwitcher'
+import UserMenu from './UserMenu'
 import NotificationsBell from './NotificationsBell'
 
 type Membership = {
@@ -16,13 +16,14 @@ interface TopbarProps {
   activeOrgId: string
   memberships: Membership[]
   userEmail: string | null
+  userName: string | null
   userId: string
   unreadNotifications: number
   projectNames: Record<string, string>
   children?: React.ReactNode
 }
 
-export default async function Topbar({ role, orgName, activeOrgId, memberships, userEmail, userId, unreadNotifications, projectNames, children }: TopbarProps) {
+export default async function Topbar({ role, orgName, activeOrgId, memberships, userEmail, userName, userId, unreadNotifications, projectNames, children }: TopbarProps) {
   const t = await getTranslations('Topbar')
   const roleLabels: Record<string, string> = {
     owner:     t('role.owner'),
@@ -61,12 +62,13 @@ export default async function Topbar({ role, orgName, activeOrgId, memberships, 
       )}
 
       {role && (
-        <OrgSwitcher
+        <UserMenu
           activeOrgId={activeOrgId}
           activeOrgName={orgName}
           activeRole={role}
           memberships={memberships}
           userEmail={userEmail}
+          userName={userName}
           roleLabels={roleLabels}
         />
       )}

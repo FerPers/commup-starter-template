@@ -12,7 +12,7 @@ function getInitialTheme(): Theme {
   return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
 }
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
   const t = useTranslations('Sidebar')
   const [theme, setThemeState] = useState<Theme>('light')
   const mounted = useMounted()
@@ -37,6 +37,11 @@ export default function ThemeToggle() {
   // Mostrar ESTADO actual: en dark vemos Moon+"Oscuro"; en light vemos Sun+"Claro".
   // El click alterna al opuesto. aria-label dice la acción.
   const Icon = isDark ? Moon : Sun
+  const light = variant === 'light'
+  const bg = light ? 'var(--gray-100)' : 'rgba(255,255,255,0.06)'
+  const bgHover = light ? 'var(--gray-200)' : 'rgba(255,255,255,0.12)'
+  const fg = light ? 'var(--text-strong)' : '#e2e8f0'
+  const border = light ? 'var(--border)' : 'rgba(255,255,255,0.12)'
   const stateLabel = isDark ? t('theme.dark') : t('theme.light')
   const actionLabel = isDark ? t('theme.switchToLight') : t('theme.switchToDark')
 
@@ -50,10 +55,10 @@ export default function ThemeToggle() {
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
         padding: '6px 10px',
-        background: 'rgba(255,255,255,0.06)',
-        border: '1px solid rgba(255,255,255,0.12)',
+        background: bg,
+        border: `1px solid ${border}`,
         borderRadius: 'var(--radius-md)',
-        color: '#e2e8f0',
+        color: fg,
         fontSize: 'var(--text-xs)',
         fontWeight: 500,
         cursor: mounted ? 'pointer' : 'default',
@@ -63,12 +68,10 @@ export default function ThemeToggle() {
       }}
       onMouseEnter={(e) => {
         if (!mounted) return
-        ;(e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'
-        ;(e.currentTarget as HTMLElement).style.color = '#fff'
+        ;(e.currentTarget as HTMLElement).style.background = bgHover
       }}
       onMouseLeave={(e) => {
-        ;(e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'
-        ;(e.currentTarget as HTMLElement).style.color = '#e2e8f0'
+        ;(e.currentTarget as HTMLElement).style.background = bg
       }}
     >
       <Icon size={14} strokeWidth={2} aria-hidden="true" />

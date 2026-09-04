@@ -1,4 +1,13 @@
 import { describe, expect, it } from 'vitest'
+import { greetingName } from './utils'
+
+describe('greetingName', () => {
+  it('primer nombre del perfil; si no, parte local del correo; si no, vacío', () => {
+    expect(greetingName('Laura Pérez', 'x@y.z')).toBe('Laura')
+    expect(greetingName('  ', 'luis.perdomo@outlook.com')).toBe('luis.perdomo')
+    expect(greetingName(null, null)).toBe('')
+  })
+})
 import { detectItrPhase, formatPercent } from './utils'
 
 describe('detectItrPhase (nemotecnia <Disc><Nº><Etapa>)', () => {

@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import type { OrgMemberRole } from '@/types/database'
 import type { DashboardLayout, WidgetId } from '@/types/dashboard'
 import { resolveLayout, WIDGET_REGISTRY, widgetsForRole } from '@/lib/dashboard/registry'
+import { greetingName } from '@/lib/utils'
 import DashboardCustomizer from '@/components/dashboard/DashboardCustomizer'
 import DashboardStatusPill from '@/components/dashboard/DashboardStatusPill'
 import InspectorSummaryWidget from '@/components/dashboard/widgets/InspectorSummaryWidget'
@@ -73,7 +74,7 @@ export default async function DashboardPage() {
   const orderedKnown = layout.widgets.filter(w => WIDGET_REGISTRY[w.id])
   const visible = orderedKnown.filter(w => !w.hidden)
 
-  const firstName = profile?.full_name?.split(' ')[0] ?? ''
+  const firstName = greetingName(profile?.full_name, auth.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
   const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const isCompact = role === 'inspector' || role === 'client'

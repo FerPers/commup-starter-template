@@ -1,6 +1,13 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+/** Nombre para saludar: primer nombre del perfil; si falta, la parte local del correo. */
+export function greetingName(fullName: string | null | undefined, email: string | null | undefined): string {
+  const first = fullName?.trim().split(/\s+/)[0]
+  if (first) return first
+  return email?.split('@')[0]?.trim() ?? ''
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

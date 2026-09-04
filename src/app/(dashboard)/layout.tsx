@@ -47,6 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { data: org },
     memberships,
     { data: myWorkRaw },
+    { data: profile },
   ] = await Promise.all([
     projectIds.length === 0
       ? Promise.resolve({ count: 0 })
@@ -78,6 +79,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     listMemberships(),
     // Sprint N: contadores personales para el badge de «Mi trabajo» (RLS del usuario)
     supabase.rpc('my_work_counts', { p_org_id: ctx.orgId }),
+    supabase.from('profiles').select('full_name').eq('id', ctx.userId).maybeSingle(),
   ])
 
   const role = ctx.role as OrgMemberRole
@@ -100,6 +102,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             activeOrgId={ctx.orgId}
             memberships={memberships}
             userEmail={ctx.userEmail}
+            userName={profile?.full_name ?? null}
             userId={ctx.userId}
             unreadNotifications={unreadNotificationsCount ?? 0}
             projectNames={projectNames}
