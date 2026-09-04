@@ -5590,6 +5590,7 @@ export type Database = {
         }
         Returns: string
       }
+      my_work_counts: { Args: { p_org_id: string }; Returns: Json }
       next_punch_number_atomic: {
         Args: { p_project_id: string }
         Returns: string

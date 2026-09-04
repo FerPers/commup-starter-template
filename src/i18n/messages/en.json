@@ -53,7 +53,13 @@
       "ops": "Operations",
       "integrations": "Integrations",
       "system": "System",
-      "project": "Project"
+      "project": "Project",
+      "myWork": "My work",
+      "organization": "Organization",
+      "admin": "Administration",
+      "engineering": "Engineering",
+      "planning": "Views & planning",
+      "lastProject": "Last project"
     },
     "nav": {
       "dashboard": "Dashboard",
@@ -87,7 +93,14 @@
       "opsPunches": "Ops Punch Tracking",
       "loops": "Loops",
       "interlocks": "Interlocks",
-      "pidDocuments": "P&IDs"
+      "pidDocuments": "P&IDs",
+      "myWork": "My work",
+      "inbox": "Inbox",
+      "import": "Import",
+      "allItrs": "All ITRs",
+      "allPunches": "All punches",
+      "allCertificates": "All certificates",
+      "allWorkPlans": "All work plans"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -2076,6 +2089,61 @@
       "s3Desc": "Project managers waiting for Monday's manual Excel reports. CommUp delivers live KPI dashboards by system, area, discipline and phase — always current.",
       "s3Module": "KPIs & Control Tower",
       "label": "Use cases"
+    }
+  },
+  "MyWork": {
+    "title": "My work",
+    "hello": "Hello, {name}",
+    "summary": "{count, plural, =0 {nothing pending} one {# pending item} other {# pending items}} · {projects, plural, =0 {no projects} one {# project} other {# projects}}",
+    "viewAll": "View all ({count}) →",
+    "completedOn": "completed on {date}",
+    "issuedOn": "issued on {date}",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Architect",
+      "leader": "Leader",
+      "inspector": "Inspector",
+      "client": "Client"
+    },
+    "chips": {
+      "execute": "ITRs to execute",
+      "review": "ITRs to review",
+      "punches": "assigned punches",
+      "plan": "today's plan",
+      "signatures": "pending signatures",
+      "preservation": "overdue preservation"
+    },
+    "queues": {
+      "execute": "ITRs to execute",
+      "review": "ITRs to review or sign",
+      "punches": "Assigned punches",
+      "plan": "Today's work plan",
+      "signatures": "Certificates to sign",
+      "preservation": "Overdue preservation"
+    },
+    "empty": {
+      "execute": "You have no ITRs pending execution.",
+      "review": "Nothing is waiting for your review.",
+      "punches": "You have no assigned punches.",
+      "plan": "No work plan items for today.",
+      "signatures": "No certificates are waiting for a completion signature.",
+      "preservation": "No overdue preservation tasks."
+    },
+    "due": {
+      "overdue": "due {date}",
+      "today": "today",
+      "scheduled": "{date}",
+      "inProgress": "in progress {pct}%",
+      "readyToApprove": "ready to approve",
+      "sign": "sign",
+      "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}"
+    },
+    "punchStatus": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "closed": "Closed",
+      "cancelled": "Cancelled"
     }
   }
 }

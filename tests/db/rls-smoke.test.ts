@@ -47,6 +47,16 @@ describe.skipIf(!enabled)('RLS multi-tenant smoke', () => {
     expect((rpc.data ?? []).length).toBe(0)
   })
 
+  it('my_work_counts de la org de A devuelve ceros para el usuario B (Sprint N)', async () => {
+    const a = await signedIn(env.TEST_USER_A_EMAIL!, env.TEST_USER_A_PASSWORD!)
+    const b = await signedIn(env.TEST_USER_B_EMAIL!, env.TEST_USER_B_PASSWORD!)
+    const { data: project } = await a.from('projects').select('org_id').eq('id', env.TEST_PROJECT_A_ID!).single()
+    expect(project?.org_id).toBeTruthy()
+    const { data, error } = await b.rpc('my_work_counts', { p_org_id: project!.org_id })
+    expect(error).toBeNull()
+    expect(Object.values((data ?? {}) as Record<string, number>).every(v => v === 0)).toBe(true)
+  })
+
   it('el usuario B no puede insertar en el proyecto de A', async () => {
     const b = await signedIn(env.TEST_USER_B_EMAIL!, env.TEST_USER_B_PASSWORD!)
     const { error } = await b.from('areas').insert({ project_id: env.TEST_PROJECT_A_ID!, code: 'HACK', name: 'x' })

@@ -18,7 +18,7 @@ export default async function SetupLayout({ children }: { children: React.ReactN
 
   // User has an org but lacks a privileged role → no access to wizard
   if (membership && !PRIVILEGED_ROLES.includes(membership.role)) {
-    redirect('/dashboard')
+    redirect('/home')
   }
 
   // No membership = first-time setup (allowed, will become owner)

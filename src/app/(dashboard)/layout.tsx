@@ -6,6 +6,7 @@ import MobileMenuButton from '@/components/layout/MobileMenuButton'
 import { ToastProvider } from '@/components/ui'
 import { getActiveMembership, listMemberships } from '@/lib/supabase/membership'
 import type { OrgMemberRole } from '@/types/database'
+import { badgeTotal, parseCounts } from '@/lib/my-work/queues'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getActiveMembership()
@@ -45,6 +46,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { count: unreadNotificationsCount },
     { data: org },
     memberships,
+    { data: myWorkRaw },
   ] = await Promise.all([
     projectIds.length === 0
       ? Promise.resolve({ count: 0 })
@@ -74,20 +76,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
       .eq('id', ctx.orgId)
       .maybeSingle(),
     listMemberships(),
+    // Sprint N: contadores personales para el badge de «Mi trabajo» (RLS del usuario)
+    supabase.rpc('my_work_counts', { p_org_id: ctx.orgId }),
   ])
 
+  const role = ctx.role as OrgMemberRole
   const notifCounts = {
     punches: punchCount ?? 0,
     preservation: preservationCount ?? 0,
+    myWork: badgeTotal(parseCounts(myWorkRaw), role),
+    inbox: unreadNotificationsCount ?? 0,
   }
-
-  const role = ctx.role as OrgMemberRole
   const orgName = org?.name ?? null
 
   return (
     <ToastProvider>
       <DashboardShell
-        sidebar={<Sidebar notifCounts={notifCounts} role={role} />}
+        sidebar={<Sidebar notifCounts={notifCounts} role={role} projectNames={projectNames} />}
         topbar={
           <Topbar
             role={role}

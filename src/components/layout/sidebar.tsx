@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useMounted } from '@/hooks/useMounted'
@@ -8,18 +10,25 @@ import {
   Settings, Users, ScanLine, ClipboardCheck, Flag, Wrench, CalendarDays,
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
   Bell, Database, History, Tag, Activity, Boxes, FolderTree, LogOut,
-  RotateCw, BookOpen,
+  RotateCw, BookOpen, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
+  ChevronDown, ChevronRight,
   type LucideIcon,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import LocaleSwitcher from '@/components/LocaleSwitcher'
 import ThemeToggle from '@/components/ThemeToggle'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
+import { NAV_STORAGE } from '@/lib/constants/navigation'
 import type { OrgMemberRole } from '@/types/database'
 
+/**
+ * Sidebar (Sprint N, 2026-09-04): tres bloques — Mi trabajo · Proyecto · Organización —
+ * más Administración colapsable. Mismos permisos que antes: ocultar aquí es UX,
+ * la seguridad real vive en cada page.tsx.
+ */
+
 // Copia client-safe de los tiers de src/lib/auth/permissions.ts (ese módulo
-// arrastra código de servidor). La visibilidad espeja el gate server-side de
-// cada página — ocultar aquí es UX, la seguridad real vive en cada page.tsx.
+// arrastra código de servidor).
 const ADMIN_ROLES: readonly OrgMemberRole[] = ['owner', 'admin']
 const PRIVILEGED_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect']
 const EDITOR_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader']
@@ -84,101 +93,11 @@ function SyncIndicator() {
   )
 }
 
-interface NavItem {
-  href: string
-  labelKey: string
-  icon: LucideIcon
-  /** Roles que ven el ítem; omitido = visible para todos */
-  roles?: readonly OrgMemberRole[]
-}
-
-interface NavGroup {
-  groupKey: string
-  items: NavItem[]
-}
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    groupKey: 'main',
-    items: [
-      { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
-      { href: '/projects',  labelKey: 'projects',  icon: FolderKanban },
-    ],
-  },
-  {
-    groupKey: 'setup',
-    items: [
-      { href: '/admin/templates',              labelKey: 'itrTemplates',          icon: FileCheck2,     roles: EDITOR_ROLES },
-      { href: '/admin/templates/preservation', labelKey: 'preservationTemplates', icon: ClipboardList,  roles: EDITOR_ROLES },
-      { href: '/admin/templates/pssr',         labelKey: 'pssrTemplates',         icon: ShieldCheck,    roles: EDITOR_ROLES },
-      { href: '/admin/config',                 labelKey: 'config',                icon: Settings,       roles: ADMIN_ROLES },
-      { href: '/admin/users',                  labelKey: 'users',                 icon: Users,          roles: ADMIN_ROLES },
-    ],
-  },
-  {
-    groupKey: 'execution',
-    items: [
-      { href: '/scan',         labelKey: 'scan',         icon: ScanLine },
-      { href: '/itrs',         labelKey: 'itrs',         icon: ClipboardCheck },
-      { href: '/punch-list',   labelKey: 'punchList',    icon: Flag },
-      { href: '/preservation', labelKey: 'preservation', icon: Wrench },
-      { href: '/work-plans',   labelKey: 'workPlans',    icon: CalendarDays },
-    ],
-  },
-  {
-    groupKey: 'control',
-    items: [
-      { href: '/control-tower', labelKey: 'controlTower', icon: Radar },
-      { href: '/kpis',          labelKey: 'kpis',         icon: TrendingUp },
-      { href: '/certificates',  labelKey: 'certificates', icon: Award },
-    ],
-  },
-  {
-    groupKey: 'closure',
-    items: [
-      { href: '/admin/handover', labelKey: 'handover', icon: PackageCheck, roles: PRIVILEGED_ROLES },
-    ],
-  },
-  {
-    groupKey: 'ops',
-    items: [
-      { href: '/ops/punches', labelKey: 'opsPunches', icon: Anchor },
-    ],
-  },
-  {
-    groupKey: 'integrations',
-    items: [
-      { href: '/admin/workflows',     labelKey: 'workflows',     icon: Workflow, roles: PRIVILEGED_ROLES },
-      { href: '/admin/api-keys',      labelKey: 'apiKeys',       icon: Key,      roles: PRIVILEGED_ROLES },
-      { href: '/admin/webhooks',      labelKey: 'webhooks',      icon: Webhook,  roles: PRIVILEGED_ROLES },
-      { href: '/admin/notifications', labelKey: 'notifications', icon: Bell },
-    ],
-  },
-  {
-    groupKey: 'system',
-    items: [
-      { href: '/admin/data-quality', labelKey: 'dataQuality', icon: Database, roles: PRIVILEGED_ROLES },
-      { href: '/admin/audit',        labelKey: 'auditLog',    icon: History,  roles: ADMIN_ROLES },
-    ],
-  },
-]
-
-function projectGroupItems(projectId: string): NavItem[] {
-  return [
-    { href: `/projects/${projectId}`,              labelKey: 'projectOverview', icon: LayoutDashboard },
-    { href: `/projects/${projectId}/tags`,         labelKey: 'tags',            icon: Tag },
-    { href: `/projects/${projectId}/itrs`,         labelKey: 'itrs',            icon: ClipboardCheck },
-    { href: `/projects/${projectId}/punches`,      labelKey: 'punchList',       icon: Flag },
-    { href: `/projects/${projectId}/certificates`, labelKey: 'certificates',    icon: Award },
-    { href: `/projects/${projectId}/signals`,      labelKey: 'signals',         icon: Activity },
-    { href: `/projects/${projectId}/twin`,         labelKey: 'twin',            icon: Boxes },
-    { href: `/projects/${projectId}/explorer`,     labelKey: 'explorer',        icon: FolderTree },
-    { href: `/projects/${projectId}/work-plans`,   labelKey: 'workPlans',       icon: CalendarDays },
-    { href: `/projects/${projectId}/pssr`,         labelKey: 'pssr',            icon: ShieldCheck },
-  ]
-}
-
 export interface NotifCounts {
+  /** Pendientes personales (ITRs, punches, plan, firmas) — badge de «Mi trabajo» */
+  myWork?: number
+  /** Notificaciones sin leer — badge de «Bandeja» */
+  inbox?: number
   punches?: number
   preservation?: number
   certsPending?: number
@@ -186,25 +105,177 @@ export interface NotifCounts {
   dataQuality?: number
 }
 
-function badgeFor(href: string, n?: NotifCounts): number {
-  if (!n) return 0
-  switch (href) {
-    case '/punch-list':         return n.punches ?? 0
-    case '/preservation':       return n.preservation ?? 0
-    case '/certificates':       return n.certsPending ?? 0
-    case '/control-tower':      return n.blockers ?? 0
-    case '/admin/data-quality': return n.dataQuality ?? 0
-    default:                    return 0
-  }
+type BadgeKey = keyof NotifCounts
+
+interface NavItem {
+  href: string
+  labelKey: string
+  icon: LucideIcon
+  /** Roles que ven el ítem; omitido = visible para todos */
+  roles?: readonly OrgMemberRole[]
+  badge?: BadgeKey
+  /** Badge discreto (gris) en vez de rojo: informa, no alarma */
+  softBadge?: boolean
+  /** Solo coincide con la ruta exacta (para «Resumen» del proyecto) */
+  exact?: boolean
 }
 
-export default function Sidebar({ notifCounts, isOpen = false, role }: { notifCounts?: NotifCounts; isOpen?: boolean; role?: OrgMemberRole }) {
+interface NavGroup {
+  groupKey: string
+  items: NavItem[]
+}
+
+// ── Bloque 1 · Mi trabajo ───────────────────────────────────────────────────
+const PERSONAL_ITEMS: NavItem[] = [
+  { href: '/my-work',             labelKey: 'myWork',        icon: ListChecks, badge: 'myWork' },
+  { href: '/inbox',               labelKey: 'inbox',         icon: Inbox,      badge: 'inbox', softBadge: true },
+  { href: '/scan',                labelKey: 'scan',          icon: ScanLine },
+  { href: '/admin/notifications', labelKey: 'notifications', icon: Bell },
+]
+
+// ── Bloque 2 · Proyecto (contextual) ────────────────────────────────────────
+type ProjectSection = { headerKey?: string; items: NavItem[] }
+
+function projectSections(projectId: string): ProjectSection[] {
+  const p = `/projects/${projectId}`
+  return [
+    {
+      items: [
+        { href: p,                    labelKey: 'projectOverview', icon: LayoutDashboard, exact: true },
+        { href: `${p}/tags`,          labelKey: 'tags',            icon: Tag },
+        { href: `${p}/itrs`,          labelKey: 'itrs',            icon: ClipboardCheck },
+        { href: `${p}/punches`,       labelKey: 'punchList',       icon: Flag },
+        { href: `${p}/certificates`,  labelKey: 'certificates',    icon: Award },
+        { href: `${p}/kpis`,          labelKey: 'kpis',            icon: TrendingUp },
+      ],
+    },
+    {
+      headerKey: 'engineering',
+      items: [
+        { href: `${p}/signals`,       labelKey: 'signals',         icon: Activity },
+        { href: `${p}/loops`,         labelKey: 'loops',           icon: GitBranch },
+        { href: `${p}/interlocks`,    labelKey: 'interlocks',      icon: Zap },
+        { href: `${p}/pid-documents`, labelKey: 'pidDocuments',    icon: FileImage },
+      ],
+    },
+    {
+      headerKey: 'planning',
+      items: [
+        { href: `${p}/explorer`,      labelKey: 'explorer',        icon: FolderTree },
+        { href: `${p}/twin`,          labelKey: 'twin',            icon: Boxes },
+        { href: `${p}/work-plans`,    labelKey: 'workPlans',       icon: CalendarDays },
+        { href: `${p}/pssr`,          labelKey: 'pssr',            icon: ShieldCheck },
+        { href: `${p}/import`,        labelKey: 'import',          icon: Upload, roles: EDITOR_ROLES },
+      ],
+    },
+  ]
+}
+
+// ── Bloque 3 · Organización ─────────────────────────────────────────────────
+const ORG_GROUP: NavGroup = {
+  groupKey: 'organization',
+  items: [
+    { href: '/dashboard',     labelKey: 'dashboard',       icon: LayoutDashboard },
+    { href: '/projects',      labelKey: 'projects',        icon: FolderKanban },
+    { href: '/control-tower', labelKey: 'controlTower',    icon: Radar,         badge: 'blockers' },
+    { href: '/kpis',          labelKey: 'kpis',            icon: TrendingUp },
+    { href: '/itrs',          labelKey: 'allItrs',         icon: ClipboardCheck },
+    { href: '/punch-list',    labelKey: 'allPunches',      icon: Flag,          badge: 'punches' },
+    { href: '/certificates',  labelKey: 'allCertificates', icon: Award,         badge: 'certsPending' },
+    { href: '/preservation',  labelKey: 'preservation',    icon: Wrench,        badge: 'preservation' },
+    { href: '/work-plans',    labelKey: 'allWorkPlans',    icon: CalendarDays },
+    { href: '/ops/punches',   labelKey: 'opsPunches',      icon: Anchor },
+    { href: '/admin/handover', labelKey: 'handover',       icon: PackageCheck,  roles: PRIVILEGED_ROLES },
+  ],
+}
+
+// ── Bloque 4 · Administración (colapsable) ──────────────────────────────────
+const ADMIN_GROUP: NavGroup = {
+  groupKey: 'admin',
+  items: [
+    { href: '/admin/templates',              labelKey: 'itrTemplates',          icon: FileCheck2,    roles: EDITOR_ROLES },
+    { href: '/admin/templates/preservation', labelKey: 'preservationTemplates', icon: ClipboardList, roles: EDITOR_ROLES },
+    { href: '/admin/templates/pssr',         labelKey: 'pssrTemplates',         icon: ShieldCheck,   roles: EDITOR_ROLES },
+    { href: '/admin/config',                 labelKey: 'config',                icon: Settings,      roles: ADMIN_ROLES },
+    { href: '/admin/users',                  labelKey: 'users',                 icon: Users,         roles: ADMIN_ROLES },
+    { href: '/admin/workflows',              labelKey: 'workflows',             icon: Workflow,      roles: PRIVILEGED_ROLES },
+    { href: '/admin/api-keys',               labelKey: 'apiKeys',               icon: Key,           roles: PRIVILEGED_ROLES },
+    { href: '/admin/webhooks',               labelKey: 'webhooks',              icon: Webhook,       roles: PRIVILEGED_ROLES },
+    { href: '/admin/data-quality',           labelKey: 'dataQuality',           icon: Database,      roles: PRIVILEGED_ROLES },
+    { href: '/admin/audit',                  labelKey: 'auditLog',              icon: History,       roles: ADMIN_ROLES },
+  ],
+}
+
+function visibleFor(items: NavItem[], role?: OrgMemberRole): NavItem[] {
+  // Sin rol conocido se muestra todo (comportamiento previo); con rol, solo lo permitido.
+  return role ? items.filter(item => !item.roles || item.roles.includes(role)) : items
+}
+
+function isActive(pathname: string, item: NavItem): boolean {
+  if (item.exact) return pathname === item.href
+  // «Templates ITR» (/admin/templates) no debe activarse en /admin/templates/pssr
+  if (item.href === '/admin/templates') {
+    return pathname === item.href || (pathname.startsWith(item.href + '/') && !/^\/admin\/templates\/(preservation|pssr)/.test(pathname))
+  }
+  return pathname === item.href || pathname.startsWith(item.href + '/')
+}
+
+function readStorage(key: string): string | null {
+  try { return window.localStorage.getItem(key) } catch { return null }
+}
+function writeStorage(key: string, value: string) {
+  try { window.localStorage.setItem(key, value) } catch { /* modo privado / sin storage: se ignora */ }
+}
+
+export default function Sidebar({
+  notifCounts, isOpen = false, role, projectNames = {},
+}: {
+  notifCounts?: NotifCounts
+  isOpen?: boolean
+  role?: OrgMemberRole
+  /** id → nombre de los proyectos de la org (para «Último proyecto») */
+  projectNames?: Record<string, string>
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const t = useTranslations('Sidebar')
+  const mounted = useMounted()
 
   const projectMatch = pathname.match(/\/projects\/([^/]+)/)
   const currentProjectId = projectMatch ? projectMatch[1] : null
+
+  // «Último proyecto»: recordado en localStorage; solo se ofrece si sigue siendo de la org activa.
+  const [lastProjectId, setLastProjectId] = useState<string | null>(null)
+  useEffect(() => {
+    if (currentProjectId) {
+      writeStorage(NAV_STORAGE.lastProject, currentProjectId)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza el estado con la ruta actual; sin esto el grupo de proyecto no cambia al navegar entre proyectos
+      setLastProjectId(currentProjectId)
+    } else {
+      setLastProjectId(readStorage(NAV_STORAGE.lastProject))
+    }
+  }, [currentProjectId])
+
+  // Administración colapsada por defecto; la preferencia se recuerda por navegador.
+  const [adminOpen, setAdminOpen] = useState(false)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lee la preferencia tras montar (localStorage no existe en SSR)
+    setAdminOpen(readStorage(NAV_STORAGE.adminOpen) === '1')
+  }, [])
+  const inAdmin = ADMIN_GROUP.items.some(item => isActive(pathname, item))
+  function toggleAdmin() {
+    const next = !adminOpen
+    setAdminOpen(next)
+    writeStorage(NAV_STORAGE.adminOpen, next ? '1' : '0')
+  }
+
+  const projectId = currentProjectId ?? (mounted && lastProjectId && projectNames[lastProjectId] ? lastProjectId : null)
+  const projectLabel = projectId ? (projectNames[projectId] ?? t('groups.project')) : null
+  const projectHeader = currentProjectId ? t('groups.project') : t('groups.lastProject')
+
+  const orgItems = visibleFor(ORG_GROUP.items, role)
+  const adminItems = visibleFor(ADMIN_GROUP.items, role)
+  const tNav = (k: string) => t(`nav.${k}`)
 
   async function handleLogout() {
     const supabase = createClient()
@@ -246,34 +317,112 @@ export default function Sidebar({ notifCounts, isOpen = false, role }: { notifCo
 
       {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
-        {/* Project context group (dynamic, rendered first when inside a project) */}
-        {currentProjectId && (
-          <ProjectContextGroup
-            projectId={currentProjectId}
-            pathname={pathname}
-            label={t('groups.project')}
-            tNav={(k) => t(`nav.${k}`)}
-          />
+        {/* 1 · Mi trabajo */}
+        <div className="nav-group" style={{ marginBottom: 4 }}>
+          <GroupHeader>{t('groups.myWork')}</GroupHeader>
+          {visibleFor(PERSONAL_ITEMS, role).map(item => (
+            <SidebarLink
+              key={item.href}
+              href={item.href}
+              label={tNav(item.labelKey)}
+              Icon={item.icon}
+              active={isActive(pathname, item)}
+              badge={item.badge ? notifCounts?.[item.badge] : undefined}
+              softBadge={item.softBadge}
+            />
+          ))}
+        </div>
+
+        <Divider />
+
+        {/* 2 · Proyecto (actual o último visitado) */}
+        {projectId && (
+          <>
+            <div className="nav-group" style={{ marginBottom: 4 }}>
+              <GroupHeader>
+                <span style={{ color: '#c084fc' }}>{projectHeader}</span>
+                {projectLabel && (
+                  <span title={projectLabel} style={{ marginLeft: 6, textTransform: 'none', letterSpacing: 0, fontWeight: 500, color: '#a5b4cf', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    · {projectLabel}
+                  </span>
+                )}
+              </GroupHeader>
+              {projectSections(projectId).map((section, idx) => {
+                const items = visibleFor(section.items, role)
+                if (items.length === 0) return null
+                return (
+                  <div key={section.headerKey ?? idx}>
+                    {section.headerKey && <SubHeader>{t(`groups.${section.headerKey}`)}</SubHeader>}
+                    {items.map(item => (
+                      <SidebarLink
+                        key={item.href}
+                        href={item.href}
+                        label={tNav(item.labelKey)}
+                        Icon={item.icon}
+                        active={isActive(pathname, item)}
+                        accent
+                        compact={!!section.headerKey}
+                      />
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+            <Divider />
+          </>
         )}
 
-        {NAV_GROUPS.map((group) => {
-          // Sin rol conocido se muestra todo (comportamiento previo); con rol,
-          // solo los ítems permitidos — y el grupo desaparece si queda vacío.
-          const items = role
-            ? group.items.filter((item) => !item.roles || item.roles.includes(role))
-            : group.items
-          if (items.length === 0) return null
-          return (
-            <NavGroupBlock
-              key={group.groupKey}
-              group={{ ...group, items }}
-              pathname={pathname}
-              label={t(`groups.${group.groupKey}`)}
-              tNav={(k) => t(`nav.${k}`)}
-              notifCounts={notifCounts}
-            />
-          )
-        })}
+        {/* 3 · Organización */}
+        {orgItems.length > 0 && (
+          <div className="nav-group" style={{ marginBottom: 4 }}>
+            <GroupHeader>{t('groups.organization')}</GroupHeader>
+            {orgItems.map(item => (
+              <SidebarLink
+                key={item.href}
+                href={item.href}
+                label={tNav(item.labelKey)}
+                Icon={item.icon}
+                active={isActive(pathname, item)}
+                badge={item.badge ? notifCounts?.[item.badge] : undefined}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* 4 · Administración (colapsable; abierta si estás dentro) */}
+        {adminItems.length > 0 && (
+          <div className="nav-group" style={{ marginBottom: 4 }}>
+            <button
+              type="button"
+              onClick={toggleAdmin}
+              aria-expanded={adminOpen || inAdmin}
+              aria-controls="sidebar-admin-group"
+              style={{
+                width: '100%', background: 'transparent', border: 'none', cursor: 'pointer',
+                padding: '8px 20px 4px', display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+                color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left',
+              }}
+            >
+              <span style={{ flex: 1 }}>{t('groups.admin')}</span>
+              {(adminOpen || inAdmin)
+                ? <ChevronDown size={12} aria-hidden="true" />
+                : <ChevronRight size={12} aria-hidden="true" />}
+            </button>
+            <div id="sidebar-admin-group" hidden={!(adminOpen || inAdmin)}>
+              {adminItems.map(item => (
+                <SidebarLink
+                  key={item.href}
+                  href={item.href}
+                  label={tNav(item.labelKey)}
+                  Icon={item.icon}
+                  active={isActive(pathname, item)}
+                  badge={item.badge ? notifCounts?.[item.badge] : undefined}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Footer */}
@@ -336,25 +485,27 @@ interface SidebarLinkProps {
   Icon: LucideIcon
   active: boolean
   badge?: number
+  softBadge?: boolean
   accent?: boolean
+  compact?: boolean
 }
 
-function SidebarLink({ href, label, Icon, active, badge, accent }: SidebarLinkProps) {
+function SidebarLink({ href, label, Icon, active, badge, softBadge, accent, compact }: SidebarLinkProps) {
   const activeBg = accent ? 'rgba(168,85,247,0.18)' : 'rgba(59,130,246,0.15)'
   const activeFg = accent ? '#c084fc' : 'var(--primary-400)'
   const activeBorder = accent ? 'var(--accent-500)' : 'var(--primary-500)'
 
   return (
-    <a
+    <Link
       href={href}
       aria-current={active ? 'page' : undefined}
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        padding: '9px 20px', margin: '1px 8px',
+        padding: compact ? '7px 20px 7px 28px' : '9px 20px', margin: '1px 8px',
         borderRadius: 'var(--radius-md)', textDecoration: 'none',
         background: active ? activeBg : 'transparent',
         color: active ? activeFg : 'var(--sidebar-text)',
-        fontSize: 'var(--text-base)',
+        fontSize: compact ? 'var(--text-sm)' : 'var(--text-base)',
         fontWeight: active ? 600 : 400,
         transition: 'background 0.15s, color 0.15s',
         borderLeft: active ? `3px solid ${activeBorder}` : '3px solid transparent',
@@ -372,7 +523,7 @@ function SidebarLink({ href, label, Icon, active, badge, accent }: SidebarLinkPr
         }
       }}
     >
-      <Icon size={16} strokeWidth={2} aria-hidden="true" style={{ flexShrink: 0, color: active ? activeFg : undefined, opacity: active ? 1 : 0.85 }} />
+      <Icon size={compact ? 14 : 16} strokeWidth={2} aria-hidden="true" style={{ flexShrink: 0, color: active ? activeFg : undefined, opacity: active ? 1 : 0.85 }} />
       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {label}
       </span>
@@ -380,7 +531,8 @@ function SidebarLink({ href, label, Icon, active, badge, accent }: SidebarLinkPr
         <span
           aria-label={`${badge} pending`}
           style={{
-            background: 'var(--danger-500)', color: '#fff',
+            background: softBadge ? 'rgba(255,255,255,0.12)' : 'var(--danger-500)',
+            color: softBadge ? '#cbd5e1' : '#fff',
             fontSize: 'var(--text-xs)', fontWeight: 700,
             padding: '1px 6px', borderRadius: 'var(--radius-pill)',
             minWidth: 20, textAlign: 'center', lineHeight: '18px',
@@ -389,14 +541,14 @@ function SidebarLink({ href, label, Icon, active, badge, accent }: SidebarLinkPr
           {badge > 99 ? '99+' : badge}
         </span>
       )}
-    </a>
+    </Link>
   )
 }
 
 function GroupHeader({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      padding: '8px 20px 4px',
+      padding: '8px 20px 4px', display: 'flex', alignItems: 'baseline', minWidth: 0,
       fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
       color: '#94a3b8', textTransform: 'uppercase',
     }}>
@@ -405,67 +557,18 @@ function GroupHeader({ children }: { children: React.ReactNode }) {
   )
 }
 
-function NavGroupBlock({
-  group, pathname, label, tNav, notifCounts,
-}: {
-  group: NavGroup
-  pathname: string
-  label: string
-  tNav: (k: string) => string
-  notifCounts?: NotifCounts
-}) {
+function SubHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div className="nav-group" style={{ marginBottom: 4 }}>
-      <GroupHeader>{label}</GroupHeader>
-      {group.items.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(item.href + '/')
-        return (
-          <SidebarLink
-            key={item.href}
-            href={item.href}
-            label={tNav(item.labelKey)}
-            Icon={item.icon}
-            active={active}
-            badge={badgeFor(item.href, notifCounts)}
-          />
-        )
-      })}
+    <div style={{
+      padding: '8px 20px 2px 28px',
+      fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
+      color: '#64748b', textTransform: 'uppercase',
+    }}>
+      {children}
     </div>
   )
 }
 
-function ProjectContextGroup({
-  projectId, pathname, label, tNav,
-}: {
-  projectId: string
-  pathname: string
-  label: string
-  tNav: (k: string) => string
-}) {
-  const items = projectGroupItems(projectId)
-  return (
-    <div className="nav-group" style={{
-      marginBottom: 12, paddingBottom: 8,
-      borderBottom: '1px solid rgba(255,255,255,0.08)',
-    }}>
-      <GroupHeader>{label}</GroupHeader>
-      {items.map((item) => {
-        // Overview matches exactly; others match prefix
-        const isOverview = item.href === `/projects/${projectId}`
-        const active = isOverview
-          ? pathname === item.href
-          : pathname === item.href || pathname.startsWith(item.href + '/')
-        return (
-          <SidebarLink
-            key={item.href}
-            href={item.href}
-            label={tNav(item.labelKey)}
-            Icon={item.icon}
-            active={active}
-            accent
-          />
-        )
-      })}
-    </div>
-  )
+function Divider() {
+  return <div aria-hidden="true" style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '6px 18px 8px' }} />
 }

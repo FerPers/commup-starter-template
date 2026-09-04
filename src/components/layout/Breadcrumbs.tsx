@@ -20,6 +20,9 @@ const TOP_LEVEL_LABELS: Record<string, string> = {
   kpis: 'kpis',
   certificates: 'certificates',
   scan: 'scan',
+  'my-work': 'myWork',
+  inbox: 'inbox',
+  home: 'dashboard',
 }
 
 const ADMIN_LABELS: Record<string, string> = {
