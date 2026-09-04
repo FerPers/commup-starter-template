@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { evaluateEligibility } from '@/lib/certificates/eligibility'
 import { redirect, notFound } from 'next/navigation'
 import CertificatesView from './CertificatesView'
 
@@ -86,22 +87,8 @@ export default async function CertificatesPage({
   const subsystemRows: SubsystemRow[] = (subsystems ?? []).map(ss => {
     const phaseData = (phases ?? []).map(phase => {
       const ssItrs = (itrs ?? []).filter(i => i.subsystem_id === ss.id && i.phase_id === phase.id)
-      const totalItrs = ssItrs.length
-      const approvedItrs = ssItrs.filter(i => i.status === 'approved').length
       const ssPunches = (openPunches ?? []).filter(p => p.subsystem_id === ss.id)
-      const openCatA = ssPunches.filter(p => p.category === 'A').length
-      const openCatBPunches = ssPunches
-        .filter(p => p.category === 'B')
-        .map(p => ({ id: p.id, punch_number: p.punch_number, description: p.description }))
-
-      let eligible: 'green' | 'yellow' | 'red'
-      if (openCatA > 0 || totalItrs === 0 || approvedItrs < totalItrs) {
-        eligible = 'red'
-      } else if (openCatBPunches.length > 0) {
-        eligible = 'yellow'
-      } else {
-        eligible = 'green'
-      }
+      const { totalItrs, approvedItrs, openCatA, openCatBPunches, eligible } = evaluateEligibility(ssItrs, ssPunches)
 
       const certificate = (certificates ?? []).find(
         c => c.subsystem_id === ss.id && c.phase_id === phase.id && c.status !== 'rejected'

@@ -6,16 +6,16 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  acceptedExceptions,
+  buildCertificateNumber,
+  evaluateEligibility,
+  issuanceBlocker,
+  type Eligibility,
+} from '@/lib/certificates/eligibility'
 
 // ── Eligibility (shared core) ──────────────────────────────────────────────
-
-type Eligibility = {
-  eligible: 'green' | 'yellow' | 'red'
-  totalItrs: number
-  approvedItrs: number
-  openCatA: number
-  openCatBPunches: { id: string; punch_number: string; description: string }[]
-}
+// Reglas puras en src/lib/certificates/eligibility.ts (con tests); aquí solo se consultan los datos.
 
 async function computeEligibility(
   supabase: SupabaseClient,
@@ -36,23 +36,7 @@ async function computeEligibility(
       .not('status', 'in', '(closed,cancelled)'),
   ])
 
-  const totalItrs = itrs?.length ?? 0
-  const approvedItrs = itrs?.filter(i => i.status === 'approved').length ?? 0
-  const openCatA = punches?.filter(p => p.category === 'A').length ?? 0
-  const openCatBPunches = (punches ?? [])
-    .filter(p => p.category === 'B')
-    .map(p => ({ id: p.id, punch_number: p.punch_number, description: p.description }))
-
-  let eligible: 'green' | 'yellow' | 'red'
-  if (openCatA > 0 || totalItrs === 0 || approvedItrs < totalItrs) {
-    eligible = 'red'
-  } else if (openCatBPunches.length > 0) {
-    eligible = 'yellow'
-  } else {
-    eligible = 'green'
-  }
-
-  return { eligible, totalItrs, approvedItrs, openCatA, openCatBPunches }
+  return evaluateEligibility(itrs ?? [], punches ?? [])
 }
 
 // ── checkSubsystemEligibility ──────────────────────────────────────────────
@@ -98,24 +82,11 @@ export const issueCertificate = withAuth(
     const { supabase, userId } = ctx
     const { projectId, subsystemId, phaseId } = input
 
-    // Verify eligibility
+    // Verify eligibility (Cat A abiertos, ITRs pendientes, Cat B sin justificar)
     const el = await computeEligibility(supabase, { projectId, subsystemId, phaseId })
-    if (el.openCatA > 0) return { error: `Hay ${el.openCatA} punch(es) Cat A abiertos — deben cerrarse antes de emitir` }
-    if (el.totalItrs === 0) return { error: 'No hay ITRs asignados en esta fase para el subsistema' }
-    if (el.approvedItrs < el.totalItrs) {
-      return { error: `Faltan ${el.totalItrs - el.approvedItrs} ITR(s) por aprobar` }
-    }
-
-    // Check that every open Cat B has a justification
     const exceptions = input.catBExceptions ?? []
-    const catBIds = el.openCatBPunches.map(p => p.id)
-    const missingJustification = catBIds.filter(id => {
-      const exc = exceptions.find(e => e.punchId === id)
-      return !exc || !exc.justification.trim()
-    })
-    if (missingJustification.length > 0) {
-      return { error: `Deben justificarse todos los punches Cat B abiertos (${missingJustification.length} sin justificación)` }
-    }
+    const blocker = issuanceBlocker(el, exceptions)
+    if (blocker) return { error: blocker }
 
     // Fetch subsystem + phase info
     const [{ data: subsystem }, { data: phase }] = await Promise.all([
@@ -125,15 +96,13 @@ export const issueCertificate = withAuth(
     if (!subsystem || !phase) return { error: 'Subsistema o fase no encontrados' }
 
     const certType = phase.certificate_name ?? phase.code
-    const baseNumber = `${certType}/${subsystem.code}`
-
     const { count } = await supabase
       .from('certificates')
       .select('id', { count: 'exact', head: true })
       .eq('project_id', projectId)
-      .like('certificate_number', `${baseNumber}%`)
+      .like('certificate_number', `${certType}/${subsystem.code}%`)
 
-    const certNumber = (count ?? 0) === 0 ? baseNumber : `${baseNumber}-R${(count ?? 0) + 1}`
+    const certNumber = buildCertificateNumber(certType, subsystem.code, count ?? 0)
     const title = `${certType} — ${subsystem.code}: ${subsystem.name}`
 
     const { data: cert, error: certErr } = await supabase
@@ -155,13 +124,13 @@ export const issueCertificate = withAuth(
     if (certErr) return { error: certErr.message }
 
     // Insert Cat B exceptions
-    const validExceptions = exceptions.filter(e => catBIds.includes(e.punchId) && e.justification.trim())
+    const validExceptions = acceptedExceptions(el, exceptions)
     if (validExceptions.length > 0) {
       await supabase.from('certificate_punch_exceptions').insert(
         validExceptions.map(e => ({
           certificate_id: cert.id,
           punch_id: e.punchId,
-          justification: e.justification.trim(),
+          justification: e.justification,
           approved_by: userId,
         })) as never[]
       )
