@@ -183,7 +183,7 @@ export default async function MyWorkPage() {
         </Queue>
 
         {/* Punches asignados */}
-        <Queue title={t('queues.punches')} count={myPunches.length} total={counts.punches} emptyText={t('empty.punches')} moreHref="/punch-list?assigned=me" moreLabel={t('viewAll', { count: counts.punches })} limit={QUEUE_LIMIT}>
+        <Queue title={t('queues.punches')} count={myPunches.length} total={counts.punches} emptyText={t('empty.punches')} moreHref="/punch-list" moreLabel={t('viewAll', { count: counts.punches })} limit={QUEUE_LIMIT}>
           {myPunches.slice(0, QUEUE_LIMIT).map(p => {
             const cat = CATEGORY_CFG[p.category]
             const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
