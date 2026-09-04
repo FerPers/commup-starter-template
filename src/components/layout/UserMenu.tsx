@@ -135,7 +135,7 @@ export default function UserMenu({
       >
         <span aria-hidden="true" style={{
           width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-          background: colors.fg, color: colors.bg,
+          background: 'var(--brand-orange)', color: '#fff',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 10, fontWeight: 700, letterSpacing: '0.02em',
         }}>
@@ -171,7 +171,7 @@ export default function UserMenu({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 10px' }}>
             <span aria-hidden="true" style={{
               width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-              background: colors.bg, color: colors.fg, border: `1px solid ${colors.border}`,
+              background: 'var(--brand-orange)', color: '#fff',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700,
             }}>
               {initialsOf(userName, userEmail)}

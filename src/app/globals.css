@@ -59,10 +59,17 @@
   --accent-600: #9333ea;
   --accent-700: #7e22ce;
 
+  /* ---------- Marca CommUP (logo definitivo): navy + naranja ---------- */
+  --brand-navy:        #12304A;
+  --brand-navy-dark:   #0B1F33;
+  --brand-orange:      #F47A20;
+  --brand-orange-soft: #F9A462;
+
   /* ---------- Role chips (Topbar) — duales light/dark ---------- */
-  --role-owner-fg:     var(--accent-700);
-  --role-owner-bg:     rgba(168, 85, 247, 0.12);
-  --role-owner-border: rgba(168, 85, 247, 0.30);
+  /* Owner en navy de marca (antes violeta del tema base) */
+  --role-owner-fg:     var(--brand-navy);
+  --role-owner-bg:     rgba(18, 48, 74, 0.10);
+  --role-owner-border: rgba(18, 48, 74, 0.28);
   --role-admin-fg:     var(--primary-700);
   --role-admin-bg:     rgba(59, 130, 246, 0.12);
   --role-admin-border: rgba(59, 130, 246, 0.30);
@@ -108,7 +115,7 @@
   --text-muted:     var(--gray-500);
   --text-strong:    var(--gray-900);
 
-  --sidebar-bg:     var(--gray-900);
+  --sidebar-bg:     var(--brand-navy-dark);
   --sidebar-text:   var(--gray-400);
   --sidebar-active: var(--primary-500);
 
@@ -148,7 +155,7 @@
   --text-muted:     var(--gray-400);
   --text-strong:    #f8fafc;
 
-  --sidebar-bg:     #0a1224;
+  --sidebar-bg:     var(--brand-navy-dark);
   --sidebar-text:   var(--gray-400);
   --sidebar-active: var(--primary-400);
 
@@ -162,9 +169,9 @@
   --focus-ring:     0 0 0 3px rgba(96, 165, 250, 0.45);
 
   /* Role chips override en dark — fg lighter + bg/border más opacos para AA */
-  --role-owner-fg:     var(--accent-300);
-  --role-owner-bg:     rgba(168, 85, 247, 0.22);
-  --role-owner-border: rgba(168, 85, 247, 0.45);
+  --role-owner-fg:     #cfe0f2;
+  --role-owner-bg:     rgba(148, 187, 224, 0.18);
+  --role-owner-border: rgba(148, 187, 224, 0.40);
   --role-admin-fg:     var(--primary-300);
   --role-admin-bg:     rgba(59, 130, 246, 0.22);
   --role-admin-border: rgba(59, 130, 246, 0.45);

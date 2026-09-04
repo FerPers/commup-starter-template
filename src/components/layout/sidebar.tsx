@@ -327,7 +327,7 @@ export default function Sidebar({
           <>
             <div className="nav-group" style={{ marginBottom: 4 }}>
               <GroupHeader>
-                <span style={{ color: '#c084fc' }}>{projectHeader}</span>
+                <span style={{ color: 'var(--brand-orange)' }}>{projectHeader}</span>
                 {projectLabel && (
                   <span title={projectLabel} style={{ marginLeft: 6, textTransform: 'none', letterSpacing: 0, fontWeight: 500, color: '#a5b4cf', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     · {projectLabel}
@@ -433,9 +433,9 @@ interface SidebarLinkProps {
 }
 
 function SidebarLink({ href, label, Icon, active, badge, softBadge, accent, compact }: SidebarLinkProps) {
-  const activeBg = accent ? 'rgba(168,85,247,0.18)' : 'rgba(59,130,246,0.15)'
-  const activeFg = accent ? '#c084fc' : 'var(--primary-400)'
-  const activeBorder = accent ? 'var(--accent-500)' : 'var(--primary-500)'
+  const activeBg = accent ? 'rgba(244,122,32,0.16)' : 'rgba(59,130,246,0.15)'
+  const activeFg = accent ? 'var(--brand-orange-soft)' : 'var(--primary-400)'
+  const activeBorder = accent ? 'var(--brand-orange)' : 'var(--primary-500)'
 
   return (
     <Link
