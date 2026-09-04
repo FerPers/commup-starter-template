@@ -48,3 +48,12 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
+        env:
+          # Tests de BD (tests/db/*) — se omiten solos si estos secretos no existen.
+          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+          TEST_USER_A_EMAIL: ${{ secrets.TEST_USER_A_EMAIL }}
+          TEST_USER_A_PASSWORD: ${{ secrets.TEST_USER_A_PASSWORD }}
+          TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
+          TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
+          TEST_PROJECT_A_ID: ${{ secrets.TEST_PROJECT_A_ID }}
