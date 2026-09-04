@@ -6,6 +6,7 @@ describe('greetingName', () => {
     expect(greetingName('Laura Pérez', 'x@y.z')).toBe('Laura')
     expect(greetingName('  ', 'luis.perdomo@outlook.com')).toBe('luis.perdomo')
     expect(greetingName(null, null)).toBe('')
+    expect(greetingName('luis.perdomo@outlook.com', null)).toBe('luis.perdomo')
   })
 })
 import { detectItrPhase, formatPercent } from './utils'
