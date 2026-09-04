@@ -161,6 +161,70 @@ export const updateMemberRole = withAuth(
 
 // ── removeMember ───────────────────────────────────────────────────────────
 
+// ── getMemberRemovalContext ────────────────────────────────────────────────
+// Qué deja atrás un miembro si se le quita la membresía. Su perfil, firmas y
+// punches NUNCA se borran (FKs NO ACTION a profiles): esto solo informa al admin
+// para que reasigne el trabajo abierto antes de removerlo.
+
+export type MemberRemovalContext = {
+  openPunches: number
+  openItrAssignments: number
+  signatures: number
+  punchesRaised: number
+}
+
+export const getMemberRemovalContext = withAuth(
+  { role: ADMIN_ROLES },
+  async (
+    ctx,
+    input: { memberId: string },
+  ): Promise<{ data?: MemberRemovalContext; error?: string }> => {
+  const { data: member } = await ctx.supabase
+    .from('org_members')
+    .select('user_id')
+    .eq('id', input.memberId)
+    .eq('org_id', ctx.orgId)
+    .single()
+  if (!member) return { error: 'Miembro no encontrado' }
+  const uid = member.user_id
+
+  const [openPunches, openItrs, signatures, raised] = await Promise.all([
+    ctx.supabase
+      .from('punches')
+      .select('id, projects!inner(org_id)', { count: 'exact', head: true })
+      .eq('projects.org_id', ctx.orgId)
+      .eq('assigned_to', uid)
+      .in('status', ['open', 'in_progress']),
+    ctx.supabase
+      .from('itr_assignments')
+      .select('id, itrs!inner(status, projects!inner(org_id))', { count: 'exact', head: true })
+      .eq('itrs.projects.org_id', ctx.orgId)
+      .eq('user_id', uid)
+      .in('itrs.status', ['not_started', 'in_progress']),
+    ctx.supabase
+      .from('itr_signatures')
+      .select('id, itrs!inner(projects!inner(org_id))', { count: 'exact', head: true })
+      .eq('itrs.projects.org_id', ctx.orgId)
+      .eq('user_id', uid),
+    ctx.supabase
+      .from('punches')
+      .select('id, projects!inner(org_id)', { count: 'exact', head: true })
+      .eq('projects.org_id', ctx.orgId)
+      .eq('raised_by', uid),
+  ])
+  const firstErr = [openPunches, openItrs, signatures, raised].find(r => r.error)?.error
+  if (firstErr) return { error: firstErr.message }
+
+  return {
+    data: {
+      openPunches: openPunches.count ?? 0,
+      openItrAssignments: openItrs.count ?? 0,
+      signatures: signatures.count ?? 0,
+      punchesRaised: raised.count ?? 0,
+    },
+  }
+})
+
 export const removeMember = withAuth(
   { role: ADMIN_ROLES },
   async (

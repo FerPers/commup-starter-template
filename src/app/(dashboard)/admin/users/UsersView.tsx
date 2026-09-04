@@ -3,7 +3,7 @@
 import type { OrgMemberRole } from '@/types/database'
 import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
-import { inviteUser, updateMemberRole, removeMember } from '@/app/actions/users'
+import { inviteUser, updateMemberRole, removeMember, getMemberRemovalContext, type MemberRemovalContext } from '@/app/actions/users'
 
 type Member = {
   id: string
@@ -159,12 +159,29 @@ export default function UsersView({
     })
   }
 
-  async function handleRemove(memberId: string, name: string) {
-    if (!confirm(t('confirmRemove', { name }))) return
+  // Remove flow: open a dialog, load what the member leaves behind, confirm.
+  const [removeTarget, setRemoveTarget] = useState<{ memberId: string; name: string } | null>(null)
+  const [removeCtx, setRemoveCtx] = useState<MemberRemovalContext | null>(null)
+
+  function openRemove(memberId: string, name: string) {
     setError(null)
+    setRemoveCtx(null)
+    setRemoveTarget({ memberId, name })
+    startTransition(async () => {
+      const res = await getMemberRemovalContext({ memberId })
+      if (res.error) { setError(res.error); setRemoveTarget(null); return }
+      setRemoveCtx(res.data ?? null)
+    })
+  }
+
+  function confirmRemove() {
+    if (!removeTarget) return
+    const { memberId } = removeTarget
     startTransition(async () => {
       const res = await removeMember({ memberId })
       if (res.error) setError(res.error)
+      setRemoveTarget(null)
+      setRemoveCtx(null)
     })
   }
 
@@ -442,7 +459,7 @@ export default function UsersView({
                       <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                         {isAdmin && !isSelf && (!isOwner || currentRole === 'owner') && (
                           <button
-                            onClick={() => handleRemove(m.id, m.fullName)}
+                            onClick={() => openRemove(m.id, m.fullName)}
                             disabled={isPending}
                             style={{
                               padding: '6px 12px', background: 'transparent',
@@ -470,6 +487,87 @@ export default function UsersView({
           background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
         }}>
           {t('pending.empty')}
+        </div>
+      )}
+
+      {/* Remove member dialog */}
+      {removeTarget && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={e => { if (e.target === e.currentTarget && !isPending) { setRemoveTarget(null); setRemoveCtx(null) } }}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 60,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          }}
+        >
+          <div style={{
+            width: '100%', maxWidth: 460, background: 'var(--card-bg)', borderRadius: 14,
+            border: '1px solid var(--border)', padding: 22, boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+          }}>
+            <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: 'var(--text-strong)' }}>
+              {t('removeDialog.title', { name: removeTarget.name })}
+            </h3>
+
+            {!removeCtx ? (
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>{t('removeDialog.loading')}</p>
+            ) : (
+              <>
+                <dl style={{ margin: '0 0 14px', display: 'grid', gridTemplateColumns: '1fr auto', rowGap: 6, columnGap: 16, fontSize: 13 }}>
+                  {([
+                    ['openPunches', removeCtx.openPunches, true],
+                    ['openItrs', removeCtx.openItrAssignments, true],
+                    ['signatures', removeCtx.signatures, false],
+                    ['punchesRaised', removeCtx.punchesRaised, false],
+                  ] as const).map(([key, n, isOpenWork]) => (
+                    <div key={key} style={{ display: 'contents' }}>
+                      <dt style={{ color: 'var(--text-muted)' }}>{t(`removeDialog.${key}`)}</dt>
+                      <dd style={{
+                        margin: 0, fontWeight: 700, textAlign: 'right',
+                        color: isOpenWork && n > 0 ? '#b45309' : 'var(--text-strong)',
+                      }}>{n}</dd>
+                    </div>
+                  ))}
+                </dl>
+
+                {(removeCtx.openPunches > 0 || removeCtx.openItrAssignments > 0) && (
+                  <p style={{
+                    margin: '0 0 10px', padding: '10px 12px', borderRadius: 8, fontSize: 12.5, lineHeight: 1.45,
+                    background: '#fffbeb', border: '1px solid #fcd34d', color: '#78350f',
+                  }}>
+                    {t('removeDialog.warnOpen')}
+                  </p>
+                )}
+                <p style={{ margin: '0 0 18px', fontSize: 12.5, lineHeight: 1.45, color: 'var(--text-muted)' }}>
+                  {t('removeDialog.keepsHistory')}
+                </p>
+              </>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button
+                onClick={() => { setRemoveTarget(null); setRemoveCtx(null) }}
+                disabled={isPending}
+                style={{
+                  padding: '8px 14px', background: 'transparent', border: '1px solid var(--border)',
+                  borderRadius: 8, fontSize: 13, color: 'var(--text-strong)', cursor: 'pointer',
+                }}
+              >
+                {t('removeDialog.cancel')}
+              </button>
+              <button
+                onClick={confirmRemove}
+                disabled={isPending || !removeCtx}
+                style={{
+                  padding: '8px 14px', background: '#ef4444', border: '1px solid #ef4444',
+                  borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#fff',
+                  cursor: isPending || !removeCtx ? 'wait' : 'pointer', opacity: isPending || !removeCtx ? 0.6 : 1,
+                }}
+              >
+                {t('removeDialog.confirm')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

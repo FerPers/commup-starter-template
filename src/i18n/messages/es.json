@@ -895,6 +895,18 @@
       "client": "Solo lectura + firma cliente"
     },
     "legend": "Referencia de roles",
+    "removeDialog": {
+      "title": "Remover a {name}",
+      "loading": "Revisando su trabajo en la organización…",
+      "openPunches": "Punches abiertos asignados",
+      "openItrs": "ITRs pendientes asignados",
+      "signatures": "Firmas en ITRs",
+      "punchesRaised": "Punches levantados",
+      "warnOpen": "Tiene trabajo abierto. Conviene reasignarlo antes: un punch Cat A asignado a alguien que ya no está bloquea el certificado en silencio.",
+      "keepsHistory": "Su nombre y sus firmas permanecen en los ITRs y punches ya ejecutados. Solo pierde el acceso a la organización.",
+      "confirm": "Remover de la organización",
+      "cancel": "Cancelar"
+    },
     "confirmRemove": "¿Remover a {name} de la organización?"
   },
   "Config": {

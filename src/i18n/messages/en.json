@@ -895,6 +895,18 @@
       "client": "Read-only + client signature"
     },
     "legend": "Role reference",
+    "removeDialog": {
+      "title": "Remove {name}",
+      "loading": "Checking their work in this organization…",
+      "openPunches": "Open punches assigned",
+      "openItrs": "Pending ITRs assigned",
+      "signatures": "ITR signatures",
+      "punchesRaised": "Punches raised",
+      "warnOpen": "They still have open work. Reassign it first: a Cat A punch assigned to someone who left silently blocks the certificate.",
+      "keepsHistory": "Their name and signatures stay on the ITRs and punches already executed. They only lose access to the organization.",
+      "confirm": "Remove from organization",
+      "cancel": "Cancel"
+    },
     "confirmRemove": "Remove {name} from the organization?"
   },
   "Config": {

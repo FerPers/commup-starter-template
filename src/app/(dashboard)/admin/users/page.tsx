@@ -79,17 +79,23 @@ export default async function AdminUsersPage() {
     const payloadRole  = payload && 'role'  in payload ? String(payload.role)  : null
     seenInvites.set(row.entity_id, { email: payloadEmail, invitedAt: row.created_at, role: payloadRole })
   }
-  // Drop invites whose auth user no longer exists (deleted from Supabase Auth →
-  // profiles row cascaded). RLS hides non-member profiles, so use the admin
-  // client; the ids come from this org's own activity_log rows (RLS-scoped).
+  // Keep only invites that are truly pending: the auth user still exists AND
+  // never confirmed / signed in. Users deleted from Supabase Auth, or removed
+  // from the org on purpose after confirming, are not "pending". RLS hides
+  // non-member profiles, so use the admin client; the ids come from this org's
+  // own activity_log rows (RLS-scoped).
   if (seenInvites.size > 0) {
-    const { data: liveProfiles } = await createAdminClient()
-      .from('profiles')
-      .select('id')
-      .in('id', Array.from(seenInvites.keys()))
-    const liveIds = new Set((liveProfiles ?? []).map(p => p.id))
-    for (const id of Array.from(seenInvites.keys())) {
-      if (!liveIds.has(id)) seenInvites.delete(id)
+    const admin = createAdminClient()
+    const checks = await Promise.all(
+      Array.from(seenInvites.keys()).map(async id => {
+        const { data } = await admin.auth.admin.getUserById(id)
+        const u = data?.user
+        const stillPending = !!u && !u.email_confirmed_at && !u.last_sign_in_at
+        return [id, stillPending] as const
+      }),
+    )
+    for (const [id, stillPending] of checks) {
+      if (!stillPending) seenInvites.delete(id)
     }
   }
   const pendingInvites = Array.from(seenInvites.entries()).map(([userId, info]) => ({
