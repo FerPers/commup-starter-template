@@ -2165,5 +2165,13 @@
       "closed": "Closed",
       "cancelled": "Cancelled"
     }
+  },
+  "MobileTabBar": {
+    "aria": "Field navigation",
+    "myWork": "My work",
+    "scan": "Scan",
+    "inbox": "Inbox",
+    "menu": "Menu",
+    "pending": "{count} pending"
   }
 }

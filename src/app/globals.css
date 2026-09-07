@@ -398,3 +398,84 @@ body.drawer-locked { overflow: hidden; }
 @media (min-width: 1024px) {
   .app-backdrop { display: none; }
 }
+
+/* ==========================================================================
+   Dashboard shell — barra inferior móvil (roles de campo)
+   ========================================================================== */
+.app-tabbar { display: none; }
+
+@media (max-width: 1023px) {
+  .app-tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 30;
+    display: flex;
+    align-items: stretch;
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  }
+  .app-main.has-tabbar {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+  .app-tabbar-item {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    background: transparent;
+    border: 0;
+    border-top: 2px solid transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s;
+  }
+  .app-tabbar-item.is-active {
+    color: var(--brand-orange);
+    border-top-color: var(--brand-orange);
+    font-weight: 600;
+  }
+  .app-tabbar-item:focus-visible {
+    outline: 2px solid var(--brand-orange);
+    outline-offset: -2px;
+  }
+  .app-tabbar-icon {
+    position: relative;
+    display: inline-flex;
+  }
+  .app-tabbar-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .app-tabbar-badge {
+    position: absolute;
+    top: -6px; right: -12px;
+    min-width: 18px; height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--danger-500);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    box-shadow: 0 0 0 2px var(--card-bg);
+  }
+  .app-tabbar-badge.is-soft {
+    background: var(--text-secondary);
+  }
+}

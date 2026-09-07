@@ -7,10 +7,12 @@ import { DrawerContext } from './DrawerContext'
 interface DashboardShellProps {
   sidebar: ReactNode
   topbar: ReactNode
+  /** Barra inferior móvil (roles de campo). Null = sin barra. */
+  tabbar?: ReactNode
   children: ReactNode
 }
 
-export default function DashboardShell({ sidebar, topbar, children }: DashboardShellProps) {
+export default function DashboardShell({ sidebar, topbar, tabbar = null, children }: DashboardShellProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -60,10 +62,11 @@ export default function DashboardShell({ sidebar, topbar, children }: DashboardS
         />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {topbar}
-          <main style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
+          <main className={`app-main${tabbar ? ' has-tabbar' : ''}`} style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
             {children}
           </main>
         </div>
+        {tabbar}
       </div>
     </DrawerContext.Provider>
   )

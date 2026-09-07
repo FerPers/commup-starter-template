@@ -3,6 +3,8 @@ import Sidebar from '@/components/layout/sidebar'
 import Topbar from '@/components/layout/Topbar'
 import DashboardShell from '@/components/layout/DashboardShell'
 import MobileMenuButton from '@/components/layout/MobileMenuButton'
+import MobileTabBar from '@/components/layout/MobileTabBar'
+import { FIELD_ROLES } from '@/lib/constants/navigation'
 import { ToastProvider } from '@/components/ui'
 import { getActiveMembership, listMemberships } from '@/lib/supabase/membership'
 import type { OrgMemberRole } from '@/types/database'
@@ -95,6 +97,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <ToastProvider>
       <DashboardShell
         sidebar={<Sidebar notifCounts={notifCounts} role={role} projectNames={projectNames} />}
+        tabbar={FIELD_ROLES.includes(role)
+          ? <MobileTabBar counts={{ myWork: notifCounts.myWork, inbox: notifCounts.inbox }} />
+          : null}
         topbar={
           <Topbar
             role={role}
