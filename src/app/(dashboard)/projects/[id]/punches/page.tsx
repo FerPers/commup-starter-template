@@ -59,6 +59,7 @@ export default async function PunchListPage({
     created_at: r.created_at,
     itr_id: r.itr_id,
     assigned_to: r.assigned_to,
+    raised_by: r.raised_by,
     raised_by_profile: r.raised_by_name ? { full_name: r.raised_by_name } : null,
     assigned_to_profile: r.assigned_to_name ? { full_name: r.assigned_to_name } : null,
     tags: r.tag_id

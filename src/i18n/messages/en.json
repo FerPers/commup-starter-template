@@ -276,7 +276,9 @@
     "applying": "Applying…",
     "rangeInfo": "Showing {from}–{to} of {total}",
     "exporting": "Exporting…",
-    "clear": "Clear"
+    "clear": "Clear",
+    "inactive": "(inactive)",
+    "inactiveTitle": "No longer a member of the organization"
   },
   "ItrList": {
     "title": "ITRs",

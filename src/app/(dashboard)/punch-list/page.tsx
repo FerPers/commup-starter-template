@@ -39,6 +39,7 @@ export default async function GlobalPunchListPage({ searchParams }: { searchPara
     itr_id: r.itr_id,
     project_id: r.project_id,
     assigned_to: r.assigned_to,
+    raised_by: r.raised_by,
     raised_by_profile: r.raised_by_name ? { full_name: r.raised_by_name } : null,
     assigned_to_profile: r.assigned_to_name ? { full_name: r.assigned_to_name } : null,
     projects: { id: r.project_id, name: r.project_name, code: r.project_code },

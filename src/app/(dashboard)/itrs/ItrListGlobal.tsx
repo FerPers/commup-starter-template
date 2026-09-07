@@ -1,5 +1,7 @@
 'use client'
 
+import { PersonName } from '@/components/ui'
+import { isInactiveMember } from '@/lib/people/inactive'
 import type { Enums } from '@/types/supabase.generated'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -29,6 +31,7 @@ const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', cl
 
 // Sprint E: lista global paginada en servidor; filtros/orden/página en la URL.
 export default function ItrListGlobal({
+  memberIds: memberIdList,
   projects,
   rows,
   total,
@@ -41,6 +44,7 @@ export default function ItrListGlobal({
   phases,
   disciplines,
 }: {
+  memberIds: string[]
   projects: Project[]
   rows: ItrListRow[]
   total: number
@@ -56,6 +60,7 @@ export default function ItrListGlobal({
   const t  = useTranslations('ItrList')
   const tc = useTranslations('Common')
   const router = useRouter()
+  const memberIds = useMemo(() => new Set(memberIdList), [memberIdList])
   const url = useUrlFilters()
 
   const itrStatusLabels: Record<string, string> = {
@@ -346,7 +351,7 @@ export default function ItrListGlobal({
             header: t('table.colInspector'),
             cell: (itr) => (
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                {itr.assignments.find(a => a.role === 'executor')?.full_name ?? '—'}
+                <PersonName name={itr.assignments.find(a => a.role === 'executor')?.full_name} inactive={isInactiveMember(itr.assignments.find(a => a.role === 'executor')?.user_id, memberIds)} />
               </span>
             ),
           },

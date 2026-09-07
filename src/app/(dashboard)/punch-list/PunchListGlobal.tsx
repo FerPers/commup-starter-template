@@ -1,7 +1,9 @@
 'use client'
 
+import { PersonName } from '@/components/ui'
+import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useRef, useEffect, useTransition } from 'react'
+import { useMemo, useState, useRef, useEffect, useTransition } from 'react'
 import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import { exportPunchList } from '@/app/actions/punch-list'
@@ -33,6 +35,7 @@ type Punch = {
   itr_id: string | null
   project_id: string
   assigned_to: string | null
+  raised_by: string | null
   raised_by_profile: { full_name: string } | null
   assigned_to_profile: { full_name: string } | null
   projects: { id: string; name: string; code: string } | null
@@ -79,6 +82,7 @@ export default function PunchListGlobal({
   summary: PunchSummary
   filters: { project: string; cat: string; status: string; disc: string; q: string }
 }) {
+  const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
   const t  = useTranslations('PunchList')
   const tc = useTranslations('Common')
   const tTags = useTranslations('Tags')
@@ -457,7 +461,7 @@ export default function PunchListGlobal({
             header: t('table.colAssigned'),
             cell: (p) => (
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {p.assigned_to_profile?.full_name ?? '—'}
+                <PersonName name={p.assigned_to_profile?.full_name} inactive={isInactiveMember(p.assigned_to, memberIds)} />
               </div>
             ),
           },

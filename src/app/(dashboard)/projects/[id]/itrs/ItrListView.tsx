@@ -1,5 +1,7 @@
 'use client'
 
+import { PersonName } from '@/components/ui'
+import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
 import type { Enums } from '@/types/supabase.generated'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -60,6 +62,7 @@ export default function ItrListView({
 }) {
   const t = useTranslations('ItrList')
   const canEdit = EDITOR_ROLES.includes(userRole)
+  const memberIds = useMemo(() => memberIdSet(users), [users])
   const router = useRouter()
   const url = useUrlFilters()
 
@@ -474,7 +477,7 @@ export default function ItrListView({
 
                 {/* Inspector */}
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {executor?.full_name ?? '—'}
+                  <PersonName name={executor?.full_name} inactive={isInactiveMember(executor?.user_id, memberIds)} />
                 </div>
 
                 {/* Date */}

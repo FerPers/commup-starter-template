@@ -19,16 +19,18 @@ export default async function GlobalItrsPage({ searchParams }: { searchParams: P
   const filters = { status: sp.status, phase: sp.phase, disc: sp.disc, q: sp.q, project: sp.project }
   const scope = { orgId: ctx.orgId }
 
-  const [{ data: projects }, pageRes, counts, { data: phases }, { data: disciplines }] = await Promise.all([
+  const [{ data: projects }, pageRes, counts, { data: phases }, { data: disciplines }, { data: members }] = await Promise.all([
     supabase.from('projects').select('id, name, code').eq('org_id', ctx.orgId).order('name'),
     fetchItrPage(supabase, scope, { filters, page, sort, dir }),
     fetchItrStatusCounts(supabase, scope),
     supabase.from('project_phases').select('id, code, name, color, order_index').eq('org_id', ctx.orgId).order('order_index'),
     supabase.from('disciplines').select('code, name, color').eq('org_id', ctx.orgId).order('code'),
+    supabase.from('org_members').select('user_id').eq('org_id', ctx.orgId),
   ])
 
   return (
     <ItrListGlobal
+      memberIds={(members ?? []).map(m => m.user_id)}
       projects={projects ?? []}
       rows={pageRes.rows}
       total={pageRes.total}

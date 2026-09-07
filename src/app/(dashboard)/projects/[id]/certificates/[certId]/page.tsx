@@ -28,6 +28,7 @@ export default async function CertificateDetailPage({
     { data: cert },
     { data: exceptions },
     { data: signatures },
+    { data: members },
   ] = await Promise.all([
     supabase
       .from('certificates')
@@ -58,6 +59,7 @@ export default async function CertificateDetailPage({
       `)
       .eq('certificate_id', certId)
       .order('signed_at'),
+    supabase.from('org_members').select('user_id').eq('org_id', membership.org_id),
   ])
 
   if (!cert) notFound()
@@ -93,6 +95,7 @@ export default async function CertificateDetailPage({
       exceptions={exceptions ?? []}
       itrs={itrs ?? []}
       signatures={signatures ?? []}
+      memberIds={(members ?? []).map(m => m.user_id)}
       currentUserId={ctx.userId}
       canEdit={canEdit}
       isAdmin={isAdmin}

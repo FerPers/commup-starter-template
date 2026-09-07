@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { PersonName } from '@/components/ui'
+import { isInactiveMember } from '@/lib/people/inactive'
+import { useMemo, useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeCertificate, reopenCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
@@ -71,6 +73,7 @@ export default function CertificateDetail({
   exceptions,
   itrs,
   signatures,
+  memberIds: memberIdList = [],
   currentUserId,
   canEdit,
   isAdmin,
@@ -83,13 +86,19 @@ export default function CertificateDetail({
   exceptions: ExceptionRow[]
   itrs: ItrRow[]
   signatures: SignatureRow[]
+  /** Ids de miembros actuales de la org: nombres fuera del conjunto se marcan «(inactivo)». */
+  memberIds?: string[]
   currentUserId: string
   canEdit: boolean
   isAdmin: boolean
 }) {
   const t      = useTranslations('Certificates')
+  const tc     = useTranslations('Common')
   const locale = useLocale()
   const router = useRouter()
+  const memberIds = useMemo(() => new Set(memberIdList), [memberIdList])
+  const personLabel = (name: string | null | undefined, userId: string | null | undefined) =>
+    name ? (isInactiveMember(userId, memberIds) ? `${name} ${tc('inactive')}` : name) : '—'
   const [isPending, startTransition] = useTransition()
   const [revokeConfirm, setRevokeConfirm] = useState(false)
   const [revokeError, setRevokeError]     = useState('')
@@ -316,7 +325,7 @@ export default function CertificateDetail({
             { label: t('detail.infoSubsystem'),  value: subsystem ? `${subsystem.code} — ${subsystem.name}` : '—' },
             { label: t('detail.infoPhase'),      value: phase ? `${phase.code} — ${phase.name}` : '—' },
             { label: t('detail.infoIssuedDate'), value: cert.issued_date ? new Date(cert.issued_date).toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' }) : '—' },
-            { label: t('detail.infoIssuedBy'),   value: cert.issued_by_profile?.full_name ?? '—' },
+            { label: t('detail.infoIssuedBy'),   value: personLabel(cert.issued_by_profile?.full_name, cert.issued_by_profile?.id) },
           ].map((item, i) => (
             <div key={i} style={{ padding: '10px 0', paddingRight: '20px' }}>
               <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>
@@ -434,7 +443,7 @@ export default function CertificateDetail({
                   <strong>{t('detail.justificationLabel')}</strong> {exc.justification}
                 </p>
                 <div style={{ fontSize: '11px', color: '#d97706' }}>
-                  {t('detail.approvedBy', { name: exc.approved_by_profile?.full_name ?? '—' })}
+                  {t('detail.approvedBy', { name: personLabel(exc.approved_by_profile?.full_name, exc.approved_by_profile?.id) })}
                   {' · '}
                   {new Date(exc.approved_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                 </div>
@@ -479,7 +488,7 @@ export default function CertificateDetail({
                     </div>
                     <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{roleLabel}</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
-                      {sig.signer_profile?.full_name ?? '—'}
+                      <PersonName name={sig.signer_profile?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '2px' }}>
                       {t('detail.sigSignedOn', {

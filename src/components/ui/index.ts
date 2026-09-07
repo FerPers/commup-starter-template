@@ -12,3 +12,4 @@ export { Tooltip, type TooltipProps, type TooltipPlacement } from './Tooltip';
 export { Table, THead, TBody, TR, TH, TD, TableWrapper, type TableWrapperProps } from './Table';
 export { DataTable, type DataTableProps, type DataTableColumn, type DataTableResponsive } from './DataTable';
 export { Pagination, type PaginationProps } from './Pagination';
+export { PersonName, type PersonNameProps } from './PersonName';

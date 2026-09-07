@@ -62,6 +62,8 @@ export default async function ItrExecutionPage({
 
   const canEdit = ['owner', 'admin', 'architect', 'leader', 'inspector'].includes(membership.role)
 
+  const { data: members } = await supabase.from('org_members').select('user_id').eq('org_id', ctx.orgId)
+
   const { data: suggestions } = await supabase
     .from('itr_suggestions')
     .select('id, signal_tag, signal_value, signal_unit, sampled_at, message, suggested_at, expires_at, pre_filled_data')
@@ -82,6 +84,7 @@ export default async function ItrExecutionPage({
         currentUserRole={membership.role}
         canEdit={canEdit}
         attachments={attachments}
+        memberIds={(members ?? []).map(m => m.user_id)}
       />
     </>
   )

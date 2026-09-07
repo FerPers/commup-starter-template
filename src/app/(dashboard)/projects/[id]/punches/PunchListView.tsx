@@ -1,5 +1,7 @@
 'use client'
 
+import { PersonName } from '@/components/ui'
+import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
 import type { Enums } from '@/types/supabase.generated'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -32,6 +34,7 @@ type Punch = {
   created_at: string
   itr_id: string | null
   assigned_to: string | null
+  raised_by: string | null
   raised_by_profile: { full_name: string } | null
   assigned_to_profile: { full_name: string } | null
   tags: { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } } | null
@@ -73,6 +76,7 @@ export default function PunchListView({
   summary: PunchSummary
   filters: { cat: string; status: string; disc: string; system: string; q: string }
 }) {
+  const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
   const t = useTranslations('PunchList')
   const router = useRouter()
   // Sprint E: filtros/página en la URL; `punches` es la página visible.
@@ -396,7 +400,7 @@ export default function PunchListView({
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                      {punch.assigned_to_profile?.full_name ?? <span style={{ color: '#cbd5e1' }}>{t('noAssignee')}</span>}
+                      <PersonName name={punch.assigned_to_profile?.full_name} inactive={isInactiveMember(punch.assigned_to, memberIds)} fallback={<span style={{ color: '#cbd5e1' }}>{t('noAssignee')}</span>} />
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', color: punch.target_date ? 'var(--text-muted)' : '#cbd5e1', whiteSpace: 'nowrap' }}>
                       {punch.target_date ?? '—'}
@@ -460,6 +464,7 @@ function PunchDetailModal({
 }) {
   const t = useTranslations('PunchList')
   const tTags = useTranslations('Tags')
+  const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
   const [comment, setComment] = useState('')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -549,8 +554,8 @@ function PunchDetailModal({
 
         {/* Meta */}
         <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {punch.raised_by_profile && <span><strong>{t('detail.raisedBy')}</strong> {punch.raised_by_profile.full_name}</span>}
-          {punch.assigned_to_profile && <span><strong>{t('detail.assignedTo')}</strong> {punch.assigned_to_profile.full_name}</span>}
+          {punch.raised_by_profile && <span><strong>{t('detail.raisedBy')}</strong> <PersonName name={punch.raised_by_profile.full_name} inactive={isInactiveMember(punch.raised_by, memberIds)} /></span>}
+          {punch.assigned_to_profile && <span><strong>{t('detail.assignedTo')}</strong> <PersonName name={punch.assigned_to_profile.full_name} inactive={isInactiveMember(punch.assigned_to, memberIds)} /></span>}
           {punch.target_date && <span><strong>{t('detail.targetDate')}</strong> {punch.target_date}</span>}
           {punch.closed_date && <span><strong>{t('detail.closedDate')}</strong> {punch.closed_date}</span>}
         </div>

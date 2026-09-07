@@ -1,10 +1,12 @@
 'use client'
 
+import { PersonName } from '@/components/ui'
+import { isInactiveMember } from '@/lib/people/inactive'
 // Pantalla de ejecución de ITR — orquestador (Q2). El estado de autosave vive
 // en useItrAutosave; los bloques de UI (ItemRow, PhotoUpload, SignModal,
 // RevokeModal, CreatePunchModal, MicAppend) son componentes hermanos.
 
-import { useState, useEffect, useTransition, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { signItr, saveItrAttachment, revokeItrApproval } from '@/app/actions/itr-instances'
@@ -25,6 +27,7 @@ export default function ItrExecution({
   currentUserRole,
   canEdit,
   attachments: initialAttachments = [],
+  memberIds: memberIdList = [],
 }: {
   itr: ItrData
   projectId: string
@@ -33,6 +36,8 @@ export default function ItrExecution({
   currentUserRole: string
   canEdit: boolean
   attachments?: Attachment[]
+  /** Ids de miembros actuales de la org: nombres fuera del conjunto se marcan «(inactivo)». */
+  memberIds?: string[]
 }) {
   const router = useRouter()
   const t = useTranslations('ItrExecution')
@@ -116,6 +121,7 @@ export default function ItrExecution({
     item => item.is_critical && responses[item.id]?.is_passed === false,
   )
   const executor = itr.itr_assignments.find(a => a.role === 'executor')
+  const memberIds = useMemo(() => new Set(memberIdList), [memberIdList])
 
   // ── Sign ────────────────────────────────────────────────────────────
 
@@ -231,7 +237,7 @@ export default function ItrExecution({
               {' — '}{tag.description}
             </span>
             {executor?.profiles?.full_name && (
-              <span><strong style={{ color: 'var(--gray-700)' }}>{t('header.inspectorLabel')}</strong> {executor.profiles.full_name}</span>
+              <span><strong style={{ color: 'var(--gray-700)' }}>{t('header.inspectorLabel')}</strong> <PersonName name={executor.profiles.full_name} inactive={isInactiveMember(executor.user_id, memberIds)} /></span>
             )}
             {itr.scheduled_date && (
               <span><strong style={{ color: 'var(--gray-700)' }}>{t('header.dateLabel')}</strong> {itr.scheduled_date}</span>
@@ -266,7 +272,7 @@ export default function ItrExecution({
                   {sig && (
                     <>
                       <div style={{ fontSize: '11px', color: 'var(--gray-700)', fontWeight: 500, marginLeft: '17px' }}>
-                        {sig.profiles?.full_name ?? '—'}
+                        <PersonName name={sig.profiles?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />
                       </div>
                       <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginLeft: '17px', marginTop: '1px' }}>
                         {signedDate} {signedTime}

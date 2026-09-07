@@ -276,7 +276,9 @@
     "applying": "Aplicando…",
     "rangeInfo": "Mostrando {from}–{to} de {total}",
     "exporting": "Exportando…",
-    "clear": "Limpiar"
+    "clear": "Limpiar",
+    "inactive": "(inactivo)",
+    "inactiveTitle": "Ya no pertenece a la organización"
   },
   "ItrList": {
     "title": "ITRs",
