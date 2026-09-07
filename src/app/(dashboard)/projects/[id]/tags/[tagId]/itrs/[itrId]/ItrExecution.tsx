@@ -9,22 +9,23 @@ import { isInactiveMember } from '@/lib/people/inactive'
 import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { signItr, revokeItrApproval } from '@/app/actions/itr-instances'
-import { uploadOrQueuePhoto, pendingAttachment } from '@/lib/sync/outbox'
+import { revokeItrApproval } from '@/app/actions/itr-instances'
+import { uploadOrQueuePhoto, pendingAttachment, pendingSignature, signOrQueue } from '@/lib/sync/outbox'
+import { localItrStatus } from '@/lib/sync/outbox-utils'
 import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
 import { useItrAutosave } from './useItrAutosave'
 import ItemRow from './ItemRow'
 import SignModal from './SignModal'
 import RevokeModal from './RevokeModal'
 import CreatePunchModal from './CreatePunchModal'
-import { isItemVisible, type Attachment, type ItrData } from './types'
+import { isItemVisible, type Attachment, type ItrData, type Signature } from './types'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
 export default function ItrExecution({
   itr,
   projectId,
   tagId,
-  currentUserId: _currentUserId,
+  currentUserId,
   currentUserRole,
   canEdit,
   attachments: initialAttachments = [],
@@ -42,6 +43,8 @@ export default function ItrExecution({
 }) {
   const router = useRouter()
   const t = useTranslations('ItrExecution')
+  /** Nombre del usuario actual según su asignación en este ITR (para pintar firmas pendientes). */
+  const executorName = itr.itr_assignments.find(a => a.user_id === currentUserId)?.profiles?.full_name ?? null
   const locale = useLocale()
   const [isModalPending, startModalTransition] = useTransition()
   const [itemLang, setItemLang] = useState<'es' | 'en'>(() => {
@@ -82,20 +85,26 @@ export default function ItrExecution({
     setServerAttachments(groupAttachments(initialAttachments))
   }, [initialAttachments])
 
-  const [punchQueuedNotice, setPunchQueuedNotice] = useState(false)
+  /** Aviso «guardado sin red» (punch o firma). */
+  const [queuedNotice, setQueuedNotice] = useState<'punch' | 'signature' | null>(null)
 
-  // Sprint O: fotos de este ITR que siguen en la bandeja de salida (sin red).
+  // Sprint O: fotos y firmas de este ITR que siguen en la bandeja de salida (sin red).
   const [pendingPhotos, setPendingPhotos] = useState<Attachment[]>([])
+  const [pendingSignatures, setPendingSignatures] = useState<Signature[]>([])
   useEffect(() => {
     let urls: string[] = []
     const load = () => {
       getOutbox().then(entries => {
         urls.forEach(u => URL.revokeObjectURL(u))
-        const mine = entries
-          .filter((e): e is typeof e & { kind: 'photo' } => e.kind === 'photo' && e.itrId === itr.id)
+        const own = entries.filter(e => e.itrId === itr.id)
+        const photos = own
+          .filter((e): e is typeof e & { kind: 'photo' } => e.kind === 'photo')
           .map(e => pendingAttachment(e))
-        urls = mine.map(a => a.signed_url).filter((u): u is string => Boolean(u))
-        setPendingPhotos(mine)
+        urls = photos.map(a => a.signed_url).filter((u): u is string => Boolean(u))
+        setPendingPhotos(photos)
+        setPendingSignatures(own
+          .filter((e): e is typeof e & { kind: 'signature' } => e.kind === 'signature')
+          .map(e => pendingSignature(e, currentUserId, executorName)))
       }).catch(() => {})
     }
     load()
@@ -104,12 +113,18 @@ export default function ItrExecution({
       window.removeEventListener(OUTBOX_CHANGED_EVENT, load)
       urls.forEach(u => URL.revokeObjectURL(u))
     }
-  }, [itr.id])
+  }, [itr.id, currentUserId, executorName])
+
+  /** Firmas del servidor + las pendientes de la bandeja (una por rol). */
+  const effectiveSignatures = useMemo<Signature[]>(() => {
+    const roles = new Set(itr.itr_signatures.map(s => s.role))
+    return [...itr.itr_signatures, ...pendingSignatures.filter(s => !roles.has(s.role))]
+  }, [itr.itr_signatures, pendingSignatures])
 
   // Al terminar un replay con envíos, recargar del servidor (fotos y punches reales).
   const [syncedFlash, setSyncedFlash] = useState(false)
   useEffect(() => {
-    const onSynced = () => { setSyncedFlash(true); setPunchQueuedNotice(false); router.refresh() }
+    const onSynced = () => { setSyncedFlash(true); setQueuedNotice(null); router.refresh() }
     window.addEventListener(SYNC_DONE_EVENT, onSynced)
     return () => window.removeEventListener(SYNC_DONE_EVENT, onSynced)
   }, [router])
@@ -175,16 +190,22 @@ export default function ItrExecution({
   )
   const executor = itr.itr_assignments.find(a => a.role === 'executor')
   const memberIds = useMemo(() => new Set(memberIdList), [memberIdList])
+  // Sprint O: estado calculado en local (espejo del servidor) para poder firmar sin red
+  // antes de que las respuestas encoladas lleguen al servidor.
+  const localStatus = localItrStatus(allItems, responses).status
+  const effectiveStatus = itr.status === 'approved' ? 'approved' : (isOffline || pendingCount > 0) ? localStatus : itr.status
 
   // ── Sign ────────────────────────────────────────────────────────────
 
   function handleSign(role: 'executor' | 'supervisor' | 'client', signatureImage: string) {
     setSignError(null)
     startModalTransition(async () => {
-      const res = await signItr(itr.id, role, projectId, tagId, signatureImage)
-      if (res.error) { setSignError(res.error); return }
+      // Sprint O: sin red la firma se encola; al sincronizar viaja después de las respuestas.
+      const res = await signOrQueue({ itrId: itr.id, role, projectId, tagId, signatureImage })
+      if ('error' in res) { setSignError(res.error); return }
       setShowSignModal(false)
-      router.refresh()
+      if (res.queued) setQueuedNotice('signature')
+      else router.refresh()
     })
   }
 
@@ -312,23 +333,23 @@ export default function ItrExecution({
         {/* Signatures status */}
         <div style={{ marginTop: '14px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {(['executor', 'supervisor', 'client'] as const).map(role => {
-            const sig = itr.itr_signatures.find(s => s.role === role)
+            const sig = effectiveSignatures.find(s => s.role === role)
             const signedDate = sig ? sig.signed_at.slice(0, 10).split('-').reverse().join('/') : null
             const signedTime = sig ? sig.signed_at.slice(11, 16) : null
             return (
-              <div key={role} style={{ borderRadius: '7px', background: sig ? '#ecfdf5' : 'var(--gray-50)', border: `1px solid ${sig ? '#a7f3d0' : 'var(--border)'}`, overflow: 'hidden', minWidth: '130px' }}>
+              <div key={role} style={{ borderRadius: '7px', background: sig?.pending ? '#fffbeb' : sig ? '#ecfdf5' : 'var(--gray-50)', border: `1px solid ${sig?.pending ? '#fde68a' : sig ? '#a7f3d0' : 'var(--border)'}`, overflow: 'hidden', minWidth: '130px' }}>
                 <div style={{ padding: '7px 10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: sig ? '4px' : 0 }}>
-                    <span style={{ fontSize: '12px' }}>{sig ? '✓' : '○'}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig ? '#10b981' : 'var(--gray-400)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
+                    <span style={{ fontSize: '12px' }}>{sig?.pending ? '⏳' : sig ? '✓' : '○'}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig?.pending ? '#b45309' : sig ? '#10b981' : 'var(--gray-400)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
                   </div>
                   {sig && (
                     <>
                       <div style={{ fontSize: '11px', color: 'var(--gray-700)', fontWeight: 500, marginLeft: '17px' }}>
                         <PersonName name={sig.profiles?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />
                       </div>
-                      <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginLeft: '17px', marginTop: '1px' }}>
-                        {signedDate} {signedTime}
+                      <div style={{ fontSize: '10px', color: sig.pending ? '#b45309' : 'var(--gray-400)', marginLeft: '17px', marginTop: '1px' }}>
+                        {sig.pending ? t('sync.pending') : `${signedDate} ${signedTime}`}
                       </div>
                     </>
                   )}
@@ -344,11 +365,13 @@ export default function ItrExecution({
           })}
         </div>
 
-        {/* Sprint O: punch guardado sin red */}
-        {punchQueuedNotice && (
+        {/* Sprint O: punch o firma guardados sin red */}
+        {queuedNotice && (
           <div role="status" style={{ marginTop: '12px', padding: '10px 14px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <p style={{ fontSize: '12px', fontWeight: 600, color: '#b45309', margin: 0, flex: 1 }}>⚑ {t('punchModal.queued')}</p>
-            <button onClick={() => setPunchQueuedNotice(false)} aria-label="×" style={{ background: 'transparent', border: 'none', color: '#b45309', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>×</button>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: '#b45309', margin: 0, flex: 1 }}>
+              {queuedNotice === 'punch' ? `⚑ ${t('punchModal.queued')}` : `✍ ${t('sync.signatureQueued')}`}
+            </p>
+            <button onClick={() => setQueuedNotice(null)} aria-label="×" style={{ background: 'transparent', border: 'none', color: '#b45309', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>×</button>
           </div>
         )}
 
@@ -459,11 +482,12 @@ export default function ItrExecution({
             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
           </button>
           {(() => {
-            const canSign = canEdit && itr.status === 'completed'
+            const allRolesPending = (['executor', 'supervisor', 'client'] as const).every(r => effectiveSignatures.some(s => s.role === r))
+            const canSign = canEdit && effectiveStatus === 'completed' && !allRolesPending
             const signTooltip =
-              itr.status === 'approved'   ? t('footer.signTooltipApproved')
-              : itr.status === 'rejected' ? t('footer.signTooltipRejected')
-              : itr.status !== 'completed' ? t('footer.signTooltipIncomplete')
+              effectiveStatus === 'approved' || allRolesPending ? t('footer.signTooltipApproved')
+              : effectiveStatus === 'rejected' ? t('footer.signTooltipRejected')
+              : effectiveStatus !== 'completed' ? t('footer.signTooltipIncomplete')
               : ''
             return (
               <button
@@ -506,7 +530,7 @@ export default function ItrExecution({
           tagId={tagId}
           initialDescription={punchItemDesc}
           onClose={() => setShowPunchModal(false)}
-          onCreated={({ queued }) => { setShowPunchModal(false); if (queued) setPunchQueuedNotice(true); else router.refresh() }}
+          onCreated={({ queued }) => { setShowPunchModal(false); if (queued) setQueuedNotice('punch'); else router.refresh() }}
         />
       )}
 
@@ -514,7 +538,7 @@ export default function ItrExecution({
       {showSignModal && (
         <SignModal
           itrNumber={itr.itr_number}
-          itrSignatures={itr.itr_signatures}
+          itrSignatures={effectiveSignatures}
           criticalBlocked={criticalBlocked}
           isPending={isModalPending}
           signError={signError}

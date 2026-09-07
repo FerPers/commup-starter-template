@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ListChecks, ScanLine, Inbox, Menu, type LucideIcon } from 'lucide-react'
 import { useDrawerControls } from './DrawerContext'
+import { useOfflineSync } from '@/hooks/useOfflineSync'
+import { useMounted } from '@/hooks/useMounted'
 
 /**
  * Barra inferior móvil (2026-09-07) para roles de campo (inspector, leader).
@@ -31,6 +33,12 @@ export default function MobileTabBar({ counts }: MobileTabBarProps) {
   const t = useTranslations('MobileTabBar')
   const pathname = usePathname()
   const { open } = useDrawerControls()
+  // Sprint O: punto ámbar (cola pendiente) o rojo (sin red) sobre «Menú».
+  const mounted = useMounted()
+  const { isOnline, pendingCount } = useOfflineSync()
+  const syncBadge = mounted && (!isOnline || pendingCount > 0)
+    ? { color: isOnline ? '#f59e0b' : '#ef4444', label: isOnline ? t('syncPending', { count: pendingCount }) : t('offline', { count: pendingCount }) }
+    : null
 
   const items: TabItem[] = [
     { href: '/my-work', labelKey: 'myWork', Icon: ListChecks, badge: counts.myWork },
@@ -69,6 +77,11 @@ export default function MobileTabBar({ counts }: MobileTabBarProps) {
       <button type="button" onClick={open} className="app-tabbar-item">
         <span className="app-tabbar-icon">
           <Menu size={22} strokeWidth={1.75} aria-hidden="true" />
+          {syncBadge && (
+            <span className="app-tabbar-badge" aria-label={syncBadge.label} title={syncBadge.label} style={{ background: syncBadge.color }}>
+              {pendingCount > 0 ? (pendingCount > 99 ? '99+' : pendingCount) : '!'}
+            </span>
+          )}
         </span>
         <span className="app-tabbar-label">{t('menu')}</span>
       </button>

@@ -4,8 +4,8 @@
 // Stores:
 //   itr_responses  — respuestas de ítems (Stage 14.5), replay con LWW.
 //   itr_snapshots  — copia completa del ITR para verlo sin red.
-//   outbox         — Sprint O (2026-09-07): fotos (blob) y punches creados sin
-//                    red, en orden de captura. Se drenan en src/lib/sync/replay.ts.
+//   outbox         — Sprint O (2026-09-07): fotos (blob), punches y firmas capturados
+//                    sin red, en orden de captura. Se drenan en src/lib/sync/replay.ts.
 
 const DB_NAME = 'commup-offline'
 const DB_VERSION = 3
@@ -17,6 +17,9 @@ const OUTBOX_STORE = 'outbox'
 export const OUTBOX_CHANGED_EVENT = 'commup:outbox-changed'
 /** Evento de ventana tras un replay que subió algo al servidor (para router.refresh()). */
 export const SYNC_DONE_EVENT = 'commup:sync-done'
+/** Evento de ventana cuando el replay descarta una entrada (rechazo definitivo del servidor). detail: SyncDroppedDetail. */
+export const SYNC_DROPPED_EVENT = 'commup:sync-dropped'
+export type SyncDroppedDetail = { kind: OutboxInput['kind']; itrId: string; error: string }
 
 export type OutboxPhoto = {
   kind: 'photo'
@@ -39,7 +42,18 @@ export type OutboxPunch = {
   targetDate: string | null
 }
 
-export type OutboxEntry = (OutboxPhoto | OutboxPunch) & {
+export type OutboxSignature = {
+  kind: 'signature'
+  itrId: string
+  projectId: string
+  tagId: string
+  role: 'executor' | 'supervisor' | 'client'
+  signatureImage: string | null
+}
+
+export type OutboxInput = OutboxPhoto | OutboxPunch | OutboxSignature
+
+export type OutboxEntry = OutboxInput & {
   id?: number
   queuedAt: string
   attempts: number
@@ -153,7 +167,7 @@ export function notifyOutboxChanged(): void {
 }
 
 /** Encola una entrada y devuelve su id numérico (para referenciarla desde la UI). */
-export async function enqueueOutbox(entry: OutboxPhoto | OutboxPunch): Promise<number> {
+export async function enqueueOutbox(entry: OutboxInput): Promise<number> {
   const db = await openDB()
   return new Promise((resolve, reject) => {
     const tx = db.transaction(OUTBOX_STORE, 'readwrite')

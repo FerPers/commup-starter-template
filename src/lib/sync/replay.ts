@@ -6,22 +6,25 @@
  * Last-Write-Wins automático y registra cada conflicto en el server.
  *
  * Sprint O (2026-09-07): después de las respuestas drena la bandeja de salida
- * (fotos → bucket + itr_attachments; punches → createPunch). Un fallo de red
- * detiene el replay (se reintenta luego); un rechazo del servidor cuenta un
- * intento y, al tercero, descarta la entrada dejando rastro en sync_conflicts.
+ * (fotos → bucket + itr_attachments; punches → createPunch; firmas → signItr).
+ * Un fallo de red detiene el replay (se reintenta luego); un rechazo del servidor
+ * cuenta un intento y, al agotar la política (outboxPolicy: 3 para fotos/punches,
+ * 1 para firmas), descarta la entrada dejando rastro en sync_conflicts y avisando
+ * a la UI con SYNC_DROPPED_EVENT.
  */
 
 import {
   getAllQueued, removeFromQueue, getOutbox, removeFromOutbox, markOutboxAttempt,
-  notifyOutboxChanged, SYNC_DONE_EVENT, type OutboxEntry,
+  notifyOutboxChanged, SYNC_DONE_EVENT, SYNC_DROPPED_EVENT, type OutboxEntry, type SyncDroppedDetail,
 } from '@/lib/offline-queue'
 import { uploadPhoto, isNetworkFailure } from '@/lib/sync/outbox'
+import { outboxPolicy } from '@/lib/sync/outbox-utils'
+import { signItr } from '@/app/actions/itr-instances'
 import { createPunch } from '@/app/actions/punches'
 import type { Json } from '@/types/supabase.generated'
 import { createClient } from '@/lib/supabase/client'
 import { upsertResponse } from '@/app/actions/itr-instances'
 
-const MAX_OUTBOX_ATTEMPTS = 3
 let inFlight = false
 
 export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: number; remaining: number }> {
@@ -152,21 +155,25 @@ async function replayOutboxOnce(
     try {
       const result = await sendOutboxEntry(entry)
       if ('error' in result) {
-        // Rechazo lógico del servidor (permiso, validación): contar intento.
+        // Rechazo lógico del servidor (permiso, validación, ITR cambió de estado): contar intento.
         const attempts = (entry.attempts ?? 0) + 1
-        if (attempts >= MAX_OUTBOX_ATTEMPTS) {
+        if (outboxPolicy(entry.kind, entry.attempts ?? 0) === 'drop') {
           await supabase.rpc('log_sync_conflict', {
-            p_entity_type: entry.kind === 'photo' ? 'itr_attachment' : 'punch',
+            p_entity_type: entry.kind === 'photo' ? 'itr_attachment' : entry.kind === 'punch' ? 'punch' : 'itr_signature',
             p_entity_id: `${entry.itrId}:${entry.kind}:${entry.id}`,
             p_local_payload: outboxPayload(entry),
             p_remote_payload: {},
             p_local_ts: entry.queuedAt,
             p_remote_ts: new Date().toISOString(),
             p_winner: 'remote',
-            p_notes: `Descartado tras ${attempts} intentos: ${result.error}`,
+            p_notes: `Descartado tras ${attempts} intento(s): ${result.error}`,
           })
           await removeFromOutbox(entry.id)
           dropped++
+          if (typeof window !== 'undefined') {
+            const detail: SyncDroppedDetail = { kind: entry.kind, itrId: entry.itrId, error: result.error }
+            window.dispatchEvent(new CustomEvent(SYNC_DROPPED_EVENT, { detail }))
+          }
         } else {
           await markOutboxAttempt(entry.id, result.error)
         }
@@ -193,6 +200,10 @@ async function sendOutboxEntry(entry: OutboxEntry): Promise<{ ok: true } | { err
     })
     return 'error' in res ? { error: res.error } : { ok: true }
   }
+  if (entry.kind === 'signature') {
+    const res = await signItr(entry.itrId, entry.role, entry.projectId, entry.tagId, entry.signatureImage)
+    return res.error ? { error: res.error } : { ok: true }
+  }
   const res = await createPunch({
     projectId: entry.projectId, tagId: entry.tagId, itrId: entry.itrId,
     category: entry.category, description: entry.description, targetDate: entry.targetDate,
@@ -203,6 +214,9 @@ async function sendOutboxEntry(entry: OutboxEntry): Promise<{ ok: true } | { err
 function outboxPayload(entry: OutboxEntry): Json {
   if (entry.kind === 'photo') {
     return { kind: 'photo', itrId: entry.itrId, itemId: entry.itemId, fileName: entry.fileName, fileType: entry.fileType, bytes: entry.blob.size }
+  }
+  if (entry.kind === 'signature') {
+    return { kind: 'signature', itrId: entry.itrId, role: entry.role, hasImage: Boolean(entry.signatureImage) }
   }
   return { kind: 'punch', itrId: entry.itrId, tagId: entry.tagId, category: entry.category, description: entry.description, targetDate: entry.targetDate }
 }

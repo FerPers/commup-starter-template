@@ -1229,6 +1229,10 @@
       "photoFullAlt": "foto ampliada",
       "pending": "Pendiente",
       "queuedHint": "Sin red: la foto quedó en este dispositivo y se subirá al reconectar."
+    },
+    "sync": {
+      "pending": "Pendiente de sincronizar",
+      "signatureQueued": "Sin red: la firma quedó guardada en este dispositivo y se registrará al reconectar, después de tus respuestas."
     }
   },
   "Tags": {
@@ -1917,7 +1921,13 @@
       "online": "Online",
       "syncing": "Sincronizando {count}…",
       "offlinePending": "Offline · {count, plural, =1 {# pendiente} other {# pendientes}}",
-      "forceSync": "Forzar sincronización"
+      "forceSync": "Forzar sincronización",
+      "dropped": "No se pudo sincronizar {kind}: {error}",
+      "kind": {
+        "photo": "una foto",
+        "punch": "un punch",
+        "signature": "una firma"
+      }
     }
   },
   "Landing": {
@@ -2178,6 +2188,8 @@
     "scan": "Escanear",
     "inbox": "Bandeja",
     "menu": "Menú",
-    "pending": "{count} pendientes"
+    "pending": "{count} pendientes",
+    "syncPending": "{count, plural, =1 {# pendiente de sincronizar} other {# pendientes de sincronizar}}",
+    "offline": "Sin red · {count, plural, =1 {# pendiente} other {# pendientes}}"
   }
 }

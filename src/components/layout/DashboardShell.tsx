@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState, cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { DrawerContext } from './DrawerContext'
+import { useToast } from '@/components/ui'
+import { SYNC_DROPPED_EVENT, type SyncDroppedDetail } from '@/lib/offline-queue'
 
 interface DashboardShellProps {
   sidebar: ReactNode
@@ -15,6 +18,19 @@ interface DashboardShellProps {
 export default function DashboardShell({ sidebar, topbar, tabbar = null, children }: DashboardShellProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const toast = useToast()
+  const tSync = useTranslations('Pwa.sync')
+
+  // Sprint O: aviso global cuando el replay descarta una entrada de la bandeja de salida.
+  useEffect(() => {
+    const onDropped = (e: Event) => {
+      const d = (e as CustomEvent<SyncDroppedDetail>).detail
+      if (!d) return
+      toast.error(tSync('dropped', { kind: tSync(`kind.${d.kind}`), error: d.error }))
+    }
+    window.addEventListener(SYNC_DROPPED_EVENT, onDropped)
+    return () => window.removeEventListener(SYNC_DROPPED_EVENT, onDropped)
+  }, [toast, tSync])
 
   const close = useCallback(() => setIsOpen(false), [])
   const open = useCallback(() => setIsOpen(true), [])

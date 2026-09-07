@@ -1229,6 +1229,10 @@
       "photoFullAlt": "enlarged photo",
       "pending": "Pending",
       "queuedHint": "Offline: the photo is stored on this device and will upload when back online."
+    },
+    "sync": {
+      "pending": "Pending sync",
+      "signatureQueued": "Offline: the signature is stored on this device and will be registered when back online, after your responses."
     }
   },
   "Tags": {
@@ -1917,7 +1921,13 @@
       "online": "Online",
       "syncing": "Syncing {count}…",
       "offlinePending": "Offline · {count, plural, =1 {# pending} other {# pending}}",
-      "forceSync": "Force sync"
+      "forceSync": "Force sync",
+      "dropped": "Could not sync {kind}: {error}",
+      "kind": {
+        "photo": "a photo",
+        "punch": "a punch",
+        "signature": "a signature"
+      }
     }
   },
   "Landing": {
@@ -2178,6 +2188,8 @@
     "scan": "Scan",
     "inbox": "Inbox",
     "menu": "Menu",
-    "pending": "{count} pending"
+    "pending": "{count} pending",
+    "syncPending": "{count, plural, =1 {# pending sync} other {# pending sync}}",
+    "offline": "Offline · {count, plural, =1 {# pending} other {# pending}}"
   }
 }

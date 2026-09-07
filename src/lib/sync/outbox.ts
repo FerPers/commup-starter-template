@@ -10,9 +10,9 @@
  */
 
 import { createClient } from '@/lib/supabase/client'
-import { saveItrAttachment } from '@/app/actions/itr-instances'
+import { saveItrAttachment, signItr } from '@/app/actions/itr-instances'
 import { createPunch } from '@/app/actions/punches'
-import { enqueueOutbox, removeFromOutbox, type OutboxEntry, type OutboxPhoto } from '@/lib/offline-queue'
+import { enqueueOutbox, removeFromOutbox, type OutboxEntry, type OutboxPhoto, type OutboxSignature } from '@/lib/offline-queue'
 
 export { LOCAL_ATTACHMENT_PREFIX, localAttachmentId, parseLocalAttachmentId, isNetworkFailure, storagePathFor } from './outbox-utils'
 import { localAttachmentId, parseLocalAttachmentId, isNetworkFailure, storagePathFor } from './outbox-utils'
@@ -118,4 +118,40 @@ export async function createPunchOrQueue(
   }
   await enqueueOutbox({ kind: 'punch', ...input })
   return { queued: true }
+}
+
+export type SignatureInput = Omit<OutboxSignature, 'kind'>
+
+/**
+ * Firma el ITR; sin red la encola. La UI debe haber comprobado que el ITR está
+ * completo localmente (localItrStatus) — al sincronizar, las respuestas se
+ * envían antes que la bandeja, así que el servidor ya lo verá «completed».
+ */
+export async function signOrQueue(
+  input: SignatureInput,
+): Promise<{ queued: boolean } | { error: string }> {
+  if (typeof navigator !== 'undefined' && navigator.onLine) {
+    try {
+      const res = await signItr(input.itrId, input.role, input.projectId, input.tagId, input.signatureImage)
+      if (res.error) return { error: res.error }
+      return { queued: false }
+    } catch (err) {
+      if (!isNetworkFailure(err)) return { error: err instanceof Error ? err.message : String(err) }
+    }
+  }
+  await enqueueOutbox({ kind: 'signature', ...input })
+  return { queued: true }
+}
+
+/** Firma «virtual» para pintar una firma que aún está en la bandeja de salida. */
+export function pendingSignature(entry: OutboxEntry & OutboxSignature, userId: string, userName: string | null) {
+  return {
+    id: `local:${entry.id ?? 0}`,
+    role: entry.role,
+    signed_at: entry.queuedAt,
+    user_id: userId,
+    signature_image: entry.signatureImage,
+    profiles: userName ? { full_name: userName } : null,
+    pending: true as const,
+  }
 }

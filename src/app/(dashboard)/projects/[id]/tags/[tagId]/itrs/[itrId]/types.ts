@@ -51,6 +51,8 @@ export type Signature = {
   user_id: string
   signature_image: string | null
   profiles: { full_name: string } | null
+  /** Sprint O: aún en la bandeja de salida (sin red). */
+  pending?: boolean
 }
 
 export type Attachment = {
