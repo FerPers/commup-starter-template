@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { enqueueResponse, getAllQueued } from '@/lib/offline-queue'
+import { enqueueResponse, countPending, OUTBOX_CHANGED_EVENT } from '@/lib/offline-queue'
 import { upsertResponse } from '@/app/actions/itr-instances'
 import { replayQueueOnce } from '@/lib/sync/replay'
 
@@ -24,16 +24,12 @@ export function useOfflineSync(itrId = '', templateId = '') {
   const [syncing, setSyncing] = useState(false)
   const syncingRef = useRef(false)
 
-  // Load initial pending count from IndexedDB
+  // Pendientes (respuestas + bandeja de salida) al montar y cada vez que cambia la bandeja.
   useEffect(() => {
-    getAllQueued()
-      .then(items => {
-        const count = itrId
-          ? items.filter(i => i.itrId === itrId).length
-          : items.length
-        setPendingCount(count)
-      })
-      .catch(() => {})
+    const refresh = () => { countPending(itrId || undefined).then(setPendingCount).catch(() => {}) }
+    refresh()
+    window.addEventListener(OUTBOX_CHANGED_EVENT, refresh)
+    return () => window.removeEventListener(OUTBOX_CHANGED_EVENT, refresh)
   }, [itrId])
 
   // Drain the queue using last-write-wins; conflicts are logged server-side
@@ -43,11 +39,7 @@ export function useOfflineSync(itrId = '', templateId = '') {
     setSyncing(true)
     try {
       await replayQueueOnce()
-      const remaining = await getAllQueued()
-      const count = itrId
-        ? remaining.filter(i => i.itrId === itrId).length
-        : remaining.length
-      setPendingCount(count)
+      setPendingCount(await countPending(itrId || undefined))
     } catch {
       // IndexedDB unavailable — ignore
     }

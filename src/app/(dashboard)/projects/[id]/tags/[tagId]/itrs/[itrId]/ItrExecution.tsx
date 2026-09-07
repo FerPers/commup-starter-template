@@ -9,8 +9,9 @@ import { isInactiveMember } from '@/lib/people/inactive'
 import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { signItr, saveItrAttachment, revokeItrApproval } from '@/app/actions/itr-instances'
-import { createClient } from '@/lib/supabase/client'
+import { signItr, revokeItrApproval } from '@/app/actions/itr-instances'
+import { uploadOrQueuePhoto, pendingAttachment } from '@/lib/sync/outbox'
+import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
 import { useItrAutosave } from './useItrAutosave'
 import ItemRow from './ItemRow'
 import SignModal from './SignModal'
@@ -66,25 +67,77 @@ export default function ItrExecution({
   const { responses, saveResponse, lastSaved, saveError, isPending, isOffline, pendingCount, syncing } =
     useItrAutosave(itr)
 
-  // Attachments state — keyed by itemId or 'general'
-  const [attachmentMap, setAttachmentMap] = useState<Record<string, Attachment[]>>(() => {
+  // Attachments state — keyed by itemId or 'general'. Estado optimista de los
+  // adjuntos del servidor, re-sincronizado con props tras router.refresh().
+  const groupAttachments = (list: Attachment[]) => {
     const map: Record<string, Attachment[]> = {}
-    for (const a of initialAttachments) {
+    for (const a of list) {
       const key = a.item_id ?? 'general'
       ;(map[key] ??= []).push(a)
     }
     return map
-  })
+  }
+  const [serverAttachments, setServerAttachments] = useState<Record<string, Attachment[]>>(() => groupAttachments(initialAttachments))
+  useEffect(() => {
+    setServerAttachments(groupAttachments(initialAttachments))
+  }, [initialAttachments])
+
+  const [punchQueuedNotice, setPunchQueuedNotice] = useState(false)
+
+  // Sprint O: fotos de este ITR que siguen en la bandeja de salida (sin red).
+  const [pendingPhotos, setPendingPhotos] = useState<Attachment[]>([])
+  useEffect(() => {
+    let urls: string[] = []
+    const load = () => {
+      getOutbox().then(entries => {
+        urls.forEach(u => URL.revokeObjectURL(u))
+        const mine = entries
+          .filter((e): e is typeof e & { kind: 'photo' } => e.kind === 'photo' && e.itrId === itr.id)
+          .map(e => pendingAttachment(e))
+        urls = mine.map(a => a.signed_url).filter((u): u is string => Boolean(u))
+        setPendingPhotos(mine)
+      }).catch(() => {})
+    }
+    load()
+    window.addEventListener(OUTBOX_CHANGED_EVENT, load)
+    return () => {
+      window.removeEventListener(OUTBOX_CHANGED_EVENT, load)
+      urls.forEach(u => URL.revokeObjectURL(u))
+    }
+  }, [itr.id])
+
+  // Al terminar un replay con envíos, recargar del servidor (fotos y punches reales).
+  const [syncedFlash, setSyncedFlash] = useState(false)
+  useEffect(() => {
+    const onSynced = () => { setSyncedFlash(true); setPunchQueuedNotice(false); router.refresh() }
+    window.addEventListener(SYNC_DONE_EVENT, onSynced)
+    return () => window.removeEventListener(SYNC_DONE_EVENT, onSynced)
+  }, [router])
+  useEffect(() => {
+    if (!syncedFlash) return
+    const h = setTimeout(() => setSyncedFlash(false), 4000)
+    return () => clearTimeout(h)
+  }, [syncedFlash])
+
+  const attachmentMap = useMemo(() => {
+    const map: Record<string, Attachment[]> = { ...serverAttachments }
+    for (const a of pendingPhotos) {
+      const key = a.item_id ?? 'general'
+      map[key] = [...(map[key] ?? []), a]
+    }
+    return map
+  }, [serverAttachments, pendingPhotos])
 
   const addAttachment = useCallback((itemId: string | null, att: Attachment) => {
     const key = itemId ?? 'general'
-    setAttachmentMap(prev => ({ ...prev, [key]: [...(prev[key] ?? []), att] }))
+    setServerAttachments(prev => ({ ...prev, [key]: [...(prev[key] ?? []), att] }))
   }, [])
 
   const removeAttachment = useCallback((itemId: string | null, attachmentId: string) => {
     const key = itemId ?? 'general'
-    setAttachmentMap(prev => ({ ...prev, [key]: (prev[key] ?? []).filter(a => a.id !== attachmentId) }))
+    setServerAttachments(prev => ({ ...prev, [key]: (prev[key] ?? []).filter(a => a.id !== attachmentId) }))
   }, [])
+
 
   const generalPhotoInputRef = useRef<HTMLInputElement>(null)
   const [generalUploading, setGeneralUploading] = useState(false)
@@ -291,6 +344,14 @@ export default function ItrExecution({
           })}
         </div>
 
+        {/* Sprint O: punch guardado sin red */}
+        {punchQueuedNotice && (
+          <div role="status" style={{ marginTop: '12px', padding: '10px 14px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: '#b45309', margin: 0, flex: 1 }}>⚑ {t('punchModal.queued')}</p>
+            <button onClick={() => setPunchQueuedNotice(false)} aria-label="×" style={{ background: 'transparent', border: 'none', color: '#b45309', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>×</button>
+          </div>
+        )}
+
         {/* Critical blockers warning */}
         {criticalBlocked.length > 0 && (
           <div style={{ marginTop: '12px', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', border: '1px solid #fecaca' }}>
@@ -356,16 +417,11 @@ export default function ItrExecution({
           e.target.value = ''
           setGeneralUploading(true)
           setGeneralUploadError(null)
-          const ext = file.name.split('.').pop() ?? 'jpg'
-          const path = `${itr.id}/general/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-          const supabase = createClient()
-          const { error: upErr } = await supabase.storage.from('itr-attachments').upload(path, file)
-          if (upErr) { setGeneralUploading(false); setGeneralUploadError(upErr.message); return }
-          const { data: signed } = await supabase.storage.from('itr-attachments').createSignedUrl(path, 3600)
-          const res = await saveItrAttachment({ itrId: itr.id, itemId: null, storagePath: path, fileType: file.type, projectId, tagId })
+          // Sprint O: sin red queda en la bandeja de salida; la miniatura pendiente llega por el evento.
+          const res = await uploadOrQueuePhoto({ itrId: itr.id, itemId: null, projectId, tagId, fileName: file.name, fileType: file.type, blob: file })
           setGeneralUploading(false)
-          if (res.error) { setGeneralUploadError(res.error); return }
-          addAttachment(null, { id: res.id!, item_id: null, file_url: path, file_type: file.type, captured_at: new Date().toISOString(), signed_url: signed?.signedUrl ?? null })
+          if ('error' in res) { setGeneralUploadError(res.error); return }
+          if (!res.queued) addAttachment(null, res.attachment)
         }}
       />
 
@@ -377,6 +433,8 @@ export default function ItrExecution({
             ? t('footer.offline')
             : syncing
             ? t('footer.syncing')
+            : syncedFlash
+            ? t('footer.synced')
             : isPending
             ? t('footer.saving')
             : saveError
@@ -448,7 +506,7 @@ export default function ItrExecution({
           tagId={tagId}
           initialDescription={punchItemDesc}
           onClose={() => setShowPunchModal(false)}
-          onCreated={() => { setShowPunchModal(false); router.refresh() }}
+          onCreated={({ queued }) => { setShowPunchModal(false); if (queued) setPunchQueuedNotice(true); else router.refresh() }}
         />
       )}
 

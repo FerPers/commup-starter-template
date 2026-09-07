@@ -60,6 +60,8 @@ export type Attachment = {
   file_type: string
   captured_at: string
   signed_url: string | null
+  /** Sprint O: aún en la bandeja de salida (sin red); id `local:<n>` y signed_url = object URL. */
+  pending?: boolean
 }
 
 export type ItrData = {

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
-import { createPunch } from '@/app/actions/punches'
+import { createPunchOrQueue } from '@/lib/sync/outbox'
 
 export default function CreatePunchModal({
   itrId,
@@ -19,7 +19,8 @@ export default function CreatePunchModal({
   tagId: string
   initialDescription: string
   onClose: () => void
-  onCreated: () => void
+  /** `queued` = sin red: el punch quedó en la bandeja de salida y se registrará al reconectar. */
+  onCreated: (result: { queued: boolean }) => void
 }) {
   const t = useTranslations('ItrExecution')
   const CATEGORY_CONFIG = {
@@ -38,7 +39,8 @@ export default function CreatePunchModal({
     if (!description.trim()) { setError(t('punchModal.errorRequired')); return }
     setError(null)
     startTransition(async () => {
-      const res = await createPunch({
+      // Sprint O: sin red el punch se encola en IndexedDB y se crea al reconectar.
+      const res = await createPunchOrQueue({
         projectId,
         tagId,
         itrId,
@@ -46,8 +48,8 @@ export default function CreatePunchModal({
         description: description.trim(),
         targetDate: targetDate || null,
       })
-      if (res.error) { setError(res.error); return }
-      onCreated()
+      if ('error' in res) { setError(res.error); return }
+      onCreated({ queued: res.queued })
     })
   }
 

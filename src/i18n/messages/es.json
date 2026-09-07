@@ -1166,7 +1166,8 @@
       "btnRevoke": "↺ Revocar aprobación",
       "signTooltipIncomplete": "Completa todos los ítems antes de firmar",
       "signTooltipRejected": "ITR rechazado: corrige los ítems críticos para volver a completado",
-      "signTooltipApproved": "Este ITR ya está aprobado"
+      "signTooltipApproved": "Este ITR ya está aprobado",
+      "synced": "✓ Sincronizado"
     },
     "revoke": {
       "title": "Revocar aprobación del ITR {itrNumber}",
@@ -1202,7 +1203,8 @@
       "register": "⚑ Registrar Punch",
       "catA": "Cat A — Bloqueante",
       "catB": "Cat B — Transferible",
-      "catC": "Cat C — Menor"
+      "catC": "Cat C — Menor",
+      "queued": "Sin red: el punch quedó guardado en este dispositivo y se registrará al reconectar."
     },
     "item": {
       "titleCritical": "Crítico",
@@ -1224,7 +1226,9 @@
       "uploading": "⏳ Subiendo...",
       "addPhoto": "📷 Agregar foto",
       "photoAlt": "foto",
-      "photoFullAlt": "foto ampliada"
+      "photoFullAlt": "foto ampliada",
+      "pending": "Pendiente",
+      "queuedHint": "Sin red: la foto quedó en este dispositivo y se subirá al reconectar."
     }
   },
   "Tags": {

@@ -1166,7 +1166,8 @@
       "btnRevoke": "↺ Revoke approval",
       "signTooltipIncomplete": "Complete all items before signing",
       "signTooltipRejected": "ITR rejected: fix critical items to return it to completed",
-      "signTooltipApproved": "This ITR is already approved"
+      "signTooltipApproved": "This ITR is already approved",
+      "synced": "✓ Synced"
     },
     "revoke": {
       "title": "Revoke approval of ITR {itrNumber}",
@@ -1202,7 +1203,8 @@
       "register": "⚑ Register Punch",
       "catA": "Cat A — Blocking",
       "catB": "Cat B — Transferable",
-      "catC": "Cat C — Minor"
+      "catC": "Cat C — Minor",
+      "queued": "Offline: the punch is stored on this device and will be registered when back online."
     },
     "item": {
       "titleCritical": "Critical",
@@ -1224,7 +1226,9 @@
       "uploading": "⏳ Uploading...",
       "addPhoto": "📷 Add photo",
       "photoAlt": "photo",
-      "photoFullAlt": "enlarged photo"
+      "photoFullAlt": "enlarged photo",
+      "pending": "Pending",
+      "queuedHint": "Offline: the photo is stored on this device and will upload when back online."
     }
   },
   "Tags": {
