@@ -149,6 +149,7 @@ export interface ItemPayload {
   is_required: boolean
   is_critical: boolean
   requires_photo: boolean
+  requires_document?: boolean
   requires_measurement: boolean
   unit?: string | null
   acceptance_min?: number | null
@@ -234,160 +235,54 @@ export const reorderItems = withAuthOnly(
   },
 )
 
-// ── Publish new template version ─────────────────────────────────
+// ── Template revisions (atomic RPCs) ─────────────────────────────
+//
+// Una revisión nunca se modifica en sitio una vez activada: crear revisión
+// copia la plantilla completa como borrador inactivo (version = max+1) y
+// activar revisión la vuelve vigente, desactiva las demás del mismo código y
+// re-apunta la matriz equipo×ITR, todo en una transacción SQL
+// (migración 20260909230000).
 
-export const publishTemplateVersion = withAuthOnly(
+export const createTemplateRevision = withAuthOnly(
   { role: EDITOR_ROLES },
-  async (
-    ctx,
-    templateId: string,
-  ): Promise<{ newTemplateId?: string; bumpedInPlace?: boolean; error?: string }> => {
-    // Load current template (org check)
+  async (ctx, templateId: string): Promise<{ newTemplateId?: string; error?: string }> => {
+    const { data: tpl } = await ctx.supabase
+      .from('itr_templates').select('id').eq('id', templateId).eq('org_id', ctx.orgId).maybeSingle()
+    if (!tpl) return { error: 'Template no encontrado' }
+    const { data, error } = await ctx.supabase.rpc('create_itr_template_revision', { p_template_id: templateId })
+    if (error || !data) return { error: error?.message ?? 'No se pudo crear la revisión' }
+    revalidatePath('/admin/templates')
+    revalidatePath(`/admin/templates/${templateId}`)
+    revalidatePath(`/admin/templates/${data}`)
+    return { newTemplateId: data }
+  },
+)
+
+export const activateTemplateRevision = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (ctx, templateId: string): Promise<{ version?: number; deactivated?: number; matrixRepointed?: number; error?: string }> => {
     const { data: tpl } = await ctx.supabase
       .from('itr_templates')
-      .select(`
-        id, org_id, code, title, description, phase_id, discipline_id,
-        version, is_active, is_global,
-        itr_template_sections(
-          id, title, order_index,
-          itr_template_items(
-            id, item_number, description, description_es, item_type,
-            is_required, is_critical, requires_photo, requires_measurement,
-            unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index,
-            condition_item_id, condition_value
-          )
-        )
-      `)
+      .select('id, itr_template_items(id, item_number, description, item_type, options)')
       .eq('id', templateId)
       .eq('org_id', ctx.orgId)
-      .single()
-
+      .maybeSingle()
     if (!tpl) return { error: 'Template no encontrado' }
-
-    // Un select sin opciones deja el ITR de campo sin poder completarse — no publicable
-    const badSelects = tpl.itr_template_sections
-      .flatMap(s => s.itr_template_items)
+    if (tpl.itr_template_items.length === 0) return { error: 'La revisión no tiene ítems' }
+    // Un select sin opciones deja el ITR de campo sin poder completarse — no activable
+    const badSelects = tpl.itr_template_items
       .filter(it => it.item_type === 'select' && !(Array.isArray(it.options) && it.options.length > 0))
     if (badSelects.length > 0) {
       const names = badSelects.map(it => it.item_number ?? it.description.slice(0, 40)).join(', ')
-      return { error: `Ítems de tipo lista sin opciones (agrega opciones antes de publicar): ${names}` }
+      return { error: `Ítems de tipo lista sin opciones (agrega opciones antes de activar): ${names}` }
     }
-
-    // Check if any ITRs are already assigned to this template
-    const { count: itrCount } = await ctx.supabase
-      .from('itrs')
-      .select('*', { count: 'exact', head: true })
-      .eq('template_id', templateId)
-
-    // No ITRs assigned → bump version in place (no copy needed)
-    if (!itrCount) {
-      const { error } = await ctx.supabase
-        .from('itr_templates')
-        .update({ version: tpl.version + 1 })
-        .eq('id', templateId)
-      if (error) return { error: error.message }
-      revalidatePath(`/admin/templates/${templateId}`)
-      return { newTemplateId: templateId, bumpedInPlace: true }
-    }
-
-    // ITRs exist → create a new template copy with version+1
-    const { data: newTpl, error: tplErr } = await ctx.supabase
-      .from('itr_templates')
-      .insert({
-        org_id: ctx.orgId,
-        code: tpl.code,
-        title: tpl.title,
-        description: tpl.description,
-        phase_id: tpl.phase_id,
-        discipline_id: tpl.discipline_id,
-        version: tpl.version + 1,
-        is_active: true,
-        is_global: tpl.is_global,
-      })
-      .select('id')
-      .single()
-
-    if (tplErr || !newTpl) return { error: tplErr?.message ?? 'Error al crear versión' }
-
-    // Mark old template inactive
-    await ctx.supabase
-      .from('itr_templates')
-      .update({ is_active: false })
-      .eq('id', templateId)
-
-    // Sort sections by order_index
-    const sections = [...tpl.itr_template_sections].sort((a, b) => a.order_index - b.order_index)
-
-    // Copy sections + items; build old→new item id map for condition_item_id remapping
-    const itemIdMap = new Map<string, string>()
-
-    for (const sec of sections) {
-      const { data: newSec, error: secErr } = await ctx.supabase
-        .from('itr_template_sections')
-        .insert({ template_id: newTpl.id, title: sec.title, order_index: sec.order_index })
-        .select('id')
-        .single()
-
-      if (secErr || !newSec) continue
-
-      const items = [...sec.itr_template_items].sort((a, b) => a.order_index - b.order_index)
-      if (items.length === 0) continue
-
-      // Insert items without condition_item_id first (to get new IDs)
-      const rows = items.map(it => ({
-        section_id: newSec.id,
-        template_id: newTpl.id,
-        item_number: it.item_number,
-        description: it.description,
-        description_es: it.description_es,
-        item_type: it.item_type,
-        is_required: it.is_required,
-        is_critical: it.is_critical,
-        requires_photo: it.requires_photo,
-        requires_measurement: it.requires_measurement,
-        unit: it.unit,
-        acceptance_min: it.acceptance_min,
-        acceptance_max: it.acceptance_max,
-        acceptance_text: it.acceptance_text,
-        options: it.options,
-        option_outcomes: it.option_outcomes,
-        order_index: it.order_index,
-        condition_value: it.condition_value,
-        // condition_item_id will be patched after all items are inserted
-      }))
-
-      const { data: newItems } = await ctx.supabase
-        .from('itr_template_items')
-        .insert(rows)
-        .select('id, order_index')
-
-      if (newItems) {
-        items.forEach((oldItem, idx) => {
-          const newItem = newItems.find(ni => ni.order_index === idx)
-          if (newItem) itemIdMap.set(oldItem.id, newItem.id)
-        })
-      }
-    }
-
-    // Patch condition_item_id using the id map
-    for (const sec of sections) {
-      for (const oldItem of sec.itr_template_items) {
-        if (!oldItem.condition_item_id) continue
-        const newItemId = itemIdMap.get(oldItem.id)
-        const newCondId = itemIdMap.get(oldItem.condition_item_id)
-        if (newItemId && newCondId) {
-          await ctx.supabase
-            .from('itr_template_items')
-            .update({ condition_item_id: newCondId })
-            .eq('id', newItemId)
-        }
-      }
-    }
-
+    const { data, error } = await ctx.supabase.rpc('activate_itr_template_revision', { p_template_id: templateId })
+    if (error || !data) return { error: error?.message ?? 'No se pudo activar la revisión' }
+    const result = data as { version?: number; deactivated?: string[]; matrix_repointed?: number }
     revalidatePath('/admin/templates')
     revalidatePath(`/admin/templates/${templateId}`)
-    revalidatePath(`/admin/templates/${newTpl.id}`)
-    return { newTemplateId: newTpl.id }
+    for (const id of result.deactivated ?? []) revalidatePath(`/admin/templates/${id}`)
+    return { version: result.version, deactivated: result.deactivated?.length ?? 0, matrixRepointed: result.matrix_repointed ?? 0 }
   },
 )
 
@@ -712,7 +607,7 @@ async function cloneTemplateInternal(
           id, title, order_index,
           itr_template_items(
             item_number, description, description_es, item_type, is_required,
-            is_critical, requires_photo, requires_measurement, options, option_outcomes, unit,
+            is_critical, requires_photo, requires_document, requires_measurement, options, option_outcomes, unit,
             acceptance_min, acceptance_max, acceptance_text, order_index
           )
         )

@@ -332,6 +332,7 @@ export interface ItrTemplateItem {
   is_required: boolean
   is_critical: boolean       // if fails → blocks ITR signature
   requires_photo: boolean
+  requires_document?: boolean   // exige un PDF adjunto al ítem (certificado, registro, soporte)
   requires_measurement: boolean
   options: Json | null       // for 'select' type items
   option_outcomes?: Json     // explicit pass/fail/not_applicable by exact option

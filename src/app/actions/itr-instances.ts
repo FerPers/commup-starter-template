@@ -315,6 +315,8 @@ export const saveItrAttachment = withAuth(
       if (itemError || !item) return { error: 'El ítem no pertenece a la plantilla del ITR' }
     }
     if (!storagePath.trim() || !fileType.trim()) return { error: 'Falta la referencia o tipo de evidencia' }
+    // Mirrors the bucket allowlist: photos as images, documentary evidence as PDF.
+    if (!/^(image\/(jpeg|png|webp|heic|heif)|application\/pdf)$/.test(fileType)) return { error: 'Tipo de evidencia no admitido (imagen o PDF)' }
 
     const { data, error } = await ctx.supabase
       .from('itr_attachments')

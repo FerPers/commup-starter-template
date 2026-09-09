@@ -25,14 +25,14 @@ export default async function ItrExecutionPage({
           id, title, order_index,
           itr_template_items(
             id, item_number, description, description_es, item_type,
-            is_critical, is_required, requires_photo, requires_measurement,
+            is_critical, is_required, requires_photo, requires_document, requires_measurement,
             acceptance_min, acceptance_max, acceptance_text,
             unit, options, option_outcomes, order_index,
             condition_item_id, condition_value
           )
         )
       ),
-      tags(id, tag_number, description, disciplines(code, name, color)),
+      tags(id, tag_number, description, manufacturer, model, serial_number, datasheet_number, pid_drawing, range_min, range_max, eng_unit, revision, junction_box, disciplines(code, name, color)),
       project_phases(code, name, color),
       itr_assignments(id, user_id, role, profiles(full_name)),
       itr_responses(id, item_id, value_text, value_numeric, value_bool, value_option, remarks, is_passed, responded_at),

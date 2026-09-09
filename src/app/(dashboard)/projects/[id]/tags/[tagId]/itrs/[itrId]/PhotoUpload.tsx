@@ -3,10 +3,13 @@
 import { useState, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { deleteItrAttachment } from '@/app/actions/itr-instances'
-import { uploadOrQueuePhoto, discardPendingPhoto } from '@/lib/sync/outbox'
+import { uploadOrQueuePhoto, uploadPhoto, discardPendingPhoto } from '@/lib/sync/outbox'
 import type { Attachment } from './types'
 
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
+
 export default function PhotoUpload({
+  kind = 'photo',
   itrId,
   itemId,
   projectId,
@@ -16,6 +19,8 @@ export default function PhotoUpload({
   onAdded,
   onRemoved,
 }: {
+  /** photo = imagen (con cola offline); document = PDF (solo con red). */
+  kind?: 'photo' | 'document'
   itrId: string
   itemId: string
   projectId: string
@@ -31,6 +36,8 @@ export default function PhotoUpload({
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<string | null>(null)
   const [queuedHint, setQueuedHint] = useState(false)
+  const isDocument = kind === 'document'
+  const shown = existingAttachments.filter(att => isDocument ? att.file_type === 'application/pdf' : att.file_type.startsWith('image/'))
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -39,6 +46,22 @@ export default function PhotoUpload({
     setUploading(true)
     setUploadError(null)
     setQueuedHint(false)
+    if (isDocument) {
+      // Documentary evidence is not queued offline: a PDF has no local preview and
+      // the bucket validates the type; keep the flow explicit and online-only.
+      if (file.type !== 'application/pdf' || file.size > MAX_DOCUMENT_BYTES) { setUploading(false); setUploadError(t('upload.documentOnlyPdf')); return }
+      if (typeof navigator !== 'undefined' && !navigator.onLine) { setUploading(false); setUploadError(t('upload.documentNeedsNetwork')); return }
+      try {
+        const res = await uploadPhoto({ itrId, itemId, projectId, tagId, fileName: file.name, fileType: file.type, blob: file })
+        setUploading(false)
+        if ('error' in res) { setUploadError(res.error); return }
+        onAdded(res.attachment)
+      } catch {
+        setUploading(false)
+        setUploadError(t('upload.documentNeedsNetwork'))
+      }
+      return
+    }
     // Sprint O: sin red la foto queda en la bandeja de salida (IndexedDB) y se
     // sube al reconectar; la miniatura pendiente llega por el evento de la bandeja.
     const res = await uploadOrQueuePhoto({ itrId, itemId, projectId, tagId, fileName: file.name, fileType: file.type, blob: file })
@@ -60,14 +83,20 @@ export default function PhotoUpload({
 
   return (
     <div style={{ marginTop: '4px' }}>
-      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />
+      {isDocument
+        ? <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display: 'none' }} onChange={handleFile} />
+        : <input ref={fileInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />}
 
       {/* Thumbnails */}
-      {existingAttachments.length > 0 && (
+      {shown.length > 0 && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
-          {existingAttachments.map(att => (
-            <div key={att.id} style={{ position: 'relative', width: '72px', height: '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0 }}>
-              {att.signed_url
+          {shown.map(att => (
+            <div key={att.id} style={{ position: 'relative', width: isDocument ? 'auto' : '72px', minWidth: isDocument ? '120px' : undefined, maxWidth: isDocument ? '220px' : undefined, height: isDocument ? 'auto' : '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0, background: isDocument ? '#ecfeff' : undefined }}>
+              {isDocument
+                ? <a href={att.signed_url ?? undefined} target="_blank" rel="noopener noreferrer" title={t('upload.openDocument')} style={{ display: 'block', padding: '10px 26px 10px 10px', fontSize: '12px', color: '#0e7490', textDecoration: 'none', wordBreak: 'break-all' }}>
+                    📄 {att.file_url.split('/').pop() ?? t('upload.documentAlt')}
+                  </a>
+                : att.signed_url
                 // eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL with rotating token, Image cache would break
                 ? <img src={att.signed_url} alt={t('upload.photoAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setLightbox(att.signed_url)} />
                 : <div style={{ width: '100%', height: '100%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📷</div>
@@ -97,7 +126,7 @@ export default function PhotoUpload({
           disabled={uploading}
           style={{ padding: '7px 14px', background: uploading ? '#eff6ff' : '#f0fdf4', border: '1px dashed #86efac', borderRadius: '7px', fontSize: '12px', color: uploading ? '#3b82f6' : '#15803d', cursor: uploading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
         >
-          {uploading ? t('upload.uploading') : t('upload.addPhoto')}
+          {uploading ? t('upload.uploading') : isDocument ? t('upload.addDocument') : t('upload.addPhoto')}
         </button>
       )}
 

@@ -66,7 +66,13 @@ export async function GET(
         signature_image,
         profiles ( full_name )
       ),
-      tags ( tag_number, description ),
+      itr_attachments (
+        item_id,
+        file_url,
+        file_type,
+        captured_at
+      ),
+      tags ( tag_number, description, manufacturer, model, serial_number, datasheet_number, pid_drawing, range_min, range_max, eng_unit, revision ),
       projects ( code, name )
     `)
     .eq('id', itrId)

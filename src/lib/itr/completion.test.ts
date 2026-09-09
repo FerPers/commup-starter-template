@@ -29,6 +29,13 @@ describe('evaluateItrCompletion', () => {
     expect(evaluateItrCompletion(items, responses, [{ item_id: null, file_url: 'photo', file_type: 'image/jpeg' }]).isComplete).toBe(false)
     expect(evaluateItrCompletion(items, responses, [{ item_id: 'a', file_url: 'photo', file_type: 'image/jpeg' }]).isComplete).toBe(true)
   })
+  it('requires an item-scoped PDF when the item demands documentary evidence', () => {
+    const items = [item('a', { requires_document: true })]
+    const responses = [response('a', { value_text: 'ok' })]
+    expect(evaluateItrCompletion(items, responses, [{ item_id: 'a', file_url: 'photo.jpg', file_type: 'image/jpeg' }]).isComplete).toBe(false)
+    expect(evaluateItrCompletion(items, responses, [{ item_id: null, file_url: 'cert.pdf', file_type: 'application/pdf' }]).isComplete).toBe(false)
+    expect(evaluateItrCompletion(items, responses, [{ item_id: 'a', file_url: 'cert.pdf', file_type: 'application/pdf' }]).isComplete).toBe(true)
+  })
   it('checks option membership and calendar dates without interpreting acceptance', () => {
     const select = item('a', { item_type: 'select', options: ['Aceptado', 'Rechazado'] })
     expect(evaluateItrCompletion([select], [response('a', { value_option: 'Rechazado' })]).isComplete).toBe(true)

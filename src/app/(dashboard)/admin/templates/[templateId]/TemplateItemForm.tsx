@@ -52,6 +52,7 @@ export default function TemplateItemForm({
     { key: 'is_critical',          label: t('flagCritical'),          color: '#ef4444' },
     { key: 'is_required',          label: t('flagRequired'),          color: '#f59e0b' },
     { key: 'requires_photo',       label: t('flagRequiresPhoto'),     color: '#3b82f6' },
+    { key: 'requires_document',    label: t('flagRequiresDocument'),  color: '#0891b2' },
     { key: 'requires_measurement', label: t('flagRequiresMeasurement'), color: '#8b5cf6' },
   ] as const
 
@@ -213,7 +214,7 @@ export default function TemplateItemForm({
           <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)' }}>
             <input
               type="checkbox"
-              checked={form[flag.key] as boolean}
+              checked={!!form[flag.key]}
               onChange={e => setForm(f => ({ ...f, [flag.key]: e.target.checked }))}
               style={{ accentColor: flag.color, width: '14px', height: '14px' }}
             />

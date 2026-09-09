@@ -2,7 +2,7 @@ import { evaluateContinuity } from './continuity'
 import { evaluateSelectionOutcome } from './selection-outcome'
 import type { ItrTemplateItem, ItrResponse, ItrAttachment } from '@/types/database'
 
-export type CompletionItem = Pick<ItrTemplateItem, 'id' | 'item_type' | 'is_required' | 'requires_photo' | 'requires_measurement' | 'condition_item_id' | 'condition_value'> & { options: unknown; option_outcomes?: unknown }
+export type CompletionItem = Pick<ItrTemplateItem, 'id' | 'item_type' | 'is_required' | 'requires_photo' | 'requires_measurement' | 'condition_item_id' | 'condition_value'> & { options: unknown; option_outcomes?: unknown; requires_document?: boolean }
 export type CompletionResponse = Pick<ItrResponse, 'item_id' | 'value_text' | 'value_numeric' | 'value_bool' | 'value_option'> & { remarks?: string | null }
 export type CompletionAttachment = Pick<ItrAttachment, 'item_id' | 'file_url' | 'file_type'>
 
@@ -52,6 +52,8 @@ export function evaluateItrCompletion(
     const answer = answers.get(item.id)
     const photo = attachments.some(attachment => attachment.item_id === item.id && hasText(attachment.file_url) && attachment.file_type.startsWith('image/'))
     if (item.requires_photo && !photo) return false
+    // Documentary evidence (certificates, contractor records) is a PDF linked to the item.
+    if (item.requires_document && !attachments.some(attachment => attachment.item_id === item.id && hasText(attachment.file_url) && attachment.file_type === 'application/pdf')) return false
     if (item.requires_measurement && !hasNumber(answer?.value_numeric)) return false
     switch (item.item_type) {
       case 'continuity': return evaluateContinuity(answer?.value_text).isComplete

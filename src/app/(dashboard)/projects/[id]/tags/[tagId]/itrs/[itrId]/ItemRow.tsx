@@ -61,6 +61,7 @@ export default function ItemRow({
               {item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleCritical')} />}
               {item.is_required && !item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleRequired')} />}
               {item.requires_photo && <span style={{ fontSize: '10px', color: '#3b82f6' }} title={t('item.titlePhoto')}>⊙</span>}
+              {item.requires_document && <span style={{ fontSize: '10px', color: '#0891b2' }} title={t('item.titleDocument')}>📄</span>}
             </div>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '2px 0 0', lineHeight: '1.4' }}>{visibleDesc}</p>
@@ -202,6 +203,21 @@ export default function ItemRow({
       {/* Photo upload */}
       {(item.item_type === 'photo' || item.requires_photo) && (
         <PhotoUpload
+          itrId={itrId}
+          itemId={item.id}
+          projectId={projectId}
+          tagId={tagId}
+          existingAttachments={itemAttachments}
+          canEdit={canEdit}
+          onAdded={onAttachmentAdded}
+          onRemoved={onAttachmentRemoved}
+        />
+      )}
+
+      {/* Documentary evidence (PDF) linked to the item */}
+      {item.requires_document && (
+        <PhotoUpload
+          kind="document"
           itrId={itrId}
           itemId={item.id}
           projectId={projectId}

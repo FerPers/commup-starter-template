@@ -1445,6 +1445,7 @@ export type Database = {
           order_index: number
           requires_measurement: boolean
           requires_photo: boolean
+          requires_document: boolean
           section_id: string
           template_id: string
           unit: string | null
@@ -1468,6 +1469,7 @@ export type Database = {
           order_index: number
           requires_measurement?: boolean
           requires_photo?: boolean
+          requires_document?: boolean
           section_id: string
           template_id: string
           unit?: string | null
@@ -1491,6 +1493,7 @@ export type Database = {
           order_index?: number
           requires_measurement?: boolean
           requires_photo?: boolean
+          requires_document?: boolean
           section_id?: string
           template_id?: string
           unit?: string | null
@@ -5420,6 +5423,14 @@ export type Database = {
       }
       reopen_itr_atomic: {
         Args: { p_itr_id: string; p_reason: string }
+        Returns: Json
+      }
+      create_itr_template_revision: {
+        Args: { p_template_id: string }
+        Returns: string
+      }
+      activate_itr_template_revision: {
+        Args: { p_template_id: string }
         Returns: Json
       }
 

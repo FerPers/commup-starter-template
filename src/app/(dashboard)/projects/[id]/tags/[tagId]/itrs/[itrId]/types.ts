@@ -14,6 +14,7 @@ export type Item = {
   is_critical: boolean
   is_required: boolean
   requires_photo: boolean
+  requires_document?: boolean
   requires_measurement: boolean
   acceptance_min: number | null
   acceptance_max: number | null
@@ -83,7 +84,15 @@ export type ItrData = {
     version: number
     itr_template_sections: Section[]
   } | null
-  tags: { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } } | null
+  tags: {
+    id: string; tag_number: string; description: string
+    /** Datos maestros del tag (solo lectura en la ejecución; nunca se recrean como ítems). */
+    manufacturer?: string | null; model?: string | null; serial_number?: string | null
+    datasheet_number?: string | null; pid_drawing?: string | null
+    range_min?: number | null; range_max?: number | null; eng_unit?: string | null
+    revision?: string | null; junction_box?: string | null
+    disciplines: { code: string; name: string; color: string }
+  } | null
   project_phases: { code: string; name: string; color: string } | null
   itr_assignments: Array<{ id: string; user_id: string; role: string; profiles: { full_name: string } | null }>
   itr_responses: Response[]

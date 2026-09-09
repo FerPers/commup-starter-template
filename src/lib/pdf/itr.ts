@@ -42,6 +42,13 @@ type ItrResponse = {
   is_passed: boolean | null
 }
 
+type ItrAttachmentRef = {
+  item_id: string | null
+  file_url: string
+  file_type: string
+  captured_at: string | null
+}
+
 type ItrSignature = {
   signature_image?: string | null
   role: string
@@ -61,10 +68,27 @@ export type ItrPdfData = {
     description: string | null
     itr_template_sections: ItrSection[]
   } | null
-  tags: { tag_number: string; description: string } | null
+  tags: {
+    tag_number: string; description: string
+    manufacturer?: string | null; model?: string | null; serial_number?: string | null
+    datasheet_number?: string | null; pid_drawing?: string | null
+    range_min?: number | null; range_max?: number | null; eng_unit?: string | null; revision?: string | null
+  } | null
   projects: { code: string; name: string } | null
   itr_responses: ItrResponse[]
   itr_signatures: ItrSignature[]
+  itr_attachments?: ItrAttachmentRef[]
+}
+
+/** «Evidencia: 2 foto(s) · documento: cert.pdf» — nombres de archivo, nunca URLs firmadas. */
+function evidenceSummary(attachments: ItrAttachmentRef[]): string | null {
+  const photos = attachments.filter(a => a.file_type.startsWith('image/')).length
+  const documents = attachments.filter(a => a.file_type === 'application/pdf').map(a => a.file_url.split('/').pop() ?? 'documento')
+  if (photos === 0 && documents.length === 0) return null
+  const parts: string[] = []
+  if (photos > 0) parts.push(`${photos} foto(s) / photo(s)`)
+  if (documents.length > 0) parts.push(`documento(s): ${documents.join(', ')}`)
+  return `Evidencia / Evidence: ${parts.join(' · ')}`
 }
 
 function statusVisual(status: string): { fg: Color; bg: Color; label: string } {
@@ -158,6 +182,13 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
   const metas: Array<[string, string | null | undefined]> = [
     ['Proyecto / Project',  itr.projects ? `${itr.projects.code} — ${itr.projects.name}` : null],
     ['Tag',                 itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : null],
+    ['Fabricante / Manufacturer', itr.tags?.manufacturer],
+    ['Modelo / Model',      itr.tags?.model],
+    ['Serie / Serial',      itr.tags?.serial_number],
+    ['Rango / Range',       itr.tags && itr.tags.range_min !== null && itr.tags.range_min !== undefined && itr.tags.range_max !== null && itr.tags.range_max !== undefined
+      ? `${itr.tags.range_min} - ${itr.tags.range_max}${itr.tags.eng_unit ? ` ${itr.tags.eng_unit}` : ''}` : null],
+    ['Hoja de datos / Datasheet', itr.tags?.datasheet_number ? `${itr.tags.datasheet_number}${itr.tags.revision ? ` rev. ${itr.tags.revision}` : ''}` : null],
+    ['P&ID',                itr.tags?.pid_drawing],
     ['Fecha / Date',        itr.scheduled_date],
     ['Plantilla / Template', itr.itr_templates ? `${itr.itr_templates.code} — ${tplTitleEs ?? itr.itr_templates.title}` : null],
     ...(tplTitleEs && tplTitleEs !== itr.itr_templates?.title ? [['Title (EN)', itr.itr_templates?.title] as [string, string | undefined]] : []),
@@ -228,6 +259,10 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
     .sort((a, b) => a.order_index - b.order_index)
 
   const responseMap = Object.fromEntries(itr.itr_responses.map(rr => [rr.item_id, rr]))
+  const attachmentsByItem = new Map<string | null, ItrAttachmentRef[]>()
+  for (const att of itr.itr_attachments ?? []) {
+    attachmentsByItem.set(att.item_id, [...(attachmentsByItem.get(att.item_id) ?? []), att])
+  }
 
   for (const section of sections) {
     // Section header
@@ -322,11 +357,14 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
       const acceptanceLines = acceptanceText ? wrapText(acceptanceText, r.fontRegular, 7, descMaxW) : []
       const remarksText = resp?.remarks ? `Observaciones / Remarks: ${resp.remarks}` : null
       const remarksLines = remarksText ? wrapText(remarksText, r.fontOblique, 7.5, descMaxW) : []
+      const evidenceText = evidenceSummary(attachmentsByItem.get(item.id) ?? [])
+      const evidenceLines = evidenceText ? wrapText(evidenceText, r.fontRegular, 7, descMaxW) : []
       const descriptionRows = [
         ...descLines.map(text => ({ text, size: 8.5, oblique: false, color: COLOR.text })),
         ...enLines.map(text => ({ text, size: 7, oblique: true, color: COLOR.empty })),
         ...acceptanceLines.map(text => ({ text, size: 7, oblique: false, color: COLOR.empty })),
         ...remarksLines.map(text => ({ text, size: 7.5, oblique: true, color: COLOR.muted })),
+        ...evidenceLines.map(text => ({ text, size: 7, oblique: false, color: COLOR.muted })),
       ]
       const respBold = isPassed === true || isPassed === false
       const responseLines = wrapText(responseText, respBold ? r.fontBold : r.fontRegular, 8.5, COLS.resp.w - 8)
@@ -355,6 +393,12 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
         offset += count
       }
     }
+  }
+
+  const generalEvidence = evidenceSummary(attachmentsByItem.get(null) ?? [])
+  if (generalEvidence) {
+    r.moveY(8)
+    r.paragraph(`${generalEvidence} (generales / general)`, { size: 8, color: COLOR.muted })
   }
 
   r.moveY(12)

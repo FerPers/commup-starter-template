@@ -14,6 +14,7 @@ interface PreviewItem {
   is_required: boolean
   is_critical: boolean
   requires_photo: boolean
+  requires_document?: boolean
   requires_measurement: boolean
   unit: string | null
   acceptance_min: number | null

@@ -6,7 +6,7 @@ import { isInactiveMember } from '@/lib/people/inactive'
 // en useItrAutosave; los bloques de UI (ItemRow, PhotoUpload, SignModal,
 // RevokeModal, CreatePunchModal, MicAppend) son componentes hermanos.
 
-import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useTransition, useCallback, useRef, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeItrApproval } from '@/app/actions/itr-instances'
@@ -339,6 +339,39 @@ export default function ItrExecution({
             )}
           </div>
         )}
+
+        {/* Datos maestros del tag (solo lectura): fabricante, modelo, serie, rango, hoja de datos, P&ID.
+            Se muestran desde la ingeniería cargada para contrastar en campo; no se duplican como ítems. */}
+        {tag && (() => {
+          const range = tag.range_min !== null && tag.range_min !== undefined && tag.range_max !== null && tag.range_max !== undefined
+            ? `${tag.range_min} – ${tag.range_max}${tag.eng_unit ? ` ${tag.eng_unit}` : ''}`
+            : tag.eng_unit ?? null
+          const rows: Array<[string, string | null | undefined]> = [
+            [t('tagData.manufacturer'), tag.manufacturer],
+            [t('tagData.model'), tag.model],
+            [t('tagData.serial'), tag.serial_number],
+            [t('tagData.range'), range],
+            [t('tagData.datasheet'), tag.datasheet_number ? `${tag.datasheet_number}${tag.revision ? ` rev. ${tag.revision}` : ''}` : null],
+            [t('tagData.pid'), tag.pid_drawing],
+            [t('tagData.junctionBox'), tag.junction_box],
+          ]
+          const present = rows.filter(([, value]) => typeof value === 'string' && value.trim().length > 0) as Array<[string, string]>
+          if (present.length === 0) return null
+          return (
+            <details style={{ marginTop: '10px', fontSize: '12px' }}>
+              <summary style={{ cursor: 'pointer', color: 'var(--gray-700)', fontWeight: 600 }}>{t('tagData.title', { count: present.length })}</summary>
+              <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: '12px', rowGap: '4px', margin: '8px 0 0', padding: '10px 12px', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                {present.map(([label, value]) => (
+                  <Fragment key={label}>
+                    <dt style={{ color: 'var(--text-muted)' }}>{label}</dt>
+                    <dd style={{ margin: 0, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', wordBreak: 'break-word' }}>{value}</dd>
+                  </Fragment>
+                ))}
+              </dl>
+              <p style={{ margin: '6px 0 0', color: 'var(--gray-400)', fontSize: '11px' }}>{t('tagData.hint')}</p>
+            </details>
+          )
+        })()}
 
         {/* Progress bar */}
         <div style={{ marginTop: '14px' }}>

@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
-  publishTemplateVersion,
+  createTemplateRevision, activateTemplateRevision,
   createSection, updateSection, deleteSection, reorderSections,
   createItem, updateItem, deleteItem, reorderItems,
   type ItemPayload,
@@ -67,21 +67,28 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
   const [newSectionTitle, setNewSectionTitle] = useState('')
   const [actionError, setActionError] = useState<string | null>(null)
 
-  // ── Publish version ───────────────────────────────────────────
+  // ── Revisions ─────────────────────────────────────────────────
+  // Plantilla activa → crear borrador (copia inactiva, v+1) y abrirlo.
+  // Plantilla inactiva → activarla (desactiva las demás del mismo código).
 
-  function handlePublishVersion() {
+  function handleCreateRevision() {
     setPublishResult(null)
     startTransition(async () => {
-      const res = await publishTemplateVersion(template.id)
+      const res = await createTemplateRevision(template.id)
       if (res.error) { setPublishResult(`error:${res.error}`); return }
       setShowPublishConfirm(false)
-      if (res.bumpedInPlace) {
-        setPublishResult(`ok:${t('publishBumpedInPlace')}`)
-        router.refresh()
-      } else {
-        // Redirect to new template
-        router.push(`/admin/templates/${res.newTemplateId}`)
-      }
+      router.push(`/admin/templates/${res.newTemplateId}`)
+    })
+  }
+
+  function handleActivateRevision() {
+    setPublishResult(null)
+    startTransition(async () => {
+      const res = await activateTemplateRevision(template.id)
+      if (res.error) { setPublishResult(`error:${res.error}`); return }
+      setShowPublishConfirm(false)
+      setPublishResult(`ok:${t('revisionActivated', { version: res.version ?? template.version, deactivated: res.deactivated ?? 0, matrix: res.matrixRepointed ?? 0 })}`)
+      router.refresh()
     })
   }
 
@@ -397,12 +404,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         />
       )}
 
-      {/* Publish version confirm modal */}
+      {/* Revision confirm modal */}
       {showPublishConfirm && (
         <TemplatePublishModal
-          nextVersion={template.version + 1}
+          mode={template.is_active ? 'create' : 'activate'}
+          version={template.is_active ? template.version + 1 : template.version}
           isPending={isPending}
-          onConfirm={handlePublishVersion}
+          onConfirm={template.is_active ? handleCreateRevision : handleActivateRevision}
           onClose={() => setShowPublishConfirm(false)}
         />
       )}

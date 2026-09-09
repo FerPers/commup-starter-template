@@ -198,7 +198,7 @@ export default function TemplateHeaderCard({
                     fontWeight: 600, opacity: busy ? 0.7 : 1,
                   }}
                 >
-                  {t('btnPublishVersion')}
+                  {template.is_active ? t('btnCreateRevision') : t('btnActivateRevision')}
                 </button>
                 <button
                   onClick={() => setEditing(true)}

@@ -50,7 +50,7 @@ async function buildFullBackup(
         id, title, order_index,
         itr_template_items(
           id, item_number, description, description_es, item_type,
-          is_required, is_critical, requires_photo, requires_measurement,
+          is_required, is_critical, requires_photo, requires_document, requires_measurement,
           unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index,
           condition_item_id, condition_value
         )
@@ -102,6 +102,7 @@ async function buildFullBackup(
             is_required: !!it.is_required,
             is_critical: !!it.is_critical,
             requires_photo: !!it.requires_photo,
+            requires_document: !!it.requires_document,
             requires_measurement: !!it.requires_measurement,
             unit: (it.unit as string | null) ?? null,
             acceptance_min: (it.acceptance_min as number | null) ?? null,
@@ -560,6 +561,7 @@ export const restoreTemplatesBackup = withAuthOnly(
               is_required: it.is_required,
               is_critical: it.is_critical,
               requires_photo: it.requires_photo,
+              requires_document: it.requires_document ?? false,
               requires_measurement: it.requires_measurement,
               unit: it.unit,
               acceptance_min: it.acceptance_min,

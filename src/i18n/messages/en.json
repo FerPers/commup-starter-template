@@ -1053,7 +1053,7 @@
       "itemTypeYesNo": "Yes / No",
       "itemTypeNumber": "Number",
       "itemTypeContinuity": "Conductor continuity",
-    "itemTypeMeasurement": "Measurement",
+      "itemTypeMeasurement": "Measurement",
       "itemTypeText": "Free text",
       "itemTypeSelect": "Selection",
       "itemTypePhoto": "Photo",
@@ -1116,12 +1116,6 @@
       "errSelectOptionsRequired": "A list item requires at least one option",
       "confirmDeleteSection": "Delete section \"{title}\" and all its items?",
       "confirmDeleteItem": "Delete this item?",
-      "btnPublishVersion": "↑ Publish new version",
-      "publishVersionTitle": "Publish new version",
-      "publishVersionDesc": "This will create version v{version} of the template. If the template has ITRs already assigned, the current version will become inactive and a new copy will be created.",
-      "publishVersionNote": "Existing ITRs will continue to reference the previous version.",
-      "btnPublishVersionConfirm": "Publish v{version}",
-      "publishBumpedInPlace": "Version bumped — no ITRs were assigned to this template.",
       "conditionSectionLabel": "Conditional logic",
       "conditionItemLabel": "Show only if item",
       "conditionItemNone": "— No condition —",
@@ -1129,7 +1123,18 @@
       "conditionValueTrue": "Yes / True",
       "conditionValueFalse": "No / False",
       "conditionValuePlaceholder": "Expected value...",
-      "conditionBadgePrefix": "if"
+      "conditionBadgePrefix": "if",
+      "btnCreateRevision": "＋ New revision (draft)",
+      "btnActivateRevision": "↑ Activate this revision",
+      "createRevisionTitle": "Create new revision",
+      "createRevisionDesc": "This template will be copied in full as inactive revision v{version} (draft). The current revision stays active until you activate the new one.",
+      "activateRevisionTitle": "Activate revision",
+      "activateRevisionDesc": "Revision v{version} will become the active one for new assignments. Other revisions of the same code will be deactivated and the equipment×ITR matrix updated in the same operation.",
+      "revisionNote": "ITRs already assigned keep their revision, responses and signatures.",
+      "btnCreateRevisionConfirm": "Create draft v{version}",
+      "btnActivateRevisionConfirm": "Activate v{version}",
+      "revisionActivated": "Revision v{version} activated · {deactivated} revision(s) deactivated · {matrix} matrix row(s) re-pointed.",
+      "flagRequiresDocument": "Requires document (PDF)"
     }
   },
   "ItrExecution": {
@@ -1221,7 +1226,8 @@
       "selectPlaceholder": "Select...",
       "yesBtn": "YES",
       "noBtn": "NO",
-      "punchTooltip": "Register punch for this item"
+      "punchTooltip": "Register punch for this item",
+      "titleDocument": "Requires document (PDF)"
     },
     "upload": {
       "uploading": "⏳ Uploading...",
@@ -1229,11 +1235,27 @@
       "photoAlt": "photo",
       "photoFullAlt": "enlarged photo",
       "pending": "Pending",
-      "queuedHint": "Offline: the photo is stored on this device and will upload when back online."
+      "queuedHint": "Offline: the photo is stored on this device and will upload when back online.",
+      "addDocument": "📄 Attach document (PDF)",
+      "documentNeedsNetwork": "Documents upload only when online.",
+      "documentOnlyPdf": "Only PDF files up to 10 MB are accepted.",
+      "openDocument": "Open document",
+      "documentAlt": "document"
     },
     "sync": {
       "pending": "Pending sync",
       "signatureQueued": "Offline: the signature is stored on this device and will be registered when back online, after your responses."
+    },
+    "tagData": {
+      "title": "Tag data ({count})",
+      "manufacturer": "Manufacturer",
+      "model": "Model",
+      "serial": "Serial no.",
+      "range": "Range",
+      "datasheet": "Datasheet",
+      "pid": "P&ID",
+      "junctionBox": "Junction box",
+      "hint": "Engineering data of the tag, read-only. If it does not match the installed equipment, record it in remarks or raise a punch."
     }
   },
   "Tags": {

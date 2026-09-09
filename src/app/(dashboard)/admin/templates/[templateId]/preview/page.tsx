@@ -24,7 +24,7 @@ export default async function TemplatePreviewPage({
         id, title, order_index,
         itr_template_items(
           id, item_number, description, description_es, item_type,
-          is_required, is_critical, requires_photo, requires_measurement,
+          is_required, is_critical, requires_photo, requires_document, requires_measurement,
           unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index
         )
       )

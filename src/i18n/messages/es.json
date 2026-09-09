@@ -1053,7 +1053,7 @@
       "itemTypeYesNo": "Sí / No",
       "itemTypeNumber": "Número",
       "itemTypeContinuity": "Continuidad por conductor",
-    "itemTypeMeasurement": "Medición",
+      "itemTypeMeasurement": "Medición",
       "itemTypeText": "Texto libre",
       "itemTypeSelect": "Selección",
       "itemTypePhoto": "Foto",
@@ -1116,12 +1116,6 @@
       "errSelectOptionsRequired": "Un ítem de tipo lista requiere al menos una opción",
       "confirmDeleteSection": "¿Eliminar sección \"{title}\" y todos sus ítems?",
       "confirmDeleteItem": "¿Eliminar este ítem?",
-      "btnPublishVersion": "↑ Publicar nueva versión",
-      "publishVersionTitle": "Publicar nueva versión",
-      "publishVersionDesc": "Se creará la versión v{version} del template. Si el template tiene ITRs asignados, la versión actual quedará inactiva y se creará una copia nueva.",
-      "publishVersionNote": "Los ITRs existentes seguirán referenciando la versión anterior.",
-      "btnPublishVersionConfirm": "Publicar v{version}",
-      "publishBumpedInPlace": "Versión actualizada — no había ITRs asignados a este template.",
       "conditionSectionLabel": "Lógica condicional",
       "conditionItemLabel": "Mostrar solo si el ítem",
       "conditionItemNone": "— Sin condición —",
@@ -1129,7 +1123,18 @@
       "conditionValueTrue": "Sí / Verdadero",
       "conditionValueFalse": "No / Falso",
       "conditionValuePlaceholder": "Valor esperado...",
-      "conditionBadgePrefix": "si"
+      "conditionBadgePrefix": "si",
+      "btnCreateRevision": "＋ Nueva revisión (borrador)",
+      "btnActivateRevision": "↑ Activar esta revisión",
+      "createRevisionTitle": "Crear nueva revisión",
+      "createRevisionDesc": "Se copiará esta plantilla completa como revisión v{version} inactiva (borrador). La revisión actual sigue vigente hasta que actives la nueva.",
+      "activateRevisionTitle": "Activar revisión",
+      "activateRevisionDesc": "La revisión v{version} pasará a ser la vigente para nuevas asignaciones. Las demás revisiones del mismo código quedarán inactivas y la matriz equipo×ITR se actualizará en la misma operación.",
+      "revisionNote": "Los ITR ya asignados conservan su revisión, respuestas y firmas.",
+      "btnCreateRevisionConfirm": "Crear borrador v{version}",
+      "btnActivateRevisionConfirm": "Activar v{version}",
+      "revisionActivated": "Revisión v{version} activada · {deactivated} revisión(es) desactivada(s) · {matrix} fila(s) de matriz re-apuntadas.",
+      "flagRequiresDocument": "Requiere documento (PDF)"
     }
   },
   "ItrExecution": {
@@ -1221,7 +1226,8 @@
       "selectPlaceholder": "Seleccionar...",
       "yesBtn": "SÍ",
       "noBtn": "NO",
-      "punchTooltip": "Registrar punch en este ítem"
+      "punchTooltip": "Registrar punch en este ítem",
+      "titleDocument": "Requiere documento (PDF)"
     },
     "upload": {
       "uploading": "⏳ Subiendo...",
@@ -1229,11 +1235,27 @@
       "photoAlt": "foto",
       "photoFullAlt": "foto ampliada",
       "pending": "Pendiente",
-      "queuedHint": "Sin red: la foto quedó en este dispositivo y se subirá al reconectar."
+      "queuedHint": "Sin red: la foto quedó en este dispositivo y se subirá al reconectar.",
+      "addDocument": "📄 Adjuntar documento (PDF)",
+      "documentNeedsNetwork": "Los documentos se suben solo con conexión.",
+      "documentOnlyPdf": "Solo se admiten archivos PDF de hasta 10 MB.",
+      "openDocument": "Abrir documento",
+      "documentAlt": "documento"
     },
     "sync": {
       "pending": "Pendiente de sincronizar",
       "signatureQueued": "Sin red: la firma quedó guardada en este dispositivo y se registrará al reconectar, después de tus respuestas."
+    },
+    "tagData": {
+      "title": "Datos del tag ({count})",
+      "manufacturer": "Fabricante",
+      "model": "Modelo",
+      "serial": "N.º de serie",
+      "range": "Rango",
+      "datasheet": "Hoja de datos",
+      "pid": "P&ID",
+      "junctionBox": "Caja de conexiones",
+      "hint": "Datos de ingeniería del tag, solo lectura. Si no coinciden con el equipo instalado, regístralo en observaciones o en un punch."
     }
   },
   "Tags": {

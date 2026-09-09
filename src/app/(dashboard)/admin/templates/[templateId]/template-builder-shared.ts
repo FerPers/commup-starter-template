@@ -16,6 +16,7 @@ export interface BuilderItem {
   is_required: boolean
   is_critical: boolean
   requires_photo: boolean
+  requires_document?: boolean
   requires_measurement: boolean
   unit: string | null
   acceptance_min: number | null
@@ -66,6 +67,7 @@ export const DEFAULT_ITEM: ItemFormValues = {
   is_required: true,
   is_critical: false,
   requires_photo: false,
+  requires_document: false,
   requires_measurement: false,
   unit: '',
   acceptance_min: null,
