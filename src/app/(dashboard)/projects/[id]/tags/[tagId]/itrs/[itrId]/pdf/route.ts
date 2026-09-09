@@ -47,6 +47,7 @@ export async function GET(
             acceptance_max,
             acceptance_text,
             unit,
+            options,
             order_index
           )
         )

@@ -133,25 +133,26 @@ Para que «a la altura de» signifique algo verificable. Toda plantilla v2 cumpl
 
 Sin estimación en jornadas: la entrega de hoy pide medir con los primeros lotes. Cada fase tiene criterio de salida.
 
-### Fase 0 — Cerrar el software y las cuatro v2 (antes de tocar una plantilla más)
+### Fase 0 — Cerrar el software y las cuatro v2 — ✅ COMPLETADA (2026-09-09, 18:10)
 
-| # | Tarea | Tipo | Salida |
+| # | Tarea | Estado | Evidencia |
 |---|---|---|---|
-| 0.1 | Re-apuntar las 39 filas de matriz a las v2 (SQL) y hacer que la publicación lo haga siempre | datos + código | 0 filas hacia inactivas |
-| 0.2 | I10A: cargar `option_outcomes` en las 31 selecciones (0 ITR asignados → corregir en sitio y anotarlo en CONTROL-CATALOGO) | datos | «Rechazado» bloquea firma en QA |
-| 0.3 | RPC atómica de publicación de revisión (copia completa, matriz, nunca bump en sitio) y botón que la use | código + migración | Publicar I06A v3 de prueba y comparar JSON |
-| 0.4 | Adjunto documental por ítem (PDF) + `requires_document` en evaluador TS/SQL/PDF | código + migración | Certificado de patrón adjunto en QA de I10A |
-| 0.5 | Bloque «Datos del tag» de solo lectura en ejecución y PDF | código | I10A sin 1.03–1.06 / 2.01–2.03 manuales |
-| 0.6 | Tipo `table` genérico generalizando `continuity` (esquema de columnas, validación, firma, PDF) | código + migración | Matriz de 9 puntos de I10A como una tabla |
-| 0.7 | Commit + push del trabajo de hoy (26 archivos modificados, 5 migraciones, 20 nuevos) | git | Repo al día con prod |
+| 0.1 | Matriz equipo×ITR sigue a la revisión activa | ✅ | 39 filas re-apuntadas a las v2 (SQL); `activate_itr_template_revision` re-apunta siempre |
+| 0.2 | I10A v2: resultados por opción | ✅ | 17 selecciones con pass/fail/not_applicable (3.01–3.05, 9 «Resultado», 7.08, 8.06, 9.01). Rechazado y «Requiere información» bloquean la firma; «No ejecutado» exige justificación |
+| 0.3 | RPC atómica de revisiones | ✅ | `create_itr_template_revision` (borrador inactivo v+1, copia completa, condiciones re-mapeadas) + `activate_itr_template_revision`. Probado en prod: copia de I10A idéntica (hash), activar/revertir I06A, borrado del borrador. Botón: «Nueva revisión (borrador)» / «Activar esta revisión». Se corrigió además el guard que impedía borrar plantillas con ítems |
+| 0.4 | Evidencia documental (PDF) por ítem | ✅ | `requires_document` en evaluador TS+SQL, editor, ejecución (solo con red), backup, PDF; bucket admite application/pdf |
+| 0.5 | Datos del tag de solo lectura | ✅ | Bloque desplegable en la ejecución y filas en la cabecera del PDF (fabricante, modelo, serie, rango, hoja de datos, P&ID, caja) |
+| 0.6 | Tipo `table` genérico | ✅ | `src/lib/itr/table.ts` + `evaluate_itr_table` SQL (mismas reglas), editor con 5 presets (calibración, aislamiento, interruptor, especificado vs. medido, presión), captura, PDF, preview. Filas fijas o variables, columnas número/texto/selección/resultado, min/max opcionales. Aún no aplicado a I10A (Fase 1) |
+| 0.7 | Commit + push | ✅ | c89ad86 (trabajo del día), 00780e0 (0.1–0.5), siguiente commit (0.6) |
 
-Decisión que condiciona 0.6: si no se hace el tipo tabla, las 105 plantillas con matriz se migran como I10A hoy (aplanadas) y se rehacen después. Recomendación: hacerlo, es un solo mecanismo ya probado en `continuity`.
+Migraciones aplicadas en prod: 20260909230000 → 20260909251000 (+ `itr_option_outcomes_list_shape`). Verificación en navegador pendiente (requiere sesión): probado por pruebas unitarias (168), evaluadores SQL en prod y build.
 
 ### Fase 1 — Fijar el estándar con tres referencias
 
 - I06A v2 se ratifica como referencia de «lista de chequeo». Solo se le añade `item_number` original y política de fotos.
 - I01A v3 corrige numeración, pares número+unidad y calibre; referencia de «datos + chequeo + tabla».
 - I10A v3 sobre el estándar: 8 controles originales, tabla de accesorios, bloque CORRECTIONS estructurado, matriz como tabla, adjuntos reales, datos del tag nativos. Referencia de «datos + chequeo + matriz».
+- I10A v3 usa el tipo `table` (preset «Calibración por puntos») en lugar de los 54 ítems aplanados, y `requires_document` en 7.05/8.01/8.02/8.04.
 - Los tres pasan la prueba mínima del PLAN-MANUAL (captura, obligatorio vacío, rechazo, NA, PDF, firmas con tres usuarios distintos).
 
 Salida: tres plantillas con «Revisión técnica conforme» en CONTROL-CATALOGO y el estándar de la sección 5 aprobado por Luis.

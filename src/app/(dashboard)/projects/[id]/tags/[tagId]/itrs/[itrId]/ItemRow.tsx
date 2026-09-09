@@ -4,6 +4,8 @@ import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import ContinuityCapture from './ContinuityCapture'
+import TableCapture from './TableCapture'
+import { evaluateTable } from '@/lib/itr/table'
 import { evaluateContinuity } from '@/lib/itr/continuity'
 import MicAppend from './MicAppend'
 import PhotoUpload from './PhotoUpload'
@@ -228,6 +230,11 @@ export default function ItemRow({
           onRemoved={onAttachmentRemoved}
         />
       )}
+
+      {item.item_type === 'table' && <TableCapture options={item.options} value={response?.value_text ?? null} disabled={!canEdit} onChange={value => {
+        const result = evaluateTable(item.options, value)
+        onSave(item.id, { valueText: value, isPassed: result.hasFail ? false : result.isComplete ? true : null })
+      }} />}
 
       {item.item_type === 'continuity' && <ContinuityCapture value={response?.value_text ?? null} disabled={!canEdit} onChange={value => {
         const result = evaluateContinuity(value)

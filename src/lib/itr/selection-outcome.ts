@@ -4,7 +4,11 @@ export type OptionOutcomes = Record<string, SelectionOutcome>;
 /** An omitted mapping is neutral; classification never depends on translated labels. */
 export function validateOptionOutcomes(options: unknown, outcomes: unknown): outcomes is OptionOutcomes {
   if (!outcomes || typeof outcomes !== 'object' || Array.isArray(outcomes)) return false;
-  if (options !== null && (!Array.isArray(options) || !options.every(value => typeof value === 'string'))) return false;
+  // A list must always be a string array; an empty map is otherwise neutral for
+  // every item type (tables keep a config object in options).
+  if (Array.isArray(options) && !options.every(value => typeof value === 'string')) return false;
+  if (Object.keys(outcomes).length === 0) return true;
+  if (options !== null && !Array.isArray(options)) return false;
   const allowedOptions = (options ?? []) as string[];
   return Object.entries(outcomes).every(([option, outcome]) =>
     allowedOptions.includes(option) && ['pass', 'fail', 'not_applicable'].includes(outcome as string));

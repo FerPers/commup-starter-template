@@ -1,9 +1,11 @@
 'use client'
 
+import { parseTableConfig } from '@/lib/itr/table'
+
 import type { Json } from '@/types/supabase.generated'
 import { useState } from 'react'
 
-type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity'
+type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity' | 'table'
 
 interface PreviewItem {
   id: string
@@ -46,6 +48,7 @@ interface TemplateData {
 // ── Item type labels ────────────────────────────────────────────
 const TYPE_LABEL: Record<ItrItemType, string> = {
   continuity: 'Continuidad por conductor',
+  table:       'Tabla de registro',
   checkbox:    'Verificación',
   yes_no:      'Sí / No',
   number:      'Número',
@@ -66,6 +69,20 @@ function ItemControl({ item }: { item: PreviewItem }) {
     boxSizing: 'border-box', fontFamily: 'inherit',
   }
 
+  if (item.item_type === 'table') {
+    const config = parseTableConfig(item.options)
+    if (!config) return <p style={{ color: '#b91c1c' }}>Tabla sin configuración válida.</p>
+    const rows = config.rows.mode === 'fixed' ? config.rows.labels : [`${config.rows.label} 1`, `${config.rows.label} 2`, '…']
+    return (
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: '12px', width: '100%' }}>
+          <thead><tr><th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)' }}>{config.rows.mode === 'fixed' ? 'Fila' : config.rows.label}</th>{config.columns.map(c => <th key={c.key} style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.label}{c.unit ? ` (${c.unit})` : ''}</th>)}</tr></thead>
+          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--gray-400)' }}>{c.type === 'result' ? 'Aceptado / Rechazado / N.A.' : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
+        </table>
+        {config.rows.mode === 'variable' && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Filas variables: el inspector declara entre {config.rows.min} y {config.rows.max}.</p>}
+      </div>
+    )
+  }
   if (item.item_type === 'continuity') return <p>Registro por pares o conductores: terminales, resultados, pantallas y lecturas según el procedimiento. Las filas se configuran al ejecutar el ITR.</p>
 
   if (item.item_type === 'checkbox') {

@@ -5732,6 +5732,7 @@ export type Database = {
         | "date"
         | "yes_no"
         | "continuity"
+        | "table"
       itr_status:
         | "not_started"
         | "in_progress"
@@ -5917,6 +5918,7 @@ export const Constants = {
         "date",
         "yes_no",
         "continuity",
+        "table",
       ],
       itr_status: [
         "not_started",

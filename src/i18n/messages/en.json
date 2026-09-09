@@ -1134,7 +1134,8 @@
       "btnCreateRevisionConfirm": "Create draft v{version}",
       "btnActivateRevisionConfirm": "Activate v{version}",
       "revisionActivated": "Revision v{version} activated · {deactivated} revision(s) deactivated · {matrix} matrix row(s) re-pointed.",
-      "flagRequiresDocument": "Requires document (PDF)"
+      "flagRequiresDocument": "Requires document (PDF)",
+      "itemTypeTable": "Record table"
     }
   },
   "ItrExecution": {

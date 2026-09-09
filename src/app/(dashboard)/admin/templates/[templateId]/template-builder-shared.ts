@@ -86,6 +86,7 @@ export const ITEM_TYPE_DEFS: ReadonlyArray<{ value: ItrItemType; labelKey: strin
   { value: 'yes_no',      labelKey: 'itemTypeYesNo',       color: '#10b981' },
   { value: 'number',      labelKey: 'itemTypeNumber',      color: '#f59e0b' },
   { value: 'continuity', labelKey: 'itemTypeContinuity', color: '#0891b2' },
+  { value: 'table',       labelKey: 'itemTypeTable',       color: '#0e7490' },
   { value: 'measurement', labelKey: 'itemTypeMeasurement', color: '#8b5cf6' },
   { value: 'text',        labelKey: 'itemTypeText',        color: 'var(--text-muted)' },
   { value: 'select',      labelKey: 'itemTypeSelect',      color: '#14b8a6' },
@@ -151,5 +152,5 @@ export const miniBtn: React.CSSProperties = {
 }
 
 export function normalizeItemType(form: ItemFormValues, itemType: ItrItemType): ItemFormValues {
-  return { ...form, item_type: itemType, requires_measurement: itemType === 'continuity' ? false : form.requires_measurement }
+  return { ...form, item_type: itemType, requires_measurement: itemType === 'continuity' || itemType === 'table' ? false : form.requires_measurement }
 }

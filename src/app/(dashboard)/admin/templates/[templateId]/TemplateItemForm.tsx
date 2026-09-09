@@ -9,6 +9,8 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ItrItemType } from '@/types/database'
+import { parseTableConfig, type TableConfig } from '@/lib/itr/table'
+import TableConfigEditor from './TableConfigEditor'
 import {
   ITEM_TYPE_DEFS,
   normalizeItemType,
@@ -37,11 +39,13 @@ export default function TemplateItemForm({
 }) {
   const t = useTranslations('ItrTemplates.builder')
   const [form, setForm] = useState<ItemFormValues>(() => normalizeItemType(initial, initial.item_type))
-  const [optionsText, setOptionsText] = useState((initial.options ?? []).join(', '))
+  const [optionsText, setOptionsText] = useState(Array.isArray(initial.options) ? initial.options.join(', ') : '')
   const [error, setError] = useState<string | null>(null)
 
   const isMeasurement = form.item_type === 'measurement'
   const isSelect = form.item_type === 'select'
+  const isTable = form.item_type === 'table'
+  const tableConfig = isTable && form.options && !Array.isArray(form.options) ? (form.options as TableConfig) : null
 
   // Determine appropriate condition_value UI based on the condition item's type
   const condItem = allItems.find(it => it.id === form.condition_item_id)
@@ -61,7 +65,7 @@ export default function TemplateItemForm({
       setError(t('errDescriptionRequired'))
       return
     }
-    let options: string[] | null = null
+    let options: string[] | TableConfig | null = null
     if (isSelect) {
       options = optionsText.split(',').map(s => s.trim()).filter(Boolean)
       if (options.length === 0) {
@@ -69,8 +73,15 @@ export default function TemplateItemForm({
         return
       }
     }
+    if (isTable) {
+      options = parseTableConfig(tableConfig)
+      if (!options) {
+        setError('La tabla necesita al menos una columna con etiqueta y filas válidas (etiquetas fijas o un rango).')
+        return
+      }
+    }
     setError(null)
-    const option_outcomes = Object.fromEntries(Object.entries(form.option_outcomes ?? {}).filter(([key]) => options?.includes(key)))
+    const option_outcomes = Object.fromEntries(Object.entries(form.option_outcomes ?? {}).filter(([key]) => Array.isArray(options) && options.includes(key)))
     const err = await onSave({ ...normalizeItemType(form, form.item_type), options, option_outcomes })
     if (err) setError(err)
   }
@@ -166,6 +177,8 @@ export default function TemplateItemForm({
         </div>
       )}
 
+      {isTable && <TableConfigEditor value={tableConfig} onChange={config => setForm(f => ({ ...f, options: config }))} />}
+
       {isMeasurement && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', gap: '10px', marginBottom: '10px' }}>
           <label style={fieldLabel}>
@@ -210,7 +223,7 @@ export default function TemplateItemForm({
 
       {/* Flags */}
       <div style={{ display: 'flex', gap: '16px', marginBottom: '14px', flexWrap: 'wrap' }}>
-        {FLAGS.filter(flag => form.item_type !== 'continuity' || flag.key !== 'requires_measurement').map(flag => (
+        {FLAGS.filter(flag => (form.item_type !== 'continuity' && form.item_type !== 'table') || flag.key !== 'requires_measurement').map(flag => (
           <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)' }}>
             <input
               type="checkbox"

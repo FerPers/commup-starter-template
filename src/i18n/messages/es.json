@@ -1134,7 +1134,8 @@
       "btnCreateRevisionConfirm": "Crear borrador v{version}",
       "btnActivateRevisionConfirm": "Activar v{version}",
       "revisionActivated": "Revisión v{version} activada · {deactivated} revisión(es) desactivada(s) · {matrix} fila(s) de matriz re-apuntadas.",
-      "flagRequiresDocument": "Requiere documento (PDF)"
+      "flagRequiresDocument": "Requiere documento (PDF)",
+      "itemTypeTable": "Tabla de registro"
     }
   },
   "ItrExecution": {

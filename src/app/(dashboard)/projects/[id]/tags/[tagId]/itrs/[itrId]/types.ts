@@ -3,7 +3,7 @@
 
 import type { Json } from '@/types/supabase.generated'
 
-export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity'
+export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity' | 'table'
 
 export type Item = {
   id: string

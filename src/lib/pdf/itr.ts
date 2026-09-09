@@ -1,4 +1,5 @@
 import { evaluateContinuity } from '../itr/continuity'
+import { evaluateTable } from '../itr/table'
 import { drawItrSignatures } from './itr-signatures'
 /**
  * ITR (Inspection & Test Record) PDF — pdf-lib (Workers-native).
@@ -23,6 +24,7 @@ type ItrItem = {
   acceptance_text: string | null
   unit: string | null
   order_index: number
+  options?: unknown
 }
 
 type ItrSection = {
@@ -335,6 +337,76 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
           }
         }
         if (resp?.remarks) r.paragraph(`Observaciones generales: ${resp.remarks}`, {size: 8, oblique: true})
+        r.moveY(6)
+        drawColumnHeaders()
+        continue
+      }
+      if (item.item_type === 'table') {
+        r.paragraph(`${item.item_number ?? ''} ${item.description_es?.trim() ? item.description_es.trim() : item.description}`, {size: 9})
+        if (item.description_es?.trim() && item.description_es.trim() !== item.description.trim()) r.paragraph(item.description, {size: 8, oblique: true})
+        if (item.acceptance_text) r.paragraph(`Criterio: ${item.acceptance_text}`, {size: 8})
+        const evaluation = evaluateTable(item.options, resp?.value_text)
+        if (!evaluation.config) {
+          r.paragraph('Tabla sin configuración válida en la plantilla.', {color: COLOR.red})
+        } else if (!evaluation.data) {
+          r.paragraph(resp?.value_text ? 'Registro de tabla inválido; revisar captura.' : 'Tabla pendiente de captura.', {color: COLOR.red})
+        } else {
+          const config = evaluation.config
+          if (!evaluation.isComplete) r.paragraph('Captura incompleta: revisar celdas requeridas y justificaciones.', {size: 8, color: COLOR.red})
+          const labels = [config.rows.mode === 'fixed' ? 'Fila' : config.rows.label, ...config.columns.map(c => `${c.label}${c.unit ? ` (${c.unit})` : ''}`)]
+          const firstW = 62
+          const restW = Math.floor((CONTENT_W - firstW) / config.columns.length)
+          const widths = [firstW, ...config.columns.map((_, i) => i === config.columns.length - 1 ? CONTENT_W - firstW - restW * (config.columns.length - 1) : restW)]
+          const resultIndex = config.columns.findIndex(c => c.type === 'result')
+          const drawTableHeader = () => {
+            r.ensureSpace(34)
+            r.drawRect({x: MARGIN, y: r.y - 16, width: CONTENT_W, height: 16, color: COLOR.borderXlight})
+            let x = MARGIN
+            labels.forEach((label, i) => {
+              const cut = wrapText(label, r.fontBold, 7, widths[i] - 6)[0] ?? ''
+              r.drawText(cut, {x: x + 3, y: r.y - 11, size: 7, bold: true, color: COLOR.muted})
+              x += widths[i]
+            })
+            r.moveY(18)
+          }
+          drawTableHeader()
+          for (const row of evaluation.data.rows) {
+            const cells = [row.label, ...config.columns.map(c => {
+              const v = row.cells[c.key]
+              if (c.type === 'result') return v === 'pass' ? 'PASS' : v === 'fail' ? 'FAIL' : v === 'not_applicable' ? 'No aplica' : 'Pendiente'
+              if (v === null || v === undefined || v === '') return '-'
+              return String(v)
+            })]
+            const rowFail = config.columns.some(c => (c.type === 'result' && row.cells[c.key] === 'fail') || (c.type === 'number' && typeof row.cells[c.key] === 'number' && ((c.min !== null && (row.cells[c.key] as number) < c.min) || (c.max !== null && (row.cells[c.key] as number) > c.max))))
+            const lines = cells.map((value, i) => wrapText(value, r.fontRegular, 7.5, widths[i] - 6))
+            const total = Math.max(...lines.map(cell => cell.length), 1)
+            let offset = 0
+            while (offset < total) {
+              if (r.y - 18 < BOTTOM_LIMIT) {
+                r.newPage()
+                r.paragraph(`Tabla ${item.item_number ?? ''} - ${row.label}${offset ? ' (continuación)' : ''}`, {size: 8})
+                drawTableHeader()
+              }
+              const count = Math.min(total - offset, Math.max(1, Math.floor((r.y - BOTTOM_LIMIT - 6) / 10)))
+              const height = count * 10 + 6
+              if (rowFail) r.drawRect({x: MARGIN, y: r.y - height, width: CONTENT_W, height, color: COLOR.redBg})
+              let x = MARGIN
+              lines.forEach((cell, column) => {
+                for (let line = 0; line < count; line++) {
+                  const textLine = cell[offset + line]
+                  if (textLine !== undefined) r.drawText(textLine, {x: x + 3, y: r.y - 9 - line * 10, size: 7.5, color: rowFail && column === resultIndex + 1 ? COLOR.red : COLOR.text})
+                }
+                x += widths[column]
+              })
+              r.drawHLine(MARGIN, MARGIN + CONTENT_W, r.y - height, 0.3, COLOR.borderLight)
+              r.moveY(height)
+              offset += count
+            }
+          }
+        }
+        if (resp?.remarks) r.paragraph(`Observaciones generales: ${resp.remarks}`, {size: 8, oblique: true})
+        const tableEvidence = evidenceSummary(attachmentsByItem.get(item.id) ?? [])
+        if (tableEvidence) r.paragraph(tableEvidence, {size: 7, color: COLOR.muted})
         r.moveY(6)
         drawColumnHeaders()
         continue

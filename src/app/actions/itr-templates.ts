@@ -1,12 +1,13 @@
 'use server'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase.generated'
+import type { Database, Json } from '@/types/supabase.generated'
 
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
+import { parseTableConfig, type TableConfig } from '@/lib/itr/table'
 import { detectItrPhase } from '@/lib/utils'
 import type { Enums } from '@/types/supabase.generated'
 
@@ -155,7 +156,8 @@ export interface ItemPayload {
   acceptance_min?: number | null
   acceptance_max?: number | null
   acceptance_text?: string | null
-  options?: string[] | null
+  /** string[] para listas; TableConfig para tablas de registro; null en el resto. */
+  options?: string[] | TableConfig | null
   option_outcomes?: Record<string, 'pass' | 'fail' | 'not_applicable'>
   order_index: number
   condition_item_id?: string | null
@@ -175,11 +177,12 @@ export const createItem = withAuthOnly(
     data: ItemPayload,
   ): Promise<{ id?: string; error?: string }> => {
     if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
+    if (data.item_type === 'table' && !parseTableConfig(data.options)) return { error: 'La tabla requiere columnas y filas válidas' }
     if (!validateOptionOutcomes(data.options ?? null, data.option_outcomes ?? {})) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
     if (data.item_type !== 'select' && Object.keys(data.option_outcomes ?? {}).length) return { error: 'Solo las listas admiten resultados por opción' }
     const { data: item, error } = await ctx.supabase
       .from('itr_template_items')
-      .insert({ ...data, section_id: sectionId, template_id: templateId })
+      .insert({ ...data, options: (data.options ?? null) as Json, section_id: sectionId, template_id: templateId })
       .select('id')
       .single()
 
@@ -196,12 +199,13 @@ export const updateItem = withAuthOnly(
     if (readError || !current) return { error: 'Ítem no encontrado o sin acceso' }
     const merged = { ...current, ...data }
     if (merged.item_type === 'select' && !(Array.isArray(merged.options) && merged.options.length)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
+    if (merged.item_type === 'table' && !parseTableConfig(merged.options)) return { error: 'La tabla requiere columnas y filas válidas' }
     const outcomes = data.option_outcomes ?? current.option_outcomes ?? {}
     if (!validateOptionOutcomes(merged.options, outcomes)) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
     if (merged.item_type !== 'select' && Object.keys(outcomes).length) return { error: 'Solo las listas admiten resultados por opción' }
     const { error } = await ctx.supabase
       .from('itr_template_items')
-      .update(data)
+      .update({ ...data, ...('options' in data ? { options: (data.options ?? null) as Json } : {}) })
       .eq('id', itemId)
 
     if (error) return { error: error.message }

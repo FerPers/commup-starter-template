@@ -1,5 +1,7 @@
 'use client'
 
+import { parseTableConfig } from '@/lib/itr/table'
+
 // Card de sección del builder: título editable, listado de ítems y formulario
 // de alta/edición (Q3, extraído de TemplateBuilder.tsx). El estado de edición
 // es local a cada card; las mutaciones suben al builder vía callbacks async
@@ -115,7 +117,7 @@ export default function TemplateSectionCard({
       acceptance_text: item.acceptance_text ?? '',
       options: Array.isArray(item.options)
         ? item.options.filter((o): o is string => typeof o === 'string')
-        : null,
+        : item.item_type === 'table' ? parseTableConfig(item.options) : null,
       option_outcomes: (item.option_outcomes ?? {}) as ItemFormValues['option_outcomes'],
       condition_item_id: item.condition_item_id,
       condition_value: item.condition_value,

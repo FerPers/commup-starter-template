@@ -1,6 +1,7 @@
 'use server'
 
 import { evaluateContinuity } from '@/lib/itr/continuity'
+import { evaluateTable } from '@/lib/itr/table'
 import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
@@ -224,6 +225,12 @@ export const upsertResponse = withAuth(
     if (item.item_type === 'continuity') {
       const result = evaluateContinuity('valueText' in input ? input.valueText : existing?.value_text)
       if (!result.data) return { error: 'La estructura por conductores no es válida' }
+      patch.is_passed = result.hasFail ? false : result.isComplete ? true : null
+    }
+    if (item.item_type === 'table') {
+      const result = evaluateTable(item.options, 'valueText' in input ? input.valueText : existing?.value_text)
+      if (!result.config) return { error: 'La plantilla no define una tabla válida para esta casilla' }
+      if (('valueText' in input ? input.valueText : existing?.value_text) && !result.data) return { error: 'El registro de la tabla no corresponde a su configuración' }
       patch.is_passed = result.hasFail ? false : result.isComplete ? true : null
     }
     if (item.item_type === 'select') {
