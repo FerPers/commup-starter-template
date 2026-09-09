@@ -63,6 +63,7 @@ export async function GET(
       itr_signatures (
         role,
         signed_at,
+        signature_image,
         profiles ( full_name )
       ),
       tags ( tag_number, description ),

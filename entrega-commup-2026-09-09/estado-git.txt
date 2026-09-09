@@ -1,0 +1,51 @@
+ M .gitignore
+ M src/app/(dashboard)/admin/templates/[templateId]/ImportItemsModal.tsx
+ M src/app/(dashboard)/admin/templates/[templateId]/TemplateItemForm.tsx
+ M src/app/(dashboard)/admin/templates/[templateId]/TemplateSectionCard.tsx
+ M src/app/(dashboard)/admin/templates/[templateId]/page.tsx
+ M src/app/(dashboard)/admin/templates/[templateId]/preview/TemplatePreview.tsx
+ M src/app/(dashboard)/admin/templates/[templateId]/preview/page.tsx
+ M src/app/(dashboard)/admin/templates/[templateId]/template-builder-shared.ts
+ M src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItemRow.tsx
+ M src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItrExecution.tsx
+ M src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/SignModal.tsx
+ M src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/page.tsx
+ M src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/pdf/route.ts
+ M src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/types.ts
+ M src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/useItrAutosave.ts
+ M src/app/actions/itr-instances.ts
+ M src/app/actions/itr-templates.ts
+ M src/app/actions/templates-backup.ts
+ M src/i18n/messages/en.json
+ M src/i18n/messages/es.json
+ M src/lib/constants/templates-backup.ts
+ M src/lib/pdf/itr.ts
+ M src/lib/sync/outbox-utils.test.ts
+ M src/lib/sync/outbox-utils.ts
+ M src/types/database.ts
+ M src/types/supabase.generated.ts
+?? AGENTS.md
+?? docs/ITR-COMPLEMENTOS-PILOTO-2026-09-09.md
+?? docs/NAVEGACION-PROPUESTA-2026-09-09.md
+?? docs/REVISION-PRODUCTO-GEOPARK-2026-09-09.md
+?? docs/REVISION-SEGUNDA-PASADA-2026-09-09.md
+?? docs/superpowers/
+?? entrega-commup-2026-09-09/
+?? src/app/(dashboard)/admin/templates/[templateId]/template-continuity.test.ts
+?? src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ContinuityCapture.tsx
+?? src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/types.test.ts
+?? src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/useItrAutosave.test.ts
+?? src/app/actions/itr-attachments.test.ts
+?? src/app/actions/itr-response-access.test.ts
+?? src/app/actions/itr-signatures.test.ts
+?? src/app/actions/itr-template-outcomes.test.ts
+?? src/lib/itr/
+?? src/lib/pdf/itr-signatures.test.ts
+?? src/lib/pdf/itr-signatures.ts
+?? src/lib/pdf/itr.test.ts
+?? supabase/migrations/20260909180000_itr_atomic_integrity.sql
+?? supabase/migrations/20260909190000_itr_selection_outcomes.sql
+?? supabase/migrations/20260909200000_itr_selection_capture.sql
+?? supabase/migrations/20260909210000_itr_continuity_type.sql
+?? supabase/migrations/20260909220000_itr_continuity_capture.sql
+?? supabase/tests/

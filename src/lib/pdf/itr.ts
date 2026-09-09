@@ -1,3 +1,5 @@
+import { evaluateContinuity } from '../itr/continuity'
+import { drawItrSignatures } from './itr-signatures'
 /**
  * ITR (Inspection & Test Record) PDF — pdf-lib (Workers-native).
  * Replaces the @react-pdf/renderer implementation in ItrPdfDocument.tsx.
@@ -5,7 +7,7 @@
 
 import {
   Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H, BOTTOM_LIMIT,
-  sanitize, truncateToWidth, wrapText,
+  sanitize, wrapText,
   type Color,
 } from './renderer'
 
@@ -41,6 +43,7 @@ type ItrResponse = {
 }
 
 type ItrSignature = {
+  signature_image?: string | null
   role: string
   signed_at: string
   profiles: { full_name: string } | null
@@ -85,7 +88,7 @@ function formatResponse(item: ItrItem, response: ItrResponse | undefined): strin
     return `${val}${item.unit ? ` ${item.unit}` : ''}`
   }
   if (item.item_type === 'select') return response.value_option ?? '-'
-  if (item.item_type === 'text') return response.value_text?.slice(0, 40) ?? '-'
+  if (item.item_type === 'text') return response.value_text ?? '-'
   if (item.item_type === 'photo') return response.value_text ? '[photo]' : '-'
   if (item.item_type === 'signature') return response.value_text ? '[signed]' : '-'
   if (item.item_type === 'date') return response.value_text ?? '-'
@@ -243,6 +246,64 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
 
     for (const item of items) {
       const resp = responseMap[item.id]
+      if (item.item_type === 'continuity') {
+        r.paragraph(`${item.item_number ?? ''} ${item.description_es?.trim() ? item.description_es.trim() : item.description}`, {size: 9})
+        if (item.description_es?.trim() && item.description_es.trim() !== item.description.trim()) r.paragraph(item.description, {size: 8, oblique: true})
+        if (item.acceptance_text) r.paragraph(`Criterio: ${item.acceptance_text}`, {size: 8})
+        const evaluation = evaluateContinuity(resp?.value_text)
+        if (!evaluation.data) {
+          r.paragraph(resp?.value_text ? 'Registro de continuidad inválido; revisar captura.' : 'Continuidad pendiente de captura.', {color: COLOR.red})
+        } else {
+          const capture = evaluation.data
+          r.paragraph(`${capture.grouping === 'pairs' ? 'Pares' : 'Conductores'}: ${capture.count}. Pantallas: ${capture.shields.join(', ') || 'Ninguna'}. Lectura ${capture.measurementRequired ? 'obligatoria' : 'opcional'}.`, {size: 8})
+          if (!evaluation.isComplete) r.paragraph('Captura incompleta: revisar terminales, resultados y requisitos aplicables.', {size: 8, color: COLOR.red})
+          const widths = [48, 78, 78, 61, 47, 40, CONTENT_W - 352]
+          const labels = ['Conductor', 'Origen', 'Destino', 'Resultado', 'Lectura', 'Unidad', 'Observaciones']
+          const drawContinuityHeader = () => {
+            r.ensureSpace(34)
+            r.drawRect({x: MARGIN, y: r.y - 16, width: CONTENT_W, height: 16, color: COLOR.borderXlight})
+            let x = MARGIN
+            labels.forEach((label, i) => {
+              r.drawText(label, {x: x + 3, y: r.y - 11, size: 7, bold: true, color: COLOR.muted})
+              x += widths[i]
+            })
+            r.moveY(18)
+          }
+          drawContinuityHeader()
+          for (const row of capture.rows) {
+            const result = row.result === 'pass' ? 'PASS' : row.result === 'fail' ? 'FAIL' : row.result === 'not_applicable' ? 'No aplica' : 'Pendiente'
+            const cells = [row.id, row.from || '-', row.to || '-', result, row.reading === null ? '-' : String(row.reading), row.unit || '-', row.remarks || '-']
+            const lines = cells.map((value, i) => wrapText(value, r.fontRegular, 7.5, widths[i] - 6))
+            const total = Math.max(...lines.map(cell => cell.length), 1)
+            let offset = 0
+            while (offset < total) {
+              if (r.y - 18 < BOTTOM_LIMIT) {
+                r.newPage()
+                r.paragraph(`Continuidad ${item.item_number ?? ''} - ${row.id}${offset ? ' (continuación)' : ''}`, {size: 8})
+                drawContinuityHeader()
+              }
+              const count = Math.min(total - offset, Math.max(1, Math.floor((r.y - BOTTOM_LIMIT - 6) / 10)))
+              const height = count * 10 + 6
+              if (row.result === 'fail') r.drawRect({x: MARGIN, y: r.y - height, width: CONTENT_W, height, color: COLOR.redBg})
+              let x = MARGIN
+              lines.forEach((cell, column) => {
+                for (let line = 0; line < count; line++) {
+                  const text = cell[offset + line]
+                  if (text !== undefined) r.drawText(text, {x: x + 3, y: r.y - 9 - line * 10, size: 7.5, color: row.result === 'fail' && column === 3 ? COLOR.red : COLOR.text})
+                }
+                x += widths[column]
+              })
+              r.drawHLine(MARGIN, MARGIN + CONTENT_W, r.y - height, 0.3, COLOR.borderLight)
+              r.moveY(height)
+              offset += count
+            }
+          }
+        }
+        if (resp?.remarks) r.paragraph(`Observaciones generales: ${resp.remarks}`, {size: 8, oblique: true})
+        r.moveY(6)
+        drawColumnHeaders()
+        continue
+      }
       const isPassed = resp?.is_passed
       const responseText = formatResponse(item, resp)
 
@@ -261,102 +322,43 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
       const acceptanceLines = acceptanceText ? wrapText(acceptanceText, r.fontRegular, 7, descMaxW) : []
       const remarksText = resp?.remarks ? `Observaciones / Remarks: ${resp.remarks}` : null
       const remarksLines = remarksText ? wrapText(remarksText, r.fontOblique, 7.5, descMaxW) : []
-      const rowH = Math.max(
-        18,
-        4 + descLines.length * 11 + enLines.length * 9 + acceptanceLines.length * 9 + remarksLines.length * 10 + 4
-      )
-
-      // Page break + redraw column headers if needed
-      if (r.y - rowH < BOTTOM_LIMIT) {
-        r.newPage()
-        drawColumnHeaders()
-      }
-
-      // Row background (fail tint)
-      if (isPassed === false) {
-        r.drawRect({ x: MARGIN, y: r.y - rowH, width: CONTENT_W, height: rowH, color: COLOR.redBg })
-      }
-
-      // Item number
-      r.drawText(item.item_number ?? '', {
-        x: COLS.num.x + 4, y: r.y - 10, size: 8, oblique: true, color: COLOR.empty,
-      })
-
-      // Critical dot (if critical)
-      const descX = COLS.desc.x + 4
-      let dx = descX
-      if (item.is_critical) {
-        r.page.drawCircle({
-          x: dx + 3, y: r.y - 8, size: 2.5, color: COLOR.red,
-        })
-        dx += 8
-      }
-
-      // Description lines
-      let ly = r.y - 10
-      for (const line of descLines) {
-        r.drawText(line, { x: dx, y: ly, size: 8.5, color: COLOR.text })
-        ly -= 11
-      }
-      // Original EN (gris, cursiva) debajo del español
-      for (const line of enLines) {
-        r.drawText(line, { x: dx, y: ly, size: 7, oblique: true, color: COLOR.empty })
-        ly -= 9
-      }
-      // Acceptance
-      for (const line of acceptanceLines) {
-        r.drawText(line, { x: descX, y: ly, size: 7, color: COLOR.empty })
-        ly -= 9
-      }
-      // Remarks
-      for (const line of remarksLines) {
-        r.drawText(line, { x: descX, y: ly, size: 7.5, oblique: true, color: COLOR.muted })
-        ly -= 10
-      }
-
-      // Response column
+      const descriptionRows = [
+        ...descLines.map(text => ({ text, size: 8.5, oblique: false, color: COLOR.text })),
+        ...enLines.map(text => ({ text, size: 7, oblique: true, color: COLOR.empty })),
+        ...acceptanceLines.map(text => ({ text, size: 7, oblique: false, color: COLOR.empty })),
+        ...remarksLines.map(text => ({ text, size: 7.5, oblique: true, color: COLOR.muted })),
+      ]
+      const respBold = isPassed === true || isPassed === false
+      const responseLines = wrapText(responseText, respBold ? r.fontBold : r.fontRegular, 8.5, COLS.resp.w - 8)
+      const totalLines = Math.max(descriptionRows.length, responseLines.length, 1)
       const respColor = isPassed === true ? COLOR.greenStrong : isPassed === false ? COLOR.red : COLOR.muted
-      const respFont = isPassed !== null ? r.fontBold : r.fontRegular
-      const respTxt = truncateToWidth(responseText, respFont, 8.5, COLS.resp.w - 8)
-      const respW = respFont.widthOfTextAtSize(respTxt, 8.5)
-      r.page.drawText(respTxt, {
-        x: COLS.resp.x + (COLS.resp.w - respW) / 2, y: r.y - 10, size: 8.5, font: respFont, color: respColor,
-      })
-
-      // Result column (PASS/FAIL)
-      const resTxt = isPassed === true ? 'PASS' : isPassed === false ? 'FAIL' : ''
-      if (resTxt) {
-        const resFont = r.fontBold
-        const resW = resFont.widthOfTextAtSize(resTxt, 8.5)
-        const resColor = isPassed === true ? COLOR.greenStrong : COLOR.red
-        r.page.drawText(resTxt, {
-          x: COLS.result.x + (COLS.result.w - resW) / 2, y: r.y - 10, size: 8.5, font: resFont, color: resColor,
-        })
+      // Split a single long item across pages; never truncate its captured value.
+      let offset = 0
+      while (offset < totalLines) {
+        if (r.y - 19 < BOTTOM_LIMIT) { r.newPage(); drawColumnHeaders() }
+        const available = Math.max(1, Math.floor((r.y - BOTTOM_LIMIT - 8) / 11))
+        const count = Math.min(available, totalLines - offset)
+        const height = count * 11 + 8
+        if (isPassed === false) r.drawRect({ x: MARGIN, y: r.y - height, width: CONTENT_W, height, color: COLOR.redBg })
+        r.drawText(item.item_number ?? '', { x: COLS.num.x + 4, y: r.y - 10, size: 8, oblique: true, color: COLOR.empty })
+        if (item.is_critical) r.page.drawCircle({ x: COLS.desc.x + 7, y: r.y - 8, size: 2.5, color: COLOR.red })
+        for (let index = 0; index < count; index++) {
+          const y = r.y - 10 - index * 11
+          const description = descriptionRows[offset + index]
+          if (description) r.drawText(description.text, { x: COLS.desc.x + 4 + (item.is_critical ? 8 : 0), y, size: description.size, oblique: description.oblique, color: description.color })
+          const responseLine = responseLines[offset + index]
+          if (responseLine !== undefined) r.drawText(responseLine, { x: COLS.resp.x + 4, y, size: 8.5, bold: respBold, color: respColor })
+        }
+        if (offset === 0 && respBold) r.drawText(isPassed ? 'PASS' : 'FAIL', { x: COLS.result.x + 4, y: r.y - 10, size: 8.5, bold: true, color: respColor })
+        r.drawHLine(MARGIN, A4_W - MARGIN, r.y - height, 0.3, COLOR.borderLight)
+        r.moveY(height)
+        offset += count
       }
-
-      // Row separator
-      r.drawHLine(MARGIN, A4_W - MARGIN, r.y - rowH, 0.3, COLOR.borderLight)
-      r.moveY(rowH)
     }
   }
 
-  // ─── Signatures ──────────────────────────────────────────────────────────
   r.moveY(12)
-  r.ensureSpace(80)
-  r.drawHLine(MARGIN, A4_W - MARGIN, r.y, 1, COLOR.border)
-  r.moveY(10)
-  r.drawText('SIGNATURES', { x: MARGIN, y: r.y - 9, size: 9, bold: true, color: COLOR.muted })
-  r.moveY(16)
-
-  const sigBoxes = (['executor', 'supervisor', 'client'] as const).map(role => {
-    const sig = itr.itr_signatures.find(s => s.role === role)
-    return {
-      role: role.charAt(0).toUpperCase() + role.slice(1),
-      name: sig?.profiles?.full_name,
-      date: sig?.signed_at?.slice(0, 10),
-    }
-  })
-  r.signatureGrid(sigBoxes, { accentColor: COLOR.purple })
+  await drawItrSignatures(r, itr.itr_signatures)
 
   r.finalizePagePlaceholders()
   return await r.doc.save()

@@ -1,3 +1,5 @@
+import { evaluateItrCompletion, type CompletionItem, type CompletionResponse, type CompletionAttachment } from '../itr/completion'
+
 /**
  * Utilidades puras de la bandeja de salida (Sprint O). Sin imports de Next ni
  * Supabase para poder testearlas en vitest; src/lib/sync/outbox.ts las re-exporta.
@@ -52,20 +54,19 @@ export function outboxPolicy(kind: OutboxKind, attemptsSoFar: number): 'retry' |
 
 export type LocalItrStatus = 'not_started' | 'in_progress' | 'completed' | 'rejected'
 
-/**
- * Calcula progreso y estado con las respuestas locales, igual que el servidor:
- * pct = respuestas / ítems de la plantilla (todos, no solo los visibles);
- * 100 % con algún crítico fallado → rejected, si no → completed.
- * Permite decidir si se puede firmar sin red antes de que el servidor lo sepa.
- */
+/** Shared capture validation; technical acceptance remains a separate gate. */
 export function localItrStatus(
-  items: ReadonlyArray<{ id: string; is_critical: boolean }>,
-  responses: Readonly<Record<string, { is_passed?: boolean | null } | undefined>>,
+  items: ReadonlyArray<CompletionItem & { is_critical: boolean }>,
+  responses: Readonly<Record<string, Partial<CompletionResponse> & { is_passed?: boolean | null } | undefined>>,
+  attachments: readonly CompletionAttachment[] = [],
 ): { pct: number; status: LocalItrStatus } {
-  const total = items.length
-  const done = items.filter(i => responses[i.id] !== undefined).length
-  const pct = total ? Math.round((done / total) * 100) : 0
-  const hasCriticalFail = items.some(i => i.is_critical && responses[i.id]?.is_passed === false)
-  const status: LocalItrStatus = pct === 0 ? 'not_started' : pct < 100 ? 'in_progress' : hasCriticalFail ? 'rejected' : 'completed'
-  return { pct, status }
+  const answers = Object.entries(responses).flatMap(([item_id, response]) => response ? [{
+    item_id, value_text: response.value_text ?? null, value_numeric: response.value_numeric ?? null,
+    value_bool: response.value_bool ?? null, value_option: response.value_option ?? null, remarks: response.remarks ?? null,
+  }] : [])
+  const result = evaluateItrCompletion(items, answers, attachments)
+  const applicable = new Set(result.applicableItemIds)
+  const rejected = result.rejectedItemIds.length > 0 || items.some(item => applicable.has(item.id) && item.is_critical && responses[item.id]?.is_passed === false)
+  const status: LocalItrStatus = rejected ? 'rejected' : result.isComplete ? 'completed' : result.completedCount > 0 ? 'in_progress' : 'not_started'
+  return { pct: result.progressPct, status }
 }

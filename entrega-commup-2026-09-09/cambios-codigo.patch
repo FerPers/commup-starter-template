@@ -1,0 +1,1684 @@
+diff --git a/.gitignore b/.gitignore
+index a1fbfcd..cbac9dd 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -213,3 +213,6 @@ testsprite_tests/tmp/config.json
+ 
+ ### Codex CLI — config con API keys de MCP
+ .codex/
++
++# Local source documents for ITR review
++/insumos-locales/
+diff --git a/src/app/(dashboard)/admin/templates/[templateId]/ImportItemsModal.tsx b/src/app/(dashboard)/admin/templates/[templateId]/ImportItemsModal.tsx
+index acf89cc..ed29634 100644
+--- a/src/app/(dashboard)/admin/templates/[templateId]/ImportItemsModal.tsx
++++ b/src/app/(dashboard)/admin/templates/[templateId]/ImportItemsModal.tsx
+@@ -23,6 +23,7 @@ const TYPE_MAP: Record<string, ItrItemType> = {
+   verificacion: 'checkbox', check: 'checkbox', checkbox: 'checkbox', verificar: 'checkbox',
+   si_no: 'yes_no', 's/n': 'yes_no', yes_no: 'yes_no', 'si/no': 'yes_no', sino: 'yes_no',
+   numero: 'number', number: 'number', 'num': 'number',
++  continuidad: 'continuity', continuity: 'continuity',
+   medicion: 'measurement', measurement: 'measurement', med: 'measurement',
+   texto: 'text', 'texto libre': 'text', text: 'text',
+   foto: 'photo', photo: 'photo',
+diff --git a/src/app/(dashboard)/admin/templates/[templateId]/TemplateItemForm.tsx b/src/app/(dashboard)/admin/templates/[templateId]/TemplateItemForm.tsx
+index 95b6ba2..a852a42 100644
+--- a/src/app/(dashboard)/admin/templates/[templateId]/TemplateItemForm.tsx
++++ b/src/app/(dashboard)/admin/templates/[templateId]/TemplateItemForm.tsx
+@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl'
+ import type { ItrItemType } from '@/types/database'
+ import {
+   ITEM_TYPE_DEFS,
++  normalizeItemType,
+   fieldInput,
+   fieldLabel,
+   type BuilderItem,
+@@ -35,7 +36,7 @@ export default function TemplateItemForm({
+   onCancel: () => void
+ }) {
+   const t = useTranslations('ItrTemplates.builder')
+-  const [form, setForm] = useState<ItemFormValues>(initial)
++  const [form, setForm] = useState<ItemFormValues>(() => normalizeItemType(initial, initial.item_type))
+   const [optionsText, setOptionsText] = useState((initial.options ?? []).join(', '))
+   const [error, setError] = useState<string | null>(null)
+ 
+@@ -68,7 +69,8 @@ export default function TemplateItemForm({
+       }
+     }
+     setError(null)
+-    const err = await onSave({ ...form, options })
++    const option_outcomes = Object.fromEntries(Object.entries(form.option_outcomes ?? {}).filter(([key]) => options?.includes(key)))
++    const err = await onSave({ ...normalizeItemType(form, form.item_type), options, option_outcomes })
+     if (err) setError(err)
+   }
+ 
+@@ -91,7 +93,7 @@ export default function TemplateItemForm({
+           {t('fieldType')}
+           <select
+             value={form.item_type}
+-            onChange={e => setForm(f => ({ ...f, item_type: e.target.value as ItrItemType }))}
++            onChange={e => setForm(f => normalizeItemType(f, e.target.value as ItrItemType))}
+             style={fieldInput}
+           >
+             {ITEM_TYPE_DEFS.map(tp => (
+@@ -126,13 +128,43 @@ export default function TemplateItemForm({
+           {t('fieldSelectOptions')} <span style={{ color: '#ef4444' }}>*</span>
+           <input
+             value={optionsText}
+-            onChange={e => setOptionsText(e.target.value)}
++            onChange={e => {
++              const text = e.target.value
++              setOptionsText(text)
++              const labels = text.split(',').map(s => s.trim()).filter(Boolean)
++              setForm(f => ({ ...f, option_outcomes: Object.fromEntries(Object.entries(f.option_outcomes ?? {}).filter(([key]) => labels.includes(key))) }))
++            }}
+             placeholder="Pass, Fail, N/A"
+             style={fieldInput}
+           />
+         </label>
+       )}
+ 
++      {isSelect && (
++        <div style={{ marginBottom: '14px' }}>
++          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Define el efecto de cada opción. Una selección informativa no implica aceptación ni rechazo. «No aplica» requiere justificación al diligenciar.</p>
++          {[...new Set(optionsText.split(',').map(s => s.trim()).filter(Boolean))].map(label => (
++            <label key={label} style={{ ...fieldLabel, marginBottom: '8px' }}>
++              {label}
++              <select style={fieldInput} value={form.option_outcomes?.[label] ?? ''} onChange={e => {
++                const outcome = e.target.value as 'pass' | 'fail' | 'not_applicable' | ''
++                setForm(f => {
++                  const outcomes = { ...f.option_outcomes }
++                  if (outcome) outcomes[label] = outcome
++                  else delete outcomes[label]
++                  return { ...f, option_outcomes: outcomes }
++                })
++              }}>
++                <option value="">Informativa — sin resultado de aceptación</option>
++                <option value="pass">Aceptación</option>
++                <option value="fail">Rechazo</option>
++                <option value="not_applicable">No aplica — requiere justificación</option>
++              </select>
++            </label>
++          ))}
++        </div>
++      )}
++
+       {isMeasurement && (
+         <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', gap: '10px', marginBottom: '10px' }}>
+           <label style={fieldLabel}>
+@@ -177,7 +209,7 @@ export default function TemplateItemForm({
+ 
+       {/* Flags */}
+       <div style={{ display: 'flex', gap: '16px', marginBottom: '14px', flexWrap: 'wrap' }}>
+-        {FLAGS.map(flag => (
++        {FLAGS.filter(flag => form.item_type !== 'continuity' || flag.key !== 'requires_measurement').map(flag => (
+           <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)' }}>
+             <input
+               type="checkbox"
+diff --git a/src/app/(dashboard)/admin/templates/[templateId]/TemplateSectionCard.tsx b/src/app/(dashboard)/admin/templates/[templateId]/TemplateSectionCard.tsx
+index b9d9d02..2e94731 100644
+--- a/src/app/(dashboard)/admin/templates/[templateId]/TemplateSectionCard.tsx
++++ b/src/app/(dashboard)/admin/templates/[templateId]/TemplateSectionCard.tsx
+@@ -116,6 +116,7 @@ export default function TemplateSectionCard({
+       options: Array.isArray(item.options)
+         ? item.options.filter((o): o is string => typeof o === 'string')
+         : null,
++      option_outcomes: (item.option_outcomes ?? {}) as ItemFormValues['option_outcomes'],
+       condition_item_id: item.condition_item_id,
+       condition_value: item.condition_value,
+     }
+diff --git a/src/app/(dashboard)/admin/templates/[templateId]/page.tsx b/src/app/(dashboard)/admin/templates/[templateId]/page.tsx
+index 62e5249..93e9a5a 100644
+--- a/src/app/(dashboard)/admin/templates/[templateId]/page.tsx
++++ b/src/app/(dashboard)/admin/templates/[templateId]/page.tsx
+@@ -28,7 +28,7 @@ export default async function TemplateBuilderPage({
+           itr_template_items(
+             id, item_number, description, description_es, item_type,
+             is_required, is_critical, requires_photo, requires_measurement,
+-            unit, acceptance_min, acceptance_max, acceptance_text, options, order_index,
++            unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index,
+             condition_item_id, condition_value
+           )
+         )
+diff --git a/src/app/(dashboard)/admin/templates/[templateId]/preview/TemplatePreview.tsx b/src/app/(dashboard)/admin/templates/[templateId]/preview/TemplatePreview.tsx
+index 08e62f7..bc3e07b 100644
+--- a/src/app/(dashboard)/admin/templates/[templateId]/preview/TemplatePreview.tsx
++++ b/src/app/(dashboard)/admin/templates/[templateId]/preview/TemplatePreview.tsx
+@@ -3,7 +3,7 @@
+ import type { Json } from '@/types/supabase.generated'
+ import { useState } from 'react'
+ 
+-type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no'
++type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity'
+ 
+ interface PreviewItem {
+   id: string
+@@ -44,6 +44,7 @@ interface TemplateData {
+ 
+ // ── Item type labels ────────────────────────────────────────────
+ const TYPE_LABEL: Record<ItrItemType, string> = {
++  continuity: 'Continuidad por conductor',
+   checkbox:    'Verificación',
+   yes_no:      'Sí / No',
+   number:      'Número',
+@@ -64,6 +65,8 @@ function ItemControl({ item }: { item: PreviewItem }) {
+     boxSizing: 'border-box', fontFamily: 'inherit',
+   }
+ 
++  if (item.item_type === 'continuity') return <p>Registro por pares o conductores: terminales, resultados, pantallas y lecturas según el procedimiento. Las filas se configuran al ejecutar el ITR.</p>
++
+   if (item.item_type === 'checkbox') {
+     return (
+       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+diff --git a/src/app/(dashboard)/admin/templates/[templateId]/preview/page.tsx b/src/app/(dashboard)/admin/templates/[templateId]/preview/page.tsx
+index de7ba47..0b1aa5f 100644
+--- a/src/app/(dashboard)/admin/templates/[templateId]/preview/page.tsx
++++ b/src/app/(dashboard)/admin/templates/[templateId]/preview/page.tsx
+@@ -25,7 +25,7 @@ export default async function TemplatePreviewPage({
+         itr_template_items(
+           id, item_number, description, description_es, item_type,
+           is_required, is_critical, requires_photo, requires_measurement,
+-          unit, acceptance_min, acceptance_max, acceptance_text, options, order_index
++          unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index
+         )
+       )
+     `)
+diff --git a/src/app/(dashboard)/admin/templates/[templateId]/template-builder-shared.ts b/src/app/(dashboard)/admin/templates/[templateId]/template-builder-shared.ts
+index ed1bad2..5d6ce88 100644
+--- a/src/app/(dashboard)/admin/templates/[templateId]/template-builder-shared.ts
++++ b/src/app/(dashboard)/admin/templates/[templateId]/template-builder-shared.ts
+@@ -22,6 +22,7 @@ export interface BuilderItem {
+   acceptance_max: number | null
+   acceptance_text: string | null
+   options: Json | null
++  option_outcomes: Json
+   order_index: number
+   condition_item_id: string | null
+   condition_value: string | null
+@@ -71,6 +72,7 @@ export const DEFAULT_ITEM: ItemFormValues = {
+   acceptance_max: null,
+   acceptance_text: '',
+   options: null,
++  option_outcomes: {},
+   condition_item_id: null,
+   condition_value: null,
+ }
+@@ -81,6 +83,7 @@ export const ITEM_TYPE_DEFS: ReadonlyArray<{ value: ItrItemType; labelKey: strin
+   { value: 'checkbox',    labelKey: 'itemTypeCheckbox',    color: '#3b82f6' },
+   { value: 'yes_no',      labelKey: 'itemTypeYesNo',       color: '#10b981' },
+   { value: 'number',      labelKey: 'itemTypeNumber',      color: '#f59e0b' },
++  { value: 'continuity', labelKey: 'itemTypeContinuity', color: '#0891b2' },
+   { value: 'measurement', labelKey: 'itemTypeMeasurement', color: '#8b5cf6' },
+   { value: 'text',        labelKey: 'itemTypeText',        color: 'var(--text-muted)' },
+   { value: 'select',      labelKey: 'itemTypeSelect',      color: '#14b8a6' },
+@@ -144,3 +147,7 @@ export const miniBtn: React.CSSProperties = {
+   borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--gray-400)',
+   cursor: 'pointer', fontSize: '10px', padding: 0,
+ }
++
++export function normalizeItemType(form: ItemFormValues, itemType: ItrItemType): ItemFormValues {
++  return { ...form, item_type: itemType, requires_measurement: itemType === 'continuity' ? false : form.requires_measurement }
++}
+diff --git a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItemRow.tsx b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItemRow.tsx
+index a1ed373..659e983 100644
+--- a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItemRow.tsx
++++ b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItemRow.tsx
+@@ -1,7 +1,10 @@
+ 'use client'
+ 
++import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
+ import { useRef } from 'react'
+ import { useTranslations } from 'next-intl'
++import ContinuityCapture from './ContinuityCapture'
++import { evaluateContinuity } from '@/lib/itr/continuity'
+ import MicAppend from './MicAppend'
+ import PhotoUpload from './PhotoUpload'
+ import { computeIsPassed, type Attachment, type Item, type Response, type SaveData } from './types'
+@@ -175,7 +178,7 @@ export default function ItemRow({
+         <select
+           value={response?.value_option ?? ''}
+           disabled={!canEdit}
+-          onChange={e => onSave(item.id, { valueOption: e.target.value || null })}
++          onChange={e => onSave(item.id, { valueOption: e.target.value || null, isPassed: evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, e.target.value).isPassed })}
+           style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit', minWidth: '200px' }}
+         >
+           <option value="">{t('item.selectPlaceholder')}</option>
+@@ -210,11 +213,17 @@ export default function ItemRow({
+         />
+       )}
+ 
++      {item.item_type === 'continuity' && <ContinuityCapture value={response?.value_text ?? null} disabled={!canEdit} onChange={value => {
++        const result = evaluateContinuity(value)
++        onSave(item.id, { valueText: value, isPassed: result.hasFail ? false : result.isComplete ? true : null })
++      }} />}
++
+       {/* Remarks (for measurement + critical items) */}
+-      {(item.is_critical || item.item_type === 'measurement') && (
++      {(item.is_critical || item.item_type === 'measurement' || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, response?.value_option).requiresJustification)) && (
+         <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+           <textarea
+             ref={remarksRef}
++            aria-label={item.item_type === 'select' ? 'Justificación de no aplica' : undefined}
+             rows={1}
+             defaultValue={response?.remarks ?? ''}
+             disabled={!canEdit}
+diff --git a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItrExecution.tsx b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItrExecution.tsx
+index a3c1742..9df0694 100644
+--- a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItrExecution.tsx
++++ b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/ItrExecution.tsx
+@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
+ import { useTranslations, useLocale } from 'next-intl'
+ import { revokeItrApproval } from '@/app/actions/itr-instances'
+ import { uploadOrQueuePhoto, pendingAttachment, pendingSignature, signOrQueue } from '@/lib/sync/outbox'
++import { evaluateItrCompletion } from '@/lib/itr/completion'
+ import { localItrStatus } from '@/lib/sync/outbox-utils'
+ import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
+ import { useItrAutosave } from './useItrAutosave'
+@@ -18,7 +19,7 @@ import ItemRow from './ItemRow'
+ import SignModal from './SignModal'
+ import RevokeModal from './RevokeModal'
+ import CreatePunchModal from './CreatePunchModal'
+-import { isItemVisible, type Attachment, type ItrData, type Signature } from './types'
++import { availableSigningRoles, type Attachment, type ItrData, type Signature } from './types'
+ import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+ 
+ export default function ItrExecution({
+@@ -91,6 +92,10 @@ export default function ItrExecution({
+   // Sprint O: fotos y firmas de este ITR que siguen en la bandeja de salida (sin red).
+   const [pendingPhotos, setPendingPhotos] = useState<Attachment[]>([])
+   const [pendingSignatures, setPendingSignatures] = useState<Signature[]>([])
++  const [justSigned, setJustSigned] = useState<Signature[]>([])
++  useEffect(() => {
++    setJustSigned(previous => previous.filter(local => !itr.itr_signatures.some(saved => saved.role === local.role)))
++  }, [itr.itr_signatures])
+   useEffect(() => {
+     let urls: string[] = []
+     const load = () => {
+@@ -118,8 +123,12 @@ export default function ItrExecution({
+   /** Firmas del servidor + las pendientes de la bandeja (una por rol). */
+   const effectiveSignatures = useMemo<Signature[]>(() => {
+     const roles = new Set(itr.itr_signatures.map(s => s.role))
+-    return [...itr.itr_signatures, ...pendingSignatures.filter(s => !roles.has(s.role))]
+-  }, [itr.itr_signatures, pendingSignatures])
++    return [...itr.itr_signatures, ...[...justSigned, ...pendingSignatures].filter(s => {
++      if (roles.has(s.role)) return false
++      roles.add(s.role)
++      return true
++    })]
++  }, [itr.itr_signatures, pendingSignatures, justSigned])
+ 
+   // Al terminar un replay con envíos, recargar del servidor (fotos y punches reales).
+   const [syncedFlash, setSyncedFlash] = useState(false)
+@@ -184,7 +193,9 @@ export default function ItrExecution({
+     })) ?? []
+ 
+   const allItems = sections.flatMap(s => s.itr_template_items)
+-  const visibleItems = allItems.filter(item => isItemVisible(item, responses))
++  const completion = evaluateItrCompletion(allItems, Object.values(responses), Object.values(attachmentMap).flat())
++  const visibleIds = new Set(completion.applicableItemIds)
++  const visibleItems = allItems.filter(item => visibleIds.has(item.id))
+   const criticalBlocked = visibleItems.filter(
+     item => item.is_critical && responses[item.id]?.is_passed === false,
+   )
+@@ -192,12 +203,18 @@ export default function ItrExecution({
+   const memberIds = useMemo(() => new Set(memberIdList), [memberIdList])
+   // Sprint O: estado calculado en local (espejo del servidor) para poder firmar sin red
+   // antes de que las respuestas encoladas lleguen al servidor.
+-  const localStatus = localItrStatus(allItems, responses).status
+-  const effectiveStatus = itr.status === 'approved' ? 'approved' : (isOffline || pendingCount > 0) ? localStatus : itr.status
++  const localEvaluation = localItrStatus(allItems, responses, [...Object.values(serverAttachments).flat(), ...pendingPhotos])
++  const localStatus = localEvaluation.status
++  const effectiveProgress = itr.status === 'approved' ? itr.progress_pct : localEvaluation.pct
++  const effectiveStatus = itr.status === 'approved' ? 'approved' : localStatus
++  const allowedSignRoles = availableSigningRoles(itr.itr_assignments, effectiveSignatures, currentUserId)
++  const canCapture = canEdit && effectiveSignatures.length === 0 && itr.status !== 'approved'
++  const signingReady = effectiveStatus === 'completed' && allowedSignRoles.length > 0 && !isPending && !saveError && !generalUploading
+ 
+   // ── Sign ────────────────────────────────────────────────────────────
+ 
+   function handleSign(role: 'executor' | 'supervisor' | 'client', signatureImage: string) {
++    if (!signingReady || !allowedSignRoles.includes(role)) return
+     setSignError(null)
+     startModalTransition(async () => {
+       // Sprint O: sin red la firma se encola; al sincronizar viaja después de las respuestas.
+@@ -205,7 +222,10 @@ export default function ItrExecution({
+       if ('error' in res) { setSignError(res.error); return }
+       setShowSignModal(false)
+       if (res.queued) setQueuedNotice('signature')
+-      else router.refresh()
++      else {
++        setJustSigned(previous => [...previous, { id: `confirmed:${role}`, role, user_id: currentUserId, signed_at: new Date().toISOString(), signature_image: signatureImage, profiles: { full_name: executorName ?? '' } }])
++        router.refresh()
++      }
+     })
+   }
+ 
+@@ -217,11 +237,12 @@ export default function ItrExecution({
+       const res = await revokeItrApproval({ itrId: itr.id, projectId, tagId, reason })
+       if (res.error) { setRevokeError(res.error); return }
+       setShowRevokeModal(false)
++      setJustSigned([])
+       router.refresh()
+     })
+   }
+ 
+-  const canRevoke = ['owner', 'admin', 'architect'].includes(currentUserRole) && itr.status === 'approved'
++  const canRevoke = ['owner', 'admin', 'architect'].includes(currentUserRole) && (itr.status === 'approved' || itr.itr_signatures.length > 0)
+ 
+   // ── Punch ────────────────────────────────────────────────────────────
+ 
+@@ -323,10 +344,10 @@ export default function ItrExecution({
+         <div style={{ marginTop: '14px' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--gray-400)', marginBottom: '5px' }}>
+             <span>{t('header.progress')}</span>
+-            <span>{itr.progress_pct}%</span>
++            <span>{effectiveProgress}%</span>
+           </div>
+           <div style={{ height: '6px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
+-            <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '4px', transition: 'width 0.4s' }} />
++            <div style={{ height: '100%', width: `${effectiveProgress}%`, background: effectiveProgress >= 100 ? '#10b981' : '#3b82f6', borderRadius: '4px', transition: 'width 0.4s' }} />
+           </div>
+         </div>
+ 
+@@ -404,12 +425,12 @@ export default function ItrExecution({
+             </div>
+ 
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+-              {section.itr_template_items.filter(item => isItemVisible(item, responses)).map(item => (
++              {section.itr_template_items.filter(item => visibleIds.has(item.id)).map(item => (
+                 <ItemRow
+                   key={item.id}
+                   item={item}
+                   response={responses[item.id] ?? null}
+-                  canEdit={canEdit}
++                  canEdit={canCapture}
+                   onSave={saveResponse}
+                   onAddPunch={openPunchModal}
+                   itrId={itr.id}
+@@ -436,7 +457,7 @@ export default function ItrExecution({
+         style={{ display: 'none' }}
+         onChange={async e => {
+           const file = e.target.files?.[0]
+-          if (!file) return
++          if (!file || !canCapture) return
+           e.target.value = ''
+           setGeneralUploading(true)
+           setGeneralUploadError(null)
+@@ -475,15 +496,15 @@ export default function ItrExecution({
+           </button>
+           <button
+             onClick={() => generalPhotoInputRef.current?.click()}
+-            disabled={!canEdit || generalUploading}
++            disabled={!canCapture || generalUploading}
+             title={generalUploadError ?? t('upload.addPhoto')}
+-            style={{ padding: '9px 16px', background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, borderRadius: '8px', fontSize: '13px', color: generalUploading ? '#3b82f6' : '#15803d', cursor: canEdit && !generalUploading ? 'pointer' : 'not-allowed', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
++            style={{ padding: '9px 16px', background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, borderRadius: '8px', fontSize: '13px', color: generalUploading ? '#3b82f6' : '#15803d', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
+           >
+             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
+           </button>
+           {(() => {
+             const allRolesPending = (['executor', 'supervisor', 'client'] as const).every(r => effectiveSignatures.some(s => s.role === r))
+-            const canSign = canEdit && effectiveStatus === 'completed' && !allRolesPending
++            const canSign = signingReady && !allRolesPending
+             const signTooltip =
+               effectiveStatus === 'approved' || allRolesPending ? t('footer.signTooltipApproved')
+               : effectiveStatus === 'rejected' ? t('footer.signTooltipRejected')
+@@ -539,6 +560,8 @@ export default function ItrExecution({
+         <SignModal
+           itrNumber={itr.itr_number}
+           itrSignatures={effectiveSignatures}
++          allowedRoles={allowedSignRoles}
++          ready={signingReady}
+           criticalBlocked={criticalBlocked}
+           isPending={isModalPending}
+           signError={signError}
+diff --git a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/SignModal.tsx b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/SignModal.tsx
+index 5c095b8..e9d7cd7 100644
+--- a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/SignModal.tsx
++++ b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/SignModal.tsx
+@@ -2,13 +2,15 @@
+ 
+ import { useState, useEffect, useRef } from 'react'
+ import { useTranslations } from 'next-intl'
+-import type { Item, Signature } from './types'
++import type { Item, Signature, SigningRole } from './types'
+ 
+ // ── Sign Modal (canvas drawing pad) ──────────────────────────────────
+ 
+ export default function SignModal({
+   itrNumber,
+   itrSignatures,
++  allowedRoles,
++  ready,
+   criticalBlocked,
+   isPending,
+   signError,
+@@ -17,6 +19,8 @@ export default function SignModal({
+ }: {
+   itrNumber: string
+   itrSignatures: Signature[]
++  allowedRoles: SigningRole[]
++  ready: boolean
+   criticalBlocked: Item[]
+   isPending: boolean
+   signError: string | null
+@@ -25,8 +29,7 @@ export default function SignModal({
+ }) {
+   const t = useTranslations('ItrExecution')
+   const [signRole, setSignRole] = useState<'executor' | 'supervisor' | 'client'>(() => {
+-    const roles = ['executor', 'supervisor', 'client'] as const
+-    return roles.find(r => !itrSignatures.some(s => s.role === r)) ?? 'executor'
++    return allowedRoles[0] ?? 'executor'
+   })
+   const canvasRef = useRef<HTMLCanvasElement>(null)
+   const [isDrawing, setIsDrawing] = useState(false)
+@@ -87,7 +90,8 @@ export default function SignModal({
+     setHasDrawn(false)
+   }
+ 
+-  const blocked = signRole === 'executor' && criticalBlocked.length > 0
++  const blocked = criticalBlocked.length > 0
++  const cannotSign = !ready || !allowedRoles.includes(signRole) || isPending || blocked || !hasDrawn
+ 
+   return (
+     <div
+@@ -107,8 +111,8 @@ export default function SignModal({
+               return (
+                 <button
+                   key={role}
+-                  onClick={() => !alreadySigned && setSignRole(role)}
+-                  disabled={alreadySigned}
++                  onClick={() => allowedRoles.includes(role) && setSignRole(role)}
++                  disabled={alreadySigned || !allowedRoles.includes(role)}
+                   style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? '#7c3aed' : 'var(--border)', background: alreadySigned ? 'var(--gray-50)' : signRole === role ? '#f5f3ff' : 'var(--card-bg)', color: alreadySigned ? 'var(--gray-400)' : signRole === role ? '#7c3aed' : '#374151', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
+                 >
+                   {alreadySigned ? '✓ ' : ''}{t(`roles.${role}` as Parameters<typeof t>[0])}
+@@ -168,9 +172,9 @@ export default function SignModal({
+             {t('signModal.cancel')}
+           </button>
+           <button
+-            onClick={() => onSign(signRole, canvasRef.current!.toDataURL('image/png'))}
+-            disabled={isPending || blocked || !hasDrawn}
+-            style={{ padding: '9px 20px', background: isPending || blocked || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending || blocked || !hasDrawn ? 'not-allowed' : 'pointer' }}
++            onClick={() => { if (!cannotSign) onSign(signRole, canvasRef.current!.toDataURL('image/png')) }}
++            disabled={cannotSign}
++            style={{ padding: '9px 20px', background: cannotSign ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: cannotSign ? 'not-allowed' : 'pointer' }}
+           >
+             {isPending ? t('signModal.signing') : t('signModal.confirm')}
+           </button>
+diff --git a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/page.tsx b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/page.tsx
+index 1ce8183..304ef6b 100644
+--- a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/page.tsx
++++ b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/page.tsx
+@@ -27,7 +27,7 @@ export default async function ItrExecutionPage({
+             id, item_number, description, description_es, item_type,
+             is_critical, is_required, requires_photo, requires_measurement,
+             acceptance_min, acceptance_max, acceptance_text,
+-            unit, options, order_index,
++            unit, options, option_outcomes, order_index,
+             condition_item_id, condition_value
+           )
+         )
+diff --git a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/pdf/route.ts b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/pdf/route.ts
+index d3367db..22b6202 100644
+--- a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/pdf/route.ts
++++ b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/pdf/route.ts
+@@ -63,6 +63,7 @@ export async function GET(
+       itr_signatures (
+         role,
+         signed_at,
++        signature_image,
+         profiles ( full_name )
+       ),
+       tags ( tag_number, description ),
+diff --git a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/types.ts b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/types.ts
+index 394ac18..26fe9c6 100644
+--- a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/types.ts
++++ b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/types.ts
+@@ -3,7 +3,7 @@
+ 
+ import type { Json } from '@/types/supabase.generated'
+ 
+-export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no'
++export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity'
+ 
+ export type Item = {
+   id: string
+@@ -19,6 +19,7 @@ export type Item = {
+   acceptance_max: number | null
+   acceptance_text: string | null
+   unit: string | null
++  option_outcomes?: Json
+   options: Json
+   order_index: number
+   condition_item_id: string | null
+@@ -108,12 +109,23 @@ export function computeIsPassed(value: number, min: number | null, max: number |
+   return true
+ }
+ 
+-export function isItemVisible(item: Item, responses: Record<string, Response>): boolean {
+-  if (!item.condition_item_id) return true
+-  const condResp = responses[item.condition_item_id]
+-  if (!condResp) return false
+-  const actual = String(
+-    condResp.value_bool ?? condResp.value_option ?? condResp.value_text ?? condResp.value_numeric ?? '',
+-  )
+-  return actual === item.condition_value
++export type SigningRole = 'executor' | 'supervisor' | 'client'
++
++/** UI gate only; the server independently verifies assignment, order and content. */
++export function availableSigningRoles(
++  assignments: readonly { role: string; user_id: string }[],
++  signatures: readonly { role: string; user_id: string }[],
++  userId: string,
++): SigningRole[] {
++  for (const role of ['executor', 'supervisor', 'client'] as const) {
++    const assigned = assignments.filter(a => a.role === role)
++    const signed = signatures.filter(s => s.role === role)
++    if (assigned.length !== 1 || signed.length > 1) return []
++    if (signed.length === 1) {
++      if (signed[0].user_id !== assigned[0].user_id) return []
++      continue
++    }
++    return assigned[0].user_id === userId ? [role] : []
++  }
++  return []
+ }
+diff --git a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/useItrAutosave.ts b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/useItrAutosave.ts
+index 89f6ce5..571b9d0 100644
+--- a/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/useItrAutosave.ts
++++ b/src/app/(dashboard)/projects/[id]/tags/[tagId]/itrs/[itrId]/useItrAutosave.ts
+@@ -14,7 +14,8 @@ export function useItrAutosave(itr: ItrData) {
+   const [isPending, startTransition] = useTransition()
+   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+   const [saveError, setSaveError] = useState<string | null>(null)
+-  const savingRef = useRef(false)
++  const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
++  const pendingSavesRef = useRef(0)
+ 
+   const { isOffline, pendingCount, syncing, saveWithQueue } = useOfflineSync(itr.id, itr.template_id)
+ 
+@@ -36,6 +37,7 @@ export function useItrAutosave(itr: ItrData) {
+     return map
+   })
+   useEffect(() => {
++    if (pendingSavesRef.current > 0) return
+     const map: Record<string, Response> = {}
+     for (const r of itr.itr_responses) map[r.item_id] = r
+     setResponses(map)
+@@ -56,16 +58,25 @@ export function useItrAutosave(itr: ItrData) {
+       ...prev,
+       [itemId]: { ...(prev[itemId] ?? { id: '', item_id: itemId, responded_at: null }), ...patch },
+     }))
+-    if (savingRef.current) return
+-    savingRef.current = true
+-    startTransition(async () => {
+-      const res = await saveWithQueue(itemId, data)
+-      savingRef.current = false
+-      if (res.queued) { return }           // offline — optimistic UI already set
+-      if (res.error) { setSaveError(res.error); return }
+-      setLastSaved(new Date())
+-      router.refresh()
++    // Preserve every edit, including another field changed during an in-flight save.
++    // Refresh only after the queue drains, so earlier server snapshots do not erase
++    // optimistic edits that have not reached the server yet.
++    pendingSavesRef.current += 1
++    const task = saveQueueRef.current.then(async () => {
++      let savedOnline = false
++      try {
++        const res = await saveWithQueue(itemId, data)
++        if (res.error) { setSaveError(res.error); return }
++        if (!res.queued) { savedOnline = true; setLastSaved(new Date()) }
++      } catch (error) {
++        setSaveError(error instanceof Error ? error.message : 'No se pudo guardar la respuesta')
++      } finally {
++        pendingSavesRef.current -= 1
++        if (pendingSavesRef.current === 0 && savedOnline) router.refresh()
++      }
+     })
++    saveQueueRef.current = task
++    startTransition(async () => { await task })
+   }, [saveWithQueue, router])
+ 
+   return { responses, saveResponse, lastSaved, saveError, isPending, isOffline, pendingCount, syncing }
+diff --git a/src/app/actions/itr-instances.ts b/src/app/actions/itr-instances.ts
+index 622f580..ef18e3a 100644
+--- a/src/app/actions/itr-instances.ts
++++ b/src/app/actions/itr-instances.ts
+@@ -1,10 +1,13 @@
+ 'use server'
+ 
++import { evaluateContinuity } from '@/lib/itr/continuity'
++import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
+ import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
+ import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
++import { checkProjectAccess } from '@/lib/auth/access'
++import { evaluateItrCompletion } from '@/lib/itr/completion'
+ import { createAdminClient } from '@/lib/supabase/admin'
+ import { revalidatePath } from 'next/cache'
+-import { logActivity } from '@/lib/log-activity'
+ import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
+ import type { TablesInsert, TablesUpdate } from '@/types/supabase.generated'
+ 
+@@ -150,19 +153,41 @@ export const upsertResponse = withAuth(
+       isPassed?: boolean | null
+     },
+   ): Promise<{ error?: string }> => {
+-    const { itrId, itemId, templateId } = input
++    const { itrId, itemId } = input
+ 
+     // Guard: ITR aprobado es inmutable. Sin este chequeo, upsertResponse recalcula
+     // status al final y pisaría 'approved' con 'in_progress'/'completed' (bug ses15).
+-    const { data: itrRow } = await ctx.supabase
++    const { data: itrRow, error: itrReadError } = await ctx.supabase
+       .from('itrs')
+-      .select('status')
++      .select('status, template_id, project_id')
+       .eq('id', itrId)
+       .single()
+-    if (itrRow?.status === 'approved') {
++    if (itrReadError || !itrRow) return { error: 'ITR no encontrado o no accesible' }
++    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
++    if (!access.ok) return { error: access.error }
++    const templateId = itrRow.template_id
++    if (input.templateId !== templateId) {
++      return { error: 'La revisión indicada no corresponde a este ITR' }
++    }
++    if (itrRow.status === 'approved') {
+       return { error: 'Este ITR ya está aprobado y no puede modificarse' }
+     }
+ 
++    const { data: signedRows, error: signatureReadError } = await ctx.supabase
++      .from('itr_signatures').select('id').eq('itr_id', itrId).limit(1)
++    if (signatureReadError || !signedRows) return { error: 'No se pudo comprobar si el ITR está firmado' }
++    if (signedRows.length > 0) return { error: 'Este ITR tiene firmas. Debe reabrirse con motivo antes de modificarlo' }
++
++    // Resolve the item independently of the supplied template reference.
++    const { data: item, error: itemReadError } = await ctx.supabase
++      .from('itr_template_items')
++      .select('template_id, item_type, acceptance_min, acceptance_max, options, option_outcomes')
++      .eq('id', itemId)
++      .single()
++    if (itemReadError || !item || item.template_id !== templateId) {
++      return { error: 'La casilla no pertenece a la revisión de este ITR o no está disponible' }
++    }
++
+     // Build patch with only the fields explicitly provided.
+     const patch: TablesUpdate<'itr_responses'> = {
+       responded_at: new Date().toISOString(),
+@@ -178,11 +203,6 @@ export const upsertResponse = withAuth(
+     // Defensive: if a numeric value is being set on a measurement item with
+     // acceptance bounds, recompute is_passed server-side regardless of client.
+     if ('valueNumeric' in input && input.valueNumeric !== null && input.valueNumeric !== undefined) {
+-      const { data: item } = await ctx.supabase
+-        .from('itr_template_items')
+-        .select('item_type, acceptance_min, acceptance_max')
+-        .eq('id', itemId)
+-        .single()
+       if (item?.item_type === 'measurement' && (item.acceptance_min !== null || item.acceptance_max !== null)) {
+         const v = input.valueNumeric
+         const minOk = item.acceptance_min === null || v >= Number(item.acceptance_min)
+@@ -193,13 +213,27 @@ export const upsertResponse = withAuth(
+ 
+     // UPDATE if response exists, INSERT otherwise. We don't use upsert because
+     // upsert with partial fields would null-out the missing columns.
+-    const { data: existing } = await ctx.supabase
++    const { data: existing, error: existingReadError } = await ctx.supabase
+       .from('itr_responses')
+-      .select('id')
++      .select('id, value_option, value_text')
+       .eq('itr_id', itrId)
+       .eq('item_id', itemId)
+       .maybeSingle()
+ 
++    if (existingReadError) return { error: 'No se pudo comprobar la respuesta existente' }
++    if (item.item_type === 'continuity') {
++      const result = evaluateContinuity('valueText' in input ? input.valueText : existing?.value_text)
++      if (!result.data) return { error: 'La estructura por conductores no es válida' }
++      patch.is_passed = result.hasFail ? false : result.isComplete ? true : null
++    }
++    if (item.item_type === 'select') {
++      const selected = 'valueOption' in input ? input.valueOption : existing?.value_option
++      if (selected != null && (!Array.isArray(item.options) || !item.options.includes(selected))) {
++        return { error: 'La opción no pertenece a esta casilla' }
++      }
++      patch.is_passed = evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, selected).isPassed
++    }
++
+     if (existing) {
+       const { error } = await ctx.supabase
+         .from('itr_responses')
+@@ -213,45 +247,33 @@ export const upsertResponse = withAuth(
+       if (error) return { error: error.message }
+     }
+ 
+-    // Recalculate progress + status (with rejected-on-critical-fail logic).
+-    const [
+-      { count: totalItems },
+-      { count: doneItems },
+-      { data: criticalFails },
+-    ] = await Promise.all([
+-      ctx.supabase
+-        .from('itr_template_items')
+-        .select('*', { count: 'exact', head: true })
+-        .eq('template_id', templateId),
+-      ctx.supabase
+-        .from('itr_responses')
+-        .select('*', { count: 'exact', head: true })
+-        .eq('itr_id', itrId),
+-      ctx.supabase
+-        .from('itr_responses')
+-        .select('item_id, itr_template_items!inner(is_critical)')
+-        .eq('itr_id', itrId)
+-        .eq('is_passed', false)
+-        .eq('itr_template_items.is_critical', true)
+-        .limit(1),
++    // Evaluate the assigned revision's applicable content, not response-row counts.
++    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
++      ctx.supabase.from('itr_template_items').select('*').eq('template_id', templateId),
++      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
++      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
+     ])
+-
+-    const pct = totalItems ? Math.round(((doneItems ?? 0) / totalItems) * 100) : 0
+-    const hasCriticalFail = (criticalFails?.length ?? 0) > 0
+-
+-    let newStatus: 'not_started' | 'in_progress' | 'completed' | 'rejected'
+-    if (pct === 0) newStatus = 'not_started'
+-    else if (pct < 100) newStatus = 'in_progress'
+-    else newStatus = hasCriticalFail ? 'rejected' : 'completed'
+-
+-    await ctx.supabase
++    if (itemsResult.error || responsesResult.error || attachmentsResult.error
++      || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
++      return { error: 'La respuesta se guardó, pero no se pudo comprobar el avance del ITR' }
++    }
++    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
++    const applicableIds = new Set(completion.applicableItemIds)
++    const criticalIds = new Set(itemsResult.data.filter(item => item.is_critical && applicableIds.has(item.id)).map(item => item.id))
++    const hasCriticalFail = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => criticalIds.has(response.item_id) && response.is_passed === false)
++    const newStatus = hasCriticalFail ? 'rejected'
++      : completion.isComplete ? 'completed'
++        : completion.completedCount > 0 ? 'in_progress' : 'not_started'
++
++    const { error: progressError } = await ctx.supabase
+       .from('itrs')
+       .update({
+-        progress_pct: pct,
++        progress_pct: completion.progressPct,
+         status: newStatus,
+-        completed_date: pct >= 100 ? new Date().toISOString() : null,
++        completed_date: completion.isComplete && !hasCriticalFail ? new Date().toISOString() : null,
+       })
+       .eq('id', itrId)
++    if (progressError) return { error: 'La respuesta se guardó, pero no se pudo actualizar el avance del ITR' }
+ 
+     return {}
+   },
+@@ -276,6 +298,24 @@ export const saveItrAttachment = withAuth(
+   ): Promise<{ id?: string; error?: string }> => {
+     const { itrId, itemId, storagePath, fileType, latitude, longitude, projectId, tagId } = input
+ 
++    const { data: itr, error: itrError } = await ctx.supabase.from('itrs')
++      .select('template_id, project_id, tag_id, status').eq('id', itrId).single()
++    if (itrError || !itr) return { error: 'ITR no encontrado' }
++    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itr.project_id)
++    if (!access.ok) return { error: access.error }
++    if (itr.project_id !== projectId || itr.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
++    if (itr.status === 'approved') return { error: 'El ITR aprobado no puede modificarse' }
++    const { data: signatures, error: signatureError } = await ctx.supabase.from('itr_signatures').select('id').eq('itr_id', itrId)
++    if (signatureError || !signatures) return { error: 'No se pudieron verificar las firmas' }
++    if (signatures.length > 0) return { error: 'El ITR tiene firmas; requiere reapertura antes de modificar evidencias' }
++
++    if (itemId) {
++      const { data: item, error: itemError } = await ctx.supabase.from('itr_template_items')
++        .select('id').eq('id', itemId).eq('template_id', itr.template_id).maybeSingle()
++      if (itemError || !item) return { error: 'El ítem no pertenece a la plantilla del ITR' }
++    }
++    if (!storagePath.trim() || !fileType.trim()) return { error: 'Falta la referencia o tipo de evidencia' }
++
+     const { data, error } = await ctx.supabase
+       .from('itr_attachments')
+       .insert({
+@@ -293,6 +333,24 @@ export const saveItrAttachment = withAuth(
+ 
+     if (error) return { error: error.message }
+ 
++    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
++      ctx.supabase.from('itr_template_items').select('*').eq('template_id', itr.template_id),
++      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
++      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
++    ])
++    if (itemsResult.error || responsesResult.error || attachmentsResult.error || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
++      return { error: 'La evidencia cambió, pero no se pudo recalcular el avance; vuelve a intentarlo' }
++    }
++    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
++    const applicable = new Set(completion.applicableItemIds)
++    const critical = new Set(itemsResult.data.filter(item => item.is_critical && applicable.has(item.id)).map(item => item.id))
++    const rejected = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => critical.has(response.item_id) && response.is_passed === false)
++    const { error: progressError } = await ctx.supabase.from('itrs').update({
++      progress_pct: completion.progressPct,
++      status: rejected ? 'rejected' : completion.isComplete ? 'completed' : 'in_progress',
++    }).eq('id', itrId)
++    if (progressError) return { error: 'La evidencia cambió, pero no se pudo guardar el avance actualizado' }
++
+     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
+     return { id: data.id }
+   },
+@@ -312,21 +370,52 @@ export const deleteItrAttachment = withAuth(
+       itrId: string
+     },
+   ): Promise<{ error?: string }> => {
+-    const { attachmentId, storagePath, projectId, tagId, itrId } = input
+-
+-    // Delete from storage
+-    const { error: storageError } = await ctx.supabase.storage
+-      .from('itr-attachments')
+-      .remove([storagePath])
+-    if (storageError) return { error: storageError.message }
+-
+-    // Delete DB record
++    const { attachmentId, projectId, tagId, itrId } = input
++
++    const { data: itr, error: itrError } = await ctx.supabase.from('itrs')
++      .select('template_id, project_id, tag_id, status').eq('id', itrId).single()
++    if (itrError || !itr) return { error: 'ITR no encontrado' }
++    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itr.project_id)
++    if (!access.ok) return { error: access.error }
++    if (itr.project_id !== projectId || itr.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
++    if (itr.status === 'approved') return { error: 'El ITR aprobado no puede modificarse' }
++    const { data: signatures, error: signatureError } = await ctx.supabase.from('itr_signatures').select('id').eq('itr_id', itrId)
++    if (signatureError || !signatures) return { error: 'No se pudieron verificar las firmas' }
++    if (signatures.length > 0) return { error: 'El ITR tiene firmas; requiere reapertura antes de modificar evidencias' }
++
++    const { data: attachment, error: attachmentError } = await ctx.supabase.from('itr_attachments')
++      .select('id, file_url').eq('id', attachmentId).eq('itr_id', itrId).single()
++    if (attachmentError || !attachment) return { error: 'El adjunto no pertenece al ITR' }
++
++    // Unlink metadata only. Evidence binaries are immutable: deleting the object
++    // before this guarded write could destroy signed evidence during a race.
++    // Unreferenced objects remain until a separate, retention-aware GC exists;
++    // do not bypass the storage policy with a service-role removal here.
+     const { error } = await ctx.supabase
+       .from('itr_attachments')
+       .delete()
+       .eq('id', attachmentId)
++      .eq('itr_id', itrId)
+     if (error) return { error: error.message }
+ 
++    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
++      ctx.supabase.from('itr_template_items').select('*').eq('template_id', itr.template_id),
++      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
++      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
++    ])
++    if (itemsResult.error || responsesResult.error || attachmentsResult.error || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
++      return { error: 'La evidencia cambió, pero no se pudo recalcular el avance; vuelve a intentarlo' }
++    }
++    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
++    const applicable = new Set(completion.applicableItemIds)
++    const critical = new Set(itemsResult.data.filter(item => item.is_critical && applicable.has(item.id)).map(item => item.id))
++    const rejected = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => critical.has(response.item_id) && response.is_passed === false)
++    const { error: progressError } = await ctx.supabase.from('itrs').update({
++      progress_pct: completion.progressPct,
++      status: rejected ? 'rejected' : completion.isComplete ? 'completed' : 'in_progress',
++    }).eq('id', itrId)
++    if (progressError) return { error: 'La evidencia cambió, pero no se pudo guardar el avance actualizado' }
++
+     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
+     return {}
+   },
+@@ -344,63 +433,20 @@ export const signItr = withAuthOnly(
+     tagId: string,
+     signatureImage?: string | null,
+   ): Promise<{ error?: string }> => {
+-    // Guard autoritativo: solo se puede firmar un ITR completado (100% y sin críticos fallados).
+-    // Bloquea not_started/in_progress/rejected (re-ejecutar para volver a completed) y approved (ya tiene 3 firmas).
+-    const { data: itrRow } = await ctx.supabase
+-      .from('itrs')
+-      .select('status, progress_pct')
+-      .eq('id', itrId)
+-      .single()
+-
+-    if (!itrRow) return { error: 'ITR no encontrado' }
+-    if (itrRow.status === 'approved') return { error: 'El ITR ya está aprobado' }
+-    if (itrRow.status === 'rejected') {
+-      return { error: 'No se puede firmar un ITR rechazado. Corrige los ítems críticos para que pase a "completado".' }
+-    }
+-    if (itrRow.status !== 'completed' || (itrRow.progress_pct ?? 0) < 100) {
+-      return { error: 'No se puede firmar: el ITR no está completo. Responde todos los ítems antes de firmar.' }
+-    }
+-
+-    const { data: existing } = await ctx.supabase
+-      .from('itr_signatures')
+-      .select('id')
+-      .eq('itr_id', itrId)
+-      .eq('role', role)
+-      .maybeSingle()
+-
+-    if (existing) return { error: `Ya firmado como ${role}` }
+-
+-    const { error } = await ctx.supabase
+-      .from('itr_signatures')
+-      .insert({ itr_id: itrId, user_id: ctx.userId, role, signature_image: signatureImage ?? null })
+-
++    const { data: itrRow, error: itrError } = await ctx.supabase.from('itrs')
++      .select('project_id, tag_id').eq('id', itrId).single()
++    if (itrError || !itrRow) return { error: 'ITR no encontrado' }
++    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
++    if (!access.ok) return { error: access.error }
++    if (itrRow.project_id !== projectId || itrRow.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
++    if (!(['executor', 'supervisor', 'client'] as const).includes(role)) return { error: 'Rol de firma no válido' }
++
++    // Database transaction owns content validation, assignment order, audit and approval.
++    const { error } = await ctx.supabase.rpc('sign_itr_atomic', {
++      p_itr_id: itrId, p_role: role, p_signature_image: signatureImage ?? null,
++    })
+     if (error) return { error: error.message }
+ 
+-    // Check if all 3 roles signed → approved
+-    const { count } = await ctx.supabase
+-      .from('itr_signatures')
+-      .select('*', { count: 'exact', head: true })
+-      .eq('itr_id', itrId)
+-
+-    if ((count ?? 0) >= 3) {
+-      await ctx.supabase.from('itrs').update({ status: 'approved' }).eq('id', itrId)
+-      // Auto-complete any work plan items that reference this ITR
+-      await ctx.supabase
+-        .from('work_plan_items')
+-        .update({ status: 'completed' })
+-        .eq('itr_id', itrId)
+-        .in('status', ['not_started', 'in_progress'])
+-
+-      await logActivity(ctx.supabase, {
+-        orgId: ctx.orgId,
+-        userId: ctx.userId,
+-        entityType: 'itr',
+-        entityId: itrId,
+-        action: 'approved',
+-        payload: { projectId, tagId, signingRole: role },
+-      })
+-    }
+-
+     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
+     revalidatePath(`/projects/${projectId}/tags/${tagId}`)
+     revalidatePath(`/projects/${projectId}/itrs`)
+@@ -431,58 +477,24 @@ export const revokeItrApproval = withAuth(
+ 
+     const { itrId, projectId, tagId } = input
+ 
+-    const { data: itrRow } = await ctx.supabase
+-      .from('itrs')
+-      .select('id, status, itr_number, project_id')
+-      .eq('id', itrId)
+-      .single()
+-
+-    if (!itrRow) return { error: 'ITR no encontrado' }
+-    if (itrRow.project_id !== projectId) return { error: 'ITR no pertenece al proyecto' }
+-    if (itrRow.status !== 'approved') {
+-      return { error: 'Solo se pueden revocar ITRs aprobados' }
++    const { data: itrRow, error: itrReadError } = await ctx.supabase.from('itrs')
++      .select('project_id, tag_id').eq('id', itrId).single()
++    if (itrReadError || !itrRow) return { error: 'ITR no encontrado' }
++    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
++    if (!access.ok) return { error: access.error }
++    if (itrRow.project_id !== projectId || itrRow.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
++    const { data, error } = await ctx.supabase.rpc('reopen_itr_atomic', { p_itr_id: itrId, p_reason: reason })
++    if (error) return { error: error.message }
++    if (!data || typeof data !== 'object' || Array.isArray(data)
++      || typeof data.revoked_count !== 'number' || !Array.isArray(data.previous_signatures)) {
++      return { error: 'La reapertura respondió sin detalle verificable; actualiza el ITR antes de continuar' }
+     }
+-
+-    // Snapshot current signatures so we can build notifications + audit payload.
+-    const { data: signatures } = await ctx.supabase
+-      .from('itr_signatures')
+-      .select('id, user_id, role, signed_at')
+-      .eq('itr_id', itrId)
+-
+-    const signers = signatures ?? []
+-
+-    // Drop signatures (UNIQUE(itr_id, role) won't conflict on re-sign later).
+-    const { error: delErr } = await ctx.supabase
+-      .from('itr_signatures')
+-      .delete()
+-      .eq('itr_id', itrId)
+-    if (delErr) return { error: delErr.message }
+-
+-    // Downgrade status. Responses stay intact; status drops to completed because
+-    // the ITR was at 100% to ever be approved.
+-    const { error: updErr } = await ctx.supabase
+-      .from('itrs')
+-      .update({ status: 'completed' })
+-      .eq('id', itrId)
+-    if (updErr) return { error: updErr.message }
+-
+-    await logActivity(ctx.supabase, {
+-      orgId: ctx.orgId,
+-      userId: ctx.userId,
+-      entityType: 'itr',
+-      entityId: itrId,
+-      action: 'revoked',
+-      payload: {
+-        projectId,
+-        tagId,
+-        reason,
+-        previousSignatures: signers.map(s => ({
+-          userId: s.user_id,
+-          role: s.role,
+-          signedAt: s.signed_at,
+-        })),
+-      },
+-    })
++    const revokedCount = data.revoked_count
++    const itrNumber = typeof data.itr_number === 'string' ? data.itr_number : ''
++    const signers = data.previous_signatures.flatMap(signature =>
++      signature && typeof signature === 'object' && !Array.isArray(signature) && typeof signature.user_id === 'string'
++        ? [{ user_id: signature.user_id }] : [],
++    )
+ 
+     // Notify each signer (dedupe by user — a user could in theory have signed
+     // more than one role, though UNIQUE(itr_id, role) and one-user-per-cert
+@@ -496,21 +508,26 @@ export const revokeItrApproval = withAuth(
+         org_id: ctx.orgId,
+         recipient_user_id: uid,
+         kind: 'itr_signature_revoked',
+-        title: `Tu firma en el ITR ${itrRow.itr_number} fue revocada`,
++        title: `Tu firma en el ITR ${itrNumber} fue revocada`,
+         body: reason,
+         link_url: `/projects/${projectId}/tags/${tagId}/itrs/${itrId}`,
+-        payload: { itrId, projectId, tagId, itrNumber: itrRow.itr_number, reason },
++        payload: { itrId, projectId, tagId, itrNumber: itrNumber, reason },
+       }))
+       // Admin client: notifications are fire-and-forget and the user's RLS
+       // context can't INSERT rows for other recipients across orgs.
+-      const admin = createAdminClient()
+-      const { error: notifErr } = await admin.from('notifications').insert(rows)
+-      if (notifErr) console.error('[notifications.insert]', notifErr)
++      try {
++        const admin = createAdminClient()
++        const { error: notifErr } = await admin.from('notifications').insert(rows)
++        if (notifErr) console.error('[notifications.insert]', notifErr)
++      } catch (notificationError) {
++        // The transaction already succeeded; a notification failure must not invite a second revocation.
++        console.error('[notifications.insert]', notificationError)
++      }
+     }
+ 
+     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
+     revalidatePath(`/projects/${projectId}/tags/${tagId}`)
+     revalidatePath(`/projects/${projectId}/itrs`)
+-    return { revokedCount: signers.length }
++    return { revokedCount }
+   },
+ )
+diff --git a/src/app/actions/itr-templates.ts b/src/app/actions/itr-templates.ts
+index d77562e..e132b71 100644
+--- a/src/app/actions/itr-templates.ts
++++ b/src/app/actions/itr-templates.ts
+@@ -6,6 +6,7 @@ import type { Database } from '@/types/supabase.generated'
+ import { EDITOR_ROLES } from '@/lib/auth/permissions'
+ import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
+ import { revalidatePath } from 'next/cache'
++import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
+ import { detectItrPhase } from '@/lib/utils'
+ import type { Enums } from '@/types/supabase.generated'
+ 
+@@ -154,6 +155,7 @@ export interface ItemPayload {
+   acceptance_max?: number | null
+   acceptance_text?: string | null
+   options?: string[] | null
++  option_outcomes?: Record<string, 'pass' | 'fail' | 'not_applicable'>
+   order_index: number
+   condition_item_id?: string | null
+   condition_value?: string | null
+@@ -172,6 +174,8 @@ export const createItem = withAuthOnly(
+     data: ItemPayload,
+   ): Promise<{ id?: string; error?: string }> => {
+     if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
++    if (!validateOptionOutcomes(data.options ?? null, data.option_outcomes ?? {})) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
++    if (data.item_type !== 'select' && Object.keys(data.option_outcomes ?? {}).length) return { error: 'Solo las listas admiten resultados por opción' }
+     const { data: item, error } = await ctx.supabase
+       .from('itr_template_items')
+       .insert({ ...data, section_id: sectionId, template_id: templateId })
+@@ -186,7 +190,14 @@ export const createItem = withAuthOnly(
+ export const updateItem = withAuthOnly(
+   { role: EDITOR_ROLES },
+   async (ctx, itemId: string, data: Partial<ItemPayload>): Promise<{ error?: string }> => {
+-    if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
++    const { data: current, error: readError } = await ctx.supabase.from('itr_template_items')
++      .select('item_type, options, option_outcomes').eq('id', itemId).single()
++    if (readError || !current) return { error: 'Ítem no encontrado o sin acceso' }
++    const merged = { ...current, ...data }
++    if (merged.item_type === 'select' && !(Array.isArray(merged.options) && merged.options.length)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
++    const outcomes = data.option_outcomes ?? current.option_outcomes ?? {}
++    if (!validateOptionOutcomes(merged.options, outcomes)) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
++    if (merged.item_type !== 'select' && Object.keys(outcomes).length) return { error: 'Solo las listas admiten resultados por opción' }
+     const { error } = await ctx.supabase
+       .from('itr_template_items')
+       .update(data)
+@@ -242,7 +253,7 @@ export const publishTemplateVersion = withAuthOnly(
+           itr_template_items(
+             id, item_number, description, description_es, item_type,
+             is_required, is_critical, requires_photo, requires_measurement,
+-            unit, acceptance_min, acceptance_max, acceptance_text, options, order_index,
++            unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index,
+             condition_item_id, condition_value
+           )
+         )
+@@ -339,6 +350,7 @@ export const publishTemplateVersion = withAuthOnly(
+         acceptance_max: it.acceptance_max,
+         acceptance_text: it.acceptance_text,
+         options: it.options,
++        option_outcomes: it.option_outcomes,
+         order_index: it.order_index,
+         condition_value: it.condition_value,
+         // condition_item_id will be patched after all items are inserted
+@@ -700,7 +712,7 @@ async function cloneTemplateInternal(
+           id, title, order_index,
+           itr_template_items(
+             item_number, description, description_es, item_type, is_required,
+-            is_critical, requires_photo, requires_measurement, options, unit,
++            is_critical, requires_photo, requires_measurement, options, option_outcomes, unit,
+             acceptance_min, acceptance_max, acceptance_text, order_index
+           )
+         )
+diff --git a/src/app/actions/templates-backup.ts b/src/app/actions/templates-backup.ts
+index 120fed9..1ae8fe4 100644
+--- a/src/app/actions/templates-backup.ts
++++ b/src/app/actions/templates-backup.ts
+@@ -1,5 +1,7 @@
+ 'use server'
+ 
++import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
++
+ import { EDITOR_ROLES } from '@/lib/auth/permissions'
+ import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
+ import { revalidatePath } from 'next/cache'
+@@ -49,7 +51,7 @@ async function buildFullBackup(
+         itr_template_items(
+           id, item_number, description, description_es, item_type,
+           is_required, is_critical, requires_photo, requires_measurement,
+-          unit, acceptance_min, acceptance_max, acceptance_text, options, order_index,
++          unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index,
+           condition_item_id, condition_value
+         )
+       )
+@@ -106,6 +108,7 @@ async function buildFullBackup(
+             acceptance_max: (it.acceptance_max as number | null) ?? null,
+             acceptance_text: (it.acceptance_text as string | null) ?? null,
+             options: (it.options as Json) ?? null,
++            option_outcomes: (it.option_outcomes as Json) ?? {},
+             order_index: (it.order_index as number) ?? 0,
+             condition_key: it.condition_item_id
+               ? keyByItemId.get(it.condition_item_id as string) ?? null
+@@ -477,6 +480,14 @@ export const restoreTemplatesBackup = withAuthOnly(
+ 
+       for (const t of backup.itr_templates) {
+         try {
++          const invalidOutcomes = t.sections.some(section => section.items.some(item =>
++            !validateOptionOutcomes(item.options, item.option_outcomes ?? {}) ||
++            (item.item_type !== 'select' && Object.keys(item.option_outcomes ?? {}).length > 0)))
++          if (invalidOutcomes) {
++            result.itr.errors.push(`${t.code}: resultados de selección inválidos`)
++            result.itr.skipped++
++            continue
++          }
+           if (!t.discipline_code || !discByCode.has(t.discipline_code)) {
+             result.itr.errors.push(`${t.code}: falta disciplina "${t.discipline_code ?? '—'}" en la org activa`)
+             result.itr.skipped++
+@@ -555,6 +566,7 @@ export const restoreTemplatesBackup = withAuthOnly(
+               acceptance_max: it.acceptance_max,
+               acceptance_text: it.acceptance_text,
+               options: it.options,
++              option_outcomes: it.option_outcomes ?? {},
+               order_index: it.order_index,
+               condition_value: it.condition_value,
+               // condition_item_id rewired in second pass
+diff --git a/src/i18n/messages/en.json b/src/i18n/messages/en.json
+index 0e2a9bd..8885540 100644
+--- a/src/i18n/messages/en.json
++++ b/src/i18n/messages/en.json
+@@ -1052,7 +1052,8 @@
+       "itemTypeCheckbox": "Verification",
+       "itemTypeYesNo": "Yes / No",
+       "itemTypeNumber": "Number",
+-      "itemTypeMeasurement": "Measurement",
++      "itemTypeContinuity": "Conductor continuity",
++    "itemTypeMeasurement": "Measurement",
+       "itemTypeText": "Free text",
+       "itemTypeSelect": "Selection",
+       "itemTypePhoto": "Photo",
+diff --git a/src/i18n/messages/es.json b/src/i18n/messages/es.json
+index e969bcc..87f341d 100644
+--- a/src/i18n/messages/es.json
++++ b/src/i18n/messages/es.json
+@@ -1052,7 +1052,8 @@
+       "itemTypeCheckbox": "Verificación",
+       "itemTypeYesNo": "Sí / No",
+       "itemTypeNumber": "Número",
+-      "itemTypeMeasurement": "Medición",
++      "itemTypeContinuity": "Continuidad por conductor",
++    "itemTypeMeasurement": "Medición",
+       "itemTypeText": "Texto libre",
+       "itemTypeSelect": "Selección",
+       "itemTypePhoto": "Foto",
+diff --git a/src/lib/constants/templates-backup.ts b/src/lib/constants/templates-backup.ts
+index 2a6467c..f80e5a2 100644
+--- a/src/lib/constants/templates-backup.ts
++++ b/src/lib/constants/templates-backup.ts
+@@ -31,6 +31,7 @@ export type ItrTemplateBackup = {
+       acceptance_max: number | null
+       acceptance_text: string | null
+       options: Json
++      option_outcomes?: Json
+       order_index: number
+       condition_key: string | null   // section_index:item_order_index of conditioning item, or null
+       condition_value: string | null
+diff --git a/src/lib/pdf/itr.ts b/src/lib/pdf/itr.ts
+index 082e708..df09971 100644
+--- a/src/lib/pdf/itr.ts
++++ b/src/lib/pdf/itr.ts
+@@ -1,3 +1,5 @@
++import { evaluateContinuity } from '../itr/continuity'
++import { drawItrSignatures } from './itr-signatures'
+ /**
+  * ITR (Inspection & Test Record) PDF — pdf-lib (Workers-native).
+  * Replaces the @react-pdf/renderer implementation in ItrPdfDocument.tsx.
+@@ -5,7 +7,7 @@
+ 
+ import {
+   Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H, BOTTOM_LIMIT,
+-  sanitize, truncateToWidth, wrapText,
++  sanitize, wrapText,
+   type Color,
+ } from './renderer'
+ 
+@@ -41,6 +43,7 @@ type ItrResponse = {
+ }
+ 
+ type ItrSignature = {
++  signature_image?: string | null
+   role: string
+   signed_at: string
+   profiles: { full_name: string } | null
+@@ -85,7 +88,7 @@ function formatResponse(item: ItrItem, response: ItrResponse | undefined): strin
+     return `${val}${item.unit ? ` ${item.unit}` : ''}`
+   }
+   if (item.item_type === 'select') return response.value_option ?? '-'
+-  if (item.item_type === 'text') return response.value_text?.slice(0, 40) ?? '-'
++  if (item.item_type === 'text') return response.value_text ?? '-'
+   if (item.item_type === 'photo') return response.value_text ? '[photo]' : '-'
+   if (item.item_type === 'signature') return response.value_text ? '[signed]' : '-'
+   if (item.item_type === 'date') return response.value_text ?? '-'
+@@ -243,6 +246,64 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
+ 
+     for (const item of items) {
+       const resp = responseMap[item.id]
++      if (item.item_type === 'continuity') {
++        r.paragraph(`${item.item_number ?? ''} ${item.description_es?.trim() ? item.description_es.trim() : item.description}`, {size: 9})
++        if (item.description_es?.trim() && item.description_es.trim() !== item.description.trim()) r.paragraph(item.description, {size: 8, oblique: true})
++        if (item.acceptance_text) r.paragraph(`Criterio: ${item.acceptance_text}`, {size: 8})
++        const evaluation = evaluateContinuity(resp?.value_text)
++        if (!evaluation.data) {
++          r.paragraph(resp?.value_text ? 'Registro de continuidad inválido; revisar captura.' : 'Continuidad pendiente de captura.', {color: COLOR.red})
++        } else {
++          const capture = evaluation.data
++          r.paragraph(`${capture.grouping === 'pairs' ? 'Pares' : 'Conductores'}: ${capture.count}. Pantallas: ${capture.shields.join(', ') || 'Ninguna'}. Lectura ${capture.measurementRequired ? 'obligatoria' : 'opcional'}.`, {size: 8})
++          if (!evaluation.isComplete) r.paragraph('Captura incompleta: revisar terminales, resultados y requisitos aplicables.', {size: 8, color: COLOR.red})
++          const widths = [48, 78, 78, 61, 47, 40, CONTENT_W - 352]
++          const labels = ['Conductor', 'Origen', 'Destino', 'Resultado', 'Lectura', 'Unidad', 'Observaciones']
++          const drawContinuityHeader = () => {
++            r.ensureSpace(34)
++            r.drawRect({x: MARGIN, y: r.y - 16, width: CONTENT_W, height: 16, color: COLOR.borderXlight})
++            let x = MARGIN
++            labels.forEach((label, i) => {
++              r.drawText(label, {x: x + 3, y: r.y - 11, size: 7, bold: true, color: COLOR.muted})
++              x += widths[i]
++            })
++            r.moveY(18)
++          }
++          drawContinuityHeader()
++          for (const row of capture.rows) {
++            const result = row.result === 'pass' ? 'PASS' : row.result === 'fail' ? 'FAIL' : row.result === 'not_applicable' ? 'No aplica' : 'Pendiente'
++            const cells = [row.id, row.from || '-', row.to || '-', result, row.reading === null ? '-' : String(row.reading), row.unit || '-', row.remarks || '-']
++            const lines = cells.map((value, i) => wrapText(value, r.fontRegular, 7.5, widths[i] - 6))
++            const total = Math.max(...lines.map(cell => cell.length), 1)
++            let offset = 0
++            while (offset < total) {
++              if (r.y - 18 < BOTTOM_LIMIT) {
++                r.newPage()
++                r.paragraph(`Continuidad ${item.item_number ?? ''} - ${row.id}${offset ? ' (continuación)' : ''}`, {size: 8})
++                drawContinuityHeader()
++              }
++              const count = Math.min(total - offset, Math.max(1, Math.floor((r.y - BOTTOM_LIMIT - 6) / 10)))
++              const height = count * 10 + 6
++              if (row.result === 'fail') r.drawRect({x: MARGIN, y: r.y - height, width: CONTENT_W, height, color: COLOR.redBg})
++              let x = MARGIN
++              lines.forEach((cell, column) => {
++                for (let line = 0; line < count; line++) {
++                  const text = cell[offset + line]
++                  if (text !== undefined) r.drawText(text, {x: x + 3, y: r.y - 9 - line * 10, size: 7.5, color: row.result === 'fail' && column === 3 ? COLOR.red : COLOR.text})
++                }
++                x += widths[column]
++              })
++              r.drawHLine(MARGIN, MARGIN + CONTENT_W, r.y - height, 0.3, COLOR.borderLight)
++              r.moveY(height)
++              offset += count
++            }
++          }
++        }
++        if (resp?.remarks) r.paragraph(`Observaciones generales: ${resp.remarks}`, {size: 8, oblique: true})
++        r.moveY(6)
++        drawColumnHeaders()
++        continue
++      }
+       const isPassed = resp?.is_passed
+       const responseText = formatResponse(item, resp)
+ 
+@@ -261,102 +322,43 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
+       const acceptanceLines = acceptanceText ? wrapText(acceptanceText, r.fontRegular, 7, descMaxW) : []
+       const remarksText = resp?.remarks ? `Observaciones / Remarks: ${resp.remarks}` : null
+       const remarksLines = remarksText ? wrapText(remarksText, r.fontOblique, 7.5, descMaxW) : []
+-      const rowH = Math.max(
+-        18,
+-        4 + descLines.length * 11 + enLines.length * 9 + acceptanceLines.length * 9 + remarksLines.length * 10 + 4
+-      )
+-
+-      // Page break + redraw column headers if needed
+-      if (r.y - rowH < BOTTOM_LIMIT) {
+-        r.newPage()
+-        drawColumnHeaders()
+-      }
+-
+-      // Row background (fail tint)
+-      if (isPassed === false) {
+-        r.drawRect({ x: MARGIN, y: r.y - rowH, width: CONTENT_W, height: rowH, color: COLOR.redBg })
+-      }
+-
+-      // Item number
+-      r.drawText(item.item_number ?? '', {
+-        x: COLS.num.x + 4, y: r.y - 10, size: 8, oblique: true, color: COLOR.empty,
+-      })
+-
+-      // Critical dot (if critical)
+-      const descX = COLS.desc.x + 4
+-      let dx = descX
+-      if (item.is_critical) {
+-        r.page.drawCircle({
+-          x: dx + 3, y: r.y - 8, size: 2.5, color: COLOR.red,
+-        })
+-        dx += 8
+-      }
+-
+-      // Description lines
+-      let ly = r.y - 10
+-      for (const line of descLines) {
+-        r.drawText(line, { x: dx, y: ly, size: 8.5, color: COLOR.text })
+-        ly -= 11
+-      }
+-      // Original EN (gris, cursiva) debajo del español
+-      for (const line of enLines) {
+-        r.drawText(line, { x: dx, y: ly, size: 7, oblique: true, color: COLOR.empty })
+-        ly -= 9
+-      }
+-      // Acceptance
+-      for (const line of acceptanceLines) {
+-        r.drawText(line, { x: descX, y: ly, size: 7, color: COLOR.empty })
+-        ly -= 9
+-      }
+-      // Remarks
+-      for (const line of remarksLines) {
+-        r.drawText(line, { x: descX, y: ly, size: 7.5, oblique: true, color: COLOR.muted })
+-        ly -= 10
+-      }
+-
+-      // Response column
++      const descriptionRows = [
++        ...descLines.map(text => ({ text, size: 8.5, oblique: false, color: COLOR.text })),
++        ...enLines.map(text => ({ text, size: 7, oblique: true, color: COLOR.empty })),
++        ...acceptanceLines.map(text => ({ text, size: 7, oblique: false, color: COLOR.empty })),
++        ...remarksLines.map(text => ({ text, size: 7.5, oblique: true, color: COLOR.muted })),
++      ]
++      const respBold = isPassed === true || isPassed === false
++      const responseLines = wrapText(responseText, respBold ? r.fontBold : r.fontRegular, 8.5, COLS.resp.w - 8)
++      const totalLines = Math.max(descriptionRows.length, responseLines.length, 1)
+       const respColor = isPassed === true ? COLOR.greenStrong : isPassed === false ? COLOR.red : COLOR.muted
+-      const respFont = isPassed !== null ? r.fontBold : r.fontRegular
+-      const respTxt = truncateToWidth(responseText, respFont, 8.5, COLS.resp.w - 8)
+-      const respW = respFont.widthOfTextAtSize(respTxt, 8.5)
+-      r.page.drawText(respTxt, {
+-        x: COLS.resp.x + (COLS.resp.w - respW) / 2, y: r.y - 10, size: 8.5, font: respFont, color: respColor,
+-      })
+-
+-      // Result column (PASS/FAIL)
+-      const resTxt = isPassed === true ? 'PASS' : isPassed === false ? 'FAIL' : ''
+-      if (resTxt) {
+-        const resFont = r.fontBold
+-        const resW = resFont.widthOfTextAtSize(resTxt, 8.5)
+-        const resColor = isPassed === true ? COLOR.greenStrong : COLOR.red
+-        r.page.drawText(resTxt, {
+-          x: COLS.result.x + (COLS.result.w - resW) / 2, y: r.y - 10, size: 8.5, font: resFont, color: resColor,
+-        })
++      // Split a single long item across pages; never truncate its captured value.
++      let offset = 0
++      while (offset < totalLines) {
++        if (r.y - 19 < BOTTOM_LIMIT) { r.newPage(); drawColumnHeaders() }
++        const available = Math.max(1, Math.floor((r.y - BOTTOM_LIMIT - 8) / 11))
++        const count = Math.min(available, totalLines - offset)
++        const height = count * 11 + 8
++        if (isPassed === false) r.drawRect({ x: MARGIN, y: r.y - height, width: CONTENT_W, height, color: COLOR.redBg })
++        r.drawText(item.item_number ?? '', { x: COLS.num.x + 4, y: r.y - 10, size: 8, oblique: true, color: COLOR.empty })
++        if (item.is_critical) r.page.drawCircle({ x: COLS.desc.x + 7, y: r.y - 8, size: 2.5, color: COLOR.red })
++        for (let index = 0; index < count; index++) {
++          const y = r.y - 10 - index * 11
++          const description = descriptionRows[offset + index]
++          if (description) r.drawText(description.text, { x: COLS.desc.x + 4 + (item.is_critical ? 8 : 0), y, size: description.size, oblique: description.oblique, color: description.color })
++          const responseLine = responseLines[offset + index]
++          if (responseLine !== undefined) r.drawText(responseLine, { x: COLS.resp.x + 4, y, size: 8.5, bold: respBold, color: respColor })
++        }
++        if (offset === 0 && respBold) r.drawText(isPassed ? 'PASS' : 'FAIL', { x: COLS.result.x + 4, y: r.y - 10, size: 8.5, bold: true, color: respColor })
++        r.drawHLine(MARGIN, A4_W - MARGIN, r.y - height, 0.3, COLOR.borderLight)
++        r.moveY(height)
++        offset += count
+       }
+-
+-      // Row separator
+-      r.drawHLine(MARGIN, A4_W - MARGIN, r.y - rowH, 0.3, COLOR.borderLight)
+-      r.moveY(rowH)
+     }
+   }
+ 
+-  // ─── Signatures ──────────────────────────────────────────────────────────
+   r.moveY(12)
+-  r.ensureSpace(80)
+-  r.drawHLine(MARGIN, A4_W - MARGIN, r.y, 1, COLOR.border)
+-  r.moveY(10)
+-  r.drawText('SIGNATURES', { x: MARGIN, y: r.y - 9, size: 9, bold: true, color: COLOR.muted })
+-  r.moveY(16)
+-
+-  const sigBoxes = (['executor', 'supervisor', 'client'] as const).map(role => {
+-    const sig = itr.itr_signatures.find(s => s.role === role)
+-    return {
+-      role: role.charAt(0).toUpperCase() + role.slice(1),
+-      name: sig?.profiles?.full_name,
+-      date: sig?.signed_at?.slice(0, 10),
+-    }
+-  })
+-  r.signatureGrid(sigBoxes, { accentColor: COLOR.purple })
++  await drawItrSignatures(r, itr.itr_signatures)
+ 
+   r.finalizePagePlaceholders()
+   return await r.doc.save()
+diff --git a/src/lib/sync/outbox-utils.test.ts b/src/lib/sync/outbox-utils.test.ts
+index 2379153..ffc7c3b 100644
+--- a/src/lib/sync/outbox-utils.test.ts
++++ b/src/lib/sync/outbox-utils.test.ts
+@@ -51,25 +51,27 @@ describe('outboxPolicy (conflictos al sincronizar)', () => {
+   })
+ })
+ 
+-describe('localItrStatus (espejo del servidor)', () => {
+-  const items = [
+-    { id: 'a', is_critical: true },
+-    { id: 'b', is_critical: false },
+-    { id: 'c', is_critical: false },
+-  ]
++describe('localItrStatus (validación de contenido)', () => {
++  const items = ['a', 'b', 'c'].map(id => ({ id, item_type: 'text' as const, is_required: true, is_critical: id === 'a', requires_photo: false, requires_measurement: false, condition_item_id: null, condition_value: null, options: null }))
+   it('not_started without responses', () => {
+     expect(localItrStatus(items, {})).toEqual({ pct: 0, status: 'not_started' })
+   })
+-  it('in_progress with partial responses, counting any saved response', () => {
+-    expect(localItrStatus(items, { a: { is_passed: true } })).toEqual({ pct: 33, status: 'in_progress' })
++  it('does not count empty saved rows', () => {
++    expect(localItrStatus(items, { a: {}, b: {}, c: {} }).status).not.toBe('completed')
+   })
+-  it('completed at 100% without critical failures', () => {
+-    expect(localItrStatus(items, { a: { is_passed: true }, b: {}, c: { is_passed: null } })).toEqual({ pct: 100, status: 'completed' })
++  it('counts actual content', () => {
++    expect(localItrStatus(items, { a: { value_text: 'dato' } })).toEqual({ pct: 33, status: 'in_progress' })
+   })
+-  it('rejected at 100% when a critical item failed', () => {
+-    expect(localItrStatus(items, { a: { is_passed: false }, b: {}, c: {} })).toEqual({ pct: 100, status: 'rejected' })
++  it('completes only when requirements are satisfied', () => {
++    expect(localItrStatus(items, { a: { value_text: 'a' }, b: { value_text: 'b' }, c: { value_text: 'c' } })).toEqual({ pct: 100, status: 'completed' })
+   })
+-  it('a failed non-critical item does not reject', () => {
+-    expect(localItrStatus(items, { a: { is_passed: true }, b: { is_passed: false }, c: {} }).status).toBe('completed')
++  it('preserves explicit critical rejection', () => {
++    expect(localItrStatus(items, { a: { value_text: 'a', is_passed: false }, b: { value_text: 'b' }, c: { value_text: 'c' } }).status).toBe('rejected')
++  })
++  it('never rounds a missing required answer to 100', () => {
++    const many = Array.from({ length: 200 }, (_, n) => ({ ...items[0], id: String(n) }))
++    const responses = Object.fromEntries(many.slice(0, 199).map(item => [item.id, { value_text: 'dato' }]))
++    expect(localItrStatus(many, responses).pct).toBeLessThan(100)
++    expect(localItrStatus(many, responses).status).toBe('in_progress')
+   })
+ })
+diff --git a/src/lib/sync/outbox-utils.ts b/src/lib/sync/outbox-utils.ts
+index 2a1b7ec..2bc287e 100644
+--- a/src/lib/sync/outbox-utils.ts
++++ b/src/lib/sync/outbox-utils.ts
+@@ -1,3 +1,5 @@
++import { evaluateItrCompletion, type CompletionItem, type CompletionResponse, type CompletionAttachment } from '../itr/completion'
++
+ /**
+  * Utilidades puras de la bandeja de salida (Sprint O). Sin imports de Next ni
+  * Supabase para poder testearlas en vitest; src/lib/sync/outbox.ts las re-exporta.
+@@ -52,20 +54,19 @@ export function outboxPolicy(kind: OutboxKind, attemptsSoFar: number): 'retry' |
+ 
+ export type LocalItrStatus = 'not_started' | 'in_progress' | 'completed' | 'rejected'
+ 
+-/**
+- * Calcula progreso y estado con las respuestas locales, igual que el servidor:
+- * pct = respuestas / ítems de la plantilla (todos, no solo los visibles);
+- * 100 % con algún crítico fallado → rejected, si no → completed.
+- * Permite decidir si se puede firmar sin red antes de que el servidor lo sepa.
+- */
++/** Shared capture validation; technical acceptance remains a separate gate. */
+ export function localItrStatus(
+-  items: ReadonlyArray<{ id: string; is_critical: boolean }>,
+-  responses: Readonly<Record<string, { is_passed?: boolean | null } | undefined>>,
++  items: ReadonlyArray<CompletionItem & { is_critical: boolean }>,
++  responses: Readonly<Record<string, Partial<CompletionResponse> & { is_passed?: boolean | null } | undefined>>,
++  attachments: readonly CompletionAttachment[] = [],
+ ): { pct: number; status: LocalItrStatus } {
+-  const total = items.length
+-  const done = items.filter(i => responses[i.id] !== undefined).length
+-  const pct = total ? Math.round((done / total) * 100) : 0
+-  const hasCriticalFail = items.some(i => i.is_critical && responses[i.id]?.is_passed === false)
+-  const status: LocalItrStatus = pct === 0 ? 'not_started' : pct < 100 ? 'in_progress' : hasCriticalFail ? 'rejected' : 'completed'
+-  return { pct, status }
++  const answers = Object.entries(responses).flatMap(([item_id, response]) => response ? [{
++    item_id, value_text: response.value_text ?? null, value_numeric: response.value_numeric ?? null,
++    value_bool: response.value_bool ?? null, value_option: response.value_option ?? null, remarks: response.remarks ?? null,
++  }] : [])
++  const result = evaluateItrCompletion(items, answers, attachments)
++  const applicable = new Set(result.applicableItemIds)
++  const rejected = result.rejectedItemIds.length > 0 || items.some(item => applicable.has(item.id) && item.is_critical && responses[item.id]?.is_passed === false)
++  const status: LocalItrStatus = rejected ? 'rejected' : result.isComplete ? 'completed' : result.completedCount > 0 ? 'in_progress' : 'not_started'
++  return { pct: result.progressPct, status }
+ }
+diff --git a/src/types/database.ts b/src/types/database.ts
+index d6e456e..3824eef 100644
+--- a/src/types/database.ts
++++ b/src/types/database.ts
+@@ -11,7 +11,7 @@ export type OrgMemberRole = 'owner' | 'admin' | 'architect' | 'leader' | 'inspec
+ export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled'
+ export type TagStatus = 'not_started' | 'in_progress' | 'completed' | 'on_hold'
+ export type ItrStatus = 'not_started' | 'in_progress' | 'completed' | 'approved' | 'rejected'
+-export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no'
++export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity'
+ export type SignatureRole = 'executor' | 'supervisor' | 'client'
+ export type PunchCategory = 'A' | 'B' | 'C'
+ export type PunchStatus = 'open' | 'in_progress' | 'closed' | 'cancelled'
+@@ -334,6 +334,7 @@ export interface ItrTemplateItem {
+   requires_photo: boolean
+   requires_measurement: boolean
+   options: Json | null       // for 'select' type items
++  option_outcomes?: Json     // explicit pass/fail/not_applicable by exact option
+   unit: string | null
+   acceptance_min: number | null
+   acceptance_max: number | null
+diff --git a/src/types/supabase.generated.ts b/src/types/supabase.generated.ts
+index f99bcdd..42578d7 100644
+--- a/src/types/supabase.generated.ts
++++ b/src/types/supabase.generated.ts
+@@ -1440,6 +1440,7 @@ export type Database = {
+           is_required: boolean
+           item_number: string | null
+           item_type: Database["public"]["Enums"]["itr_item_type"]
++          option_outcomes: Json
+           options: Json | null
+           order_index: number
+           requires_measurement: boolean
+@@ -1462,6 +1463,7 @@ export type Database = {
+           is_required?: boolean
+           item_number?: string | null
+           item_type?: Database["public"]["Enums"]["itr_item_type"]
++          option_outcomes?: Json
+           options?: Json | null
+           order_index: number
+           requires_measurement?: boolean
+@@ -1484,6 +1486,7 @@ export type Database = {
+           is_required?: boolean
+           item_number?: string | null
+           item_type?: Database["public"]["Enums"]["itr_item_type"]
++          option_outcomes?: Json
+           options?: Json | null
+           order_index?: number
+           requires_measurement?: boolean
+@@ -5410,6 +5413,16 @@ export type Database = {
+       }
+     }
+     Functions: {
++      // Added for 20260909180000_itr_atomic_integrity; regenerate after migration.
++      sign_itr_atomic: {
++        Args: { p_itr_id: string; p_role: string; p_signature_image?: string | null }
++        Returns: Json
++      }
++      reopen_itr_atomic: {
++        Args: { p_itr_id: string; p_reason: string }
++        Returns: Json
++      }
++
+       accept_itr_suggestion: {
+         Args: { p_note?: string; p_suggestion_id: string }
+         Returns: string
+@@ -5707,6 +5720,7 @@ export type Database = {
+         | "signature"
+         | "date"
+         | "yes_no"
++        | "continuity"
+       itr_status:
+         | "not_started"
+         | "in_progress"
+@@ -5891,6 +5905,7 @@ export const Constants = {
+         "signature",
+         "date",
+         "yes_no",
++        "continuity",
+       ],
+       itr_status: [
+         "not_started",

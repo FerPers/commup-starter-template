@@ -31,6 +31,7 @@ export type ItrTemplateBackup = {
       acceptance_max: number | null
       acceptance_text: string | null
       options: Json
+      option_outcomes?: Json
       order_index: number
       condition_key: string | null   // section_index:item_order_index of conditioning item, or null
       condition_value: string | null

@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeItrApproval } from '@/app/actions/itr-instances'
 import { uploadOrQueuePhoto, pendingAttachment, pendingSignature, signOrQueue } from '@/lib/sync/outbox'
+import { evaluateItrCompletion } from '@/lib/itr/completion'
 import { localItrStatus } from '@/lib/sync/outbox-utils'
 import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
 import { useItrAutosave } from './useItrAutosave'
@@ -18,7 +19,7 @@ import ItemRow from './ItemRow'
 import SignModal from './SignModal'
 import RevokeModal from './RevokeModal'
 import CreatePunchModal from './CreatePunchModal'
-import { isItemVisible, type Attachment, type ItrData, type Signature } from './types'
+import { availableSigningRoles, type Attachment, type ItrData, type Signature } from './types'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
 export default function ItrExecution({
@@ -91,6 +92,10 @@ export default function ItrExecution({
   // Sprint O: fotos y firmas de este ITR que siguen en la bandeja de salida (sin red).
   const [pendingPhotos, setPendingPhotos] = useState<Attachment[]>([])
   const [pendingSignatures, setPendingSignatures] = useState<Signature[]>([])
+  const [justSigned, setJustSigned] = useState<Signature[]>([])
+  useEffect(() => {
+    setJustSigned(previous => previous.filter(local => !itr.itr_signatures.some(saved => saved.role === local.role)))
+  }, [itr.itr_signatures])
   useEffect(() => {
     let urls: string[] = []
     const load = () => {
@@ -118,8 +123,12 @@ export default function ItrExecution({
   /** Firmas del servidor + las pendientes de la bandeja (una por rol). */
   const effectiveSignatures = useMemo<Signature[]>(() => {
     const roles = new Set(itr.itr_signatures.map(s => s.role))
-    return [...itr.itr_signatures, ...pendingSignatures.filter(s => !roles.has(s.role))]
-  }, [itr.itr_signatures, pendingSignatures])
+    return [...itr.itr_signatures, ...[...justSigned, ...pendingSignatures].filter(s => {
+      if (roles.has(s.role)) return false
+      roles.add(s.role)
+      return true
+    })]
+  }, [itr.itr_signatures, pendingSignatures, justSigned])
 
   // Al terminar un replay con envíos, recargar del servidor (fotos y punches reales).
   const [syncedFlash, setSyncedFlash] = useState(false)
@@ -184,7 +193,9 @@ export default function ItrExecution({
     })) ?? []
 
   const allItems = sections.flatMap(s => s.itr_template_items)
-  const visibleItems = allItems.filter(item => isItemVisible(item, responses))
+  const completion = evaluateItrCompletion(allItems, Object.values(responses), Object.values(attachmentMap).flat())
+  const visibleIds = new Set(completion.applicableItemIds)
+  const visibleItems = allItems.filter(item => visibleIds.has(item.id))
   const criticalBlocked = visibleItems.filter(
     item => item.is_critical && responses[item.id]?.is_passed === false,
   )
@@ -192,12 +203,18 @@ export default function ItrExecution({
   const memberIds = useMemo(() => new Set(memberIdList), [memberIdList])
   // Sprint O: estado calculado en local (espejo del servidor) para poder firmar sin red
   // antes de que las respuestas encoladas lleguen al servidor.
-  const localStatus = localItrStatus(allItems, responses).status
-  const effectiveStatus = itr.status === 'approved' ? 'approved' : (isOffline || pendingCount > 0) ? localStatus : itr.status
+  const localEvaluation = localItrStatus(allItems, responses, [...Object.values(serverAttachments).flat(), ...pendingPhotos])
+  const localStatus = localEvaluation.status
+  const effectiveProgress = itr.status === 'approved' ? itr.progress_pct : localEvaluation.pct
+  const effectiveStatus = itr.status === 'approved' ? 'approved' : localStatus
+  const allowedSignRoles = availableSigningRoles(itr.itr_assignments, effectiveSignatures, currentUserId)
+  const canCapture = canEdit && effectiveSignatures.length === 0 && itr.status !== 'approved'
+  const signingReady = effectiveStatus === 'completed' && allowedSignRoles.length > 0 && !isPending && !saveError && !generalUploading
 
   // ── Sign ────────────────────────────────────────────────────────────
 
   function handleSign(role: 'executor' | 'supervisor' | 'client', signatureImage: string) {
+    if (!signingReady || !allowedSignRoles.includes(role)) return
     setSignError(null)
     startModalTransition(async () => {
       // Sprint O: sin red la firma se encola; al sincronizar viaja después de las respuestas.
@@ -205,7 +222,10 @@ export default function ItrExecution({
       if ('error' in res) { setSignError(res.error); return }
       setShowSignModal(false)
       if (res.queued) setQueuedNotice('signature')
-      else router.refresh()
+      else {
+        setJustSigned(previous => [...previous, { id: `confirmed:${role}`, role, user_id: currentUserId, signed_at: new Date().toISOString(), signature_image: signatureImage, profiles: { full_name: executorName ?? '' } }])
+        router.refresh()
+      }
     })
   }
 
@@ -217,11 +237,12 @@ export default function ItrExecution({
       const res = await revokeItrApproval({ itrId: itr.id, projectId, tagId, reason })
       if (res.error) { setRevokeError(res.error); return }
       setShowRevokeModal(false)
+      setJustSigned([])
       router.refresh()
     })
   }
 
-  const canRevoke = ['owner', 'admin', 'architect'].includes(currentUserRole) && itr.status === 'approved'
+  const canRevoke = ['owner', 'admin', 'architect'].includes(currentUserRole) && (itr.status === 'approved' || itr.itr_signatures.length > 0)
 
   // ── Punch ────────────────────────────────────────────────────────────
 
@@ -323,10 +344,10 @@ export default function ItrExecution({
         <div style={{ marginTop: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--gray-400)', marginBottom: '5px' }}>
             <span>{t('header.progress')}</span>
-            <span>{itr.progress_pct}%</span>
+            <span>{effectiveProgress}%</span>
           </div>
           <div style={{ height: '6px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '4px', transition: 'width 0.4s' }} />
+            <div style={{ height: '100%', width: `${effectiveProgress}%`, background: effectiveProgress >= 100 ? '#10b981' : '#3b82f6', borderRadius: '4px', transition: 'width 0.4s' }} />
           </div>
         </div>
 
@@ -404,12 +425,12 @@ export default function ItrExecution({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {section.itr_template_items.filter(item => isItemVisible(item, responses)).map(item => (
+              {section.itr_template_items.filter(item => visibleIds.has(item.id)).map(item => (
                 <ItemRow
                   key={item.id}
                   item={item}
                   response={responses[item.id] ?? null}
-                  canEdit={canEdit}
+                  canEdit={canCapture}
                   onSave={saveResponse}
                   onAddPunch={openPunchModal}
                   itrId={itr.id}
@@ -436,7 +457,7 @@ export default function ItrExecution({
         style={{ display: 'none' }}
         onChange={async e => {
           const file = e.target.files?.[0]
-          if (!file) return
+          if (!file || !canCapture) return
           e.target.value = ''
           setGeneralUploading(true)
           setGeneralUploadError(null)
@@ -475,15 +496,15 @@ export default function ItrExecution({
           </button>
           <button
             onClick={() => generalPhotoInputRef.current?.click()}
-            disabled={!canEdit || generalUploading}
+            disabled={!canCapture || generalUploading}
             title={generalUploadError ?? t('upload.addPhoto')}
-            style={{ padding: '9px 16px', background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, borderRadius: '8px', fontSize: '13px', color: generalUploading ? '#3b82f6' : '#15803d', cursor: canEdit && !generalUploading ? 'pointer' : 'not-allowed', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
+            style={{ padding: '9px 16px', background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, borderRadius: '8px', fontSize: '13px', color: generalUploading ? '#3b82f6' : '#15803d', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
           >
             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
           </button>
           {(() => {
             const allRolesPending = (['executor', 'supervisor', 'client'] as const).every(r => effectiveSignatures.some(s => s.role === r))
-            const canSign = canEdit && effectiveStatus === 'completed' && !allRolesPending
+            const canSign = signingReady && !allRolesPending
             const signTooltip =
               effectiveStatus === 'approved' || allRolesPending ? t('footer.signTooltipApproved')
               : effectiveStatus === 'rejected' ? t('footer.signTooltipRejected')
@@ -539,6 +560,8 @@ export default function ItrExecution({
         <SignModal
           itrNumber={itr.itr_number}
           itrSignatures={effectiveSignatures}
+          allowedRoles={allowedSignRoles}
+          ready={signingReady}
           criticalBlocked={criticalBlocked}
           isPending={isModalPending}
           signError={signError}

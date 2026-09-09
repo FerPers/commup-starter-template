@@ -1,5 +1,7 @@
 'use server'
 
+import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
+
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
@@ -49,7 +51,7 @@ async function buildFullBackup(
         itr_template_items(
           id, item_number, description, description_es, item_type,
           is_required, is_critical, requires_photo, requires_measurement,
-          unit, acceptance_min, acceptance_max, acceptance_text, options, order_index,
+          unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index,
           condition_item_id, condition_value
         )
       )
@@ -106,6 +108,7 @@ async function buildFullBackup(
             acceptance_max: (it.acceptance_max as number | null) ?? null,
             acceptance_text: (it.acceptance_text as string | null) ?? null,
             options: (it.options as Json) ?? null,
+            option_outcomes: (it.option_outcomes as Json) ?? {},
             order_index: (it.order_index as number) ?? 0,
             condition_key: it.condition_item_id
               ? keyByItemId.get(it.condition_item_id as string) ?? null
@@ -477,6 +480,14 @@ export const restoreTemplatesBackup = withAuthOnly(
 
       for (const t of backup.itr_templates) {
         try {
+          const invalidOutcomes = t.sections.some(section => section.items.some(item =>
+            !validateOptionOutcomes(item.options, item.option_outcomes ?? {}) ||
+            (item.item_type !== 'select' && Object.keys(item.option_outcomes ?? {}).length > 0)))
+          if (invalidOutcomes) {
+            result.itr.errors.push(`${t.code}: resultados de selección inválidos`)
+            result.itr.skipped++
+            continue
+          }
           if (!t.discipline_code || !discByCode.has(t.discipline_code)) {
             result.itr.errors.push(`${t.code}: falta disciplina "${t.discipline_code ?? '—'}" en la org activa`)
             result.itr.skipped++
@@ -555,6 +566,7 @@ export const restoreTemplatesBackup = withAuthOnly(
               acceptance_max: it.acceptance_max,
               acceptance_text: it.acceptance_text,
               options: it.options,
+              option_outcomes: it.option_outcomes ?? {},
               order_index: it.order_index,
               condition_value: it.condition_value,
               // condition_item_id rewired in second pass

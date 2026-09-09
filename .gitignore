@@ -213,3 +213,10 @@ testsprite_tests/tmp/config.json
 
 ### Codex CLI — config con API keys de MCP
 .codex/
+
+# Local source documents for ITR review
+/insumos-locales/
+
+# Respaldos zip de entregas locales
+/entrega-commup-*/**/*.zip
+/entrega-commup-*/*.zip

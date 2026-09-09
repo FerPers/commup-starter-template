@@ -14,7 +14,8 @@ export function useItrAutosave(itr: ItrData) {
   const [isPending, startTransition] = useTransition()
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const savingRef = useRef(false)
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
+  const pendingSavesRef = useRef(0)
 
   const { isOffline, pendingCount, syncing, saveWithQueue } = useOfflineSync(itr.id, itr.template_id)
 
@@ -36,6 +37,7 @@ export function useItrAutosave(itr: ItrData) {
     return map
   })
   useEffect(() => {
+    if (pendingSavesRef.current > 0) return
     const map: Record<string, Response> = {}
     for (const r of itr.itr_responses) map[r.item_id] = r
     setResponses(map)
@@ -56,16 +58,25 @@ export function useItrAutosave(itr: ItrData) {
       ...prev,
       [itemId]: { ...(prev[itemId] ?? { id: '', item_id: itemId, responded_at: null }), ...patch },
     }))
-    if (savingRef.current) return
-    savingRef.current = true
-    startTransition(async () => {
-      const res = await saveWithQueue(itemId, data)
-      savingRef.current = false
-      if (res.queued) { return }           // offline — optimistic UI already set
-      if (res.error) { setSaveError(res.error); return }
-      setLastSaved(new Date())
-      router.refresh()
+    // Preserve every edit, including another field changed during an in-flight save.
+    // Refresh only after the queue drains, so earlier server snapshots do not erase
+    // optimistic edits that have not reached the server yet.
+    pendingSavesRef.current += 1
+    const task = saveQueueRef.current.then(async () => {
+      let savedOnline = false
+      try {
+        const res = await saveWithQueue(itemId, data)
+        if (res.error) { setSaveError(res.error); return }
+        if (!res.queued) { savedOnline = true; setLastSaved(new Date()) }
+      } catch (error) {
+        setSaveError(error instanceof Error ? error.message : 'No se pudo guardar la respuesta')
+      } finally {
+        pendingSavesRef.current -= 1
+        if (pendingSavesRef.current === 0 && savedOnline) router.refresh()
+      }
     })
+    saveQueueRef.current = task
+    startTransition(async () => { await task })
   }, [saveWithQueue, router])
 
   return { responses, saveResponse, lastSaved, saveError, isPending, isOffline, pendingCount, syncing }

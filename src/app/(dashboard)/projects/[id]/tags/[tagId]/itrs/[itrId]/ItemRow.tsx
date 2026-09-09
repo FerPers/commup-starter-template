@@ -1,7 +1,10 @@
 'use client'
 
+import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import ContinuityCapture from './ContinuityCapture'
+import { evaluateContinuity } from '@/lib/itr/continuity'
 import MicAppend from './MicAppend'
 import PhotoUpload from './PhotoUpload'
 import { computeIsPassed, type Attachment, type Item, type Response, type SaveData } from './types'
@@ -175,7 +178,7 @@ export default function ItemRow({
         <select
           value={response?.value_option ?? ''}
           disabled={!canEdit}
-          onChange={e => onSave(item.id, { valueOption: e.target.value || null })}
+          onChange={e => onSave(item.id, { valueOption: e.target.value || null, isPassed: evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, e.target.value).isPassed })}
           style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit', minWidth: '200px' }}
         >
           <option value="">{t('item.selectPlaceholder')}</option>
@@ -210,11 +213,17 @@ export default function ItemRow({
         />
       )}
 
+      {item.item_type === 'continuity' && <ContinuityCapture value={response?.value_text ?? null} disabled={!canEdit} onChange={value => {
+        const result = evaluateContinuity(value)
+        onSave(item.id, { valueText: value, isPassed: result.hasFail ? false : result.isComplete ? true : null })
+      }} />}
+
       {/* Remarks (for measurement + critical items) */}
-      {(item.is_critical || item.item_type === 'measurement') && (
+      {(item.is_critical || item.item_type === 'measurement' || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, response?.value_option).requiresJustification)) && (
         <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <textarea
             ref={remarksRef}
+            aria-label={item.item_type === 'select' ? 'Justificación de no aplica' : undefined}
             rows={1}
             defaultValue={response?.remarks ?? ''}
             disabled={!canEdit}

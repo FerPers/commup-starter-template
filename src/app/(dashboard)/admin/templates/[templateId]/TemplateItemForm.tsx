@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl'
 import type { ItrItemType } from '@/types/database'
 import {
   ITEM_TYPE_DEFS,
+  normalizeItemType,
   fieldInput,
   fieldLabel,
   type BuilderItem,
@@ -35,7 +36,7 @@ export default function TemplateItemForm({
   onCancel: () => void
 }) {
   const t = useTranslations('ItrTemplates.builder')
-  const [form, setForm] = useState<ItemFormValues>(initial)
+  const [form, setForm] = useState<ItemFormValues>(() => normalizeItemType(initial, initial.item_type))
   const [optionsText, setOptionsText] = useState((initial.options ?? []).join(', '))
   const [error, setError] = useState<string | null>(null)
 
@@ -68,7 +69,8 @@ export default function TemplateItemForm({
       }
     }
     setError(null)
-    const err = await onSave({ ...form, options })
+    const option_outcomes = Object.fromEntries(Object.entries(form.option_outcomes ?? {}).filter(([key]) => options?.includes(key)))
+    const err = await onSave({ ...normalizeItemType(form, form.item_type), options, option_outcomes })
     if (err) setError(err)
   }
 
@@ -91,7 +93,7 @@ export default function TemplateItemForm({
           {t('fieldType')}
           <select
             value={form.item_type}
-            onChange={e => setForm(f => ({ ...f, item_type: e.target.value as ItrItemType }))}
+            onChange={e => setForm(f => normalizeItemType(f, e.target.value as ItrItemType))}
             style={fieldInput}
           >
             {ITEM_TYPE_DEFS.map(tp => (
@@ -126,11 +128,41 @@ export default function TemplateItemForm({
           {t('fieldSelectOptions')} <span style={{ color: '#ef4444' }}>*</span>
           <input
             value={optionsText}
-            onChange={e => setOptionsText(e.target.value)}
+            onChange={e => {
+              const text = e.target.value
+              setOptionsText(text)
+              const labels = text.split(',').map(s => s.trim()).filter(Boolean)
+              setForm(f => ({ ...f, option_outcomes: Object.fromEntries(Object.entries(f.option_outcomes ?? {}).filter(([key]) => labels.includes(key))) }))
+            }}
             placeholder="Pass, Fail, N/A"
             style={fieldInput}
           />
         </label>
+      )}
+
+      {isSelect && (
+        <div style={{ marginBottom: '14px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Define el efecto de cada opción. Una selección informativa no implica aceptación ni rechazo. «No aplica» requiere justificación al diligenciar.</p>
+          {[...new Set(optionsText.split(',').map(s => s.trim()).filter(Boolean))].map(label => (
+            <label key={label} style={{ ...fieldLabel, marginBottom: '8px' }}>
+              {label}
+              <select style={fieldInput} value={form.option_outcomes?.[label] ?? ''} onChange={e => {
+                const outcome = e.target.value as 'pass' | 'fail' | 'not_applicable' | ''
+                setForm(f => {
+                  const outcomes = { ...f.option_outcomes }
+                  if (outcome) outcomes[label] = outcome
+                  else delete outcomes[label]
+                  return { ...f, option_outcomes: outcomes }
+                })
+              }}>
+                <option value="">Informativa — sin resultado de aceptación</option>
+                <option value="pass">Aceptación</option>
+                <option value="fail">Rechazo</option>
+                <option value="not_applicable">No aplica — requiere justificación</option>
+              </select>
+            </label>
+          ))}
+        </div>
       )}
 
       {isMeasurement && (
@@ -177,7 +209,7 @@ export default function TemplateItemForm({
 
       {/* Flags */}
       <div style={{ display: 'flex', gap: '16px', marginBottom: '14px', flexWrap: 'wrap' }}>
-        {FLAGS.map(flag => (
+        {FLAGS.filter(flag => form.item_type !== 'continuity' || flag.key !== 'requires_measurement').map(flag => (
           <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)' }}>
             <input
               type="checkbox"

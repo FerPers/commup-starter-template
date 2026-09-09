@@ -22,6 +22,7 @@ export interface BuilderItem {
   acceptance_max: number | null
   acceptance_text: string | null
   options: Json | null
+  option_outcomes: Json
   order_index: number
   condition_item_id: string | null
   condition_value: string | null
@@ -71,6 +72,7 @@ export const DEFAULT_ITEM: ItemFormValues = {
   acceptance_max: null,
   acceptance_text: '',
   options: null,
+  option_outcomes: {},
   condition_item_id: null,
   condition_value: null,
 }
@@ -81,6 +83,7 @@ export const ITEM_TYPE_DEFS: ReadonlyArray<{ value: ItrItemType; labelKey: strin
   { value: 'checkbox',    labelKey: 'itemTypeCheckbox',    color: '#3b82f6' },
   { value: 'yes_no',      labelKey: 'itemTypeYesNo',       color: '#10b981' },
   { value: 'number',      labelKey: 'itemTypeNumber',      color: '#f59e0b' },
+  { value: 'continuity', labelKey: 'itemTypeContinuity', color: '#0891b2' },
   { value: 'measurement', labelKey: 'itemTypeMeasurement', color: '#8b5cf6' },
   { value: 'text',        labelKey: 'itemTypeText',        color: 'var(--text-muted)' },
   { value: 'select',      labelKey: 'itemTypeSelect',      color: '#14b8a6' },
@@ -143,4 +146,8 @@ export const miniBtn: React.CSSProperties = {
   width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
   borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--gray-400)',
   cursor: 'pointer', fontSize: '10px', padding: 0,
+}
+
+export function normalizeItemType(form: ItemFormValues, itemType: ItrItemType): ItemFormValues {
+  return { ...form, item_type: itemType, requires_measurement: itemType === 'continuity' ? false : form.requires_measurement }
 }

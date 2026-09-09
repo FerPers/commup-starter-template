@@ -1440,6 +1440,7 @@ export type Database = {
           is_required: boolean
           item_number: string | null
           item_type: Database["public"]["Enums"]["itr_item_type"]
+          option_outcomes: Json
           options: Json | null
           order_index: number
           requires_measurement: boolean
@@ -1462,6 +1463,7 @@ export type Database = {
           is_required?: boolean
           item_number?: string | null
           item_type?: Database["public"]["Enums"]["itr_item_type"]
+          option_outcomes?: Json
           options?: Json | null
           order_index: number
           requires_measurement?: boolean
@@ -1484,6 +1486,7 @@ export type Database = {
           is_required?: boolean
           item_number?: string | null
           item_type?: Database["public"]["Enums"]["itr_item_type"]
+          option_outcomes?: Json
           options?: Json | null
           order_index?: number
           requires_measurement?: boolean
@@ -5410,6 +5413,16 @@ export type Database = {
       }
     }
     Functions: {
+      // Added for 20260909180000_itr_atomic_integrity; regenerate after migration.
+      sign_itr_atomic: {
+        Args: { p_itr_id: string; p_role: string; p_signature_image?: string | null }
+        Returns: Json
+      }
+      reopen_itr_atomic: {
+        Args: { p_itr_id: string; p_reason: string }
+        Returns: Json
+      }
+
       accept_itr_suggestion: {
         Args: { p_note?: string; p_suggestion_id: string }
         Returns: string
@@ -5707,6 +5720,7 @@ export type Database = {
         | "signature"
         | "date"
         | "yes_no"
+        | "continuity"
       itr_status:
         | "not_started"
         | "in_progress"
@@ -5891,6 +5905,7 @@ export const Constants = {
         "signature",
         "date",
         "yes_no",
+        "continuity",
       ],
       itr_status: [
         "not_started",

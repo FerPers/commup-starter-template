@@ -23,6 +23,7 @@ const TYPE_MAP: Record<string, ItrItemType> = {
   verificacion: 'checkbox', check: 'checkbox', checkbox: 'checkbox', verificar: 'checkbox',
   si_no: 'yes_no', 's/n': 'yes_no', yes_no: 'yes_no', 'si/no': 'yes_no', sino: 'yes_no',
   numero: 'number', number: 'number', 'num': 'number',
+  continuidad: 'continuity', continuity: 'continuity',
   medicion: 'measurement', measurement: 'measurement', med: 'measurement',
   texto: 'text', 'texto libre': 'text', text: 'text',
   foto: 'photo', photo: 'photo',

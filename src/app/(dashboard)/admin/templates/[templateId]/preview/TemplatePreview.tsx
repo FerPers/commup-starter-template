@@ -3,7 +3,7 @@
 import type { Json } from '@/types/supabase.generated'
 import { useState } from 'react'
 
-type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no'
+type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity'
 
 interface PreviewItem {
   id: string
@@ -44,6 +44,7 @@ interface TemplateData {
 
 // ── Item type labels ────────────────────────────────────────────
 const TYPE_LABEL: Record<ItrItemType, string> = {
+  continuity: 'Continuidad por conductor',
   checkbox:    'Verificación',
   yes_no:      'Sí / No',
   number:      'Número',
@@ -63,6 +64,8 @@ function ItemControl({ item }: { item: PreviewItem }) {
     borderRadius: '8px', fontSize: '14px', color: 'var(--text-strong)', background: 'var(--card-bg)',
     boxSizing: 'border-box', fontFamily: 'inherit',
   }
+
+  if (item.item_type === 'continuity') return <p>Registro por pares o conductores: terminales, resultados, pantallas y lecturas según el procedimiento. Las filas se configuran al ejecutar el ITR.</p>
 
   if (item.item_type === 'checkbox') {
     return (

@@ -51,25 +51,27 @@ describe('outboxPolicy (conflictos al sincronizar)', () => {
   })
 })
 
-describe('localItrStatus (espejo del servidor)', () => {
-  const items = [
-    { id: 'a', is_critical: true },
-    { id: 'b', is_critical: false },
-    { id: 'c', is_critical: false },
-  ]
+describe('localItrStatus (validación de contenido)', () => {
+  const items = ['a', 'b', 'c'].map(id => ({ id, item_type: 'text' as const, is_required: true, is_critical: id === 'a', requires_photo: false, requires_measurement: false, condition_item_id: null, condition_value: null, options: null }))
   it('not_started without responses', () => {
     expect(localItrStatus(items, {})).toEqual({ pct: 0, status: 'not_started' })
   })
-  it('in_progress with partial responses, counting any saved response', () => {
-    expect(localItrStatus(items, { a: { is_passed: true } })).toEqual({ pct: 33, status: 'in_progress' })
+  it('does not count empty saved rows', () => {
+    expect(localItrStatus(items, { a: {}, b: {}, c: {} }).status).not.toBe('completed')
   })
-  it('completed at 100% without critical failures', () => {
-    expect(localItrStatus(items, { a: { is_passed: true }, b: {}, c: { is_passed: null } })).toEqual({ pct: 100, status: 'completed' })
+  it('counts actual content', () => {
+    expect(localItrStatus(items, { a: { value_text: 'dato' } })).toEqual({ pct: 33, status: 'in_progress' })
   })
-  it('rejected at 100% when a critical item failed', () => {
-    expect(localItrStatus(items, { a: { is_passed: false }, b: {}, c: {} })).toEqual({ pct: 100, status: 'rejected' })
+  it('completes only when requirements are satisfied', () => {
+    expect(localItrStatus(items, { a: { value_text: 'a' }, b: { value_text: 'b' }, c: { value_text: 'c' } })).toEqual({ pct: 100, status: 'completed' })
   })
-  it('a failed non-critical item does not reject', () => {
-    expect(localItrStatus(items, { a: { is_passed: true }, b: { is_passed: false }, c: {} }).status).toBe('completed')
+  it('preserves explicit critical rejection', () => {
+    expect(localItrStatus(items, { a: { value_text: 'a', is_passed: false }, b: { value_text: 'b' }, c: { value_text: 'c' } }).status).toBe('rejected')
+  })
+  it('never rounds a missing required answer to 100', () => {
+    const many = Array.from({ length: 200 }, (_, n) => ({ ...items[0], id: String(n) }))
+    const responses = Object.fromEntries(many.slice(0, 199).map(item => [item.id, { value_text: 'dato' }]))
+    expect(localItrStatus(many, responses).pct).toBeLessThan(100)
+    expect(localItrStatus(many, responses).status).toBe('in_progress')
   })
 })

@@ -3,7 +3,7 @@
 
 import type { Json } from '@/types/supabase.generated'
 
-export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no'
+export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity'
 
 export type Item = {
   id: string
@@ -19,6 +19,7 @@ export type Item = {
   acceptance_max: number | null
   acceptance_text: string | null
   unit: string | null
+  option_outcomes?: Json
   options: Json
   order_index: number
   condition_item_id: string | null
@@ -108,12 +109,23 @@ export function computeIsPassed(value: number, min: number | null, max: number |
   return true
 }
 
-export function isItemVisible(item: Item, responses: Record<string, Response>): boolean {
-  if (!item.condition_item_id) return true
-  const condResp = responses[item.condition_item_id]
-  if (!condResp) return false
-  const actual = String(
-    condResp.value_bool ?? condResp.value_option ?? condResp.value_text ?? condResp.value_numeric ?? '',
-  )
-  return actual === item.condition_value
+export type SigningRole = 'executor' | 'supervisor' | 'client'
+
+/** UI gate only; the server independently verifies assignment, order and content. */
+export function availableSigningRoles(
+  assignments: readonly { role: string; user_id: string }[],
+  signatures: readonly { role: string; user_id: string }[],
+  userId: string,
+): SigningRole[] {
+  for (const role of ['executor', 'supervisor', 'client'] as const) {
+    const assigned = assignments.filter(a => a.role === role)
+    const signed = signatures.filter(s => s.role === role)
+    if (assigned.length !== 1 || signed.length > 1) return []
+    if (signed.length === 1) {
+      if (signed[0].user_id !== assigned[0].user_id) return []
+      continue
+    }
+    return assigned[0].user_id === userId ? [role] : []
+  }
+  return []
 }

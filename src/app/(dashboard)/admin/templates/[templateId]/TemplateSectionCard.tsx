@@ -116,6 +116,7 @@ export default function TemplateSectionCard({
       options: Array.isArray(item.options)
         ? item.options.filter((o): o is string => typeof o === 'string')
         : null,
+      option_outcomes: (item.option_outcomes ?? {}) as ItemFormValues['option_outcomes'],
       condition_item_id: item.condition_item_id,
       condition_value: item.condition_value,
     }

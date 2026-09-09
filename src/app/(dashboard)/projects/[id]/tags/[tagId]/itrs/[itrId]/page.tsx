@@ -27,7 +27,7 @@ export default async function ItrExecutionPage({
             id, item_number, description, description_es, item_type,
             is_critical, is_required, requires_photo, requires_measurement,
             acceptance_min, acceptance_max, acceptance_text,
-            unit, options, order_index,
+            unit, options, option_outcomes, order_index,
             condition_item_id, condition_value
           )
         )

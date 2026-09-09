@@ -1,10 +1,13 @@
 'use server'
 
+import { evaluateContinuity } from '@/lib/itr/continuity'
+import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
+import { checkProjectAccess } from '@/lib/auth/access'
+import { evaluateItrCompletion } from '@/lib/itr/completion'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { logActivity } from '@/lib/log-activity'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
 import type { TablesInsert, TablesUpdate } from '@/types/supabase.generated'
 
@@ -150,17 +153,39 @@ export const upsertResponse = withAuth(
       isPassed?: boolean | null
     },
   ): Promise<{ error?: string }> => {
-    const { itrId, itemId, templateId } = input
+    const { itrId, itemId } = input
 
     // Guard: ITR aprobado es inmutable. Sin este chequeo, upsertResponse recalcula
     // status al final y pisaría 'approved' con 'in_progress'/'completed' (bug ses15).
-    const { data: itrRow } = await ctx.supabase
+    const { data: itrRow, error: itrReadError } = await ctx.supabase
       .from('itrs')
-      .select('status')
+      .select('status, template_id, project_id')
       .eq('id', itrId)
       .single()
-    if (itrRow?.status === 'approved') {
+    if (itrReadError || !itrRow) return { error: 'ITR no encontrado o no accesible' }
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
+    if (!access.ok) return { error: access.error }
+    const templateId = itrRow.template_id
+    if (input.templateId !== templateId) {
+      return { error: 'La revisión indicada no corresponde a este ITR' }
+    }
+    if (itrRow.status === 'approved') {
       return { error: 'Este ITR ya está aprobado y no puede modificarse' }
+    }
+
+    const { data: signedRows, error: signatureReadError } = await ctx.supabase
+      .from('itr_signatures').select('id').eq('itr_id', itrId).limit(1)
+    if (signatureReadError || !signedRows) return { error: 'No se pudo comprobar si el ITR está firmado' }
+    if (signedRows.length > 0) return { error: 'Este ITR tiene firmas. Debe reabrirse con motivo antes de modificarlo' }
+
+    // Resolve the item independently of the supplied template reference.
+    const { data: item, error: itemReadError } = await ctx.supabase
+      .from('itr_template_items')
+      .select('template_id, item_type, acceptance_min, acceptance_max, options, option_outcomes')
+      .eq('id', itemId)
+      .single()
+    if (itemReadError || !item || item.template_id !== templateId) {
+      return { error: 'La casilla no pertenece a la revisión de este ITR o no está disponible' }
     }
 
     // Build patch with only the fields explicitly provided.
@@ -178,11 +203,6 @@ export const upsertResponse = withAuth(
     // Defensive: if a numeric value is being set on a measurement item with
     // acceptance bounds, recompute is_passed server-side regardless of client.
     if ('valueNumeric' in input && input.valueNumeric !== null && input.valueNumeric !== undefined) {
-      const { data: item } = await ctx.supabase
-        .from('itr_template_items')
-        .select('item_type, acceptance_min, acceptance_max')
-        .eq('id', itemId)
-        .single()
       if (item?.item_type === 'measurement' && (item.acceptance_min !== null || item.acceptance_max !== null)) {
         const v = input.valueNumeric
         const minOk = item.acceptance_min === null || v >= Number(item.acceptance_min)
@@ -193,12 +213,26 @@ export const upsertResponse = withAuth(
 
     // UPDATE if response exists, INSERT otherwise. We don't use upsert because
     // upsert with partial fields would null-out the missing columns.
-    const { data: existing } = await ctx.supabase
+    const { data: existing, error: existingReadError } = await ctx.supabase
       .from('itr_responses')
-      .select('id')
+      .select('id, value_option, value_text')
       .eq('itr_id', itrId)
       .eq('item_id', itemId)
       .maybeSingle()
+
+    if (existingReadError) return { error: 'No se pudo comprobar la respuesta existente' }
+    if (item.item_type === 'continuity') {
+      const result = evaluateContinuity('valueText' in input ? input.valueText : existing?.value_text)
+      if (!result.data) return { error: 'La estructura por conductores no es válida' }
+      patch.is_passed = result.hasFail ? false : result.isComplete ? true : null
+    }
+    if (item.item_type === 'select') {
+      const selected = 'valueOption' in input ? input.valueOption : existing?.value_option
+      if (selected != null && (!Array.isArray(item.options) || !item.options.includes(selected))) {
+        return { error: 'La opción no pertenece a esta casilla' }
+      }
+      patch.is_passed = evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, selected).isPassed
+    }
 
     if (existing) {
       const { error } = await ctx.supabase
@@ -213,45 +247,33 @@ export const upsertResponse = withAuth(
       if (error) return { error: error.message }
     }
 
-    // Recalculate progress + status (with rejected-on-critical-fail logic).
-    const [
-      { count: totalItems },
-      { count: doneItems },
-      { data: criticalFails },
-    ] = await Promise.all([
-      ctx.supabase
-        .from('itr_template_items')
-        .select('*', { count: 'exact', head: true })
-        .eq('template_id', templateId),
-      ctx.supabase
-        .from('itr_responses')
-        .select('*', { count: 'exact', head: true })
-        .eq('itr_id', itrId),
-      ctx.supabase
-        .from('itr_responses')
-        .select('item_id, itr_template_items!inner(is_critical)')
-        .eq('itr_id', itrId)
-        .eq('is_passed', false)
-        .eq('itr_template_items.is_critical', true)
-        .limit(1),
+    // Evaluate the assigned revision's applicable content, not response-row counts.
+    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
+      ctx.supabase.from('itr_template_items').select('*').eq('template_id', templateId),
+      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
+      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
     ])
+    if (itemsResult.error || responsesResult.error || attachmentsResult.error
+      || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
+      return { error: 'La respuesta se guardó, pero no se pudo comprobar el avance del ITR' }
+    }
+    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
+    const applicableIds = new Set(completion.applicableItemIds)
+    const criticalIds = new Set(itemsResult.data.filter(item => item.is_critical && applicableIds.has(item.id)).map(item => item.id))
+    const hasCriticalFail = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => criticalIds.has(response.item_id) && response.is_passed === false)
+    const newStatus = hasCriticalFail ? 'rejected'
+      : completion.isComplete ? 'completed'
+        : completion.completedCount > 0 ? 'in_progress' : 'not_started'
 
-    const pct = totalItems ? Math.round(((doneItems ?? 0) / totalItems) * 100) : 0
-    const hasCriticalFail = (criticalFails?.length ?? 0) > 0
-
-    let newStatus: 'not_started' | 'in_progress' | 'completed' | 'rejected'
-    if (pct === 0) newStatus = 'not_started'
-    else if (pct < 100) newStatus = 'in_progress'
-    else newStatus = hasCriticalFail ? 'rejected' : 'completed'
-
-    await ctx.supabase
+    const { error: progressError } = await ctx.supabase
       .from('itrs')
       .update({
-        progress_pct: pct,
+        progress_pct: completion.progressPct,
         status: newStatus,
-        completed_date: pct >= 100 ? new Date().toISOString() : null,
+        completed_date: completion.isComplete && !hasCriticalFail ? new Date().toISOString() : null,
       })
       .eq('id', itrId)
+    if (progressError) return { error: 'La respuesta se guardó, pero no se pudo actualizar el avance del ITR' }
 
     return {}
   },
@@ -276,6 +298,24 @@ export const saveItrAttachment = withAuth(
   ): Promise<{ id?: string; error?: string }> => {
     const { itrId, itemId, storagePath, fileType, latitude, longitude, projectId, tagId } = input
 
+    const { data: itr, error: itrError } = await ctx.supabase.from('itrs')
+      .select('template_id, project_id, tag_id, status').eq('id', itrId).single()
+    if (itrError || !itr) return { error: 'ITR no encontrado' }
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itr.project_id)
+    if (!access.ok) return { error: access.error }
+    if (itr.project_id !== projectId || itr.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
+    if (itr.status === 'approved') return { error: 'El ITR aprobado no puede modificarse' }
+    const { data: signatures, error: signatureError } = await ctx.supabase.from('itr_signatures').select('id').eq('itr_id', itrId)
+    if (signatureError || !signatures) return { error: 'No se pudieron verificar las firmas' }
+    if (signatures.length > 0) return { error: 'El ITR tiene firmas; requiere reapertura antes de modificar evidencias' }
+
+    if (itemId) {
+      const { data: item, error: itemError } = await ctx.supabase.from('itr_template_items')
+        .select('id').eq('id', itemId).eq('template_id', itr.template_id).maybeSingle()
+      if (itemError || !item) return { error: 'El ítem no pertenece a la plantilla del ITR' }
+    }
+    if (!storagePath.trim() || !fileType.trim()) return { error: 'Falta la referencia o tipo de evidencia' }
+
     const { data, error } = await ctx.supabase
       .from('itr_attachments')
       .insert({
@@ -292,6 +332,24 @@ export const saveItrAttachment = withAuth(
       .single()
 
     if (error) return { error: error.message }
+
+    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
+      ctx.supabase.from('itr_template_items').select('*').eq('template_id', itr.template_id),
+      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
+      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
+    ])
+    if (itemsResult.error || responsesResult.error || attachmentsResult.error || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
+      return { error: 'La evidencia cambió, pero no se pudo recalcular el avance; vuelve a intentarlo' }
+    }
+    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
+    const applicable = new Set(completion.applicableItemIds)
+    const critical = new Set(itemsResult.data.filter(item => item.is_critical && applicable.has(item.id)).map(item => item.id))
+    const rejected = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => critical.has(response.item_id) && response.is_passed === false)
+    const { error: progressError } = await ctx.supabase.from('itrs').update({
+      progress_pct: completion.progressPct,
+      status: rejected ? 'rejected' : completion.isComplete ? 'completed' : 'in_progress',
+    }).eq('id', itrId)
+    if (progressError) return { error: 'La evidencia cambió, pero no se pudo guardar el avance actualizado' }
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
     return { id: data.id }
@@ -312,20 +370,51 @@ export const deleteItrAttachment = withAuth(
       itrId: string
     },
   ): Promise<{ error?: string }> => {
-    const { attachmentId, storagePath, projectId, tagId, itrId } = input
+    const { attachmentId, projectId, tagId, itrId } = input
 
-    // Delete from storage
-    const { error: storageError } = await ctx.supabase.storage
-      .from('itr-attachments')
-      .remove([storagePath])
-    if (storageError) return { error: storageError.message }
+    const { data: itr, error: itrError } = await ctx.supabase.from('itrs')
+      .select('template_id, project_id, tag_id, status').eq('id', itrId).single()
+    if (itrError || !itr) return { error: 'ITR no encontrado' }
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itr.project_id)
+    if (!access.ok) return { error: access.error }
+    if (itr.project_id !== projectId || itr.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
+    if (itr.status === 'approved') return { error: 'El ITR aprobado no puede modificarse' }
+    const { data: signatures, error: signatureError } = await ctx.supabase.from('itr_signatures').select('id').eq('itr_id', itrId)
+    if (signatureError || !signatures) return { error: 'No se pudieron verificar las firmas' }
+    if (signatures.length > 0) return { error: 'El ITR tiene firmas; requiere reapertura antes de modificar evidencias' }
 
-    // Delete DB record
+    const { data: attachment, error: attachmentError } = await ctx.supabase.from('itr_attachments')
+      .select('id, file_url').eq('id', attachmentId).eq('itr_id', itrId).single()
+    if (attachmentError || !attachment) return { error: 'El adjunto no pertenece al ITR' }
+
+    // Unlink metadata only. Evidence binaries are immutable: deleting the object
+    // before this guarded write could destroy signed evidence during a race.
+    // Unreferenced objects remain until a separate, retention-aware GC exists;
+    // do not bypass the storage policy with a service-role removal here.
     const { error } = await ctx.supabase
       .from('itr_attachments')
       .delete()
       .eq('id', attachmentId)
+      .eq('itr_id', itrId)
     if (error) return { error: error.message }
+
+    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
+      ctx.supabase.from('itr_template_items').select('*').eq('template_id', itr.template_id),
+      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
+      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
+    ])
+    if (itemsResult.error || responsesResult.error || attachmentsResult.error || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
+      return { error: 'La evidencia cambió, pero no se pudo recalcular el avance; vuelve a intentarlo' }
+    }
+    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
+    const applicable = new Set(completion.applicableItemIds)
+    const critical = new Set(itemsResult.data.filter(item => item.is_critical && applicable.has(item.id)).map(item => item.id))
+    const rejected = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => critical.has(response.item_id) && response.is_passed === false)
+    const { error: progressError } = await ctx.supabase.from('itrs').update({
+      progress_pct: completion.progressPct,
+      status: rejected ? 'rejected' : completion.isComplete ? 'completed' : 'in_progress',
+    }).eq('id', itrId)
+    if (progressError) return { error: 'La evidencia cambió, pero no se pudo guardar el avance actualizado' }
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
     return {}
@@ -344,62 +433,19 @@ export const signItr = withAuthOnly(
     tagId: string,
     signatureImage?: string | null,
   ): Promise<{ error?: string }> => {
-    // Guard autoritativo: solo se puede firmar un ITR completado (100% y sin críticos fallados).
-    // Bloquea not_started/in_progress/rejected (re-ejecutar para volver a completed) y approved (ya tiene 3 firmas).
-    const { data: itrRow } = await ctx.supabase
-      .from('itrs')
-      .select('status, progress_pct')
-      .eq('id', itrId)
-      .single()
+    const { data: itrRow, error: itrError } = await ctx.supabase.from('itrs')
+      .select('project_id, tag_id').eq('id', itrId).single()
+    if (itrError || !itrRow) return { error: 'ITR no encontrado' }
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
+    if (!access.ok) return { error: access.error }
+    if (itrRow.project_id !== projectId || itrRow.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
+    if (!(['executor', 'supervisor', 'client'] as const).includes(role)) return { error: 'Rol de firma no válido' }
 
-    if (!itrRow) return { error: 'ITR no encontrado' }
-    if (itrRow.status === 'approved') return { error: 'El ITR ya está aprobado' }
-    if (itrRow.status === 'rejected') {
-      return { error: 'No se puede firmar un ITR rechazado. Corrige los ítems críticos para que pase a "completado".' }
-    }
-    if (itrRow.status !== 'completed' || (itrRow.progress_pct ?? 0) < 100) {
-      return { error: 'No se puede firmar: el ITR no está completo. Responde todos los ítems antes de firmar.' }
-    }
-
-    const { data: existing } = await ctx.supabase
-      .from('itr_signatures')
-      .select('id')
-      .eq('itr_id', itrId)
-      .eq('role', role)
-      .maybeSingle()
-
-    if (existing) return { error: `Ya firmado como ${role}` }
-
-    const { error } = await ctx.supabase
-      .from('itr_signatures')
-      .insert({ itr_id: itrId, user_id: ctx.userId, role, signature_image: signatureImage ?? null })
-
+    // Database transaction owns content validation, assignment order, audit and approval.
+    const { error } = await ctx.supabase.rpc('sign_itr_atomic', {
+      p_itr_id: itrId, p_role: role, p_signature_image: signatureImage ?? null,
+    })
     if (error) return { error: error.message }
-
-    // Check if all 3 roles signed → approved
-    const { count } = await ctx.supabase
-      .from('itr_signatures')
-      .select('*', { count: 'exact', head: true })
-      .eq('itr_id', itrId)
-
-    if ((count ?? 0) >= 3) {
-      await ctx.supabase.from('itrs').update({ status: 'approved' }).eq('id', itrId)
-      // Auto-complete any work plan items that reference this ITR
-      await ctx.supabase
-        .from('work_plan_items')
-        .update({ status: 'completed' })
-        .eq('itr_id', itrId)
-        .in('status', ['not_started', 'in_progress'])
-
-      await logActivity(ctx.supabase, {
-        orgId: ctx.orgId,
-        userId: ctx.userId,
-        entityType: 'itr',
-        entityId: itrId,
-        action: 'approved',
-        payload: { projectId, tagId, signingRole: role },
-      })
-    }
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
     revalidatePath(`/projects/${projectId}/tags/${tagId}`)
@@ -431,58 +477,24 @@ export const revokeItrApproval = withAuth(
 
     const { itrId, projectId, tagId } = input
 
-    const { data: itrRow } = await ctx.supabase
-      .from('itrs')
-      .select('id, status, itr_number, project_id')
-      .eq('id', itrId)
-      .single()
-
-    if (!itrRow) return { error: 'ITR no encontrado' }
-    if (itrRow.project_id !== projectId) return { error: 'ITR no pertenece al proyecto' }
-    if (itrRow.status !== 'approved') {
-      return { error: 'Solo se pueden revocar ITRs aprobados' }
+    const { data: itrRow, error: itrReadError } = await ctx.supabase.from('itrs')
+      .select('project_id, tag_id').eq('id', itrId).single()
+    if (itrReadError || !itrRow) return { error: 'ITR no encontrado' }
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
+    if (!access.ok) return { error: access.error }
+    if (itrRow.project_id !== projectId || itrRow.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
+    const { data, error } = await ctx.supabase.rpc('reopen_itr_atomic', { p_itr_id: itrId, p_reason: reason })
+    if (error) return { error: error.message }
+    if (!data || typeof data !== 'object' || Array.isArray(data)
+      || typeof data.revoked_count !== 'number' || !Array.isArray(data.previous_signatures)) {
+      return { error: 'La reapertura respondió sin detalle verificable; actualiza el ITR antes de continuar' }
     }
-
-    // Snapshot current signatures so we can build notifications + audit payload.
-    const { data: signatures } = await ctx.supabase
-      .from('itr_signatures')
-      .select('id, user_id, role, signed_at')
-      .eq('itr_id', itrId)
-
-    const signers = signatures ?? []
-
-    // Drop signatures (UNIQUE(itr_id, role) won't conflict on re-sign later).
-    const { error: delErr } = await ctx.supabase
-      .from('itr_signatures')
-      .delete()
-      .eq('itr_id', itrId)
-    if (delErr) return { error: delErr.message }
-
-    // Downgrade status. Responses stay intact; status drops to completed because
-    // the ITR was at 100% to ever be approved.
-    const { error: updErr } = await ctx.supabase
-      .from('itrs')
-      .update({ status: 'completed' })
-      .eq('id', itrId)
-    if (updErr) return { error: updErr.message }
-
-    await logActivity(ctx.supabase, {
-      orgId: ctx.orgId,
-      userId: ctx.userId,
-      entityType: 'itr',
-      entityId: itrId,
-      action: 'revoked',
-      payload: {
-        projectId,
-        tagId,
-        reason,
-        previousSignatures: signers.map(s => ({
-          userId: s.user_id,
-          role: s.role,
-          signedAt: s.signed_at,
-        })),
-      },
-    })
+    const revokedCount = data.revoked_count
+    const itrNumber = typeof data.itr_number === 'string' ? data.itr_number : ''
+    const signers = data.previous_signatures.flatMap(signature =>
+      signature && typeof signature === 'object' && !Array.isArray(signature) && typeof signature.user_id === 'string'
+        ? [{ user_id: signature.user_id }] : [],
+    )
 
     // Notify each signer (dedupe by user — a user could in theory have signed
     // more than one role, though UNIQUE(itr_id, role) and one-user-per-cert
@@ -496,21 +508,26 @@ export const revokeItrApproval = withAuth(
         org_id: ctx.orgId,
         recipient_user_id: uid,
         kind: 'itr_signature_revoked',
-        title: `Tu firma en el ITR ${itrRow.itr_number} fue revocada`,
+        title: `Tu firma en el ITR ${itrNumber} fue revocada`,
         body: reason,
         link_url: `/projects/${projectId}/tags/${tagId}/itrs/${itrId}`,
-        payload: { itrId, projectId, tagId, itrNumber: itrRow.itr_number, reason },
+        payload: { itrId, projectId, tagId, itrNumber: itrNumber, reason },
       }))
       // Admin client: notifications are fire-and-forget and the user's RLS
       // context can't INSERT rows for other recipients across orgs.
-      const admin = createAdminClient()
-      const { error: notifErr } = await admin.from('notifications').insert(rows)
-      if (notifErr) console.error('[notifications.insert]', notifErr)
+      try {
+        const admin = createAdminClient()
+        const { error: notifErr } = await admin.from('notifications').insert(rows)
+        if (notifErr) console.error('[notifications.insert]', notifErr)
+      } catch (notificationError) {
+        // The transaction already succeeded; a notification failure must not invite a second revocation.
+        console.error('[notifications.insert]', notificationError)
+      }
     }
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
     revalidatePath(`/projects/${projectId}/tags/${tagId}`)
     revalidatePath(`/projects/${projectId}/itrs`)
-    return { revokedCount: signers.length }
+    return { revokedCount }
   },
 )

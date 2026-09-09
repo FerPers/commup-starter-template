@@ -11,7 +11,7 @@ export type OrgMemberRole = 'owner' | 'admin' | 'architect' | 'leader' | 'inspec
 export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled'
 export type TagStatus = 'not_started' | 'in_progress' | 'completed' | 'on_hold'
 export type ItrStatus = 'not_started' | 'in_progress' | 'completed' | 'approved' | 'rejected'
-export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no'
+export type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity'
 export type SignatureRole = 'executor' | 'supervisor' | 'client'
 export type PunchCategory = 'A' | 'B' | 'C'
 export type PunchStatus = 'open' | 'in_progress' | 'closed' | 'cancelled'
@@ -334,6 +334,7 @@ export interface ItrTemplateItem {
   requires_photo: boolean
   requires_measurement: boolean
   options: Json | null       // for 'select' type items
+  option_outcomes?: Json     // explicit pass/fail/not_applicable by exact option
   unit: string | null
   acceptance_min: number | null
   acceptance_max: number | null

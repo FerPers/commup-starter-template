@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
-import type { Item, Signature } from './types'
+import type { Item, Signature, SigningRole } from './types'
 
 // ── Sign Modal (canvas drawing pad) ──────────────────────────────────
 
 export default function SignModal({
   itrNumber,
   itrSignatures,
+  allowedRoles,
+  ready,
   criticalBlocked,
   isPending,
   signError,
@@ -17,6 +19,8 @@ export default function SignModal({
 }: {
   itrNumber: string
   itrSignatures: Signature[]
+  allowedRoles: SigningRole[]
+  ready: boolean
   criticalBlocked: Item[]
   isPending: boolean
   signError: string | null
@@ -25,8 +29,7 @@ export default function SignModal({
 }) {
   const t = useTranslations('ItrExecution')
   const [signRole, setSignRole] = useState<'executor' | 'supervisor' | 'client'>(() => {
-    const roles = ['executor', 'supervisor', 'client'] as const
-    return roles.find(r => !itrSignatures.some(s => s.role === r)) ?? 'executor'
+    return allowedRoles[0] ?? 'executor'
   })
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -87,7 +90,8 @@ export default function SignModal({
     setHasDrawn(false)
   }
 
-  const blocked = signRole === 'executor' && criticalBlocked.length > 0
+  const blocked = criticalBlocked.length > 0
+  const cannotSign = !ready || !allowedRoles.includes(signRole) || isPending || blocked || !hasDrawn
 
   return (
     <div
@@ -107,8 +111,8 @@ export default function SignModal({
               return (
                 <button
                   key={role}
-                  onClick={() => !alreadySigned && setSignRole(role)}
-                  disabled={alreadySigned}
+                  onClick={() => allowedRoles.includes(role) && setSignRole(role)}
+                  disabled={alreadySigned || !allowedRoles.includes(role)}
                   style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? '#7c3aed' : 'var(--border)', background: alreadySigned ? 'var(--gray-50)' : signRole === role ? '#f5f3ff' : 'var(--card-bg)', color: alreadySigned ? 'var(--gray-400)' : signRole === role ? '#7c3aed' : '#374151', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
                 >
                   {alreadySigned ? '✓ ' : ''}{t(`roles.${role}` as Parameters<typeof t>[0])}
@@ -168,9 +172,9 @@ export default function SignModal({
             {t('signModal.cancel')}
           </button>
           <button
-            onClick={() => onSign(signRole, canvasRef.current!.toDataURL('image/png'))}
-            disabled={isPending || blocked || !hasDrawn}
-            style={{ padding: '9px 20px', background: isPending || blocked || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending || blocked || !hasDrawn ? 'not-allowed' : 'pointer' }}
+            onClick={() => { if (!cannotSign) onSign(signRole, canvasRef.current!.toDataURL('image/png')) }}
+            disabled={cannotSign}
+            style={{ padding: '9px 20px', background: cannotSign ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: cannotSign ? 'not-allowed' : 'pointer' }}
           >
             {isPending ? t('signModal.signing') : t('signModal.confirm')}
           </button>

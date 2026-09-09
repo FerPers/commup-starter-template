@@ -6,6 +6,7 @@ import type { Database } from '@/types/supabase.generated'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
+import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
 import { detectItrPhase } from '@/lib/utils'
 import type { Enums } from '@/types/supabase.generated'
 
@@ -154,6 +155,7 @@ export interface ItemPayload {
   acceptance_max?: number | null
   acceptance_text?: string | null
   options?: string[] | null
+  option_outcomes?: Record<string, 'pass' | 'fail' | 'not_applicable'>
   order_index: number
   condition_item_id?: string | null
   condition_value?: string | null
@@ -172,6 +174,8 @@ export const createItem = withAuthOnly(
     data: ItemPayload,
   ): Promise<{ id?: string; error?: string }> => {
     if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
+    if (!validateOptionOutcomes(data.options ?? null, data.option_outcomes ?? {})) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
+    if (data.item_type !== 'select' && Object.keys(data.option_outcomes ?? {}).length) return { error: 'Solo las listas admiten resultados por opción' }
     const { data: item, error } = await ctx.supabase
       .from('itr_template_items')
       .insert({ ...data, section_id: sectionId, template_id: templateId })
@@ -186,7 +190,14 @@ export const createItem = withAuthOnly(
 export const updateItem = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, itemId: string, data: Partial<ItemPayload>): Promise<{ error?: string }> => {
-    if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
+    const { data: current, error: readError } = await ctx.supabase.from('itr_template_items')
+      .select('item_type, options, option_outcomes').eq('id', itemId).single()
+    if (readError || !current) return { error: 'Ítem no encontrado o sin acceso' }
+    const merged = { ...current, ...data }
+    if (merged.item_type === 'select' && !(Array.isArray(merged.options) && merged.options.length)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
+    const outcomes = data.option_outcomes ?? current.option_outcomes ?? {}
+    if (!validateOptionOutcomes(merged.options, outcomes)) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
+    if (merged.item_type !== 'select' && Object.keys(outcomes).length) return { error: 'Solo las listas admiten resultados por opción' }
     const { error } = await ctx.supabase
       .from('itr_template_items')
       .update(data)
@@ -242,7 +253,7 @@ export const publishTemplateVersion = withAuthOnly(
           itr_template_items(
             id, item_number, description, description_es, item_type,
             is_required, is_critical, requires_photo, requires_measurement,
-            unit, acceptance_min, acceptance_max, acceptance_text, options, order_index,
+            unit, acceptance_min, acceptance_max, acceptance_text, options, option_outcomes, order_index,
             condition_item_id, condition_value
           )
         )
@@ -339,6 +350,7 @@ export const publishTemplateVersion = withAuthOnly(
         acceptance_max: it.acceptance_max,
         acceptance_text: it.acceptance_text,
         options: it.options,
+        option_outcomes: it.option_outcomes,
         order_index: it.order_index,
         condition_value: it.condition_value,
         // condition_item_id will be patched after all items are inserted
@@ -700,7 +712,7 @@ async function cloneTemplateInternal(
           id, title, order_index,
           itr_template_items(
             item_number, description, description_es, item_type, is_required,
-            is_critical, requires_photo, requires_measurement, options, unit,
+            is_critical, requires_photo, requires_measurement, options, option_outcomes, unit,
             acceptance_min, acceptance_max, acceptance_text, order_index
           )
         )
