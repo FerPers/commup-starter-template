@@ -147,6 +147,10 @@ Sin estimación en jornadas: la entrega de hoy pide medir con los primeros lotes
 
 Migraciones aplicadas en prod: 20260909230000 → 20260909251000 (+ `itr_option_outcomes_list_shape`). Verificación en navegador pendiente (requiere sesión): probado por pruebas unitarias (168), evaluadores SQL en prod y build.
 
+### Estado al cierre del 2026-09-09
+
+Fase 0 completa. Fase 1: I10A v3 e I01A v3 como borradores inactivos para revisión; I06A v2 e I04A v2 ratificadas. Fase 2 completa para las cuatro familias: 262 borradores inactivos (C 98, C+V 75, D 45, M 30, DM 14) generados con `scripts/itr-v2/generar-v2-listas.mjs` a partir de las tablas del Word; informe con enlaces en `docs/ITR-FASE2-LOTE-2026-09-09.md`. Quedan ~35 formatos para diseño manual (listados como bloqueados en el informe) y la Fase 6 (organización catálogo + clonación, regenerar Ecopetrol). Regla operativa: el generador crea siempre version max+1; no re-ejecutar `--apply` sobre una familia ya generada.
+
 ### Fase 1 — Fijar el estándar con tres referencias
 
 - I06A v2 se ratifica como referencia de «lista de chequeo». Solo se le añade `item_number` original y política de fotos.
