@@ -76,7 +76,8 @@ def classify_table(table):
             if not re.match(r'^\s*\d', num) and (len(r) == 1 or (num and not desc)):
                 continue
             clean = PRESERV_RE.sub(' ', desc)
-            info['items'].append({'num': num, 'desc': desc[:120], 'value': bool(VALUE_RE.search(clean)), 'conditional': bool(COND_RE.search(desc))})
+            data_like = bool(re.search(r'[:：]\s*$|_{3,}|^(?:input|output|indication|calibration)\s+(?:range|check)|\b(?:range|rango|setting|set ?point|ajuste)\s*:', desc.strip(), re.I))
+            info['items'].append({'num': num, 'desc': desc[:120], 'value': bool(VALUE_RE.search(clean)) or data_like, 'conditional': bool(COND_RE.search(desc))})
         return info
     if NOTE_RE.search(first) and ncols <= 2 and len(rows) <= 3:
         info['kind'] = 'nota'
