@@ -711,6 +711,8 @@ async function cloneTemplateInternal(
 
     const stamp = new Date().toISOString().slice(0, 10)
     const provenance = `Importada de «${sourceOrg?.name ?? 'otra organización'}» (v${source.version}, ${stamp}).`
+    // Sin encadenar notas de procedencia de importaciones anteriores.
+    const sourceDescription = (source.description ?? '').replace(/(?:Revisión \d+: )?[Ii]mportada de «[^»]*» \([^)]*\)\.?\s*/g, '').trim() || null
     const { data: cloned, error: tplErr } = await ctx.supabase
       .from('itr_templates')
       .insert({
@@ -722,8 +724,8 @@ async function cloneTemplateInternal(
         title: source.title,
         title_es: source.title_es,
         description: kind === 'revision'
-          ? `Revisión ${version}: ${provenance}${source.description ? ' ' + source.description : ''}`
-          : source.description ?? provenance,
+          ? `Revisión ${version}: ${provenance}${sourceDescription ? ' ' + sourceDescription : ''}`
+          : sourceDescription ?? provenance,
         version,
         is_active: kind === 'created',
         is_global: false,

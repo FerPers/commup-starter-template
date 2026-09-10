@@ -22,7 +22,7 @@
 //     Luis como owner, disciplinas, fases y tipos de equipo copiados del origen.
 //   • --seed-config: crea en el destino las disciplinas / fases / tipos de equipo
 //     que falten (por código) antes de sincronizar.
-// Salida: docs/CATALOGO-SYNC-<fecha>.csv (--csv <ruta> para otro destino).
+// Salida: docs/CATALOGO-SYNC-<fecha>-<origen>-<destino>.csv (--csv <ruta> para otro destino).
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -47,6 +47,9 @@ const env = Object.fromEntries(readFileSync(path.join(ROOT, '.env.local'), 'utf8
 const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
 const SECTIONS = 'itr_template_sections(id, title, order_index, itr_template_items(id, item_number, description, description_es, description_es_source, item_type, is_required, is_critical, requires_photo, requires_document, requires_measurement, options, option_outcomes, unit, acceptance_min, acceptance_max, acceptance_text, order_index, condition_item_id, condition_value))'
+/** Quita las notas de procedencia de importaciones anteriores para no encadenarlas. */
+const stripProvenance = d => (d ?? '').replace(/(?:Revisión \d+: )?[Ii]mportada de «[^»]*» \([^)]*\)\.?\s*/g, '').trim()
+
 const fail = (e, what) => { if (e) throw new Error(`${what}: ${e.message ?? e}`) }
 
 async function org(slug) {
@@ -88,7 +91,7 @@ async function copyTemplate(src, target, cfg, version, activate) {
   const { data: tpl, error } = await db.from('itr_templates').insert({
     org_id: target.id, discipline_id: disc, phase_id: phase, equipment_type_id: cfg.equipment_types.get(src.equipment_types?.code) ?? null,
     code: src.code, title: src.title, title_es: src.title_es,
-    description: version === 1 ? (src.description ?? `Importada de «${src.orgName}» (v${src.version}, ${TODAY}).`) : `Revisión ${version}: importada de «${src.orgName}» (v${src.version}, ${TODAY}).${src.description ? ' ' + src.description : ''}`,
+    description: version === 1 ? (stripProvenance(src.description) || `Importada de «${src.orgName}» (v${src.version}, ${TODAY}).`) : `Revisión ${version}: importada de «${src.orgName}» (v${src.version}, ${TODAY}).${stripProvenance(src.description) ? ' ' + stripProvenance(src.description) : ''}`,
     version, is_active: activate, is_global: false,
   }).select('id').single()
   fail(error, `insertar ${src.code}`)
@@ -165,7 +168,7 @@ async function main() {
       tally.error++; out.push([src.code, 'ERROR', src.version, '', '', '', e.message]); console.error(src.code, 'ERROR', e.message)
     }
   }
-  const file = path.resolve(ROOT, arg('--csv', `docs/CATALOGO-SYNC-${TODAY}.csv`))
+  const file = path.resolve(ROOT, arg('--csv', `docs/CATALOGO-SYNC-${TODAY}-${source.slug}-${target.slug}.csv`))
   writeFileSync(file, '﻿' + out.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n') + '\n')
   console.log(`\n${srcTemplates.length} plantillas activas en origen → nuevas ${tally.created} · revisiones ${tally.revision} · sin cambios ${tally.unchanged} · errores ${tally.error}\n${APPLY ? 'aplicado' : 'vista previa'} → ${file}`)
 }
