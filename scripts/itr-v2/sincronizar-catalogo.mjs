@@ -8,7 +8,7 @@
 //   node scripts/itr-v2/sincronizar-catalogo.mjs                      # vista previa DEMO → catálogo
 //   node scripts/itr-v2/sincronizar-catalogo.mjs --apply              # escribe
 //   node scripts/itr-v2/sincronizar-catalogo.mjs --from <slug> --to <slug> [--apply]
-//   node scripts/itr-v2/sincronizar-catalogo.mjs --to morelco --apply # catálogo → Ecopetrol
+//   node scripts/itr-v2/sincronizar-catalogo.mjs --from commup-catalogo --to morelco --apply [--activar]  # catálogo → Ecopetrol
 //
 // Reglas:
 //   • Origen: revisión ACTIVA por código (se ignoran los códigos QA-*).
@@ -17,7 +17,10 @@
 //   • Si el destino es la organización catálogo (settings.is_template_catalog), la
 //     revisión nueva se activa de inmediato (el catálogo no ejecuta ITRs) y la
 //     matriz equipo×ITR se copia del origen. En una org cliente queda INACTIVA:
-//     el editor la revisa y pulsa «Activar esta revisión».
+//     el editor la revisa y pulsa «Activar esta revisión»; con --activar se activa
+//     directamente (como la RPC: desactiva las anteriores y re-apunta la matriz),
+//     salvo los códigos con ITRs ya creados sobre la revisión anterior, que se
+//     dejan inactivos para activarlos a mano.
 //   • --crear-catalogo: crea la org «CommUp Catálogo» (slug commup-catalogo) con
 //     Luis como owner, disciplinas, fases y tipos de equipo copiados del origen.
 //   • --seed-config: crea en el destino las disciplinas / fases / tipos de equipo
@@ -40,6 +43,7 @@ const arg = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] 
 const FROM = arg('--from', 'demo-refiner-a-los-andes')
 const TO = arg('--to', CATALOG_SLUG)
 const CREATE_CATALOG = args.includes('--crear-catalogo')
+const ACTIVATE = args.includes('--activar')
 const SEED_CONFIG = args.includes('--seed-config') || CREATE_CATALOG
 
 const env = Object.fromEntries(readFileSync(path.join(ROOT, '.env.local'), 'utf8').split('\n')
@@ -125,6 +129,29 @@ async function activateInCatalog(target, code, newId, srcId, cfg) {
   return matrix.length
 }
 
+/** Activa una revisión en una org cliente como la RPC activate_itr_template_revision. */
+async function activateInClient(target, code, newId) {
+  const { data: others } = await db.from('itr_templates').select('id').eq('org_id', target.id).eq('code', code).neq('id', newId)
+  const otherIds = (others ?? []).map(o => o.id)
+  if (otherIds.length) {
+    const { count } = await db.from('itrs').select('id', { count: 'exact', head: true }).in('template_id', otherIds)
+    if (count) return { activated: false, note: `inactiva: ${count} ITR(s) usan la revisión anterior → activar a mano` }
+    fail((await db.from('itr_templates').update({ is_active: false }).in('id', otherIds)).error, 'desactivar anteriores')
+    const { data: rows } = await db.from('equipment_type_templates').select('id, equipment_type_id').in('itr_template_id', otherIds)
+    const { data: mine } = await db.from('equipment_type_templates').select('equipment_type_id').eq('itr_template_id', newId)
+    const have = new Set((mine ?? []).map(r => r.equipment_type_id))
+    let moved = 0
+    for (const r of rows ?? []) {
+      if (have.has(r.equipment_type_id)) { fail((await db.from('equipment_type_templates').delete().eq('id', r.id)).error, 'matriz duplicada'); continue }
+      fail((await db.from('equipment_type_templates').update({ itr_template_id: newId }).eq('id', r.id)).error, 'matriz'); have.add(r.equipment_type_id); moved++
+    }
+    fail((await db.from('itr_templates').update({ is_active: true }).eq('id', newId)).error, 'activar')
+    return { activated: true, note: `activada (${moved} filas de matriz re-apuntadas)` }
+  }
+  fail((await db.from('itr_templates').update({ is_active: true }).eq('id', newId)).error, 'activar')
+  return { activated: true, note: 'activada' }
+}
+
 async function main() {
   const source = await org(FROM)
   if (!source) throw new Error(`no existe la org origen «${FROM}»`)
@@ -153,17 +180,24 @@ async function main() {
     const hash = templateContentHash(src.itr_template_sections)
     const local = latest.get(src.code)
     try {
-      if (local && local.hash === hash) { tally.unchanged++; out.push([src.code, 'sin cambios', src.version, local.version, local.id, '', '']); continue }
+      if (local && local.hash === hash) {
+        // Idéntica pero inactiva (importada antes sin activar): con --activar se activa ahora.
+        let note = ''
+        if (!local.is_active && !targetIsCatalog && ACTIVATE) note = APPLY ? (await activateInClient(target, src.code, local.id)).note : 'se activará (--activar)'
+        tally.unchanged++; out.push([src.code, 'sin cambios', src.version, local.version, local.id, '', note]); continue
+      }
       const version = local ? local.version + 1 : 1
       const action = local ? 'revisión' : 'nueva'
       let id = '', matrix = ''
+      let note = local && !targetIsCatalog ? (ACTIVATE ? 'se activará (--activar)' : 'inactiva: activar en el editor') : ''
       if (APPLY) {
         id = await copyTemplate(src, target, cfg, version, !local || targetIsCatalog)
         if (targetIsCatalog) matrix = await activateInCatalog(target, src.code, id, src.id, cfg)
+        else if (local && ACTIVATE) note = (await activateInClient(target, src.code, id)).note
         await db.from('activity_log').insert({ org_id: target.id, user_id: ACTOR, entity_type: 'itr_template', entity_id: id, action: 'template_imported', payload: { code: src.code, version, kind: local ? 'revision' : 'created', source_org_id: source.id, source_template_id: src.id, source_version: src.version, content_hash: hash, source: 'sincronizar-catalogo' } })
       }
       tally[local ? 'revision' : 'created']++
-      out.push([src.code, action, src.version, version, id, matrix, local && !targetIsCatalog ? 'inactiva: activar en el editor' : ''])
+      out.push([src.code, action, src.version, version, id, matrix, note])
     } catch (e) {
       tally.error++; out.push([src.code, 'ERROR', src.version, '', '', '', e.message]); console.error(src.code, 'ERROR', e.message)
     }
