@@ -193,9 +193,9 @@ Cada tipo se define una vez (esquema + validación + PDF), se prueba en una plan
 
 I33C (lazo de válvula), I05A↔I10A (dependencia entre ITR del mismo tag: necesita consulta al ITR aceptado o un `select` «I10A aceptado: referencia» verificado por el supervisor), I02A (fórmula de espesor ligada a DN, no universal), contradicciones de originales, unidades ausentes. No frenan las otras fases.
 
-### Fase 6 — Repositorio y despliegue a organizaciones
+### Fase 6 — Repositorio y despliegue a organizaciones — ✅ SOFTWARE Y CATÁLOGO LISTOS (2026-09-10)
 
-Decidir modelo (organización catálogo + clonación, o `is_global`), regenerar la copia de Ecopetrol desde el catálogo v2 conservando sus v1 inactivas, y dejar el flujo de «Publicar revisión» como único camino (retirar los scripts `preparar-*.mjs`).
+Modelo: organización catálogo + clonación (decisión 7). Hecho: org «CommUp Catálogo» (`commup-catalogo`) creada y sembrada con la revisión activa de cada código de DEMO; huella de contenido (`src/lib/itr/clone.ts`); importación desde el catálogo que copia todos los campos v2 (título ES, tipo de equipo, condiciones, matriz) y **actualiza** códigos existentes como revisión inactiva; política RLS para la matriz del catálogo; script `scripts/itr-v2/sincronizar-catalogo.mjs`. Los scripts `preparar-*.mjs` ya no existen; el único camino es «Nueva revisión» → «Activar». Detalle y flujo operativo en `docs/CATALOGO-BIBLIOTECA-ITR-2026-09-10.md`. Pendiente: re-sincronizar tras cada lote activado en DEMO y regenerar Ecopetrol desde el catálogo (`--from commup-catalogo --to morelco --apply`) cuando las v2 estén activas.
 
 ---
 
