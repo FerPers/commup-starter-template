@@ -153,6 +153,8 @@ Fase 0 completa. Fase 1: I10A v3 e I01A v3 como borradores inactivos para revisi
 
 ### Fase 1 — Fijar el estándar con tres referencias
 
+**Estado 2026-09-10:** I10A v3 e I01A v3 revisados y corregidos (numeración, EN/ES, columna «% del rango», D.4 pares restaurado, fotos §7.1, fecha de revisión retirada). Detalle, cobertura contra el original y decisiones abiertas en `docs/ITR-FASE1-REFERENCIAS-2026-09-10.md`. Falta la prueba mínima en navegador y la activación.
+
 - I06A v2 se ratifica como referencia de «lista de chequeo». Solo se le añade `item_number` original y política de fotos.
 - I01A v3 corrige numeración, pares número+unidad y calibre; referencia de «datos + chequeo + tabla».
 - I10A v3 sobre el estándar: 8 controles originales, tabla de accesorios, bloque CORRECTIONS estructurado, matriz como tabla, adjuntos reales, datos del tag nativos. Referencia de «datos + chequeo + matriz».
