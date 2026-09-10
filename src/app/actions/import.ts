@@ -25,6 +25,13 @@ export interface TagRow {
   serial_number?: string
   preservation_required?: boolean
   pid_drawing?: string
+  /** Datos maestros que autollenan los ITR; si la columna no viene en el Excel no se tocan. */
+  datasheet_number?: string
+  revision?: string
+  range_min?: number
+  range_max?: number
+  eng_unit?: string
+  junction_box?: string
   fluid_type?: string
   mounting_typical?: string
 }
@@ -163,6 +170,13 @@ export const importTags = withAuthOnly(
           serial_number: textOrNull(row.serial_number),
           preservation_required: row.preservation_required ?? false,
           pid_drawing: normalizePidRef(row.pid_drawing),
+          // Solo cuando la columna existe: un Excel sin rango no borra el rango cargado antes.
+          ...(row.datasheet_number !== undefined ? { datasheet_number: textOrNull(row.datasheet_number) } : {}),
+          ...(row.revision !== undefined ? { revision: textOrNull(row.revision) } : {}),
+          ...(row.range_min !== undefined ? { range_min: row.range_min } : {}),
+          ...(row.range_max !== undefined ? { range_max: row.range_max } : {}),
+          ...(row.eng_unit !== undefined ? { eng_unit: textOrNull(row.eng_unit) } : {}),
+          ...(row.junction_box !== undefined ? { junction_box: textOrNull(row.junction_box) } : {}),
           fluid_type: textOrNull(row.fluid_type),
           mounting_typical: textOrNull(row.mounting_typical),
           equipment_type_id: resolveEquipmentType(row.equipment_type_code, tagNumber),

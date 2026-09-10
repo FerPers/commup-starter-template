@@ -195,17 +195,29 @@ Decidir modelo (organización catálogo + clonación, o `is_global`), regenerar 
 
 ---
 
-## 7. Decisiones que necesito de Luis
+## 7. Decisiones — respondidas por Luis (2026-09-09, 19:40)
 
-1. **I10A:** corregir la v2 en sitio (0 asignaciones, nunca ejecutada) o emitir v3 completa en Fase 1. Recomiendo: 0.2 en sitio ahora (solo outcomes, es una corrección de seguridad) y v3 en Fase 1.
-2. **Tipo tabla genérico (0.6):** sí antes de las matrices, o aplanar como I10A y rehacer. Recomiendo sí.
-3. **Adjunto documental (0.4):** sí. Sin esto, la sección 8 de I10A es decorativa.
-4. **Autollenado desde tag (0.5):** solo lectura + «coincide» o mantener captura manual de contraste.
-5. **Política de fotos:** qué familias exigen foto por punto (hoy 0 en todo el catálogo).
-6. **Alcance piloto GeoPark:** lista de códigos. Define el orden real de las fases 2–4.
-7. **Modelo de repositorio:** organización catálogo con clonación, o `is_global`.
+| # | Decisión | Respuesta |
+|---|---|---|
+| 1 | I10A corregir en sitio o v3 | En sitio los outcomes (hecho); v3 completa en Fase 1 |
+| 2 | Tipo tabla genérico | Sí (hecho) |
+| 3 | Adjunto documental | Sí (hecho) |
+| 4 | Autollenado desde tag | **Sí, desde el listado maestro cargado por Excel.** La plantilla Excel de tags debe incluir fabricante, modelo, serie, hoja de datos/revisión, P&ID, rango y unidad para digitarlos ahí. Las plantillas v3 eliminan los ítems duplicados. |
+| 5 | Política de fotos | **Definir por ítem.** Regla propuesta (sección 7.1) aplicada a las tres referencias; Luis ajusta. |
+| 6 | Alcance piloto GeoPark | **Todo el catálogo disponible para elegir por proyecto.** No hay subconjunto piloto; se migra completo, por familia. |
+| 7 | Modelo de repositorio | **Biblioteca de formatos**: organización catálogo + clonación; el administrador o arquitecto llama a los formatos requeridos por proyecto. |
 
----
+### 7.1 Regla de fotos propuesta
+
+`requires_photo` se marca por defecto en los controles que verifican algo visible cuya evidencia no puede reconstruirse después:
+
+- Identificación / placa / marcado del elemento (nameplate, labels, cable markers).
+- Ausencia de daños mecánicos o de revestimiento.
+- Puesta a tierra y conexión de pantallas/armaduras.
+- Entradas de reserva obturadas, sellos y cierre de cajas/gabinetes.
+- Estado final instalado (montaje, soportes, nivelación) cuando el control lo describe.
+
+No se marca en: referencias documentales, datos de ensayo (tablas), equipo de prueba, observaciones, ni en controles cuya evidencia es un documento (ahí va `requires_document`). Un control puede llevar ambos si el original lo exige.
 
 ## 8. Referencias
 

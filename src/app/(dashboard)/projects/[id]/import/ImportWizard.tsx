@@ -24,6 +24,12 @@ const COL_KEYWORDS: ColumnKeywords = {
   preservation:     ['PRESERVATION', 'PRESERVACION', 'PRESERVACIÓN'],
   pid_drawing:      ['P&ID', 'PID', 'P_ID', 'PLANO P&ID', 'P&ID REF', 'P&ID DRAWING'],
   datasheet:        ['DATASHEET', 'DATA SHEET', 'DS NUMBER', 'DATASHEET NUMBER', 'NUMERO DATASHEET'],
+  // Datos maestros que autollenan los ITR (fabricante/modelo/serie arriba): revisión de hoja de datos, rango y unidad, caja de conexiones.
+  datasheet_rev:    ['DATASHEET REV', 'DS REV', 'REV DATASHEET', 'REVISION', 'REVISIÓN', 'REV'],
+  range_min:        ['RANGE MIN', 'RANGO MIN', 'RANGO INFERIOR', 'LRV', 'MIN RANGE', 'RANGO_MIN'],
+  range_max:        ['RANGE MAX', 'RANGO MAX', 'RANGO SUPERIOR', 'URV', 'MAX RANGE', 'RANGO_MAX'],
+  eng_unit:         ['ENG UNIT', 'UNIDAD ING', 'UNIDAD', 'UNIT', 'UNITS', 'ENG_UNIT'],
+  junction_box:     ['JUNCTION BOX', 'CAJA DE CONEXIONES', 'CAJA CONEXIONES', 'JB'],
   fluid_type:       ['FLUID TYPE', 'TIPO DE FLUIDO', 'TIPO FLUIDO', 'FLUIDO', 'FLUID'],
   mounting_typical: ['MOUNTING TYPICAL', 'TYPICAL', 'TIPICO DE MONTAJE', 'TIPICO MONTAJE', 'TÍPICO', 'TIPICO'],
   // Va después de fluid_type/mounting_typical para que 'TIPO' (parcial) no se robe 'TIPO DE FLUIDO'
@@ -32,6 +38,13 @@ const COL_KEYWORDS: ColumnKeywords = {
 // A valid tag must contain at least one letter and one digit (e.g. FT-101, ESDV-7621001)
 function isValidTag(val: string): boolean {
   return /[A-Za-z]/.test(val) && /\d/.test(val)
+}
+
+/** «0», «100», «-20,5» → número; vacío o no numérico → undefined (no se toca el valor existente). */
+function numberOrUndefined(val: string): number | undefined {
+  if (!val.trim()) return undefined
+  const n = Number(val.replace(',', '.'))
+  return Number.isFinite(n) ? n : undefined
 }
 
 function parseRows(
@@ -62,6 +75,12 @@ function parseRows(
       serial_number:        get('serial')             || undefined,
       preservation_required: ['YES', 'SI', 'SÍ'].includes(get('preservation').toUpperCase()),
       pid_drawing:          get('pid_drawing')        || undefined,
+      datasheet_number:     get('datasheet')          || undefined,
+      revision:             get('datasheet_rev')      || undefined,
+      range_min:            numberOrUndefined(get('range_min')),
+      range_max:            numberOrUndefined(get('range_max')),
+      eng_unit:             get('eng_unit')           || undefined,
+      junction_box:         get('junction_box')       || undefined,
       fluid_type:           get('fluid_type')         || undefined,
       mounting_typical:     get('mounting_typical')   || undefined,
       equipment_type_code:  get('equipment_type')     || undefined,
@@ -72,20 +91,20 @@ function parseRows(
 
 function downloadTemplate(disciplineCode: string) {
   const wb = XLSX.utils.book_new()
-  const baseHeaders = ['TAG', 'DESCRIPTION', 'EQUIPMENT TYPE', 'AREA_CODE', 'AREA_NAME', 'SYSTEM_CODE', 'SYSTEM_NAME', 'SUBSYSTEM_CODE', 'SUBSYSTEM_NAME', 'P&ID', 'MANUFACTURER', 'MODEL', 'SERIAL', 'PRESERVATION', 'DATASHEET']
+  const baseHeaders = ['TAG', 'DESCRIPTION', 'EQUIPMENT TYPE', 'AREA_CODE', 'AREA_NAME', 'SYSTEM_CODE', 'SYSTEM_NAME', 'SUBSYSTEM_CODE', 'SUBSYSTEM_NAME', 'P&ID', 'MANUFACTURER', 'MODEL', 'SERIAL', 'PRESERVATION', 'DATASHEET', 'DATASHEET REV', 'RANGE MIN', 'RANGE MAX', 'UNIT']
   const isInst = disciplineCode === 'INST'
   const isMec  = !isInst && disciplineCode !== 'ELEC'
   const headers = [
     ...baseHeaders,
     ...(isMec  ? ['FLUID TYPE']       : []),
-    ...(isInst ? ['MOUNTING TYPICAL'] : []),
+    ...(isInst ? ['MOUNTING TYPICAL', 'JUNCTION BOX'] : []),
   ]
   const sample =
     isInst
-      ? [['FT-101', 'Flow transmitter feed water', 'FT', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO', 'DS-FT-101', 'TYP-INST-001']]
+      ? [['FT-101', 'Flow transmitter feed water', 'FT', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO', 'DS-FT-101', 'B', '0', '100', 'psi', 'TYP-INST-001', 'JB-101']]
       : disciplineCode === 'ELEC'
-        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'SWG', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO', 'DS-SWG-CPF-1']]
-        : [['P-101A', 'Booster Pump', 'P', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO', 'DS-P-101A', 'Gas Natural']]
+        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'SWG', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO', 'DS-SWG-CPF-1', '', '', '', '']]
+        : [['P-101A', 'Booster Pump', 'P', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO', 'DS-P-101A', '', '', '', '', 'Gas Natural']]
   const ws = XLSX.utils.aoa_to_sheet([headers, ...sample])
   XLSX.utils.book_append_sheet(wb, ws, 'Tags')
   XLSX.writeFile(wb, `CommUp_${disciplineCode || 'Tags'}_Template.xlsx`)
@@ -333,7 +352,10 @@ export default function ImportWizard({
               { key: 'SYSTEM_CODE / SISTEMA',     req: false, note: 'Código de sistema' },
               { key: 'SUBSYSTEM_CODE',            req: false, note: 'Código de subsistema' },
               { key: 'FABRICANTE / MARCA/MODELO', req: false, note: 'Fabricante y modelo' },
-              { key: 'DATASHEET',               req: false, note: 'Código de hoja de datos (todos)' },
+              { key: 'DATASHEET / DATASHEET REV', req: false, note: 'Hoja de datos y su revisión (todos). Autollena los ITR' },
+              { key: 'SERIAL / SERIE',            req: false, note: 'Número de serie. Autollena los ITR' },
+              { key: 'RANGE MIN / RANGE MAX / UNIT', req: false, note: 'Rango calibrado y unidad de ingeniería (INST). Autollena los ITR de calibración' },
+              { key: 'JUNCTION BOX / CAJA',       req: false, note: 'Caja de conexiones asociada (INST)' },
               { key: 'FLUID TYPE / FLUIDO',      req: false, note: 'Tipo de fluido (MEC/tubería)' },
               { key: 'MOUNTING TYPICAL / TIPICO',req: false, note: 'Típico de montaje (INST)' },
             ].map(col => (
