@@ -32,7 +32,7 @@ export type TableCapture = { version: 1; count: number; rows: TableRow[] }
 export const TABLE_RESULT_VALUES = ['pass', 'fail', 'not_applicable'] as const
 const COLUMN_TYPES: readonly TableColumnType[] = ['text', 'number', 'select', 'result']
 const KEY_PATTERN = /^[a-z][a-z0-9_]{0,31}$/
-export const TABLE_MAX_COLUMNS = 12
+export const TABLE_MAX_COLUMNS = 16
 export const TABLE_MAX_ROWS = 500
 
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)

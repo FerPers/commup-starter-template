@@ -1,21 +1,78 @@
 # Fase 2 — borradores v2 de listas de chequeo — 2026-09-09
 
-173 borradores inactivos generados desde la tabla de chequeo del Word original (`scripts/itr-v2/generar-v2-listas.mjs`). Estructura: Referencias de ejecución (R.1) · Inspección (numeración original, selección Conforme/No conforme/No aplica con resultado, fotos según regla §7.1) · Equipo de prueba (T.1–T.5) si el original lo trae · Observaciones (O.1).
+262 borradores inactivos generados desde la tabla de chequeo del Word original (`scripts/itr-v2/generar-v2-listas.mjs`). Estructura: Referencias de ejecución (R.1) · Inspección (numeración original, selección Conforme/No conforme/No aplica con resultado, fotos según regla §7.1) · Equipo de prueba (T.1–T.5) si el original lo trae · Observaciones (O.1).
 
-Ítems de inspección (selección): 2659 · con foto: 709 · mediciones: 9 · campos de texto (registros N-R, datos, libres): 343 · con equipo de prueba: 5 · sin traducción ES: 0.
+Ítems de inspección (selección): 3541 · con foto: 1015 · mediciones: 118 · campos de texto (registros N-R, datos, libres): 1038 · con equipo de prueba: 12 · sin traducción ES: 2.
 
 Avisos: «base N ítems / original M» = la plantilla actual tiene más filas que la tabla del Word (subfilas o cabeceras importadas como casillas); comparar con el original antes de activar. «campos de registro (N-R)» = ítems que exigen valor y recibieron un campo acompañante.
 
 Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redacción, y pulsar «Activar esta revisión». La v1 queda inactiva y la matriz equipo×ITR se re-apunta sola.
 
-## E — 2 formatos
+## E — 59 formatos
 
 | Código | Activa | Borrador | Selecciones | Fotos | Mediciones | Textos | Equipo | Sin ES | Título | Avisos |
 |---|---|---|---|---|---|---|---|---|---|---|
+| [E01A](https://commup.app/admin/templates/df50cf83-3d3b-4822-b2bd-a8e4fe093450) | v1 | v2 | 20 | 8 | 3 | 9 |  | 2 | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cables de alta tens | 3 campos de registro (N-R); 2 sin traducción ES; base 32 ítems / original 20; 8 campos de datos (D.n) |
+| [E02A](https://commup.app/admin/templates/2ab80654-ca02-41c1-b38d-293911dcb12a) | v1 | v2 | 15 | 8 |  | 16 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cables B.T. (<1000  | 4 campos de registro (N-R); base 41 ítems / original 15; 6 filas de matriz embebida en la lista (revisar); 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 11 campos de datos (D.n); 1 matriz(es) como tabla (M.n); bloque de texto omitido: «Final Testing» |
+| [E03A](https://commup.app/admin/templates/d86e6fc6-9af5-41f0-9a63-aee76cd3d27a) | v1 | v2 | 29 | 15 |  | 4 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Generador | base 32 ítems / original 29; 3 campos de datos (D.n) |
+| [E03B](https://commup.app/admin/templates/0dfa0d9a-188c-4314-8c48-63c47f10be98) | v1 | v2 | 12 | 1 | 5 | 36 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Generador / Alterna | 5 campos de registro (N-R); 5 ítems como texto (dato o libre); base 64 ítems / original 17; 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 30 campos de datos (D.n); 1 matriz(es) como tabla (M.n); 3 datos del tag no duplicados |
+| [E03BV](https://commup.app/admin/templates/5b3ad3bb-f4a3-4451-a5a0-1471ebaac213) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN: Prueba funcional de turbogenerador | base 7 ítems / original 0; sin lista de chequeo (solo matriz); 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 1 matriz(es) como tabla (M.n) |
+| [E04B](https://commup.app/admin/templates/5fcdafa0-573c-4912-a018-edf92684aa0b) | v1 | v2 | 13 | 4 | 8 | 11 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Transformado | 3 campos de registro (N-R); base 43 ítems / original 13; 15 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E04BV](https://commup.app/admin/templates/4e7d49b0-9eba-41a4-bddd-b36e747575a2) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba funci | base 7 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
+| [E05A](https://commup.app/admin/templates/e7c10fef-0cba-4470-aed4-a2b29448e40c) | v1 | v2 | 7 | 5 |  | 9 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Transformador de co | base 17 ítems / original 7; 8 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E05B](https://commup.app/admin/templates/4e3c3d53-3c81-4d57-b940-5285799cbc18) | v1 | v2 | 7 | 3 |  | 10 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Transformado | 1 ítems como texto (dato o libre); base 31 ítems / original 8; 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 8 campos de datos (D.n); 1 matriz(es) como tabla (M.n); 1 datos del tag no duplicados |
+| [E05BV](https://commup.app/admin/templates/b82b058d-ae7b-4a06-86fd-e20299304af2) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba funci | base 4 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
+| [E06A](https://commup.app/admin/templates/77467143-e598-4a84-9819-aa233d1064c5) | v1 | v2 | 11 | 6 |  | 9 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Transformador de te | base 21 ítems / original 11; 8 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E06BV](https://commup.app/admin/templates/71ac125d-14c2-403e-a25e-e6ebe381c9dc) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba funci | base 5 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
+| [E07A](https://commup.app/admin/templates/783d33b7-199e-412c-ba1a-708e7981628c) | v1 | v2 | 22 | 11 |  | 11 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Tablero de distribu | 4 campos de registro (N-R); base 31 ítems / original 22; 6 campos de datos (D.n); 3 datos del tag no duplicados |
+| [E07B](https://commup.app/admin/templates/b599d101-d9a2-4855-b335-e2820d846cdb) | v1 | v2 | 20 | 1 | 5 | 4 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Tablero de d | 2 campos de registro (N-R); base 39 ítems / original 20; 6 campos de datos (D.n) |
+| [E08A](https://commup.app/admin/templates/f3e6b655-1e1e-4875-a13c-31156e3b50c3) | v1 | v2 | 25 | 9 |  | 8 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Tablero de distribu | 1 campos de registro (N-R); base 33 ítems / original 25; 6 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E09A](https://commup.app/admin/templates/fbc76b65-dac0-40cb-89ff-86be3c518909) | v1 | v2 | 24 | 8 |  | 8 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Tablero de distribu | 1 campos de registro (N-R); base 32 ítems / original 24; 6 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E10A](https://commup.app/admin/templates/4d7709e7-7bb1-4c46-874a-6b7f2bcd2bbe) | v1 | v2 | 19 | 10 |  | 8 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Tablero de distribu | 1 campos de registro (N-R); base 27 ítems / original 19; 6 campos de datos (D.n); 1 matriz(es) como tabla (M.n); 2 datos del tag no duplicados |
+| [E10B](https://commup.app/admin/templates/7fbb4721-2726-4242-8e18-4e7b21fe5894) | v1 | v2 | 17 | 4 | 4 | 7 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Tableros de  | 3 campos de registro (N-R); 2 ítems como texto (dato o libre); base 58 ítems / original 19; 5 campos de datos (D.n); 2 matriz(es) como tabla (M.n) |
+| [E11B](https://commup.app/admin/templates/4e756c44-2bfc-46fd-97d8-6d889fa5cbd7) | v1 | v2 | 3 | 3 | 1 | 5 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Circuitos de | 3 campos de registro (N-R); 2 ítems como texto (dato o libre); base 32 ítems / original 5; 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 1 matriz(es) como tabla (M.n) |
+| [E13B](https://commup.app/admin/templates/efc89002-7c85-4ade-9c84-0fc0c7691bf1) | v1 | v2 | 22 | 3 | 7 | 19 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Motores de b | 6 campos de registro (N-R); 3 ítems como texto (dato o libre); base 78 ítems / original 25; 16 campos de datos (D.n); 1 matriz(es) como tabla (M.n); 2 datos del tag no duplicados |
+| [E13C](https://commup.app/admin/templates/dafea747-3647-4616-a840-a63837974ed6) | v1 | v2 | 11 | 1 | 16 | 44 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Motores de baja  | 2 campos de registro (N-R); 2 ítems como texto (dato o libre); base 91 ítems / original 13; 55 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E14-1B](https://commup.app/admin/templates/99af3b04-199b-4724-9b0b-49edb3049d8d) | v1 | v2 | 10 | 0 | 3 | 6 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba de ba | 3 campos de registro (N-R); 1 ítems como texto (dato o libre); base 46 ítems / original 11; 4 campos de datos (D.n); 1 matriz(es) como tabla (M.n); 1 datos del tag no duplicados |
+| [E14A](https://commup.app/admin/templates/8c26c896-708a-4f90-bc83-5ffa81ecbe92) | v1 | v2 | 35 | 18 | 1 | 13 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Batería y cargador  | 2 campos de registro (N-R); 1 ítems como texto (dato o libre); base 49 ítems / original 36; 10 campos de datos (D.n) |
+| [E15A](https://commup.app/admin/templates/8242680d-266e-44bf-9849-37e7414edf62) | v1 | v2 | 13 | 9 | 1 | 15 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cinta / Circuito de | 2 campos de registro (N-R); 1 ítems como texto (dato o libre); base 29 ítems / original 15; 12 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E15B](https://commup.app/admin/templates/d36f9720-72f6-40c8-ad0f-dfa81c44fa3e) | v1 | v2 | 10 | 6 | 5 | 17 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Circuito de  | 2 campos de registro (N-R); base 40 ítems / original 10; 19 campos de datos (D.n); 1 matriz(es) como tabla (M.n); 1 datos del tag no duplicados |
+| [E16A](https://commup.app/admin/templates/114f0b3e-ee62-410f-90f5-e53a1837acf1) | v1 | v2 | 15 | 9 | 1 | 7 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Calentador eléctric | 2 campos de registro (N-R); base 21 ítems / original 15; 5 campos de datos (D.n); 1 datos del tag no duplicados |
+| [E17A](https://commup.app/admin/templates/7c2e48bf-6747-400b-a750-5d3603446a13) | v1 | v2 | 12 | 7 | 2 | 9 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Equipos varios | 2 campos de registro (N-R); base 23 ítems / original 13; 8 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E17B](https://commup.app/admin/templates/5505e4c8-7272-4c99-84b8-a31aea1921f3) | v1 | v2 | 9 | 0 | 3 | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Equipos vari | base 27 ítems / original 9; 5 campos de datos (D.n) |
+| [E18A](https://commup.app/admin/templates/99a5eeed-25b8-4b55-ab04-c69def942984) | v1 | v2 | 10 | 7 |  | 5 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Resistor de puesta  | 1 campos de registro (N-R); 1 ítems como texto (dato o libre); base 14 ítems / original 11; 2 campos de datos (D.n); 1 datos del tag no duplicados |
+| [E18B](https://commup.app/admin/templates/f034d474-7bc1-43d8-b240-360fe035dbf3) | v1 | v2 | 9 | 4 | 3 | 10 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Resistor de  | 2 campos de registro (N-R); 3 ítems como texto (dato o libre); base 32 ítems / original 12; 7 campos de datos (D.n) |
+| [E20A](https://commup.app/admin/templates/57cd0f97-689f-43f4-aed1-1746e467ec2e) | v1 | v2 | 17 | 7 |  | 10 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Relé de protección | 1 campos de registro (N-R); base 27 ítems / original 17; 8 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E20B](https://commup.app/admin/templates/acdf0e16-b56d-4a80-9fe6-c5009ed41401) | v1 | v2 | 21 | 4 | 4 | 21 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Relé de prot | 1 campos de registro (N-R); base 62 ítems / original 24; 23 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E20BV](https://commup.app/admin/templates/44311e72-5e37-4929-afb3-1d1ebc0f7f48) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Relé de prot | base 4 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
+| [E21A](https://commup.app/admin/templates/bec61d31-2fe2-4ee7-90a6-9f8b3afe2e11) | v1 | v2 | 9 | 6 |  | 4 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Arrancadores de baj | base 14 ítems / original 9; 3 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E21BV](https://commup.app/admin/templates/bc39099b-7dd6-4ceb-9dfc-2b3e5f120770) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Interruptore | base 4 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
+| [E22A](https://commup.app/admin/templates/3f9e7ca3-4880-4bcf-847b-5cf2b02577bd) | v1 | v2 | 10 | 7 | 1 | 5 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Puesta a tierra elé | 3 campos de registro (N-R); base 20 ítems / original 10; 1 filas de matriz embebida en la lista (revisar); 2 campos de datos (D.n); 1 matriz(es) como tabla (M.n); 1 datos del tag no duplicados |
+| [E22B](https://commup.app/admin/templates/41119ba1-fb97-406b-a398-3a6e8dc5ef3f) | v1 | v2 | 8 | 7 |  | 4 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Sistema de p | 1 campos de registro (N-R); base 19 ítems / original 8; 2 campos de datos (D.n) |
+| [E23A](https://commup.app/admin/templates/2e0376d9-16a0-4540-ac2c-5be47aac6fcb) | v1 | v2 | 15 | 9 |  | 16 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Válvula motorizada  | 1 campos de registro (N-R); base 30 ítems / original 15; 14 campos de datos (D.n); 1 datos del tag no duplicados |
+| [E24A](https://commup.app/admin/templates/0258ad2a-4532-49d9-93d9-e44bc69fe940) | v1 | v2 | 14 | 8 | 1 | 7 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Estación de control | 1 campos de registro (N-R); base 22 ítems / original 14; 6 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E25A](https://commup.app/admin/templates/b15ba198-3dcd-413e-b0b2-aa7a654f78db) | v1 | v2 | 10 | 3 |  | 7 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Bandeja portacables | base 16 ítems / original 10; 6 campos de datos (D.n) |
+| [E26A](https://commup.app/admin/templates/1fcdb814-84c3-4dc9-99da-7c2d3a64ee97) | v1 | v2 | 14 | 7 | 1 | 11 | sí |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Lista de verificaci | 1 campos de registro (N-R); 1 ítems como texto (dato o libre); base 43 ítems / original 15; 1 filas de matriz embebida en la lista (revisar); 5 campos de datos (D.n); 3 matriz(es) como tabla (M.n); 1 datos del tag no duplicados |
+| [E27A](https://commup.app/admin/templates/782a1d67-bf03-434b-8172-89f52f9abd75) | v1 | v2 | 14 | 4 |  | 8 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Instalación de duct | base 21 ítems / original 14; 7 campos de datos (D.n) |
+| [E28A](https://commup.app/admin/templates/9c746c31-ad7d-4e32-a570-b40eee416324) | v1 | v2 | 4 | 2 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Tramo de zanja para | base 6 ítems / original 4; 2 campos de datos (D.n) |
+| [E29A](https://commup.app/admin/templates/110f8e8c-6638-42fc-936c-1670b3180d08) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cable de potencia A | base 26 ítems / original 0; sin lista de chequeo (solo matriz); 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 1 matriz(es) como tabla (M.n) |
+| [E30A](https://commup.app/admin/templates/26f15e25-60b8-4e00-926a-8756d43954cb) | v1 | v2 | 22 | 10 |  | 7 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Ducto de barras ais | 2 campos de registro (N-R); base 26 ítems / original 22; 4 campos de datos (D.n) |
+| [E32A](https://commup.app/admin/templates/35012a93-01f8-433e-a4b6-522e50acbbc1) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Registro de prueba  | base 13 ítems / original 0; sin lista de chequeo (solo matriz); 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 1 matriz(es) como tabla (M.n) |
+| [E34B](https://commup.app/admin/templates/bf54a2c0-dc36-411e-bae3-f094fff67306) | v1 | v2 | 8 | 3 | 4 | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Tomacorrient | 1 campos de registro (N-R); base 26 ítems / original 8; 5 campos de datos (D.n) |
+| [E38A](https://commup.app/admin/templates/7bfcd7df-f1f4-4353-8105-de5750c5c6b1) | v1 | v2 | 7 | 3 |  | 31 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Registro de pruebas | 2 campos de registro (N-R); 1 ítems como texto (dato o libre); base 18 ítems / original 8; 27 campos de datos (D.n); 1 matriz(es) como tabla (M.n); bloque de texto omitido: «Datos de Cable»; 2 datos del tag no duplicados |
 | [E39A](https://commup.app/admin/templates/89ebc08d-b121-4811-8d6f-45fdecceb1df) | v1 | v2 | 15 | 6 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Inspección de zanja |  |
 | [E40A](https://commup.app/admin/templates/14ca8ff2-dd8f-4921-b1b6-a6d7e3225c80) | v1 | v2 | 8 | 1 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Instalación de cond |  |
+| [E41B](https://commup.app/admin/templates/b877229d-6900-4103-b46b-e03df104e9fb) | v1 | v2 | 17 | 2 | 4 | 6 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Sistema UPS | 2 campos de registro (N-R); 3 ítems como texto (dato o libre); base 43 ítems / original 20; 4 campos de datos (D.n) |
+| [E42-1B](https://commup.app/admin/templates/ba04c563-6884-46be-879b-489dcfe2f3cd) | v1 | v2 | 10 | 1 | 3 | 4 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO EMCS - (SISTE | 2 campos de registro (N-R); base 27 ítems / original 10; 4 campos de datos (D.n) |
+| [E47B](https://commup.app/admin/templates/69faa02b-8f35-4a4d-b5b7-9b0ff1ec2d44) | v1 | v2 | 11 | 1 | 4 | 4 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: MCC de media | 1 campos de registro (N-R); base 26 ítems / original 11; 6 campos de datos (D.n) |
+| [E48B](https://commup.app/admin/templates/54b4b5c4-9f8f-4907-989f-744c0ecd0260) | v1 | v2 | 6 | 3 | 2 | 7 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Válvula moto | 1 campos de registro (N-R); base 27 ítems / original 6; 7 campos de datos (D.n); 1 datos del tag no duplicados |
+| [E49BV](https://commup.app/admin/templates/515fd3be-3f36-45a6-9752-0c623975d023) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba funci | base 47 ítems / original 0; sin lista de chequeo (solo matriz); 8 matriz(es) como tabla (M.n) |
+| [E49BV-1](https://commup.app/admin/templates/772c673f-5645-46fa-886b-ebd9b7399e96) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba funci | base 207 ítems / original 0; sin lista de chequeo (solo matriz); 28 matriz(es) como tabla (M.n) |
+| [E50B](https://commup.app/admin/templates/2c75e55d-106f-4a01-a068-a3f2a8aeb28b) | v1 | v2 | 16 | 2 | 4 | 12 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Sistemas de  | 6 campos de registro (N-R); 1 ítems como texto (dato o libre); base 40 ítems / original 17; 8 campos de datos (D.n); 2 datos del tag no duplicados |
+| [E52BV](https://commup.app/admin/templates/85deea1a-6d2f-4c03-933e-bd15c494a6b0) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba funci | base 35 ítems / original 0; sin lista de chequeo (solo matriz); 6 matriz(es) como tabla (M.n) |
+| [E54B](https://commup.app/admin/templates/27889124-5417-4650-97bf-555ac7b9cbb3) | v1 | v2 | 15 | 3 | 8 | 15 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Separador ma | 3 campos de registro (N-R); 3 ítems como texto (dato o libre); base 49 ítems / original 18; 16 campos de datos (D.n); 2 datos del tag no duplicados |
 
-## H — 22 formatos
+## H — 25 formatos
 
 | Código | Activa | Borrador | Selecciones | Fotos | Mediciones | Textos | Equipo | Sin ES | Título | Avisos |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -38,30 +95,43 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [H13A](https://commup.app/admin/templates/66640b3f-47b6-4f62-a163-b473fe85cdb4) | v1 | v2 | 16 | 8 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cajas terminales de |  |
 | [H14A](https://commup.app/admin/templates/b5004cf7-530b-4551-98b3-e91f782a4037) | v1 | v2 | 10 | 5 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Termostatos y contr |  |
 | [H15A](https://commup.app/admin/templates/bc169b39-62b7-4e01-b81b-0c41a5eeadf6) | v1 | v2 | 17 | 10 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Ductos de HVAC |  |
+| [H15B](https://commup.app/admin/templates/807f7a6d-3e82-46b7-a1bd-45dee1d070e4) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Área de sist | base 8 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
 | [H16A](https://commup.app/admin/templates/14ec404f-21c4-45bd-a752-c9fcc9e66b9e) | v1 | v2 | 2 | 0 |  | 16 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Prueba de fugas en  | 15 ítems como texto (dato o libre) |
 | [H17B](https://commup.app/admin/templates/4ee9760d-49bb-45a7-be89-eacd4e8e202a) | v1 | v2 | 10 | 0 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Filtro / coa | 1 campos de registro (N-R); 1 ítems como texto (dato o libre) |
+| [H18B](https://commup.app/admin/templates/63b3b9c2-2a11-4821-9abb-e48aa221863d) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba de pr | base 13 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
+| [H20C](https://commup.app/admin/templates/d14b4c82-e3fb-47b0-82eb-3588cd89c94a) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Área de sistema  | base 8 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
 | [H21C](https://commup.app/admin/templates/1bd83024-16ab-4649-b1f9-0d74365ebd51) | v1 | v2 | 16 | 2 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Unidad enfriador |  |
 
-## I — 14 formatos
+## I — 24 formatos
 
 | Código | Activa | Borrador | Selecciones | Fotos | Mediciones | Textos | Equipo | Sin ES | Título | Avisos |
 |---|---|---|---|---|---|---|---|---|---|---|
+| [I03A](https://commup.app/admin/templates/14d477e7-2c9d-46b5-87dd-07b043b9af07) | v1 | v2 | 6 | 1 | 4 | 11 | sí |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Verificación de esp | base 31 ítems / original 7; 10 campos de datos (D.n); 5 datos del tag no duplicados |
 | [I03B](https://commup.app/admin/templates/9937e137-8902-4962-8692-71adcb3f1ed5) | v1 | v2 | 5 | 3 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Verificación |  |
 | [I04B](https://commup.app/admin/templates/18ea85da-d7a5-4718-9f80-8e379e7d0521) | v1 | v2 | 7 | 2 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Inspección d |  |
+| [I05A](https://commup.app/admin/templates/dc904dca-07cf-4839-8389-838323911874) | v1 | v2 | 10 | 6 |  | 5 | sí |  | COMPLETACIÓN DE CONSTRUCCIÓN: Instalación de instrumentos | base 52 ítems / original 10; 2 matriz(es) como tabla (M.n) |
 | [I07A](https://commup.app/admin/templates/ea2860ec-9c2e-449b-8a47-67ae04619375) | v1 | v2 | 17 | 9 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Panel de instrument | 1 campos de registro (N-R) |
 | [I08A](https://commup.app/admin/templates/c55edb64-a50b-4d41-a0c2-cb7bdf97a5f1) | v1 | v2 | 6 | 4 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Instalación de tubi |  |
 | [I09A](https://commup.app/admin/templates/7cdfc772-f05e-4b1a-b441-4722ca7ef5b9) | v1 | v2 | 10 | 3 |  | 5 | sí |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Unidad hidráulica / | base 23 ítems / original 10 |
+| [I11A](https://commup.app/admin/templates/0d92c319-b01c-47f7-aaca-b5a440a031aa) | v1 | v2 | 10 | 6 |  | 27 | sí |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Válvulas y accesori | 20 ítems como texto (dato o libre); base 66 ítems / original 37; 2 campos de datos (D.n); 2 matriz(es) como tabla (M.n); 5 datos del tag no duplicados |
 | [I12A](https://commup.app/admin/templates/21405d22-8882-4558-aff1-3ecc9c4d1fe4) | v1 | v2 | 10 | 6 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Instalación de gabi |  |
 | [I12B](https://commup.app/admin/templates/a22f1882-62dc-484b-b846-7bd586af1c7c) | v1 | v2 | 21 | 9 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Verificación |  |
+| [I14A](https://commup.app/admin/templates/dd87b7a5-f065-4f75-ba46-2c265a1bbb95) | v1 | v2 | 11 | 1 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Verificaciones de i | base 13 ítems / original 11; 1 campos de datos (D.n); 1 datos del tag no duplicados |
 | [I14B](https://commup.app/admin/templates/69e068f1-0f1c-4f1f-a69e-b3a0f78fbab1) | v1 | v2 | 7 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Verificación |  |
+| [I15A](https://commup.app/admin/templates/cc8dde91-2a14-41f7-87d2-2f9d4e46e5e6) | v1 | v2 | 14 | 3 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Verificaciones de i | 1 ítems como texto (dato o libre); base 17 ítems / original 15; 1 campos de datos (D.n); 1 datos del tag no duplicados |
 | [I17A](https://commup.app/admin/templates/c8c6f255-1ebc-4577-82ae-0791aad710eb) | v1 | v2 | 3 | 1 |  | 4 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Termopozo / Pozo de | 3 ítems como texto (dato o libre) |
 | [I18A](https://commup.app/admin/templates/31ad9838-6c19-4d4e-a50e-992f5ab46d32) | v1 | v2 | 3 | 1 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Instalación de plac |  |
 | [I26B](https://commup.app/admin/templates/10cff300-6b3a-42a1-a6b5-51fc1f563442) | v1 | v2 | 7 | 3 |  | 5 | sí |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Válvula de c | base 27 ítems / original 7 |
+| [I27B](https://commup.app/admin/templates/086e43bb-3bf7-4d48-b918-f9c6cb15f6f4) | v1 | v2 | 7 | 3 |  | 5 | sí |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba de en | base 28 ítems / original 7; 1 matriz(es) como tabla (M.n) |
+| [I28C](https://commup.app/admin/templates/c944621e-c1b5-4d77-85b6-c2663aa56b7d) | v1 | v2 | 7 | 1 |  | 14 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Lazo de fuego y  | 1 campos de registro (N-R); base 32 ítems / original 7; 12 campos de datos (D.n) |
+| [I29C](https://commup.app/admin/templates/2c2b1e48-ad01-43da-9ac6-47c5fc5447ed) | v1 | v2 | 5 | 0 |  | 6 | sí |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Prueba funcional | 1 ítems como texto (dato o libre); base 82 ítems / original 6; 1 matriz(es) como tabla (M.n) |
+| [I30C](https://commup.app/admin/templates/89275e37-883a-43aa-bba0-7ae737971106) | v1 | v2 | 4 | 0 |  | 11 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Verificación de  | 1 campos de registro (N-R); base 15 ítems / original 4; 9 campos de datos (D.n); 3 datos del tag no duplicados |
 | [I31C](https://commup.app/admin/templates/a4f3096e-63c0-4ba0-a591-7ce9f7f54b4f) | v1 | v2 | 8 | 2 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Panel de detecci | 1 ítems como texto (dato o libre) |
+| [I42B](https://commup.app/admin/templates/3544d7e4-c85b-488d-a0b1-a2bc5b8c4dbc) | v1 | v2 | 8 | 4 |  | 5 | sí |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Transmisor / | base 26 ítems / original 8; 2 matriz(es) como tabla (M.n) |
 | [I43B](https://commup.app/admin/templates/820fbbd5-3172-4cf5-a403-086ff9bed39a) | v1 | v2 | 8 | 3 |  | 6 | sí |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Instrumentos | 1 ítems como texto (dato o libre); base 14 ítems / original 9 |
 | [I45C](https://commup.app/admin/templates/8d4ac41e-3e97-4b5a-a146-2a470894c8e6) | v1 | v2 | 9 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Sistema LCP / PC |  |
 
-## L — 12 formatos
+## L — 13 formatos
 
 | Código | Activa | Borrador | Selecciones | Fotos | Mediciones | Textos | Equipo | Sin ES | Título | Avisos |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -70,6 +140,7 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [L03A](https://commup.app/admin/templates/cd3381ed-bec0-4cce-9ce7-5c58b4fdd5d1) | v1 | v2 | 13 | 4 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Equipo de respiraci |  |
 | [L04A](https://commup.app/admin/templates/49b3610f-7652-45ad-8fff-968b0a39239a) | v1 | v2 | 20 | 4 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Carretes de manguer |  |
 | [L04B](https://commup.app/admin/templates/f49881aa-ae8c-46ea-9bce-fe371429dfc3) | v1 | v2 | 8 | 1 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Carrete de m |  |
+| [L05A](https://commup.app/admin/templates/90be3267-9bd6-433c-8c3d-9abe58d9d6da) | v1 | v2 | 5 | 1 |  | 24 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Extintor portátil d | base 27 ítems / original 5; 23 campos de datos (D.n); 1 matriz(es) como tabla (M.n) |
 | [L05C](https://commup.app/admin/templates/51cd6e42-3be9-49df-8938-e33f3c30b260) | v1 | v2 | 8 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Duchas de seguri | base 9 ítems / original 8 |
 | [L06A](https://commup.app/admin/templates/b73abf38-89e0-4652-a547-1766b8fee1ad) | v1 | v2 | 16 | 5 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Hidrantes y gabinet |  |
 | [L07A](https://commup.app/admin/templates/7c735ad5-2ae2-4cc2-8f48-fc0c17dc8453) | v1 | v2 | 10 | 3 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Ítems misceláneos d |  |
@@ -78,7 +149,7 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [L08C](https://commup.app/admin/templates/975ab2ee-020e-4cb4-b18d-f5a7fccbedef) | v1 | v2 | 9 | 1 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Válvula de diluv |  |
 | [L10B](https://commup.app/admin/templates/a59def8a-b685-459d-aadc-1a5256866aef) | v1 | v2 | 7 | 3 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Verificación | 1 ítems como texto (dato o libre) |
 
-## M — 87 formatos
+## M — 92 formatos
 
 | Código | Activa | Borrador | Selecciones | Fotos | Mediciones | Textos | Equipo | Sin ES | Título | Avisos |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -90,6 +161,7 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [M04A](https://commup.app/admin/templates/a5f93144-c468-49f6-abc7-d52152794b2e) | v1 | v2 | 8 | 1 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Junta de expansión  | 1 ítems como texto (dato o libre) |
 | [M05A](https://commup.app/admin/templates/d5a2f24c-9e8c-4716-9928-00111c43ec24) | v1 | v2 | 6 | 5 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Junta de expansión  | 1 ítems como texto (dato o libre) |
 | [M06A](https://commup.app/admin/templates/db05db33-5f95-407b-ab10-d900d0518bfa) | v1 | v2 | 16 | 4 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Tanque de almacenam |  |
+| [M06B](https://commup.app/admin/templates/c9134fa0-86e9-439a-a0fc-1dac08434435) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Certificado  | base 27 ítems / original 0; sin lista de chequeo (solo matriz); 1 matriz(es) como tabla (M.n) |
 | [M07A](https://commup.app/admin/templates/1501e0b8-1810-4f8c-a1dd-3cd83c1e794f) | v1 | v2 | 20 | 7 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Recipiente |  |
 | [M07B](https://commup.app/admin/templates/a41e2954-66c6-4ffb-b3bc-95da49f9ac06) | v1 | v2 | 25 | 6 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Recipientes  | 2 ítems como texto (dato o libre) |
 | [M08A](https://commup.app/admin/templates/27f3b35a-8a93-4b27-965c-97bbb25f8f45) | v1 | v2 | 16 | 3 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Puntas de tea y car |  |
@@ -99,6 +171,7 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [M09B-2](https://commup.app/admin/templates/ed9f731d-2293-47fb-b764-37e939fe67d8) | v1 | v2 | 21 | 9 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Bomba centrí |  |
 | [M10A](https://commup.app/admin/templates/5b25d162-516f-475e-b4b9-8b5702f0c10a) | v1 | v2 | 11 | 3 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Bomba de desplazami | 1 ítems como texto (dato o libre) |
 | [M10B](https://commup.app/admin/templates/3b26810c-6b3e-44fc-a470-200a4e948e64) | v1 | v2 | 22 | 6 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Bombas de de | 1 campos de registro (N-R); 1 ítems como texto (dato o libre) |
+| [M10C](https://commup.app/admin/templates/7f9afdbb-17b8-4aaf-96bc-a806e58f2c2f) | v1 | v2 | 9 | 2 |  | 4 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Bombas de despla | 2 campos de registro (N-R); 1 ítems como texto (dato o libre); base 54 ítems / original 10; 1 matriz(es) como tabla (M.n) |
 | [M11A](https://commup.app/admin/templates/bf4e0d53-7ebe-4b54-9578-5391924cac99) | v1 | v2 | 6 | 2 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Bomba sumergible |  |
 | [M11C](https://commup.app/admin/templates/8630fb64-6275-4783-a154-7f0fd2521fb0) | v1 | v2 | 18 | 8 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Bomba sumergible | 2 ítems como texto (dato o libre) |
 | [M12B](https://commup.app/admin/templates/4351687d-01bf-47a2-8390-d52f63a8ecce) | v1 | v2 | 7 | 1 |  | 7 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Alineación d | 6 campos de registro (N-R); base 8 ítems / original 7 |
@@ -122,6 +195,7 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [M22C](https://commup.app/admin/templates/8b00f173-7891-4d51-af56-c60836cb6a47) | v1 | v2 | 15 | 0 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Equipo de izaje  | 1 ítems como texto (dato o libre) |
 | [M23A](https://commup.app/admin/templates/b2094371-3cd3-4e1d-a4a5-9df378074fdf) | v1 | v2 | 12 | 6 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Hidrociclón |  |
 | [M23B](https://commup.app/admin/templates/44e01d77-7c30-43ad-811d-580435876796) | v1 | v2 | 24 | 3 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Ventiladores | 1 ítems como texto (dato o libre) |
+| [M23C](https://commup.app/admin/templates/74e20686-c846-436b-98b6-4d05ab4a6111) | v1 | v2 | 16 | 2 |  | 12 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Ventiladores/Sop | 2 campos de registro (N-R); base 130 ítems / original 16; 9 campos de datos (D.n); 2 matriz(es) como tabla (M.n); 1 datos del tag no duplicados |
 | [M24A](https://commup.app/admin/templates/bb553f82-dffb-453f-ae01-6c9c9703d11e) | v1 | v2 | 7 | 2 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Monitor de espuma | 2 ítems como texto (dato o libre) |
 | [M25A](https://commup.app/admin/templates/19e79c39-0f99-4f8f-bce4-f51614238b4f) | v1 | v2 | 28 | 9 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Equipo empaquetado |  |
 | [M26A](https://commup.app/admin/templates/47318a4b-265e-43ae-a9ca-a07fa2ac1584) | v1 | v2 | 13 | 5 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Unidad de potencia  |  |
@@ -158,11 +232,13 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [M53B](https://commup.app/admin/templates/34cb3ea9-f7f5-433b-8210-a6f479fb3bde) | v1 | v2 | 22 | 5 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Unidad de po |  |
 | [M53C](https://commup.app/admin/templates/c29adb1d-b9be-4292-a831-20dfa5848443) | v1 | v2 | 3 | 0 |  | 8 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Carga de químico | 7 ítems como texto (dato o libre) |
 | [M54B](https://commup.app/admin/templates/d0220fbb-193f-4fa6-a89b-c8c88a8aad8a) | v1 | v2 | 31 | 8 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Bomba de agu |  |
+| [M54C](https://commup.app/admin/templates/024a4a8b-ad36-4446-ba09-ea836952245b) | v1 | v2 | 4 | 0 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Carga de cataliz | 2 ítems como texto (dato o libre); base 22 ítems / original 6; 1 matriz(es) como tabla (M.n) |
 | [M55B](https://commup.app/admin/templates/d458cbf4-12fa-468b-b9d3-f13a80be7154) | v1 | v2 | 38 | 8 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Compresor ce | 1 campos de registro (N-R); 1 ítems como texto (dato o libre) |
 | [M56B](https://commup.app/admin/templates/87e7a810-2278-41ac-9512-70126407d2cf) | v1 | v2 | 33 | 3 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Turbogenerad |  |
 | [M57B](https://commup.app/admin/templates/9a69a9c7-8945-40c5-891b-1fbf9af03910) | v1 | v2 | 41 | 3 | 3 | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Turbogenerad | 4 campos de registro (N-R); 1 ítems como texto (dato o libre) |
 | [M58B](https://commup.app/admin/templates/24de5e41-1e93-478c-9e79-db1c72dbabbf) | v1 | v2 | 69 | 9 |  | 4 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Tren de turb | 2 campos de registro (N-R); 1 ítems como texto (dato o libre) |
 | [M59B](https://commup.app/admin/templates/abb5c036-5c28-4a8b-846e-20e5ac02b488) | v1 | v2 | 17 | 2 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Enfriadores  | 1 ítems como texto (dato o libre) |
+| [M59C](https://commup.app/admin/templates/8a1871e4-8420-4a59-afce-0f3b3d27fbc8) | v1 | v2 | 15 | 2 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Unidades de vent | 2 campos de registro (N-R); base 59 ítems / original 15; 1 matriz(es) como tabla (M.n) |
 | [M60B](https://commup.app/admin/templates/93514ca7-e4cd-408f-9980-674a6aed098c) | v1 | v2 | 42 | 3 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Sistema de c | 1 campos de registro (N-R); 1 ítems como texto (dato o libre) |
 | [M61B](https://commup.app/admin/templates/53cade92-c9ea-41b8-bbd6-611e1ee00774) | v1 | v2 | 31 | 3 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Dispositivos | 1 campos de registro (N-R); 1 ítems como texto (dato o libre) |
 | [M62B](https://commup.app/admin/templates/f779d1f3-c072-4e66-99cd-f2a8f03fff3f) | v1 | v2 | 6 | 3 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Torre de des |  |
@@ -170,15 +246,17 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [M65B](https://commup.app/admin/templates/908248f3-aa9d-4b5b-ae9f-ba4063c56abb) | v1 | v2 | 16 | 3 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Enfriador de |  |
 | [M65C](https://commup.app/admin/templates/95e25e1f-eaa2-400f-9756-f483b02b8f43) | v1 | v2 | 7 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Enfriador de gas |  |
 
-## P — 14 formatos
+## P — 18 formatos
 
 | Código | Activa | Borrador | Selecciones | Fotos | Mediciones | Textos | Equipo | Sin ES | Título | Avisos |
 |---|---|---|---|---|---|---|---|---|---|---|
+| [P01A](https://commup.app/admin/templates/e9d8808a-be40-49f1-87d5-d850aa22071d) | v1 | v2 | 0 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Índice de isométric | base 12 ítems / original 0; sin lista de chequeo (solo matriz); 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 2 matriz(es) como tabla (M.n) |
 | [P02A](https://commup.app/admin/templates/0c578b78-ef2b-42cb-9076-7f83ad754a8d) | v1 | v2 | 15 | 7 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Instalación de tube |  |
 | [P04A](https://commup.app/admin/templates/c77c8b1d-995e-4b6e-9d9d-9bf76430ac6d) | v1 | v2 | 10 | 0 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Registro de prueba  | 1 campos de registro (N-R); 1 ítems como texto (dato o libre); base 15 ítems / original 11 |
 | [P05A](https://commup.app/admin/templates/11935a3c-a807-4928-a571-68ae0d8e95b3) | v1 | v2 | 19 | 3 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Verificación y rest | 1 ítems como texto (dato o libre) |
 | [P06A](https://commup.app/admin/templates/7cce7206-6f55-4e6a-8f71-e3e691bad767) | v1 | v2 | 4 | 1 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Marcación de tuberí | 1 ítems como texto (dato o libre) |
 | [P06A(1)](https://commup.app/admin/templates/f01ce691-82ea-48e3-b95a-3bd8b9849229) | v1 | v2 | 4 | 1 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Marcación de tuberí | 1 ítems como texto (dato o libre) |
+| [P07A](https://commup.app/admin/templates/125c2348-516b-4a1e-996a-b343932949b5) | v1 | v2 | 8 | 1 |  | 7 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Registros de tensio | 2 campos de registro (N-R); base 21 ítems / original 8; 4 campos de datos (D.n); 9 datos del tag no duplicados |
 | [P08A](https://commup.app/admin/templates/33047a4a-2a02-4c17-ac41-58d021e28fdc) | v1 | v2 | 48 | 10 |  | 5 | sí |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Lista de verificaci | base 55 ítems / original 48 |
 | [P10A](https://commup.app/admin/templates/b7759979-c844-4272-bda0-779ac91687c1) | v1 | v2 | 14 | 5 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Interconexiones de  | 1 campos de registro (N-R) |
 | [P11A](https://commup.app/admin/templates/ae5527d0-c416-4cdf-8c33-ac4a0e3949c8) | v1 | v2 | 14 | 6 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Instalación de ítem |  |
@@ -186,29 +264,40 @@ Revisión por lote: abrir el editor, comparar con el Word, ajustar fotos y redac
 | [P13B](https://commup.app/admin/templates/fa2755d5-94b0-4c7c-83bc-8947c30d1b73) | v1 | v2 | 1 | 0 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Limpieza de  | 2 ítems como texto (dato o libre); base 5 ítems / original 3 |
 | [P14B](https://commup.app/admin/templates/138681b3-747f-4404-9dda-a04fd1ae15d4) | v1 | v2 | 26 | 6 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Restablecimi | base 27 ítems / original 26 |
 | [P15B](https://commup.app/admin/templates/166fc0f6-e9b5-4523-a4e2-5fd1c12008fe) | v1 | v2 | 18 | 3 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Prueba de he | 2 ítems como texto (dato o libre); base 22 ítems / original 20 |
+| [P16B](https://commup.app/admin/templates/be373ad0-ce1f-482e-b810-aa3a981fc9f1) | v1 | v2 | 12 | 4 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Verificación | 1 campos de registro (N-R); 1 ítems como texto (dato o libre); base 22 ítems / original 13; 1 matriz(es) como tabla (M.n) |
+| [P17B](https://commup.app/admin/templates/a46b6ca0-767c-42f4-96b7-75678f016516) | v1 | v2 | 4 | 1 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Lista de ver | 2 ítems como texto (dato o libre); base 17 ítems / original 6; 1 tabla(s) del original sin clasificar (revisar que la matriz/datos las cubra); 1 matriz(es) como tabla (M.n) |
 | [P18B](https://commup.app/admin/templates/04b788ee-f082-4581-b403-0b9e251f9426) | v1 | v2 | 6 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Registro de  |  |
 | [P19B](https://commup.app/admin/templates/b24fb2fb-41bb-47b5-a095-5269b052ad61) | v1 | v2 | 4 | 3 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Soplado/limpieza | 2 ítems como texto (dato o libre); base 8 ítems / original 6 |
 
-## Q — 5 formatos
+## Q — 6 formatos
 
 | Código | Activa | Borrador | Selecciones | Fotos | Mediciones | Textos | Equipo | Sin ES | Título | Avisos |
 |---|---|---|---|---|---|---|---|---|---|---|
 | [Q01A](https://commup.app/admin/templates/be73056a-1050-40b3-a22b-27f061d80129) | v1 | v2 | 44 | 9 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Aislamiento térmico |  |
 | [Q02A](https://commup.app/admin/templates/e870efdc-1dbe-48c0-aa0f-79802a974e1a) | v1 | v2 | 18 | 4 |  | 5 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Aislamiento en frío | 3 campos de registro (N-R); 1 ítems como texto (dato o libre) |
 | [Q03A](https://commup.app/admin/templates/cb59287b-d66f-45ca-af21-d50d86aaf4c1) | v1 | v2 | 35 | 9 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Aislamiento térmico |  |
+| [Q04A](https://commup.app/admin/templates/9a349cd3-dbe2-40e2-88ee-deb902e0351a) | v1 | v2 | 26 | 5 |  | 11 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Aislamiento en frío | 4 campos de registro (N-R); base 37 ítems / original 28; 6 campos de datos (D.n) |
 | [Q05A](https://commup.app/admin/templates/c34e8b1a-f46d-4e4d-8275-24fb0f73f72e) | v1 | v2 | 12 | 3 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Aislamiento acústic |  |
 | [Q07A](https://commup.app/admin/templates/f3511505-c3a7-4b11-9ec5-82a8188f96a3) | v1 | v2 | 6 | 0 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Refractario de equi | 1 ítems como texto (dato o libre) |
 
-## T — 16 formatos
+## T — 24 formatos
 
 | Código | Activa | Borrador | Selecciones | Fotos | Mediciones | Textos | Equipo | Sin ES | Título | Avisos |
 |---|---|---|---|---|---|---|---|---|---|---|
 | [T01A](https://commup.app/admin/templates/3b209956-830e-4b9a-a988-3a42f269c843) | v1 | v2 | 11 | 5 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Teléfono P.A.B.X /  |  |
+| [T01C](https://commup.app/admin/templates/2a847049-ee56-43e0-b79b-74afb2b72eb9) | v1 | v2 | 3 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Teléfono P.A.B.X | base 10 ítems / original 3; 1 filas de matriz embebida en la lista (revisar); 1 matriz(es) como tabla (M.n) |
+| [T02A](https://commup.app/admin/templates/2e1667b6-2558-44a6-a6f5-a9f6a190c5b4) | v1 | v2 | 8 | 3 |  | 6 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cables de telecomun | 1 campos de registro (N-R); base 18 ítems / original 8; 4 campos de datos (D.n) |
+| [T03A](https://commup.app/admin/templates/3869b8f8-997b-4828-935c-331cbda65f4f) | v1 | v2 | 8 | 2 |  | 6 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cables de fibra ópt | base 20 ítems / original 8; 5 campos de datos (D.n) |
 | [T04A](https://commup.app/admin/templates/0da6803c-7be6-4a1f-8143-8ce4866177ac) | v1 | v2 | 8 | 5 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Equipos de telecomu |  |
 | [T04B](https://commup.app/admin/templates/6bc40093-5035-4199-b4ae-1a657ed7570a) | v1 | v2 | 5 | 0 |  | 2 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Equipos de t | 1 campos de registro (N-R) |
+| [T04C](https://commup.app/admin/templates/5d46b75a-bc77-44d1-89e1-063a83e77fc9) | v1 | v2 | 3 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Verificaciones d | base 10 ítems / original 3; 1 filas de matriz embebida en la lista (revisar); 1 matriz(es) como tabla (M.n) |
 | [T05A](https://commup.app/admin/templates/ec6114de-f642-4f54-8253-13f2720a8874) | v1 | v2 | 12 | 6 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Radios, antenas, CC |  |
+| [T05C](https://commup.app/admin/templates/171a60a9-d71d-45d0-a82f-7d85b5e14d54) | v1 | v2 | 3 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Radios, antenas, | base 10 ítems / original 3; 1 filas de matriz embebida en la lista (revisar); 1 matriz(es) como tabla (M.n) |
 | [T06A](https://commup.app/admin/templates/44a6b2e6-4f00-4082-9747-e07a551824ed) | v1 | v2 | 14 | 6 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Teléfono P.A., alta |  |
 | [T06B](https://commup.app/admin/templates/e4f1bedd-f485-4dcc-8bea-c0eb67429123) | v1 | v2 | 7 | 1 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Teléfono, al |  |
+| [T06C](https://commup.app/admin/templates/3ca7e89c-ca42-4cb8-9964-0825fda0d844) | v1 | v2 | 3 | 0 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Altavoz de megaf | base 13 ítems / original 3; 1 filas de matriz embebida en la lista (revisar); 1 matriz(es) como tabla (M.n) |
+| [T07A](https://commup.app/admin/templates/3a6bcf40-5d1b-49f7-8c07-36ee36b9f37e) | v1 | v2 | 8 | 2 |  | 8 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cable de cobre (LAN | 1 campos de registro (N-R); base 20 ítems / original 8; 6 campos de datos (D.n) |
+| [T08A](https://commup.app/admin/templates/cb8240cd-8abd-459c-8da5-84986ef15282) | v1 | v2 | 17 | 4 | 1 | 8 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Cables de telecomun | 2 campos de registro (N-R); base 29 ítems / original 17; 6 campos de datos (D.n) |
 | [T09A](https://commup.app/admin/templates/aa2a02a2-f9de-49e6-ae46-7f56d273df2d) | v1 | v2 | 20 | 10 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Paneles / consolas  | 2 campos de registro (N-R) |
 | [T09C](https://commup.app/admin/templates/35d148c3-6e32-41e6-969b-cecd93ea463c) | v1 | v2 | 25 | 1 |  | 3 |  |  | FORMATO DE COMPLETACIÓN DE COMISIONAMIENTO: Paneles / consol | 2 campos de registro (N-R) |
 | [T10A](https://commup.app/admin/templates/8216d22e-364e-417f-a473-818fe4e7b965) | v1 | v2 | 19 | 8 |  | 1 |  |  | FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Monitores CCTV y te |  |

@@ -16,7 +16,7 @@ BEGIN
   IF p_options IS NULL OR jsonb_typeof(p_options) <> 'object' OR p_options->'version' IS DISTINCT FROM '1'::jsonb THEN RETURN false; END IF;
   IF jsonb_typeof(p_options->'columns') IS DISTINCT FROM 'array' THEN RETURN false; END IF;
   n := jsonb_array_length(p_options->'columns');
-  IF n < 1 OR n > 12 THEN RETURN false; END IF;
+  IF n < 1 OR n > 16 THEN RETURN false; END IF;
   FOR col IN SELECT value FROM jsonb_array_elements(p_options->'columns') LOOP
     IF jsonb_typeof(col) <> 'object' THEN RETURN false; END IF;
     k := col->>'key'; t := col->>'type';
