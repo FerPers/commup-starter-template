@@ -311,6 +311,11 @@ export interface ItrTemplate {
   version: number
   is_active: boolean
   is_global: boolean
+  /** Revisión del catálogo (u otra org) de la que se clonó; null si es propia. */
+  source_template_id: string | null
+  source_org_id: string | null
+  source_version: number | null
+  imported_at: string | null
   created_at: string
 }
 

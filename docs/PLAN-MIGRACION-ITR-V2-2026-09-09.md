@@ -199,6 +199,8 @@ I33C (lazo de válvula), I05A↔I10A (dependencia entre ITR del mismo tag: neces
 
 Decidir modelo (organización catálogo + clonación, o `is_global`), regenerar la copia de Ecopetrol desde el catálogo v2 conservando sus v1 inactivas, y dejar el flujo de «Publicar revisión» como único camino (retirar los scripts `preparar-*.mjs`).
 
+**Estado 2026-09-10:** mecanismo construido y aplicado en prod (migración `20260910120000`): RPC atómica `clone_itr_template_from_catalog` con procedencia y revisiones (código existente → revisión nueva inactiva), `list_catalog_template_updates`, modal y aviso en `/admin/templates`. Probado con rollback en prod. Falta lo operativo: designar la org catálogo, activar las v2 en el catálogo y traerlas a Ecopetrol. Runbook en `docs/ITR-FASE6-BIBLIOTECA-2026-09-10.md`.
+
 ---
 
 ## 7. Decisiones — respondidas por Luis (2026-09-09, 19:40)

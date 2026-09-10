@@ -1626,9 +1626,13 @@ export type Database = {
           equipment_type_id: string | null
           id: string
           is_active: boolean
+          imported_at: string | null
           is_global: boolean
           org_id: string
           phase_id: string
+          source_org_id: string | null
+          source_template_id: string | null
+          source_version: number | null
           title: string
           title_es: string | null
           version: number
@@ -1641,9 +1645,13 @@ export type Database = {
           equipment_type_id?: string | null
           id?: string
           is_active?: boolean
+          imported_at?: string | null
           is_global?: boolean
           org_id: string
           phase_id: string
+          source_org_id?: string | null
+          source_template_id?: string | null
+          source_version?: number | null
           title: string
           title_es?: string | null
           version?: number
@@ -1656,9 +1664,13 @@ export type Database = {
           equipment_type_id?: string | null
           id?: string
           is_active?: boolean
+          imported_at?: string | null
           is_global?: boolean
           org_id?: string
           phase_id?: string
+          source_org_id?: string | null
+          source_template_id?: string | null
+          source_version?: number | null
           title?: string
           title_es?: string | null
           version?: number
@@ -5432,6 +5444,24 @@ export type Database = {
       activate_itr_template_revision: {
         Args: { p_template_id: string }
         Returns: Json
+      }
+      clone_itr_template_from_catalog: {
+        Args: { p_source_template_id: string; p_target_org_id: string; p_code_suffix?: string | null }
+        Returns: Json
+      }
+      list_catalog_template_updates: {
+        Args: { p_org_id: string }
+        Returns: {
+          template_id: string
+          code: string
+          local_version: number
+          source_template_id: string
+          source_version: number | null
+          catalog_template_id: string
+          catalog_version: number
+          catalog_org_id: string
+          catalog_org_name: string
+        }[]
       }
 
       accept_itr_suggestion: {

@@ -10,10 +10,13 @@ import {
   type BulkCloneResult,
 } from '@/app/actions/itr-templates'
 
-// Banco de plantillas: una org marcada como catálogo expone sus templates a
+// Biblioteca de formatos: una org marcada como catálogo expone sus templates a
 // todas las demás (RLS is_catalog_org). Una org nueva no necesita saber quién
 // es el catálogo: aquí aparece agrupado con la etiqueta "Catálogo público",
 // filtrable por disciplina y con importación de una o de todas a la vez.
+// La clonación es atómica y guarda procedencia: un código nuevo entra como v1
+// activa; uno existente recibe una revisión nueva inactiva (se revisa y se
+// activa en el editor); uno ya importado de esa misma revisión se salta.
 
 export default function ImportFromOrgModal({ onClose }: { onClose: () => void }) {
   const router = useRouter()
@@ -72,7 +75,15 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
         setError(res.error)
         return
       }
-      setSuccess(`Template "${t.code}" importado exitosamente`)
+      const eq = res.equipmentTypeMapped === false ? ' Sin tipo de equipo: la org activa no tiene uno con ese código.' : ''
+      setSuccess(
+        res.mode === 'revision'
+          ? `Revisión v${res.version} de "${t.code}" creada como borrador inactivo. Revísala y actívala en el editor.${eq}`
+          : res.mode === 'skipped'
+            ? `"${t.code}" ya está al día con esta revisión del catálogo.`
+            : `Template "${t.code}" importado (v1 activa).${eq}`,
+      )
+      setTemplates(prev => prev.map(x => x.id === t.id ? { ...x, localState: 'current', localVersion: res.isActive ? res.version ?? x.localVersion : x.localVersion } : x))
       router.refresh()
     })
   }
@@ -92,6 +103,8 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
       if (res.result.errors.length > 0) {
         setError(res.result.errors.slice(0, 5).map(e => `${e.code}: ${e.reason}`).join(' · '))
       }
+      const failed = new Set(res.result.errors.map(e => e.code))
+      setTemplates(prev => prev.map(x => list.some(l => l.id === x.id) && !failed.has(x.code) ? { ...x, localState: 'current' } : x))
       router.refresh()
     })
   }
@@ -123,7 +136,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
               Importar templates del catálogo
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
-              Se clonan en la org activa. Cada org evoluciona su copia de forma independiente. Los que ya existen (mismo código) se saltan.
+              Se clonan en la org activa con su procedencia. Un código nuevo entra como v1 activa; uno que ya existe recibe una revisión nueva inactiva para revisar y activar; el que ya está al día se salta.
             </p>
           </div>
           <button
@@ -218,20 +231,25 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
                       </p>
                       <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
                         {t.disciplineCode} / fase {t.phaseCode} · v{t.version} · {t.sectionCount} secciones · {t.itemCount} ítems
+                        {t.localState === 'current' && <span style={{ color: '#059669' }}> · al día en esta org{t.localVersion ? ` (v${t.localVersion})` : ''}</span>}
+                        {t.localState === 'outdated' && <span style={{ color: '#b45309' }}> · en esta org: {t.localVersion ? `v${t.localVersion}` : 'sin revisión activa'} · nueva revisión disponible</span>}
                       </p>
                     </div>
                     <button
                       onClick={() => handleImport(t)}
-                      disabled={isPending}
+                      disabled={isPending || t.localState === 'current'}
+                      title={t.localState === 'outdated' ? 'Crea una revisión nueva inactiva a partir del catálogo; revísala y actívala en el editor' : undefined}
                       style={{
                         padding: '7px 14px', fontSize: 12, fontWeight: 500,
-                        background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6,
-                        cursor: isPending ? 'wait' : 'pointer',
+                        background: t.localState === 'current' ? 'var(--gray-50)' : t.localState === 'outdated' ? '#f59e0b' : '#3b82f6',
+                        color: t.localState === 'current' ? 'var(--text-muted)' : 'white',
+                        border: t.localState === 'current' ? '1px solid var(--border)' : 'none', borderRadius: 6,
+                        cursor: t.localState === 'current' ? 'default' : isPending ? 'wait' : 'pointer',
                         opacity: isPending && importingId !== t.id ? 0.6 : 1,
                         flexShrink: 0,
                       }}
                     >
-                      {isPending && importingId === t.id ? 'Importando…' : 'Importar'}
+                      {isPending && importingId === t.id ? 'Importando…' : t.localState === 'current' ? 'Al día' : t.localState === 'outdated' ? 'Nueva revisión' : 'Importar'}
                     </button>
                   </div>
                 ))}
@@ -246,7 +264,8 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
 
 function describeBulk(r: BulkCloneResult): string {
   const parts = [`${r.created} importado${r.created !== 1 ? 's' : ''}`]
-  if (r.skipped > 0) parts.push(`${r.skipped} ya existía${r.skipped !== 1 ? 'n' : ''}`)
+  if (r.updated > 0) parts.push(`${r.updated} revisi${r.updated !== 1 ? 'ones' : 'ón'} nueva${r.updated !== 1 ? 's' : ''} (borrador inactivo)`)
+  if (r.skipped > 0) parts.push(`${r.skipped} ya al día`)
   if (r.errors.length > 0) parts.push(`${r.errors.length} con error`)
   return parts.join(' · ')
 }

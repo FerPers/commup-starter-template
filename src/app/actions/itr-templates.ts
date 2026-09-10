@@ -529,6 +529,10 @@ export type ImportableTemplate = {
   sourceOrgIsCatalog: boolean
   sectionCount: number
   itemCount: number
+  /** Revisión activa del mismo código en la org activa (null si no existe). */
+  localVersion: number | null
+  /** missing: no existe · current: ya se importó esta revisión · outdated: existe pero de otra revisión. */
+  localState: 'missing' | 'current' | 'outdated'
 }
 
 export const listImportableTemplates = withAuthOnly(
@@ -567,11 +571,27 @@ export const listImportableTemplates = withAuthOnly(
 
     if (error) return { templates: [], error: error.message }
 
+    // Estado local por código: qué revisión está activa y de qué revisiones
+    // origen se importó ya (procedencia), para ofrecer «importar», «nueva
+    // revisión» o «al día» sin volver a clonar.
+    const { data: local } = await ctx.supabase
+      .from('itr_templates')
+      .select('code, version, is_active, source_template_id')
+      .eq('org_id', ctx.orgId)
+    const localByCode = new Map<string, { activeVersion: number | null; sources: Set<string> }>()
+    for (const row of local ?? []) {
+      const entry = localByCode.get(row.code) ?? { activeVersion: null, sources: new Set<string>() }
+      if (row.is_active) entry.activeVersion = row.version
+      if (row.source_template_id) entry.sources.add(row.source_template_id)
+      localByCode.set(row.code, entry)
+    }
+
     const templates: ImportableTemplate[] = (data ?? []).map(t => {
       const disc = t.disciplines as { code: string } | { code: string }[] | null
       const phase = t.project_phases as { code: string } | { code: string }[] | null
       const sections = (t.itr_template_sections ?? []) as Array<{ id: string; itr_template_items: { id: string }[] }>
       const info = orgInfo.get(t.org_id as string)
+      const mine = localByCode.get(t.code as string)
       return {
         id: t.id as string,
         code: t.code as string,
@@ -584,6 +604,8 @@ export const listImportableTemplates = withAuthOnly(
         sourceOrgIsCatalog: info?.isCatalog ?? false,
         sectionCount: sections.length,
         itemCount: sections.reduce((sum, s) => sum + s.itr_template_items.length, 0),
+        localVersion: mine?.activeVersion ?? null,
+        localState: !mine ? 'missing' : mine.sources.has(t.id as string) ? 'current' : 'outdated',
       }
     })
 
@@ -595,119 +617,49 @@ export const listImportableTemplates = withAuthOnly(
 // de withAuthOnly). Compartido por la importación unitaria y la masiva.
 type CloneCtx = { supabase: SupabaseClient<Database>; orgId: string }
 
+export type CloneMode = 'created' | 'revision' | 'skipped'
+export type CloneOutcome = {
+  id?: string
+  /** created: código nuevo (v1 activa) · revision: el código existía (revisión nueva inactiva) · skipped: ya importada. */
+  mode?: CloneMode
+  version?: number
+  isActive?: boolean
+  /** false cuando el origen tiene tipo de equipo y la org activa no tiene uno con ese código. */
+  equipmentTypeMapped?: boolean
+  error?: string
+}
+
+function describeCloneError(message: string): string {
+  const disc = /Missing discipline "(.+)" in target organization/.exec(message)
+  if (disc) return `Falta la disciplina "${disc[1]}" en la org activa. Créala antes de importar.`
+  const phase = /Missing phase "(.+)" in target organization/.exec(message)
+  if (phase) return `Falta la fase "${phase[1]}" en la org activa. Créala antes de importar.`
+  if (message.includes('Source template not found')) return 'Template origen no encontrado o sin acceso'
+  if (message.includes('already belongs to the target')) return 'El template ya está en la org activa'
+  if (message.includes('Only the active revision')) return 'Solo se importa la revisión activa del origen'
+  if (message.includes('membership required')) return 'Se requiere rol de editor en la org activa'
+  return message
+}
+
+/**
+ * Clonación atómica (RPC SECURITY DEFINER clone_itr_template_from_catalog):
+ * cabecera completa, secciones, ítems y condiciones en una transacción, con
+ * procedencia (source_template_id). Un código que ya existe en la org activa
+ * recibe una revisión nueva inactiva (para revisar y activar), nunca se pisa.
+ */
 async function cloneTemplateInternal(
   ctx: CloneCtx,
   sourceTemplateId: string,
   options?: { codeSuffix?: string },
-): Promise<{ id?: string; error?: string }> {
-    // Verify the source template belongs to an org the user is a member of.
-    const { data: source } = await ctx.supabase
-      .from('itr_templates')
-      .select(`
-        id, code, title, description, version, org_id, is_global,
-        disciplines(code),
-        project_phases(code),
-        itr_template_sections(
-          id, title, order_index,
-          itr_template_items(
-            item_number, description, description_es, item_type, is_required,
-            is_critical, requires_photo, requires_document, requires_measurement, options, option_outcomes, unit,
-            acceptance_min, acceptance_max, acceptance_text, order_index
-          )
-        )
-      `)
-      .eq('id', sourceTemplateId)
-      .single()
-
-    if (!source) return { error: 'Template origen no encontrado o sin acceso' }
-    if (source.org_id === ctx.orgId) return { error: 'El template ya está en la org activa' }
-
-    const sourceDisc = source.disciplines as { code: string } | { code: string }[] | null
-    const sourcePhase = source.project_phases as { code: string } | { code: string }[] | null
-    const discCode = Array.isArray(sourceDisc) ? sourceDisc[0]?.code : sourceDisc?.code
-    const phaseCode = Array.isArray(sourcePhase) ? sourcePhase[0]?.code : sourcePhase?.code
-
-    if (!discCode || !phaseCode) {
-      return { error: 'Template origen sin disciplina o fase válida' }
-    }
-
-    // Map source discipline + phase by code into target org. RLS ensures we only
-    // see rows in the active org here.
-    const [{ data: targetDisc }, { data: targetPhase }] = await Promise.all([
-      ctx.supabase
-        .from('disciplines')
-        .select('id')
-        .eq('org_id', ctx.orgId)
-        .eq('code', discCode)
-        .maybeSingle(),
-      ctx.supabase
-        .from('project_phases')
-        .select('id')
-        .eq('org_id', ctx.orgId)
-        .eq('code', phaseCode)
-        .maybeSingle(),
-    ])
-
-    if (!targetDisc) {
-      return { error: `Falta la disciplina "${discCode}" en la org activa. Créala antes de importar.` }
-    }
-    if (!targetPhase) {
-      return { error: `Falta la fase "${phaseCode}" en la org activa. Créala antes de importar.` }
-    }
-
-    const newCode = `${source.code}${options?.codeSuffix ?? ''}`
-
-    const { data: existing } = await ctx.supabase
-      .from('itr_templates')
-      .select('id')
-      .eq('org_id', ctx.orgId)
-      .eq('code', newCode)
-      .maybeSingle()
-
-    if (existing) {
-      return { error: `Ya existe un template con código "${newCode}" en esta org` }
-    }
-
-    const { data: cloned, error: tplErr } = await ctx.supabase
-      .from('itr_templates')
-      .insert({
-        org_id: ctx.orgId,
-        discipline_id: targetDisc.id,
-        phase_id: targetPhase.id,
-        code: newCode,
-        title: source.title,
-        description: source.description,
-        version: 1,
-        is_active: true,
-        is_global: false,
-      })
-      .select('id')
-      .single()
-
-    if (tplErr || !cloned) return { error: tplErr?.message ?? 'No se pudo crear el template' }
-
-    const sections = source.itr_template_sections ?? []
-
-    for (const sec of sections) {
-      const { data: newSec, error: secErr } = await ctx.supabase
-        .from('itr_template_sections')
-        .insert({ template_id: cloned.id, title: sec.title, order_index: sec.order_index })
-        .select('id')
-        .single()
-
-      if (secErr || !newSec) continue
-
-      if (sec.itr_template_items.length > 0) {
-        const itemRows = sec.itr_template_items.map(item => ({
-          ...item,
-          section_id: newSec.id,
-          template_id: cloned.id,
-        }))
-        await ctx.supabase.from('itr_template_items').insert(itemRows)
-      }
-    }
-
-    return { id: cloned.id }
+): Promise<CloneOutcome> {
+  const { data, error } = await ctx.supabase.rpc('clone_itr_template_from_catalog', {
+    p_source_template_id: sourceTemplateId,
+    p_target_org_id: ctx.orgId,
+    p_code_suffix: options?.codeSuffix ?? null,
+  })
+  if (error || !data) return { error: describeCloneError(error?.message ?? 'No se pudo clonar') }
+  const r = data as { mode: CloneMode; id: string; version: number; is_active: boolean; equipment_type_mapped: boolean }
+  return { id: r.id, mode: r.mode, version: r.version, isActive: r.is_active, equipmentTypeMapped: r.equipment_type_mapped }
 }
 
 export const cloneTemplateToActiveOrg = withAuthOnly(
@@ -716,7 +668,7 @@ export const cloneTemplateToActiveOrg = withAuthOnly(
     ctx,
     sourceTemplateId: string,
     options?: { codeSuffix?: string },
-  ): Promise<{ id?: string; error?: string }> => {
+  ): Promise<CloneOutcome> => {
     const res = await cloneTemplateInternal(ctx, sourceTemplateId, options)
     if (res.id) revalidatePath('/admin/templates')
     return res
@@ -724,20 +676,21 @@ export const cloneTemplateToActiveOrg = withAuthOnly(
 )
 
 export interface BulkCloneResult {
-  created: number
-  skipped: number   // ya existían en la org activa (mismo código)
+  created: number   // códigos nuevos (v1 activa)
+  updated: number   // códigos existentes: revisión nueva inactiva
+  skipped: number   // ya importados de esa misma revisión origen
   errors: { code: string; reason: string }[]
 }
 
 /**
  * Importación masiva desde el catálogo / otra org: clona en secuencia todos
- * los templates indicados. Los que ya existen (mismo código) se saltan sin
- * error, para que "Importar todo" sea re-ejecutable.
+ * los templates indicados. La RPC decide por código: nuevo → v1 activa;
+ * existente → revisión nueva inactiva; ya importado → se salta. Re-ejecutable.
  */
 export const cloneTemplatesToActiveOrg = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, sourceTemplateIds: string[]): Promise<{ result?: BulkCloneResult; error?: string }> => {
-    const result: BulkCloneResult = { created: 0, skipped: 0, errors: [] }
+    const result: BulkCloneResult = { created: 0, updated: 0, skipped: 0, errors: [] }
     const ids = [...new Set(sourceTemplateIds)].slice(0, 1000)
 
     const { data: sources } = await ctx.supabase
@@ -746,22 +699,17 @@ export const cloneTemplatesToActiveOrg = withAuthOnly(
       .in('id', ids)
     const codeById = new Map((sources ?? []).map(t => [t.id, t.code]))
 
-    const { data: existing } = await ctx.supabase
-      .from('itr_templates')
-      .select('code')
-      .eq('org_id', ctx.orgId)
-    const existingCodes = new Set((existing ?? []).map(t => t.code))
-
     for (const id of ids) {
       const code = codeById.get(id)
       if (!code) { result.errors.push({ code: id, reason: 'Template origen no encontrado o sin acceso' }); continue }
-      if (existingCodes.has(code)) { result.skipped++; continue }
       const res = await cloneTemplateInternal(ctx, id)
-      if (res.id) { result.created++; existingCodes.add(code) }
-      else result.errors.push({ code, reason: res.error ?? 'No se pudo clonar' })
+      if (res.error) { result.errors.push({ code, reason: res.error }); continue }
+      if (res.mode === 'created') result.created++
+      else if (res.mode === 'revision') result.updated++
+      else result.skipped++
     }
 
-    if (result.created > 0) revalidatePath('/admin/templates')
+    if (result.created + result.updated > 0) revalidatePath('/admin/templates')
     return { result }
   },
 )

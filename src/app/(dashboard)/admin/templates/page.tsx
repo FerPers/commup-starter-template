@@ -10,7 +10,7 @@ export default async function ItrTemplatesPage() {
 
   const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(membership.role)
 
-  const [{ data: templates }, { data: disciplines }, { data: phases }] = await Promise.all([
+  const [{ data: templates }, { data: disciplines }, { data: phases }, { data: catalogUpdates }] = await Promise.all([
     supabase
       .from('itr_templates')
       .select(`
@@ -31,6 +31,10 @@ export default async function ItrTemplatesPage() {
       .select('id, code, name, color, order_index')
       .eq('org_id', membership.org_id)
       .order('order_index'),
+    // Plantillas importadas del catálogo cuyo origen ya tiene una revisión más nueva (Fase 6).
+    canEdit
+      ? supabase.rpc('list_catalog_template_updates', { p_org_id: membership.org_id })
+      : Promise.resolve({ data: null }),
   ])
 
   return (
@@ -49,6 +53,9 @@ export default async function ItrTemplatesPage() {
         disciplines={disciplines ?? []}
         phases={phases ?? []}
         canEdit={canEdit}
+        catalogUpdates={(catalogUpdates ?? []).map(u => ({
+          code: u.code, localVersion: u.local_version, catalogVersion: u.catalog_version, catalogOrgName: u.catalog_org_name,
+        }))}
       />
     </div>
   )

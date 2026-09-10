@@ -122,6 +122,7 @@ Rules for every new page/query/action:
 - **Edge Functions** (`supabase/functions/evaluate-workflow`, `webhook-dispatcher`) are deployed with `verify_jwt=false` because the pg_net trigger sends the Vault-stored service key. Each function authenticates by itself (`requireServiceCaller`: Bearer must equal the runtime service key or pass the Auth Admin API probe). Every executor mutation is scoped to `event.project_id`/`event.org_id`; outbound `fetch` goes through `assertPublicHttpsUrl` (https only, no private/loopback/metadata hosts, `redirect: 'manual'`). Never add an action that takes a free table name or id.
 - **Security headers** live in `next.config.ts` (`headers()` + `poweredByHeader: false`): CSP, HSTS, nosniff, frame DENY, Referrer-Policy, Permissions-Policy. CSP has `'unsafe-inline'` for scripts because OpenNext has no per-request nonce (no middleware). If you add an external script/API host, add it to the CSP or it is silently blocked.
 - Invitations are email-only (Supabase SMTP). There is no temp-password fallback — do not reintroduce one.
+- **ITR template library:** an org with `settings.is_template_catalog` exposes its templates to every org (RLS `is_catalog_org`). Importing goes only through the atomic RPC `clone_itr_template_from_catalog` (provenance in `itr_templates.source_*`; an existing code becomes a new inactive revision, never overwritten). Revisions: `create_itr_template_revision` / `activate_itr_template_revision`. Do not clone templates with row-by-row inserts.
 
 ## AI (Claude) — matriz ITR híbrida
 

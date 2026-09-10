@@ -24,16 +24,20 @@ interface Template {
   itr_template_sections: Array<{ id: string; itr_template_items: Array<{ id: string }> }>
 }
 
+/** Código importado del catálogo cuyo origen ya tiene una revisión activa más nueva. */
+export interface CatalogUpdate { code: string; localVersion: number; catalogVersion: number; catalogOrgName: string }
+
 interface Props {
   templates: Template[]
   disciplines: Discipline[]
   phases: Phase[]
   canEdit: boolean
+  catalogUpdates?: CatalogUpdate[]
 }
 
 const DEFAULT_FORM = { code: '', title: '', phase_id: '', discipline_id: '', description: '' }
 
-export default function ItrTemplatesView({ templates, disciplines, phases, canEdit }: Props) {
+export default function ItrTemplatesView({ templates, disciplines, phases, canEdit, catalogUpdates = [] }: Props) {
   const router = useRouter()
   const t = useTranslations('ItrTemplates')
   const [isPending, startTransition] = useTransition()
@@ -115,6 +119,32 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
   return (
     <div>
+      {/* Biblioteca de formatos: revisiones nuevas disponibles en el catálogo */}
+      {canEdit && catalogUpdates.length > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap',
+          padding: '12px 16px', marginBottom: '16px', borderRadius: '10px',
+          background: '#fffbeb', border: '1px solid #fde68a',
+        }}>
+          <div style={{ fontSize: '13px', color: '#92400e', minWidth: 0 }}>
+            <strong>{catalogUpdates.length} plantilla{catalogUpdates.length !== 1 ? 's tienen' : ' tiene'} una revisión nueva en el catálogo</strong>
+            {' '}({catalogUpdates[0].catalogOrgName}):{' '}
+            {catalogUpdates.slice(0, 8).map(u => `${u.code} v${u.localVersion} → v${u.catalogVersion}`).join(' · ')}
+            {catalogUpdates.length > 8 ? ` · y ${catalogUpdates.length - 8} más` : ''}
+          </div>
+          <button
+            onClick={() => setShowImportFromOrg(true)}
+            style={{
+              padding: '7px 14px', background: '#f59e0b', color: 'white', border: 'none',
+              borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+            title="Trae cada revisión nueva como borrador inactivo; se revisa y se activa en el editor"
+          >
+            Traer revisiones nuevas
+          </button>
+        </div>
+      )}
+
       {/* Top bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '16px' }}>
         {/* Discipline filter tabs */}
