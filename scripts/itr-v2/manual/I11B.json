@@ -1,0 +1,40 @@
+{
+  "code": "I11B",
+  "note": "Prueba de operación como registros M.1–M.9 (presiones, tiempos, límites de carrera, posiciones de falla) más M.10 de conformidad con el diseño; impedancia de bobinas como tabla 8.0-R; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "“A” check sheets (construction ITRs) completed and signed.", "es": "Formatos «A» (ITR de construcción) completados y firmados." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "Visual check: no damage.", "es": "Inspección visual: sin daños." },
+      { "n": "3.0", "type": "check", "en": "Correct location according to the P&ID.", "es": "Ubicación correcta según el P&ID." },
+      { "n": "4.0", "type": "check", "en": "Accessibility for operation and maintenance.", "es": "Accesibilidad para operación y mantenimiento." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Correct nameplate and tag number.", "es": "Placa de características y número de tag correctos." },
+      { "n": "6.0", "type": "check", "photo": true, "en": "Installation in accordance with the typical drawings and mounting specifications (mechanical, pneumatic, electrical and support).", "es": "Instalación conforme a los típicos y especificaciones de montaje (mecánica, neumática, eléctrica y soporte)." },
+      { "n": "7.0", "type": "check", "photo": true, "en": "Orientation according to the flow direction.", "es": "Orientación conforme al sentido de flujo." }
+    ] },
+    { "title": "Prueba de operación", "items": [
+      { "n": "M.1", "type": "measurement", "unit": "psig", "en": "Supply pressure.", "es": "Presión de suministro." },
+      { "n": "M.2", "type": "measurement", "unit": "psig", "en": "Regulator adjustment.", "es": "Ajuste del regulador." },
+      { "n": "M.3", "type": "text", "en": "Tag(s) of the solenoid valve(s) driving the actuator.", "es": "Tag(s) de la(s) válvula(s) solenoide de accionamiento." },
+      { "n": "M.4", "type": "measurement", "unit": "s", "en": "Valve opening time.", "es": "Tiempo de apertura de la válvula." },
+      { "n": "M.5", "type": "text", "en": "Stroke limit “open”: setting or reading as per the calibration sheet.", "es": "Límite de carrera «abierta»: ajuste o lectura según la hoja de calibración." },
+      { "n": "M.6", "type": "measurement", "unit": "s", "en": "Valve closing time.", "es": "Tiempo de cierre de la válvula." },
+      { "n": "M.7", "type": "text", "en": "Stroke limit “closed”: setting or reading as per the calibration sheet.", "es": "Límite de carrera «cerrada»: ajuste o lectura según la hoja de calibración." },
+      { "n": "M.8", "type": "select", "options": ["FO", "FC", "FS"], "en": "Instrument air failure position (FO = fail open, FC = fail closed, FS = fail steady).", "es": "Posición de falla de aire de instrumentos (FO = abre, FC = cierra, FS = permanece)." },
+      { "n": "M.9", "type": "select", "options": ["FO", "FC", "FS"], "en": "Electrical signal failure position (FO / FC / FS).", "es": "Posición de falla de señal eléctrica (FO / FC / FS)." },
+      { "n": "M.10", "type": "check", "en": "Failure positions (M.8, M.9) correspond to the design (data sheet / cause & effect).", "es": "Las posiciones de falla (M.8, M.9) corresponden al diseño (hoja de datos / causa-efecto)." }
+    ] },
+    { "title": "Prueba de accesorios", "items": [
+      { "n": "8.0", "type": "check", "en": "Coil(s) impedance measured and within the manufacturer's values.", "es": "Impedancia de bobina(s) medida y dentro de los valores del fabricante." },
+      { "n": "8.0-R", "type": "table", "en": "Coil impedance readings.", "es": "Lecturas de impedancia de bobina(s).",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 4, "label": "Bobina" }, "columns": [
+          { "key": "coil_tag", "label": "Tag / bobina", "type": "text" },
+          { "key": "impedance", "label": "Impedancia", "type": "number", "unit": "Ω" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "9.0", "type": "text", "required": false, "en": "Other ancillaries tested (positioner, stroke limits, etc.), if applicable: description and result.", "es": "Otros accesorios probados (posicionador, límites de carrera, etc.), si aplica: descripción y resultado." }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

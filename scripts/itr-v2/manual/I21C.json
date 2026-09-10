@@ -1,0 +1,31 @@
+{
+  "code": "I21C",
+  "note": "Sistema remoto como dato (D.1–D.2), listado de señales como tabla M.1 (tag local, tipo, objeto remoto, lectura/escritura/gráfico/alarma) y el listado de variables como documento adjunto en 3.0.",
+  "sections": [
+    { "title": "Referencias y datos del enlace", "items": [
+      "R.1",
+      { "n": "D.1", "type": "select", "options": ["PCS", "F&G", "PAS", "Otro"], "en": "Remote system (master).", "es": "Sistema remoto (maestro)." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Other remote system: specify.", "es": "Otro sistema remoto: especificar." },
+      { "n": "D.3", "type": "text", "required": false, "en": "Protocol and link parameters (e.g. Modbus RTU, baud rate, address).", "es": "Protocolo y parámetros del enlace (p. ej. Modbus RTU, velocidad, dirección)." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "Communication between the panel (slave) and the remote system (master) is functioning correctly.", "es": "La comunicación entre el panel (esclavo) y el sistema remoto (maestro) funciona correctamente." },
+      { "n": "2.0", "type": "check", "en": "Redundancy of the communication link is correct.", "es": "La redundancia del enlace de comunicación es correcta." },
+      { "n": "3.0", "type": "check", "document": true, "en": "Signals have been tested (attach the tag list).", "es": "Las señales han sido probadas (adjuntar el listado de variables)." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "en": "Serial communication link data test: one row per signal.", "es": "Prueba de datos del enlace de comunicación serial: una fila por señal.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 200, "label": "Señal" }, "columns": [
+          { "key": "local_tag", "label": "Tag del dispositivo local", "type": "text" },
+          { "key": "sig_type", "label": "Tipo", "type": "select", "options": ["Valor", "Estado"] },
+          { "key": "remote_object", "label": "Objeto del sistema remoto", "type": "text" },
+          { "key": "read", "label": "Lectura", "type": "select", "options": ["Sí", "No", "N.A."] },
+          { "key": "write", "label": "Escritura", "type": "select", "options": ["Sí", "No", "N.A."] },
+          { "key": "graphic", "label": "Despliegue gráfico", "type": "select", "options": ["Sí", "No", "N.A."] },
+          { "key": "alarm", "label": "Alarma", "type": "select", "options": ["Sí", "No", "N.A."] },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

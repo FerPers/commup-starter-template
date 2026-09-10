@@ -1,0 +1,36 @@
+{
+  "code": "I34B",
+  "note": "Prueba de operación local/remota como tabla M.1 (abrir/parar/cerrar × local/remoto), tiempos, límites de carrera, interruptor de torque y posición de falla como registros M.2–M.8; hoja de calibración adjunta en 8.0; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "“A” check sheets (construction ITRs) completed and signed.", "es": "Formatos «A» (ITR de construcción) completados y firmados." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "Visual check: no damage.", "es": "Inspección visual: sin daños." },
+      { "n": "3.0", "type": "check", "en": "Correct location according to the P&ID.", "es": "Ubicación correcta según el P&ID." },
+      { "n": "4.0", "type": "check", "en": "Accessibility for operation and maintenance.", "es": "Accesibilidad para operación y mantenimiento." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Correct nameplate and tag number.", "es": "Placa de características y número de tag correctos." },
+      { "n": "6.0", "type": "check", "photo": true, "en": "Installation in accordance with the typical drawings and mounting specifications (mechanical, pneumatic, electrical and support).", "es": "Instalación conforme a los típicos y especificaciones de montaje (mecánica, neumática, eléctrica y soporte)." },
+      { "n": "7.0", "type": "check", "photo": true, "en": "Orientation according to the flow direction.", "es": "Orientación conforme al sentido de flujo." },
+      { "n": "8.0", "type": "check", "document": true, "en": "Calibration sheet, stroke limits and torque switch settings verified (attach the calibration sheet).", "es": "Hoja de calibración, límites de carrera e interruptor de torque verificados (adjuntar la hoja de calibración)." }
+    ] },
+    { "title": "Prueba de operación", "items": [
+      { "n": "M.1", "type": "table", "en": "Local and remote operation test (open / stop / close).", "es": "Prueba de operación local y remota (abrir / parar / cerrar).",
+        "table": { "rows": { "mode": "fixed", "labels": ["Abrir — local", "Parar — local", "Cerrar — local", "Abrir — remoto", "Parar — remoto", "Cerrar — remoto"] }, "columns": [
+          { "key": "command_tag", "label": "Tag de mando (remoto)", "type": "text", "required": false },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.2", "type": "measurement", "unit": "s", "en": "Valve opening time.", "es": "Tiempo de apertura de la válvula." },
+      { "n": "M.3", "type": "text", "en": "Stroke limit “open”: setting or reading as per the calibration sheet.", "es": "Límite de carrera «abierta»: ajuste o lectura según la hoja de calibración." },
+      { "n": "M.4", "type": "measurement", "unit": "s", "en": "Valve closing time.", "es": "Tiempo de cierre de la válvula." },
+      { "n": "M.5", "type": "text", "en": "Stroke limit “closed”: setting or reading as per the calibration sheet.", "es": "Límite de carrera «cerrada»: ajuste o lectura según la hoja de calibración." },
+      { "n": "M.6", "type": "text", "en": "Torque switch: setting verified (open / close).", "es": "Interruptor de torque: ajuste verificado (apertura / cierre)." },
+      { "n": "M.7", "type": "select", "options": ["FO", "FC", "FS"], "en": "Electrical power supply / signal failure position (FO = fail open, FC = fail closed, FS = fail steady).", "es": "Posición de falla de alimentación / señal eléctrica (FO = abre, FC = cierra, FS = permanece)." },
+      { "n": "M.8", "type": "check", "en": "Failure position (M.7) corresponds to the design (data sheet / cause & effect).", "es": "La posición de falla (M.7) corresponde al diseño (hoja de datos / causa-efecto)." }
+    ] },
+    { "title": "Prueba de accesorios", "items": [
+      { "n": "9.0", "type": "text", "required": false, "en": "Ancillaries tested (positioner, stroke limits, etc.), if applicable: description and result.", "es": "Accesorios probados (posicionador, límites de carrera, etc.), si aplica: descripción y resultado." }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

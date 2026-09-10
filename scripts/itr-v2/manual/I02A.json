@@ -1,0 +1,30 @@
+{
+  "code": "I02A",
+  "note": "Mediciones con calibrador como datos (D.1–D.3) y espesores como tabla (D.4); el marcado de la placa se desglosa en 1.1–1.4; el criterio de espesor conserva el 0,001·DN del original sujeto a la especificación del proyecto.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Mediciones de la placa (calibrador)", "items": [
+      { "n": "D.1", "type": "measurement", "unit": "mm", "en": "Actual outside diameter of the plate, measured with calipers.", "es": "Diámetro exterior real de la placa, medido con calibrador." },
+      { "n": "D.2", "type": "measurement", "unit": "mm", "en": "Actual inside (bore) diameter of the orifice, measured with calipers.", "es": "Diámetro interior real del orificio, medido con calibrador." },
+      { "n": "D.3", "type": "measurement", "unit": "mm", "required": false, "en": "Drain or vent hole size, where applicable.", "es": "Tamaño del orificio de drenaje o de venteo, donde aplique." },
+      { "n": "D.4", "type": "table", "en": "Plate thickness: caliper readings at different points of the plate (at least two).", "es": "Espesor de la placa: lecturas con calibrador en distintos puntos de la placa (mínimo dos).",
+        "table": { "rows": { "mode": "variable", "min": 2, "max": 6, "label": "Medición" }, "columns": [
+          { "key": "point", "label": "Punto de medición", "type": "text", "required": false },
+          { "key": "thickness", "label": "Espesor", "type": "number", "unit": "mm" },
+          { "key": "result", "label": "Resultado", "type": "result", "required": false },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.1", "type": "check", "photo": true, "en": "Upstream face of the plate tab is marked with the tag number.", "es": "La cara aguas arriba de la lengüeta de la placa lleva marcado el número de tag." },
+      { "n": "1.2", "type": "check", "en": "Plate tab is marked with the ANSI flange class followed by “RF”.", "es": "La lengüeta lleva marcada la clase de brida ANSI seguida de «RF»." },
+      { "n": "1.3", "type": "check", "en": "Plate tab is marked with the nominal size in DN (mm).", "es": "La lengüeta lleva marcado el tamaño nominal en DN (mm)." },
+      { "n": "1.4", "type": "check", "en": "Plate tab is marked with the measured orifice diameter (mm), consistent with D.2.", "es": "La lengüeta lleva marcado el diámetro de orificio medido (mm), coherente con D.2." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "Orifice plate is not damaged and shows no signs of corrosion.", "es": "La placa de orificio no está dañada ni muestra signos de corrosión." },
+      { "n": "3.0", "type": "check", "en": "Difference between any two plate thickness readings (D.4) is within 0.001·DN (mm), unless the project specification states another criterion.", "es": "La diferencia entre dos lecturas cualesquiera del espesor (D.4) está dentro de 0,001·DN (mm), salvo que la especificación del proyecto indique otro criterio." },
+      { "n": "4.0", "type": "check", "photo": true, "en": "Surface finish of the beveled surface (throat) and of the plate is free from visible scratches and indentations.", "es": "El acabado de la superficie biselada (garganta) y de la placa está libre de rayas y abolladuras visibles." },
+      { "n": "5.0", "type": "check", "en": "Beveled surface (throat) edges are sharp and free from burrs.", "es": "Las aristas de la superficie biselada (garganta) están bien definidas y libres de rebabas." },
+      { "n": "6.0", "type": "check", "en": "Location and size of the drain / vent hole (where applicable) conform to the requirements for the orifice type.", "es": "La ubicación y el tamaño del orificio de drenaje / venteo (donde aplique) cumplen los requisitos para el tipo de orificio." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "code": "I16A",
+  "note": "El P&ID y el rango se verifican contra los datos del tag (sin duplicar); número de línea y rango leído en carátula como registro.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "photo": true, "en": "Tag number engraving is correct to specification.", "es": "El grabado del número de tag es correcto según la especificación." },
+      { "n": "2.0", "type": "check", "en": "Tag is shown on the P&ID recorded in the tag data.", "es": "El tag figura en el P&ID registrado en los datos del tag." },
+      { "n": "3.0", "type": "text", "en": "Line number where the instrument is installed.", "es": "Número de línea en la que está instalado el instrumento." },
+      { "n": "4.0", "type": "check", "en": "Instrument range matches the data sheet / tag data.", "es": "El rango del instrumento coincide con la hoja de datos / datos del tag." },
+      { "n": "4.0-R", "type": "text", "en": "Range read on the gauge dial: value and unit.", "es": "Rango leído en la carátula del manómetro: valor y unidad." },
+      { "n": "5.0", "type": "check", "en": "Field location of the instrument in accordance with the P&ID and the isometric drawing.", "es": "Ubicación en campo del instrumento conforme al P&ID y al plano isométrico." },
+      { "n": "6.0", "type": "check", "photo": true, "en": "Instrument mounted correctly (orientation, support and accessories).", "es": "Instrumento montado correctamente (orientación, soporte y accesorios)." },
+      { "n": "7.0", "type": "check", "en": "Process connection is tight.", "es": "La conexión al proceso está apretada." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

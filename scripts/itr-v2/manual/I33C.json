@@ -1,0 +1,44 @@
+{
+  "code": "I33C",
+  "note": "Rangos como datos (D.1–D.2), verificación de calibración por 9 puntos ascenso/descenso como tabla M.1 (salida DCS vs. posición real), alarmas y disparos como tabla M.2, equipo de prueba múltiple como tabla T.1 con certificados adjuntos en T.2.",
+  "sections": [
+    { "title": "Referencias y datos del lazo", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "en": "Input range: value and unit (as per the instrument data sheet).", "es": "Rango de entrada: valor y unidad (según la hoja de datos del instrumento)." },
+      { "n": "D.2", "type": "text", "en": "Indication range: value and unit (DCS / HMI).", "es": "Rango de indicación: valor y unidad (DCS / HMI)." }
+    ] },
+    { "title": "Verificación", "items": [
+      { "n": "3.0", "type": "check", "en": "Calibration check: DCS output and actual valve position agree at every point (see M.1).", "es": "Verificación de calibración: la salida del DCS y la posición real de la válvula coinciden en todos los puntos (ver M.1)." },
+      { "n": "4.0", "type": "check", "en": "Alarm and trip settings verified against the actual alarm / trip points (see M.2).", "es": "Ajustes de alarma y disparo verificados contra los puntos reales de alarma / disparo (ver M.2)." },
+      { "n": "5.0", "type": "check", "en": "Shutdown and maintenance override function verified.", "es": "Función de paro y de anulación por mantenimiento verificada." },
+      { "n": "6.0", "type": "check", "en": "DCS graphic display verified (tag, value, units, alarms).", "es": "Despliegue gráfico en DCS verificado (tag, valor, unidades, alarmas)." },
+      { "n": "7.0", "type": "check", "en": "ESD graphic display verified.", "es": "Despliegue gráfico en ESD verificado." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "en": "Calibration check by points, rising and falling (0–25–50–75–100–75–50–25–0 %).", "es": "Verificación de calibración por puntos, ascenso y descenso (0–25–50–75–100–75–50–25–0 %).",
+        "table": { "rows": { "mode": "fixed", "labels": ["0 % ↑", "25 % ↑", "50 % ↑", "75 % ↑", "100 %", "75 % ↓", "50 % ↓", "25 % ↓", "0 % ↓"] }, "columns": [
+          { "key": "dcs_output", "label": "Salida DCS", "type": "number", "unit": "%" },
+          { "key": "valve_position", "label": "Posición real de la válvula", "type": "number", "unit": "%" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.2", "type": "table", "en": "Alarm and trip settings: configured setting vs. actual alarm / trip point.", "es": "Ajustes de alarma y disparo: ajuste configurado vs. punto real de alarma / disparo.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Alarma alta", "Disparo alto-alto", "Alarma baja", "Disparo bajo-bajo"] }, "columns": [
+          { "key": "setting", "label": "Ajuste", "type": "number", "required": false },
+          { "key": "actual", "label": "Punto real", "type": "number", "required": false },
+          { "key": "unit", "label": "Unidad", "type": "text", "required": false },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": [
+      { "n": "T.1", "type": "table", "en": "Test equipment used (one row per instrument).", "es": "Equipo de prueba utilizado (una fila por instrumento).",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 5, "label": "Equipo" }, "columns": [
+          { "key": "make", "label": "Fabricante", "type": "text" },
+          { "key": "model", "label": "Modelo", "type": "text" },
+          { "key": "serial", "label": "N.° de serie", "type": "text" },
+          { "key": "expiry", "label": "Vencimiento de calibración (AAAA-MM-DD)", "type": "text" },
+          { "key": "result", "label": "Calibración vigente", "type": "result" } ] } },
+      { "n": "T.2", "type": "text", "document": true, "en": "Calibration certificates of the test equipment (attach).", "es": "Certificados de calibración del equipo de prueba (adjuntar)." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}
