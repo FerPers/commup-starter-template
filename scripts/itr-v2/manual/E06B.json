@@ -1,0 +1,67 @@
+{
+  "code": "E06B",
+  "note": "Datos del VT como D.1–D.8 (serie del tag); aislamiento secundario, primario y tensiones tras energizar como tablas por pares de fases (M.1–M.4); polaridad por batería como tabla R/S/T; relé de baja tensión como tabla drop-off / pick-up (M.6) con ítem de conformidad 12.3.",
+  "sections": [
+    { "title": "Referencias y datos del elemento", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Location.", "es": "Ubicación." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Switchgear No.", "es": "Tablero N.°" },
+      { "n": "D.3", "type": "text", "required": false, "en": "Accuracy class.", "es": "Clase de precisión." },
+      { "n": "D.4", "type": "text", "required": false, "en": "Unit No.", "es": "N.° de la unidad." },
+      { "n": "D.5", "type": "text", "required": false, "en": "Function.", "es": "Función." },
+      { "n": "D.6", "type": "text", "required": false, "en": "Type.", "es": "Tipo." },
+      { "n": "D.7", "type": "text", "required": false, "en": "Transformation ratio.", "es": "Relación de transformación." },
+      { "n": "D.8", "type": "measurement", "unit": "VA", "required": false, "en": "VA rating.", "es": "Potencia nominal." },
+      { "n": "D.9", "type": "text", "required": false, "en": "Fuse rating.", "es": "Capacidad nominal de los fusibles." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "photo": true, "en": "No mechanical damage; connections are tight.", "es": "Sin daño mecánico; conexiones ajustadas." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "Star-point neutral connection is grounded.", "es": "El punto neutro de la conexión en estrella está puesto a tierra." },
+      { "n": "3.0", "type": "check", "en": "Lock arrangement present; core / winding terminals marked.", "es": "Dispone de facilidades de bloqueo; terminales del devanado identificados." },
+      { "n": "4.0", "type": "check", "document": true, "en": "For oil-immersed transformers: oil test results are available (attach).", "es": "Para transformadores en aceite: resultados de las pruebas de aceite disponibles (adjuntar)." },
+      { "n": "5.0", "type": "check", "en": "Oil level correct and no leakage, where applicable.", "es": "Nivel de aceite correcto y sin fugas, donde aplique." },
+      { "n": "6.0", "type": "check", "photo": true, "en": "Voltage transformer grounding continuity and connection checked.", "es": "Continuidad y conexión de la puesta a tierra del transformador de tensión verificadas." }
+    ] },
+    { "title": "Pruebas de resistencia de aislamiento", "items": [
+      { "n": "7.1", "type": "measurement", "unit": "MΩ", "en": "Secondary wiring insulation at 500 V DC.", "es": "Aislamiento del cableado secundario a 500 V DC." },
+      { "n": "7.2", "type": "table", "en": "Secondary winding with primary winding earthed, 500 V DC.", "es": "Devanado secundario con el primario puesto a tierra, 500 V DC.",
+        "table": { "rows": { "mode": "fixed", "labels": ["R – S", "S – T", "T – R", "R – Tierra", "S – Tierra", "T – Tierra"] }, "columns": [
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "8.1", "type": "table", "en": "Primary winding with secondary winding earthed (up to 4.6 kV: 2500 V DC; above 4.6 kV: 5000 V DC).", "es": "Devanado primario con el secundario puesto a tierra (hasta 4,6 kV: 2500 V DC; por encima de 4,6 kV: 5000 V DC).",
+        "table": { "rows": { "mode": "fixed", "labels": ["R – S", "S – T", "T – R", "R – Tierra", "S – Tierra", "T – Tierra"] }, "columns": [
+          { "key": "test_voltage", "label": "Tensión de prueba", "type": "number", "unit": "V" },
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "8.2", "type": "measurement", "unit": "°C", "en": "Ambient temperature during the test.", "es": "Temperatura ambiente durante la prueba." },
+      { "n": "9.0", "type": "table", "en": "Polarity check by battery flick test.", "es": "Prueba de polaridad por batería (flick test).",
+        "table": { "rows": { "mode": "fixed", "labels": ["R", "S", "T"] }, "columns": [
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Después de energizar", "items": [
+      { "n": "10.1", "type": "table", "en": "VT secondary voltage.", "es": "Tensión secundaria del VT.",
+        "table": { "rows": { "mode": "fixed", "labels": ["R – S", "S – T", "T – R", "R – Tierra", "S – Tierra", "T – Tierra"] }, "columns": [
+          { "key": "voltage", "label": "Tensión", "type": "number", "unit": "V" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "10.2", "type": "check", "en": "Phase rotation is correct.", "es": "La rotación de fases es correcta." },
+      { "n": "11.1", "type": "measurement", "unit": "kV", "en": "Secondary voltage (reference).", "es": "Tensión secundaria (referencia)." },
+      { "n": "11.1-R", "type": "measurement", "unit": "kV", "en": "Voltmeter reading.", "es": "Lectura del voltímetro." },
+      { "n": "11.2", "type": "check", "en": "Voltmeter reading agrees with the secondary voltage.", "es": "La lectura del voltímetro coincide con la tensión secundaria." }
+    ] },
+    { "title": "Relé de protección de baja tensión", "items": [
+      { "n": "12.1", "type": "text", "en": "Relay manufacturer and type.", "es": "Fabricante y tipo del relé." },
+      { "n": "12.2", "type": "table", "en": "Drop-off and pick-up values.", "es": "Valores de desconexión (drop-off) y reconexión (pick-up).",
+        "table": { "rows": { "mode": "fixed", "labels": ["Rango de ajuste", "Ajuste seleccionado", "Valor medido"] }, "columns": [
+          { "key": "drop_off", "label": "Drop-off", "type": "number", "unit": "V" },
+          { "key": "pick_up", "label": "Pick-up", "type": "number", "unit": "V" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "12.3", "type": "check", "en": "Measured drop-off / pick-up values are within the selected setting tolerance.", "es": "Los valores medidos de drop-off / pick-up están dentro de la tolerancia del ajuste seleccionado." }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

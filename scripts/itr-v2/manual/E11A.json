@@ -1,0 +1,35 @@
+{
+  "code": "E11A",
+  "note": "Datos del circuito como D.1–D.5 (uso como selección); lista de componentes del circuito como tabla M.1 (tag y descripción).",
+  "sections": [
+    { "title": "Referencias y datos del circuito", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Distribution board reference.", "es": "Referencia del tablero de distribución." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Circuit reference.", "es": "Referencia del circuito." },
+      { "n": "D.3", "type": "measurement", "unit": "A", "required": false, "en": "MCB rating.", "es": "Capacidad del MCB." },
+      { "n": "D.4", "type": "measurement", "unit": "V", "required": false, "en": "Voltage.", "es": "Tensión." },
+      { "n": "D.5", "type": "select", "required": false, "options": ["Normal", "Suplementario", "Reflectores", "Señal marítima", "Baliza de advertencia aérea", "Otro"], "en": "Usage.", "es": "Uso." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "Installed fittings for the circuit are of the correct make and type as per specifications and drawings.", "es": "Los accesorios instalados en el circuito son de la marca y tipo correctos según especificaciones y planos." },
+      { "n": "2.0", "type": "check", "en": "Cable terminations at the distribution board checked.", "es": "Terminaciones de los cables en el tablero de distribución verificadas." },
+      { "n": "3.0", "type": "check", "photo": true, "en": "Circuit and cable identification labels completed.", "es": "Etiquetas de identificación de circuito y cables completas." },
+      { "n": "4.0", "type": "check", "photo": true, "en": "Type, number, location, height and spacing of light fixtures installed as per the lighting layout drawing.", "es": "Tipo, número, ubicación, altura y separación de las luminarias instaladas según el plano de trazado de iluminación." },
+      { "n": "5.0", "type": "check", "en": "Light hanging hardware and/or pole type and size as per drawing.", "es": "Herrajes de suspensión y/o tipo y tamaño de poste según plano." },
+      { "n": "6.0", "type": "check", "en": "Correct number of light fixtures fed from the emergency power source as per drawing.", "es": "Número correcto de luminarias alimentadas desde la fuente de emergencia según plano." },
+      { "n": "7.0", "type": "check", "photo": true, "en": "Lighting fixtures, junction boxes and cable gland installation conform to the area classification.", "es": "Instalación de luminarias, cajas de empalme y prensacables conforme a la clasificación del área." },
+      { "n": "8.0", "type": "check", "en": "Lighting wired as per the applicable wiring diagrams.", "es": "Cableado de iluminación según los diagramas de cableado aplicables." },
+      { "n": "9.0", "type": "check", "photo": true, "en": "Fixture nameplate data confirms the correct operating voltage is applied (spot check each type of fixture in the circuit).", "es": "Los datos de placa de las luminarias confirman que la tensión de operación aplicada es correcta (muestreo por cada tipo de luminaria del circuito)." },
+      { "n": "10.0", "type": "check", "en": "On-off manual or light-sensitive relay controllers wired as per drawing.", "es": "Controladores on-off manuales o relés fotosensibles conectados según plano." }
+    ] },
+    { "title": "Registros", "items": [
+      { "n": "M.1", "type": "table", "en": "List of components in the circuit.", "es": "Lista de componentes del circuito.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 100, "label": "Componente" }, "columns": [
+          { "key": "tag", "label": "Tag N.°", "type": "text" },
+          { "key": "description", "label": "Descripción", "type": "text" },
+          { "key": "result", "label": "Resultado", "type": "result", "required": false },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

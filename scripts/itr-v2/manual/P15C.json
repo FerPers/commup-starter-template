@@ -1,0 +1,25 @@
+{
+  "code": "P15C",
+  "note": "Certificación de prueba de fugas: P&ID de referencia como dato D.1; medio de prueba como selección (4.0 + 4.0-R); presiones de diseño y de prueba, ajuste de PSV, duración y pérdida de presión por hora como mediciones; límites y subsistemas incluidos como texto 10.0.",
+  "sections": [
+    { "title": "Referencias y datos de la prueba", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "en": "Reference P&ID numbers.", "es": "Números de P&ID de referencia." }
+    ] },
+    { "title": "Verificación", "items": [
+      { "n": "1.0", "type": "check", "en": "System test diagram and marked-up P&IDs identify the test limits according to the procedure.", "es": "El diagrama de prueba del sistema y los P&ID marcados identifican los límites de prueba según el procedimiento." },
+      { "n": "2.0", "type": "check", "en": "System and equipment properly set up: equipment internals, hoses and associated temporary piping installed according to the design specifications.", "es": "Sistema y equipos correctamente configurados: internos de equipos, mangueras y tubería temporal asociada instalados según las especificaciones de diseño." },
+      { "n": "3.0", "type": "check", "photo": true, "en": "Pressure gauges installed with the correct range for the test.", "es": "Manómetros instalados con el rango correcto para la prueba." },
+      { "n": "4.0", "type": "select", "options": ["Aire", "Nitrógeno", "Otro"], "en": "Test medium.", "es": "Medio de prueba." },
+      { "n": "4.0-R", "type": "text", "required": false, "en": "Other test medium: specify.", "es": "Otro medio de prueba: especificar." },
+      { "n": "5.0", "type": "measurement", "unit": "psig", "en": "Design pressure of the system to be tested.", "es": "Presión de diseño del sistema a probar." },
+      { "n": "6.0", "type": "measurement", "unit": "psig", "en": "Approved leak test pressure for the system.", "es": "Presión de prueba de fugas aprobada para el sistema." },
+      { "n": "7.0", "type": "check", "en": "Pressure relief valve (PSV) installed on the lower-rated piping and set as recorded in 7.0-R (if applicable).", "es": "Válvula de seguridad (PSV) instalada en la tubería de menor presión nominal y ajustada según 7.0-R (si aplica)." },
+      { "n": "7.0-R", "type": "measurement", "unit": "psig", "required": false, "en": "PSV set pressure.", "es": "Presión de ajuste de la PSV." },
+      { "n": "8.0", "type": "measurement", "unit": "h", "en": "Duration of the test.", "es": "Duración de la prueba." },
+      { "n": "9.0", "type": "measurement", "unit": "psi/h", "en": "Loss of pressure per hour.", "es": "Pérdida de presión por hora." },
+      { "n": "10.0", "type": "text", "en": "Boundary drawings / sub-systems / systems included in the leak test.", "es": "Planos de límites / subsistemas / sistemas incluidos en la prueba de fugas." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

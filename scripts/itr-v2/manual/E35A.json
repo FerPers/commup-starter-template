@@ -1,0 +1,46 @@
+{
+  "code": "E35A",
+  "note": "Protección catódica: descripción del punto de prueba como datos y selecciones (1.1–1.9); continuidad de ánodos (M.1), resistencia a tierra del lecho por picas (M.2 con promedio M.3) y potencial del suelo con rectificador OFF/ON (M.4) como tablas; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Descripción del punto de prueba", "items": [
+      { "n": "1.1", "type": "text", "en": "Test point No.", "es": "Punto de prueba N.°" },
+      { "n": "1.2", "type": "text", "en": "Type.", "es": "Tipo." },
+      { "n": "1.3", "type": "text", "en": "Location.", "es": "Ubicación." },
+      { "n": "1.4", "type": "text", "en": "Bonding type.", "es": "Tipo de vinculación (bonding)." },
+      { "n": "1.5", "type": "check", "photo": true, "en": "Installation accepted.", "es": "Instalación aceptada." },
+      { "n": "1.6", "type": "text", "required": false, "en": "Post station.", "es": "Estación / poste." },
+      { "n": "1.7", "type": "check", "photo": true, "en": "Junction box condition satisfactory.", "es": "Condición de la caja de empalme satisfactoria." },
+      { "n": "1.8", "type": "check", "photo": true, "en": "Marker plate installed and legible.", "es": "Placa marcadora instalada y legible." },
+      { "n": "1.9", "type": "check", "en": "Cable terminations correct.", "es": "Terminaciones de cables correctas." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "en": "Anode continuity check prior to installation.", "es": "Verificación de continuidad del ánodo antes de la instalación.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 20, "label": "Ánodo" }, "columns": [
+          { "key": "anode_no", "label": "Ánodo N.°", "type": "text" },
+          { "key": "anode_type", "label": "Tipo de ánodo", "type": "text" },
+          { "key": "bed_type", "label": "Tipo de lecho", "type": "text", "required": false },
+          { "key": "depth", "label": "Profundidad del pozo", "type": "number", "unit": "m", "required": false },
+          { "key": "resistance", "label": "Resistencia", "type": "number", "unit": "Ω" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.2", "type": "table", "en": "Bed earth resistance measurements (fall-of-potential).", "es": "Mediciones de resistencia a tierra del lecho (caída de potencial).",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 9, "label": "Medición" }, "columns": [
+          { "key": "potential_spike", "label": "Red a pica de potencial", "type": "number", "unit": "m" },
+          { "key": "current_spike", "label": "Red a pica de corriente", "type": "number", "unit": "m" },
+          { "key": "resistance", "label": "Resistencia", "type": "number", "unit": "Ω" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.3", "type": "measurement", "unit": "Ω", "en": "Average bed earth resistance.", "es": "Resistencia a tierra promedio del lecho." },
+      { "n": "M.4", "type": "table", "en": "Soil potential: iron-to-soil potential with rectifier OFF and ON.", "es": "Potencial del suelo: potencial hierro–suelo con rectificador apagado y encendido.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 50, "label": "Punto" }, "columns": [
+          { "key": "point_type", "label": "Tipo de punto de prueba", "type": "text" },
+          { "key": "description", "label": "Descripción", "type": "text", "required": false },
+          { "key": "off_mv", "label": "Rectificador OFF", "type": "number", "unit": "mV" },
+          { "key": "on_mv", "label": "Rectificador ON", "type": "number", "unit": "mV" },
+          { "key": "result", "label": "Resultado", "type": "result", "required": false },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

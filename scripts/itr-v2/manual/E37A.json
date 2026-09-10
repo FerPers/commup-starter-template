@@ -1,0 +1,48 @@
+{
+  "code": "E37A",
+  "note": "Datos del cable D.1–D.10 (fabricante y tipo del tag); continuidad de tierra del prensaestopas con registro 8.0-R (máx. 0,1 Ω); matriz triangular de aislamiento entre conductores (hasta 14 + tierra) como tabla M.1 de filas variables (par, lectura ≥ 25 MΩ a 500 V); equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias y datos del cable", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Insulation grade.", "es": "Grado de aislamiento." },
+      { "n": "D.2", "type": "number", "required": false, "en": "Number of conductors.", "es": "Número de conductores." },
+      { "n": "D.3", "type": "text", "required": false, "en": "Conductor size.", "es": "Sección del conductor." },
+      { "n": "D.4", "type": "text", "required": false, "en": "Length (value and unit).", "es": "Longitud (valor y unidad)." },
+      { "n": "D.5", "type": "text", "required": false, "en": "From.", "es": "Desde." },
+      { "n": "D.6", "type": "text", "required": false, "en": "Gland type (from end).", "es": "Tipo de prensaestopas (extremo origen)." },
+      { "n": "D.7", "type": "text", "required": false, "en": "Connection detail.", "es": "Detalle de conexión." },
+      { "n": "D.8", "type": "text", "required": false, "en": "To.", "es": "Hasta." },
+      { "n": "D.9", "type": "text", "required": false, "en": "Gland type (to end).", "es": "Tipo de prensaestopas (extremo destino)." },
+      { "n": "D.10", "type": "text", "required": false, "en": "Wiring diagram.", "es": "Diagrama de cableado." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "Cable: correct size and type as indicated on the cable schedule.", "es": "Cable: tipo y sección correctos según el listado de cables." },
+      { "n": "2.0", "type": "check", "en": "Cable: route and segregation correct and in accordance with drawings.", "es": "Cable: ruta y segregación correctas y conforme a planos." },
+      { "n": "3.0", "type": "check", "photo": true, "en": "Cable: supports to specification and properly installed.", "es": "Cable: soportes según especificación y correctamente instalados." },
+      { "n": "4.0", "type": "check", "en": "Cable: bending radius within manufacturer recommendations.", "es": "Cable: radio de curvatura dentro de las recomendaciones del fabricante." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Cable: outer markers correctly installed and cable identification correct.", "es": "Cable: marcas exteriores correctamente instaladas e identificación del cable correcta." },
+      { "n": "6.0", "type": "check", "photo": true, "en": "Cable: outer protective measures fitted correctly (kick plates, tray covers, etc.).", "es": "Cable: medidas de protección exterior correctamente instaladas (placas, cubrebandejas, etc.)." },
+      { "n": "7.0", "type": "check", "photo": true, "en": "Glands: correct size and type and correctly fitted.", "es": "Prensaestopas: tamaño y tipo correctos y correctamente instalados." },
+      { "n": "8.0", "type": "check", "en": "Glands: earth bonding correct and tested; maximum 0.1 Ω to ground.", "es": "Prensaestopas: conexión a tierra correcta y probada; máximo 0,1 Ω a tierra." },
+      { "n": "8.0-R", "type": "measurement", "unit": "Ω", "en": "Gland earth bonding resistance.", "es": "Resistencia de la conexión a tierra del prensaestopas." },
+      { "n": "9.0", "type": "check", "en": "Glands: IP sealing washers fitted (where required).", "es": "Prensaestopas: arandelas de sellado IP colocadas (donde se requiera)." },
+      { "n": "10.0", "type": "check", "en": "Cores: insulation resistance tested and recorded prior to termination (see M.1).", "es": "Conductores: resistencia de aislamiento probada y registrada antes de la terminación (ver M.1)." },
+      { "n": "11.0", "type": "check", "en": "Cores: no visible damage.", "es": "Conductores: sin daños visibles." },
+      { "n": "12.0", "type": "check", "en": "Cores: terminations in accordance with the installation detail and wiring diagram.", "es": "Conductores: terminaciones conforme al detalle de instalación y diagrama de cableado." },
+      { "n": "13.0", "type": "check", "en": "Cores: properly tagged in accordance with the wiring diagram.", "es": "Conductores: correctamente etiquetados conforme al diagrama de cableado." },
+      { "n": "14.0", "type": "check", "photo": true, "en": "Cores: cable ground conductor properly connected inside the enclosure.", "es": "Conductores: conductor de tierra del cable correctamente conectado dentro de la caja." },
+      { "n": "15.0", "type": "check", "en": "Enclosure: termination layout satisfactory, no excessive bending or crimping of insulation.", "es": "Caja: disposición de las terminaciones satisfactoria, sin flexión excesiva ni aplastamiento del aislamiento." },
+      { "n": "16.0", "type": "check", "photo": true, "en": "Enclosure: all covers closed and all bolts tightened on completion of the inspection.", "es": "Caja: todas las tapas cerradas y todos los tornillos apretados al finalizar la inspección." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "en": "Insulation resistance between cores and to ground (G), 500 V; acceptable minimum 25 MΩ. One row per pair tested (e.g. 1-2, 1-G).", "es": "Resistencia de aislamiento entre conductores y a tierra (G), 500 V; mínimo aceptable 25 MΩ. Una fila por par probado (p. ej. 1-2, 1-G).",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 120, "label": "Par" }, "columns": [
+          { "key": "pair", "label": "Par (conductor–conductor / conductor–G)", "type": "text" },
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ", "min": 25 },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "code": "E21B",
+  "note": "Datos del cubículo D.1–D.4; conmutación automática (M.1, filas 90/100/80 % con operaciones del original), aislamiento a 1 min (M.2), resistencia de contactos por polo (M.3) y factor de potencia GST/UST (M.4, solo 38 kV, no obligatoria) como tablas; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias y datos del elemento", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Switchgear / MCC tag No.", "es": "Tablero (SWG / MCC / TAPC / SSG) N.°" },
+      { "n": "D.2", "type": "text", "required": false, "en": "Cubicle No.", "es": "Cubículo N.°" },
+      { "n": "D.3", "type": "text", "required": false, "en": "Interconnection diagram No.", "es": "Diagrama de interconexión N.°" },
+      { "n": "D.4", "type": "text", "required": false, "en": "Interlock diagram No.", "es": "Diagrama de enclavamientos N.°" }
+    ] },
+    { "title": "Inspección y pruebas", "items": [
+      { "n": "1.0", "type": "check", "en": "All circuit identification is as per the design specifications.", "es": "Toda la identificación de circuitos está conforme a las especificaciones de diseño." },
+      { "n": "2.0", "type": "check", "en": "All electrical and mechanical interlocks proven.", "es": "Todos los enclavamientos eléctricos y mecánicos probados." },
+      { "n": "3.0", "type": "check", "en": "All relays and control circuit trips functionally tested.", "es": "Todos los relés y disparos del circuito de control probados funcionalmente." },
+      { "n": "4.0", "type": "check", "en": "Trip circuit supervision relay proven by failing the supply with the circuit breaker in both the open and closed positions.", "es": "Relé de supervisión del circuito de disparo probado quitando la alimentación con el interruptor en posición abierta y cerrada." },
+      { "n": "5.0", "type": "check", "en": "All alarm indicators operate correctly.", "es": "Todos los indicadores de alarma funcionan correctamente." },
+      { "n": "6.0", "type": "check", "en": "Fuse ratings are as per the design specifications.", "es": "Características de los fusibles conforme a las especificaciones de diseño." },
+      { "n": "7.0", "type": "check", "en": "All “as built” drawings are complete.", "es": "Todos los planos «as built» están completos." },
+      { "n": "8.0", "type": "check", "en": "Automatic commutating operations performed at decreased and nominal voltage with the running circuit (see M.1).", "es": "Operaciones de conmutación automática realizadas a tensión reducida y nominal con el circuito en funcionamiento (ver M.1)." },
+      { "n": "9.0", "type": "check", "en": "Insulation resistance tests for one minute on each pole, phase-to-phase and phase-to-ground, with the circuit breaker closed (see M.2).", "es": "Pruebas de resistencia de aislamiento durante un minuto por polo, fase a fase y fase a tierra, con el interruptor cerrado (ver M.2)." },
+      { "n": "10.0", "type": "check", "en": "Main contact / pole resistance test with the breaker closed (see M.3).", "es": "Prueba de resistencia de contactos principales / polos con el interruptor cerrado (ver M.3)." },
+      { "n": "11.0", "type": "check", "required": false, "en": "Power factor / dissipation factor test (only for 38 kV) (see M.4).", "es": "Prueba de factor de potencia / disipación (solo para 38 kV) (ver M.4)." },
+      { "n": "12.0", "type": "check", "en": "Cubicle space heaters operate correctly.", "es": "Los calentadores de espacio del cubículo funcionan correctamente." },
+      { "n": "13.0", "type": "check", "en": "“B” check sheets for the voltage and current transformers are completed and available.", "es": "Formatos «B» de los transformadores de tensión y corriente completos y disponibles." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "en": "Automatic commutating operations (voltage / current as % of nominal, number of operations).", "es": "Operaciones de conmutación automática (tensión / corriente en % del nominal, número de operaciones).",
+        "table": { "rows": { "mode": "fixed", "labels": ["Encendido — 90 % (5 operaciones)", "Encendido y apagado — 100 % (5 operaciones)", "Apagado — 80 % (10 operaciones)"] }, "columns": [
+          { "key": "applied_pct", "label": "% aplicado", "type": "number", "unit": "%" },
+          { "key": "operations", "label": "Operaciones realizadas", "type": "number" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.2", "type": "table", "en": "Insulation resistance, 1 minute, breaker closed.", "es": "Resistencia de aislamiento, 1 minuto, interruptor cerrado.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Fase A – Fase B", "Fase B – Fase C", "Fase C – Fase A", "Fase A – Tierra", "Fase B – Tierra", "Fase C – Tierra"] }, "columns": [
+          { "key": "test_voltage", "label": "Tensión de prueba", "type": "number", "unit": "V" },
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.3", "type": "table", "en": "Main contact / pole resistance, breaker closed.", "es": "Resistencia de contactos principales / polos, interruptor cerrado.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Polo fase A (1-2)", "Polo fase B (3-4)", "Polo fase C (5-6)"] }, "columns": [
+          { "key": "resistance", "label": "Resistencia", "type": "number", "unit": "µΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.4", "type": "table", "required": false, "en": "Power factor / dissipation factor test (only for 38 kV): GST-Ground with breaker closed and UST with breaker open.", "es": "Prueba de factor de potencia / disipación (solo 38 kV): GST-Ground con interruptor cerrado y UST con interruptor abierto.",
+        "table": { "rows": { "mode": "fixed", "labels": ["GST-Ground (cerrado) — Fase A", "GST-Ground (cerrado) — Fase B", "GST-Ground (cerrado) — Fase C", "UST (abierto) — Fase A", "UST (abierto) — Fase B", "UST (abierto) — Fase C"] }, "columns": [
+          { "key": "pf", "label": "% FP", "type": "number", "unit": "%" },
+          { "key": "capacitance", "label": "Capacitancia", "type": "number", "unit": "pF" },
+          { "key": "result", "label": "Resultado", "type": "result", "required": false },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

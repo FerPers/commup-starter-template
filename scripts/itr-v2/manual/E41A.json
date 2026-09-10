@@ -1,0 +1,35 @@
+{
+  "code": "E41A",
+  "note": "Datos del circuito D.1–D.4; once controles como selecciones; lista de componentes del circuito como tabla M.1.",
+  "sections": [
+    { "title": "Referencias y datos del circuito", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Distribution board reference.", "es": "Referencia del tablero de distribución." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Circuit reference.", "es": "Referencia del circuito." },
+      { "n": "D.3", "type": "number", "required": false, "en": "Number of outlets in the circuit.", "es": "Número de salidas en el circuito." },
+      { "n": "D.4", "type": "measurement", "unit": "V", "required": false, "en": "Voltage.", "es": "Tensión." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "photo": true, "en": "Type, number and orientation as per drawings.", "es": "Tipo, número y orientación según planos." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "Installation conforms to the area classification.", "es": "Instalación conforme a la clasificación del área." },
+      { "n": "3.0", "type": "check", "en": "Receptacle outlets connected to the correct circuit as per panel schedule and drawings.", "es": "Tomacorrientes conectados al circuito correcto según el cuadro del tablero y los planos." },
+      { "n": "4.0", "type": "check", "en": "Number of outlets in the circuit is correct.", "es": "El número de salidas en el circuito es correcto." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Classified receptacle outlets are colour coded correctly.", "es": "Tomacorrientes clasificados con la codificación de color correcta." },
+      { "n": "6.0", "type": "check", "photo": true, "en": "Equipment fixings and mountings are secure.", "es": "Fijaciones y soportes del equipo firmes." },
+      { "n": "7.0", "type": "check", "photo": true, "en": "Visual inspection: no external damage.", "es": "Inspección visual: sin daños externos." },
+      { "n": "8.0", "type": "check", "en": "All bolts are correct and none are missing.", "es": "Todos los pernos son correctos y no falta ninguno." },
+      { "n": "9.0", "type": "check", "photo": true, "en": "Gaskets and seals are not damaged.", "es": "Juntas y sellos sin daños." },
+      { "n": "10.0", "type": "check", "photo": true, "en": "All equipment carries the correct circuit identification.", "es": "Todo el equipo lleva la identificación correcta del circuito." },
+      { "n": "11.0", "type": "check", "photo": true, "en": "Receptacle outlets securely earthed.", "es": "Tomacorrientes puestos a tierra de forma segura." }
+    ] },
+    { "title": "Registros", "items": [
+      { "n": "M.1", "type": "table", "en": "List of components in the circuit.", "es": "Lista de componentes del circuito.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 100, "label": "Componente" }, "columns": [
+          { "key": "tag", "label": "Tag N.°", "type": "text" },
+          { "key": "description", "label": "Descripción", "type": "text" },
+          { "key": "result", "label": "Resultado", "type": "result", "required": false },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

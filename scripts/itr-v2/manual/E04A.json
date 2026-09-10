@@ -1,0 +1,44 @@
+{
+  "code": "E04A",
+  "note": "Datos de placa y planos como D.1–D.14 (fabricante, modelo y serie vienen del tag); resistencia de aislamiento AT/BT/tierra como tabla M.1 con tensión de prueba y lectura a 1 min; equipo de prueba T.1–T.5 añadido por tratarse de un ensayo con megóhmetro.",
+  "sections": [
+    { "title": "Referencias y datos del elemento", "items": [
+      "R.1",
+      { "n": "D.1", "type": "measurement", "unit": "kVA", "required": false, "en": "Rated power.", "es": "Potencia nominal." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Primary voltage (value and unit).", "es": "Tensión primaria (valor y unidad)." },
+      { "n": "D.3", "type": "text", "required": false, "en": "Secondary voltage (value and unit).", "es": "Tensión secundaria (valor y unidad)." },
+      { "n": "D.4", "type": "measurement", "unit": "Hz", "required": false, "en": "Frequency.", "es": "Frecuencia." },
+      { "n": "D.5", "type": "number", "required": false, "en": "Number of taps.", "es": "Número de derivaciones (taps)." },
+      { "n": "D.6", "type": "text", "required": false, "en": "Type of protection.", "es": "Tipo de protección." },
+      { "n": "D.7", "type": "text", "required": false, "en": "Insulation medium.", "es": "Medio de aislamiento." },
+      { "n": "D.8", "type": "text", "required": false, "en": "Vector group.", "es": "Grupo vectorial." },
+      { "n": "D.9", "type": "text", "required": false, "en": "Ex classification.", "es": "Clasificación Ex." },
+      { "n": "D.10", "type": "text", "required": false, "en": "Hazardous area classification.", "es": "Clasificación del área peligrosa." },
+      { "n": "D.11", "type": "text", "required": false, "en": "Schematic drawing No.", "es": "Plano esquemático N.°" },
+      { "n": "D.12", "type": "text", "required": false, "en": "Single line diagram No.", "es": "Diagrama unifilar N.°" },
+      { "n": "D.13", "type": "text", "required": false, "en": "Supplier interconnection diagram No.", "es": "Diagrama de interconexión del proveedor N.°" },
+      { "n": "D.14", "type": "text", "required": false, "en": "Supplier details drawing No. and nameplate details not covered by the tag data.", "es": "Plano de detalles del proveedor N.° y detalles de placa no cubiertos por los datos del tag." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "All equipment is suitable for the hazardous area.", "es": "Todo el equipo es adecuado para el área peligrosa." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "Visual inspection: no external damage.", "es": "Inspección visual: sin daños externos." },
+      { "n": "3.0", "type": "check", "photo": true, "en": "Equipment fixings and mountings are secure.", "es": "Las fijaciones y soportes del equipo están firmes." },
+      { "n": "4.0", "type": "check", "en": "Air-cooling / ventilation air inlets and outlets are clear.", "es": "Las entradas y salidas de aire de refrigeración / ventilación están despejadas." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Terminal box checked for damage and cleanliness; packing removed.", "es": "Caja de bornes revisada por daños y limpieza; elementos de embalaje retirados." },
+      { "n": "6.0", "type": "check", "en": "Gland plates for outgoing single-core feeders are non-magnetic.", "es": "Las placas prensacables de los alimentadores unipolares de salida no son magnéticas." },
+      { "n": "7.0", "type": "check", "photo": true, "en": "Gaskets and seals are not damaged.", "es": "Empaques y sellos sin daños." },
+      { "n": "8.0", "type": "check", "en": "All bolts are correct and none are missing.", "es": "Todos los pernos son correctos y no falta ninguno." },
+      { "n": "9.0", "type": "check", "en": "Insulation resistance measured with a megohmmeter at the nominal tap position; for 0–600 V transformers minimum 100 MΩ (see M.1).", "es": "Resistencia de aislamiento medida con megóhmetro con la derivación en posición nominal; para transformadores de 0–600 V mínimo 100 MΩ (ver M.1)." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "en": "Insulation resistance test, 1 minute reading, nominal tap.", "es": "Prueba de resistencia de aislamiento, lectura a 1 minuto, derivación nominal.",
+        "table": { "rows": { "mode": "fixed", "labels": ["AT – BT", "AT – Tierra", "BT – Tierra"] }, "columns": [
+          { "key": "test_voltage", "label": "Tensión de prueba", "type": "number", "unit": "V" },
+          { "key": "reading", "label": "Lectura a 1 min", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

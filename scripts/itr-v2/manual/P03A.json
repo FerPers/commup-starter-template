@@ -1,0 +1,61 @@
+{
+  "code": "P03A",
+  "note": "Calibración de equipos de prueba de tubería: tres bloques (manómetro 1, manómetro 2, válvula de alivio) con tabla de puntos ascenso/descenso, patrón usado, certificado, rango, lectura de cero y técnico; los bloques 2 y 3 no son obligatorios; formulario del tercero como documento en R.2.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": [
+      "R.1",
+      { "n": "R.2", "type": "text", "required": false, "document": true, "en": "Supplier / third-party contractor calibration form covering the readings below (attach if used).", "es": "Formulario de calibración del proveedor / tercero que cubre las lecturas de abajo (adjuntar si se usa)." }
+    ] },
+    { "title": "Manómetro 1", "items": [
+      { "n": "1.0", "type": "text", "en": "Gauge 1: tag / serial No.", "es": "Manómetro 1: tag / N.° de serie." },
+      { "n": "1.1", "type": "table", "en": "Calibration check: input, output rising and falling, error.", "es": "Verificación de calibración: entrada, salida en ascenso y descenso, error.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 10, "label": "Punto" }, "columns": [
+          { "key": "input", "label": "Entrada", "type": "number", "unit": "psig" },
+          { "key": "rising", "label": "Salida ascenso", "type": "number", "unit": "psig" },
+          { "key": "rising_err", "label": "Error ascenso", "type": "number", "unit": "%" },
+          { "key": "falling", "label": "Salida descenso", "type": "number", "unit": "psig" },
+          { "key": "falling_err", "label": "Error descenso", "type": "number", "unit": "%" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "1.2", "type": "text", "en": "Dead weight tester serial No.", "es": "N.° de serie del probador de peso muerto." },
+      { "n": "1.3", "type": "text", "document": true, "en": "Test certificate No. (attach).", "es": "Certificado de prueba N.° (adjuntar)." },
+      { "n": "1.3-D", "type": "date", "en": "Test certificate issue date.", "es": "Fecha de emisión del certificado." },
+      { "n": "1.3-E", "type": "date", "en": "Test certificate expiry date.", "es": "Fecha de vencimiento del certificado." },
+      { "n": "1.4", "type": "text", "en": "Range and zero reading.", "es": "Rango y lectura de cero." },
+      { "n": "1.5", "type": "text", "en": "Technician name and date performed.", "es": "Nombre del técnico y fecha de ejecución." }
+    ] },
+    { "title": "Manómetro 2", "items": [
+      { "n": "2.0", "type": "text", "required": false, "en": "Gauge 2: tag / serial No.", "es": "Manómetro 2: tag / N.° de serie." },
+      { "n": "2.1", "type": "table", "required": false, "en": "Calibration check: input, output rising and falling, error.", "es": "Verificación de calibración: entrada, salida en ascenso y descenso, error.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 10, "label": "Punto" }, "columns": [
+          { "key": "input", "label": "Entrada", "type": "number", "unit": "psig" },
+          { "key": "rising", "label": "Salida ascenso", "type": "number", "unit": "psig" },
+          { "key": "rising_err", "label": "Error ascenso", "type": "number", "unit": "%" },
+          { "key": "falling", "label": "Salida descenso", "type": "number", "unit": "psig" },
+          { "key": "falling_err", "label": "Error descenso", "type": "number", "unit": "%" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "2.2", "type": "text", "required": false, "en": "Dead weight tester serial No.", "es": "N.° de serie del probador de peso muerto." },
+      { "n": "2.3", "type": "text", "required": false, "document": true, "en": "Test certificate No., issue and expiry dates (attach).", "es": "Certificado de prueba N.°, fechas de emisión y vencimiento (adjuntar)." },
+      { "n": "2.4", "type": "text", "required": false, "en": "Range and zero reading.", "es": "Rango y lectura de cero." },
+      { "n": "2.5", "type": "text", "required": false, "en": "Technician name and date performed.", "es": "Nombre del técnico y fecha de ejecución." }
+    ] },
+    { "title": "Válvula de alivio", "items": [
+      { "n": "3.0", "type": "text", "required": false, "en": "Relief valve: tag / serial No.", "es": "Válvula de alivio: tag / N.° de serie." },
+      { "n": "3.1", "type": "table", "required": false, "en": "Calibration check: input, output rising and falling, error.", "es": "Verificación de calibración: entrada, salida en ascenso y descenso, error.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 10, "label": "Punto" }, "columns": [
+          { "key": "input", "label": "Entrada", "type": "number", "unit": "psig" },
+          { "key": "rising", "label": "Salida ascenso", "type": "number", "unit": "psig" },
+          { "key": "rising_err", "label": "Error ascenso", "type": "number", "unit": "%" },
+          { "key": "falling", "label": "Salida descenso", "type": "number", "unit": "psig" },
+          { "key": "falling_err", "label": "Error descenso", "type": "number", "unit": "%" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "3.2", "type": "text", "required": false, "en": "Jofra tester serial No.", "es": "N.° de serie del calibrador Jofra." },
+      { "n": "3.3", "type": "text", "required": false, "document": true, "en": "Jofra test certificate No., issue and expiry dates (attach).", "es": "Certificado de prueba Jofra N.°, fechas de emisión y vencimiento (adjuntar)." },
+      { "n": "3.4", "type": "text", "required": false, "en": "Range and zero reading.", "es": "Rango y lectura de cero." },
+      { "n": "3.5", "type": "text", "required": false, "en": "Technician name and date performed.", "es": "Nombre del técnico y fecha de ejecución." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "code": "E34A",
+  "note": "Datos del circuito D.1–D.4; cinco controles como selecciones con foto en tipo/orientación, clasificación de área, codificación de color y puesta a tierra.",
+  "sections": [
+    { "title": "Referencias y datos del circuito", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Distribution board reference.", "es": "Referencia del tablero de distribución." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Circuit reference.", "es": "Referencia del circuito." },
+      { "n": "D.3", "type": "number", "required": false, "en": "Number of outlets in the circuit.", "es": "Número de salidas en el circuito." },
+      { "n": "D.4", "type": "measurement", "unit": "V", "required": false, "en": "Voltage.", "es": "Tensión." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "photo": true, "en": "Type, number and orientation as per drawings.", "es": "Tipo, número y orientación según planos." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "Installation conforms to the area classification.", "es": "Instalación conforme a la clasificación del área." },
+      { "n": "3.0", "type": "check", "en": "Receptacle outlets connected to the correct circuit as per panel schedule and drawings.", "es": "Tomacorrientes conectados al circuito correcto según el cuadro del tablero y los planos." },
+      { "n": "4.0", "type": "check", "photo": true, "en": "Classified receptacle outlets are colour coded correctly.", "es": "Tomacorrientes clasificados con la codificación de color correcta." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Receptacle outlets securely earthed.", "es": "Tomacorrientes puestos a tierra de forma segura." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

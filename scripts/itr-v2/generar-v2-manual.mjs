@@ -17,6 +17,8 @@
 //   node scripts/itr-v2/generar-v2-manual.mjs --codes I02A --apply    # escribe el borrador
 // Salvaguarda: si ya existe una revisión posterior a la activa (borrador) no se crea otra
 // salvo con --force (regla: no duplicar borradores).
+// Formatos sin plantilla en la base: la spec declara "create": { title, title_es, discipline, phase }
+// (códigos de disciplina y fase de la org) y se crea la v1 como borrador inactivo.
 // Salida: docs/ITR-FASE2-MANUAL-<fecha>.csv (--csv <ruta> para otro destino).
 
 import { createClient } from '@supabase/supabase-js'
@@ -124,11 +126,20 @@ async function loadVersions(code) {
   return data ?? []
 }
 
+async function lookupCreate(spec) {
+  const c = spec.create
+  if (!c?.title || !c?.title_es || !c?.discipline || !c?.phase) throw new Error('sin plantilla activa y sin bloque "create" completo (title, title_es, discipline, phase)')
+  const { data: d } = await db.from('disciplines').select('id').eq('org_id', ORG).eq('code', c.discipline).maybeSingle()
+  const { data: p } = await db.from('project_phases').select('id').eq('org_id', ORG).eq('code', c.phase).maybeSingle()
+  if (!d || !p) throw new Error(`create: disciplina «${c.discipline}» o fase «${c.phase}» no existen en la org`)
+  return { id: null, title: c.title, title_es: c.title_es, discipline_id: d.id, phase_id: p.id, equipment_type_id: null, version: 0, is_global: false }
+}
+
 async function apply(spec, active, versions, sections) {
   const next = Math.max(0, ...versions.map(v => v.version)) + 1
   const { data: tpl, error: tErr } = await db.from('itr_templates').insert({
     org_id: ORG, code: spec.code, title: spec.title ?? active.title, title_es: spec.title_es ?? active.title_es,
-    description: `Revisión ${next} (borrador Fase 2, diseño manual, ${TODAY}): ${spec.note} Fuente: estructura del Word original.`,
+    description: `Revisión ${next} (borrador Fase 2, diseño manual, ${TODAY}${active.id ? '' : ', plantilla nueva'}): ${spec.note} Fuente: estructura del Word original.`,
     discipline_id: active.discipline_id, phase_id: active.phase_id, equipment_type_id: active.equipment_type_id,
     version: next, is_active: false, is_global: active.is_global,
   }).select('id').single()
@@ -139,7 +150,7 @@ async function apply(spec, active, versions, sections) {
     const { error: iErr } = await db.from('itr_template_items').insert(section.items.map(it => ({ section_id: sec.id, template_id: tpl.id, ...it })))
     if (iErr) throw iErr
   }
-  await db.from('activity_log').insert({ org_id: ORG, user_id: ACTOR, entity_type: 'itr_template', entity_id: tpl.id, action: 'revision_created', payload: { code: spec.code, version: next, source: 'fase2-manual', source_template_id: active.id } })
+  await db.from('activity_log').insert({ org_id: ORG, user_id: ACTOR, entity_type: 'itr_template', entity_id: tpl.id, action: 'revision_created', payload: { code: spec.code, version: next, source: 'fase2-manual', source_template_id: active.id ?? null } })
   return { id: tpl.id, version: next }
 }
 
@@ -154,8 +165,9 @@ async function main() {
       if (spec.code !== code) throw new Error(`la especificación declara ${spec.code}`)
       const { sections, stats } = expand(spec)
       const versions = await loadVersions(code)
-      const active = versions.find(v => v.is_active)
-      if (!active) throw new Error('sin plantilla activa')
+      let active = versions.find(v => v.is_active)
+      if (!active && versions.length) throw new Error(`sin plantilla activa (existen v${versions.map(v => v.version).join('/')} inactivas)`)
+      if (!active) active = await lookupCreate(spec)
       const newer = versions.filter(v => v.version > active.version)
       let created = { id: '', version: '' }
       let note = spec.note
@@ -163,7 +175,7 @@ async function main() {
         if (newer.length && !FORCE) note = `NO GENERADO: ya existe borrador v${newer.map(v => v.version).join('/')} (usa --force o bórralo antes)`
         else created = await apply(spec, active, versions, sections)
       }
-      out.push([code, active.version, created.id, created.version, stats.items, stats.checks, stats.photos, stats.docs, stats.tables, note])
+      out.push([code, active.id ? active.version : '(nueva)', created.id, created.version, stats.items, stats.checks, stats.photos, stats.docs, stats.tables, note])
       console.log(`${code}: ${sections.length} secciones, ${stats.items} ítems (${stats.checks} selecciones, ${stats.photos} fotos, ${stats.docs} documentos, ${stats.tables} tablas)${created.id ? ` → v${created.version} ${created.id}` : ''}${note.startsWith('NO') ? ' — ' + note : ''}`)
       if (args.includes('--verbose')) for (const s of sections) { console.log(`  [${s.title}]`); for (const it of s.items) console.log(`    ${it.item_number.padEnd(6)} ${it.item_type.padEnd(11)}${it.is_required ? '*' : ' '}${it.requires_photo ? '📷' : '  '}${it.requires_document ? '📄' : '  '} ${it.description_es.slice(0, 96)}${it.unit ? ' [' + it.unit + ']' : ''}${it.item_type === 'table' ? ' → ' + it.options.columns.map(c => c.label + ':' + c.type[0]).join(', ') + ' | ' + (it.options.rows.mode === 'fixed' ? it.options.rows.labels.join(', ') : `${it.options.rows.label} ${it.options.rows.min}–${it.options.rows.max}`) : ''}`) }
     } catch (e) {

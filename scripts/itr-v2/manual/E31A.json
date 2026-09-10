@@ -1,0 +1,45 @@
+{
+  "code": "E31A",
+  "note": "Datos eléctricos D.1–D.4; resistencia de devanados (M.1, el original dice MΩ pero es resistencia óhmica: columna de unidad libre) y aislamiento AT/BT/tierra (M.2) como tablas; resultados de rigidez dieléctrica del aceite como documento en 6.0; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias y datos del elemento", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Primary voltage (value and unit).", "es": "Tensión primaria (valor y unidad)." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Secondary voltage (value and unit).", "es": "Tensión secundaria (valor y unidad)." },
+      { "n": "D.3", "type": "measurement", "unit": "kVA", "required": false, "en": "kVA rating.", "es": "Potencia nominal." },
+      { "n": "D.4", "type": "measurement", "unit": "Hz", "required": false, "en": "Frequency.", "es": "Frecuencia." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "photo": true, "en": "Transformer nameplate data (tag No., voltage, kVA rating, etc.) matches specifications and drawings.", "es": "Los datos de placa del transformador (tag, tensión, potencia en kVA, etc.) coinciden con especificaciones y planos." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "Installed location and orientation as per drawings.", "es": "Ubicación y orientación del transformador instalado según planos." },
+      { "n": "3.0", "type": "check", "photo": true, "en": "Clean; no chips, cracks or other apparent damage to bushings, radiators, terminal box and tank.", "es": "Limpio; sin virutas, grietas u otro daño aparente en bujes, radiadores, caja de conexiones y tanque." },
+      { "n": "4.0", "type": "check", "en": "Air-cooling / ventilation air inlets and outlets are clear.", "es": "Entradas y salidas de aire de refrigeración / ventilación despejadas." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "No liquid leakage around tank, radiators and accessories.", "es": "Sin fugas de líquido alrededor del tanque, radiadores y accesorios." },
+      { "n": "6.0", "type": "check", "document": true, "en": "Dielectric strength test results of the insulating oil are satisfactory (attach).", "es": "Resultados de las pruebas de rigidez dieléctrica del aceite aislante satisfactorios (adjuntar)." },
+      { "n": "7.0", "type": "check", "en": "Gland plates for outgoing single-core feeders are non-magnetic.", "es": "Las placas prensacables de los alimentadores unipolares de salida no son magnéticas." },
+      { "n": "8.0", "type": "check", "photo": true, "en": "Gaskets and seals are not damaged.", "es": "Empaques y sellos sin daños." },
+      { "n": "9.0", "type": "check", "photo": true, "en": "Equipment fixings and mountings are secure.", "es": "Fijaciones y soportes del equipo firmemente anclados." },
+      { "n": "10.0", "type": "check", "en": "All bolts are correct and none are missing.", "es": "Todos los pernos son correctos y no falta ninguno." },
+      { "n": "11.0", "type": "check", "en": "Positive pressure is maintained on nitrogen-blanketed transformers.", "es": "Se mantiene la presión positiva en transformadores con colchón de nitrógeno." },
+      { "n": "12.0", "type": "check", "en": "If oil filled: oil level indicator checked and topped up with the approved oil as required.", "es": "Si es en aceite: indicador de nivel verificado y completado con el aceite aprobado según se requiera." },
+      { "n": "13.0", "type": "check", "en": "Winding resistance of the primary and secondary windings measured and recorded (see M.1).", "es": "Resistencia de los devanados primario y secundario medida y registrada (ver M.1)." },
+      { "n": "14.0", "type": "check", "en": "Insulation resistance (megger) of primary and secondary windings at nominal tap, winding to winding and winding to ground, with guard connection over all bushings (see M.2).", "es": "Resistencia de aislamiento (megger) de devanados primario y secundario en derivación nominal, devanado a devanado y devanado a tierra, con terminal de guarda en todos los bujes (ver M.2)." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "en": "Winding resistance test results.", "es": "Resultados de la prueba de resistencia de devanados.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Primario L1–L2", "Primario L2–L3", "Primario L3–L1", "Secundario L1–L2", "Secundario L2–L3", "Secundario L3–L1"] }, "columns": [
+          { "key": "resistance", "label": "Resistencia", "type": "number" },
+          { "key": "unit", "label": "Unidad", "type": "text" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.2", "type": "table", "en": "Insulation resistance, nominal tap.", "es": "Resistencia de aislamiento, derivación nominal.",
+        "table": { "rows": { "mode": "fixed", "labels": ["AT – Tierra", "BT – Tierra", "AT – BT"] }, "columns": [
+          { "key": "test_voltage", "label": "Tensión de prueba", "type": "number", "unit": "V" },
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

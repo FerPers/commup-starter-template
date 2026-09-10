@@ -1,0 +1,36 @@
+{
+  "code": "M37A",
+  "note": "Prueba de carga de orejas de izaje / monorrieles: 15 controles previos como selecciones (certificados y calibración de celda de carga como documentos); deflexiones permitidas vs. reales como tabla M.1 (nota de 20 min antes de medir); controles 18–20 tras la prueba.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección previa", "items": [
+      { "n": "1.0", "type": "check", "document": true, "en": "Manufacturer's drawings, data sheets and test certificates available (attach).", "es": "Planos del fabricante, hojas de datos y certificados de prueba disponibles (adjuntar)." },
+      { "n": "2.0", "type": "check", "en": "Vendor punch list cleared.", "es": "Lista de pendientes (punch list) del proveedor cerrada." },
+      { "n": "3.0", "type": "check", "photo": true, "en": "Nameplate details correct, in accordance with the manufacturer's data sheets.", "es": "Datos de placa correctos, conforme a las hojas de datos del fabricante." },
+      { "n": "4.0", "type": "check", "en": "Holding-down bolts / shims / taper washers installed as per the manufacturer's specification.", "es": "Pernos de anclaje / calzas / arandelas cónicas instalados según la especificación del fabricante." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Project ID and safe working load (SWL) marked and clearly visible on runway beams and lifting lugs.", "es": "ID del proyecto y carga segura de trabajo (SWL) marcados y claramente visibles en vigas de rodadura y orejas de izaje." },
+      { "n": "6.0", "type": "check", "photo": true, "en": "End stops installed and bolts tensioned.", "es": "Topes de extremo instalados y pernos tensionados." },
+      { "n": "7.0", "type": "check", "en": "Lateral travel is free of obstructions.", "es": "Recorrido lateral libre de obstrucciones." },
+      { "n": "8.0", "type": "check", "en": "Support arrangement for curved beams as per design requirements.", "es": "Disposición de soportes para vigas curvas conforme a los requisitos de diseño." },
+      { "n": "9.0", "type": "check", "en": "Lateral bracing provided as per design.", "es": "Arriostramiento lateral conforme al diseño." },
+      { "n": "10.0", "type": "check", "en": "Trolley travel is smooth throughout the length.", "es": "El recorrido del trole es uniforme en toda la longitud." },
+      { "n": "11.0", "type": "check", "en": "Monorail calculations prepared / checked.", "es": "Cálculos del monorriel preparados / verificados." },
+      { "n": "12.0", "type": "check", "en": "Supporting structure calculations prepared / checked.", "es": "Cálculos de la estructura de soporte preparados / verificados." },
+      { "n": "13.0", "type": "check", "document": true, "en": "All material certificates recorded (attach).", "es": "Todos los certificados de material registrados (adjuntar)." },
+      { "n": "14.0", "type": "check", "document": true, "en": "NDE completed and reports recorded (attach).", "es": "END completados e informes registrados (adjuntar)." },
+      { "n": "15.0", "type": "check", "document": true, "en": "Load cell calibration confirmed; copy attached to the test certificate.", "es": "Calibración de la celda de carga confirmada; copia adjunta al certificado de prueba." }
+    ] },
+    { "title": "Prueba de carga", "items": [
+      { "n": "M.1", "type": "table", "en": "Deflection under test load (apply all test loads for a minimum of 20 minutes before taking measurements, to equalise strain).", "es": "Deflexión bajo carga de prueba (aplicar todas las cargas de prueba un mínimo de 20 minutos antes de medir, para igualar la deformación).",
+        "table": { "rows": { "mode": "fixed", "labels": ["Deflexión máx. en centro de vano", "Deflexión máx. en voladizo"] }, "columns": [
+          { "key": "allowable", "label": "Permitida", "type": "number", "unit": "mm" },
+          { "key": "actual", "label": "Real", "type": "number", "unit": "mm" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "18.0", "type": "check", "en": "No signs of local flange deformation during the test (remove the load immediately if any deformation is noted).", "es": "Sin signos de deformación local de la brida durante la prueba (retirar la carga de inmediato si se observa deformación)." },
+      { "n": "19.0", "type": "check", "photo": true, "en": "No permanent deformation of the monorail after the test.", "es": "Sin deformación permanente del monorriel después de la prueba." },
+      { "n": "20.0", "type": "check", "photo": true, "en": "No permanent flange deformation after the test.", "es": "Sin deformación permanente de la brida después de la prueba." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

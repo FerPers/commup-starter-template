@@ -1,0 +1,29 @@
+{
+  "code": "H02B",
+  "note": "Compuertas (pre-comisionamiento): 11 controles como selecciones con foto en cierre sin holguras, indicador y dispositivo de bloqueo; parámetros medidos vs. diseño (volumen de aire, velocidad, pérdida de presión) como tabla 12.1; verificaciones adicionales del proveedor como texto 13.0.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "All preservation measures have been removed.", "es": "Todas las medidas de preservación han sido retiradas." },
+      { "n": "2.0", "type": "check", "en": "Manufacturer's documentation is readily available and correct for the installed equipment.", "es": "La documentación del fabricante está disponible y corresponde al equipo instalado." },
+      { "n": "3.0", "type": "check", "en": "Access hatches installed, allowing proper inspection.", "es": "Escotillas de acceso instaladas que permiten una inspección adecuada." },
+      { "n": "4.0", "type": "check", "photo": true, "en": "Damper closes fully when operated, with no visible gaps around the blades.", "es": "La compuerta cierra completamente al operarla, sin holguras visibles alrededor de las hojas." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Position indicator operates and is clearly visible.", "es": "El indicador de posición funciona y es claramente visible." },
+      { "n": "6.0", "type": "check", "en": "All control actions operate correctly.", "es": "Todas las acciones de control funcionan correctamente." },
+      { "n": "7.0", "type": "check", "en": "Damper resets to normal operating mode after the test.", "es": "La compuerta vuelve al modo de operación normal después de la prueba." },
+      { "n": "8.0", "type": "check", "en": "Manual operating handle not obstructed through its full travel.", "es": "La palanca de operación manual no está obstruida en todo su recorrido." },
+      { "n": "9.0", "type": "check", "photo": true, "en": "Locking device secures and is correctly marked.", "es": "El dispositivo de bloqueo asegura y está correctamente marcado." },
+      { "n": "10.0", "type": "check", "en": "Fan shut-off damper functions correctly.", "es": "La compuerta de cierre del ventilador funciona correctamente." },
+      { "n": "11.0", "type": "check", "en": "Blade adjustment of manually operated dampers is correct.", "es": "El ajuste de las hojas de las compuertas de operación manual es correcto." },
+      { "n": "12.1", "type": "table", "en": "Measured vs. calculated parameters.", "es": "Parámetros medidos vs. calculados (diseño).",
+        "table": { "rows": { "mode": "fixed", "labels": ["Volumen de aire (m³/s)", "Velocidad en el ducto (m/s)", "Pérdida de presión (Pa)"] }, "columns": [
+          { "key": "design", "label": "Diseño", "type": "number" },
+          { "key": "actual", "label": "Real", "type": "number" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "13.0", "type": "text", "required": false, "en": "Additional checks recommended by the equipment supplier: carried out and recorded.", "es": "Verificaciones adicionales recomendadas por el proveedor del equipo: realizadas y registradas." },
+      { "n": "14.0", "type": "check", "en": "Latest issue of the design drawings updated with “as built” information.", "es": "Última revisión de los planos de diseño actualizada con la información «as built»." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

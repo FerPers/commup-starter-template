@@ -1,0 +1,34 @@
+{
+  "code": "M12A",
+  "note": "Alineación de acoples: 11 controles como selecciones; largo libre del espaciador, DBSE, tolerancias del fabricante y flotación axial como registros M.1–M.4; distancia entre caras de cubos (Fig. 1) M.5; lecturas de periferia y cara iniciales y finales (Fig. 2) como tabla M.6.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "Manufacturer's tolerances for the coupling alignment checked and all specified data recorded below.", "es": "Tolerancias del fabricante para la alineación del acople verificadas y todos los datos especificados registrados abajo." },
+      { "n": "2.0", "type": "check", "en": "All piping complete and correct to the latest revision drawings.", "es": "Toda la tubería completa y conforme a la última revisión de los planos." },
+      { "n": "3.0", "type": "check", "en": "All flange alignments checked for parallelism and side offset.", "es": "Alineación de todas las bridas verificada en paralelismo y desplazamiento lateral." },
+      { "n": "4.0", "type": "check", "en": "Condition of all holding-down and jacking bolts checked; all shim material is stainless steel.", "es": "Estado de todos los pernos de anclaje y de nivelación verificado; todo el material de calzas (shims) es de acero inoxidable." },
+      { "n": "5.0", "type": "check", "en": "All piping to the driven equipment loosened off and soft-foot check completed.", "es": "Toda la tubería del equipo accionado aflojada y prueba de pata coja (soft foot) completada." },
+      { "n": "6.0", "type": "check", "en": "Spacer, bolts and guards in good condition and stored in a secure place.", "es": "Espaciador, pernos y guardas en buen estado y almacenados en lugar seguro." },
+      { "n": "7.0", "type": "check", "en": "Free length of the coupling spacer and distance between shaft ends (DBSE) checked and recorded (M.1, M.2).", "es": "Largo libre del espaciador de acople y distancia entre extremos de eje (DBSE) verificados y registrados (M.1, M.2)." },
+      { "n": "8.0", "type": "check", "en": "Distance between coupling hub faces recorded (Fig. 1, M.5) after setting the drive shafts in the correct running position.", "es": "Distancia entre las caras de los cubos del acople registrada (Fig. 1, M.5) tras fijar los ejes en la posición correcta de operación." },
+      { "n": "9.0", "type": "check", "en": "Radial concentricity of each half coupling checked.", "es": "Concentricidad radial de cada semiacople verificada." },
+      { "n": "10.0", "type": "check", "en": "Suction and discharge piping tightened in turn; alignment remains within tolerance; final readings recorded (Fig. 2, M.6).", "es": "Tubería de succión y descarga apretada secuencialmente; la alineación se mantiene dentro de tolerancia; lecturas finales registradas (Fig. 2, M.6)." },
+      { "n": "11.0", "type": "check", "photo": true, "en": "On completion all jacking bolts are loose and coupling guards have been re-fitted.", "es": "Al terminar, todos los pernos de nivelación están sueltos y los guardacoples reinstalados." }
+    ] },
+    { "title": "Registros de alineación", "items": [
+      { "n": "M.1", "type": "measurement", "unit": "mm", "en": "Coupling spacer free length.", "es": "Largo libre del espaciador de acople." },
+      { "n": "M.2", "type": "measurement", "unit": "mm", "en": "Distance between shaft ends (DBSE).", "es": "Distancia entre extremos de eje (DBSE)." },
+      { "n": "M.3", "type": "text", "en": "Manufacturer's tolerances (± in or mm of total indicator reading) and coupling type.", "es": "Tolerancias del fabricante (± in o mm de la lectura total del indicador) y tipo de acople." },
+      { "n": "M.4", "type": "text", "required": false, "en": "Free end float (±).", "es": "Flotación axial libre (±)." },
+      { "n": "M.5", "type": "measurement", "unit": "mm", "en": "Distance between coupling hub flange faces (Fig. 1).", "es": "Distancia entre las caras de brida de los cubos del acople (Fig. 1)." },
+      { "n": "M.6", "type": "table", "en": "Dial indicator readings, periphery (P) and face (F): top, bottom, left, right — required and final (Fig. 2).", "es": "Lecturas del indicador, periferia (P) y cara (F): arriba, abajo, izquierda, derecha — requeridas y finales (Fig. 2).",
+        "table": { "rows": { "mode": "fixed", "labels": ["PT (periferia arriba)", "PB (periferia abajo)", "PL (periferia izquierda)", "PR (periferia derecha)", "FT (cara arriba)", "FB (cara abajo)", "FL (cara izquierda)", "FR (cara derecha)"] }, "columns": [
+          { "key": "required", "label": "Lectura requerida", "type": "number", "unit": "mm" },
+          { "key": "final", "label": "Lectura final", "type": "number", "unit": "mm" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "code": "P21C",
+  "note": "Soportes de resorte: P&ID de referencia D.1; líneas y resortes instalados como tabla M.1; cantidades 1.2 / 1.3 como números; controles agrupados en identificación, montaje, integridad, funcionalidad, liberación y registros; hoja de datos de resortes actualizada como documento en 6.1.",
+  "sections": [
+    { "title": "Referencias y datos", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "en": "Reference P&ID numbers.", "es": "Números de P&ID de referencia." },
+      { "n": "M.1", "type": "table", "en": "Line numbers and installed spring support tags with manufacturers.", "es": "Números de línea e identificación de los resortes instalados con su fabricante.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 50, "label": "Línea" }, "columns": [
+          { "key": "line", "label": "Número de línea", "type": "text" },
+          { "key": "variable_springs", "label": "Resortes variables: tags y fabricante", "type": "text", "required": false },
+          { "key": "constant_springs", "label": "Resortes constantes: tags y fabricante", "type": "text", "required": false },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Identificación en campo", "items": [
+      { "n": "1.1", "type": "check", "en": "All spring supports associated with the lines of this sub-system identified and located according to the isometrics.", "es": "Todos los soportes de resorte asociados a las líneas de este subsistema identificados y ubicados según los isométricos." },
+      { "n": "1.2", "type": "number", "en": "Variable springs (quantity).", "es": "Resortes variables (cantidad)." },
+      { "n": "1.3", "type": "number", "en": "Constant springs (quantity).", "es": "Resortes constantes (cantidad)." }
+    ] },
+    { "title": "Montaje", "items": [
+      { "n": "2.1", "type": "check", "en": "Each spring support installed according to the vendor or Reficar springs job instruction requirements.", "es": "Cada resorte instalado según los requisitos del fabricante o del instructivo de resortes de Reficar." },
+      { "n": "2.2", "type": "check", "photo": true, "en": "Before unlocking, the load indicator guide or plate of every spring is in line with the cold load position marked on the nameplate.", "es": "Antes de la liberación, la guía o placa indicadora de carga de todos los resortes está alineada con la posición de carga fría marcada en la placa." },
+      { "n": "2.3", "type": "check", "en": "No pending modifications on any of the spring supports.", "es": "Sin modificaciones pendientes en ninguno de los resortes." }
+    ] },
+    { "title": "Integridad y seguridad", "items": [
+      { "n": "3.1", "type": "check", "photo": true, "en": "All spring components, including welded joints in each assembly, in good shape: no deformations, cracks or fractures, free of rust.", "es": "Todos los componentes del resorte, incluidas las uniones soldadas de cada montaje, en buen estado: sin deformaciones, grietas ni fracturas, libres de óxido." },
+      { "n": "3.2", "type": "check", "en": "No missing components in any of the spring supports.", "es": "Sin elementos faltantes en ninguno de los resortes." },
+      { "n": "3.3", "type": "check", "en": "All safety pins installed in the bushings of the springs that require them.", "es": "Todos los pines de seguridad instalados en los bujes de los resortes que los requieren." }
+    ] },
+    { "title": "Funcionalidad", "items": [
+      { "n": "4.1", "type": "check", "en": "All threaded parts (nuts, locknuts, turnbuckles) properly installed and turning freely on the springs that have them.", "es": "Todas las partes roscadas (tuercas, contratuercas, tensores) correctamente instaladas y giran en los resortes que las tienen." },
+      { "n": "4.2", "type": "check", "en": "Slope of all spring hanger assemblies is less than 4°.", "es": "La inclinación de todos los resortes colgantes es menor de 4°." },
+      { "n": "4.3", "type": "check", "en": "All base-type springs carry the piping load without significant offset from the load plate centre point.", "es": "Todos los resortes tipo base soportan la carga de tubería sin desplazamiento significativo del centro de la placa de carga." }
+    ] },
+    { "title": "Liberación", "items": [
+      { "n": "5.1", "type": "check", "en": "All shipping bands used to keep the spring stops in place removed from all spring supports.", "es": "Todas las bandas de transporte que mantenían los frenos en su lugar retiradas de todos los resortes." },
+      { "n": "5.2", "type": "check", "photo": true, "en": "All stops removed from all spring supports.", "es": "Todos los frenos retirados de todos los resortes." },
+      { "n": "5.3", "type": "check", "en": "All spring hangers work within the allowable working range.", "es": "Todos los resortes trabajan dentro del rango permitido." }
+    ] },
+    { "title": "Registros", "items": [
+      { "n": "6.1", "type": "check", "document": true, "en": "Springs data sheet updated for all spring supports according to the final installation position and nameplate data (tag, manufacturer, type or figure, size, spring rate, cold load, hot load, displacement and load for constant springs) (attach).", "es": "Hoja de datos de resortes actualizada para todos los soportes según la posición final de instalación y los datos de placa (tag, fabricante, tipo o figura, tamaño, constante, carga fría, carga caliente, desplazamiento y carga para constantes) (adjuntar)." },
+      { "n": "6.2", "type": "check", "en": "All spring stops stored or attached directly to the spring casing.", "es": "Todos los frenos de los resortes almacenados o adheridos a la carcasa del resorte." },
+      { "n": "6.3", "type": "check", "en": "Additional notes required for any spring support recorded in the springs data sheet to clarify future actions.", "es": "Notas adicionales requeridas por cualquier resorte registradas en la hoja de datos de resortes para aclarar acciones futuras." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

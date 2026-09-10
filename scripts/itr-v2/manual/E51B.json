@@ -1,0 +1,55 @@
+{
+  "code": "E51B",
+  "note": "Desalador electrostático: datos D.1–D.4; aislamiento de la acometida (M.1) y de los devanados del transformador con neutro desconectado (M.2) como tablas; resistencia de puesta a tierra en 11.1-R; referencias a informes del vendor (Prosernat) conservadas como en el original; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias y datos del elemento", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Primary voltage (value and unit).", "es": "Tensión primaria (valor y unidad)." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Secondary voltage (value and unit).", "es": "Tensión secundaria (valor y unidad)." },
+      { "n": "D.3", "type": "measurement", "unit": "Hz", "required": false, "en": "Frequency.", "es": "Frecuencia." },
+      { "n": "D.4", "type": "text", "required": false, "en": "Rated power (value and unit).", "es": "Potencia nominal (valor y unidad)." }
+    ] },
+    { "title": "Inspección y pruebas", "items": [
+      { "n": "1.0", "type": "check", "document": true, "en": "Vendor electrical test documentation for the electrostatic desalter is complete and available (attach).", "es": "Documentación del fabricante de pruebas de los elementos eléctricos del desalador electrostático completa y disponible (adjuntar)." },
+      { "n": "2.0", "type": "check", "en": "“A” sheets of the low voltage power, control and instrumentation cables are complete and available.", "es": "Formatos «A» de los cables de fuerza, control de baja tensión e instrumentación completos y disponibles." },
+      { "n": "3.0", "type": "check", "en": "Transformer “A” sheets are complete and available.", "es": "Formatos «A» de los transformadores completos y disponibles." },
+      { "n": "4.0", "type": "check", "en": "Comments raised by the vendor in the previous inspection have been closed (see Prosernat report No. 70862).", "es": "Observaciones generadas por el vendor en la inspección anterior atendidas (ver reporte de visita N.° 70862 Prosernat)." },
+      { "n": "5.0", "type": "check", "en": "Values and specifications of the power and control (protection) components agree with the design schematic.", "es": "Valores y especificaciones de los componentes de fuerza y control (protecciones) conformes al esquemático de diseño." },
+      { "n": "6.0", "type": "check", "en": "Transformer feeder cubicle operates correctly.", "es": "El cubículo alimentador del transformador opera correctamente." },
+      { "n": "7.0", "type": "check", "en": "Opening and closing of the breakers is enabled.", "es": "Apertura y cierre de los interruptores habilitados." },
+      { "n": "8.0", "type": "check", "en": "Line voltage and frequency match the transformer nameplate.", "es": "Tensión de línea y frecuencia coinciden con la placa del transformador." },
+      { "n": "9.0", "type": "check", "en": "Continuity of all cables (power and control) verified.", "es": "Continuidad de todos los cables (fuerza y control) verificada." },
+      { "n": "10.0", "type": "check", "en": "Insulation resistance of the power feeder, phase to ground and phase to phase, 1 minute (see M.1).", "es": "Resistencia de aislamiento de la acometida de potencia, fase a tierra y entre fases, 1 minuto (ver M.1)." },
+      { "n": "11.0", "type": "check", "en": "Neutral-to-ground connection removed and transformer winding insulation resistance tested, 1 minute (see M.2).", "es": "Conexión neutro–tierra retirada y resistencia de aislamiento de los devanados del transformador probada, 1 minuto (ver M.2)." },
+      { "n": "11.1", "type": "check", "photo": true, "en": "Transformer grounding agrees with drawings and vendor recommendations; ground resistance value verified.", "es": "Puesta a tierra de los transformadores conforme a planos y recomendaciones del fabricante; valor de resistencia de tierra verificado." },
+      { "n": "11.1-R", "type": "measurement", "unit": "Ω", "en": "Ground resistance value.", "es": "Valor de la resistencia de puesta a tierra." },
+      { "n": "12.0", "type": "check", "photo": true, "en": "All cable glands of the desalter unit correctly installed and tightened.", "es": "Todos los prensaestopas de cables de la unidad correctamente instalados y apretados." },
+      { "n": "13.0", "type": "check", "photo": true, "en": "Internal and external cleaning of the control panel boards performed.", "es": "Limpieza interna y externa de los tableros de control realizada." },
+      { "n": "14.0", "type": "check", "en": "Measuring apparatus of the control panel (voltmeters, ammeters, pushbuttons, etc.) operational.", "es": "Aparatos de medición del tablero de control (voltímetros, amperímetros, pulsadores, etc.) operativos." },
+      { "n": "15.0", "type": "check", "photo": true, "en": "Local control panel sealed with all bolts.", "es": "Panel de control local herméticamente cerrado con toda la tornillería." },
+      { "n": "16.0", "type": "check", "en": "Insulation characteristics within the control panel reviewed.", "es": "Características de aislamiento dentro del panel de control revisadas." },
+      { "n": "17.0", "type": "check", "en": "Low voltage bushings, walls and roof inspected and cleaned.", "es": "Bushings de baja tensión, paredes y cubierta inspeccionados y limpiados." },
+      { "n": "18.0", "type": "check", "photo": true, "en": "Electrical connections (terminals) on the porcelain insulators for control and power cables made as shown in section 6.5.3 of vendor document 40862-89-100.", "es": "Conexiones eléctricas (terminales) en los aisladores de porcelana de los cables de control y fuerza realizadas según la figura de la sección 6.5.3 del documento del vendor 40862-89-100." },
+      { "n": "19.0", "type": "check", "photo": true, "en": "No oil leaks at the porcelain power and control terminals.", "es": "Sin fugas de aceite en los terminales de porcelana de fuerza y control." },
+      { "n": "20.0", "type": "check", "en": "Low voltage terminals (power and control) correctly connected and tight.", "es": "Terminales de baja tensión (alimentación y control) correctamente conectados y apretados." },
+      { "n": "21.0", "type": "check", "en": "High voltage connection correct and in accordance with the instructions.", "es": "Conexión de alta tensión correcta y conforme a las instrucciones." },
+      { "n": "22.0", "type": "check", "photo": true, "en": "HV chamber filled with oil to the indicated level.", "es": "Cámara de alta tensión llena de aceite hasta el nivel indicado." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "en": "Power feeder insulation resistance, 1 minute.", "es": "Resistencia de aislamiento de la acometida de potencia, 1 minuto.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Fases A – B", "Fases B – C", "Fases C – A", "Fase A – Tierra", "Fase B – Tierra", "Fase C – Tierra"] }, "columns": [
+          { "key": "test_voltage", "label": "Tensión de prueba", "type": "number", "unit": "V" },
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.2", "type": "table", "en": "Transformer winding insulation resistance, neutral-to-ground connection removed, 1 minute.", "es": "Resistencia de aislamiento de devanados del transformador, conexión neutro–tierra retirada, 1 minuto.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Devanado AT – Tierra", "Devanado BT – Tierra", "Devanado AT – Devanado BT"] }, "columns": [
+          { "key": "test_voltage", "label": "Tensión de prueba", "type": "number", "unit": "V" },
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

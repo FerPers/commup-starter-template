@@ -1,0 +1,21 @@
+{
+  "code": "Q06A",
+  "note": "Protección contra fuego: tipo como selección 1.0; etapas 2.0–10.0 como selecciones con foto en aplicaciones, malla, acabado y reparaciones; espesor final medido en 7.0-R.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "select", "options": ["Cementicio", "Chartek"], "en": "Fireproofing type.", "es": "Tipo de protección contra fuego." },
+      { "n": "2.0", "type": "check", "en": "Surface preparation checked.", "es": "Preparación de la superficie verificada." },
+      { "n": "3.0", "type": "check", "en": "Temperature and humidity checked within the application limits.", "es": "Temperatura y humedad verificadas dentro de los límites de aplicación." },
+      { "n": "4.0", "type": "check", "photo": true, "en": "First application completed.", "es": "Primera aplicación completada." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Mesh installed.", "es": "Malla instalada." },
+      { "n": "6.0", "type": "check", "en": "Second application completed (if required).", "es": "Segunda aplicación completada (si se requiere)." },
+      { "n": "7.0", "type": "check", "en": "Final thickness checked against the specification.", "es": "Espesor final verificado contra la especificación." },
+      { "n": "7.0-R", "type": "measurement", "unit": "mm", "en": "Final thickness measured.", "es": "Espesor final medido." },
+      { "n": "8.0", "type": "check", "photo": true, "en": "Surface finish acceptable.", "es": "Acabado de la superficie aceptable." },
+      { "n": "9.0", "type": "check", "en": "Latex painting applied.", "es": "Pintura látex aplicada." },
+      { "n": "10.0", "type": "check", "photo": true, "en": "Damages repaired, complete.", "es": "Reparación de daños completa." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

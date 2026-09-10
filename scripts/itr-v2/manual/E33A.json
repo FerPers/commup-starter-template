@@ -1,0 +1,31 @@
+{
+  "code": "E33A",
+  "note": "Prueba HiPot AC de transformador: parámetros por devanado como tabla M.1 (primario / secundario), corriente de fuga en el tiempo como tabla M.2 (5 s a 1 min, fases A/B/C); criterio del 75 % de la tensión de fábrica y resultado como selecciones; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias y datos del elemento", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Transformer rating.", "es": "Potencia / valores nominales del transformador." }
+    ] },
+    { "title": "Prueba de alto potencial AC", "items": [
+      { "n": "1.0", "type": "check", "en": "AC high potential test voltage does not exceed 75 % of the factory test voltage; duration one (1) minute.", "es": "La tensión de prueba HiPot AC no supera el 75 % de la tensión de prueba de fábrica; duración un (1) minuto." },
+      { "n": "M.1", "type": "table", "en": "Test parameters per winding.", "es": "Parámetros de la prueba por devanado.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Tensión nominal (kV)", "Tensión de servicio (kV)", "Temperatura nominal (°C)", "Tensión AC inicial (kV)", "Tensión AC de prueba (kV)", "Temperatura en la prueba (°C)"] }, "columns": [
+          { "key": "primary", "label": "Devanado primario", "type": "number" },
+          { "key": "secondary", "label": "Devanado secundario", "type": "number" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.2", "type": "table", "en": "Current at test voltage (µA) per phase and winding.", "es": "Corriente a la tensión de prueba (µA) por fase y devanado.",
+        "table": { "rows": { "mode": "fixed", "labels": ["5 s", "15 s", "30 s", "45 s", "1 min"] }, "columns": [
+          { "key": "prim_a", "label": "Primario fase A", "type": "number", "unit": "µA" },
+          { "key": "prim_b", "label": "Primario fase B", "type": "number", "unit": "µA" },
+          { "key": "prim_c", "label": "Primario fase C", "type": "number", "unit": "µA" },
+          { "key": "sec_a", "label": "Secundario fase A", "type": "number", "unit": "µA" },
+          { "key": "sec_b", "label": "Secundario fase B", "type": "number", "unit": "µA" },
+          { "key": "sec_c", "label": "Secundario fase C", "type": "number", "unit": "µA" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "2.0", "type": "check", "en": "Test withstood for one minute without breakdown or flashover; leakage current stable.", "es": "Prueba soportada durante un minuto sin ruptura ni arco; corriente de fuga estable." }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

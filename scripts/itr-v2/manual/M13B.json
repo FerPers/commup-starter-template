@@ -1,0 +1,20 @@
+{
+  "code": "M13B",
+  "create": { "title": "PRE-COMMISSIONING COMPLETION FORM: Submersible pump", "title_es": "FORMATO DE COMPLETACIÓN DE PRE-COMISIONAMIENTO: Bomba sumergible", "discipline": "MECH", "phase": "B" },
+  "note": "Plantilla nueva (no existía en CommUp): bomba sumergible en pre-comisionamiento, nueve controles como selecciones (4.1–4.4 bajo «resultados según especificación del fabricante») y comentarios adicionales como texto 6.0.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "All preservation measures have been removed.", "es": "Todas las medidas de preservación han sido retiradas." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "All valves associated with the pump have their specified actuator or manual operator installed and move freely; valve tagging is complete.", "es": "Todas las válvulas asociadas a la bomba tienen instalado su actuador u operador manual especificado y se mueven libremente; el etiquetado de válvulas está completo." },
+      { "n": "3.0", "type": "check", "en": "All temporary filters, strainers, screens and plugs removed following completion of the pre-commissioning activities.", "es": "Todos los filtros temporales, coladores, mallas y tapones retirados tras completar las actividades de pre-comisionamiento." },
+      { "n": "4.1", "type": "check", "en": "Quick spin check performed with the electrical group to confirm the direction of rotation of the motor and pump.", "es": "Verificación rápida de giro realizada con el grupo eléctrico para confirmar el sentido de rotación del motor y la bomba." },
+      { "n": "4.2", "type": "check", "en": "Supplier documentation available for reference as needed.", "es": "Documentación del proveedor disponible para consulta cuando se requiera." },
+      { "n": "4.3", "type": "check", "en": "All gaskets on the pump discharge line installed and correct.", "es": "Todos los empaques de la línea de descarga de la bomba instalados y correctos." },
+      { "n": "4.4", "type": "check", "en": "Free rotation of the pump confirmed.", "es": "Libre rotación de la bomba confirmada." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Sump or tank clean before starting the pump.", "es": "Sumidero o tanque limpio antes de arrancar la bomba." },
+      { "n": "6.0", "type": "text", "required": false, "en": "Additional comments obtained during the pre-commissioning activities.", "es": "Comentarios adicionales obtenidos durante las actividades de pre-comisionamiento." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

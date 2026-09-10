@@ -1,0 +1,53 @@
+{
+  "code": "E12A",
+  "note": "Datos del circuito como D.1–D.14 (fabricante, tipo y serie del tag); chequeos generales 1.1–1.14 y de tierra 2.1–2.3 como selecciones; lista de componentes como tabla M.1.",
+  "sections": [
+    { "title": "Referencias y datos del circuito", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Distribution board reference.", "es": "Referencia del tablero de distribución." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Circuit reference.", "es": "Referencia del circuito." },
+      { "n": "D.3", "type": "measurement", "unit": "A", "required": false, "en": "MCB rating.", "es": "Capacidad del MCB." },
+      { "n": "D.4", "type": "measurement", "unit": "V", "required": false, "en": "Voltage.", "es": "Tensión." },
+      { "n": "D.5", "type": "measurement", "unit": "Hz", "required": false, "en": "Frequency.", "es": "Frecuencia." },
+      { "n": "D.6", "type": "number", "required": false, "en": "Number of outlets in the circuit.", "es": "Número de salidas en el circuito." },
+      { "n": "D.7", "type": "text", "required": false, "en": "Total circuit power (value and unit).", "es": "Potencia total del circuito (valor y unidad)." },
+      { "n": "D.8", "type": "number", "required": false, "en": "Number of junction boxes in the circuit.", "es": "Número de cajas de empalme en el circuito." },
+      { "n": "D.9", "type": "text", "required": false, "en": "Type of conductor.", "es": "Tipo de conductor." },
+      { "n": "D.10", "type": "text", "required": false, "en": "Conductor size.", "es": "Sección del conductor." },
+      { "n": "D.11", "type": "text", "required": false, "en": "Hazardous area.", "es": "Área peligrosa." },
+      { "n": "D.12", "type": "text", "required": false, "en": "Single line diagram.", "es": "Diagrama unifilar." },
+      { "n": "D.13", "type": "text", "required": false, "en": "Distribution schedule No.", "es": "Cuadro de distribución N.°" },
+      { "n": "D.14", "type": "text", "required": false, "en": "Earthing details drawing No.", "es": "Plano de detalles de puesta a tierra N.°" }
+    ] },
+    { "title": "Chequeos generales", "items": [
+      { "n": "1.1", "type": "check", "en": "Equipment is suitable for the hazardous area.", "es": "El equipo es adecuado para el área peligrosa." },
+      { "n": "1.2", "type": "check", "photo": true, "en": "Nameplate details verified against the data sheet.", "es": "Datos de placa verificados contra la hoja de datos." },
+      { "n": "1.3", "type": "check", "en": "Circuit installation complete as per the installation drawings.", "es": "Instalación del circuito completa según los planos de instalación." },
+      { "n": "1.4", "type": "check", "en": "Number of outlets in the circuit is correct.", "es": "El número de salidas en el circuito es correcto." },
+      { "n": "1.5", "type": "check", "photo": true, "en": "Visual inspection: no external damage.", "es": "Inspección visual: sin daños externos." },
+      { "n": "1.6", "type": "check", "photo": true, "en": "Equipment fixings and mountings are secure.", "es": "Las fijaciones y soportes del equipo están firmes." },
+      { "n": "1.7", "type": "check", "en": "All connections are correct and tight; cable markings fitted.", "es": "Todas las conexiones son correctas y están apretadas; marcas de cable colocadas." },
+      { "n": "1.8", "type": "check", "en": "Inside of the equipment is dry and free from dirt / debris.", "es": "El interior del equipo está seco y libre de suciedad / escombros." },
+      { "n": "1.9", "type": "check", "en": "No internal damage to outlets and boxes.", "es": "Sin daños internos en salidas y cajas." },
+      { "n": "1.10", "type": "check", "photo": true, "en": "All equipment carries the correct circuit identification.", "es": "Todo el equipo lleva la identificación correcta del circuito." },
+      { "n": "1.11", "type": "check", "en": "Equipment on different phases is more than 2 metres apart.", "es": "Los equipos en fases distintas están a más de 2 metros de distancia." },
+      { "n": "1.12", "type": "check", "photo": true, "en": "Three-phase warning labels fitted where necessary.", "es": "Etiquetas de advertencia de tres fases colocadas donde sea necesario." },
+      { "n": "1.13", "type": "check", "photo": true, "en": "Gaskets and seals are not damaged.", "es": "Juntas y sellos sin daños." },
+      { "n": "1.14", "type": "check", "en": "All bolts are correct and none are missing.", "es": "Todos los pernos son correctos y no falta ninguno." }
+    ] },
+    { "title": "Verificación de puesta a tierra", "items": [
+      { "n": "2.1", "type": "check", "photo": true, "en": "Earth bosses installed are welded correctly.", "es": "Los puntos de tierra instalados están soldados correctamente." },
+      { "n": "2.2", "type": "check", "photo": true, "en": "Equipment is bonded to the main earth.", "es": "El equipo está conectado a la tierra principal." },
+      { "n": "2.3", "type": "check", "en": "All cable lugs are fitted correctly.", "es": "Todos los terminales de cable están correctamente colocados." }
+    ] },
+    { "title": "Registros", "items": [
+      { "n": "M.1", "type": "table", "en": "List of components in the circuit.", "es": "Lista de componentes del circuito.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 100, "label": "Componente" }, "columns": [
+          { "key": "tag", "label": "Tag N.°", "type": "text" },
+          { "key": "description", "label": "Descripción", "type": "text" },
+          { "key": "result", "label": "Resultado", "type": "result", "required": false },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

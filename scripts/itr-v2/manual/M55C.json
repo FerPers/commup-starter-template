@@ -1,0 +1,25 @@
+{
+  "code": "M55C",
+  "note": "Compresor centrífugo de aire con engranaje integral (comisionamiento): actividades eléctricas 3.1–3.3 como selecciones con registro del giro desacoplado (3.2-R); duración real de la prueba de 72 h (8.0-R) y parámetros BN 3500 (9.0-R) como registros; aceptaciones del vendor como documentos.",
+  "sections": [
+    { "title": "Referencias de ejecución", "items": ["R.1"] },
+    { "title": "Inspección y pruebas", "items": [
+      { "n": "1.0", "type": "check", "document": true, "en": "All punch lists for the installed equipment completed and mechanical completion accepted by the vendor (attach).", "es": "Todas las listas de pendientes del equipo instalado completadas y aceptación de completación mecánica por el vendor (adjuntar)." },
+      { "n": "2.0", "type": "check", "en": "Final alignment check completed.", "es": "Verificación de alineación final completada." },
+      { "n": "3.1", "type": "check", "en": "Electrical activities (if not executed during pre-commissioning): motor uncoupled and quick spin check performed with the electrical group to confirm the direction of rotation.", "es": "Actividades eléctricas (si no se ejecutaron en pre-comisionamiento): motor desacoplado y verificación rápida de giro realizada con el grupo eléctrico para confirmar el sentido de rotación." },
+      { "n": "3.2", "type": "check", "en": "Guard replaced and uncoupled motor run of 4 hours minimum performed; motor vibration levels and bearing temperatures checked.", "es": "Guarda reinstalada y prueba de motor desacoplado de mínimo 4 horas realizada; niveles de vibración y temperaturas de rodamientos del motor verificados." },
+      { "n": "3.2-R", "type": "text", "en": "Uncoupled run: vibration levels and bearing temperatures recorded.", "es": "Prueba desacoplada: niveles de vibración y temperaturas de rodamientos registrados." },
+      { "n": "3.3", "type": "check", "en": "Electric motor check sheet “B” completed (if not completed during pre-commissioning).", "es": "Formato «B» del motor eléctrico completado (si no se completó en pre-comisionamiento)." },
+      { "n": "4.0", "type": "check", "photo": true, "en": "Couplings and guards installed.", "es": "Acoples y guardas instalados." },
+      { "n": "5.0", "type": "check", "en": "Vendor pre-start-up procedure completed.", "es": "Procedimiento de pre-arranque del vendor completado." },
+      { "n": "6.0", "type": "check", "en": "Load start-up of the compressor initiated.", "es": "Arranque con carga del compresor iniciado." },
+      { "n": "7.0", "type": "check", "en": "Antisurge system tuned.", "es": "Ajuste (tuning) del sistema antisurge realizado." },
+      { "n": "8.0", "type": "check", "en": "Compressor test run for 72 hours.", "es": "Prueba de operación del compresor durante 72 horas." },
+      { "n": "8.0-R", "type": "measurement", "unit": "h", "en": "Actual test run duration.", "es": "Duración real de la prueba de operación." },
+      { "n": "9.0", "type": "check", "en": "Compressor monitored during the test run; parameters from the BN 3500 vibration and temperature monitoring system are acceptable.", "es": "Compresor monitoreado durante la prueba; parámetros del sistema de monitoreo de vibración y temperatura BN 3500 aceptables." },
+      { "n": "9.0-R", "type": "text", "en": "BN 3500 parameters recorded (vibration, temperatures) or reference to the attached log.", "es": "Parámetros del BN 3500 registrados (vibración, temperaturas) o referencia al registro adjunto." },
+      { "n": "10.0", "type": "check", "document": true, "en": "System commissioning acceptance by the vendor (attach).", "es": "Aceptación de comisionamiento del sistema por el vendor (adjuntar)." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

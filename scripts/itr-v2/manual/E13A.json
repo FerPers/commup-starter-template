@@ -1,0 +1,58 @@
+{
+  "code": "E13A",
+  "note": "Datos del circuito D.1–D.5; resistencia de aislamiento del motor y del calentador como tablas M.1–M.4 (AC y DC, no obligatorias: se llena la que corresponde al tipo de motor) con los mínimos del original en 6.0; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias y datos del circuito", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Distribution board reference.", "es": "Referencia del tablero de distribución." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Circuit reference.", "es": "Referencia del circuito." },
+      { "n": "D.3", "type": "measurement", "unit": "A", "required": false, "en": "MCB rating.", "es": "Capacidad del MCB." },
+      { "n": "D.4", "type": "measurement", "unit": "V", "required": false, "en": "Voltage.", "es": "Tensión." },
+      { "n": "D.5", "type": "select", "required": false, "options": ["Normal", "Respaldo"], "en": "Service.", "es": "Servicio." }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "photo": true, "en": "Equipment nameplate matches drawings and specifications.", "es": "La placa de características concuerda con los planos y las especificaciones." },
+      { "n": "2.0", "type": "check", "photo": true, "en": "No damaged or missing parts.", "es": "Sin partes dañadas o faltantes." },
+      { "n": "3.0", "type": "check", "photo": true, "en": "Proper anchorage and mounting.", "es": "Anclaje y montaje sobre la base apropiados." },
+      { "n": "4.0", "type": "check", "photo": true, "en": "Grounding installed in accordance with the drawings.", "es": "Puesta a tierra instalada según los planos." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "All equipment and internal cables properly identified.", "es": "Equipo y cables internos correctamente identificados." },
+      { "n": "6.0", "type": "check", "en": "Motor and heater disconnected; insulation resistance checked against the minimum for the motor size: < 1 kV → 500 V / 10 MΩ; < 4.6 kV → 2.5 kV / 100 MΩ; > 4.6 kV → 5 kV / 150 MΩ (see M.1–M.4).", "es": "Motor y calentador desconectados; resistencia de aislamiento verificada contra el mínimo según tamaño del motor: < 1 kV → 500 V / 10 MΩ; < 4,6 kV → 2,5 kV / 100 MΩ; > 4,6 kV → 5 kV / 150 MΩ (ver M.1–M.4)." },
+      { "n": "7.0", "type": "check", "en": "Motor and heater reconnected as per the connection diagram.", "es": "Motor y calentador reconectados según el diagrama de conexión." },
+      { "n": "8.0", "type": "check", "en": "Tightness of accessible bolted electrical connections verified with the calibrated torque-wrench method.", "es": "Ajuste de las conexiones eléctricas apernadas accesibles verificado con torquímetro calibrado." },
+      { "n": "9.0", "type": "check", "en": "Where fitted, visual inspection confirms no damage to: winding temperature detectors, air temperature detectors, bearing temperature detectors, vibration probes, space heaters.", "es": "Donde estén instalados, la inspección visual confirma que no hay daño en: detectores de temperatura de devanado, de aire y de rodamientos, sondas de vibración y calentadores de espacio." },
+      { "n": "10.0", "type": "check", "photo": true, "en": "Motor terminal box: proper internal terminations and insulating boots; gaskets and seals present and correctly fitted.", "es": "Caja de conexiones del motor: terminaciones internas y capuchones aislantes correctos; juntas y sellos presentes y bien colocados." },
+      { "n": "11.0", "type": "check", "en": "Stop station wiring as per schematic (if applicable).", "es": "Cableado de la estación de parada según el esquema (si aplica)." },
+      { "n": "12.0", "type": "check", "en": "All motor accessories properly connected (space heaters, RTDs, vibration switches, etc.).", "es": "Todos los accesorios del motor correctamente conectados (calentadores, RTD, interruptores de vibración, etc.)." },
+      { "n": "13.0", "type": "check", "photo": true, "en": "Spare cable entries plugged correctly.", "es": "Entradas de cable de reserva correctamente obturadas." },
+      { "n": "14.0", "type": "check", "en": "Manufacturer's recommended lubricants correctly applied, where applicable.", "es": "Lubricantes recomendados por el fabricante aplicados correctamente, donde aplique." },
+      { "n": "15.0", "type": "check", "en": "Shaft rotated and freedom of movement confirmed, if possible.", "es": "Eje rotado y libertad de movimiento confirmada, si es posible." },
+      { "n": "16.0", "type": "check", "photo": true, "en": "Screens, guards and other personnel protective devices are in place.", "es": "Pantallas, guardas y demás dispositivos de protección del personal en su sitio." }
+    ] },
+    { "title": "Registros de ensayo", "items": [
+      { "n": "M.1", "type": "table", "required": false, "en": "AC motor: insulation resistance.", "es": "Motor AC: resistencia de aislamiento.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Fase a fase 1", "Fase a fase 2", "Fase a fase 3", "Fase a tierra"] }, "columns": [
+          { "key": "test_voltage", "label": "Tensión de prueba", "type": "number", "unit": "V" },
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.2", "type": "table", "required": false, "en": "AC motor heater: continuity and insulation.", "es": "Calentador del motor AC: continuidad y aislamiento.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Continuidad (Ω)", "Elemento a tierra (MΩ)", "Elemento a devanado (MΩ)"] }, "columns": [
+          { "key": "reading", "label": "Lectura", "type": "number" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.3", "type": "table", "required": false, "en": "DC motor: insulation resistance.", "es": "Motor DC: resistencia de aislamiento.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Campo a armadura", "Campo a tierra", "Armadura a tierra"] }, "columns": [
+          { "key": "test_voltage", "label": "Tensión de prueba", "type": "number", "unit": "V" },
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "M.4", "type": "table", "required": false, "en": "DC motor heater: insulation.", "es": "Calentador del motor DC: aislamiento.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Armadura a calentador", "Calentador a tierra"] }, "columns": [
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

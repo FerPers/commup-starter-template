@@ -1,0 +1,15 @@
+{
+  "code": "X01A",
+  "note": "Informe de inspección de pintura: es una hoja de aceptación; lista de planos de límites como dato D.1, aceptación del alcance como selección 1.0 y registros de inspección de pintura (preparación, espesores) como documento 2.0.",
+  "sections": [
+    { "title": "Referencias y alcance", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "en": "List of boundary drawings reflecting the scope of the tag.", "es": "Lista de planos de límites que reflejan el alcance del tag." }
+    ] },
+    { "title": "Aceptación", "items": [
+      { "n": "1.0", "type": "check", "photo": true, "en": "The painting / coating scope associated with the system / sub-system, to the extent specified above, has been satisfactorily completed: the structure, equipment and/or piping has been prepared, painted, inspected and accepted in accordance with the specifications.", "es": "El alcance de pintura / recubrimiento asociado al sistema / subsistema, en la extensión indicada arriba, se completó satisfactoriamente: la estructura, equipos y/o tubería fueron preparados, pintados, inspeccionados y aceptados conforme a las especificaciones." },
+      { "n": "2.0", "type": "text", "document": true, "en": "Painting inspection records (surface preparation, ambient conditions, dry film thickness) attached.", "es": "Registros de inspección de pintura (preparación de superficie, condiciones ambientales, espesor de película seca) adjuntos." }
+    ] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

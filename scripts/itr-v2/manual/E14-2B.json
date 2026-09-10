@@ -1,0 +1,66 @@
+{
+  "code": "E14-2B",
+  "note": "Datos del cargador D.1–D.8 (fabricante y serie del tag); pruebas de alarmas y disparos como tabla 9.0; valores de flotación, corriente límite y rizado como registros; aislamiento del tablero AC/DC como tabla 15.4; subítems 15.5.n / 15.6.n como selecciones; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias y datos del elemento", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Location.", "es": "Ubicación." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Rectifier / inverter designation.", "es": "Designación del rectificador / inversor." },
+      { "n": "D.3", "type": "text", "required": false, "en": "Battery type.", "es": "Tipo de baterías." },
+      { "n": "D.4", "type": "text", "required": false, "en": "Number of cells / volts.", "es": "Número de celdas / voltios." },
+      { "n": "D.5", "type": "measurement", "unit": "V", "required": false, "en": "Rated voltage.", "es": "Tensión nominal." },
+      { "n": "D.6", "type": "measurement", "unit": "A", "required": false, "en": "Rated current.", "es": "Corriente nominal." },
+      { "n": "D.7", "type": "measurement", "unit": "kA", "required": false, "en": "Fault level.", "es": "Nivel de falla." },
+      { "n": "D.8", "type": "measurement", "unit": "s", "required": false, "en": "Fault duration.", "es": "Duración de la falla." }
+    ] },
+    { "title": "Inspección y pruebas", "items": [
+      { "n": "1.0", "type": "check", "document": true, "en": "Vendor test documentation is complete and available (attach).", "es": "Documentación de pruebas del fabricante completa y disponible (adjuntar)." },
+      { "n": "2.0", "type": "check", "en": "Fuse / MCB ratings at the switchboard feeder cubicle are as per design.", "es": "Fusibles / características del interruptor en el cubículo alimentador del tablero según diseño." },
+      { "n": "3.0", "type": "check", "en": "Proper operation of the feeder cubicle equipment; remote alarms / trips tested.", "es": "Operación correcta del cubículo alimentador; alarmas y disparos remotos probados." },
+      { "n": "4.0", "type": "check", "en": "Manual operation of switches and pushbuttons proven.", "es": "Funcionamiento manual de interruptores y pulsadores probado." },
+      { "n": "5.0", "type": "check", "en": "Correct scale and operation of the charger instruments.", "es": "Escala y operación correctas de los instrumentos del cargador." },
+      { "n": "6.0", "type": "check", "en": "Main MCB rating according to design drawings and specifications.", "es": "Características del interruptor principal según planos y especificaciones de diseño." },
+      { "n": "7.0", "type": "check", "en": "IR tests on the main AC circuit breakers performed (all electronic devices disconnected).", "es": "Pruebas de resistencia de aislamiento en los interruptores AC principales realizadas (dispositivos electrónicos desconectados)." },
+      { "n": "7.0-R", "type": "measurement", "unit": "MΩ", "en": "Recorded insulation resistance, main AC circuit breakers.", "es": "Resistencia de aislamiento registrada, interruptores AC principales." },
+      { "n": "8.0", "type": "check", "en": "Operational checks (energised): all internal logic and interlocks work according to the design philosophy.", "es": "Chequeos operacionales (energizado): toda la lógica interna y los enclavamientos funcionan según la filosofía de diseño." },
+      { "n": "9.0", "type": "table", "en": "Alarm and trip function test.", "es": "Pruebas funcionales de alarmas y disparos.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 30, "label": "Dispositivo" }, "columns": [
+          { "key": "device", "label": "Dispositivo", "type": "text" },
+          { "key": "alarm_setting", "label": "Ajuste de alarma", "type": "text", "required": false },
+          { "key": "trip_setting", "label": "Ajuste de disparo", "type": "text", "required": false },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Comentarios", "type": "text", "required": false } ] } },
+      { "n": "10.0", "type": "check", "en": "Battery charger energised; output voltage polarity confirmed.", "es": "Cargador energizado; polaridad de la tensión de salida confirmada." },
+      { "n": "10.1", "type": "measurement", "unit": "A", "en": "Float charge rate.", "es": "Corriente de carga en flotación." },
+      { "n": "11.0", "type": "check", "en": "Output voltage ripple within tolerance.", "es": "Rizado de la tensión de salida dentro de la tolerancia." },
+      { "n": "11.0-R", "type": "text", "en": "Measured ripple: value and unit.", "es": "Rizado medido: valor y unidad." },
+      { "n": "12.0", "type": "check", "en": "Current limit operation confirmed.", "es": "Operación de la limitación de corriente confirmada." },
+      { "n": "12.0-R", "type": "measurement", "unit": "A", "en": "Current limit value.", "es": "Valor de la corriente límite." },
+      { "n": "13.0", "type": "check", "en": "Continuity of the output voltage on failure of the AC supply confirmed.", "es": "Continuidad de la tensión de salida ante falla de la alimentación AC confirmada." },
+      { "n": "14.0", "type": "check", "en": "Proper operation of the battery switch confirmed.", "es": "Funcionamiento correcto del seccionador de baterías confirmado." }
+    ] },
+    { "title": "Tablero de distribución AC/DC", "items": [
+      { "n": "15.1", "type": "check", "photo": true, "en": "Good condition, no mechanical damage.", "es": "Buen estado, sin daños mecánicos." },
+      { "n": "15.2", "type": "check", "photo": true, "en": "Correct labelling.", "es": "Identificación correcta." },
+      { "n": "15.3", "type": "check", "photo": true, "en": "Correct earthing.", "es": "Puesta a tierra correcta." },
+      { "n": "15.4", "type": "table", "en": "Insulation resistance at 500 V.", "es": "Resistencia de aislamiento a 500 V.",
+        "table": { "rows": { "mode": "fixed", "labels": ["Barra 1 – Tierra", "Barra 2 – Tierra", "Barra 1 – Barra 2"] }, "columns": [
+          { "key": "reading", "label": "Lectura", "type": "number", "unit": "MΩ" },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } },
+      { "n": "15.5.1", "type": "check", "en": "Correct earthing.", "es": "Puesta a tierra correcta." },
+      { "n": "15.5.2", "type": "check", "en": "Cable connections.", "es": "Conexiones de cables." },
+      { "n": "15.5.3", "type": "check", "en": "Operating temperature.", "es": "Temperatura de operación." },
+      { "n": "15.5.4", "type": "check", "en": "Cleanliness.", "es": "Limpieza." },
+      { "n": "15.5.5", "type": "check", "en": "No abnormal noise.", "es": "Sin ruido anormal." },
+      { "n": "15.6.1", "type": "check", "en": "Forced cooling fan operates correctly.", "es": "Ventiladores de enfriamiento operan correctamente." },
+      { "n": "15.6.2", "type": "check", "en": "Interlock system operates correctly.", "es": "Sistema de enclavamientos opera correctamente." },
+      { "n": "15.6.3", "type": "check", "en": "Indicating lights / meters operate correctly.", "es": "Luces y medidores de indicación operan correctamente." },
+      { "n": "15.6.4", "type": "check", "en": "Common alarm operates correctly.", "es": "Alarma común opera correctamente." },
+      { "n": "15.7", "type": "check", "en": "Rectifier operating set points checked.", "es": "Ajustes de operación del rectificador verificados." },
+      { "n": "15.7-R", "type": "text", "en": "Rectifier set points recorded (float, boost, current limit, alarms).", "es": "Ajustes del rectificador registrados (flotación, carga rápida, límite de corriente, alarmas)." }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}

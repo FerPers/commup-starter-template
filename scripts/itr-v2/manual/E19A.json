@@ -1,0 +1,60 @@
+{
+  "code": "E19A",
+  "note": "Datos del panel D.1–D.11 (fabricante y serie del tag); segunda lista «Verificaciones de cableado» renumerada C.1–C.12 para no repetir la numeración; aislamiento del calentador (10.0-R, mín. 10 MΩ), continuidad de tierra (C.11-R, máx. 1,0 Ω) y uniones de cinta como tabla C.12-R; equipo de prueba T.1–T.5.",
+  "sections": [
+    { "title": "Referencias y datos del elemento", "items": [
+      "R.1",
+      { "n": "D.1", "type": "text", "required": false, "en": "Type.", "es": "Tipo." },
+      { "n": "D.2", "type": "text", "required": false, "en": "Switchboard No.", "es": "Tablero N.°" },
+      { "n": "D.3", "type": "text", "required": false, "en": "Cubicle No.", "es": "Cubículo N.°" },
+      { "n": "D.4", "type": "text", "required": false, "en": "Voltage range.", "es": "Rango de tensión." },
+      { "n": "D.5", "type": "text", "required": false, "en": "Hazardous zone.", "es": "Zona peligrosa." },
+      { "n": "D.6", "type": "text", "required": false, "en": "IP rating.", "es": "Grado IP." },
+      { "n": "D.7", "type": "text", "required": false, "en": "Rating (volts, W/kW).", "es": "Valores nominales (V, W/kW)." },
+      { "n": "D.8", "type": "text", "required": false, "en": "Enclosure type.", "es": "Tipo de recinto." },
+      { "n": "D.9", "type": "text", "required": false, "en": "Schematic drawing No.", "es": "Plano esquemático N.°" },
+      { "n": "D.10", "type": "text", "required": false, "en": "Termination drawing No.", "es": "Plano de terminaciones N.°" },
+      { "n": "D.11", "type": "text", "required": false, "en": "Manufacturer's drawing No.", "es": "Plano del fabricante N.°" }
+    ] },
+    { "title": "Inspección", "items": [
+      { "n": "1.0", "type": "check", "en": "All equipment is suitable for the hazardous area.", "es": "Todo el equipo es adecuado para el área peligrosa." },
+      { "n": "2.0", "type": "check", "en": "Equipment is suitable for the required IP rating.", "es": "El equipo es adecuado para el grado IP requerido." },
+      { "n": "3.0", "type": "check", "photo": true, "en": "Nameplate details verified against the data sheet.", "es": "Datos de placa verificados contra la hoja de datos." },
+      { "n": "4.0", "type": "check", "photo": true, "en": "Visual inspection: no external damage.", "es": "Inspección visual: sin daños externos." },
+      { "n": "5.0", "type": "check", "photo": true, "en": "Equipment fixings and mountings are secure.", "es": "Las fijaciones y soportes del equipo están firmes." },
+      { "n": "6.0", "type": "check", "en": "All connections are correct and tight; cable markings fitted.", "es": "Todas las conexiones son correctas y están apretadas; marcas de cable colocadas." },
+      { "n": "7.0", "type": "check", "en": "All equipment carries the correct circuit identification.", "es": "Todo el equipo lleva la identificación correcta del circuito." },
+      { "n": "8.0", "type": "check", "photo": true, "en": "Earthing conforms to the project specification.", "es": "La puesta a tierra cumple la especificación del proyecto." },
+      { "n": "9.0", "type": "check", "photo": true, "en": "Internal visual inspection: clean, no internal damage, no major components missing; all packing / silica gel removed.", "es": "Inspección visual interna: limpio, sin daños internos, sin componentes principales faltantes; embalaje / gel de sílice retirados." },
+      { "n": "10.0", "type": "check", "en": "Insulation resistance test on the anti-condensation heater: minimum 10 MΩ.", "es": "Prueba de resistencia de aislamiento del calentador anticondensación: mínimo 10 MΩ." },
+      { "n": "10.0-R", "type": "measurement", "unit": "MΩ", "en": "Anti-condensation heater insulation resistance reading.", "es": "Lectura de resistencia de aislamiento del calentador anticondensación." },
+      { "n": "11.0", "type": "check", "en": "Approved grease applied to the flanges of Ex d enclosures.", "es": "Grasa aprobada aplicada en las bridas de las cajas Ex d." },
+      { "n": "12.0", "type": "check", "photo": true, "en": "Gaskets and seals are not damaged.", "es": "Empaquetaduras y sellos sin daños." },
+      { "n": "13.0", "type": "check", "photo": true, "en": "On completion of all cable glanding, spare entries are correctly plugged.", "es": "Al completar los prensacables, las entradas de reserva están correctamente obturadas." },
+      { "n": "14.0", "type": "check", "en": "All bolts are correct and none are missing.", "es": "Todos los pernos son correctos y no falta ninguno." }
+    ] },
+    { "title": "Verificaciones de cableado", "items": [
+      { "n": "C.1", "type": "check", "photo": true, "en": "Earth bosses installed are welded correctly.", "es": "Los puntos de tierra instalados están soldados correctamente." },
+      { "n": "C.2", "type": "check", "en": "Conductor tape is jointed correctly.", "es": "La cinta conductora está correctamente unida." },
+      { "n": "C.3", "type": "check", "en": "All cables are correctly sized.", "es": "Todos los cables tienen la sección correcta." },
+      { "n": "C.4", "type": "check", "photo": true, "en": "Equipment is bonded to the main earth.", "es": "El equipo está unido a la tierra principal." },
+      { "n": "C.5", "type": "check", "en": "All cable lugs are fitted correctly.", "es": "Todos los terminales de cable están correctamente colocados." },
+      { "n": "C.6", "type": "check", "en": "Only one cable is terminated to each earth boss.", "es": "Solo un cable termina en cada punto de tierra." },
+      { "n": "C.7", "type": "check", "en": "All contact points are clean and greased with the approved compound.", "es": "Todos los puntos de contacto están limpios y engrasados con el compuesto aprobado." },
+      { "n": "C.8", "type": "check", "en": "All washers are of the shake-proof type.", "es": "Todas las arandelas son a prueba de vibración." },
+      { "n": "C.9", "type": "check", "photo": true, "en": "Cable protective measures (kick plates) are installed.", "es": "Medidas de protección de cables (placas de protección) instaladas." },
+      { "n": "C.10", "type": "check", "photo": true, "en": "For IS equipment, a separate insulated earth bar is installed and earthed (not to the dirty earth bar in the panel).", "es": "Para equipo IS, barra de tierra aislada independiente instalada y conectada a tierra (no a la barra de tierra sucia del panel)." },
+      { "n": "C.11", "type": "check", "en": "Earth continuity resistance from the main earthing point to the final earth point of the sub-system: maximum 1.0 Ω.", "es": "Resistencia de continuidad de tierra desde el punto principal hasta el punto final del subsistema: máximo 1,0 Ω." },
+      { "n": "C.11-R", "type": "measurement", "unit": "Ω", "en": "Earth continuity resistance reading.", "es": "Lectura de resistencia de continuidad de tierra." },
+      { "n": "C.12", "type": "check", "en": "Ducter test across all tape joints: maximum 1.0 Ω (see C.12-R).", "es": "Prueba con ohmímetro en todas las uniones de cinta: máximo 1,0 Ω (ver C.12-R)." },
+      { "n": "C.12-R", "type": "table", "en": "Tape joint resistance readings.", "es": "Lecturas de resistencia en las uniones de cinta.",
+        "table": { "rows": { "mode": "variable", "min": 1, "max": 50, "label": "Unión" }, "columns": [
+          { "key": "joint", "label": "Unión / ubicación", "type": "text" },
+          { "key": "resistance", "label": "Resistencia", "type": "number", "unit": "Ω", "max": 1 },
+          { "key": "result", "label": "Resultado", "type": "result" },
+          { "key": "remarks", "label": "Observación", "type": "text", "required": false } ] } }
+    ] },
+    { "title": "Equipo de prueba", "items": ["T"] },
+    { "title": "Observaciones", "items": ["O.1"] }
+  ]
+}
