@@ -425,6 +425,10 @@ export default function TemplatePreview({ template }: { template: TemplateData }
             <span style={{ color: '#ec4899', fontWeight: 700 }}>📷</span>
             <span>{lang === 'es' ? 'Requiere foto' : 'Photo required'}</span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: '#0891b2', fontWeight: 700 }}>📄</span>
+            <span>{lang === 'es' ? 'Requiere documento (PDF)' : 'Document required (PDF)'}</span>
+          </div>
         </div>
 
         {/* Sections */}
@@ -500,6 +504,9 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                             )}
                             {item.requires_photo && (
                               <span title="Requiere foto" style={{ fontSize: '13px' }}>📷</span>
+                            )}
+                            {item.requires_document && (
+                              <span title="Requiere documento (PDF)" style={{ fontSize: '13px' }}>📄</span>
                             )}
                           </span>
                         </div>
