@@ -13,7 +13,7 @@ import {
   updateGate,
   updateGateCriterion,
 } from '@/app/actions/gates-admin'
-import { CONFIGURABLE_CRITERIA } from '@/lib/readiness/gates'
+import { COSIGN_CAPACITIES, CONFIGURABLE_CRITERIA } from '@/lib/readiness/gates'
 import { GATE_APPROVAL_ROLES, READINESS_GATE_CATALOG } from '@/lib/constants/readiness-gates'
 
 type Gate = {
@@ -26,6 +26,8 @@ type Gate = {
   requires_previous: boolean
   is_active: boolean
   approval_roles: string[]
+  required_signatures: string[]
+  cosign_roles: string[]
 }
 type Crit = { id: string; gate_id: string; kind: string; label: string | null; is_blocking: boolean }
 type Phase = { id: string; code: string; name: string; certificate_name: string | null }
@@ -125,6 +127,37 @@ export default function GatesAdminView({ gates, criteria, phases }: { gates: Gat
                       <input type="checkbox" checked={g.approval_roles.includes(r)} disabled={isPending}
                         onChange={e => act(() => updateGate(g.id, {
                           approvalRoles: e.target.checked ? [...g.approval_roles, r] : g.approval_roles.filter(x => x !== r),
+                        }))} />
+                      {t(`role.${r}`)}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, marginTop: 14 }}>
+              <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+                <legend style={small}>{t('requiredSignatures')}</legend>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
+                  {COSIGN_CAPACITIES.map(c => (
+                    <label key={c} style={{ ...small, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <input type="checkbox" checked={g.required_signatures.includes(c)} disabled={isPending}
+                        onChange={e => act(() => updateGate(g.id, {
+                          requiredSignatures: e.target.checked ? [...g.required_signatures, c] : g.required_signatures.filter(x => x !== c),
+                        }))} />
+                      {tg(`capacity.${c}`)}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+                <legend style={small}>{t('cosignRoles')}</legend>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
+                  {GATE_APPROVAL_ROLES.map(r => (
+                    <label key={r} style={{ ...small, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <input type="checkbox" checked={g.cosign_roles.includes(r)} disabled={isPending}
+                        onChange={e => act(() => updateGate(g.id, {
+                          cosignRoles: e.target.checked ? [...g.cosign_roles, r] : g.cosign_roles.filter(x => x !== r),
                         }))} />
                       {t(`role.${r}`)}
                     </label>

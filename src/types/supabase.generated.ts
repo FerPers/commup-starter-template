@@ -3797,6 +3797,7 @@ export type Database = {
         Row: {
           approval_roles: string[]
           code: string
+          cosign_roles: string[]
           created_at: string
           description: string | null
           id: string
@@ -3805,11 +3806,13 @@ export type Database = {
           order_index: number
           org_id: string
           phase_id: string | null
+          required_signatures: string[]
           requires_previous: boolean
         }
         Insert: {
           approval_roles?: string[]
           code: string
+          cosign_roles?: string[]
           created_at?: string
           description?: string | null
           id?: string
@@ -3818,11 +3821,13 @@ export type Database = {
           order_index?: number
           org_id: string
           phase_id?: string | null
+          required_signatures?: string[]
           requires_previous?: boolean
         }
         Update: {
           approval_roles?: string[]
           code?: string
+          cosign_roles?: string[]
           created_at?: string
           description?: string | null
           id?: string
@@ -3831,6 +3836,7 @@ export type Database = {
           order_index?: number
           org_id?: string
           phase_id?: string | null
+          required_signatures?: string[]
           requires_previous?: boolean
         }
         Relationships: [
@@ -4218,6 +4224,7 @@ export type Database = {
           revoked_by: string | null
           status: string
           system_id: string
+          target_status: string | null
         }
         Insert: {
           approved_at?: string
@@ -4235,6 +4242,7 @@ export type Database = {
           revoked_by?: string | null
           status: string
           system_id: string
+          target_status?: string | null
         }
         Update: {
           approved_at?: string
@@ -4252,6 +4260,7 @@ export type Database = {
           revoked_by?: string | null
           status?: string
           system_id?: string
+          target_status?: string | null
         }
         Relationships: [
           {
@@ -4394,6 +4403,64 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      system_gate_signatures: {
+        Row: {
+          approval_id: string
+          capacity: string
+          comments: string | null
+          id: string
+          org_id: string
+          project_id: string
+          signed_at: string
+          user_id: string
+          user_role: string
+        }
+        Insert: {
+          approval_id: string
+          capacity: string
+          comments?: string | null
+          id?: string
+          org_id: string
+          project_id: string
+          signed_at?: string
+          user_id: string
+          user_role: string
+        }
+        Update: {
+          approval_id?: string
+          capacity?: string
+          comments?: string | null
+          id?: string
+          org_id?: string
+          project_id?: string
+          signed_at?: string
+          user_id?: string
+          user_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_gate_signatures_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "system_gate_approvals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_signatures_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_signatures_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5836,12 +5903,14 @@ export type Database = {
           approval: Json
           approval_roles: string[]
           computed_level: string
+          cosign_roles: string[]
           criteria: Json
           gate_code: string
           gate_id: string
           gate_name: string
           gate_order: number
           gate_phase_id: string
+          required_signatures: string[]
           requires_previous: boolean
           status: string
         }[]
@@ -6082,6 +6151,10 @@ export type Database = {
       sign_itr_atomic: {
         Args: { p_itr_id: string; p_role: string; p_signature_image?: string }
         Returns: Json
+      }
+      sign_system_gate: {
+        Args: { p_approval_id: string; p_capacity: string; p_comments?: string }
+        Returns: string
       }
       subsystem_rollup: {
         Args: { p_project_id: string }

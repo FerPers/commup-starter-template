@@ -13,7 +13,7 @@ export default async function AdminGatesPage() {
   const [{ data: gates }, { data: criteria }, { data: phases }] = await Promise.all([
     supabase
       .from('readiness_gates')
-      .select('id, code, name, description, order_index, phase_id, requires_previous, is_active, approval_roles')
+      .select('id, code, name, description, order_index, phase_id, requires_previous, is_active, approval_roles, required_signatures, cosign_roles')
       .eq('org_id', ctx.orgId)
       .order('order_index')
       .order('code'),

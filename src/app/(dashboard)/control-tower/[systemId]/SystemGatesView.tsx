@@ -11,12 +11,15 @@ import {
   getGateEvidenceUrl,
   revokeGateAttestation,
   revokeSystemGateApproval,
+  signSystemGate,
 } from '@/app/actions/gates'
 import {
   GATE_STATUS_STYLE,
   canApprove,
   canRevoke,
   evidencePath,
+  missingSignatures,
+  signableCapacities,
   type Criterion,
   type GateStatus,
   type SystemGate,
@@ -25,6 +28,7 @@ import {
 type Props = {
   orgId: string
   role: string
+  userId: string
   canEdit: boolean
   project: { id: string; code: string; name: string }
   system: { id: string; code: string; name: string; area: string }
@@ -67,13 +71,14 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, canEdit, project, system, gates, names, phaseCodes }: Props) {
+export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes }: Props) {
   const t = useTranslations('Gates')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [conditions, setConditions] = useState<Record<string, string>>({})
   const [notes, setNotes] = useState<Record<string, string>>({})
+  const [signComments, setSignComments] = useState<Record<string, string>>({})
   const [attest, setAttest] = useState<Record<string, { comment: string; file: File | null }>>({})
 
   const base = { projectId: project.id, systemId: system.id }
@@ -91,6 +96,11 @@ export default function SystemGatesView({ orgId, role, canEdit, project, system,
 
   function approve(g: SystemGate) {
     run(() => approveSystemGate({ ...base, gateId: g.gate_id, conditions: conditions[g.gate_id] ?? '', notes: notes[g.gate_id] ?? '' }))
+  }
+
+  function sign(g: SystemGate, capacity: string) {
+    if (!g.approval) return
+    run(() => signSystemGate({ ...base, approvalId: g.approval!.id, capacity, comments: signComments[`${g.gate_id}:${capacity}`] ?? '' }))
   }
 
   function revoke(g: SystemGate) {
@@ -295,9 +305,34 @@ export default function SystemGatesView({ orgId, role, canEdit, project, system,
               {g.approval ? (
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)', fontWeight: 600 }}>
-                      {t('approvedBy', { name: who(g.approval.approved_by), role: g.approval.approved_role, date: when(g.approval.approved_at) })}
-                    </span>
+                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)', fontWeight: 600 }}>{t('signatures')}</span>
+                    <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
+                      {g.approval.signatures.map(sg => (
+                        <li key={sg.capacity}>
+                          <strong style={{ color: 'var(--text-strong)' }}>{t(`capacity.${sg.capacity}`)}</strong>:{' '}
+                          {t('signedBy', { name: who(sg.user_id), role: sg.user_role, date: when(sg.signed_at) })}
+                          {sg.comments && <> — “{sg.comments}”</>}
+                        </li>
+                      ))}
+                      {missingSignatures(g).map(c => (
+                        <li key={c} style={{ color: '#1d4ed8' }}>
+                          <strong>{t(`capacity.${c}`)}</strong>: {t('signaturePending')}
+                        </li>
+                      ))}
+                    </ul>
+                    {signableCapacities(g, role, userId).map(c => (
+                      <div key={c} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 4 }}>
+                        <input style={{ ...input, maxWidth: 360 }} placeholder={t('signCommentPlaceholder')}
+                          value={signComments[`${g.gate_id}:${c}`] ?? ''}
+                          onChange={e => setSignComments(s => ({ ...s, [`${g.gate_id}:${c}`]: e.target.value }))} />
+                        <button type="button" disabled={isPending} style={btn('primary')} onClick={() => sign(g, c)}>
+                          {t('signAs', { capacity: t(`capacity.${c}`) })}
+                        </button>
+                      </div>
+                    ))}
+                    {g.status === 'pending_signatures' && signableCapacities(g, role, userId).length === 0 && (
+                      <span style={small}>{t('pendingSignaturesHint', { roles: g.cosign_roles.join(', ') })}</span>
+                    )}
                     {g.status === 'regressed' && <span style={{ ...small, color: 'var(--danger-700)' }}>{t('regressedHint')}</span>}
                     {g.approval.conditions.length > 0 && (
                       <div style={small}>

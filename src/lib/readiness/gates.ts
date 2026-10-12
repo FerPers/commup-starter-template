@@ -6,6 +6,7 @@
  */
 
 export type GateStatus =
+  | 'pending_signatures'
   | 'approved'
   | 'approved_with_conditions'
   | 'regressed'
@@ -32,9 +33,23 @@ export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate'>[] = 
   'manual_attestation',
 ]
 
+/** Firmas de un gate: quien aprueba firma como Comisionamiento; Operaciones y HSE co-firman. */
+export type SignatureCapacity = 'commissioning' | 'operations' | 'hse'
+export const COSIGN_CAPACITIES: Exclude<SignatureCapacity, 'commissioning'>[] = ['operations', 'hse']
+
+export type GateSignature = {
+  capacity: SignatureCapacity
+  user_id: string
+  user_role: string
+  comments: string | null
+  signed_at: string
+}
+
 export type Approval = {
   id: string
-  status: 'approved' | 'approved_with_conditions'
+  status: 'approved' | 'approved_with_conditions' | 'pending_signatures'
+  target_status: 'approved' | 'approved_with_conditions' | null
+  signatures: GateSignature[]
   conditions: string[]
   notes: string | null
   approved_by: string
@@ -60,6 +75,8 @@ export type SystemGate = {
   gate_phase_id: string | null
   requires_previous: boolean
   approval_roles: string[]
+  required_signatures: string[]
+  cosign_roles: string[]
   computed_level: GateLevel
   status: GateStatus
   criteria: Criterion[]
@@ -79,6 +96,7 @@ export type MatrixGate = {
 }
 
 export const GATE_STATUS_STYLE: Record<GateStatus, { bg: string; fg: string; border: string; icon: string }> = {
+  pending_signatures:       { bg: '#eff6ff',           fg: '#1d4ed8',           border: '#93c5fd', icon: '✎' },
   approved:                 { bg: '#059669',           fg: '#ffffff',           border: '#059669', icon: '✓' },
   approved_with_conditions: { bg: '#059669',           fg: '#ffffff',           border: '#f59e0b', icon: '✓!' },
   regressed:                { bg: 'var(--danger-50)',  fg: 'var(--danger-700)', border: '#ef4444', icon: '↺' },
@@ -97,6 +115,24 @@ export function canApprove(gate: Pick<SystemGate, 'status' | 'approval_roles'>, 
 /** ¿Puede este rol revocar la aprobación? owner/admin siempre; si no, los roles que aprueban el gate. */
 export function canRevoke(gate: Pick<SystemGate, 'approval' | 'approval_roles'>, role: string): boolean {
   return !!gate.approval && (role === 'owner' || role === 'admin' || gate.approval_roles.includes(role))
+}
+
+/** Firmas que faltan en una aprobación pendiente, en el orden configurado del gate. */
+export function missingSignatures(gate: Pick<SystemGate, 'approval' | 'required_signatures'>): string[] {
+  if (gate.approval?.status !== 'pending_signatures') return []
+  const signed = new Set(gate.approval.signatures.map(s => s.capacity))
+  return gate.required_signatures.filter(c => !signed.has(c as SignatureCapacity))
+}
+
+/** Firmas que este usuario puede registrar ahora (la RPC vuelve a validar todo). */
+export function signableCapacities(
+  gate: Pick<SystemGate, 'approval' | 'required_signatures' | 'cosign_roles' | 'status'>,
+  role: string,
+  userId: string,
+): string[] {
+  if (gate.status !== 'pending_signatures' || !gate.cosign_roles.includes(role)) return []
+  if (gate.approval?.signatures.some(s => s.user_id === userId)) return []
+  return missingSignatures(gate)
 }
 
 /** Condiciones escritas una por línea → lista limpia (máx. 20, 500 caracteres), igual que la RPC. */

@@ -6,7 +6,7 @@ import { withAuthOnly } from '@/lib/auth/withAuth'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, TablesUpdate } from '@/types/supabase.generated'
 import { checkPhaseAccess } from '@/lib/auth/access'
-import { CONFIGURABLE_CRITERIA } from '@/lib/readiness/gates'
+import { COSIGN_CAPACITIES, CONFIGURABLE_CRITERIA } from '@/lib/readiness/gates'
 import { GATE_APPROVAL_ROLES, READINESS_GATE_CATALOG } from '@/lib/constants/readiness-gates'
 
 // Configuración de gates por org (fase 1 plan readiness). Solo owner/admin; RLS
@@ -117,6 +117,8 @@ export const updateGate = withAuthOnly(
       requiresPrevious?: boolean
       isActive?: boolean
       approvalRoles?: string[]
+      requiredSignatures?: string[]
+      cosignRoles?: string[]
     },
   ): Promise<Result> => {
     const row: TablesUpdate<'readiness_gates'> = {}
@@ -138,6 +140,15 @@ export const updateGate = withAuthOnly(
       const roles = (patch.approvalRoles ?? []).filter(r => (GATE_APPROVAL_ROLES as readonly string[]).includes(r))
       if (roles.length === 0) return { error: 'Al menos un rol debe poder aprobar el gate' }
       row.approval_roles = roles
+    }
+
+    if ('requiredSignatures' in patch) {
+      row.required_signatures = (patch.requiredSignatures ?? []).filter(c => (COSIGN_CAPACITIES as string[]).includes(c))
+    }
+    if ('cosignRoles' in patch) {
+      const roles = (patch.cosignRoles ?? []).filter(r => (GATE_APPROVAL_ROLES as readonly string[]).includes(r))
+      if (roles.length === 0) return { error: 'Al menos un rol debe poder co-firmar el gate' }
+      row.cosign_roles = roles
     }
 
     const { error } = await ctx.supabase.from('readiness_gates').update(row).eq('id', gateId).eq('org_id', ctx.orgId)

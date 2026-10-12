@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
-import { isEvidencePathFor, parseConditions } from '@/lib/readiness/gates'
+import { COSIGN_CAPACITIES, isEvidencePathFor, parseConditions } from '@/lib/readiness/gates'
 
 // Motor de gates (fase 1 plan readiness). Toda escritura pasa por RPCs SECURITY DEFINER
 // (approve/revoke/attest) que validan rol, org y criterios en la BD; aquí solo se verifica
@@ -45,6 +45,34 @@ export const approveSystemGate = withAuth(
     })
     revalidate(input.projectId, input.systemId)
     return { approvalId: data as string }
+  },
+)
+
+/** Co-firma (Operaciones / HSE) de una aprobación pendiente; la RPC exige persona distinta y rol habilitado. */
+export const signSystemGate = withAuth(
+  { guards: systemGuards },
+  async (
+    ctx,
+    input: { projectId: string; systemId: string; approvalId: string; capacity: string; comments?: string },
+  ): Promise<{ status?: string; error?: string }> => {
+    if (!(COSIGN_CAPACITIES as string[]).includes(input.capacity)) return { error: 'Firma no válida' }
+    const { data, error } = await ctx.supabase.rpc('sign_system_gate', {
+      p_approval_id: input.approvalId,
+      p_capacity: input.capacity,
+      p_comments: input.comments?.trim() ? input.comments.trim() : undefined,
+    })
+    if (error) return { error: error.message }
+
+    await logActivity(ctx.supabase, {
+      orgId: ctx.orgId,
+      userId: ctx.userId,
+      action: 'gate.signed',
+      entityType: 'system',
+      entityId: input.systemId,
+      payload: { project_id: input.projectId, approval_id: input.approvalId, capacity: input.capacity, status: data },
+    })
+    revalidate(input.projectId, input.systemId)
+    return { status: data as string }
   },
 )
 

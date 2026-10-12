@@ -45,6 +45,7 @@ export default async function SystemGatesPage({
     <SystemGatesView
       orgId={ctx.orgId}
       role={ctx.role}
+      userId={ctx.userId}
       canEdit={EDITOR_ROLES.includes(ctx.role)}
       project={{ id: project.id, code: project.code, name: project.name }}
       system={{ id: system.id, code: system.code, name: system.name, area: area ? `${area.code} — ${area.name}` : '' }}

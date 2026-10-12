@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canApprove, canRevoke, evidencePath, isApproved, isEvidencePathFor, parseConditions } from './gates'
+import { canApprove, canRevoke, evidencePath, isApproved, isEvidencePathFor, missingSignatures, parseConditions, signableCapacities, type Approval } from './gates'
 
 const roles = ['owner', 'admin', 'architect']
 
@@ -13,7 +13,7 @@ describe('canApprove / canRevoke', () => {
   })
 
   it('revocar: owner/admin siempre; otros si aprueban ese gate', () => {
-    const approval = { id: 'a', status: 'approved' as const, conditions: [], notes: null, approved_by: 'u', approved_role: 'architect', approved_at: '' }
+    const approval: Approval = { id: 'a', status: 'approved', target_status: 'approved', signatures: [], conditions: [], notes: null, approved_by: 'u', approved_role: 'architect', approved_at: '' }
     expect(canRevoke({ approval, approval_roles: ['architect'] }, 'admin')).toBe(true)
     expect(canRevoke({ approval, approval_roles: ['architect'] }, 'architect')).toBe(true)
     expect(canRevoke({ approval, approval_roles: ['architect'] }, 'leader')).toBe(false)
@@ -41,5 +41,27 @@ describe('evidencePath', () => {
     expect(isEvidencePathFor(p, 'org', 'sys')).toBe(true)
     expect(isEvidencePathFor('org/otro/x.pdf', 'org', 'sys')).toBe(false)
     expect(isEvidencePathFor('org/sys/../otro/x.pdf', 'org', 'sys')).toBe(false)
+  })
+})
+
+describe('co-firmas Operaciones + HSE', () => {
+  const sig = (capacity: 'commissioning' | 'operations' | 'hse', user_id: string) => ({ capacity, user_id, user_role: 'owner', comments: null, signed_at: '' })
+  const gate = (signatures: ReturnType<typeof sig>[]) => ({
+    status: 'pending_signatures' as const,
+    required_signatures: ['operations', 'hse'],
+    cosign_roles: ['owner', 'leader'],
+    approval: { id: 'a', status: 'pending_signatures' as const, target_status: 'approved' as const, signatures, conditions: [], notes: null, approved_by: 'u1', approved_role: 'owner', approved_at: '' },
+  })
+
+  it('faltan las firmas no registradas', () => {
+    expect(missingSignatures(gate([sig('commissioning', 'u1')]))).toEqual(['operations', 'hse'])
+    expect(missingSignatures(gate([sig('commissioning', 'u1'), sig('operations', 'u2')]))).toEqual(['hse'])
+  })
+
+  it('quien ya firmó no puede firmar otra vez; rol fuera de cosign_roles tampoco', () => {
+    const g = gate([sig('commissioning', 'u1')])
+    expect(signableCapacities(g, 'owner', 'u1')).toEqual([])
+    expect(signableCapacities(g, 'owner', 'u2')).toEqual(['operations', 'hse'])
+    expect(signableCapacities(g, 'inspector', 'u3')).toEqual([])
   })
 })

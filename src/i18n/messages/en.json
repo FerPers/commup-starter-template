@@ -1690,7 +1690,8 @@
       "catBLimit": "Open Cat B limit per subsystem: {limit}",
       "catBNoLimit": "No limit on open Cat B per subsystem",
       "approvedByGate": "Systems approved per gate",
-      "toApprove": "{count} to approve"
+      "toApprove": "{count} to approve",
+      "toSign": "{count} to sign"
     },
     "col": {
       "area": "Area",
@@ -1717,7 +1718,8 @@
       "regressed": "approved — regressed",
       "ready": "ready to approve",
       "ready_with_conditions": "ready with conditions",
-      "not_ready": "not ready"
+      "not_ready": "not ready",
+      "pending_signatures": "pending signatures"
     }
   },
   "DataQuality": {
@@ -2255,7 +2257,6 @@
     "attestMissing": "The attestation needs a comment and an attached file",
     "andMore": "…and {count} more",
     "nonBlocking": "non-blocking",
-    "approvedBy": "Approved by {name} ({role}) — {date}",
     "regressedHint": "Approved, but it no longer meets its criteria: review the blockers or revoke the approval.",
     "conditions": "Conditions",
     "notes": "Notes",
@@ -2273,7 +2274,8 @@
       "regressed": "Approved — regressed",
       "ready": "Ready to approve",
       "ready_with_conditions": "Ready with conditions",
-      "not_ready": "Not ready"
+      "not_ready": "Not ready",
+      "pending_signatures": "Pending signatures"
     },
     "result": {
       "pass": "met",
@@ -2332,6 +2334,17 @@
       "commentPlaceholder": "What was verified and how (e.g.: isolations verified per permit PT-0456)",
       "file": "Evidence file",
       "submit": "Record attestation"
+    },
+    "signatures": "Signatures",
+    "signedBy": "{name} ({role}) — {date}",
+    "signaturePending": "pending",
+    "signCommentPlaceholder": "Signature comment (optional)",
+    "signAs": "Sign as {capacity}",
+    "pendingSignaturesHint": "Co-signatures pending. They must come from people who have not signed yet, with role: {roles}.",
+    "capacity": {
+      "commissioning": "Commissioning",
+      "operations": "Operations",
+      "hse": "HSE"
     }
   },
   "GatesAdmin": {
@@ -2368,6 +2381,8 @@
       "leader": "Leader",
       "inspector": "Inspector",
       "client": "Client"
-    }
+    },
+    "requiredSignatures": "Additional signatures required",
+    "cosignRoles": "Can co-sign"
   }
 }

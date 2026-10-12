@@ -1690,7 +1690,8 @@
       "catBLimit": "Límite Cat B abiertos por subsistema: {limit}",
       "catBNoLimit": "Sin límite de Cat B abiertos por subsistema",
       "approvedByGate": "Sistemas aprobados por gate",
-      "toApprove": "{count} por aprobar"
+      "toApprove": "{count} por aprobar",
+      "toSign": "{count} por firmar"
     },
     "col": {
       "area": "Área",
@@ -1717,7 +1718,8 @@
       "regressed": "aprobado — en regresión",
       "ready": "listo para aprobar",
       "ready_with_conditions": "listo con condiciones",
-      "not_ready": "no listo"
+      "not_ready": "no listo",
+      "pending_signatures": "pendiente de firmas"
     }
   },
   "DataQuality": {
@@ -2255,7 +2257,6 @@
     "attestMissing": "La declaración necesita un comentario y un archivo adjunto",
     "andMore": "…y {count} más",
     "nonBlocking": "no bloqueante",
-    "approvedBy": "Aprobado por {name} ({role}) — {date}",
     "regressedHint": "Aprobado, pero hoy no cumple sus criterios: revisa los bloqueos o revoca la aprobación.",
     "conditions": "Condiciones",
     "notes": "Notas",
@@ -2273,7 +2274,8 @@
       "regressed": "Aprobado — en regresión",
       "ready": "Listo para aprobar",
       "ready_with_conditions": "Listo con condiciones",
-      "not_ready": "No listo"
+      "not_ready": "No listo",
+      "pending_signatures": "Pendiente de firmas"
     },
     "result": {
       "pass": "cumple",
@@ -2332,6 +2334,17 @@
       "commentPlaceholder": "Qué se verificó y cómo (ej.: aislamientos verificados según permiso PT-0456)",
       "file": "Archivo de evidencia",
       "submit": "Registrar declaración"
+    },
+    "signatures": "Firmas",
+    "signedBy": "{name} ({role}) — {date}",
+    "signaturePending": "pendiente",
+    "signCommentPlaceholder": "Comentario de la firma (opcional)",
+    "signAs": "Firmar como {capacity}",
+    "pendingSignaturesHint": "Faltan co-firmas. Pueden firmar personas distintas a las que ya firmaron, con rol: {roles}.",
+    "capacity": {
+      "commissioning": "Comisionamiento",
+      "operations": "Operaciones",
+      "hse": "HSE"
     }
   },
   "GatesAdmin": {
@@ -2368,6 +2381,8 @@
       "leader": "Líder",
       "inspector": "Inspector",
       "client": "Cliente"
-    }
+    },
+    "requiredSignatures": "Firmas adicionales requeridas",
+    "cosignRoles": "Pueden co-firmar"
   }
 }

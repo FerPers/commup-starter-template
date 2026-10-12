@@ -128,6 +128,7 @@ export default async function ControlTowerPage({
       code: g.code,
       approved: statuses.filter(st => st && isApproved(st) && st !== 'regressed').length,
       toApprove: statuses.filter(st => st === 'ready' || st === 'ready_with_conditions').length,
+      toSign: statuses.filter(st => st === 'pending_signatures').length,
     }
   })
 
@@ -189,6 +190,7 @@ export default async function ControlTowerPage({
                   </div>
                   <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>
                     {g.code}{g.toApprove > 0 && <span style={{ color: 'var(--success-700)' }}> · {t('kpi.toApprove', { count: g.toApprove })}</span>}
+                    {g.toSign > 0 && <span style={{ color: '#1d4ed8' }}> · {t('kpi.toSign', { count: g.toSign })}</span>}
                   </div>
                 </div>
               ))}

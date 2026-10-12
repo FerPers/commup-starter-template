@@ -128,7 +128,8 @@ Rules for every new page/query/action:
 - Plan completo: `docs/ANALISIS-GUIA-COMISIONAMIENTO-2026-10-12.md`. Migración `20261012180000_readiness_gates_engine.sql`.
 - `readiness_gates` (por org; uno por fase sembrado automáticamente por trigger en `project_phases`) + `gate_criteria` (catálogo fijo: `itr_phase_approved`, `certificates_issued`, `pssr_approved`, `critical_tags_ready`, `manual_attestation`) + `requires_previous`.
 - Cálculo en SQL: `compute_system_gates` / `compute_project_gates` (reglas de subsistema × fase en `system_phase_level`, igual que `eligibility.ts`). Estados: approved · approved_with_conditions · regressed · ready · ready_with_conditions · not_ready.
-- Escritura SOLO por RPCs SECURITY DEFINER (`approve_system_gate`, `revoke_system_gate_approval`, `attest_gate_criterion`, `revoke_gate_attestation`): las tablas de aprobaciones/declaraciones no tienen políticas de escritura. Evidencia en bucket `gate-evidence` con ruta `<org>/<system>/…`, inmutable.
+- Multifirma (migración `20261012200000`): quien aprueba firma como Comisionamiento y el gate queda `pending_signatures` hasta que firmen Operaciones y HSE (`readiness_gates.required_signatures`, roles en `cosign_roles`), cada firma de una persona distinta (`sign_system_gate`). Un gate pendiente de firmas no habilita al siguiente.
+- Escritura SOLO por RPCs SECURITY DEFINER (`approve_system_gate`, `sign_system_gate`, `revoke_system_gate_approval`, `attest_gate_criterion`, `revoke_gate_attestation`): las tablas de aprobaciones/declaraciones no tienen políticas de escritura. Evidencia en bucket `gate-evidence` con ruta `<org>/<system>/…`, inmutable.
 - UI: Control Tower = matriz sistema × gate → `/control-tower/[systemId]` (detalle + aprobación); configuración en `/admin/gates`. `tags.criticality` (safety/process/normal) alimenta `critical_tags_ready`.
 
 ## AI (Claude) — matriz ITR híbrida
