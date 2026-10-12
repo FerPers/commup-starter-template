@@ -31,6 +31,8 @@ type PhaseEligibility = {
   openCatBPunches: { id: string; punch_number: string; description: string }[]
   certificate: CertRow | null
   eligible: 'green' | 'yellow' | 'red'
+  catBOverLimit: boolean
+  catBLimit: number | null
 }
 
 type SubsystemRow = {
@@ -251,7 +253,9 @@ export default function CertificatesView({
                 const semColors = SEMAPHORE_COLORS[pd.eligible]
                 const semLabel  = pd.eligible === 'red' && pd.totalItrs === 0
                   ? t('view.semaphore.noItrs')
-                  : semLabels[pd.eligible]
+                  : pd.eligible === 'red' && pd.catBOverLimit && pd.openCatA === 0 && pd.approvedItrs === pd.totalItrs
+                    ? t('view.semaphore.catBOverLimit', { limit: pd.catBLimit ?? 0 })
+                    : semLabels[pd.eligible]
                 const certColors = pd.certificate
                   ? (CERT_STATUS_COLORS[pd.certificate.status as keyof typeof CERT_STATUS_COLORS] ?? CERT_STATUS_COLORS.pending)
                   : null

@@ -3,6 +3,25 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
 
+type GateLevel = 'green' | 'yellow' | 'red'
+
+type Gate = {
+  phase_id: string
+  code: string
+  name: string
+  certificate: string
+  order: number
+  itr_total: number
+  itr_approved: number
+  subsystems_total: number
+  subsystems_red: number
+  subsystems_yellow: number
+  level: GateLevel
+  ready: boolean
+}
+
+type Blocker = { code: string; severity: string; message: string; count?: number; pending?: number; limit?: number }
+
 type Readiness = {
   system_id: string
   system_code: string
@@ -15,22 +34,28 @@ type Readiness = {
   open_punches_a: number
   open_punches_b: number
   open_punches_c: number
-  ready_mc: boolean
-  ready_rfsu: boolean
-  ready_rfc: boolean
-  blockers: Array<{ code: string; severity: string; message: string; count?: number; pending?: number }>
+  cat_b_limit: number | null
+  gates: Gate[]
+  blockers: Blocker[]
 }
 
-function GateBadge({ ok, label }: { ok: boolean; label: string }) {
+// Mismas reglas que la emisión de certificados (src/lib/certificates/eligibility.ts):
+// verde = listo, ámbar = listo con condiciones (Cat B justificables), rojo = no listo.
+const GATE_STYLE: Record<GateLevel, { bg: string; fg: string; border: string; dot: string }> = {
+  green:  { bg: 'var(--success-50)', fg: 'var(--success-700)', border: '#a7f3d0', dot: '●' },
+  yellow: { bg: '#fffbeb',           fg: '#b45309',            border: '#fde68a', dot: '◐' },
+  red:    { bg: 'var(--danger-50)',  fg: 'var(--danger-700)',  border: '#fecaca', dot: '○' },
+}
+
+function GateBadge({ level, label, title }: { level: GateLevel; label: string; title: string }) {
+  const st = GATE_STYLE[level]
   return (
-    <span style={{
+    <span title={title} style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
       padding: '3px 9px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600,
-      background: ok ? 'var(--success-50)' : 'var(--danger-50)',
-      color:      ok ? 'var(--success-700)' : 'var(--danger-700)',
-      border: `1px solid ${ok ? '#a7f3d0' : '#fecaca'}`,
+      background: st.bg, color: st.fg, border: `1px solid ${st.border}`,
     }}>
-      <span style={{ fontSize: 10 }} aria-hidden="true">{ok ? '●' : '○'}</span>
+      <span style={{ fontSize: 10 }} aria-hidden="true">{st.dot}</span>
       {label}
     </span>
   )
@@ -91,16 +116,32 @@ export default async function ControlTowerPage({
   const totals = rows.reduce(
     (acc, r) => ({
       systems: acc.systems + 1,
-      mc:   acc.mc   + (r.ready_mc   ? 1 : 0),
-      rfsu: acc.rfsu + (r.ready_rfsu ? 1 : 0),
-      rfc:  acc.rfc  + (r.ready_rfc  ? 1 : 0),
       punchesA: acc.punchesA + r.open_punches_a,
       punchesB: acc.punchesB + r.open_punches_b,
       itrPctSum: acc.itrPctSum + Number(r.itr_pct),
     }),
-    { systems: 0, mc: 0, rfsu: 0, rfc: 0, punchesA: 0, punchesB: 0, itrPctSum: 0 },
+    { systems: 0, punchesA: 0, punchesB: 0, itrPctSum: 0 },
   )
   const avgItrPct = totals.systems > 0 ? totals.itrPctSum / totals.systems : 0
+
+  // Gates = fases de la org en orden; se cuentan los sistemas listos (verde o ámbar) por gate.
+  const gateDefs = rows[0]?.gates ?? []
+  const readyByGate = gateDefs.map(g => ({
+    certificate: g.certificate,
+    ready: rows.filter(r => r.gates.find(x => x.phase_id === g.phase_id)?.ready).length,
+  }))
+
+  const blockerText = (b: Blocker): string => {
+    switch (b.code) {
+      case 'no_subsystems':        return t('blocker.noSubsystems')
+      case 'no_itrs':              return t('blocker.noItrs')
+      case 'itrs_incomplete':      return t('blocker.itrsIncomplete', { pending: b.pending ?? 0 })
+      case 'punches_a_open':       return t('blocker.punchesA', { count: b.count ?? 0 })
+      case 'punches_b_over_limit': return t('blocker.punchesBOverLimit', { count: b.count ?? 0, limit: b.limit ?? 0 })
+      case 'punches_b_open':       return t('blocker.punchesB', { count: b.count ?? 0 })
+      default:                     return b.message
+    }
+  }
 
   return (
     <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto' }}>
@@ -138,13 +179,23 @@ export default async function ControlTowerPage({
             <div style={{ ...kpiValue, color: 'var(--text-strong)' }}>{totals.systems}</div>
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.avgItr', { pct: avgItrPct.toFixed(1) })}</div>
           </Card>
-          <Card padding="md">
-            <div style={kpiLabel}>{t('kpi.readyMc')}</div>
-            <div style={{ ...kpiValue, color: 'var(--success-500)' }}>{totals.mc}/{totals.systems}</div>
-          </Card>
-          <Card padding="md">
-            <div style={kpiLabel}>{t('kpi.readyRfsu')}</div>
-            <div style={{ ...kpiValue, color: '#7c3aed' }}>{totals.rfsu}/{totals.systems}</div>
+          <Card padding="md" style={{ gridColumn: 'span 2' }}>
+            <div style={kpiLabel}>{t('kpi.readyByGate')}</div>
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginTop: 4 }}>
+              {readyByGate.map(g => (
+                <div key={g.certificate}>
+                  <div style={{ ...kpiValue, marginTop: 0, color: g.ready === totals.systems ? 'var(--success-500)' : 'var(--text-strong)' }}>
+                    {g.ready}/{totals.systems}
+                  </div>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>{g.certificate}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 6 }}>
+              {rows[0]?.cat_b_limit == null
+                ? t('kpi.catBNoLimit')
+                : t('kpi.catBLimit', { limit: rows[0].cat_b_limit })}
+            </div>
           </Card>
           <Card padding="md">
             <div style={kpiLabel}>{t('kpi.punchesOpen')}</div>
@@ -208,13 +259,25 @@ export default async function ControlTowerPage({
                       </TD>
                       <TD>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          <GateBadge ok={r.ready_mc}   label="MC" />
-                          <GateBadge ok={r.ready_rfsu} label="RFSU" />
-                          <GateBadge ok={r.ready_rfc}  label="RFC" />
+                          {r.gates.map(g => (
+                            <GateBadge
+                              key={g.phase_id}
+                              level={g.level}
+                              label={g.certificate}
+                              title={t('gateTitle', {
+                                name: g.name,
+                                level: t(`level.${g.level}`),
+                                approved: g.itr_approved,
+                                total: g.itr_total,
+                                red: g.subsystems_red,
+                                subsystems: g.subsystems_total,
+                              })}
+                            />
+                          ))}
                         </div>
                       </TD>
                       <TD style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-                        {topBlocker ? topBlocker.message : <span style={{ color: 'var(--success-500)', fontWeight: 600 }}>{t('noBlockers')}</span>}
+                        {topBlocker ? blockerText(topBlocker) : <span style={{ color: 'var(--success-500)', fontWeight: 600 }}>{t('noBlockers')}</span>}
                       </TD>
                     </TR>
                   )

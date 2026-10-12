@@ -5469,10 +5469,9 @@ export type Database = {
           itr_total: number
           open_punches_a: number
           open_punches_b: number
+          cat_b_limit: number | null
+          gates: Json
           open_punches_c: number
-          ready_mc: boolean
-          ready_rfc: boolean
-          ready_rfsu: boolean
           system_code: string
           system_id: string
           system_name: string
@@ -5487,10 +5486,9 @@ export type Database = {
           itr_total: number
           open_punches_a: number
           open_punches_b: number
+          cat_b_limit: number | null
+          gates: Json
           open_punches_c: number
-          ready_mc: boolean
-          ready_rfc: boolean
-          ready_rfsu: boolean
           system_id: string
         }[]
       }

@@ -541,7 +541,8 @@
         "green": "Elegible",
         "yellow": "Cat B abier.",
         "red": "Bloqueado",
-        "noItrs": "Sin ITRs"
+        "noItrs": "Sin ITRs",
+        "catBOverLimit": "Cat B > {limit}"
       },
       "issueBtn": "Emitir {certName}",
       "viewBtn": "Ver →",
@@ -1676,9 +1677,10 @@
     "kpi": {
       "systems": "Sistemas",
       "avgItr": "ITR promedio {pct}%",
-      "readyMc": "Listos para MC",
-      "readyRfsu": "Listos para RFSU",
-      "punchesOpen": "Punches Abiertos"
+      "punchesOpen": "Punches Abiertos",
+      "readyByGate": "Sistemas listos por gate",
+      "catBLimit": "Límite Cat B abiertos por subsistema: {limit}",
+      "catBNoLimit": "Sin límite de Cat B abiertos por subsistema"
     },
     "col": {
       "area": "Área",
@@ -1689,6 +1691,20 @@
       "punchC": "Cat C",
       "gates": "Gates",
       "topBlocker": "Blocker Principal"
+    },
+    "gateTitle": "{name}: {level} · ITRs {approved}/{total} aprobados · {red} de {subsystems} subsistemas no listos",
+    "level": {
+      "green": "listo",
+      "yellow": "listo con condiciones (Cat B a justificar)",
+      "red": "no listo"
+    },
+    "blocker": {
+      "noSubsystems": "El sistema no tiene subsistemas",
+      "noItrs": "No hay ITRs definidos para este sistema",
+      "itrsIncomplete": "{pending} ITR(s) pendientes de aprobación",
+      "punchesA": "{count} punch(es) Cat A abiertos — bloquean todos los gates",
+      "punchesBOverLimit": "{count} subsistema(s) superan el límite de {limit} Cat B abiertos",
+      "punchesB": "{count} punch(es) Cat B abiertos — requieren justificación al emitir"
     }
   },
   "DataQuality": {

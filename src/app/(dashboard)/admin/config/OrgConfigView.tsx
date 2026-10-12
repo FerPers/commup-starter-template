@@ -6,7 +6,7 @@ import {
   createPhase, updatePhase, deletePhase,
   createDiscipline, updateDiscipline, deleteDiscipline,
   seedEquipmentTypes, createEquipmentType, updateEquipmentType, deleteEquipmentType,
-  updateOrgProfile, uploadOrgLogo, setOrgTemplateCatalog, saveOrgGlossary,
+  updateOrgProfile, uploadOrgLogo, setOrgTemplateCatalog, saveOrgGlossary, saveCatBLimit,
 } from '@/app/actions/config'
 import { DEFAULT_ITR_GLOSSARY } from '@/lib/constants/itr-glossary'
 import { EQUIPMENT_CATEGORIES } from '@/lib/equipment-types'
@@ -227,6 +227,7 @@ export default function OrgConfigView({
   projects,
   isTemplateCatalog: initialIsCatalog,
   glossary: initialGlossary,
+  catBLimit: initialCatBLimit,
   isOwner,
 }: {
   org: Org
@@ -236,6 +237,7 @@ export default function OrgConfigView({
   projects: Project[]
   isTemplateCatalog: boolean
   glossary: string
+  catBLimit: number | null
   isOwner: boolean
 }) {
   const t = useTranslations('Config')
@@ -251,6 +253,9 @@ export default function OrgConfigView({
   const [catalogMsg, setCatalogMsg] = useState<string | null>(null)
   const [glossary, setGlossary] = useState(initialGlossary)
   const [glossaryMsg, setGlossaryMsg] = useState<string | null>(null)
+  const [catBUnlimited, setCatBUnlimited] = useState(initialCatBLimit === null)
+  const [catBValue, setCatBValue] = useState(String(initialCatBLimit ?? 3))
+  const [catBMsg, setCatBMsg] = useState<string | null>(null)
 
   const [newPhase, setNewPhase] = useState({ code: '', name: '', color: '#3b82f6', certName: '' })
   const [showNewPhase, setShowNewPhase] = useState(false)
@@ -462,6 +467,44 @@ export default function OrgConfigView({
               </button>
               <button onClick={() => setGlossary(DEFAULT_ITR_GLOSSARY)} style={btnOutline}>Cargar glosario estándar</button>
               {glossaryMsg && <span style={{ fontSize: '12px', color: '#10b981' }}>{glossaryMsg}</span>}
+            </div>
+          </div>
+
+          {/* ── Límite de punches Cat B por subsistema ── */}
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: '18px', paddingTop: '16px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '4px' }}>
+              Máximo de punches Cat B abiertos por subsistema
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '10px' }}>
+              Hasta este número, los Cat B abiertos permiten pasar el gate con justificación (listo con condiciones). Por encima, el subsistema queda bloqueado para emitir certificados y en Control Tower. Cat C nunca bloquea.
+            </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="number"
+                min={0}
+                max={999}
+                value={catBValue}
+                disabled={catBUnlimited}
+                onChange={e => setCatBValue(e.target.value)}
+                aria-label="Máximo de punches Cat B abiertos por subsistema"
+                style={{ ...inputStyle, width: '90px' }}
+              />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text)' }}>
+                <input type="checkbox" checked={catBUnlimited} onChange={e => setCatBUnlimited(e.target.checked)} />
+                Sin límite
+              </label>
+              <button
+                disabled={isPending}
+                onClick={() => act(async () => {
+                  const r = await saveCatBLimit(catBUnlimited ? null : Number(catBValue))
+                  if (!r.error) setCatBMsg('Límite guardado')
+                  return r
+                })}
+                style={btnPrimary}
+              >
+                Guardar límite
+              </button>
+              {catBMsg && <span style={{ fontSize: '12px', color: '#10b981' }}>{catBMsg}</span>}
             </div>
           </div>
         </div>

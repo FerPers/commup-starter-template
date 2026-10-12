@@ -1,3 +1,4 @@
+import { resolveCatBLimit } from '@/lib/certificates/eligibility'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import OrgConfigView from './OrgConfigView'
@@ -43,6 +44,7 @@ export default async function AdminConfigPage() {
   const isCatalog = !!(org?.settings as Record<string, unknown> | null)?.is_template_catalog
   const glossaryRaw = (org?.settings as Record<string, unknown> | null)?.itr_glossary
   const glossary = typeof glossaryRaw === 'string' ? glossaryRaw : ''
+  const catBLimit = resolveCatBLimit(org?.settings)
 
   return (
     <OrgConfigView
@@ -53,6 +55,7 @@ export default async function AdminConfigPage() {
       projects={projects ?? []}
       isTemplateCatalog={isCatalog}
       glossary={glossary}
+      catBLimit={catBLimit}
       isOwner={ctx.role === 'owner'}
     />
   )

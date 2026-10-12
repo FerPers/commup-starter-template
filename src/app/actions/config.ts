@@ -4,6 +4,7 @@ import { ADMIN_ROLES, OWNER_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { EQUIPMENT_TYPE_DEFAULTS } from '@/lib/equipment-types'
 import { revalidatePath } from 'next/cache'
+import { CAT_B_LIMIT_SETTING } from '@/lib/certificates/eligibility'
 
 // ═══════════════════════════════════════════════════════════
 // PROJECT PHASES
@@ -339,6 +340,32 @@ export const saveOrgGlossary = withAuthOnly(
     const { error } = await ctx.supabase.from('organizations').update({ settings: next }).eq('id', ctx.orgId)
     if (error) return { error: error.message }
     revalidatePath('/admin/config')
+    return {}
+  },
+)
+
+/**
+ * Límite de punches Cat B abiertos por subsistema para pasar un gate / emitir certificado.
+ * `null` = sin límite. Lo leen eligibility.ts (resolveCatBLimit) y compute_system_readiness (SQL).
+ */
+export const saveCatBLimit = withAuthOnly(
+  { role: ADMIN_ROLES },
+  async (ctx, limit: number | null): Promise<{ error?: string }> => {
+    if (limit !== null && (!Number.isInteger(limit) || limit < 0 || limit > 999)) {
+      return { error: 'El límite debe ser un entero entre 0 y 999' }
+    }
+    const { data: org, error: fetchErr } = await ctx.supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', ctx.orgId)
+      .single()
+    if (fetchErr) return { error: fetchErr.message }
+    const settings = (org?.settings as Record<string, unknown> | null) ?? {}
+    const next = { ...settings, [CAT_B_LIMIT_SETTING]: limit }
+    const { error } = await ctx.supabase.from('organizations').update({ settings: next }).eq('id', ctx.orgId)
+    if (error) return { error: error.message }
+    revalidatePath('/admin/config')
+    revalidatePath('/control-tower')
     return {}
   },
 )

@@ -541,7 +541,8 @@
         "green": "Eligible",
         "yellow": "Cat B open",
         "red": "Blocked",
-        "noItrs": "No ITRs"
+        "noItrs": "No ITRs",
+        "catBOverLimit": "Cat B > {limit}"
       },
       "issueBtn": "Issue {certName}",
       "viewBtn": "View →",
@@ -1676,9 +1677,10 @@
     "kpi": {
       "systems": "Systems",
       "avgItr": "Avg ITR {pct}%",
-      "readyMc": "Ready for MC",
-      "readyRfsu": "Ready for RFSU",
-      "punchesOpen": "Open Punches"
+      "punchesOpen": "Open Punches",
+      "readyByGate": "Systems ready per gate",
+      "catBLimit": "Open Cat B limit per subsystem: {limit}",
+      "catBNoLimit": "No limit on open Cat B per subsystem"
     },
     "col": {
       "area": "Area",
@@ -1689,6 +1691,20 @@
       "punchC": "Cat C",
       "gates": "Gates",
       "topBlocker": "Top Blocker"
+    },
+    "gateTitle": "{name}: {level} · ITRs {approved}/{total} approved · {red} of {subsystems} subsystems not ready",
+    "level": {
+      "green": "ready",
+      "yellow": "ready with conditions (Cat B to justify)",
+      "red": "not ready"
+    },
+    "blocker": {
+      "noSubsystems": "System has no subsystems",
+      "noItrs": "No ITRs defined for this system",
+      "itrsIncomplete": "{pending} ITR(s) pending approval",
+      "punchesA": "{count} Cat A punch(es) open — block every gate",
+      "punchesBOverLimit": "{count} subsystem(s) exceed the limit of {limit} open Cat B",
+      "punchesB": "{count} Cat B punch(es) open — require justification at issuance"
     }
   },
   "DataQuality": {

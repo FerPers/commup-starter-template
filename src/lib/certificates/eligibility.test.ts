@@ -5,6 +5,8 @@ import {
   evaluateEligibility,
   isOpenPunchStatus,
   issuanceBlocker,
+  resolveCatBLimit,
+  DEFAULT_CAT_B_LIMIT,
   type PunchLike,
 } from './eligibility'
 
@@ -71,6 +73,38 @@ describe('evaluateEligibility', () => {
     const el = evaluateEligibility([approved, approved], [punch({ id: 'c1', category: 'C' })])
     expect(el).toMatchObject({ eligible: 'green', totalItrs: 2, approvedItrs: 2, openCatA: 0 })
     expect(el.openCatBPunches).toEqual([])
+  })
+})
+
+describe('límite de Cat B por subsistema', () => {
+  const bs = (n: number) => Array.from({ length: n }, (_, i) => punch({ id: `b${i}`, category: 'B' }))
+
+  it('por defecto 3: con 3 abiertos amarillo, con 4 rojo', () => {
+    expect(DEFAULT_CAT_B_LIMIT).toBe(3)
+    expect(evaluateEligibility([approved], bs(3)).eligible).toBe('yellow')
+    const el = evaluateEligibility([approved], bs(4))
+    expect(el).toMatchObject({ eligible: 'red', catBLimit: 3, catBOverLimit: true })
+  })
+
+  it('límite configurable y null = sin límite', () => {
+    expect(evaluateEligibility([approved], bs(2), 1).eligible).toBe('red')
+    expect(evaluateEligibility([approved], bs(1), 0).eligible).toBe('red')
+    expect(evaluateEligibility([approved], bs(50), null)).toMatchObject({ eligible: 'yellow', catBOverLimit: false })
+  })
+
+  it('sobre el límite bloquea la emisión aunque todos estén justificados', () => {
+    const el = evaluateEligibility([approved], bs(4))
+    const all = el.openCatBPunches.map(p => ({ punchId: p.id, justification: 'ok' }))
+    expect(issuanceBlocker(el, all)).toMatch(/máximo por subsistema es 3/)
+  })
+
+  it('resolveCatBLimit: ausente → 3, número → entero ≥ 0, null u otro → sin límite', () => {
+    expect(resolveCatBLimit(null)).toBe(3)
+    expect(resolveCatBLimit({})).toBe(3)
+    expect(resolveCatBLimit({ max_open_cat_b_per_subsystem: 5 })).toBe(5)
+    expect(resolveCatBLimit({ max_open_cat_b_per_subsystem: 2.9 })).toBe(2)
+    expect(resolveCatBLimit({ max_open_cat_b_per_subsystem: -1 })).toBe(0)
+    expect(resolveCatBLimit({ max_open_cat_b_per_subsystem: null })).toBeNull()
   })
 })
 

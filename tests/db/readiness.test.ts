@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { evaluateEligibility } from '@/lib/certificates/eligibility'
+import { evaluateEligibility, resolveCatBLimit } from '@/lib/certificates/eligibility'
 
 /**
  * Gate de certificados contra la BD real (Sprint T fase 2, 2026-09-04).
  *
  * Verifica, como usuario autenticado bajo RLS:
- *   - `compute_system_readiness` (SQL): gates MC / RFSU / RFC y blockers.
+ *   - `compute_system_readiness` (SQL): gates por fase (verde/ámbar/rojo), límite de Cat B y blockers.
  *   - El numerador atómico de punches (trigger `punch_number_before_insert`) con inserciones en paralelo.
  *   - Que la elegibilidad TypeScript (`evaluateEligibility`) coincide con el SQL sobre los mismos datos.
  *
@@ -25,9 +25,8 @@ type Readiness = {
   open_punches_a: number
   open_punches_b: number
   open_punches_c: number
-  ready_mc: boolean
-  ready_rfsu: boolean
-  ready_rfc: boolean
+  cat_b_limit: number | null
+  gates: { phase_id: string; level: 'green' | 'yellow' | 'red'; ready: boolean }[]
   blockers: { code: string }[]
 }
 
@@ -36,6 +35,7 @@ const stamp = `T${Date.now().toString(36).toUpperCase()}`
 let a: SupabaseClient
 let userId: string
 let ids = { area: '', system: '', subsystem: '', tag: '', phase: '', discipline: '', template: '' }
+let catBLimit: number | null = 3
 
 async function readiness(): Promise<Readiness> {
   const { data, error } = await a.rpc('compute_system_readiness', { p_system_id: ids.system })
@@ -45,12 +45,19 @@ async function readiness(): Promise<Readiness> {
   return row
 }
 
+/** Gate SQL de la fase de prueba (la primera de la org). */
+function gate(r: Readiness) {
+  const g = r.gates.find(x => x.phase_id === ids.phase)
+  if (!g) throw new Error('gate de la fase de prueba ausente')
+  return g
+}
+
 async function tsEligibility() {
   const [{ data: itrs }, { data: punches }] = await Promise.all([
-    a.from('itrs').select('status').eq('subsystem_id', ids.subsystem),
+    a.from('itrs').select('status').eq('subsystem_id', ids.subsystem).eq('phase_id', ids.phase),
     a.from('punches').select('id, punch_number, description, category, status').eq('subsystem_id', ids.subsystem),
   ])
-  return evaluateEligibility(itrs ?? [], punches ?? [])
+  return evaluateEligibility(itrs ?? [], punches ?? [], catBLimit)
 }
 
 async function insertOrThrow<T>(label: string, q: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<NonNullable<T>> {
@@ -67,6 +74,8 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
     userId = auth.user.id
 
     const project = await insertOrThrow<{ org_id: string }>('project', a.from('projects').select('org_id').eq('id', pid).single())
+    const org = await insertOrThrow<{ settings: unknown }>('org', a.from('organizations').select('settings').eq('id', project.org_id).single())
+    catBLimit = resolveCatBLimit(org.settings)
     const [phase, discipline, template] = await Promise.all([
       insertOrThrow<{ id: string }>('phase', a.from('project_phases').select('id').eq('org_id', project.org_id).order('order_index').limit(1).single()),
       insertOrThrow<{ id: string }>('discipline', a.from('disciplines').select('id').eq('org_id', project.org_id).limit(1).single()),
@@ -88,22 +97,25 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
     await a.from('areas').delete().eq('id', ids.area)
   }, 30_000)
 
-  it('sin ITRs: nada listo y blocker no_itrs; TS también rojo', async () => {
+  it('sin ITRs: gate rojo y blocker no_itrs; TS también rojo', async () => {
     const r = await readiness()
-    expect(r).toMatchObject({ itr_total: 0, ready_mc: false, ready_rfsu: false, ready_rfc: false })
+    expect(r.itr_total).toBe(0)
+    expect(r.cat_b_limit).toBe(catBLimit)
+    expect(gate(r)).toMatchObject({ level: 'red', ready: false })
     expect(r.blockers.map(b => b.code)).toEqual(['no_itrs'])
     expect((await tsEligibility()).eligible).toBe('red')
   })
 
-  it('ITR pendiente bloquea MC con itrs_incomplete y porcentaje', async () => {
+  it('ITR pendiente: rojo con itrs_incomplete y porcentaje', async () => {
     const itr = (n: number, status: string) => ({
       project_id: pid, subsystem_id: ids.subsystem, tag_id: ids.tag, template_id: ids.template, phase_id: ids.phase,
       itr_number: `${stamp}-ITR-${n}`, status,
     })
     await insertOrThrow('itrs', a.from('itrs').insert([itr(1, 'not_started'), itr(2, 'approved')]).select('id'))
     const r = await readiness()
-    expect(r).toMatchObject({ itr_total: 2, itr_approved: 1, ready_mc: false })
+    expect(r).toMatchObject({ itr_total: 2, itr_approved: 1 })
     expect(Number(r.itr_pct)).toBe(50)
+    expect(gate(r).level).toBe('red')
     expect(r.blockers.map(b => b.code)).toEqual(['itrs_incomplete'])
     expect(await tsEligibility()).toMatchObject({ eligible: 'red', totalItrs: 2, approvedItrs: 1 })
   })
@@ -121,35 +133,43 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
     expect(new Set(numbers).size).toBe(numbers.length)
   })
 
-  it('Cat A abierto bloquea MC; TS coincide (rojo)', async () => {
+  it('Cat A abierto: rojo; Cat C no aparece como blocker; TS coincide', async () => {
     const r = await readiness()
-    expect(r).toMatchObject({ open_punches_a: 1, open_punches_b: 1, open_punches_c: 3, ready_mc: false, ready_rfsu: false, ready_rfc: false })
-    expect(r.blockers.map(b => b.code)).toEqual(['punches_a_open', 'punches_b_open', 'punches_c_open'])
+    expect(r).toMatchObject({ open_punches_a: 1, open_punches_b: 1, open_punches_c: 3 })
+    expect(gate(r).level).toBe('red')
+    expect(r.blockers.map(b => b.code)).toEqual(['punches_a_open', 'punches_b_open'])
     expect((await tsEligibility()).eligible).toBe('red')
   })
 
-  it('Cat A cerrado → MC listo; Cat B abierto bloquea RFSU; TS amarillo', async () => {
+  it('Cat A cerrado, 1 Cat B abierto: ámbar (listo con condiciones); TS amarillo', async () => {
     await a.from('punches').update({ status: 'closed' }).eq('subsystem_id', ids.subsystem).eq('category', 'A')
     const r = await readiness()
-    expect(r).toMatchObject({ open_punches_a: 0, ready_mc: true, ready_rfsu: false, ready_rfc: false })
+    expect(gate(r)).toMatchObject({ level: 'yellow', ready: true })
     const el = await tsEligibility()
     expect(el.eligible).toBe('yellow')
     expect(el.openCatBPunches).toHaveLength(1)
   })
 
-  it('Cat B cancelado → RFSU listo; Cat C in_progress sigue abierto y bloquea RFC; TS verde', async () => {
+  it('Cat B sobre el límite: rojo con punches_b_over_limit; TS rojo', async () => {
+    if (catBLimit === null) return // org sin límite: no aplica
+    const extra = catBLimit // ya hay 1 Cat B abierto → total = límite + 1
+    const base = { project_id: pid, subsystem_id: ids.subsystem, tag_id: ids.tag, discipline_id: ids.discipline, raised_by: userId, punch_number: '', category: 'B' }
+    for (let i = 0; i < extra; i++) {
+      await insertOrThrow(`punch B extra ${i}`, a.from('punches').insert({ ...base, description: `${stamp} cat B extra #${i}` }).select('id').single())
+    }
+    const r = await readiness()
+    expect(gate(r)).toMatchObject({ level: 'red', ready: false })
+    expect(r.blockers.map(b => b.code)).toContain('punches_b_over_limit')
+    expect(await tsEligibility()).toMatchObject({ eligible: 'red', catBOverLimit: true })
+  })
+
+  it('Cat B cancelados y Cat C abiertos: verde (Cat C no bloquea); TS verde', async () => {
     await a.from('punches').update({ status: 'cancelled' }).eq('subsystem_id', ids.subsystem).eq('category', 'B')
     await a.from('punches').update({ status: 'in_progress' }).eq('subsystem_id', ids.subsystem).eq('category', 'C')
     const r = await readiness()
-    expect(r).toMatchObject({ open_punches_b: 0, open_punches_c: 3, ready_mc: true, ready_rfsu: true, ready_rfc: false })
-    expect(r.blockers.map(b => b.code)).toEqual(['punches_c_open'])
-    expect((await tsEligibility()).eligible).toBe('green')
-  })
-
-  it('todo cerrado → RFC listo sin blockers', async () => {
-    await a.from('punches').update({ status: 'closed' }).eq('subsystem_id', ids.subsystem).eq('category', 'C')
-    const r = await readiness()
-    expect(r).toMatchObject({ ready_mc: true, ready_rfsu: true, ready_rfc: true })
+    expect(r).toMatchObject({ open_punches_b: 0, open_punches_c: 3 })
+    expect(gate(r)).toMatchObject({ level: 'green', ready: true })
     expect(r.blockers).toEqual([])
+    expect((await tsEligibility()).eligible).toBe('green')
   })
 })

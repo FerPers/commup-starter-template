@@ -1,5 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
-import { evaluateEligibility } from '@/lib/certificates/eligibility'
+import { evaluateEligibility, resolveCatBLimit } from '@/lib/certificates/eligibility'
 import { redirect, notFound } from 'next/navigation'
 import CertificatesView from './CertificatesView'
 
@@ -22,6 +22,7 @@ export default async function CertificatesPage({
     { data: itrs },
     { data: openPunches },
     { data: certificates },
+    { data: org },
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -53,9 +54,15 @@ export default async function CertificatesPage({
       .select('id, subsystem_id, phase_id, certificate_number, title, status, issued_date, issued_by')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', membership.org_id)
+      .single(),
   ])
 
   if (!project) notFound()
+  const catBLimit = resolveCatBLimit(org?.settings)
 
   // ── Compute eligibility per subsystem × phase server-side ─────────────
   type CertRow = {
@@ -74,6 +81,8 @@ export default async function CertificatesPage({
     openCatBPunches: { id: string; punch_number: string; description: string }[]
     certificate: CertRow | null
     eligible: 'green' | 'yellow' | 'red'
+    catBOverLimit: boolean
+    catBLimit: number | null
   }
 
   type SubsystemRow = {
@@ -88,13 +97,13 @@ export default async function CertificatesPage({
     const phaseData = (phases ?? []).map(phase => {
       const ssItrs = (itrs ?? []).filter(i => i.subsystem_id === ss.id && i.phase_id === phase.id)
       const ssPunches = (openPunches ?? []).filter(p => p.subsystem_id === ss.id)
-      const { totalItrs, approvedItrs, openCatA, openCatBPunches, eligible } = evaluateEligibility(ssItrs, ssPunches)
+      const { totalItrs, approvedItrs, openCatA, openCatBPunches, eligible, catBOverLimit } = evaluateEligibility(ssItrs, ssPunches, catBLimit)
 
       const certificate = (certificates ?? []).find(
         c => c.subsystem_id === ss.id && c.phase_id === phase.id && c.status !== 'rejected'
       ) ?? null
 
-      return { phaseId: phase.id, totalItrs, approvedItrs, openCatA, openCatBPunches, certificate, eligible }
+      return { phaseId: phase.id, totalItrs, approvedItrs, openCatA, openCatBPunches, certificate, eligible, catBOverLimit, catBLimit }
     })
 
     const sysRel = (ss as { systems: unknown }).systems

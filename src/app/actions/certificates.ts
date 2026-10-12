@@ -11,6 +11,7 @@ import {
   buildCertificateNumber,
   evaluateEligibility,
   issuanceBlocker,
+  resolveCatBLimit,
   type Eligibility,
 } from '@/lib/certificates/eligibility'
 
@@ -19,9 +20,10 @@ import {
 
 async function computeEligibility(
   supabase: SupabaseClient,
+  orgId: string,
   input: { projectId: string; subsystemId: string; phaseId: string },
 ): Promise<Eligibility> {
-  const [{ data: itrs }, { data: punches }] = await Promise.all([
+  const [{ data: itrs }, { data: punches }, { data: org }] = await Promise.all([
     supabase
       .from('itrs')
       .select('id, status')
@@ -34,9 +36,10 @@ async function computeEligibility(
       .eq('project_id', input.projectId)
       .eq('subsystem_id', input.subsystemId)
       .not('status', 'in', '(closed,cancelled)'),
+    supabase.from('organizations').select('settings').eq('id', orgId).single(),
   ])
 
-  return evaluateEligibility(itrs ?? [], punches ?? [])
+  return evaluateEligibility(itrs ?? [], punches ?? [], resolveCatBLimit(org?.settings))
 }
 
 // ── checkSubsystemEligibility ──────────────────────────────────────────────
@@ -54,7 +57,7 @@ export const checkSubsystemEligibility = withAuth(
     ctx,
     input: { projectId: string; subsystemId: string; phaseId: string },
   ): Promise<Eligibility & { error?: string }> => {
-    return computeEligibility(ctx.supabase, input)
+    return computeEligibility(ctx.supabase, ctx.orgId, input)
   },
 )
 
@@ -83,7 +86,7 @@ export const issueCertificate = withAuth(
     const { projectId, subsystemId, phaseId } = input
 
     // Verify eligibility (Cat A abiertos, ITRs pendientes, Cat B sin justificar)
-    const el = await computeEligibility(supabase, { projectId, subsystemId, phaseId })
+    const el = await computeEligibility(supabase, ctx.orgId, { projectId, subsystemId, phaseId })
     const exceptions = input.catBExceptions ?? []
     const blocker = issuanceBlocker(el, exceptions)
     if (blocker) return { error: blocker }
