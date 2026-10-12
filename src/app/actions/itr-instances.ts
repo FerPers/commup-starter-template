@@ -452,7 +452,7 @@ export const signItr = withAuthOnly(
 
     // Database transaction owns content validation, assignment order, audit and approval.
     const { error } = await ctx.supabase.rpc('sign_itr_atomic', {
-      p_itr_id: itrId, p_role: role, p_signature_image: signatureImage ?? null,
+      p_itr_id: itrId, p_role: role, p_signature_image: signatureImage ?? undefined,
     })
     if (error) return { error: error.message }
 

@@ -1332,7 +1332,8 @@
       "engMounting": "Mounting typical",
       "engRevision": "Revision",
       "yesPreservation": "Yes",
-      "noPreservation": "No"
+      "noPreservation": "No",
+      "fieldCriticality": "Criticality"
     },
     "edit": {
       "sectionBasic": "Basic information",
@@ -1369,7 +1370,9 @@
       "deleteBtn": "Delete tag…",
       "deleteConfirmMsg": "This action will delete tag {tagNumber} and all its data (ITRs, punches, preservation, hotspots). It is irreversible.",
       "deleting": "Deleting…",
-      "confirmDelete": "Confirm deletion"
+      "confirmDelete": "Confirm deletion",
+      "fieldCriticality": "Criticality",
+      "criticalityHint": "Critical tags block the gate even when progress is high. A SIL rating suggests \"Safety\"."
     },
     "docs": {
       "sectionTitle": "P&ID Documents",
@@ -1466,6 +1469,11 @@
         "confirmDelete": "Delete this photo?",
         "confirmCloseWithoutPhotos": "You haven't added any photos to this punch. Attaching evidence is recommended before closing. Close anyway?"
       }
+    },
+    "criticality": {
+      "safety": "Safety",
+      "process": "Process",
+      "normal": "Normal"
     }
   },
   "PidDocuments": {

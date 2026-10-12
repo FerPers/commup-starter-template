@@ -826,6 +826,54 @@ export type Database = {
           },
         ]
       }
+      gate_criteria: {
+        Row: {
+          created_at: string
+          gate_id: string
+          id: string
+          is_blocking: boolean
+          kind: string
+          order_index: number
+          org_id: string
+          params: Json
+        }
+        Insert: {
+          created_at?: string
+          gate_id: string
+          id?: string
+          is_blocking?: boolean
+          kind: string
+          order_index?: number
+          org_id: string
+          params?: Json
+        }
+        Update: {
+          created_at?: string
+          gate_id?: string
+          id?: string
+          is_blocking?: boolean
+          kind?: string
+          order_index?: number
+          org_id?: string
+          params?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_criteria_gate_id_fkey"
+            columns: ["gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_criteria_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       handover_package_systems: {
         Row: {
           package_id: string
@@ -1443,9 +1491,9 @@ export type Database = {
           option_outcomes: Json
           options: Json | null
           order_index: number
+          requires_document: boolean
           requires_measurement: boolean
           requires_photo: boolean
-          requires_document: boolean
           section_id: string
           template_id: string
           unit: string | null
@@ -1467,9 +1515,9 @@ export type Database = {
           option_outcomes?: Json
           options?: Json | null
           order_index: number
+          requires_document?: boolean
           requires_measurement?: boolean
           requires_photo?: boolean
-          requires_document?: boolean
           section_id: string
           template_id: string
           unit?: string | null
@@ -1491,9 +1539,9 @@ export type Database = {
           option_outcomes?: Json
           options?: Json | null
           order_index?: number
+          requires_document?: boolean
           requires_measurement?: boolean
           requires_photo?: boolean
-          requires_document?: boolean
           section_id?: string
           template_id?: string
           unit?: string | null
@@ -1625,10 +1673,14 @@ export type Database = {
           discipline_id: string
           equipment_type_id: string | null
           id: string
+          imported_at: string | null
           is_active: boolean
           is_global: boolean
           org_id: string
           phase_id: string
+          source_org_id: string | null
+          source_template_id: string | null
+          source_version: number | null
           title: string
           title_es: string | null
           version: number
@@ -1640,10 +1692,14 @@ export type Database = {
           discipline_id: string
           equipment_type_id?: string | null
           id?: string
+          imported_at?: string | null
           is_active?: boolean
           is_global?: boolean
           org_id: string
           phase_id: string
+          source_org_id?: string | null
+          source_template_id?: string | null
+          source_version?: number | null
           title: string
           title_es?: string | null
           version?: number
@@ -1655,10 +1711,14 @@ export type Database = {
           discipline_id?: string
           equipment_type_id?: string | null
           id?: string
+          imported_at?: string | null
           is_active?: boolean
           is_global?: boolean
           org_id?: string
           phase_id?: string
+          source_org_id?: string | null
+          source_template_id?: string | null
+          source_version?: number | null
           title?: string
           title_es?: string | null
           version?: number
@@ -1697,6 +1757,20 @@ export type Database = {
             columns: ["phase_id"]
             isOneToOne: false
             referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_templates_source_org_id_fkey"
+            columns: ["source_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_templates_source_template_id_fkey"
+            columns: ["source_template_id"]
+            isOneToOne: false
+            referencedRelation: "itr_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -3719,6 +3793,63 @@ export type Database = {
           },
         ]
       }
+      readiness_gates: {
+        Row: {
+          approval_roles: string[]
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          org_id: string
+          phase_id: string | null
+          requires_previous: boolean
+        }
+        Insert: {
+          approval_roles?: string[]
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          org_id: string
+          phase_id?: string | null
+          requires_previous?: boolean
+        }
+        Update: {
+          approval_roles?: string[]
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          org_id?: string
+          phase_id?: string | null
+          requires_previous?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "readiness_gates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "readiness_gates_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signal_sample_batches: {
         Row: {
           accepted_count: number
@@ -4070,6 +4201,202 @@ export type Database = {
           },
         ]
       }
+      system_gate_approvals: {
+        Row: {
+          approved_at: string
+          approved_by: string
+          approved_role: string
+          conditions: Json
+          evidence: Json
+          gate_id: string
+          id: string
+          notes: string | null
+          org_id: string
+          project_id: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          status: string
+          system_id: string
+        }
+        Insert: {
+          approved_at?: string
+          approved_by: string
+          approved_role: string
+          conditions?: Json
+          evidence?: Json
+          gate_id: string
+          id?: string
+          notes?: string | null
+          org_id: string
+          project_id: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status: string
+          system_id: string
+        }
+        Update: {
+          approved_at?: string
+          approved_by?: string
+          approved_role?: string
+          conditions?: Json
+          evidence?: Json
+          gate_id?: string
+          id?: string
+          notes?: string | null
+          org_id?: string
+          project_id?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_gate_approvals_gate_id_fkey"
+            columns: ["gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_approvals_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_approvals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_approvals_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_approvals_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_approvals_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_approvals_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      system_gate_attestations: {
+        Row: {
+          attested_at: string
+          attested_by: string
+          comment: string
+          criterion_id: string
+          file_path: string
+          id: string
+          org_id: string
+          project_id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          system_id: string
+        }
+        Insert: {
+          attested_at?: string
+          attested_by: string
+          comment: string
+          criterion_id: string
+          file_path: string
+          id?: string
+          org_id: string
+          project_id: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          system_id: string
+        }
+        Update: {
+          attested_at?: string
+          attested_by?: string
+          comment?: string
+          criterion_id?: string
+          file_path?: string
+          id?: string
+          org_id?: string
+          project_id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_gate_attestations_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "gate_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_attestations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_attestations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_attestations_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_attestations_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_attestations_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_attestations_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       systems: {
         Row: {
           area_id: string
@@ -4132,6 +4459,7 @@ export type Database = {
       tags: {
         Row: {
           created_at: string
+          criticality: string
           datasheet_number: string | null
           description: string
           discipline_id: string
@@ -4164,6 +4492,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          criticality?: string
           datasheet_number?: string | null
           description: string
           discipline_id: string
@@ -4196,6 +4525,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          criticality?: string
           datasheet_number?: string | null
           description?: string
           discipline_id?: string
@@ -5416,27 +5746,13 @@ export type Database = {
       }
     }
     Functions: {
-      // Added for 20260909180000_itr_atomic_integrity; regenerate after migration.
-      sign_itr_atomic: {
-        Args: { p_itr_id: string; p_role: string; p_signature_image?: string | null }
-        Returns: Json
-      }
-      reopen_itr_atomic: {
-        Args: { p_itr_id: string; p_reason: string }
-        Returns: Json
-      }
-      create_itr_template_revision: {
-        Args: { p_template_id: string }
+      accept_itr_suggestion: {
+        Args: { p_note?: string; p_suggestion_id: string }
         Returns: string
       }
       activate_itr_template_revision: {
         Args: { p_template_id: string }
         Returns: Json
-      }
-
-      accept_itr_suggestion: {
-        Args: { p_note?: string; p_suggestion_id: string }
-        Returns: string
       }
       analytics_project_forecast: {
         Args: { p_project_id: string }
@@ -5453,41 +5769,94 @@ export type Database = {
           velocity_per_day: number
         }[]
       }
+      approve_system_gate: {
+        Args: {
+          p_conditions?: Json
+          p_gate_id: string
+          p_notes?: string
+          p_system_id: string
+        }
+        Returns: string
+      }
+      attest_gate_criterion: {
+        Args: {
+          p_comment: string
+          p_criterion_id: string
+          p_file_path: string
+          p_system_id: string
+        }
+        Returns: string
+      }
       bump_push_subscription_failure: {
         Args: { p_sub_id: string }
         Returns: undefined
       }
       cleanup_signal_samples_retention: { Args: never; Returns: number }
+      clone_itr_template_from_catalog: {
+        Args: {
+          p_code_suffix?: string
+          p_source_template_id: string
+          p_target_org_id: string
+        }
+        Returns: Json
+      }
+      compute_project_gates: {
+        Args: { p_project_id: string }
+        Returns: {
+          area_code: string
+          area_name: string
+          gates: Json
+          system_code: string
+          system_id: string
+          system_name: string
+        }[]
+      }
       compute_project_readiness: {
         Args: { p_project_id: string }
         Returns: {
           area_code: string
           area_name: string
           blockers: Json
+          cat_b_limit: number
+          gates: Json
           itr_approved: number
           itr_pct: number
           itr_total: number
           open_punches_a: number
           open_punches_b: number
-          cat_b_limit: number | null
-          gates: Json
           open_punches_c: number
           system_code: string
           system_id: string
           system_name: string
         }[]
       }
+      compute_system_gates: {
+        Args: { p_system_id: string }
+        Returns: {
+          approval: Json
+          approval_roles: string[]
+          computed_level: string
+          criteria: Json
+          gate_code: string
+          gate_id: string
+          gate_name: string
+          gate_order: number
+          gate_phase_id: string
+          requires_previous: boolean
+          status: string
+        }[]
+      }
       compute_system_readiness: {
         Args: { p_system_id: string }
         Returns: {
           blockers: Json
+          cat_b_limit: number
+          gates: Json
           itr_approved: number
           itr_pct: number
           itr_total: number
           open_punches_a: number
           open_punches_b: number
-          cat_b_limit: number | null
-          gates: Json
           open_punches_c: number
           system_id: string
         }[]
@@ -5504,6 +5873,10 @@ export type Database = {
           key_prefix: string
           token: string
         }[]
+      }
+      create_itr_template_revision: {
+        Args: { p_template_id: string }
+        Returns: string
       }
       create_webhook_subscription: {
         Args: {
@@ -5555,6 +5928,12 @@ export type Database = {
         Args: { p_sub_id: string }
         Returns: undefined
       }
+      evaluate_itr_capture: { Args: { p_itr_id: string }; Returns: Json }
+      evaluate_itr_continuity: { Args: { p_value: string }; Returns: Json }
+      evaluate_itr_table: {
+        Args: { p_options: Json; p_value: string }
+        Returns: Json
+      }
       evaluate_signal_rules_for_batch: {
         Args: { p_batch_id: string }
         Returns: number
@@ -5564,7 +5943,9 @@ export type Database = {
         Returns: Json
       }
       generate_punch_number: { Args: { p_project_id: string }; Returns: string }
+      get_my_editor_project_ids: { Args: never; Returns: string[] }
       get_my_org_ids: { Args: never; Returns: string[] }
+      get_my_project_ids: { Args: never; Returns: string[] }
       get_org_member_emails: {
         Args: { p_org_id: string }
         Returns: {
@@ -5592,11 +5973,30 @@ export type Database = {
       is_org_editor: { Args: { p_org_id: string }; Returns: boolean }
       is_project_editor: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      itr_option_outcomes_valid: {
+        Args: { p_options: Json; p_outcomes: Json }
+        Returns: boolean
+      }
       itr_status_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {
           n: number
           status: Database["public"]["Enums"]["itr_status"]
+        }[]
+      }
+      itr_table_config_valid: { Args: { p_options: Json }; Returns: boolean }
+      list_catalog_template_updates: {
+        Args: { p_org_id: string }
+        Returns: {
+          catalog_org_id: string
+          catalog_org_name: string
+          catalog_template_id: string
+          catalog_version: number
+          code: string
+          local_version: number
+          source_template_id: string
+          source_version: number
+          template_id: string
         }[]
       }
       log_sync_conflict: {
@@ -5617,6 +6017,7 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: string
       }
+      org_cat_b_limit: { Args: { p_org_id: string }; Returns: number }
       project_cert_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {
@@ -5655,10 +6056,32 @@ export type Database = {
         Args: { p_note?: string; p_suggestion_id: string }
         Returns: string
       }
+      reopen_itr_atomic: {
+        Args: { p_itr_id: string; p_reason: string }
+        Returns: Json
+      }
       revoke_api_key: { Args: { p_key_id: string }; Returns: undefined }
+      revoke_gate_attestation: {
+        Args: { p_attestation_id: string }
+        Returns: undefined
+      }
+      revoke_system_gate_approval: {
+        Args: { p_approval_id: string; p_reason: string }
+        Returns: undefined
+      }
+      seed_default_gate_for_phase: {
+        Args: { p_phase_id: string }
+        Returns: string
+      }
       set_webhook_enabled: {
         Args: { p_enabled: boolean; p_sub_id: string }
         Returns: undefined
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
+      sign_itr_atomic: {
+        Args: { p_itr_id: string; p_role: string; p_signature_image?: string }
+        Returns: Json
       }
       subsystem_rollup: {
         Args: { p_project_id: string }
@@ -5671,6 +6094,10 @@ export type Database = {
           subsystem_id: string
           tag_count: number
         }[]
+      }
+      system_phase_level: {
+        Args: { p_limit: number; p_phase_id: string; p_system_id: string }
+        Returns: Json
       }
       tag_discipline_counts: {
         Args: { p_project_id: string; p_subsystem_id?: string }

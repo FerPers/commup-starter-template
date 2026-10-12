@@ -5,6 +5,7 @@ import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
 import type { Enums } from '@/types/supabase.generated'
+import { isCriticality, type Criticality } from '@/lib/tags/criticality'
 
 export interface TagUpdatePayload {
   description?: string
@@ -24,6 +25,7 @@ export interface TagUpdatePayload {
   sp_ll?: number | null
   signal_type?: string | null
   sil_level?: string | null
+  criticality?: Criticality
   io_address?: string | null
   junction_box?: string | null
   datasheet_number?: string | null
@@ -61,6 +63,9 @@ export const updateTag = withAuthOnly(
   ): Promise<{ error?: string }> => {
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
     if (!access.ok) return { error: access.error }
+    if ('criticality' in payload && !isCriticality(payload.criticality)) {
+      return { error: 'Criticidad no válida' }
+    }
 
     const { error } = await ctx.supabase
       .from('tags')

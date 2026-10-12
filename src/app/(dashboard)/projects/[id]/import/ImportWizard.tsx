@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import { importTags, findExistingTags, type TagRow, type ImportResult } from '@/app/actions/import'
 import { detectTagType } from '@/lib/tag-types'
+import { parseCriticality, parseSilLevel } from '@/lib/tags/criticality'
 import { detectEquipmentTypeCode } from '@/lib/equipment-types'
 import { pickBestSheet, detectHeaderRow, cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
 
@@ -32,6 +33,8 @@ const COL_KEYWORDS: ColumnKeywords = {
   junction_box:     ['JUNCTION BOX', 'CAJA DE CONEXIONES', 'CAJA CONEXIONES', 'JB'],
   fluid_type:       ['FLUID TYPE', 'TIPO DE FLUIDO', 'TIPO FLUIDO', 'FLUIDO', 'FLUID'],
   mounting_typical: ['MOUNTING TYPICAL', 'TYPICAL', 'TIPICO DE MONTAJE', 'TIPICO MONTAJE', 'TÍPICO', 'TIPICO'],
+  criticality:      ['CRITICALITY', 'CRITICIDAD', 'CRITICO', 'CRÍTICO'],
+  sil:              ['SIL', 'SIL LEVEL', 'NIVEL SIL', 'SIL_LEVEL'],
   // Va después de fluid_type/mounting_typical para que 'TIPO' (parcial) no se robe 'TIPO DE FLUIDO'
   equipment_type:   ['EQUIPMENT TYPE', 'TIPO DE EQUIPO', 'TIPO EQUIPO', 'EQUIPMENT_TYPE', 'TIPO'],
 }
@@ -84,6 +87,8 @@ function parseRows(
       fluid_type:           get('fluid_type')         || undefined,
       mounting_typical:     get('mounting_typical')   || undefined,
       equipment_type_code:  get('equipment_type')     || undefined,
+      criticality:          parseCriticality(get('criticality')),
+      sil_level:            parseSilLevel(get('sil')),
     })
   }
   return result
@@ -97,14 +102,15 @@ function downloadTemplate(disciplineCode: string) {
   const headers = [
     ...baseHeaders,
     ...(isMec  ? ['FLUID TYPE']       : []),
-    ...(isInst ? ['MOUNTING TYPICAL', 'JUNCTION BOX'] : []),
+    ...(isInst ? ['MOUNTING TYPICAL', 'JUNCTION BOX', 'SIL'] : []),
+    'CRITICALITY',
   ]
   const sample =
     isInst
-      ? [['FT-101', 'Flow transmitter feed water', 'FT', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO', 'DS-FT-101', 'B', '0', '100', 'psi', 'TYP-INST-001', 'JB-101']]
+      ? [['FT-101', 'Flow transmitter feed water', 'FT', 'AREA-01', 'Process Area', 'SYS-01', 'Water System', 'SS-01', 'Feedwater', 'P&ID-1001', 'Rosemount', '3051S', 'SN12345', 'NO', 'DS-FT-101', 'B', '0', '100', 'psi', 'TYP-INST-001', 'JB-101', 'SIL2', 'Safety']]
       : disciplineCode === 'ELEC'
-        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'SWG', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO', 'DS-SWG-CPF-1', '', '', '', '']]
-        : [['P-101A', 'Booster Pump', 'P', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO', 'DS-P-101A', '', '', '', '', 'Gas Natural']]
+        ? [['SWG-CPF-1', 'Medium Voltage Switchgear', 'SWG', 'AREA-02', 'Power Room', 'SYS-02', 'MV System', 'SS-02', 'Distribution', '', 'ABB', 'UniGear', '', 'NO', 'DS-SWG-CPF-1', '', '', '', '', 'Process']]
+        : [['P-101A', 'Booster Pump', 'P', 'AREA-01', 'Process Area', 'SYS-03', 'Pump System', 'SS-03', 'Booster', '', 'Grundfos', 'CM5-A', '', 'NO', 'DS-P-101A', '', '', '', '', 'Gas Natural', 'Normal']]
   const ws = XLSX.utils.aoa_to_sheet([headers, ...sample])
   XLSX.utils.book_append_sheet(wb, ws, 'Tags')
   XLSX.writeFile(wb, `CommUp_${disciplineCode || 'Tags'}_Template.xlsx`)

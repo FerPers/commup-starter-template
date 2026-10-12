@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updateTag, deleteTag } from '@/app/actions/tags'
+import { suggestCriticality, CRITICALITY_LEVELS } from '@/lib/tags/criticality'
 import { INST_DISCIPLINES, SIGNAL_TYPES, SIL_LEVELS, cardStyle, inputStyle, sectionLabel, type Tag } from './tag-detail-shared'
 
 export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
@@ -39,6 +40,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
     sp_ll:        tag.sp_ll     != null ? String(tag.sp_ll)     : '',
     signal_type:      tag.signal_type      ?? '',
     sil_level:        tag.sil_level        ?? 'None',
+    criticality:      tag.criticality      ?? 'normal',
     io_address:       tag.io_address       ?? '',
     junction_box:     tag.junction_box     ?? '',
     datasheet_number: tag.datasheet_number ?? '',
@@ -84,6 +86,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
         sp_ll:        toNum(form.sp_ll),
         signal_type:      form.signal_type || null,
         sil_level:        form.sil_level || 'None',
+        criticality:      form.criticality as (typeof CRITICALITY_LEVELS)[number],
         io_address:       form.io_address.trim() || null,
         junction_box:     form.junction_box.trim() || null,
         datasheet_number: form.datasheet_number.trim() || null,
@@ -143,6 +146,13 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
               <option value="completed">{t('status.completed')}</option>
               <option value="on_hold">{t('status.on_hold')}</option>
             </select>
+          </FormField>
+
+          <FormField label={t('edit.fieldCriticality')}>
+            <select style={inputStyle} value={form.criticality} onChange={e => set('criticality', e.target.value)}>
+              {CRITICALITY_LEVELS.map(c => <option key={c} value={c}>{t(`criticality.${c}`)}</option>)}
+            </select>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('edit.criticalityHint')}</span>
           </FormField>
 
           <FormField label={t('edit.fieldPreservation')}>
@@ -228,7 +238,12 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
               </FormField>
 
               <FormField label={t('edit.fieldSilLevel')}>
-                <select style={inputStyle} value={form.sil_level} onChange={e => set('sil_level', e.target.value)}>
+                <select style={inputStyle} value={form.sil_level} onChange={e => {
+                  const sil = e.target.value
+                  set('sil_level', sil)
+                  // Con SIL declarado se sugiere criticidad de seguridad (editable)
+                  if (form.criticality === 'normal' && suggestCriticality(sil)) set('criticality', 'safety')
+                }}>
                   {SIL_LEVELS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </FormField>

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import NfcSection from './NfcSection'
-import { INST_DISCIPLINES, cardStyle, sectionLabel, type Area, type Subsystem, type System, type Tag } from './tag-detail-shared'
+import { CRITICALITY_STYLE, INST_DISCIPLINES, cardStyle, sectionLabel, type Area, type Subsystem, type System, type Tag } from './tag-detail-shared'
 
 export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, projectId, canEdit }: {
   tag: Tag
@@ -23,8 +23,20 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
     on_hold:      t('status.on_hold'),
   }
 
-  const infoFields = [
+  const crit = CRITICALITY_STYLE[tag.criticality] ?? CRITICALITY_STYLE.normal
+  const infoFields: { label: string; value: React.ReactNode }[] = [
     { label: t('overview.fieldStatus'),       value: STATUS_LABELS[tag.status] ?? tag.status },
+    {
+      label: t('overview.fieldCriticality'),
+      value: (
+        <span style={{
+          padding: '2px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 600,
+          background: crit.bg, color: crit.color, border: `1px solid ${crit.border}`,
+        }}>
+          {t(`criticality.${tag.criticality ?? 'normal'}`)}
+        </span>
+      ),
+    },
     { label: t('overview.fieldDiscipline'),   value: `${d.code} — ${d.name}` },
     { label: t('overview.fieldManufacturer'), value: tag.manufacturer ?? '—' },
     { label: t('overview.fieldModel'),        value: tag.model ?? '—' },

@@ -63,6 +63,7 @@ export type Tag = {
   sp_ll: number | null
   signal_type: string | null
   sil_level: string | null
+  criticality: string
   io_address: string | null
   junction_box: string | null
   datasheet_number: string | null
@@ -84,6 +85,13 @@ export const STATUS: Record<string, { color: string; bg: string; border: string 
 
 export const SIGNAL_TYPES = ['4-20mA', 'HART', 'Discreta', 'Foundation Fieldbus', 'Profibus', 'Modbus', 'WirelessHART', 'Otra']
 export const SIL_LEVELS   = ['None', 'SIL1', 'SIL2', 'SIL3']
+
+// Criticidad del tag (bloquea gates aunque el % sea alto); colores del badge
+export const CRITICALITY_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+  safety:  { color: '#b91c1c', bg: '#fef2f2', border: '#fecaca' },
+  process: { color: '#b45309', bg: '#fffbeb', border: '#fde68a' },
+  normal:  { color: 'var(--text-muted)', bg: 'var(--gray-100)', border: 'var(--border)' },
+}
 
 // Disciplines that work with analog/digital signals, setpoints, and SIL levels
 export const INST_DISCIPLINES = ['INST', 'SAFE', 'TELE']

@@ -8,6 +8,7 @@ import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
 import { normalizeCode, normalizePidRef, textOrNull, textOr } from '@/lib/excel/normalize'
 import { detectEquipmentTypeCode, normalizeTypeKey } from '@/lib/equipment-types'
 import type { TablesInsert } from '@/types/supabase.generated'
+import { isCriticality, suggestCriticality, type Criticality } from '@/lib/tags/criticality'
 
 export interface TagRow {
   tag_number: string
@@ -34,6 +35,10 @@ export interface TagRow {
   junction_box?: string
   fluid_type?: string
   mounting_typical?: string
+  /** safety / process / normal; ausente = no se toca (con SIL declarado se sugiere safety). */
+  criticality?: Criticality
+  /** 'SIL1'…'SIL4' o 'None'; ausente = no se toca. */
+  sil_level?: string
 }
 
 export interface ImportResult {
@@ -179,6 +184,10 @@ export const importTags = withAuthOnly(
           ...(row.junction_box !== undefined ? { junction_box: textOrNull(row.junction_box) } : {}),
           fluid_type: textOrNull(row.fluid_type),
           mounting_typical: textOrNull(row.mounting_typical),
+          ...(row.sil_level !== undefined ? { sil_level: row.sil_level } : {}),
+          ...(isCriticality(row.criticality)
+            ? { criticality: row.criticality }
+            : suggestCriticality(row.sil_level) ? { criticality: 'safety' as const } : {}),
           equipment_type_id: resolveEquipmentType(row.equipment_type_code, tagNumber),
         },
       })
