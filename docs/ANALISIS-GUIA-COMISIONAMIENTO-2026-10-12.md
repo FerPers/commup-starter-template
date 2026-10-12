@@ -90,11 +90,11 @@ Cada fase entrega algo usable por sí misma. Las estimaciones van en sesiones de
 ### Fase 0 — Coherencia de gates (1 sesión) · *corrección, no feature*
 - Elegir una sola fuente de verdad. Recomendado: la regla por fase de `eligibility.ts`, reescrita en SQL como `compute_system_readiness` v2 con el orden MC→RFPC→RFC→RFSU y las mismas reglas Cat B/Cat C.
 - Control Tower consume la v2. Tests DB en `tests/db/` + unit tests que comparan TS y SQL con los mismos fixtures.
-- **Decisión de Luis:** ¿Cat B bloquea o va como excepción justificada? ¿Cat C bloquea algún gate (p. ej. Handover)?
+- **Decidido:** Cat C no bloquea; Cat B se maneja como excepción justificada (ver sección 6).
 
 ### Fase 1 — Motor de gates y hold points (3–4 sesiones) · *el cimiento*
 - **Modelo:**
-  - `readiness_gates`: por org, configurable. Se siembran los 8 del libro (4.6) como plantilla y las fases/certificados actuales se mapean a ellos.
+  - `readiness_gates`: por org, configurable. **Por defecto MC/RFPC/RFC/RFSU** (mapeados a las fases actuales). Los otros gates del libro (4.6) se activan como opcionales por org.
   - `gate_criteria`: tipo + parámetros. Tipos:
     - `itr_phase_approved`
     - `punch_category_closed`
@@ -133,6 +133,9 @@ Cada fase entrega algo usable por sí misma. Las estimaciones van en sesiones de
 - **Ciclo común:** propuesto → autorizado → instalado/activo → retirado/restaurado → **verificado por otra persona**. Cada ítem tiene dueño, sistema/tag, adjuntos y captura offline con QR/NFC (ya existe `/scan`).
 - **Bloqueo:** se configura qué ítems abiertos bloquean qué gate. Ej.: un bypass activo bloquea *Process Introduction*; una ciega de prueba sin retirar bloquea *Pre-Comm complete*.
 - **Test packs de presión:** las líneas entran como **tags tipo "line"** (coherente con la decisión "todo es tag"). Un test pack agrupa líneas con presión, medio, duración, frontera, manómetros (con su calibración) y ciegas vinculadas, y se ejecuta con su ITR. Así cubre 8.15 y 10.29 sin otra jerarquía.
+  - Los packs pueden ser **grandes** (caso Refinería de Cartagena): la relación pack ↔ líneas es N:M y puede cruzar subsistemas.
+  - Avance por línea y por pack.
+  - Importación masiva desde Excel (line list + asignación a packs).
 
 ### Fase 4 — Calidad de evidencia en ITRs y punch (2–3 sesiones)
 - **Registro de equipos de prueba** (calibrador, megger, manómetro) con vencimiento de calibración. El ITR registra qué equipo se usó y **advierte o bloquea si está vencido** (13.8, 13.42).
@@ -147,6 +150,11 @@ Cada fase entrega algo usable por sí misma. Las estimaciones van en sesiones de
 - **Punch:**
   - Paso **"verificado en campo"** antes de cerrar, por otra persona (9.21).
   - Campo **impacto**: seguridad / proceso / equipo / operabilidad / ambiente.
+  - **Guía/procedimiento de levantamiento de pendientes**, que es la condición para que Cat C no bloquee:
+    - criterios de categoría por impacto funcional, no por tamaño físico (9.20);
+    - ayuda contextual en el formulario con ejemplos por disciplina;
+    - revisión de la categoría por el supervisor;
+    - PDF del procedimiento.
   - En PSSR, **disposición**: "cerrar antes del arranque / puede quedar con controles / mejora a largo plazo" (16.37).
 
 ### Fase 5 — Gestión diaria por readiness (3 sesiones)
@@ -203,9 +211,18 @@ Cada fase entrega algo usable por sí misma. Las estimaciones van en sesiones de
 
 Total aproximado: **22–27 sesiones**. Cada fase se puede vender y demostrar por separado. Para Geopark/Ecopetrol, las fases 1 + 3 son las que más resuenan con un HSE y un gerente de proyecto.
 
-## 6. Decisiones que necesito de ti antes de arrancar
-1. **Cat B / Cat C** en los gates (fase 0).
-2. **¿Los 8 gates del libro son la plantilla por defecto**, o mantenemos MC/RFPC/RFC/RFSU como únicos gates visibles y los demás como opcionales por org?
-3. **¿Líneas como tags tipo "line"** para los test packs (coherente con "todo es tag")?
-4. **¿PTW/MOC se integran por referencia** (recomendado) o los quieres nativos?
-5. **¿Prioridad comercial?** Si hay un cliente que pide arranque/desempeño antes, la fase 7 puede adelantarse porque depende poco de 2–3.
+## 6. Decisiones (Luis, 2026-10-12)
+1. **Cat C no bloquea ningún gate.** La condición es que los pendientes queden bien categorizados desde que se levantan. Por eso se agrega a la **fase 4** una **guía/procedimiento de levantamiento de pendientes**:
+   - criterios de categoría por impacto funcional y de seguridad, no por tamaño físico (9.19–9.20, 16.36);
+   - ayuda en el formulario de punch con ejemplos por disciplina;
+   - revisión de categoría por el supervisor;
+   - un PDF de procedimiento para entregar al cliente.
+
+   **Cat B** sigue como hoy en `eligibility.ts`: excepción justificada al emitir. *(Supuesto: confirmar.)*
+2. **Gates por defecto = MC / RFPC / RFC / RFSU** (lo que CommUp ya tiene). Los demás gates del libro (Utility Ready, Functional, Process Introduction, Performance Test, Handover) quedan como **opcionales que cada org activa**.
+3. **Líneas como tags tipo "line"** para los test packs. Nota de diseño (experiencia en la Refinería de Cartagena): los test packs suelen ser **grandes** y abarcan muchas líneas y a veces varios subsistemas. Entonces:
+   - test pack ↔ líneas es **N:M** y no cuelga de un subsistema;
+   - el avance se ve por línea y por pack;
+   - hace falta importación masiva desde Excel (line list + asignación a packs).
+4. **PTW / LOTO / MOC / SIMOPS se integran por referencia.** Cada compañía tiene sus propias reglas y procedimientos.
+5. **Sin cambio de prioridad comercial.** El objetivo es **presentar a Geopark en unos meses**. Para la demo, lo ideal es tener listas F0 + F1 + F2 + F3 (la historia del "motor de readiness" con registros); F4–F5 suman si da el tiempo.
