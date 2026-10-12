@@ -100,7 +100,8 @@
       "allItrs": "Todos los ITRs",
       "allPunches": "Todos los punches",
       "allCertificates": "Todos los certificados",
-      "allWorkPlans": "Todos los planes"
+      "allWorkPlans": "Todos los planes",
+      "gates": "Gates (hold points)"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -1686,9 +1687,10 @@
       "systems": "Sistemas",
       "avgItr": "ITR promedio {pct}%",
       "punchesOpen": "Punches Abiertos",
-      "readyByGate": "Sistemas listos por gate",
       "catBLimit": "Límite Cat B abiertos por subsistema: {limit}",
-      "catBNoLimit": "Sin límite de Cat B abiertos por subsistema"
+      "catBNoLimit": "Sin límite de Cat B abiertos por subsistema",
+      "approvedByGate": "Sistemas aprobados por gate",
+      "toApprove": "{count} por aprobar"
     },
     "col": {
       "area": "Área",
@@ -1700,12 +1702,7 @@
       "gates": "Gates",
       "topBlocker": "Blocker Principal"
     },
-    "gateTitle": "{name}: {level} · ITRs {approved}/{total} aprobados · {red} de {subsystems} subsistemas no listos",
-    "level": {
-      "green": "listo",
-      "yellow": "listo con condiciones (Cat B a justificar)",
-      "red": "no listo"
-    },
+    "gateTitle": "{name}: {status} · {failing} criterio(s) sin cumplir — clic para ver el detalle",
     "blocker": {
       "noSubsystems": "El sistema no tiene subsistemas",
       "noItrs": "No hay ITRs definidos para este sistema",
@@ -1713,6 +1710,14 @@
       "punchesA": "{count} punch(es) Cat A abiertos — bloquean todos los gates",
       "punchesBOverLimit": "{count} subsistema(s) superan el límite de {limit} Cat B abiertos",
       "punchesB": "{count} punch(es) Cat B abiertos — requieren justificación al emitir"
+    },
+    "gateStatus": {
+      "approved": "aprobado",
+      "approved_with_conditions": "aprobado con condiciones",
+      "regressed": "aprobado — en regresión",
+      "ready": "listo para aprobar",
+      "ready_with_conditions": "listo con condiciones",
+      "not_ready": "no listo"
     }
   },
   "DataQuality": {
@@ -2239,5 +2244,130 @@
     "pending": "{count} pendientes",
     "syncPending": "{count, plural, =1 {# pendiente de sincronizar} other {# pendientes de sincronizar}}",
     "offline": "Sin red · {count, plural, =1 {# pendiente} other {# pendientes}}"
+  },
+  "Gates": {
+    "back": "Volver a Control Tower",
+    "intro": "Cada gate es un hold point: se calcula con sus criterios y, cuando está listo, alguien con autoridad lo aprueba. La aprobación congela la evidencia del momento. Si después algo se cae (p. ej. aparece un Cat A), el gate se marca «en regresión» sin revocarse solo.",
+    "noGates": "La organización no tiene gates activos. Configúralos en Administración → Gates.",
+    "unknownUser": "usuario",
+    "revokePrompt": "Motivo para revocar la aprobación de {gate}:",
+    "evidenceError": "No se pudo abrir el adjunto",
+    "attestMissing": "La declaración necesita un comentario y un archivo adjunto",
+    "andMore": "…y {count} más",
+    "nonBlocking": "no bloqueante",
+    "approvedBy": "Aprobado por {name} ({role}) — {date}",
+    "regressedHint": "Aprobado, pero hoy no cumple sus criterios: revisa los bloqueos o revoca la aprobación.",
+    "conditions": "Condiciones",
+    "notes": "Notas",
+    "revoke": "Revocar aprobación",
+    "conditionsRequired": "Condiciones de la aprobación (obligatorias: hay Cat B abiertos), una por línea",
+    "conditionsOptional": "Condiciones de la aprobación (opcional), una por línea",
+    "conditionsPlaceholder": "Ej.: Los Cat B P-0123 y P-0124 se cierran antes de RFC",
+    "notesPlaceholder": "Notas (opcional)",
+    "approve": "Aprobar {gate}",
+    "notReadyHint": "No se puede aprobar hasta que se cumplan los criterios en rojo.",
+    "noAuthority": "Listo para aprobar. Pueden aprobarlo los roles: {roles}.",
+    "status": {
+      "approved": "Aprobado",
+      "approved_with_conditions": "Aprobado con condiciones",
+      "regressed": "Aprobado — en regresión",
+      "ready": "Listo para aprobar",
+      "ready_with_conditions": "Listo con condiciones",
+      "not_ready": "No listo"
+    },
+    "result": {
+      "pass": "cumple",
+      "warn": "cumple con condiciones",
+      "fail": "no cumple"
+    },
+    "kind": {
+      "previous_gate": "Gate anterior aprobado",
+      "itr_phase_approved": "ITRs de la fase aprobados",
+      "certificates_issued": "Certificados emitidos en todos los subsistemas",
+      "pssr_approved": "PSSR aprobado",
+      "critical_tags_ready": "Tags críticos completos",
+      "manual_attestation": "Declaración con evidencia"
+    },
+    "crit": {
+      "previousOk": "El gate anterior está aprobado.",
+      "previousMissing": "Requiere aprobar primero el gate anterior.",
+      "noPhase": "El gate no tiene una fase asociada: configúrala en Administración → Gates.",
+      "itrSummary": "{approved}/{total} ITRs aprobados · {red} de {subsystems} subsistemas no listos",
+      "catBOpen": "{count} Cat B abiertos (requieren justificación)",
+      "certSummary": "{issued}/{total} subsistemas con certificado emitido",
+      "certMissing": "Faltan",
+      "pssrStatus": "PSSR {number}: {status}",
+      "pssrNone": "No hay PSSR para este sistema.",
+      "criticalSummary": "{total} tags críticos · {failing} con pendientes",
+      "criticalTagDetail": "{itrs} ITR(s) sin aprobar · {punches} punch(es) A/B abiertos"
+    },
+    "reason": {
+      "cat_a": "{a} punch(es) Cat A abiertos",
+      "no_itrs": "sin ITRs en esta fase",
+      "itrs_pending": "{approved}/{total} ITRs aprobados",
+      "cat_b_over_limit": "{b} Cat B abiertos (sobre el límite)"
+    },
+    "link": {
+      "itrs": "Ver ITRs",
+      "punches": "Ver punches",
+      "certificates": "Ver certificados",
+      "pssr": "Ver PSSR"
+    },
+    "pssrStatus": {
+      "draft": "borrador",
+      "in_progress": "en curso",
+      "pending_approval": "pendiente de aprobación",
+      "approved": "aprobado",
+      "rejected": "rechazado"
+    },
+    "criticality": {
+      "safety": "seguridad",
+      "process": "proceso",
+      "normal": "normal"
+    },
+    "attest": {
+      "view": "Ver adjunto",
+      "revoke": "Retirar declaración",
+      "pending": "Pendiente de declaración por un editor.",
+      "commentPlaceholder": "Qué se verificó y cómo (ej.: aislamientos verificados según permiso PT-0456)",
+      "file": "Archivo de evidencia",
+      "submit": "Registrar declaración"
+    }
+  },
+  "GatesAdmin": {
+    "title": "Gates (hold points)",
+    "subtitle": "Cada gate es un punto de control por sistema: se calcula con sus criterios y quien tenga autoridad lo aprueba formalmente. Por defecto hay uno por fase (MC, RFPC, RFC, RFSU); puedes sumar los gates opcionales de la guía de comisionamiento.",
+    "name": "Nombre",
+    "code": "Código",
+    "phase": "Fase asociada",
+    "noPhase": "Sin fase",
+    "requiresPrevious": "Exige el gate anterior aprobado",
+    "approvalRoles": "Pueden aprobar",
+    "criteria": "Criterios",
+    "blocking": "bloqueante",
+    "remove": "quitar",
+    "criterionKind": "Tipo de criterio",
+    "attestationPlaceholder": "Qué se debe declarar (ej.: Aislamientos verificados)",
+    "addCriterion": "Agregar criterio",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "activate": "Activar",
+    "deactivate": "Desactivar",
+    "delete": "Borrar",
+    "confirmDelete": "¿Borrar el gate {code}? Esta acción no se puede deshacer.",
+    "newGate": "Nuevo gate",
+    "create": "Crear gate",
+    "catalogTitle": "Gates opcionales de la guía de comisionamiento",
+    "catalogHint": "Se agregan al final, sin exigir el gate anterior; ajusta orden, fase y criterios después.",
+    "add": "Agregar",
+    "added": "Ya agregado",
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Arquitecto",
+      "leader": "Líder",
+      "inspector": "Inspector",
+      "client": "Cliente"
+    }
   }
 }

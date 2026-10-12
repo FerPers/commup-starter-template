@@ -100,7 +100,8 @@
       "allItrs": "All ITRs",
       "allPunches": "All punches",
       "allCertificates": "All certificates",
-      "allWorkPlans": "All work plans"
+      "allWorkPlans": "All work plans",
+      "gates": "Gates (hold points)"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -1686,9 +1687,10 @@
       "systems": "Systems",
       "avgItr": "Avg ITR {pct}%",
       "punchesOpen": "Open Punches",
-      "readyByGate": "Systems ready per gate",
       "catBLimit": "Open Cat B limit per subsystem: {limit}",
-      "catBNoLimit": "No limit on open Cat B per subsystem"
+      "catBNoLimit": "No limit on open Cat B per subsystem",
+      "approvedByGate": "Systems approved per gate",
+      "toApprove": "{count} to approve"
     },
     "col": {
       "area": "Area",
@@ -1700,12 +1702,7 @@
       "gates": "Gates",
       "topBlocker": "Top Blocker"
     },
-    "gateTitle": "{name}: {level} · ITRs {approved}/{total} approved · {red} of {subsystems} subsystems not ready",
-    "level": {
-      "green": "ready",
-      "yellow": "ready with conditions (Cat B to justify)",
-      "red": "not ready"
-    },
+    "gateTitle": "{name}: {status} · {failing} criteria not met — click for details",
     "blocker": {
       "noSubsystems": "System has no subsystems",
       "noItrs": "No ITRs defined for this system",
@@ -1713,6 +1710,14 @@
       "punchesA": "{count} Cat A punch(es) open — block every gate",
       "punchesBOverLimit": "{count} subsystem(s) exceed the limit of {limit} open Cat B",
       "punchesB": "{count} Cat B punch(es) open — require justification at issuance"
+    },
+    "gateStatus": {
+      "approved": "approved",
+      "approved_with_conditions": "approved with conditions",
+      "regressed": "approved — regressed",
+      "ready": "ready to approve",
+      "ready_with_conditions": "ready with conditions",
+      "not_ready": "not ready"
     }
   },
   "DataQuality": {
@@ -2239,5 +2244,130 @@
     "pending": "{count} pending",
     "syncPending": "{count, plural, =1 {# pending sync} other {# pending sync}}",
     "offline": "Offline · {count, plural, =1 {# pending} other {# pending}}"
+  },
+  "Gates": {
+    "back": "Back to Control Tower",
+    "intro": "Each gate is a hold point: it is computed from its criteria and, once ready, someone with authority approves it. Approval freezes the evidence at that moment. If something later falls back (e.g. a Cat A appears), the gate is flagged as regressed instead of being revoked automatically.",
+    "noGates": "The organization has no active gates. Configure them in Admin → Gates.",
+    "unknownUser": "user",
+    "revokePrompt": "Reason for revoking the {gate} approval:",
+    "evidenceError": "Could not open the attachment",
+    "attestMissing": "The attestation needs a comment and an attached file",
+    "andMore": "…and {count} more",
+    "nonBlocking": "non-blocking",
+    "approvedBy": "Approved by {name} ({role}) — {date}",
+    "regressedHint": "Approved, but it no longer meets its criteria: review the blockers or revoke the approval.",
+    "conditions": "Conditions",
+    "notes": "Notes",
+    "revoke": "Revoke approval",
+    "conditionsRequired": "Approval conditions (required: there are open Cat B), one per line",
+    "conditionsOptional": "Approval conditions (optional), one per line",
+    "conditionsPlaceholder": "E.g.: Cat B P-0123 and P-0124 closed before RFC",
+    "notesPlaceholder": "Notes (optional)",
+    "approve": "Approve {gate}",
+    "notReadyHint": "It cannot be approved until the criteria in red are met.",
+    "noAuthority": "Ready to approve. Roles that can approve: {roles}.",
+    "status": {
+      "approved": "Approved",
+      "approved_with_conditions": "Approved with conditions",
+      "regressed": "Approved — regressed",
+      "ready": "Ready to approve",
+      "ready_with_conditions": "Ready with conditions",
+      "not_ready": "Not ready"
+    },
+    "result": {
+      "pass": "met",
+      "warn": "met with conditions",
+      "fail": "not met"
+    },
+    "kind": {
+      "previous_gate": "Previous gate approved",
+      "itr_phase_approved": "Phase ITRs approved",
+      "certificates_issued": "Certificates issued in every subsystem",
+      "pssr_approved": "PSSR approved",
+      "critical_tags_ready": "Critical tags complete",
+      "manual_attestation": "Attestation with evidence"
+    },
+    "crit": {
+      "previousOk": "The previous gate is approved.",
+      "previousMissing": "The previous gate must be approved first.",
+      "noPhase": "The gate has no phase: set it in Admin → Gates.",
+      "itrSummary": "{approved}/{total} ITRs approved · {red} of {subsystems} subsystems not ready",
+      "catBOpen": "{count} open Cat B (justification required)",
+      "certSummary": "{issued}/{total} subsystems with an issued certificate",
+      "certMissing": "Missing",
+      "pssrStatus": "PSSR {number}: {status}",
+      "pssrNone": "No PSSR for this system.",
+      "criticalSummary": "{total} critical tags · {failing} with pending items",
+      "criticalTagDetail": "{itrs} unapproved ITR(s) · {punches} open A/B punch(es)"
+    },
+    "reason": {
+      "cat_a": "{a} open Cat A punch(es)",
+      "no_itrs": "no ITRs in this phase",
+      "itrs_pending": "{approved}/{total} ITRs approved",
+      "cat_b_over_limit": "{b} open Cat B (over the limit)"
+    },
+    "link": {
+      "itrs": "View ITRs",
+      "punches": "View punches",
+      "certificates": "View certificates",
+      "pssr": "View PSSR"
+    },
+    "pssrStatus": {
+      "draft": "draft",
+      "in_progress": "in progress",
+      "pending_approval": "pending approval",
+      "approved": "approved",
+      "rejected": "rejected"
+    },
+    "criticality": {
+      "safety": "safety",
+      "process": "process",
+      "normal": "normal"
+    },
+    "attest": {
+      "view": "View attachment",
+      "revoke": "Withdraw attestation",
+      "pending": "Awaiting attestation by an editor.",
+      "commentPlaceholder": "What was verified and how (e.g.: isolations verified per permit PT-0456)",
+      "file": "Evidence file",
+      "submit": "Record attestation"
+    }
+  },
+  "GatesAdmin": {
+    "title": "Gates (hold points)",
+    "subtitle": "Each gate is a per-system checkpoint: it is computed from its criteria and formally approved by someone with authority. By default there is one per phase (MC, RFPC, RFC, RFSU); you can add the optional gates from the commissioning guide.",
+    "name": "Name",
+    "code": "Code",
+    "phase": "Linked phase",
+    "noPhase": "No phase",
+    "requiresPrevious": "Requires the previous gate approved",
+    "approvalRoles": "Can approve",
+    "criteria": "Criteria",
+    "blocking": "blocking",
+    "remove": "remove",
+    "criterionKind": "Criterion type",
+    "attestationPlaceholder": "What must be attested (e.g.: Isolations verified)",
+    "addCriterion": "Add criterion",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "delete": "Delete",
+    "confirmDelete": "Delete gate {code}? This cannot be undone.",
+    "newGate": "New gate",
+    "create": "Create gate",
+    "catalogTitle": "Optional gates from the commissioning guide",
+    "catalogHint": "They are added at the end without requiring the previous gate; adjust order, phase and criteria afterwards.",
+    "add": "Add",
+    "added": "Already added",
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Architect",
+      "leader": "Leader",
+      "inspector": "Inspector",
+      "client": "Client"
+    }
   }
 }

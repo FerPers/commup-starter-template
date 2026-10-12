@@ -11,7 +11,7 @@ import {
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
   Bell, Database, History, Tag, Activity, Boxes, FolderTree,
   RotateCw, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
-  ChevronDown, ChevronRight,
+  ChevronDown, ChevronRight, Milestone,
   type LucideIcon,
 } from 'lucide-react'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
@@ -191,6 +191,7 @@ const ADMIN_GROUP: NavGroup = {
     { href: '/admin/templates/preservation', labelKey: 'preservationTemplates', icon: ClipboardList, roles: EDITOR_ROLES },
     { href: '/admin/templates/pssr',         labelKey: 'pssrTemplates',         icon: ShieldCheck,   roles: EDITOR_ROLES },
     { href: '/admin/config',                 labelKey: 'config',                icon: Settings,      roles: ADMIN_ROLES },
+    { href: '/admin/gates',                  labelKey: 'gates',                 icon: Milestone,     roles: ADMIN_ROLES },
     { href: '/admin/users',                  labelKey: 'users',                 icon: Users,         roles: ADMIN_ROLES },
     { href: '/admin/workflows',              labelKey: 'workflows',             icon: Workflow,      roles: PRIVILEGED_ROLES },
     { href: '/admin/api-keys',               labelKey: 'apiKeys',               icon: Key,           roles: PRIVILEGED_ROLES },

@@ -1,7 +1,9 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import Link from 'next/link'
 import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
+import { GATE_STATUS_STYLE, isApproved, type MatrixGate } from '@/lib/readiness/gates'
 
 type GateLevel = 'green' | 'yellow' | 'red'
 
@@ -39,25 +41,18 @@ type Readiness = {
   blockers: Blocker[]
 }
 
-// Mismas reglas que la emisión de certificados (src/lib/certificates/eligibility.ts):
-// verde = listo, ámbar = listo con condiciones (Cat B justificables), rojo = no listo.
-const GATE_STYLE: Record<GateLevel, { bg: string; fg: string; border: string; dot: string }> = {
-  green:  { bg: 'var(--success-50)', fg: 'var(--success-700)', border: '#a7f3d0', dot: '●' },
-  yellow: { bg: '#fffbeb',           fg: '#b45309',            border: '#fde68a', dot: '◐' },
-  red:    { bg: 'var(--danger-50)',  fg: 'var(--danger-700)',  border: '#fecaca', dot: '○' },
-}
-
-function GateBadge({ level, label, title }: { level: GateLevel; label: string; title: string }) {
-  const st = GATE_STYLE[level]
+// Estado del hold point por sistema (fase 1): aprobado / listo / no listo / regresión.
+function GateBadge({ gate, label, title, href }: { gate: MatrixGate; label: string; title: string; href: string }) {
+  const st = GATE_STATUS_STYLE[gate.status]
   return (
-    <span title={title} style={{
-      display: 'inline-flex', alignItems: 'center', gap: 4,
+    <Link href={href} title={title} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none',
       padding: '3px 9px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600,
-      background: st.bg, color: st.fg, border: `1px solid ${st.border}`,
+      background: st.bg, color: st.fg, border: `1.5px solid ${st.border}`,
     }}>
-      <span style={{ fontSize: 10 }} aria-hidden="true">{st.dot}</span>
+      <span style={{ fontSize: 10 }} aria-hidden="true">{st.icon}</span>
       {label}
-    </span>
+    </Link>
   )
 }
 
@@ -102,15 +97,16 @@ export default async function ControlTowerPage({
   const projectId = params.projectId ?? projects?.[0]?.id ?? null
 
   let rows: Readiness[] = []
+  const gatesBySystem = new Map<string, MatrixGate[]>()
   if (projectId) {
-    const { data, error } = await supabase.rpc('compute_project_readiness', {
-      p_project_id: projectId,
-    })
-    if (error) {
-      console.error('[ControlTower] rpc error:', error)
-    } else {
-      rows = (data ?? []) as Readiness[]
-    }
+    const [readiness, gates] = await Promise.all([
+      supabase.rpc('compute_project_readiness', { p_project_id: projectId }),
+      supabase.rpc('compute_project_gates', { p_project_id: projectId }),
+    ])
+    if (readiness.error) console.error('[ControlTower] readiness rpc error:', readiness.error)
+    else rows = (readiness.data ?? []) as unknown as Readiness[]
+    if (gates.error) console.error('[ControlTower] gates rpc error:', gates.error)
+    for (const g of gates.data ?? []) gatesBySystem.set(g.system_id, (g.gates ?? []) as unknown as MatrixGate[])
   }
 
   const totals = rows.reduce(
@@ -124,12 +120,16 @@ export default async function ControlTowerPage({
   )
   const avgItrPct = totals.systems > 0 ? totals.itrPctSum / totals.systems : 0
 
-  // Gates = fases de la org en orden; se cuentan los sistemas listos (verde o ámbar) por gate.
-  const gateDefs = rows[0]?.gates ?? []
-  const readyByGate = gateDefs.map(g => ({
-    certificate: g.certificate,
-    ready: rows.filter(r => r.gates.find(x => x.phase_id === g.phase_id)?.ready).length,
-  }))
+  // Por gate: sistemas aprobados y, aparte, los que ya están listos para aprobar.
+  const gateDefs = rows.length > 0 ? (gatesBySystem.get(rows[0].system_id) ?? []) : []
+  const byGate = gateDefs.map(g => {
+    const statuses = rows.map(r => gatesBySystem.get(r.system_id)?.find(x => x.gate_id === g.gate_id)?.status)
+    return {
+      code: g.code,
+      approved: statuses.filter(st => st && isApproved(st) && st !== 'regressed').length,
+      toApprove: statuses.filter(st => st === 'ready' || st === 'ready_with_conditions').length,
+    }
+  })
 
   const blockerText = (b: Blocker): string => {
     switch (b.code) {
@@ -180,14 +180,16 @@ export default async function ControlTowerPage({
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.avgItr', { pct: avgItrPct.toFixed(1) })}</div>
           </Card>
           <Card padding="md" style={{ gridColumn: 'span 2' }}>
-            <div style={kpiLabel}>{t('kpi.readyByGate')}</div>
+            <div style={kpiLabel}>{t('kpi.approvedByGate')}</div>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginTop: 4 }}>
-              {readyByGate.map(g => (
-                <div key={g.certificate}>
-                  <div style={{ ...kpiValue, marginTop: 0, color: g.ready === totals.systems ? 'var(--success-500)' : 'var(--text-strong)' }}>
-                    {g.ready}/{totals.systems}
+              {byGate.map(g => (
+                <div key={g.code}>
+                  <div style={{ ...kpiValue, marginTop: 0, color: g.approved === totals.systems ? 'var(--success-500)' : 'var(--text-strong)' }}>
+                    {g.approved}/{totals.systems}
                   </div>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>{g.certificate}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>
+                    {g.code}{g.toApprove > 0 && <span style={{ color: 'var(--success-700)' }}> · {t('kpi.toApprove', { count: g.toApprove })}</span>}
+                  </div>
                 </div>
               ))}
             </div>
@@ -239,7 +241,7 @@ export default async function ControlTowerPage({
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.area_name}</div>
                       </TD>
                       <TD>
-                        <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{r.system_code}</div>
+                        <Link href={`/control-tower/${r.system_id}`} style={{ fontWeight: 600, color: 'var(--text-strong)', textDecoration: 'none' }}>{r.system_code}</Link>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.system_name}</div>
                       </TD>
                       <TD>
@@ -259,19 +261,13 @@ export default async function ControlTowerPage({
                       </TD>
                       <TD>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          {r.gates.map(g => (
+                          {(gatesBySystem.get(r.system_id) ?? []).map(g => (
                             <GateBadge
-                              key={g.phase_id}
-                              level={g.level}
-                              label={g.certificate}
-                              title={t('gateTitle', {
-                                name: g.name,
-                                level: t(`level.${g.level}`),
-                                approved: g.itr_approved,
-                                total: g.itr_total,
-                                red: g.subsystems_red,
-                                subsystems: g.subsystems_total,
-                              })}
+                              key={g.gate_id}
+                              gate={g}
+                              label={g.code}
+                              href={`/control-tower/${r.system_id}`}
+                              title={t('gateTitle', { name: g.name, status: t(`gateStatus.${g.status}`), failing: g.failing })}
                             />
                           ))}
                         </div>
