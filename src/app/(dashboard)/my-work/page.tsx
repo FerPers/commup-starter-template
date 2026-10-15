@@ -44,8 +44,9 @@ export default async function MyWorkPage() {
   const signer = canSignCertificates(role)
   const oversight = seesPreservation(role)
 
-  const [t, locale, { data: profile }, { data: projects }] = await Promise.all([
+  const [t, tGuide, locale, { data: profile }, { data: projects }] = await Promise.all([
     getTranslations('MyWork'),
+    getTranslations('PunchGuide'),
     getLocale(),
     supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle(),
     supabase.from('projects').select('id, code').eq('org_id', orgId),
@@ -55,7 +56,8 @@ export default async function MyWorkPage() {
   const today = new Date().toISOString().slice(0, 10)
 
   const none = Promise.resolve({ data: null })
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }] = await Promise.all([
+  const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }] = await Promise.all([
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
     supabase
       .from('itr_assignments')
@@ -66,6 +68,7 @@ export default async function MyWorkPage() {
       .select('id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)')
       .eq('assigned_to', userId)
       .in('status', ['open', 'in_progress'])
+      .is('resolved_at', null)
       .in('project_id', projectIds)
       .limit(200),
     projectIds.length === 0 ? none : supabase
@@ -92,6 +95,26 @@ export default async function MyWorkPage() {
       .in('project_id', projectIds)
       .order('next_due_date', { ascending: true })
       .limit(QUEUE_LIMIT + 1),
+    // Fase 4: resueltos por otros, por verificar en campo.
+    projectIds.length === 0 ? none : supabase
+      .from('punches')
+      .select(`${punchSel}, resolved_at`)
+      .eq('status', 'in_progress')
+      .not('resolved_at', 'is', null)
+      .neq('resolved_by', userId)
+      .in('project_id', projectIds)
+      .order('resolved_at', { ascending: true })
+      .limit(QUEUE_LIMIT + 1),
+    // Fase 4: categoría sin revisar (solo supervisores), levantados por otros.
+    !oversight || projectIds.length === 0 ? none : supabase
+      .from('punches')
+      .select(`${punchSel}, impact`)
+      .in('status', ['open', 'in_progress'])
+      .is('category_reviewed_at', null)
+      .neq('raised_by', userId)
+      .in('project_id', projectIds)
+      .order('created_at', { ascending: true })
+      .limit(QUEUE_LIMIT + 1),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -100,6 +123,8 @@ export default async function MyWorkPage() {
   const plan = (planItems ?? []) as unknown as PlanItemRow[]
   const pendingCerts = ((certs ?? []) as unknown as CertRow[]).filter(c => !c.certificate_signatures.some(s => s.role === 'completion'))
   const overduePres = (preservation ?? []) as unknown as PreservationRow[]
+  const verifyRows = (toVerify ?? []) as unknown as PunchRow[]
+  const reviewRows = (toReview ?? []) as unknown as (PunchRow & { impact: string | null })[]
 
   const projectsInvolved = new Set<string>([
     ...queues.execute.map(r => r.itrs!.project_id),
@@ -145,6 +170,8 @@ export default async function MyWorkPage() {
         <Chip n={counts.plan_items} label={t('chips.plan')} tone="neutral" />
         {signer && <Chip n={counts.signatures} label={t('chips.signatures')} tone={counts.signatures > 0 ? 'info' : 'neutral'} />}
         {oversight && <Chip n={counts.preservation_overdue} label={t('chips.preservation')} tone={counts.preservation_overdue > 0 ? 'danger' : 'neutral'} />}
+        <Chip n={counts.punches_verify} label={t('chips.punchesVerify')} tone={counts.punches_verify > 0 ? 'info' : 'neutral'} />
+        {oversight && <Chip n={counts.punches_review} label={t('chips.punchesReview')} tone={counts.punches_review > 0 ? 'warning' : 'neutral'} />}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -199,6 +226,40 @@ export default async function MyWorkPage() {
             )
           })}
         </Queue>
+
+        {/* Punch por verificar en campo (fase 4) */}
+        <Queue title={t('queues.punchesVerify')} count={Math.min(verifyRows.length, QUEUE_LIMIT)} total={counts.punches_verify} emptyText={t('empty.punchesVerify')} moreHref="/punch-list?status=in_progress" moreLabel={t('viewAll', { count: counts.punches_verify })} limit={QUEUE_LIMIT}>
+          {verifyRows.slice(0, QUEUE_LIMIT).map(p => {
+            const cat = CATEGORY_CFG[p.category]
+            return (
+              <Row key={p.id} href={`/projects/${p.project_id}/punches?q=${encodeURIComponent(p.punch_number)}`} stripe="#7c3aed"
+                code={p.punch_number}
+                tag={<span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>}
+                what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`}
+                project={p.projects?.code}
+                right={<Pill tone="info" style={{ background: '#f5f3ff', color: '#7c3aed' }}>{t('due.verify')}</Pill>}
+              />
+            )
+          })}
+        </Queue>
+
+        {/* Categoría por revisar (supervisores, fase 4) */}
+        {oversight && (
+          <Queue title={t('queues.punchesReview')} count={Math.min(reviewRows.length, QUEUE_LIMIT)} total={counts.punches_review} emptyText={t('empty.punchesReview')} moreHref="/punch-list" moreLabel={t('viewAll', { count: counts.punches_review })} limit={QUEUE_LIMIT}>
+            {reviewRows.slice(0, QUEUE_LIMIT).map(p => {
+              const cat = CATEGORY_CFG[p.category]
+              return (
+                <Row key={p.id} href={`/projects/${p.project_id}/punches?q=${encodeURIComponent(p.punch_number)}`} stripe={cat.color}
+                  code={p.punch_number}
+                  tag={<span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>}
+                  what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`}
+                  project={p.projects?.code}
+                  right={<Pill tone="warning">{p.impact ? tGuide(`impact.${p.impact}`) : tGuide('noImpact')}</Pill>}
+                />
+              )
+            })}
+          </Queue>
+        )}
 
         {/* Plan de trabajo */}
         <Queue title={t('queues.plan')} count={Math.min(plan.length, QUEUE_LIMIT)} total={counts.plan_items} emptyText={t('empty.plan')} moreHref="/work-plans" moreLabel={t('viewAll', { count: counts.plan_items })} limit={QUEUE_LIMIT}>

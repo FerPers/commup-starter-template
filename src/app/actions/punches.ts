@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
 import type { TablesUpdate } from '@/types/supabase.generated'
+import { PUNCH_IMPACTS, STARTUP_DISPOSITIONS, type PunchImpact, type StartupDisposition } from '@/lib/punches/category-guide'
 
 // ── createPunch ────────────────────────────────────────────────────────────
 
@@ -28,9 +29,16 @@ export const createPunch = withAuth(
       assignedTo?: string | null
       targetDate?: string | null
       priority?: 'critical' | 'major' | 'minor'
+      /** Impacto funcional (obligatorio desde la fase 4, §10.5). */
+      impact?: PunchImpact | null
+      /** Solo la cola offline: punch encolados antes de que el impacto fuera obligatorio. */
+      legacyWithoutImpact?: boolean
     },
   ): Promise<{ punchId?: string; punchNumber?: string; error?: string }> => {
     const { supabase, orgId, userId } = ctx
+
+    if (input.impact && !PUNCH_IMPACTS.includes(input.impact)) return { error: 'Impacto no válido' }
+    if (!input.impact && !input.legacyWithoutImpact) return { error: 'Indica el impacto del punch (seguridad, ambiente, proceso, equipo u operabilidad)' }
 
     let subsystemId: string | null = null
     let disciplineId: string | null = null
@@ -67,6 +75,7 @@ export const createPunch = withAuth(
         status: 'open',
         priority: input.priority ?? 'major',
         target_date: input.targetDate ?? null,
+        impact: input.impact ?? null,
       })
       .select('id, punch_number')
       .single()
@@ -278,6 +287,32 @@ export const reviewPunchCategory = withAuth(
     })
     if (error) return { error: error.message }
     revalidatePunch(input.projectId, input.tagId)
+    return {}
+  },
+)
+
+/** Impacto y disposición para el arranque (PSSR 16.37). Columnas libres: solo se valida el valor. */
+export const updatePunchClassification = withAuth(
+  { guards: [{ resource: 'project', field: 'projectId' }] },
+  async (
+    ctx,
+    input: { punchId: string; projectId: string; tagId?: string | null; impact?: PunchImpact | null; startupDisposition?: StartupDisposition | null },
+  ): Promise<{ error?: string }> => {
+    if (ctx.role === 'client') return { error: 'Sin permiso' }
+    const patch: TablesUpdate<'punches'> = {}
+    if ('impact' in input) {
+      if (input.impact && !PUNCH_IMPACTS.includes(input.impact)) return { error: 'Impacto no válido' }
+      patch.impact = input.impact ?? null
+    }
+    if ('startupDisposition' in input) {
+      if (input.startupDisposition && !STARTUP_DISPOSITIONS.includes(input.startupDisposition)) return { error: 'Disposición no válida' }
+      patch.startup_disposition = input.startupDisposition ?? null
+    }
+    if (!Object.keys(patch).length) return {}
+    const { error } = await ctx.supabase.from('punches').update(patch).eq('id', input.punchId).eq('project_id', input.projectId)
+    if (error) return { error: error.message }
+    revalidatePunch(input.projectId, input.tagId)
+    revalidatePath(`/projects/${input.projectId}/pssr`, 'layout')
     return {}
   },
 )

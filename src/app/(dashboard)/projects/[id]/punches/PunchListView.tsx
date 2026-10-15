@@ -8,6 +8,9 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updatePunchStatus, addPunchComment, reassignPunch, createPunch } from '@/app/actions/punches'
 import { PunchVerification } from '@/components/punch/PunchVerification'
+import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
+import { PunchClassification } from '@/components/punch/PunchClassification'
+import type { PunchImpact } from '@/lib/punches/category-guide'
 import { punchDisplayStatus } from '@/lib/punches/verification'
 import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
@@ -42,6 +45,9 @@ type Punch = {
   resolved_at: string | null
   resolved_by: string | null
   resolved_by_name: string | null
+  impact: string | null
+  startup_disposition: string | null
+  category_reviewed_at: string | null
   tags: { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } } | null
   subsystems: { id: string; code: string; name: string; systems: { code: string; name: string } } | null
 }
@@ -85,6 +91,7 @@ export default function PunchListView({
 }) {
   const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
   const t = useTranslations('PunchList')
+  const tGuide = useTranslations('PunchGuide')
   const router = useRouter()
   // Sprint E: filtros/página en la URL; `punches` es la página visible.
   const url = useUrlFilters()
@@ -201,6 +208,19 @@ export default function PunchListView({
             }}
           >
             {t('exportPdf')}
+          </a>
+          <a
+            href="/punch-list/procedure"
+            target="_blank"
+            rel="noopener"
+            title={tGuide('procedureHint')}
+            style={{
+              padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+              borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+              textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
+            }}
+          >
+            {tGuide('procedure')}
           </a>
           {canCreate && (
             <button
@@ -390,6 +410,9 @@ export default function PunchListView({
                       <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}`, whiteSpace: 'nowrap' }}>
                         {catCfg.label}
                       </span>
+                      {!punch.category_reviewed_at && punch.status !== 'closed' && punch.status !== 'cancelled' && (
+                        <div style={{ fontSize: '10px', color: '#b45309', marginTop: '3px', whiteSpace: 'nowrap' }}>{tGuide('unreviewedShort')}</div>
+                      )}
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-strong)', maxWidth: '320px' }}>
                       <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -570,6 +593,9 @@ function PunchDetailModal({
           <PunchVerification punch={punch} projectId={projectId} tagId={punch.tags?.id ?? null} userId={userId} role={role} onUpdated={onUpdated} />
         )}
 
+        {/* Impacto, disposición para el arranque y revisión de categoría (fase 4) */}
+        <PunchClassification punch={punch} projectId={projectId} tagId={punch.tags?.id ?? null} userId={userId} role={role} onUpdated={onUpdated} />
+
         {/* Status actions */}
         {!isClosed && (
           <div style={{ marginBottom: '20px' }}>
@@ -664,6 +690,7 @@ function CreatePunchModal({
   onCreated: () => void
 }) {
   const t = useTranslations('PunchList')
+  const tGuide = useTranslations('PunchGuide')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -671,6 +698,7 @@ function CreatePunchModal({
   const [tagId, setTagId] = useState<string>('')
   const [tagOpen, setTagOpen] = useState(false)
   const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
+  const [impact, setImpact] = useState<PunchImpact | null>(null)
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<'critical' | 'major' | 'minor'>('major')
   const [assignedTo, setAssignedTo] = useState('')
@@ -688,17 +716,19 @@ function CreatePunchModal({
     return () => { cancelled = true; clearTimeout(handle) }
   }, [tagSearch, projectId])
 
-  const canSubmit = !!tagId && !!description.trim() && !isPending
+  const canSubmit = !!tagId && !!description.trim() && !!impact && !isPending
 
   function handleSubmit() {
     setError(null)
     if (!tagId) { setError(t('create.tagRequired')); return }
+    if (!impact) { setError(tGuide('impactRequired')); return }
     if (!description.trim()) { setError(t('create.descriptionRequired')); return }
     startTransition(async () => {
       const res = await createPunch({
         projectId,
         tagId,
         category,
+        impact,
         description: description.trim(),
         assignedTo: assignedTo || null,
         targetDate: targetDate || null,
@@ -783,6 +813,11 @@ function CreatePunchModal({
               )
             })}
           </div>
+        </div>
+
+        {/* Impacto obligatorio + guía de categorización (fase 4) */}
+        <div style={{ marginBottom: '16px' }}>
+          <PunchImpactAndGuide impact={impact} onImpact={setImpact} category={category} onCategory={setCategory} disciplineCode={selectedTag?.disciplines?.code ?? null} />
         </div>
 
         {/* Description */}

@@ -98,6 +98,7 @@ export type PunchInput = {
   category: 'A' | 'B' | 'C'
   description: string
   targetDate: string | null
+  impact: 'safety' | 'process' | 'equipment' | 'operability' | 'environment'
 }
 
 /** Registra el punch; sin red lo encola. `queued: true` cuando quedó pendiente. */
@@ -108,7 +109,7 @@ export async function createPunchOrQueue(
     try {
       const res = await createPunch({
         projectId: input.projectId, tagId: input.tagId, itrId: input.itrId,
-        category: input.category, description: input.description, targetDate: input.targetDate,
+        category: input.category, description: input.description, targetDate: input.targetDate, impact: input.impact,
       })
       if (res.error) return { error: res.error }
       return { queued: false, punchNumber: res.punchNumber }

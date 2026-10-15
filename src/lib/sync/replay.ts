@@ -207,6 +207,7 @@ async function sendOutboxEntry(entry: OutboxEntry): Promise<{ ok: true } | { err
   const res = await createPunch({
     projectId: entry.projectId, tagId: entry.tagId, itrId: entry.itrId,
     category: entry.category, description: entry.description, targetDate: entry.targetDate,
+    impact: entry.impact, legacyWithoutImpact: !entry.impact,
   })
   return res.error ? { error: res.error } : { ok: true }
 }

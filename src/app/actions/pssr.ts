@@ -5,6 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
+import { startupDispositionBlockers } from '@/lib/punches/category-guide'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase.generated'
 import { DEFAULT_PSSR_ITEMS, PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
 import {
@@ -256,6 +258,27 @@ export const updatePssrReviewDueDate = withAuthOnly(
   },
 )
 
+/**
+ * Fase 4 (§10.7, libro 16.37): todo punch abierto del sistema del PSSR necesita disposición para el
+ * arranque y ninguno «cerrar antes del arranque» puede seguir abierto. Devuelve el error o null.
+ */
+async function startupPunchBlocker(supabase: SupabaseClient, reviewId: string): Promise<string | null> {
+  const { data: review } = await supabase.from('pssr_reviews').select('project_id, system_id').eq('id', reviewId).single()
+  if (!review?.system_id) return null
+  const { data: punches, error } = await supabase
+    .from('punches')
+    .select('punch_number, startup_disposition, subsystems!inner(system_id)')
+    .eq('project_id', review.project_id)
+    .eq('subsystems.system_id', review.system_id)
+    .in('status', ['open', 'in_progress'])
+  if (error) return error.message
+  const { missing, mustClose } = startupDispositionBlockers(punches ?? [])
+  const parts: string[] = []
+  if (missing.length) parts.push(`${missing.length} punch abierto(s) sin disposición para el arranque (${missing.slice(0, 5).map(p => p.punch_number).join(', ')}${missing.length > 5 ? '…' : ''})`)
+  if (mustClose.length) parts.push(`${mustClose.length} punch marcado(s) «cerrar antes del arranque» siguen abiertos (${mustClose.slice(0, 5).map(p => p.punch_number).join(', ')}${mustClose.length > 5 ? '…' : ''})`)
+  return parts.length ? parts.join('; ') : null
+}
+
 export const submitPssrForApproval = withAuthOnly(
   {},
   async (ctx, reviewId: string, projectId: string): Promise<{ error?: string }> => {
@@ -270,6 +293,9 @@ export const submitPssrForApproval = withAuthOnly(
 
     if (pendingItems && pendingItems.length > 0)
       return { error: `${pendingItems.length} ítem(s) sin completar o con estado NO` }
+
+    const punchBlock = await startupPunchBlocker(supabase, reviewId)
+    if (punchBlock) return { error: punchBlock }
 
     const { data: review, error: fetchErr } = await supabase
       .from('pssr_reviews')
@@ -358,6 +384,9 @@ export const approvePssrAndIssueRfsu = withAuthOnly(
       .eq('review_id', reviewId)
     if (!sigCount || sigCount === 0)
       return { error: 'Se requiere al menos una firma antes de aprobar' }
+
+    const punchBlock = await startupPunchBlocker(supabase, reviewId)
+    if (punchBlock) return { error: punchBlock }
 
     // Get review + system info
     const { data: review } = await supabase

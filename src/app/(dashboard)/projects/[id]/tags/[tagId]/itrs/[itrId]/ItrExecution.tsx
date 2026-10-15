@@ -582,6 +582,7 @@ export default function ItrExecution({
           itrItemId={punchItrItemId}
           projectId={projectId}
           tagId={tagId}
+          disciplineCode={tag?.disciplines?.code ?? null}
           initialDescription={punchItemDesc}
           onClose={() => setShowPunchModal(false)}
           onCreated={({ queued }) => { setShowPunchModal(false); if (queued) setQueuedNotice('punch'); else router.refresh() }}

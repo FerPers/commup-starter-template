@@ -87,6 +87,7 @@ export default function PunchListGlobal({
 }) {
   const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
   const t  = useTranslations('PunchList')
+  const tGuide = useTranslations('PunchGuide')
   const tc = useTranslations('Common')
   const tTags = useTranslations('Tags')
   const canReassign = REASSIGN_ROLES.includes(currentUserRole)
@@ -306,6 +307,22 @@ export default function PunchListGlobal({
         >
           <Download size={14} />
           {t('exportExcel')}
+        </a>
+        <a
+          href="/punch-list/procedure"
+          target="_blank"
+          rel="noopener"
+          title={tGuide('procedureHint')}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '6px 12px', height: 28,
+            border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--text-sm)', fontWeight: 500,
+            color: 'var(--text-strong)', textDecoration: 'none',
+            background: 'transparent', whiteSpace: 'nowrap',
+          }}
+        >
+          {tGuide('procedure')}
         </a>
       </div>
 

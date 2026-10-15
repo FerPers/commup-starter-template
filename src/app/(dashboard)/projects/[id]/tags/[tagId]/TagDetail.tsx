@@ -335,6 +335,7 @@ export default function TagDetail({
                 orgMembers={orgMembers as OrgMemberForPunch[]}
                 currentUserRole={currentUserRole}
                 currentUserId={currentUserId}
+                disciplineCode={d?.code ?? null}
               />
             )}
             {activeTab === 'photos'       && <TagPhotosTab photos={tagPhotos} />}

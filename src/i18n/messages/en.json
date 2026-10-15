@@ -2219,7 +2219,9 @@
       "punches": "assigned punches",
       "plan": "today's plan",
       "signatures": "pending signatures",
-      "preservation": "overdue preservation"
+      "preservation": "overdue preservation",
+      "punchesVerify": "Punches to verify",
+      "punchesReview": "Categories to review"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2227,7 +2229,9 @@
       "punches": "Assigned punches",
       "plan": "Today's work plan",
       "signatures": "Certificates to sign",
-      "preservation": "Overdue preservation"
+      "preservation": "Overdue preservation",
+      "punchesVerify": "Punches to verify in the field",
+      "punchesReview": "Punch categories to review"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -2235,7 +2239,9 @@
       "punches": "You have no assigned punches.",
       "plan": "No work plan items for today.",
       "signatures": "No certificates are waiting for a completion signature.",
-      "preservation": "No overdue preservation tasks."
+      "preservation": "No overdue preservation tasks.",
+      "punchesVerify": "No resolved punches waiting for verification.",
+      "punchesReview": "No categories to review."
     },
     "due": {
       "overdue": "due {date}",
@@ -2244,7 +2250,8 @@
       "inProgress": "in progress {pct}%",
       "readyToApprove": "ready to approve",
       "sign": "sign",
-      "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}"
+      "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}",
+      "verify": "Verify"
     },
     "punchStatus": {
       "open": "Open",
@@ -2904,5 +2911,49 @@
     "accept": "Verify and close",
     "reject": "Reject resolution",
     "verifyHint": "Verify in the field before closing. Rejecting sends the punch back to \"in progress\"."
+  },
+  "PunchGuide": {
+    "impactLabel": "Impact",
+    "impact": {
+      "safety": "Safety",
+      "environment": "Environment",
+      "process": "Process",
+      "equipment": "Equipment",
+      "operability": "Operability"
+    },
+    "suggests": "Suggests Cat {cat}.",
+    "mismatch": "You chose Cat {chosen}, but a {impact} impact suggests Cat {suggested}.",
+    "useSuggested": "Use Cat {cat}",
+    "guideToggle": "Categorisation guide",
+    "examplesFor": "{disc} examples.",
+    "examplesGeneric": "General examples.",
+    "functionNotSize": "Category is decided by functional impact, not size.",
+    "impactRequired": "Choose the punch impact.",
+    "noImpact": "No impact",
+    "dispositionLabel": "Start-up disposition",
+    "noDisposition": "No disposition",
+    "disposition": {
+      "close_before_startup": "Close before start-up",
+      "controls": "May remain with controls",
+      "long_term": "Long-term improvement"
+    },
+    "reviewed": "Category reviewed by supervisor",
+    "unreviewed": "Category not reviewed",
+    "unreviewedShort": "not reviewed",
+    "reviewCategory": "Reviewed category",
+    "reviewNoteOptional": "Note (optional)",
+    "reviewNoteRequired": "Reason for the change (required)",
+    "confirmCategory": "Confirm Cat {cat}",
+    "recategorize": "Re-categorise {from} → {to}",
+    "reviewByOther": "The category is reviewed by a supervisor other than the originator.",
+    "procedure": "Procedure (PDF)",
+    "procedureHint": "Punch raising procedure to hand over to the client",
+    "pssrTitle": "Open punches of {system} for start-up",
+    "pssrHelp": "Every open punch needs a disposition; those marked «close before start-up» must be closed before submitting and approving the PSSR.",
+    "pssrNone": "The system has no open punches.",
+    "pssrOk": "All {n} open punches have a disposition and none blocks start-up.",
+    "pssrBlocked": "Blocks the PSSR: {missing} without disposition and {mustClose} to close before start-up.",
+    "colDescription": "Description",
+    "colStatus": "Status"
   }
 }

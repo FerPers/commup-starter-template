@@ -64,6 +64,9 @@ export default async function PunchListPage({
     resolved_at: r.resolved_at,
     resolved_by: r.resolved_by,
     resolved_by_name: r.resolved_by_name,
+    impact: r.impact,
+    startup_disposition: r.startup_disposition,
+    category_reviewed_at: r.category_reviewed_at,
     assigned_to_profile: r.assigned_to_name ? { full_name: r.assigned_to_name } : null,
     tags: r.tag_id
       ? {

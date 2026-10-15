@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import PssrReviewForm from './PssrReviewForm'
 import type { ItemStatus, ReviewStatus } from './pssr-review-shared'
+import type { SystemPunch } from './PssrPunchDisposition'
 
 export default async function PssrReviewPage({
   params,
@@ -45,6 +46,20 @@ export default async function PssrReviewPage({
 
   if (!project || !review) notFound()
 
+  // Fase 4: pendientes abiertos del sistema con su disposición para el arranque (16.37).
+  const systemId = (review.systems as { id: string } | null)?.id
+  const { data: systemPunches } = systemId
+    ? await supabase
+        .from('punches')
+        .select('id, punch_number, category, description, status, resolved_at, startup_disposition, tags(id, tag_number), subsystems!inner(system_id)')
+        .eq('project_id', projectId)
+        .eq('subsystems.system_id', systemId)
+        .in('status', ['open', 'in_progress'])
+        .order('category')
+        .order('punch_number')
+        .limit(500)
+    : { data: [] }
+
   const totalItems = items?.length ?? 0
 
   return (
@@ -59,6 +74,8 @@ export default async function PssrReviewPage({
         currentUserName={profile?.full_name ?? ctx.userEmail ?? 'Usuario'}
         canApprove={canApprove}
         totalItems={totalItems}
+        systemPunches={(systemPunches ?? []) as unknown as SystemPunch[]}
+        canEditPunches={ctx.role !== 'client'}
       />
     </div>
   )

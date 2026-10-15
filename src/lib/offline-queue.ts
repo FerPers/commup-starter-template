@@ -40,6 +40,8 @@ export type OutboxPunch = {
   category: 'A' | 'B' | 'C'
   description: string
   targetDate: string | null
+  /** Ausente en punch encolados antes de la fase 4 (impacto obligatorio). */
+  impact?: 'safety' | 'process' | 'equipment' | 'operability' | 'environment'
 }
 
 export type OutboxSignature = {

@@ -3,12 +3,15 @@
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { createPunchOrQueue } from '@/lib/sync/outbox'
+import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
+import type { PunchImpact } from '@/lib/punches/category-guide'
 
 export default function CreatePunchModal({
   itrId,
   itrItemId: _itrItemId,
   projectId,
   tagId,
+  disciplineCode,
   initialDescription,
   onClose,
   onCreated,
@@ -17,12 +20,14 @@ export default function CreatePunchModal({
   itrItemId: string | null
   projectId: string
   tagId: string
+  disciplineCode: string | null
   initialDescription: string
   onClose: () => void
   /** `queued` = sin red: el punch quedó en la bandeja de salida y se registrará al reconectar. */
   onCreated: (result: { queued: boolean }) => void
 }) {
   const t = useTranslations('ItrExecution')
+  const tGuide = useTranslations('PunchGuide')
   const CATEGORY_CONFIG = {
     A: { label: t('punchModal.catA'), color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
     B: { label: t('punchModal.catB'), color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
@@ -31,12 +36,14 @@ export default function CreatePunchModal({
 
   const [description, setDescription] = useState(initialDescription)
   const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
+  const [impact, setImpact] = useState<PunchImpact | null>(null)
   const [targetDate, setTargetDate] = useState('')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
   function handleSubmit() {
     if (!description.trim()) { setError(t('punchModal.errorRequired')); return }
+    if (!impact) { setError(tGuide('impactRequired')); return }
     setError(null)
     startTransition(async () => {
       // Sprint O: sin red el punch se encola en IndexedDB y se crea al reconectar.
@@ -45,6 +52,7 @@ export default function CreatePunchModal({
         tagId,
         itrId,
         category,
+        impact,
         description: description.trim(),
         targetDate: targetDate || null,
       })
@@ -58,7 +66,7 @@ export default function CreatePunchModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('punchModal.title')}</h2>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 20px' }}>{t('punchModal.subtitle')}</p>
 
@@ -80,6 +88,11 @@ export default function CreatePunchModal({
               )
             })}
           </div>
+        </div>
+
+        {/* Impacto obligatorio + guía de categorización (fase 4) */}
+        <div style={{ marginBottom: '16px' }}>
+          <PunchImpactAndGuide impact={impact} onImpact={setImpact} category={category} onCategory={setCategory} disciplineCode={disciplineCode} />
         </div>
 
         {/* Description */}

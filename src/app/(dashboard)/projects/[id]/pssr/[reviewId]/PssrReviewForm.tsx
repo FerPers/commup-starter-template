@@ -19,6 +19,7 @@ import PssrReviewHeader from './PssrReviewHeader'
 import PssrItemsChecklist from './PssrItemsChecklist'
 import PssrSignaturesPanel from './PssrSignaturesPanel'
 import PssrSignModal from './PssrSignModal'
+import PssrPunchDisposition, { type SystemPunch } from './PssrPunchDisposition'
 import type { ItemStatus, ReviewItem, ReviewStatus, Signature } from './pssr-review-shared'
 
 interface Props {
@@ -41,12 +42,14 @@ interface Props {
   currentUserName: string
   canApprove: boolean
   totalItems: number
+  systemPunches: SystemPunch[]
+  canEditPunches: boolean
 }
 
 export default function PssrReviewForm({
   projectId, review, items: initialItems, signatures: initialSigs,
   project, currentUserId, currentUserName, canApprove,
-  totalItems,
+  totalItems, systemPunches, canEditPunches,
 }: Props) {
   const t = useTranslations('PSSR')
   const router = useRouter()
@@ -214,6 +217,9 @@ export default function PssrReviewForm({
         onStatusChange={handleStatusChange}
         onFieldSave={handleFieldSave}
       />
+
+      {/* Pendientes del sistema y disposición para el arranque (fase 4) */}
+      <PssrPunchDisposition projectId={projectId} systemCode={review.systems?.code ?? null} punches={systemPunches} editable={canEditPunches && !readonly} />
 
       {/* Notes ───────────────────────────────────────────────── */}
       {!readonly && (

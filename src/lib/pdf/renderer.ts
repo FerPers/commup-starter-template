@@ -430,7 +430,7 @@ export class Renderer {
    * Draws a horizontal grid of N signature boxes. Each box: top accent line,
    * role label, then either { name, date } if signed, or a dashed line + "Name / Date".
    */
-  signatureGrid(boxes: Array<{ role: string; name?: string; date?: string }>, opts?: { accentColor?: Color; height?: number; gap?: number }) {
+  signatureGrid(boxes: Array<{ role: string; name?: string; date?: string }>, opts?: { accentColor?: Color; height?: number; gap?: number; placeholder?: string }) {
     const accent = opts?.accentColor ?? COLOR.purple
     const gap = opts?.gap ?? 14
     const h = opts?.height ?? 58
@@ -460,7 +460,7 @@ export class Renderer {
           this.drawHLine(dx, dx + dashLen, dashY, 0.6, COLOR.border)
           dx += dashLen + dashGap
         }
-        this.page.drawText('Name / Date', {
+        this.page.drawText(sanitize(opts?.placeholder ?? 'Name / Date'), {
           x, y: this.y - 46, size: 7.5, font: this.fontOblique, color: COLOR.empty,
         })
       }

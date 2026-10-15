@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createPunch, updatePunchStatus, addPunchComment, reassignPunch } from '@/app/actions/punches'
 import { PunchVerification } from '@/components/punch/PunchVerification'
+import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
+import { PunchClassification } from '@/components/punch/PunchClassification'
+import type { PunchImpact } from '@/lib/punches/category-guide'
 import { punchDisplayStatus } from '@/lib/punches/verification'
 import PunchPhotosSection from './PunchPhotosSection'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
@@ -30,6 +33,10 @@ export type TagPunch = {
   resolved_at: string | null
   resolved_by: string | null
   resolved_by_profile: { full_name: string } | null
+  raised_by: string | null
+  impact: string | null
+  startup_disposition: string | null
+  category_reviewed_at: string | null
 }
 
 export type OrgMemberForPunch = {
@@ -46,6 +53,7 @@ export default function TagPunchTab({
   orgMembers,
   currentUserRole,
   currentUserId,
+  disciplineCode,
 }: {
   punches: TagPunch[]
   projectId: string
@@ -53,8 +61,10 @@ export default function TagPunchTab({
   orgMembers: OrgMemberForPunch[]
   currentUserRole: string
   currentUserId: string
+  disciplineCode: string | null
 }) {
   const t = useTranslations('Tags')
+  const tGuide = useTranslations('PunchGuide')
   const router = useRouter()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedPunch, setSelectedPunch] = useState<TagPunch | null>(null)
@@ -79,6 +89,7 @@ export default function TagPunchTab({
         {showCreateModal && (
           <CreatePunchModal
             projectId={projectId}
+            disciplineCode={disciplineCode}
             tagId={tagId}
             orgMembers={orgMembers}
             onClose={() => setShowCreateModal(false)}
@@ -143,6 +154,9 @@ export default function TagPunchTab({
                     <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', fontWeight: 600 }}>{punch.punch_number}</span>
                     <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
                     <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{stLabel}</span>
+                    {!punch.category_reviewed_at && punch.status !== 'closed' && punch.status !== 'cancelled' && (
+                      <span style={{ fontSize: '10px', color: '#b45309' }}>{tGuide('unreviewedShort')}</span>
+                    )}
                   </div>
                   <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '0 0 4px', lineHeight: '1.4' }}>{punch.description}</p>
                   <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'var(--gray-400)', flexWrap: 'wrap' }}>
@@ -164,6 +178,7 @@ export default function TagPunchTab({
           projectId={projectId}
           tagId={tagId}
           orgMembers={orgMembers}
+          disciplineCode={disciplineCode}
           onClose={() => setShowCreateModal(false)}
           onCreated={() => { setShowCreateModal(false); refresh() }}
         />
@@ -193,18 +208,22 @@ function CreatePunchModal({
   projectId,
   tagId,
   orgMembers,
+  disciplineCode,
   onClose,
   onCreated,
 }: {
   projectId: string
   tagId: string
   orgMembers: OrgMemberForPunch[]
+  disciplineCode: string | null
   onClose: () => void
   onCreated: () => void
 }) {
   const t = useTranslations('Tags')
+  const tGuide = useTranslations('PunchGuide')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
+  const [impact, setImpact] = useState<PunchImpact | null>(null)
   const [assignedTo, setAssignedTo] = useState('')
   const [targetDate, setTargetDate] = useState('')
   const [isPending, startTransition] = useTransition()
@@ -218,12 +237,14 @@ function CreatePunchModal({
 
   function handleSubmit() {
     if (!description.trim()) { setError(t('punches.create.errorRequired')); return }
+    if (!impact) { setError(tGuide('impactRequired')); return }
     setError(null)
     startTransition(async () => {
       const res = await createPunch({
         projectId,
         tagId,
         category,
+        impact,
         description: description.trim(),
         assignedTo: assignedTo || null,
         targetDate: targetDate || null,
@@ -238,7 +259,7 @@ function CreatePunchModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>{t('punches.create.title')}</h2>
 
         {/* Category */}
@@ -255,6 +276,11 @@ function CreatePunchModal({
               )
             })}
           </div>
+        </div>
+
+        {/* Impacto obligatorio + guía de categorización (fase 4) */}
+        <div style={{ marginBottom: '16px' }}>
+          <PunchImpactAndGuide impact={impact} onImpact={setImpact} category={category} onCategory={setCategory} disciplineCode={disciplineCode} />
         </div>
 
         {/* Description */}
@@ -426,6 +452,9 @@ function PunchDetailModal({
             projectId={projectId} tagId={tagId} userId={userId} role={role} photoCount={photoCount} onUpdated={onUpdated}
           />
         )}
+
+        {/* Impacto, disposición para el arranque y revisión de categoría (fase 4) */}
+        <PunchClassification punch={punch} projectId={projectId} tagId={tagId} userId={userId} role={role} onUpdated={onUpdated} />
 
         {/* Status actions */}
         {!isClosed && (

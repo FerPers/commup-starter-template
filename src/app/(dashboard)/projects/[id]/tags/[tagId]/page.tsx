@@ -80,6 +80,7 @@ export default async function TagDetailPage({
       .select(`
         id, punch_number, category, description, status, priority,
         target_date, closed_date, created_at, itr_id, assigned_to, resolved_at, resolved_by,
+        raised_by, impact, startup_disposition, category_reviewed_at,
         raised_by_profile:profiles!raised_by(full_name),
         resolved_by_profile:profiles!resolved_by(full_name),
         assigned_to_profile:profiles!assigned_to(full_name)
