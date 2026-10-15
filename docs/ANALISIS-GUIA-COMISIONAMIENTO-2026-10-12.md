@@ -267,6 +267,7 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 | F4-B equipos de prueba (calibración bloquea la firma del ITR) | ✅ migración `20261016150000_test_equipment`; inventario en /admin/test-equipment, sección en el ITR, PDF; 72 plantillas de DEMO y 44 del Catálogo marcadas | b866abb |
 | F4-C tabla v2 (desviación calculada + tolerancia, resultado automático, as found/as left, series con estabilidad) | ✅ migración `20261016180000_itr_table_v2`; 3 presets v2; plantilla DEMO-CAL-V2 + ITR DEMO-CAL-V2/PT-101 | bd0e802 |
 | F4-D loops/C&E ejecutables | ⏳ | — |
+| 📌 Pendiente: tablas de calibración del catálogo → tabla v2 con tolerancias reales (criterios con Luis; ver `PLAN-MIGRACION-ITR-V2` §9) | ⏳ | — |
 
 Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
 

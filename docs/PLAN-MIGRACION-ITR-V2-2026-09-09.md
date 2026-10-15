@@ -229,3 +229,16 @@ No se marca en: referencias documentales, datos de ensayo (tablas), equipo de pr
 - Código: `src/app/actions/itr-templates.ts` (publishTemplateVersion, línea 239), `src/lib/itr/{completion,continuity,selection-outcome}.ts`, migraciones `20260909180000`–`20260909220000`.
 - Entrega previa: `entrega-commup-2026-09-09/LEEME-ESTADO-Y-PENDIENTES.md` y `PLAN-MANUAL-DE-ACTUALIZACION.md`, `CONTROL-CATALOGO.csv`.
 - Suite: 161 pruebas pasan, 11 omitidas (DB), ejecutada a las 17:31.
+
+## 9. Pendiente — tablas de calibración a tabla v2 (agregado 2026-10-15)
+Con la fase 4-C del plan readiness (`docs/ANALISIS-GUIA-COMISIONAMIENTO-2026-10-12.md` §10.13–10.16) la tabla de registro admite desviación calculada con tolerancia, resultado automático y as found / as left. Falta llevar el catálogo a ese formato **con tolerancias reales, definidas con Luis** (no se inventan).
+
+| Plantilla (borrador DEMO) | Ítems | Qué hacer |
+|---|---|---|
+| I10A v3 | 4.01 y 6.03 | Pareja as found / as left; definir span y tolerancia (% del span) |
+| I05A v2, I11A v2 | M.1 | Agregar la columna de referencia (esperada) y la desviación calculada |
+| P03A v2 | 1.1, 2.1, 3.1 | Dos desviaciones por fila (ascenso y descenso) |
+| E32A v2 | M.1 | Error de relación de transformación (definir modo y tolerancia) |
+| E26A v2 (M.2), E49BV-1 v2 (M.3/M.5/M.7), I33C v2 (T.1) | — | Son «equipo de prueba usado»: reemplazar por la sección de equipos de prueba (fase 4-B) |
+
+Todas son borradores inactivos sin ITRs: se editan en sitio. Si alguna ya estuviera activa o tuviera ITRs, va por «Nueva revisión (borrador)». Flujo: tabla de criterios propuesta → aprobación de Luis → edición → validación (`checkTableConfig` / `itr_table_config_valid`) → Luis activa.
