@@ -264,8 +264,8 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 | F3 registros — sesión 4 (datos de DEMO) | ✅ DEMO con 30 registros (12 test packs, 6 ciegas, 4 temporales, 3 reinstalaciones, 3 bypass, 3 energizaciones) y 39 líneas nuevas; script re-ejecutable `scripts/demo-data/seed_registers_demo.sql` | cd338d2 |
 | F4-A sesión 1: punch resuelto → verificado por otra persona (BD + acciones + modales); columnas de impacto, disposición PSSR y revisión de categoría en BD | ✅ migración `20261016120000_punch_evidence` aplicada | c237385, 871078c |
 | F4-A sesión 2: revisión de categoría (cola en Mi trabajo), impacto obligatorio en los 3 formularios, guía por disciplina + PDF del procedimiento, disposición en PSSR (bloquea enviar/aprobar) | ✅ sin migración; DEMO: P-0266 (Cat A, A100-S02) bloquea el PSSR-002 por «cerrar antes del arranque» | 69a67eb, 1bb0e2d |
-| F4-B equipos de prueba (calibración bloquea la firma del ITR) | ✅ migración `20261016150000_test_equipment`; inventario en /admin/test-equipment, sección en el ITR, PDF; 72 plantillas de DEMO y 44 del Catálogo marcadas | ver git log |
-| F4-C tabla v2 (desviación calculada + tolerancia, resultado automático, as found/as left, series con estabilidad) | ✅ migración `20261016180000_itr_table_v2`; 3 presets v2; plantilla DEMO-CAL-V2 + ITR DEMO-CAL-V2/PT-101 | (este commit) |
+| F4-B equipos de prueba (calibración bloquea la firma del ITR) | ✅ migración `20261016150000_test_equipment`; inventario en /admin/test-equipment, sección en el ITR, PDF; 72 plantillas de DEMO y 44 del Catálogo marcadas | b866abb |
+| F4-C tabla v2 (desviación calculada + tolerancia, resultado automático, as found/as left, series con estabilidad) | ✅ migración `20261016180000_itr_table_v2`; 3 presets v2; plantilla DEMO-CAL-V2 + ITR DEMO-CAL-V2/PT-101 | bd0e802 |
 | F4-D loops/C&E ejecutables | ⏳ | — |
 
 Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
