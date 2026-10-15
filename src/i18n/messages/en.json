@@ -101,7 +101,9 @@
       "allPunches": "All punches",
       "allCertificates": "All certificates",
       "allWorkPlans": "All work plans",
-      "gates": "Gates (hold points)"
+      "gates": "Gates (hold points)",
+      "registers": "Registers",
+      "registerTypes": "Controlled registers"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -2332,7 +2334,8 @@
       "itrs": "View ITRs",
       "punches": "View punches",
       "certificates": "View certificates",
-      "pssr": "View PSSR"
+      "pssr": "View PSSR",
+      "registers": "View registers"
     },
     "pssrStatus": {
       "draft": "draft",
@@ -2591,6 +2594,217 @@
       "applying": "Applying…",
       "done": "Done: {systems} systems updated and {dependencies} dependencies created.",
       "notePrefix": "AI:"
+    }
+  },
+  "Registers": {
+    "title": "Controlled registers",
+    "subtitle": "Temporary plant state: temporary installations, blinds, reinstatement, bypasses, energization and test packs. Each open register can block a gate.",
+    "new": "New register",
+    "kpi": {
+      "open": "Open",
+      "active": "Active in the field",
+      "toVerify": "To verify",
+      "verified": "Verified"
+    },
+    "filter": {
+      "allTypes": "All types",
+      "allStatuses": "All statuses",
+      "openOnly": "Open only",
+      "search": "Search number, title or tag"
+    },
+    "col": {
+      "number": "Number",
+      "type": "Type",
+      "title": "Title",
+      "system": "System",
+      "tags": "Tags",
+      "status": "Status",
+      "updated": "Updated"
+    },
+    "empty": "No registers match.",
+    "kind": {
+      "temporary": "Temporary installation",
+      "blind": "Blind / spade",
+      "reinstatement": "Reinstatement",
+      "bypass": "Bypass / override",
+      "energization": "Energization",
+      "test_pack": "Pressure test pack"
+    },
+    "kindHelp": {
+      "temporary": "Temporary hoses, spools, strainers, power or software changes (guide 6.9, 16.35).",
+      "blind": "Blinds and spades installed for testing or isolation, each with its physical tag (16.40).",
+      "reinstatement": "Temporary condition → final condition, verified by another person (10.15.1).",
+      "bypass": "Inhibited or forced protections: reason, mitigation and restoration (16.34).",
+      "energization": "Energized equipment: boundary, authority and certificate (12.8–12.9).",
+      "test_pack": "Pressure test of a group of lines, with gauges, result and witness (8.15, 10.29)."
+    },
+    "status": {
+      "proposed": "Proposed",
+      "authorized": "Authorized",
+      "active": "Active",
+      "removed": "Removed",
+      "verified": "Verified",
+      "cancelled": "Cancelled"
+    },
+    "statusByKind": {
+      "temporary": {
+        "active": "Installed",
+        "removed": "Removed"
+      },
+      "blind": {
+        "active": "Installed",
+        "removed": "Removed"
+      },
+      "reinstatement": {
+        "active": "Temporary condition",
+        "removed": "Reinstated"
+      },
+      "bypass": {
+        "active": "Bypassed",
+        "removed": "Restored"
+      },
+      "energization": {
+        "active": "Energized",
+        "removed": "De-energized"
+      },
+      "test_pack": {
+        "proposed": "Prepared",
+        "authorized": "Approved for test",
+        "active": "Tested",
+        "removed": "Reinstated"
+      }
+    },
+    "field": {
+      "category": "Category",
+      "location": "Location",
+      "purpose": "Purpose",
+      "planned_removal": "Planned removal",
+      "risk": "Risks and controls",
+      "blind_type": "Blind type",
+      "size": "Size",
+      "rating": "Rating",
+      "label_number": "Physical tag number",
+      "temporary_condition": "Temporary condition",
+      "final_condition": "Final condition",
+      "reference": "Reference (ITR, test pack, drawing)",
+      "protection_function": "Protection function",
+      "method": "Method",
+      "reason": "Reason",
+      "risk_mitigation": "Risk mitigation",
+      "max_duration_hours": "Maximum duration",
+      "restoration_check": "Restoration check",
+      "equipment": "Equipment",
+      "boundary": "Boundary",
+      "authority": "Energizing authority",
+      "certificate": "Energization certificate",
+      "energized_on": "Energization date",
+      "test_type": "Test type",
+      "medium": "Medium",
+      "design_pressure": "Design pressure",
+      "test_pressure": "Test pressure",
+      "hold_minutes": "Hold time",
+      "achieved_pressure": "Achieved pressure",
+      "result": "Result",
+      "witness": "Witness"
+    },
+    "option": {
+      "category": {
+        "hose": "Hose",
+        "spool": "Spool",
+        "strainer": "Temporary strainer",
+        "temp_power": "Temporary power supply",
+        "software": "Temporary software change",
+        "other": "Other"
+      },
+      "blind_type": {
+        "blind_flange": "Blind flange",
+        "spade": "Spade",
+        "spectacle": "Spectacle blind",
+        "other": "Other"
+      },
+      "purpose": {
+        "pressure_test": "Pressure test",
+        "isolation": "Isolation",
+        "cleaning": "Cleaning",
+        "other": "Other"
+      },
+      "method": {
+        "logic_force": "Logic force",
+        "jumper": "Jumper",
+        "inhibit": "Inhibit",
+        "bypass_key": "Bypass key",
+        "other": "Other"
+      },
+      "test_type": {
+        "hydrostatic": "Hydrostatic",
+        "pneumatic": "Pneumatic",
+        "service": "Service"
+      },
+      "medium": {
+        "water": "Water",
+        "air": "Air",
+        "nitrogen": "Nitrogen",
+        "other": "Other"
+      },
+      "result": {
+        "accepted": "Accepted",
+        "rejected": "Rejected"
+      }
+    },
+    "tagRole": {
+      "subject": "Tags",
+      "line": "Lines",
+      "gauge": "Gauges"
+    },
+    "form": {
+      "type": "Register type",
+      "title": "Title",
+      "titlePlaceholder": "e.g. Blind at P-101A suction for hydrotest",
+      "description": "Description",
+      "system": "System",
+      "noSystem": "— From its tags —",
+      "systemHelp": "If no system is chosen, the register affects the systems of its tags.",
+      "tags": "Linked tags",
+      "addTag": "Search tag…",
+      "noTags": "No tags.",
+      "remove": "Remove",
+      "create": "Create register",
+      "save": "Save changes",
+      "saved": "Changes saved.",
+      "requiredFor": "required for \"{status}\"",
+      "fields": "Register data"
+    },
+    "detail": {
+      "back": "Project registers",
+      "timeline": "Timeline",
+      "lifecycle": "Lifecycle",
+      "advance": "Move to \"{status}\"",
+      "commentPlaceholder": "Comment (optional)",
+      "missing": "Missing fields for this step: {fields}",
+      "cancel": "Cancel register",
+      "cancelPrompt": "Cancellation reason:",
+      "delete": "Delete draft",
+      "deleteConfirm": "Delete this draft? This cannot be undone.",
+      "closed": "Closed register: it can no longer be edited.",
+      "by": "{who} · {when}",
+      "someone": "a user",
+      "otherPerson": "This step must be done by someone other than {who}.",
+      "blocks": "While open it blocks gate {gate} of its system.",
+      "noBlock": "This type does not block any gate.",
+      "event": {
+        "created": "Created",
+        "updated": "Data updated",
+        "transition": "{from} → {to}"
+      },
+      "rejected": "The test was rejected: repeat the test (new test pack) before reinstating or verifying."
+    },
+    "admin": {
+      "title": "Controlled registers",
+      "subtitle": "Enable the types your organization uses and choose which gate each one blocks while it has open registers in a system.",
+      "active": "Active",
+      "blocks": "Blocks gate",
+      "none": "Does not block",
+      "saved": "Saved."
     }
   }
 }

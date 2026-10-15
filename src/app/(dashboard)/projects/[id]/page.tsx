@@ -217,6 +217,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               actions={<ResourceLink href={`/projects/${project.id}/systems`}>Ver sistemas →</ResourceLink>}
             />
 
+            {/* Registros controlados (fase 3 plan readiness) */}
+            <ResourceRow
+              title="Registros controlados"
+              detail="Temporales, ciegas, reinstalación, bypass, energización y test packs"
+              actions={<ResourceLink href={`/projects/${project.id}/registers`}>Ver registros →</ResourceLink>}
+            />
+
             {/* Tags de Equipos */}
             <ResourceRow
               title="Tags de Equipos"

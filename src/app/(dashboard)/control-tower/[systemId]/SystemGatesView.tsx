@@ -168,13 +168,20 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
 
       case 'registers_clear': {
         const open = (d.open as { id: string; number: string; title: string; status: string }[]) ?? []
-        if (!open.length) return <span style={small}>{t('crit.registersNone')}</span>
+        if (!open.length) return (
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={small}>{t('crit.registersNone')}</span>
+            <Link style={linkStyle} href={`/projects/${project.id}/registers`}>{t('link.registers')}</Link>
+          </div>
+        )
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={small}>{t('crit.registersOpen', { count: open.length })}</span>
             <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
               {open.slice(0, 10).map(r => (
-                <li key={r.id}><strong style={{ color: 'var(--text-strong)' }}>{r.number}</strong> {r.title} · {t(`registerStatus.${r.status}`)}</li>
+                <li key={r.id}>
+                  <Link href={`/projects/${project.id}/registers/${r.id}`} style={{ ...linkStyle, fontWeight: 700 }}>{r.number}</Link> {r.title} · {t(`registerStatus.${r.status}`)}
+                </li>
               ))}
               {open.length > 10 && <li>{t('andMore', { count: open.length - 10 })}</li>}
             </ul>

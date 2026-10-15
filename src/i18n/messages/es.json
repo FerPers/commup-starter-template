@@ -101,7 +101,9 @@
       "allPunches": "Todos los punches",
       "allCertificates": "Todos los certificados",
       "allWorkPlans": "Todos los planes",
-      "gates": "Gates (hold points)"
+      "gates": "Gates (hold points)",
+      "registers": "Registros",
+      "registerTypes": "Registros controlados"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -2332,7 +2334,8 @@
       "itrs": "Ver ITRs",
       "punches": "Ver punches",
       "certificates": "Ver certificados",
-      "pssr": "Ver PSSR"
+      "pssr": "Ver PSSR",
+      "registers": "Ver registros"
     },
     "pssrStatus": {
       "draft": "borrador",
@@ -2591,6 +2594,217 @@
       "applying": "Aplicando…",
       "done": "Listo: {systems} sistemas actualizados y {dependencies} dependencias creadas.",
       "notePrefix": "IA:"
+    }
+  },
+  "Registers": {
+    "title": "Registros controlados",
+    "subtitle": "Estado temporal de la planta: instalaciones temporales, ciegas, reinstalación, bypass, energización y test packs. Cada registro abierto puede bloquear un gate.",
+    "new": "Nuevo registro",
+    "kpi": {
+      "open": "Abiertos",
+      "active": "Activos en campo",
+      "toVerify": "Por verificar",
+      "verified": "Verificados"
+    },
+    "filter": {
+      "allTypes": "Todos los tipos",
+      "allStatuses": "Todos los estados",
+      "openOnly": "Solo abiertos",
+      "search": "Buscar número, título o tag"
+    },
+    "col": {
+      "number": "Número",
+      "type": "Tipo",
+      "title": "Título",
+      "system": "Sistema",
+      "tags": "Tags",
+      "status": "Estado",
+      "updated": "Actualizado"
+    },
+    "empty": "No hay registros que coincidan.",
+    "kind": {
+      "temporary": "Instalación temporal",
+      "blind": "Ciega / spade",
+      "reinstatement": "Reinstalación",
+      "bypass": "Bypass / override",
+      "energization": "Energización",
+      "test_pack": "Test pack de presión"
+    },
+    "kindHelp": {
+      "temporary": "Mangueras, spools, strainers, alimentación o cambios de software temporales (guía 6.9, 16.35).",
+      "blind": "Ciegas y spades instaladas para pruebas o aislamiento; cada una con su etiqueta física (16.40).",
+      "reinstatement": "Condición temporal → condición final, verificada por otra persona (10.15.1).",
+      "bypass": "Protecciones inhibidas o forzadas: motivo, mitigación y restauración (16.34).",
+      "energization": "Equipo energizado: límite, autoridad y certificado (12.8–12.9).",
+      "test_pack": "Prueba de presión de un grupo de líneas, con manómetros, resultado y testigo (8.15, 10.29)."
+    },
+    "status": {
+      "proposed": "Propuesto",
+      "authorized": "Autorizado",
+      "active": "Activo",
+      "removed": "Retirado",
+      "verified": "Verificado",
+      "cancelled": "Cancelado"
+    },
+    "statusByKind": {
+      "temporary": {
+        "active": "Instalada",
+        "removed": "Retirada"
+      },
+      "blind": {
+        "active": "Instalada",
+        "removed": "Retirada"
+      },
+      "reinstatement": {
+        "active": "En condición temporal",
+        "removed": "Reinstalado"
+      },
+      "bypass": {
+        "active": "En bypass",
+        "removed": "Restaurado"
+      },
+      "energization": {
+        "active": "Energizado",
+        "removed": "Desenergizado"
+      },
+      "test_pack": {
+        "proposed": "Preparado",
+        "authorized": "Aprobado para prueba",
+        "active": "Probado",
+        "removed": "Restituido"
+      }
+    },
+    "field": {
+      "category": "Categoría",
+      "location": "Ubicación",
+      "purpose": "Propósito",
+      "planned_removal": "Retiro previsto",
+      "risk": "Riesgos y controles",
+      "blind_type": "Tipo de ciega",
+      "size": "Diámetro",
+      "rating": "Rating",
+      "label_number": "N.º de etiqueta física",
+      "temporary_condition": "Condición temporal",
+      "final_condition": "Condición final",
+      "reference": "Referencia (ITR, test pack, plano)",
+      "protection_function": "Función de protección",
+      "method": "Método",
+      "reason": "Motivo",
+      "risk_mitigation": "Mitigación del riesgo",
+      "max_duration_hours": "Duración máxima",
+      "restoration_check": "Prueba de restauración",
+      "equipment": "Equipo",
+      "boundary": "Límite",
+      "authority": "Autoridad que energiza",
+      "certificate": "Certificado de energización",
+      "energized_on": "Fecha de energización",
+      "test_type": "Tipo de prueba",
+      "medium": "Medio",
+      "design_pressure": "Presión de diseño",
+      "test_pressure": "Presión de prueba",
+      "hold_minutes": "Tiempo de sostenimiento",
+      "achieved_pressure": "Presión alcanzada",
+      "result": "Resultado",
+      "witness": "Testigo"
+    },
+    "option": {
+      "category": {
+        "hose": "Manguera",
+        "spool": "Spool",
+        "strainer": "Strainer temporal",
+        "temp_power": "Alimentación eléctrica temporal",
+        "software": "Cambio temporal de software",
+        "other": "Otro"
+      },
+      "blind_type": {
+        "blind_flange": "Brida ciega",
+        "spade": "Spade",
+        "spectacle": "Ciega en ocho (spectacle)",
+        "other": "Otra"
+      },
+      "purpose": {
+        "pressure_test": "Prueba de presión",
+        "isolation": "Aislamiento",
+        "cleaning": "Limpieza",
+        "other": "Otro"
+      },
+      "method": {
+        "logic_force": "Forzado lógico",
+        "jumper": "Puente físico",
+        "inhibit": "Inhibición",
+        "bypass_key": "Llave de bypass",
+        "other": "Otro"
+      },
+      "test_type": {
+        "hydrostatic": "Hidrostática",
+        "pneumatic": "Neumática",
+        "service": "De servicio"
+      },
+      "medium": {
+        "water": "Agua",
+        "air": "Aire",
+        "nitrogen": "Nitrógeno",
+        "other": "Otro"
+      },
+      "result": {
+        "accepted": "Aceptada",
+        "rejected": "Rechazada"
+      }
+    },
+    "tagRole": {
+      "subject": "Tags",
+      "line": "Líneas",
+      "gauge": "Manómetros"
+    },
+    "form": {
+      "type": "Tipo de registro",
+      "title": "Título",
+      "titlePlaceholder": "Ej.: Ciega en succión de P-101A para prueba hidrostática",
+      "description": "Descripción",
+      "system": "Sistema",
+      "noSystem": "— Por sus tags —",
+      "systemHelp": "Si no eliges sistema, el registro afecta a los sistemas de sus tags.",
+      "tags": "Tags vinculados",
+      "addTag": "Buscar tag…",
+      "noTags": "Sin tags.",
+      "remove": "Quitar",
+      "create": "Crear registro",
+      "save": "Guardar cambios",
+      "saved": "Cambios guardados.",
+      "requiredFor": "obligatorio para «{status}»",
+      "fields": "Datos del registro"
+    },
+    "detail": {
+      "back": "Registros del proyecto",
+      "timeline": "Línea de tiempo",
+      "lifecycle": "Ciclo de vida",
+      "advance": "Pasar a «{status}»",
+      "commentPlaceholder": "Comentario (opcional)",
+      "missing": "Faltan campos para este paso: {fields}",
+      "cancel": "Cancelar registro",
+      "cancelPrompt": "Motivo de la cancelación:",
+      "delete": "Borrar borrador",
+      "deleteConfirm": "¿Borrar este borrador? No se puede deshacer.",
+      "closed": "Registro cerrado: ya no se puede editar.",
+      "by": "{who} · {when}",
+      "someone": "un usuario",
+      "otherPerson": "Este paso debe hacerlo una persona distinta de {who}.",
+      "blocks": "Mientras esté abierto bloquea el gate {gate} de su sistema.",
+      "noBlock": "Este tipo no bloquea ningún gate.",
+      "event": {
+        "created": "Creado",
+        "updated": "Datos actualizados",
+        "transition": "{from} → {to}"
+      },
+      "rejected": "La prueba fue rechazada: repite la prueba (nuevo test pack) antes de restituir o verificar."
+    },
+    "admin": {
+      "title": "Registros controlados",
+      "subtitle": "Activa los tipos que usa tu organización y elige qué gate bloquea cada uno mientras tenga registros abiertos en un sistema.",
+      "active": "Activo",
+      "blocks": "Bloquea el gate",
+      "none": "No bloquea",
+      "saved": "Guardado."
     }
   }
 }
