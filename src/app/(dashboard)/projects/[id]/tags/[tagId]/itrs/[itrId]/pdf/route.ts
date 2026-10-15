@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { renderItrPdf } from '@/lib/pdf/itr'
+import { renderItrPdf, type ItrTestEquipmentRef } from '@/lib/pdf/itr'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,6 +73,7 @@ export async function GET(
         file_type,
         captured_at
       ),
+      itr_test_equipment ( used_on, calibrated_on, calibration_due, certificate_number, snapshot ),
       tags ( tag_number, description, manufacturer, model, serial_number, datasheet_number, pid_drawing, range_min, range_max, eng_unit, revision ),
       projects ( code, name )
     `)
@@ -85,7 +86,11 @@ export async function GET(
     return new Response('ITR not found', { status: 404 })
   }
 
-  const bytes = await renderItrPdf(itr)
+  const bytes = await renderItrPdf({
+    ...itr,
+    // snapshot es jsonb: la foto de calibración que copió el trigger al registrar el equipo.
+    itr_test_equipment: (itr.itr_test_equipment ?? []).map(u => ({ ...u, snapshot: u.snapshot as ItrTestEquipmentRef['snapshot'] })),
+  })
   const filename = `ITR-${itr.itr_number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`
 
   return new Response(bytes as BodyInit, {

@@ -19,6 +19,7 @@ import ItemRow from './ItemRow'
 import SignModal from './SignModal'
 import RevokeModal from './RevokeModal'
 import CreatePunchModal from './CreatePunchModal'
+import TestEquipmentSection, { type EquipmentOption, type EquipmentUsed } from './TestEquipmentSection'
 import { availableSigningRoles, type Attachment, type ItrData, type Signature } from './types'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
@@ -31,6 +32,7 @@ export default function ItrExecution({
   canEdit,
   attachments: initialAttachments = [],
   memberIds: memberIdList = [],
+  testEquipment,
 }: {
   itr: ItrData
   projectId: string
@@ -41,6 +43,8 @@ export default function ItrExecution({
   attachments?: Attachment[]
   /** Ids de miembros actuales de la org: nombres fuera del conjunto se marcan «(inactivo)». */
   memberIds?: string[]
+  /** Fase 4-B: equipos de prueba usados e inventario activo de la org. */
+  testEquipment?: { requires: boolean; used: EquipmentUsed[]; options: EquipmentOption[] }
 }) {
   const router = useRouter()
   const t = useTranslations('ItrExecution')
@@ -446,6 +450,21 @@ export default function ItrExecution({
           </div>
         )}
       </div>
+
+      {/* ── Equipos de prueba (fase 4-B) ─────────────────────────────── */}
+      {testEquipment && (
+        <div style={{ padding: '0 32px' }}>
+          <TestEquipmentSection
+            itrId={itr.id}
+            projectId={projectId}
+            requires={testEquipment.requires}
+            used={testEquipment.used}
+            options={testEquipment.options}
+            editable={canCapture && currentUserRole !== 'client'}
+            canManageInventory={['owner', 'admin', 'architect', 'leader'].includes(currentUserRole)}
+          />
+        </div>
+      )}
 
       {/* ── Sections + Items ─────────────────────────────────────────── */}
       <div style={{ padding: '0 20px' }}>

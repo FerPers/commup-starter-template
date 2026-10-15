@@ -103,7 +103,8 @@
       "allWorkPlans": "All work plans",
       "gates": "Gates (hold points)",
       "registers": "Registers",
-      "registerTypes": "Controlled registers"
+      "registerTypes": "Controlled registers",
+      "testEquipment": "Test equipment"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -2955,5 +2956,82 @@
     "pssrBlocked": "Blocks the PSSR: {missing} without disposition and {mustClose} to close before start-up.",
     "colDescription": "Description",
     "colStatus": "Status"
+  },
+  "TestEquipment": {
+    "title": "Test equipment",
+    "subtitle": "Organisation inventory with calibration status. An ITR cannot be signed if the equipment used was out of calibration on the test date.",
+    "new": "New equipment",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "kpi": {
+      "total": "Active",
+      "valid": "In calibration",
+      "expiring": "Expiring (30 days)",
+      "expired": "Expired"
+    },
+    "f": {
+      "code": "Code",
+      "kind": "Type",
+      "make": "Make",
+      "model": "Model",
+      "serial": "Serial no.",
+      "owner": "Owner company",
+      "certificate": "Certificate no.",
+      "calibratedOn": "Calibrated on",
+      "due": "Due",
+      "notes": "Notes"
+    },
+    "kind": {
+      "insulation_tester": "Insulation tester",
+      "loop_calibrator": "Loop calibrator",
+      "pressure_gauge": "Reference pressure gauge",
+      "deadweight_tester": "Deadweight tester",
+      "multimeter": "Multimeter",
+      "clamp_meter": "Clamp meter",
+      "earth_tester": "Earth tester",
+      "relay_tester": "Relay tester",
+      "torque_wrench": "Torque wrench",
+      "thermometer": "Reference thermometer",
+      "flow_meter": "Reference flow meter",
+      "other": "Other"
+    },
+    "state": {
+      "valid": "In calibration",
+      "expiring": "Expiring",
+      "expired": "Expired",
+      "not_yet": "Not yet calibrated"
+    },
+    "search": "Search code, serial, make…",
+    "filter": "Status",
+    "allActive": "All active",
+    "inactive": "Retired",
+    "col": {
+      "equipment": "Equipment",
+      "state": "Calibration"
+    },
+    "viewCert": "View certificate",
+    "noCert": "No PDF",
+    "calibratedOn": "Calibrated {date}",
+    "uploadCert": "Upload certificate",
+    "deactivate": "Retire",
+    "activate": "Reactivate",
+    "delete": "Delete",
+    "deleteConfirm": "Delete equipment {code}? Only possible if it was never used in an ITR.",
+    "empty": "No equipment in this view.",
+    "itrTitle": "Test equipment used",
+    "required": "Required to sign",
+    "blockMissing": "Record the test equipment used: this ITR cannot be signed without it.",
+    "blockExpired": "Out of calibration on the date of use: {codes}. Replace it to be able to sign.",
+    "certDue": "Cert. {cert} · due {due}",
+    "usedOn": "used {date}",
+    "remove": "Remove",
+    "pick": "Pick equipment from inventory…",
+    "due": "due {date}",
+    "add": "Record",
+    "pickExpired": "This equipment is expired today: it can be recorded, but the ITR will not be signable.",
+    "pickExpiring": "Expires in less than 30 days.",
+    "noInventory": "No more active equipment in the inventory.",
+    "goInventory": "Go to inventory"
   }
 }

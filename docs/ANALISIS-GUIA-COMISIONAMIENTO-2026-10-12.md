@@ -263,9 +263,10 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 | F3 registros — sesión 3 (test packs: avance por línea/pack, Excel line list, pack ↔ ciegas; etiquetas QR + /scan) | ✅ hecha; DEMO con TPK-0001 (A100-S01, PL-102/105, vinculado a CIE-0001) y TPK-0002 (OS01-S01, PL-101/103) | 5816c20 |
 | F3 registros — sesión 4 (datos de DEMO) | ✅ DEMO con 30 registros (12 test packs, 6 ciegas, 4 temporales, 3 reinstalaciones, 3 bypass, 3 energizaciones) y 39 líneas nuevas; script re-ejecutable `scripts/demo-data/seed_registers_demo.sql` | cd338d2 |
 | F4-A sesión 1: punch resuelto → verificado por otra persona (BD + acciones + modales); columnas de impacto, disposición PSSR y revisión de categoría en BD | ✅ migración `20261016120000_punch_evidence` aplicada | c237385, 871078c |
-| F4-A sesión 2: revisión de categoría (cola en Mi trabajo), impacto obligatorio en los 3 formularios, guía por disciplina + PDF del procedimiento, disposición en PSSR (bloquea enviar/aprobar) | ✅ sin migración; DEMO: P-0266 (Cat A, A100-S02) bloquea el PSSR-002 por «cerrar antes del arranque» | (este commit) |
-| F4-B equipos de prueba (calibración bloquea la firma del ITR) | ⏳ siguiente | — |
-| F4-C tipos de ítem · F4-D loops/C&E ejecutables | ⏳ | — |
+| F4-A sesión 2: revisión de categoría (cola en Mi trabajo), impacto obligatorio en los 3 formularios, guía por disciplina + PDF del procedimiento, disposición en PSSR (bloquea enviar/aprobar) | ✅ sin migración; DEMO: P-0266 (Cat A, A100-S02) bloquea el PSSR-002 por «cerrar antes del arranque» | 69a67eb, 1bb0e2d |
+| F4-B equipos de prueba (calibración bloquea la firma del ITR) | ✅ migración `20261016150000_test_equipment`; inventario en /admin/test-equipment, sección en el ITR, PDF; 72 plantillas de DEMO y 44 del Catálogo marcadas | (este commit) |
+| F4-C tipos de ítem (as found/as left, esperado/real, serie de lecturas) | ⏳ siguiente | — |
+| F4-D loops/C&E ejecutables | ⏳ | — |
 
 Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
 
@@ -282,3 +283,9 @@ Pendiente de Luis: probar en commup.app el ciclo de CIE-0001 con dos personas (O
 6. **La guía sugiere y avisa, no bloquea:** el impacto sugiere la categoría (seguridad/ambiente → A, proceso/equipo → B, operabilidad → C) y se avisa si se elige otra; se muestran ejemplos de la disciplina del tag. Decide quien levanta y después revisa el supervisor.
 7. **La disposición bloquea el PSSR:** para enviar y para aprobar, todo punch abierto del sistema debe tener disposición, y ninguno marcado «cerrar antes del arranque» puede seguir abierto (16.37).
 8. **PDF del procedimiento generado** (pdf-lib), con el nombre de la org y en el idioma del usuario: criterios, matriz impacto → categoría, ejemplos por disciplina, flujo resolver → verificar y revisión del supervisor. La versión editable por la org queda para después.
+
+**Bloque B (Luis, 2026-10-15):**
+9. **El equipo se registra por ITR** (sección «Equipos de prueba usados», uno o varios), obligatoria si la plantilla lo requiere. Se marcan automáticamente las plantillas que hoy piden el equipo por texto; esos ítems de texto se limpian después en el catálogo ITR v2.
+10. **Inventario por organización**, usable en todos sus proyectos (con el contratista dueño del equipo).
+11. **Certificado:** obligatorios el n.º de certificado, la fecha de calibración y el vencimiento; el PDF es opcional.
+12. **Validez contra la fecha de uso** (13.42): vale si estaba vigente el día que se registró en el ITR. Si vence después, la firma posterior no se bloquea; si se registró ya vencido, bloquea.

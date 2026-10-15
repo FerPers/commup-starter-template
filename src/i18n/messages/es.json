@@ -103,7 +103,8 @@
       "allWorkPlans": "Todos los planes",
       "gates": "Gates (hold points)",
       "registers": "Registros",
-      "registerTypes": "Registros controlados"
+      "registerTypes": "Registros controlados",
+      "testEquipment": "Equipos de prueba"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -2955,5 +2956,82 @@
     "pssrBlocked": "Bloquea el PSSR: {missing} sin disposición y {mustClose} por cerrar antes del arranque.",
     "colDescription": "Descripción",
     "colStatus": "Estado"
+  },
+  "TestEquipment": {
+    "title": "Equipos de prueba",
+    "subtitle": "Inventario de la organización con su calibración. Un ITR no se firma si el equipo usado estaba vencido el día de la prueba.",
+    "new": "Nuevo equipo",
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "kpi": {
+      "total": "Activos",
+      "valid": "Vigentes",
+      "expiring": "Por vencer (30 días)",
+      "expired": "Vencidos"
+    },
+    "f": {
+      "code": "Código",
+      "kind": "Tipo",
+      "make": "Marca",
+      "model": "Modelo",
+      "serial": "N.º de serie",
+      "owner": "Empresa dueña",
+      "certificate": "N.º de certificado",
+      "calibratedOn": "Calibrado el",
+      "due": "Vence",
+      "notes": "Notas"
+    },
+    "kind": {
+      "insulation_tester": "Megóhmetro",
+      "loop_calibrator": "Calibrador de lazo",
+      "pressure_gauge": "Manómetro patrón",
+      "deadweight_tester": "Balanza de pesos muertos",
+      "multimeter": "Multímetro",
+      "clamp_meter": "Pinza amperimétrica",
+      "earth_tester": "Telurómetro",
+      "relay_tester": "Probador de relés",
+      "torque_wrench": "Torquímetro",
+      "thermometer": "Termómetro patrón",
+      "flow_meter": "Medidor de flujo patrón",
+      "other": "Otro"
+    },
+    "state": {
+      "valid": "Vigente",
+      "expiring": "Por vencer",
+      "expired": "Vencido",
+      "not_yet": "Aún no calibrado"
+    },
+    "search": "Buscar código, serie, marca…",
+    "filter": "Estado",
+    "allActive": "Todos los activos",
+    "inactive": "Dados de baja",
+    "col": {
+      "equipment": "Equipo",
+      "state": "Calibración"
+    },
+    "viewCert": "Ver certificado",
+    "noCert": "Sin PDF",
+    "calibratedOn": "Calibrado {date}",
+    "uploadCert": "Subir certificado",
+    "deactivate": "Dar de baja",
+    "activate": "Reactivar",
+    "delete": "Borrar",
+    "deleteConfirm": "¿Borrar el equipo {code}? Solo es posible si nunca se usó en un ITR.",
+    "empty": "No hay equipos en esta vista.",
+    "itrTitle": "Equipos de prueba usados",
+    "required": "Obligatorio para firmar",
+    "blockMissing": "Registra el equipo de prueba usado: sin él no se puede firmar este ITR.",
+    "blockExpired": "Fuera de calibración en la fecha de uso: {codes}. Reemplázalo para poder firmar.",
+    "certDue": "Cert. {cert} · vence {due}",
+    "usedOn": "usado {date}",
+    "remove": "Quitar",
+    "pick": "Elegir equipo del inventario…",
+    "due": "vence {date}",
+    "add": "Registrar",
+    "pickExpired": "Este equipo está vencido hoy: se puede registrar, pero el ITR no se podrá firmar.",
+    "pickExpiring": "Vence en menos de 30 días.",
+    "noInventory": "No hay más equipos activos en el inventario.",
+    "goInventory": "Ir al inventario"
   }
 }

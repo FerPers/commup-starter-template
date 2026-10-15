@@ -1,6 +1,7 @@
 import { evaluateContinuity } from '../itr/continuity'
 import { evaluateTable } from '../itr/table'
 import { drawItrSignatures } from './itr-signatures'
+import { calibrationState, isUsable } from '../test-equipment/calibration'
 /**
  * ITR (Inspection & Test Record) PDF — pdf-lib (Workers-native).
  * Replaces the @react-pdf/renderer implementation in ItrPdfDocument.tsx.
@@ -9,7 +10,7 @@ import { drawItrSignatures } from './itr-signatures'
 import {
   Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H, BOTTOM_LIMIT,
   sanitize, wrapText,
-  type Color,
+  type Color, type TableCol,
 } from './renderer'
 
 type ItrItem = {
@@ -80,7 +81,19 @@ export type ItrPdfData = {
   itr_responses: ItrResponse[]
   itr_signatures: ItrSignature[]
   itr_attachments?: ItrAttachmentRef[]
+  /** Fase 4-B: equipos de prueba usados, con la calibración copiada al momento de uso. */
+  itr_test_equipment?: ItrTestEquipmentRef[]
 }
+
+export type ItrTestEquipmentRef = {
+  used_on: string
+  calibrated_on: string
+  calibration_due: string
+  certificate_number: string
+  snapshot: { code?: string; kind?: string; make?: string | null; model?: string | null; serial_number?: string } | null
+}
+
+const humanKind = (k?: string) => (k ?? '').replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())
 
 /** «Evidencia: 2 foto(s) · documento: cert.pdf» — nombres de archivo, nunca URLs firmadas. */
 function evidenceSummary(attachments: ItrAttachmentRef[]): string | null {
@@ -471,6 +484,31 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
   if (generalEvidence) {
     r.moveY(8)
     r.paragraph(`${generalEvidence} (generales / general)`, { size: 8, color: COLOR.muted })
+  }
+
+  // ─── Equipos de prueba (fase 4-B, 13.42: con qué equipo y si estaba calibrado) ─────────
+  if (itr.itr_test_equipment?.length) {
+    r.moveY(10)
+    r.accentSection('Equipos de prueba usados / Test equipment used')
+    const cols: TableCol[] = [
+      { w: 46, label: 'Código' },
+      { w: 78, label: 'Tipo/Type' },
+      { w: 84, label: 'Equipo/Equipment' },
+      { w: 62, label: 'S/N' },
+      { w: 92, label: 'Certificado/Cert.' },
+      { w: 54, label: 'Vence/Due', align: 'center' },
+      { w: 54, label: 'Uso/Used', align: 'center' },
+      { w: 53, label: 'Estado', align: 'center' },
+    ]
+    r.tableHeader(cols)
+    itr.itr_test_equipment.forEach((u, i) => {
+      const ok = isUsable(calibrationState(u, u.used_on))
+      const snap = u.snapshot ?? {}
+      r.tableRow(cols, [
+        snap.code ?? '-', humanKind(snap.kind), [snap.make, snap.model].filter(Boolean).join(' ') || '-', snap.serial_number ?? '-',
+        u.certificate_number, u.calibration_due, u.used_on, ok ? 'VIGENTE' : 'VENCIDO',
+      ], { alternate: i % 2 === 1, valueColors: [null, null, null, null, null, null, null, ok ? COLOR.green : COLOR.red], valueBold: [true, false, false, false, false, false, false, true] })
+    })
   }
 
   r.moveY(12)

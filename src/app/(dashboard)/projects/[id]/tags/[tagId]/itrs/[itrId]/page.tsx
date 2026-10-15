@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import ItrExecution from './ItrExecution'
+import type { EquipmentOption, EquipmentUsed } from './TestEquipmentSection'
 import SuggestionsBar, { type ItrSuggestion } from '@/components/itr/SuggestionsBar'
 
 export default async function ItrExecutionPage({
@@ -20,7 +21,7 @@ export default async function ItrExecutionPage({
     .select(`
       id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id,
       itr_templates(
-        id, code, title, version,
+        id, code, title, version, requires_test_equipment,
         itr_template_sections(
           id, title, order_index,
           itr_template_items(
@@ -64,6 +65,20 @@ export default async function ItrExecutionPage({
 
   const { data: members } = await supabase.from('org_members').select('user_id').eq('org_id', ctx.orgId)
 
+  // Fase 4-B: equipos de prueba usados (con su calibración al momento de uso) e inventario activo de la org.
+  const [{ data: equipmentUsed }, { data: equipmentOptions }] = await Promise.all([
+    supabase.from('itr_test_equipment')
+      .select('equipment_id, used_on, calibrated_on, calibration_due, certificate_number, snapshot')
+      .eq('itr_id', itrId)
+      .order('added_at'),
+    supabase.from('test_equipment')
+      .select('id, code, kind, make, model, serial_number, calibrated_on, calibration_due')
+      .eq('org_id', ctx.orgId)
+      .eq('is_active', true)
+      .order('code')
+      .limit(1000),
+  ])
+
   const { data: suggestions } = await supabase
     .from('itr_suggestions')
     .select('id, signal_tag, signal_value, signal_unit, sampled_at, message, suggested_at, expires_at, pre_filled_data')
@@ -85,6 +100,11 @@ export default async function ItrExecutionPage({
         canEdit={canEdit}
         attachments={attachments}
         memberIds={(members ?? []).map(m => m.user_id)}
+        testEquipment={{
+          requires: (itr.itr_templates as { requires_test_equipment?: boolean } | null)?.requires_test_equipment ?? false,
+          used: (equipmentUsed ?? []) as EquipmentUsed[],
+          options: (equipmentOptions ?? []) as EquipmentOption[],
+        }}
       />
     </>
   )

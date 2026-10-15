@@ -1678,6 +1678,7 @@ export type Database = {
           is_global: boolean
           org_id: string
           phase_id: string
+          requires_test_equipment: boolean
           source_org_id: string | null
           source_template_id: string | null
           source_version: number | null
@@ -1697,6 +1698,7 @@ export type Database = {
           is_global?: boolean
           org_id: string
           phase_id: string
+          requires_test_equipment?: boolean
           source_org_id?: string | null
           source_template_id?: string | null
           source_version?: number | null
@@ -1716,6 +1718,7 @@ export type Database = {
           is_global?: boolean
           org_id?: string
           phase_id?: string
+          requires_test_equipment?: boolean
           source_org_id?: string | null
           source_template_id?: string | null
           source_version?: number | null
@@ -1771,6 +1774,74 @@ export type Database = {
             columns: ["source_template_id"]
             isOneToOne: false
             referencedRelation: "itr_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itr_test_equipment: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          calibrated_on: string
+          calibration_due: string
+          certificate_number: string
+          equipment_id: string
+          itr_id: string
+          project_id: string
+          snapshot: Json
+          used_on: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          calibrated_on: string
+          calibration_due: string
+          certificate_number: string
+          equipment_id: string
+          itr_id: string
+          project_id: string
+          snapshot?: Json
+          used_on?: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          calibrated_on?: string
+          calibration_due?: string
+          certificate_number?: string
+          equipment_id?: string
+          itr_id?: string
+          project_id?: string
+          snapshot?: Json
+          used_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itr_test_equipment_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "test_equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_test_equipment_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_test_equipment_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itrs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_test_equipment_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -5239,6 +5310,74 @@ export type Database = {
           },
         ]
       }
+      test_equipment: {
+        Row: {
+          calibrated_on: string
+          calibration_due: string
+          certificate_number: string
+          certificate_path: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          make: string | null
+          model: string | null
+          notes: string | null
+          org_id: string
+          owner_company: string | null
+          serial_number: string
+          updated_at: string
+        }
+        Insert: {
+          calibrated_on: string
+          calibration_due: string
+          certificate_number: string
+          certificate_path?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind: string
+          make?: string | null
+          model?: string | null
+          notes?: string | null
+          org_id: string
+          owner_company?: string | null
+          serial_number: string
+          updated_at?: string
+        }
+        Update: {
+          calibrated_on?: string
+          calibration_due?: string
+          certificate_number?: string
+          certificate_path?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          make?: string | null
+          model?: string | null
+          notes?: string | null
+          org_id?: string
+          owner_company?: string | null
+          serial_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_equipment_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_deliveries: {
         Row: {
           attempts: number
@@ -6648,6 +6787,10 @@ export type Database = {
         }[]
       }
       itr_table_config_valid: { Args: { p_options: Json }; Returns: boolean }
+      itr_test_equipment_blocker: {
+        Args: { p_itr_id: string }
+        Returns: string
+      }
       link_register_items: {
         Args: { p_item_id: string; p_link?: boolean; p_linked_item_id: string }
         Returns: undefined
