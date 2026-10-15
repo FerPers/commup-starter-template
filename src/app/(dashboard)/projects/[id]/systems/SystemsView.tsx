@@ -9,6 +9,7 @@ import { KIND_LETTER, TypeChip } from './system-ui'
 
 // El modal trae xlsx (pesado): solo se descarga al abrirlo.
 const ImportSystemsModal = dynamic(() => import('./ImportSystemsModal'), { ssr: false })
+const AiSuggestionsModal = dynamic(() => import('./AiSuggestionsModal'), { ssr: false })
 
 export type SystemListItem = {
   id: string
@@ -56,6 +57,7 @@ export default function SystemsView({ project, systems, edges, canEdit }: Props)
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<'' | SystemType | 'none'>('')
   const [importing, setImporting] = useState(false)
+  const [suggesting, setSuggesting] = useState(false)
 
   const byId = useMemo(() => new Map(systems.map(s => [s.id, s])), [systems])
   const enabling = useMemo(() => enablingSystemIds(edges), [edges])
@@ -90,6 +92,7 @@ export default function SystemsView({ project, systems, edges, canEdit }: Props)
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <Link href={`/control-tower?projectId=${project.id}`} style={{ ...tab(false), textDecoration: 'none' }}>{t('openControlTower')}</Link>
+            {canEdit && systems.length > 0 && <button type="button" style={tab(false)} onClick={() => setSuggesting(true)}>✨ {t('ai.button')}</button>}
             {canEdit && <button type="button" style={tab(true)} onClick={() => setImporting(true)}>{t('import.button')}</button>}
           </div>
         </div>
@@ -200,6 +203,7 @@ export default function SystemsView({ project, systems, edges, canEdit }: Props)
         <DependencyMatrix projectId={project.id} systems={systems} edges={edges} />
       )}
 
+      {suggesting && <AiSuggestionsModal projectId={project.id} onClose={() => setSuggesting(false)} />}
       {importing && <ImportSystemsModal projectId={project.id} systems={systems} edges={edges} onClose={() => setImporting(false)} />}
     </div>
   )

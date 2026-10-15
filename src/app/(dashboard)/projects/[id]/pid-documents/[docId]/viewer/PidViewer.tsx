@@ -8,6 +8,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import { useSearchParams } from 'next/navigation'
 import TagQuickViewModal from '@/components/TagQuickViewModal'
 import { upsertHotspot, deleteHotspot } from '@/app/actions/pid-hotspots'
+import { NO_SYSTEM_COLOR, systemColorMap } from '@/lib/systems/colors'
 
 // Point to the worker we copied to public/ — safe for Cloudflare Workers runtime
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
@@ -22,10 +23,13 @@ type HotspotTag = {
   itr_completion_pct: number
 }
 
+type SystemRef = { id: string; code: string; name: string }
+
 type Hotspot = {
   id: string; tag_id: string; page_num: number; x_pct: number; y_pct: number
   tag: Pick<HotspotTag, 'id' | 'tag_number' | 'description' | 'status'>
   discipline: { id: string; code: string; name: string; color: string }
+  system: SystemRef | null
   open_punches_a: number
   open_punches_b: number
   itr_completion_pct: number
@@ -50,6 +54,7 @@ function hotspotStatusColor(h: { open_punches_a: number; itr_completion_pct: num
 type TagItem = {
   id: string; tag_number: string; description: string; status: string
   discipline: { id: string; code: string; name: string; color: string }
+  system: SystemRef | null
 }
 
 interface Props {
@@ -192,6 +197,9 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
   const [pendingPos, setPendingPos] = useState<{ x: number; y: number } | null>(null)
   const [hotspots, setHotspots] = useState<Hotspot[]>(initialHotspots)
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null)
+  // Fase 2: colorear por estado (semáforo) o por sistema; clic en la leyenda filtra un sistema.
+  const [colorBy, setColorBy] = useState<'status' | 'system'>('status')
+  const [systemFilter, setSystemFilter] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [pageWidth, setPageWidth] = useState(900)
   const [dragCursor, setDragCursor] = useState(false)
@@ -329,6 +337,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
       y_pct: pendingPos.y,
       tag: { id: tagData.id, tag_number: tagData.tag_number, description: tagData.description, status: tagData.status },
       discipline: tagData.discipline,
+      system: tagData.system,
       open_punches_a: 0,
       open_punches_b: 0,
       itr_completion_pct: 0,
@@ -362,6 +371,13 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
   }
 
   const pageHotspots = hotspots.filter(h => h.page_num === currentPage)
+  const docSystems = [...new Map(hotspots.filter(h => h.system).map(h => [h.system!.id, h.system!])).values()]
+    .sort((a, b) => a.code.localeCompare(b.code))
+  const systemColors = systemColorMap(docSystems)
+  const pinColor = (h: Hotspot) => colorBy === 'system'
+    ? (h.system ? systemColors.get(h.system.id) ?? NO_SYSTEM_COLOR : NO_SYSTEM_COLOR)
+    : hotspotStatusColor(h)
+  const dimmed = (h: Hotspot) => !!systemFilter && h.system?.id !== systemFilter
   const selectedTagData = selectedHotspot ? {
     id: selectedHotspot.tag.id,
     tag_number: selectedHotspot.tag.tag_number,
@@ -425,11 +441,43 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
           </div>
         </div>
 
-        {/* Status legend */}
+        {/* Leyenda: estado o sistemas (fase 2) */}
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-            {t('viewer.legendTitle')}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              {t('viewer.colorBy')}
+            </span>
+            <div role="group" aria-label={t('viewer.colorBy')} style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+              {(['status', 'system'] as const).map(mode => (
+                <button key={mode} type="button" aria-pressed={colorBy === mode}
+                  onClick={() => { setColorBy(mode); if (mode === 'status') setSystemFilter(null) }}
+                  style={{ padding: '3px 8px', fontSize: '11px', fontWeight: 600, border: 'none', cursor: 'pointer',
+                    background: colorBy === mode ? 'var(--primary-500)' : 'var(--card-bg)', color: colorBy === mode ? '#fff' : 'var(--text-muted)' }}>
+                  {t(`viewer.colorBy_${mode}`)}
+                </button>
+              ))}
+            </div>
           </div>
+          {colorBy === 'system' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {docSystems.length === 0 && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('viewer.noSystems')}</span>}
+              {docSystems.map(sys => {
+                const active = systemFilter === sys.id
+                return (
+                  <button key={sys.id} type="button" aria-pressed={active}
+                    onClick={() => setSystemFilter(active ? null : sys.id)}
+                    title={t('viewer.filterSystem')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '3px 6px', borderRadius: 6, cursor: 'pointer', textAlign: 'left',
+                      border: active ? '1px solid var(--border)' : '1px solid transparent', background: active ? 'var(--gray-50)' : 'transparent',
+                      opacity: systemFilter && !active ? 0.5 : 1 }}>
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: systemColors.get(sys.id), flexShrink: 0, display: 'inline-block' }} />
+                    <span style={{ fontSize: '11px', color: 'var(--text-strong)', fontWeight: 600 }}>{sys.code}</span>
+                    {sys.name !== sys.code && <span style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sys.name}</span>}
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             {([
               [STATUS_COLORS.punchA, t('viewer.legendPunchA')],
@@ -443,6 +491,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
               </div>
             ))}
           </div>
+          )}
         </div>
 
         {/* Edit mode + tag selector */}
@@ -567,15 +616,15 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
             }}
           />
 
-          {/* Hotspot pins — color = estado (semáforo), glifo = disciplina */}
+          {/* Hotspot pins — color = estado (semáforo) o sistema, glifo = disciplina */}
           {pageHotspots.map(h => {
-            const statusColor = hotspotStatusColor(h)
+            const statusColor = pinColor(h)
             const pinSize = isTouch ? 28 : 20
             return (
               <div
                 key={h.id}
                 onClick={() => { setSelectedHotspot(h) }}
-                title={`${h.tag.tag_number} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}`}
+                title={`${h.tag.tag_number}${h.system ? ` · ${h.system.code}` : ''} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}`}
                 style={{
                   position: 'absolute',
                   left: `${h.x_pct}%`,
@@ -587,6 +636,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                   border: `2px solid white`,
                   cursor: 'pointer',
                   zIndex: 10,
+                  opacity: dimmed(h) ? 0.2 : 1,
                   boxShadow: selectedHotspot?.id === h.id
                     ? `0 0 0 3px ${statusColor}60`
                     : '0 2px 4px rgba(0,0,0,0.3)',

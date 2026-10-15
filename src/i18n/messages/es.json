@@ -1537,7 +1537,12 @@
       "legendPunchA": "Punch Cat A abierto",
       "legendComplete": "ITRs aprobados",
       "legendProgress": "En progreso",
-      "legendPending": "Sin iniciar"
+      "legendPending": "Sin iniciar",
+      "colorBy": "Colorear por",
+      "colorBy_status": "Estado",
+      "colorBy_system": "Sistema",
+      "noSystems": "Los tags marcados no tienen sistema.",
+      "filterSystem": "Clic para resaltar solo este sistema"
     }
   },
   "PreservationExecution": {
@@ -2548,6 +2553,33 @@
         "tag": "tag",
         "subsystem": "subsistema"
       }
+    },
+    "ai": {
+      "button": "Sugerir con IA",
+      "title": "Sugerencias de IA para la sistematización",
+      "help": "La IA propone tipo, prioridad y nombre de cada sistema y las dependencias que faltan, a partir de áreas, subsistemas y tags. Nada se guarda hasta que apliques. Los sistemas que tu equipo ya definió llegan desmarcados; las dependencias se crean con los gates por defecto de su tipo y luego se pueden ajustar en la ficha.",
+      "loading": "Analizando los sistemas del proyecto… puede tardar uno o dos minutos.",
+      "failed": "No se pudieron generar sugerencias.",
+      "truncated": "El proyecto tiene más de 80 sistemas: se analizaron los primeros 80.",
+      "attributes": "Tipo y prioridad ({count})",
+      "dependencies": "Dependencias propuestas ({count})",
+      "noDependencies": "La IA no propuso dependencias nuevas.",
+      "select": "Seleccionar",
+      "selectSystem": "Aplicar sugerencia para {code}",
+      "selectDependency": "Aplicar dependencia {system} → {provider}",
+      "proposal": "Propuesta",
+      "confidence": "Confianza",
+      "reason": "Motivo",
+      "dependency": "Dependencia",
+      "dependsOnArrow": "depende de",
+      "humanDecided": "Ya definido por el equipo: {type} · {priority}",
+      "rename": "Nombre propuesto: {name}",
+      "gatesNote": "Las dependencias usan los gates por defecto: utility = el proveedor en servicio antes de comisionar; proceso = arranque aguas arriba antes del arranque.",
+      "discarded": "{count, plural, one {# sugerencia descartada} other {# sugerencias descartadas}} (códigos inexistentes, duplicados o ciclos)",
+      "apply": "Aplicar seleccionadas ({count})",
+      "applying": "Aplicando…",
+      "done": "Listo: {systems} sistemas actualizados y {dependencies} dependencias creadas.",
+      "notePrefix": "IA:"
     }
   }
 }

@@ -56,14 +56,15 @@ export default async function PidViewerPage({
       .select(`
         id, tag_id, page_num, x_pct, y_pct, created_by, created_at,
         tags:tag_id ( id, tag_number, description, status,
-          disciplines:discipline_id ( id, code, name, color )
+          disciplines:discipline_id ( id, code, name, color ),
+          subsystems:subsystem_id ( systems:system_id ( id, code, name ) )
         )
       `)
       .eq('pid_document_id', docId)
       .eq('project_id', id),
     supabase
       .from('tags')
-      .select('id, tag_number, description, status, discipline_id, disciplines:discipline_id(id, code, name, color)')
+      .select('id, tag_number, description, status, discipline_id, disciplines:discipline_id(id, code, name, color), subsystems:subsystem_id(systems:system_id(id, code, name))')
       .eq('project_id', id)
       .order('tag_number'),
     supabase
@@ -98,6 +99,11 @@ export default async function PidViewerPage({
     }
   }
 
+  // Sistema del tag (fase 2): el visor colorea y filtra los pines por sistema.
+  type SystemRef = { id: string; code: string; name: string }
+  const systemOf = (sub: unknown): SystemRef | null =>
+    ((sub as { systems: SystemRef | null } | null)?.systems) ?? null
+
   // Enrich hotspots
 
   const hotspots = (rawHotspots ?? []).map(h => {
@@ -123,6 +129,7 @@ export default async function PidViewerPage({
         name: tag?.disciplines?.name ?? '',
         color: tag?.disciplines?.color ?? '#94a3b8',
       },
+      system: systemOf(tag?.subsystems),
       open_punches_a: punchACountByTag.get(tagId) ?? 0,
       open_punches_b: punchBCountByTag.get(tagId) ?? 0,
       itr_completion_pct: total > 0 ? Math.round((approved / total) * 100) : 0,
@@ -132,6 +139,7 @@ export default async function PidViewerPage({
   type TagItem = {
     id: string; tag_number: string; description: string; status: string
     discipline: { id: string; code: string; name: string; color: string }
+    system: SystemRef | null
   }
 
   const tags: TagItem[] = (allTags ?? []).map(t => {
@@ -147,6 +155,7 @@ export default async function PidViewerPage({
         name: disc?.name ?? '',
         color: disc?.color ?? '#94a3b8',
       },
+      system: systemOf(t.subsystems),
     }
   })
 

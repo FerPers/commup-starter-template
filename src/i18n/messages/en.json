@@ -1537,7 +1537,12 @@
       "legendPunchA": "Open Cat A punch",
       "legendComplete": "ITRs approved",
       "legendProgress": "In progress",
-      "legendPending": "Not started"
+      "legendPending": "Not started",
+      "colorBy": "Color by",
+      "colorBy_status": "Status",
+      "colorBy_system": "System",
+      "noSystems": "Marked tags have no system.",
+      "filterSystem": "Click to highlight only this system"
     }
   },
   "PreservationExecution": {
@@ -2548,6 +2553,33 @@
         "tag": "tag",
         "subsystem": "subsystem"
       }
+    },
+    "ai": {
+      "button": "Suggest with AI",
+      "title": "AI suggestions for systemization",
+      "help": "The AI proposes each system's type, priority and name, plus missing dependencies, from areas, subsystems and tags. Nothing is saved until you apply. Systems your team already defined come unchecked; dependencies are created with the default gates for their type and can be adjusted on the system page.",
+      "loading": "Analyzing the project systems… this can take a minute or two.",
+      "failed": "Suggestions could not be generated.",
+      "truncated": "The project has more than 80 systems: the first 80 were analyzed.",
+      "attributes": "Type and priority ({count})",
+      "dependencies": "Proposed dependencies ({count})",
+      "noDependencies": "The AI proposed no new dependencies.",
+      "select": "Select",
+      "selectSystem": "Apply suggestion for {code}",
+      "selectDependency": "Apply dependency {system} → {provider}",
+      "proposal": "Proposal",
+      "confidence": "Confidence",
+      "reason": "Reason",
+      "dependency": "Dependency",
+      "dependsOnArrow": "depends on",
+      "humanDecided": "Already set by the team: {type} · {priority}",
+      "rename": "Proposed name: {name}",
+      "gatesNote": "Dependencies use the default gates: utility = provider in service before commissioning; process = upstream start-up before start-up.",
+      "discarded": "{count, plural, one {# suggestion discarded} other {# suggestions discarded}} (unknown codes, duplicates or cycles)",
+      "apply": "Apply selected ({count})",
+      "applying": "Applying…",
+      "done": "Done: {systems} systems updated and {dependencies} dependencies created.",
+      "notePrefix": "AI:"
     }
   }
 }

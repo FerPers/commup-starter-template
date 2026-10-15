@@ -61,3 +61,11 @@ describe('enablingSystemIds / cleanBatteryLimits', () => {
     expect(cleanBatteryLimits({ notes: 'x'.repeat(1200) }).notes).toHaveLength(1000)
   })
 })
+
+describe('systemColorMap', () => {
+  it('colores estables por orden de código, sin repetir hasta agotar la paleta', async () => {
+    const { systemColorMap, SYSTEM_PALETTE } = await import('./colors')
+    const m = systemColorMap([{ id: 'b', code: 'U100' }, { id: 'a', code: 'A100' }, { id: 'b', code: 'U100' }])
+    expect([...m.entries()]).toEqual([['a', SYSTEM_PALETTE[0]], ['b', SYSTEM_PALETTE[1]]])
+  })
+})
