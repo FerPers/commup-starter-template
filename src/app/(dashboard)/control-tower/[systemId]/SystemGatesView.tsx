@@ -36,6 +36,8 @@ type Props = {
   gates: SystemGate[]
   names: Record<string, string>
   phaseCodes: Record<string, string>
+  dependsOn: { id: string; code: string }[]
+  enables: { id: string; code: string }[]
 }
 
 const RESULT_STYLE: Record<string, { icon: string; color: string }> = {
@@ -72,7 +74,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes }: Props) {
+export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables }: Props) {
   const t = useTranslations('Gates')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -279,9 +281,24 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
       <div>
         <Link href={`/control-tower?projectId=${project.id}`} style={linkStyle}>← {t('back')}</Link>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 2px' }}>
-          {system.code} — {system.name}
+          {system.code}{system.name && system.name !== system.code ? ` — ${system.name}` : ''}
         </h1>
-        <p style={{ ...small, margin: 0 }}>{project.code} · {project.name}{system.area ? ` · ${system.area}` : ''}</p>
+        <p style={{ ...small, margin: 0 }}>
+          {project.code} · {project.name}{system.area ? ` · ${system.area}` : ''}
+          {' · '}<Link href={`/projects/${project.id}/systems/${system.id}`} style={linkStyle}>{t('systemFile')}</Link>
+        </p>
+        {(dependsOn.length > 0 || enables.length > 0) && (
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8, ...small }}>
+            {([['dependsOn', dependsOn], ['enables', enables]] as const).map(([key, list]) => list.length > 0 && (
+              <span key={key}>
+                <strong style={{ color: 'var(--text-strong)' }}>{t(key)}:</strong>{' '}
+                {list.map((s, i) => (
+                  <span key={s.id}>{i > 0 && ', '}<Link href={`/control-tower/${s.id}`} style={linkStyle}>{s.code}</Link></span>
+                ))}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <p style={{ ...small, margin: 0, lineHeight: 1.5 }}>{t('intro')}</p>

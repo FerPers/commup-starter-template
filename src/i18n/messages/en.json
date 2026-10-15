@@ -1720,6 +1720,12 @@
       "ready_with_conditions": "ready with conditions",
       "not_ready": "not ready",
       "pending_signatures": "pending signatures"
+    },
+    "blockedBy": "⛓ Blocked by dependency: {systems}",
+    "systemType": {
+      "process": "Process",
+      "utility": "Utility",
+      "safety": "Safety"
     }
   },
   "DataQuality": {
@@ -2350,7 +2356,10 @@
       "commissioning": "Commissioning",
       "operations": "Operations",
       "hse": "HSE"
-    }
+    },
+    "dependsOn": "Depends on",
+    "enables": "Enables",
+    "systemFile": "System page"
   },
   "GatesAdmin": {
     "title": "Gates (hold points)",
@@ -2389,5 +2398,156 @@
     },
     "requiredSignatures": "Additional signatures required",
     "cosignRoles": "Can co-sign"
+  },
+  "Systems": {
+    "title": "Systems",
+    "subtitle": "Project systemization: type, priority, battery limits and dependencies between systems.",
+    "openControlTower": "Open in Control Tower",
+    "kpi": {
+      "systems": "Systems",
+      "typed": "With type",
+      "dependencies": "Dependencies",
+      "enabling": "Enabling",
+      "frozen": "Frozen limits"
+    },
+    "view": {
+      "list": "List",
+      "matrix": "Dependency matrix"
+    },
+    "search": "Search system or area",
+    "allTypes": "All types",
+    "noType": "No type",
+    "col": {
+      "area": "Area",
+      "system": "System",
+      "type": "Type",
+      "priority": "Priority",
+      "dependsOn": "Depends on",
+      "enables": "Enables",
+      "boundary": "Limits"
+    },
+    "type": {
+      "process": "Process",
+      "utility": "Utility",
+      "safety": "Safety"
+    },
+    "priority": {
+      "1": "P1 — critical",
+      "2": "P2 — high",
+      "3": "P3 — medium",
+      "4": "P4 — low",
+      "5": "P5 — deferrable"
+    },
+    "kind": {
+      "utility": "Utility",
+      "process": "Process",
+      "other": "Other"
+    },
+    "source": {
+      "manual": "manual",
+      "import": "imported",
+      "ai": "suggested by AI"
+    },
+    "subsystems": "{count, plural, =0 {no subsystems} one {# subsystem} other {# subsystems}}",
+    "edgeTitle": "needs the provider's {required} before its {blocked}",
+    "enablesCount": "{count, plural, one {# system} other {# systems}}",
+    "frozen": "Frozen",
+    "open": "Open",
+    "noMatches": "No system matches the filter.",
+    "empty": "This project has no systems yet.",
+    "emptyLink": "Import the hierarchy from Excel.",
+    "matrix": {
+      "empty": "No dependencies yet. Add them from each system's page or import the matrix from Excel.",
+      "legend": "Rows: dependent system. Columns: system it depends on. U = utility, P = process, O = other; \"RFSU→RFC\" = the provider needs RFSU before the dependent's RFC.",
+      "corner": "Depends on →"
+    },
+    "import": {
+      "button": "Import Excel",
+      "title": "Import systemization from Excel",
+      "help": "\"Systems\" sheet: SYSTEM, NAME, TYPE (process / utility / safety), PRIORITY (P1–P5) and limits (INLET, OUTLET, ELECTRICAL, INSTRUMENTATION, UTILITIES, NOTES). \"Dependencies\" sheet: SYSTEM, DEPENDS ON, DEPENDENCY TYPE and, optionally, REQUIRED GATE and BLOCKED GATE (defaults apply when empty). Systems must already exist: the hierarchy importer creates them. Empty cells do not erase existing data.",
+      "template": "Download template with current systems",
+      "file": "Excel file",
+      "nothingFound": "No valid rows found. Check there is a SYSTEM column (Systems sheet) or SYSTEM and DEPENDS ON columns (Dependencies sheet).",
+      "readError": "The file could not be read. Make sure it is a valid .xlsx or .xls.",
+      "sheetSystems": "Systems",
+      "sheetDependencies": "Dependencies",
+      "preview": "{systems} systems to update and {dependencies} dependencies to create.",
+      "skipped": "{count, plural, one {# row will be skipped} other {# rows will be skipped}}:",
+      "submit": "Import",
+      "importing": "Importing…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "done": "Done: {systems} systems updated, {created} new dependencies, {existing} already existed."
+    },
+    "detail": {
+      "back": "Project systems",
+      "scope": "{subsystems} subsystems · {tags} tags",
+      "openGates": "Open gates in Control Tower",
+      "attributes": "Attributes",
+      "name": "Name",
+      "typeHelp": "Utility: instrument air, power, N₂, cooling water… Usually enabling and commissioned first. Safety: flare, relief systems, fire fighting, ESD.",
+      "save": "Save attributes",
+      "saved": "Changes saved.",
+      "limits": "Battery limits",
+      "limitsHelp": "Where the system starts and ends, and its interfaces with other systems (guide 8.6). Freezing the limits records who and when; any later change to its subsystems or tags is logged here.",
+      "saveLimits": "Save limits",
+      "freeze": "Freeze limits",
+      "unfreeze": "Unfreeze",
+      "freezeConfirm": "Freeze this system's limits? Later changes to subsystems and tags will be logged.",
+      "unfreezeConfirm": "Unfreeze this system's limits?",
+      "frozenInfo": "Frozen by {who} on {when}",
+      "someone": "a user",
+      "notFrozen": "Limits open",
+      "history": "Limits history",
+      "dependsOn": "Depends on",
+      "dependsOnHelp": "Systems that must be ready before this one moves forward. The blocked gate cannot be approved until the provider has the required gate approved.",
+      "noDependsOn": "This system does not depend on others.",
+      "enables": "Enables",
+      "enablesHelp": "Systems waiting for this one. If a gate of this system is revoked, approved dependents go into regression.",
+      "noEnables": "No system depends on this one.",
+      "provider": "Depends on",
+      "choose": "Choose a system…",
+      "kind": "Dependency type",
+      "requiredGate": "Provider's required gate",
+      "blockedGate": "Gate it blocks here",
+      "notes": "Notes",
+      "notesPlaceholder": "e.g. dry air at 7 barg for control valves",
+      "add": "Add dependency",
+      "addPreview": "{system} cannot approve {blocked} until {provider} has {required} approved.",
+      "ruleDependsOn": "Needs the provider's {required} before its {blocked}",
+      "ruleEnables": "That system needs this one's {required} before its {blocked}",
+      "remove": "Remove",
+      "removeConfirm": "Remove the dependency on {code}?"
+    },
+    "limit": {
+      "inlet": "Inlet",
+      "outlet": "Outlet",
+      "electrical": "Electrical interfaces",
+      "instrumentation": "Instrumentation & control",
+      "utilities": "Utilities",
+      "notes": "Notes"
+    },
+    "limitPlaceholder": {
+      "inlet": "e.g. flange upstream of V-101",
+      "outlet": "e.g. block valve at P-101 A/B discharge",
+      "electrical": "e.g. MCC-01 bucket 3",
+      "instrumentation": "e.g. DCS cards in cabinet 2",
+      "utilities": "e.g. instrument air header",
+      "notes": ""
+    },
+    "event": {
+      "boundary_frozen": "Limits frozen",
+      "boundary_unfrozen": "Limits unfrozen",
+      "changed": "Change after freeze: {op} {entity} {code}",
+      "op": {
+        "INSERT": "added",
+        "UPDATE": "moved",
+        "DELETE": "removed"
+      },
+      "entity": {
+        "tag": "tag",
+        "subsystem": "subsystem"
+      }
+    }
   }
 }

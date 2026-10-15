@@ -26,11 +26,20 @@ export default async function SystemGatesPage({
   if (!system || !project || project.org_id !== ctx.orgId) notFound()
   const area = system.areas as { code: string; name: string } | null
 
-  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }] = await Promise.all([
+  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }] = await Promise.all([
     supabase.rpc('compute_system_gates', { p_system_id: systemId }),
     supabase.from('project_phases').select('id, code').eq('org_id', ctx.orgId),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
+    supabase.from('system_dependencies')
+      .select(`system_id, depends_on_system_id,
+        provider:systems!system_dependencies_depends_on_system_id_fkey(id, code),
+        dependent:systems!system_dependencies_system_id_fkey(id, code)`)
+      .eq('project_id', system.project_id)
+      .or(`system_id.eq.${systemId},depends_on_system_id.eq.${systemId}`),
   ])
+  type Ref = { id: string; code: string }
+  const dependsOn = (deps ?? []).filter(d => d.system_id === systemId).map(d => d.provider as unknown as Ref).filter(Boolean)
+  const enables = (deps ?? []).filter(d => d.depends_on_system_id === systemId).map(d => d.dependent as unknown as Ref).filter(Boolean)
   if (gatesError) console.error('[SystemGates] rpc error:', gatesError)
 
   const names: Record<string, string> = {}
@@ -52,6 +61,8 @@ export default async function SystemGatesPage({
       gates={(gates ?? []) as unknown as SystemGate[]}
       names={names}
       phaseCodes={phaseCodes}
+      dependsOn={dependsOn}
+      enables={enables}
     />
   )
 }

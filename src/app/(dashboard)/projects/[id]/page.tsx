@@ -210,6 +210,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <h3 style={sectionTitle}>Tags / Equipos y Señales</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
 
+            {/* Sistematización (fase 2 plan readiness) */}
+            <ResourceRow
+              title="Sistemas y dependencias"
+              detail="Tipo, prioridad, límites de batería y qué sistema habilita a cuál"
+              actions={<ResourceLink href={`/projects/${project.id}/systems`}>Ver sistemas →</ResourceLink>}
+            />
+
             {/* Tags de Equipos */}
             <ResourceRow
               title="Tags de Equipos"

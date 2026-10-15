@@ -1720,6 +1720,12 @@
       "ready_with_conditions": "listo con condiciones",
       "not_ready": "no listo",
       "pending_signatures": "pendiente de firmas"
+    },
+    "blockedBy": "⛓ Bloqueado por dependencia: {systems}",
+    "systemType": {
+      "process": "Proceso",
+      "utility": "Utility",
+      "safety": "Seguridad"
     }
   },
   "DataQuality": {
@@ -2350,7 +2356,10 @@
       "commissioning": "Comisionamiento",
       "operations": "Operaciones",
       "hse": "HSE"
-    }
+    },
+    "dependsOn": "Depende de",
+    "enables": "Habilita a",
+    "systemFile": "Ficha del sistema"
   },
   "GatesAdmin": {
     "title": "Gates (hold points)",
@@ -2389,5 +2398,156 @@
     },
     "requiredSignatures": "Firmas adicionales requeridas",
     "cosignRoles": "Pueden co-firmar"
+  },
+  "Systems": {
+    "title": "Sistemas",
+    "subtitle": "Sistematización del proyecto: tipo, prioridad, límites de batería y dependencias entre sistemas.",
+    "openControlTower": "Ver en Control Tower",
+    "kpi": {
+      "systems": "Sistemas",
+      "typed": "Con tipo asignado",
+      "dependencies": "Dependencias",
+      "enabling": "Habilitantes",
+      "frozen": "Límites congelados"
+    },
+    "view": {
+      "list": "Lista",
+      "matrix": "Matriz de dependencias"
+    },
+    "search": "Buscar sistema o área",
+    "allTypes": "Todos los tipos",
+    "noType": "Sin tipo",
+    "col": {
+      "area": "Área",
+      "system": "Sistema",
+      "type": "Tipo",
+      "priority": "Prioridad",
+      "dependsOn": "Depende de",
+      "enables": "Habilita a",
+      "boundary": "Límites"
+    },
+    "type": {
+      "process": "Proceso",
+      "utility": "Utility",
+      "safety": "Seguridad"
+    },
+    "priority": {
+      "1": "P1 — crítica",
+      "2": "P2 — alta",
+      "3": "P3 — media",
+      "4": "P4 — baja",
+      "5": "P5 — diferible"
+    },
+    "kind": {
+      "utility": "Utility",
+      "process": "Proceso",
+      "other": "Otra"
+    },
+    "source": {
+      "manual": "manual",
+      "import": "importada",
+      "ai": "sugerida por IA"
+    },
+    "subsystems": "{count, plural, =0 {sin subsistemas} one {# subsistema} other {# subsistemas}}",
+    "edgeTitle": "necesita {required} del proveedor antes de su {blocked}",
+    "enablesCount": "{count, plural, one {# sistema} other {# sistemas}}",
+    "frozen": "Congelados",
+    "open": "Abiertos",
+    "noMatches": "Ningún sistema coincide con el filtro.",
+    "empty": "Este proyecto aún no tiene sistemas.",
+    "emptyLink": "Importa la jerarquía desde Excel.",
+    "matrix": {
+      "empty": "Todavía no hay dependencias. Agrégalas desde la ficha de cada sistema o importa la matriz desde Excel.",
+      "legend": "Filas: sistema que depende. Columnas: sistema del que depende. U = utility, P = proceso, O = otra; «RFSU→RFC» = el proveedor necesita RFSU antes del RFC del dependiente.",
+      "corner": "Depende de →"
+    },
+    "import": {
+      "button": "Importar Excel",
+      "title": "Importar sistematización desde Excel",
+      "help": "Hoja «Sistemas»: SISTEMA, NOMBRE, TIPO (proceso / utility / seguridad), PRIORIDAD (P1–P5) y límites (ENTRADA, SALIDA, ELÉCTRICO, INSTRUMENTACIÓN, UTILITIES, NOTAS). Hoja «Dependencias»: SISTEMA, DEPENDE DE, TIPO DEPENDENCIA y, opcionales, GATE REQUERIDO y GATE BLOQUEADO (si faltan se usan los valores por defecto). Los sistemas deben existir: se crean con el importador de jerarquía. Las celdas vacías no borran lo ya cargado.",
+      "template": "Descargar plantilla con los sistemas actuales",
+      "file": "Archivo Excel",
+      "nothingFound": "No se encontró ninguna fila válida. Revisa que exista la columna SISTEMA (hoja Sistemas) o las columnas SISTEMA y DEPENDE DE (hoja Dependencias).",
+      "readError": "No se pudo leer el archivo. Verifica que sea un .xlsx o .xls válido.",
+      "sheetSystems": "Sistemas",
+      "sheetDependencies": "Dependencias",
+      "preview": "{systems} sistemas a actualizar y {dependencies} dependencias a crear.",
+      "skipped": "{count, plural, one {# fila se omitirá} other {# filas se omitirán}}:",
+      "submit": "Importar",
+      "importing": "Importando…",
+      "cancel": "Cancelar",
+      "close": "Cerrar",
+      "done": "Listo: {systems} sistemas actualizados, {created} dependencias nuevas, {existing} ya existían."
+    },
+    "detail": {
+      "back": "Sistemas del proyecto",
+      "scope": "{subsystems} subsistemas · {tags} tags",
+      "openGates": "Ver gates en Control Tower",
+      "attributes": "Atributos",
+      "name": "Nombre",
+      "typeHelp": "Utility: aire de instrumentos, potencia, N₂, agua de enfriamiento… Suelen ser habilitantes y comisionarse primero. Seguridad: tea, sistemas de alivio, contra incendio, ESD.",
+      "save": "Guardar atributos",
+      "saved": "Cambios guardados.",
+      "limits": "Límites de batería",
+      "limitsHelp": "Dónde empieza y termina el sistema, y sus interfaces con otros sistemas (guía 8.6). Congelar los límites deja constancia de quién y cuándo; cualquier cambio posterior de subsistemas o tags queda registrado aquí.",
+      "saveLimits": "Guardar límites",
+      "freeze": "Congelar límites",
+      "unfreeze": "Descongelar",
+      "freezeConfirm": "¿Congelar los límites de este sistema? Los cambios posteriores de subsistemas y tags quedarán registrados.",
+      "unfreezeConfirm": "¿Descongelar los límites de este sistema?",
+      "frozenInfo": "Congelados por {who} el {when}",
+      "someone": "un usuario",
+      "notFrozen": "Límites abiertos",
+      "history": "Historial de límites",
+      "dependsOn": "Depende de",
+      "dependsOnHelp": "Sistemas que deben estar listos antes de que este avance. El gate bloqueado no se puede aprobar hasta que el proveedor tenga aprobado el gate requerido.",
+      "noDependsOn": "Este sistema no depende de otros.",
+      "enables": "Habilita a",
+      "enablesHelp": "Sistemas que esperan a este. Si se revoca un gate de este sistema, los que dependen de él y ya estaban aprobados quedan en regresión.",
+      "noEnables": "Ningún sistema depende de este.",
+      "provider": "Depende de",
+      "choose": "Elegir sistema…",
+      "kind": "Tipo de dependencia",
+      "requiredGate": "Gate requerido del proveedor",
+      "blockedGate": "Gate que bloquea aquí",
+      "notes": "Notas",
+      "notesPlaceholder": "Ej.: aire seco a 7 barg para las válvulas de control",
+      "add": "Agregar dependencia",
+      "addPreview": "{system} no podrá aprobar {blocked} hasta que {provider} tenga aprobado {required}.",
+      "ruleDependsOn": "Necesita {required} del proveedor antes de su {blocked}",
+      "ruleEnables": "Ese sistema necesita {required} de este antes de su {blocked}",
+      "remove": "Quitar",
+      "removeConfirm": "¿Quitar la dependencia de {code}?"
+    },
+    "limit": {
+      "inlet": "Entrada",
+      "outlet": "Salida",
+      "electrical": "Interfaces eléctricas",
+      "instrumentation": "Instrumentación y control",
+      "utilities": "Utilities",
+      "notes": "Notas"
+    },
+    "limitPlaceholder": {
+      "inlet": "Ej.: brida aguas arriba de V-101",
+      "outlet": "Ej.: válvula de bloqueo a la descarga de P-101 A/B",
+      "electrical": "Ej.: celda 3 del CCM-01",
+      "instrumentation": "Ej.: tarjetas DCS del gabinete 2",
+      "utilities": "Ej.: cabezal de aire de instrumentos",
+      "notes": ""
+    },
+    "event": {
+      "boundary_frozen": "Límites congelados",
+      "boundary_unfrozen": "Límites descongelados",
+      "changed": "Cambio tras congelar: {op} {entity} {code}",
+      "op": {
+        "INSERT": "alta de",
+        "UPDATE": "movimiento de",
+        "DELETE": "baja de"
+      },
+      "entity": {
+        "tag": "tag",
+        "subsystem": "subsistema"
+      }
+    }
   }
 }

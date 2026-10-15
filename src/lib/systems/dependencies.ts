@@ -71,6 +71,27 @@ export function enablingSystemIds(edges: Pick<SystemDependency, 'depends_on_syst
   return new Set(edges.map(e => e.depends_on_system_id))
 }
 
+/**
+ * Bloqueos por dependencia para la matriz de Control Tower, a partir del estado de cada gate
+ * (mismo criterio que la BD: el proveedor cumple con su gate aprobado con todas las firmas; una
+ * aprobación vigente en regresión sigue contando, porque la BD mira la aprobación, no el cálculo).
+ * Devuelve `${systemId}:${gateId}` → códigos de los proveedores que faltan.
+ */
+export function dependencyBlocks(
+  edges: Pick<SystemDependency, 'system_id' | 'depends_on_system_id' | 'required_gate_id' | 'blocked_gate_id'>[],
+  statusOf: (systemId: string, gateId: string) => string | undefined,
+  codeOf: (systemId: string) => string,
+): Map<string, string[]> {
+  const out = new Map<string, string[]>()
+  for (const e of edges) {
+    const st = statusOf(e.depends_on_system_id, e.required_gate_id)
+    if (st === 'approved' || st === 'approved_with_conditions' || st === 'regressed') continue
+    const key = `${e.system_id}:${e.blocked_gate_id}`
+    out.set(key, [...(out.get(key) ?? []), codeOf(e.depends_on_system_id)])
+  }
+  return out
+}
+
 /** Límites de batería del formulario → objeto limpio (solo claves conocidas, sin vacíos, 1000 caracteres). */
 export function cleanBatteryLimits(input: Record<string, unknown>): BatteryLimits {
   const out: BatteryLimits = {}

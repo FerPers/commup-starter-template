@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
 import { GATE_STATUS_STYLE, isApproved, type MatrixGate } from '@/lib/readiness/gates'
+import { dependencyBlocks, type SystemType } from '@/lib/systems/dependencies'
 
 type GateLevel = 'green' | 'yellow' | 'red'
 
@@ -42,7 +43,8 @@ type Readiness = {
 }
 
 // Estado del hold point por sistema (fase 1): aprobado / listo / no listo / regresión.
-function GateBadge({ gate, label, title, href }: { gate: MatrixGate; label: string; title: string; href: string }) {
+// ⛓ = bloqueado por un sistema del que depende (fase 2).
+function GateBadge({ gate, label, title, href, blocked }: { gate: MatrixGate; label: string; title: string; href: string; blocked?: boolean }) {
   const st = GATE_STATUS_STYLE[gate.status]
   return (
     <Link href={href} title={title} style={{
@@ -52,6 +54,7 @@ function GateBadge({ gate, label, title, href }: { gate: MatrixGate; label: stri
     }}>
       <span style={{ fontSize: 10 }} aria-hidden="true">{st.icon}</span>
       {label}
+      {blocked && <span aria-hidden="true" style={{ fontSize: 10 }}>⛓</span>}
     </Link>
   )
 }
@@ -98,15 +101,25 @@ export default async function ControlTowerPage({
 
   let rows: Readiness[] = []
   const gatesBySystem = new Map<string, MatrixGate[]>()
+  let blocks = new Map<string, string[]>()
+  const sysInfo = new Map<string, { code: string; system_type: SystemType | null; priority: number | null }>()
   if (projectId) {
-    const [readiness, gates] = await Promise.all([
+    const [readiness, gates, deps, systems] = await Promise.all([
       supabase.rpc('compute_project_readiness', { p_project_id: projectId }),
       supabase.rpc('compute_project_gates', { p_project_id: projectId }),
+      supabase.from('system_dependencies').select('system_id, depends_on_system_id, required_gate_id, blocked_gate_id').eq('project_id', projectId),
+      supabase.from('systems').select('id, code, system_type, priority').eq('project_id', projectId),
     ])
+    for (const s of systems.data ?? []) sysInfo.set(s.id, { code: s.code, system_type: s.system_type as SystemType | null, priority: s.priority })
     if (readiness.error) console.error('[ControlTower] readiness rpc error:', readiness.error)
     else rows = (readiness.data ?? []) as unknown as Readiness[]
     if (gates.error) console.error('[ControlTower] gates rpc error:', gates.error)
     for (const g of gates.data ?? []) gatesBySystem.set(g.system_id, (g.gates ?? []) as unknown as MatrixGate[])
+    blocks = dependencyBlocks(
+      deps.data ?? [],
+      (systemId, gateId) => gatesBySystem.get(systemId)?.find(x => x.gate_id === gateId)?.status,
+      systemId => sysInfo.get(systemId)?.code ?? '?',
+    )
   }
 
   const totals = rows.reduce(
@@ -245,6 +258,11 @@ export default async function ControlTowerPage({
                       <TD>
                         <Link href={`/control-tower/${r.system_id}`} style={{ fontWeight: 600, color: 'var(--text-strong)', textDecoration: 'none' }}>{r.system_code}</Link>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.system_name}</div>
+                        {(() => {
+                          const info = sysInfo.get(r.system_id)
+                          const parts = [info?.system_type && t(`systemType.${info.system_type}`), info?.priority && `P${info.priority}`].filter(Boolean)
+                          return parts.length > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-500)', marginTop: 2 }}>{parts.join(' · ')}</div>
+                        })()}
                       </TD>
                       <TD>
                         <Bar pct={Number(r.itr_pct)} />
@@ -263,15 +281,20 @@ export default async function ControlTowerPage({
                       </TD>
                       <TD>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          {(gatesBySystem.get(r.system_id) ?? []).map(g => (
-                            <GateBadge
-                              key={g.gate_id}
-                              gate={g}
-                              label={g.code}
-                              href={`/control-tower/${r.system_id}`}
-                              title={t('gateTitle', { name: g.name, status: t(`gateStatus.${g.status}`), failing: g.failing })}
-                            />
-                          ))}
+                          {(gatesBySystem.get(r.system_id) ?? []).map(g => {
+                            const blockedBy = blocks.get(`${r.system_id}:${g.gate_id}`)
+                            const title = t('gateTitle', { name: g.name, status: t(`gateStatus.${g.status}`), failing: g.failing })
+                            return (
+                              <GateBadge
+                                key={g.gate_id}
+                                gate={g}
+                                label={g.code}
+                                href={`/control-tower/${r.system_id}`}
+                                blocked={!!blockedBy}
+                                title={blockedBy ? `${title}\n${t('blockedBy', { systems: blockedBy.join(', ') })}` : title}
+                              />
+                            )
+                          })}
                         </div>
                       </TD>
                       <TD style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
