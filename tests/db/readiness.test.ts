@@ -10,8 +10,11 @@ import { evaluateEligibility, resolveCatBLimit } from '@/lib/certificates/eligib
  *   - El numerador atómico de punches (trigger `punch_number_before_insert`) con inserciones en paralelo.
  *   - Que la elegibilidad TypeScript (`evaluateEligibility`) coincide con el SQL sobre los mismos datos.
  *
- * Siembra una jerarquía temporal (área/sistema/subsistema/tag) en TEST_PROJECT_A_ID y la borra al final.
- * El usuario A debe tener rol editor (owner/admin/architect/leader) en la org del proyecto.
+ * Siembra una jerarquía temporal (área/sistema/subsistema/tag) y una plantilla mínima (1 ítem) en
+ * TEST_PROJECT_A_ID y la borra al final. Desde la integridad atómica de ITR (migración 20260909180000)
+ * un ITR solo llega a `approved` firmando (`sign_itr_atomic`: contenido completo + 3 roles asignados)
+ * y un ITR firmado solo se borra tras `reopen_itr_atomic`, que exige owner/admin/architect:
+ * el usuario A debe tener uno de esos roles en la org del proyecto.
  * Usa las mismas variables que rls-smoke.test.ts; sin ellas se omite. Los inserts disparan
  * `emit_domain_event` (domain_events reales en el proyecto de prueba): usar un proyecto de QA, nunca uno de cliente.
  */
@@ -34,7 +37,9 @@ const pid = env.TEST_PROJECT_A_ID!
 const stamp = `T${Date.now().toString(36).toUpperCase()}`
 let a: SupabaseClient
 let userId: string
-let ids = { area: '', system: '', subsystem: '', tag: '', phase: '', discipline: '', template: '' }
+let ids = { area: '', system: '', subsystem: '', tag: '', phase: '', discipline: '', template: '', item: '' }
+const itrIds: string[] = []
+const SIGNING_ROLES = ['executor', 'supervisor', 'client'] as const
 let catBLimit: number | null = 3
 
 async function readiness(): Promise<Readiness> {
@@ -60,6 +65,16 @@ async function tsEligibility() {
   return evaluateEligibility(itrs ?? [], punches ?? [], catBLimit)
 }
 
+/** Aprueba un ITR por el camino real: respuesta al único ítem, 3 roles asignados a A y 3 firmas en orden. */
+async function approveItr(itrId: string) {
+  await insertOrThrow('response', a.from('itr_responses').insert({ itr_id: itrId, item_id: ids.item, value_bool: true, is_passed: true, responded_by: userId }).select('id'))
+  await insertOrThrow('assignments', a.from('itr_assignments').insert(SIGNING_ROLES.map(role => ({ itr_id: itrId, user_id: userId, role }))).select('id'))
+  for (const role of SIGNING_ROLES) {
+    const { error } = await a.rpc('sign_itr_atomic', { p_itr_id: itrId, p_role: role })
+    if (error) throw new Error(`sign_itr_atomic ${role}: ${error.message}`)
+  }
+}
+
 async function insertOrThrow<T>(label: string, q: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<NonNullable<T>> {
   const { data, error } = await q
   if (error || !data) throw new Error(`${label}: ${error?.message ?? 'sin datos'}`)
@@ -74,14 +89,27 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
     userId = auth.user.id
 
     const project = await insertOrThrow<{ org_id: string }>('project', a.from('projects').select('org_id').eq('id', pid).single())
+    // Sin rol privilegiado la limpieza no puede reabrir los ITR firmados: fallar antes de sembrar nada.
+    const member = await insertOrThrow<{ role: string }>('membership', a.from('org_members').select('role').eq('org_id', project.org_id).eq('user_id', userId).single())
+    if (!['owner', 'admin', 'architect'].includes(member.role)) throw new Error(`el usuario A necesita owner/admin/architect (tiene ${member.role})`)
     const org = await insertOrThrow<{ settings: unknown }>('org', a.from('organizations').select('settings').eq('id', project.org_id).single())
     catBLimit = resolveCatBLimit(org.settings)
-    const [phase, discipline, template] = await Promise.all([
+    const [phase, discipline] = await Promise.all([
       insertOrThrow<{ id: string }>('phase', a.from('project_phases').select('id').eq('org_id', project.org_id).order('order_index').limit(1).single()),
       insertOrThrow<{ id: string }>('discipline', a.from('disciplines').select('id').eq('org_id', project.org_id).limit(1).single()),
-      insertOrThrow<{ id: string }>('template', a.from('itr_templates').select('id').eq('org_id', project.org_id).eq('is_active', true).limit(1).single()),
     ])
-    ids = { ...ids, phase: phase.id, discipline: discipline.id, template: template.id }
+    ids = { ...ids, phase: phase.id, discipline: discipline.id }
+
+    // Plantilla propia e inactiva (no aparece en los selectores): la revisión debe ser de la misma fase que el ITR.
+    const template = await insertOrThrow<{ id: string }>('template', a.from('itr_templates').insert({
+      org_id: project.org_id, discipline_id: ids.discipline, phase_id: ids.phase, code: `${stamp}-TPL`, title: 'test', is_active: false,
+    }).select('id').single())
+    ids.template = template.id
+    const section = await insertOrThrow<{ id: string }>('section', a.from('itr_template_sections').insert({ template_id: template.id, title: 'test', order_index: 0 }).select('id').single())
+    const item = await insertOrThrow<{ id: string }>('item', a.from('itr_template_items').insert({
+      template_id: template.id, section_id: section.id, description: 'test', item_type: 'checkbox', is_required: true, order_index: 0,
+    }).select('id').single())
+    ids.item = item.id
 
     const area = await insertOrThrow<{ id: string }>('area', a.from('areas').insert({ project_id: pid, code: `${stamp}-A`, name: 'test' }).select('id').single())
     const system = await insertOrThrow<{ id: string }>('system', a.from('systems').insert({ project_id: pid, area_id: area.id, code: `${stamp}-S`, name: 'test' }).select('id').single())
@@ -91,11 +119,27 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
   }, 30_000)
 
   afterAll(async () => {
-    if (!ids.subsystem) return
-    // punches no tienen ON DELETE CASCADE desde subsystems; el área sí arrastra sistemas/subsistemas/tags/ITRs.
-    await a.from('punches').delete().eq('subsystem_id', ids.subsystem)
-    await a.from('areas').delete().eq('id', ids.area)
-  }, 30_000)
+    // Un ITR firmado no se puede borrar: primero se reabre (deja rastro en activity_log).
+    for (const id of itrIds) {
+      const { data } = await a.from('itrs').select('status').eq('id', id).single()
+      const { count } = await a.from('itr_signatures').select('id', { count: 'exact', head: true }).eq('itr_id', id)
+      if (data?.status === 'approved' || (count ?? 0) > 0) {
+        const { error } = await a.rpc('reopen_itr_atomic', { p_itr_id: id, p_reason: 'limpieza test readiness' })
+        if (error) console.error(`reopen ${id}: ${error.message}`)
+      }
+    }
+    if (ids.subsystem) {
+      // punches no tienen ON DELETE CASCADE desde subsystems; el área sí arrastra sistemas/subsistemas/tags/ITRs.
+      await a.from('punches').delete().eq('subsystem_id', ids.subsystem)
+      const { error } = await a.from('areas').delete().eq('id', ids.area)
+      if (error) console.error(`borrar área ${ids.area}: ${error.message}`)
+    }
+    // La plantilla solo se puede borrar cuando ya no tiene ITRs.
+    if (ids.template) {
+      const { error } = await a.from('itr_templates').delete().eq('id', ids.template)
+      if (error) console.error(`borrar plantilla ${ids.template}: ${error.message}`)
+    }
+  }, 60_000)
 
   it('sin ITRs: gate rojo y blocker no_itrs; TS también rojo', async () => {
     const r = await readiness()
@@ -107,21 +151,23 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
   })
 
   it('ITR pendiente: rojo con itrs_incomplete y porcentaje', async () => {
-    const itr = (n: number, status: string) => ({
+    const itr = (n: number) => ({
       project_id: pid, subsystem_id: ids.subsystem, tag_id: ids.tag, template_id: ids.template, phase_id: ids.phase,
-      itr_number: `${stamp}-ITR-${n}`, status,
+      itr_number: `${stamp}-ITR-${n}`, status: 'not_started',
     })
-    await insertOrThrow('itrs', a.from('itrs').insert([itr(1, 'not_started'), itr(2, 'approved')]).select('id'))
+    const rows = await insertOrThrow<{ id: string }[]>('itrs', a.from('itrs').insert([itr(1), itr(2)]).select('id'))
+    itrIds.push(...rows.map(r => r.id))
+    await approveItr(itrIds[1])
     const r = await readiness()
     expect(r).toMatchObject({ itr_total: 2, itr_approved: 1 })
     expect(Number(r.itr_pct)).toBe(50)
     expect(gate(r).level).toBe('red')
     expect(r.blockers.map(b => b.code)).toEqual(['itrs_incomplete'])
     expect(await tsEligibility()).toMatchObject({ eligible: 'red', totalItrs: 2, approvedItrs: 1 })
-  })
+  }, 30_000)
 
   it('numerador: inserciones paralelas reciben números P-#### únicos', async () => {
-    await a.from('itrs').update({ status: 'approved' }).eq('subsystem_id', ids.subsystem)
+    await approveItr(itrIds[0])
     const base = { project_id: pid, subsystem_id: ids.subsystem, tag_id: ids.tag, discipline_id: ids.discipline, raised_by: userId, punch_number: '' }
     const rows = await Promise.all(
       (['A', 'B', 'C', 'C', 'C'] as const).map((category, i) =>
@@ -131,7 +177,7 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
     const numbers = rows.map(r => r.punch_number)
     expect(numbers.every(n => /^P-\d{4,}$/.test(n))).toBe(true)
     expect(new Set(numbers).size).toBe(numbers.length)
-  })
+  }, 30_000)
 
   it('Cat A abierto: rojo; Cat C no aparece como blocker; TS coincide', async () => {
     const r = await readiness()

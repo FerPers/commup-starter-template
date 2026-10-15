@@ -176,7 +176,6 @@ function readMatrices(code) {
     if (/item no/i.test(first)) continue
     const ncols = Math.max(...rows.map(r => r.length))
     const cells = rows.flat().filter(Boolean)
-    const labelish = cells.filter(c => /:\s*(?:\S+\s*)?$/m.test(c) || (/\n/.test(c) && !SEQ_RE.test(c))).length
     if (ncols < 3) continue // bloques de datos y notas: los lee readDataBlock
     if (cells.filter(c => /:\s*(?:\S+\s*)?$/m.test(c) || UNIT_TOKEN_RE.test(c.trim()) || /^_+/.test(c.trim())).length >= cells.length * 0.5) continue // bloque de datos ancho (I03A)
     // bloques separados por filas-título (una sola celda)
