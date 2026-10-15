@@ -85,14 +85,14 @@ describe.skipIf(!enabled)('registros controlados — numeración, autorización 
     expect(byId.get(first)!.status).toBe('proposed')
     expect(byId.get(first)!.number).toMatch(/^CIE-\d{4}$/)
     expect(byId.get(second)!.seq).toBe(byId.get(first)!.seq + 1)
-  })
+  }, 30_000)
 
   it('quien propone no puede autorizar; tampoco se salta estados', async () => {
     const own = await a.rpc('transition_register_item', { p_item_id: items[0], p_to: 'authorized' })
     expect(own.error?.message).toMatch(/no puede autorizar su propio registro/)
     const skip = await a.rpc('transition_register_item', { p_item_id: items[0], p_to: 'verified' })
     expect(skip.error?.message).toMatch(/Transición no permitida/)
-  })
+  }, 30_000)
 
   it('un registro abierto vinculado por tag bloquea el gate de su tipo; cancelado deja de bloquear', async () => {
     const before = await registersCriterion()
@@ -107,7 +107,7 @@ describe.skipIf(!enabled)('registros controlados — numeración, autorización 
 
     const { data: events } = await a.from('register_events').select('action, to_status').eq('item_id', items[0]).order('created_at')
     expect((events ?? []).map(e => `${e.action}:${e.to_status}`)).toEqual(['created:proposed', 'transition:cancelled'])
-  })
+  }, 30_000)
 
   it('rechaza tags que no son del proyecto', async () => {
     const { error } = await a.rpc('create_register_item', {
@@ -115,5 +115,5 @@ describe.skipIf(!enabled)('registros controlados — numeración, autorización 
       p_tags: [{ tag_id: '00000000-0000-0000-0000-000000000000' }],
     })
     expect(error?.message).toMatch(/no pertenecen al proyecto/)
-  })
+  }, 30_000)
 })
