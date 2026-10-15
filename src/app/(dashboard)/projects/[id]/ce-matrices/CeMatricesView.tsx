@@ -56,7 +56,10 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
             Lógica de paro y enclavamientos (SIS/ESD/PSD): cada causa con los efectos que dispara. Cada causa se prueba con su propio ITR, y el cruce probado queda como evidencia.
           </p>
         </div>
-        {canEdit && <button type="button" onClick={() => setOpen(v => !v)} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{open ? 'Cancelar' : '+ Nueva matriz'}</button>}
+        {canEdit && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <Link href={`/projects/${project.id}/ce-matrices/import`} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>✨ Importar con IA</Link>
+          <button type="button" onClick={() => setOpen(v => !v)} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{open ? 'Cancelar' : '+ Nueva matriz'}</button>
+        </div>}
       </div>
 
       {open && (
