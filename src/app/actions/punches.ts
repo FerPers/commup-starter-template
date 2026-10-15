@@ -198,9 +198,11 @@ export const updatePunchStatus = withAuth(
     },
   ): Promise<{ error?: string }> => {
     const { supabase } = ctx
+    // Cerrar solo por verificación en campo (verifyPunch); el trigger lo rechazaría igual.
+    if (input.status === 'closed') return { error: 'Para cerrar un punch hay que verificarlo en campo' }
 
     const update: TablesUpdate<'punches'> = { status: input.status }
-    if (input.status === 'closed' || input.status === 'cancelled') {
+    if (input.status === 'cancelled') {
       update.closed_date = new Date().toISOString().split('T')[0]
     }
 
@@ -220,54 +222,62 @@ export const updatePunchStatus = withAuth(
   },
 )
 
-// ── closePunch ─────────────────────────────────────────────────────────────
+// ── Resolver / verificar / revisar categoría (fase 4 · bloque A) ───────────
+// Las tres pasan por RPC SECURITY DEFINER (migración 20261016120000): «resuelto» es un sub-estado de
+// in_progress; cerrar = verificar en campo por OTRA persona; la revisión de categoría la hace un
+// supervisor distinto de quien levantó el punch. Un trigger impide cerrar por fuera de verify_punch.
 
-export const closePunch = withAuth(
-  {
-    role: EDITOR_ROLES,
-    guards: [{ resource: 'project', field: 'projectId' }],
+function revalidatePunch(projectId: string, tagId?: string | null) {
+  revalidatePath(`/projects/${projectId}/punches`)
+  revalidatePath('/punch-list')
+  revalidatePath('/my-work')
+  if (tagId) revalidatePath(`/projects/${projectId}/tags/${tagId}`)
+}
+
+/** Quien arregló el pendiente lo marca resuelto, describiendo qué se hizo. */
+export const resolvePunch = withAuth(
+  { guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { punchId: string; projectId: string; tagId?: string | null; comment: string }): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase.rpc('resolve_punch', { p_punch_id: input.punchId, p_comment: input.comment ?? '' })
+    if (error) return { error: error.message }
+    revalidatePunch(input.projectId, input.tagId)
+    return {}
   },
+)
+
+/** Verificación en campo: aceptar cierra el punch; rechazar lo devuelve a «en curso» (motivo obligatorio). */
+export const verifyPunch = withAuth(
+  { guards: [{ resource: 'project', field: 'projectId' }] },
   async (
     ctx,
-    input: {
-      punchId: string
-      projectId: string
-      tagId?: string | null
-      resolutionComment?: string
-    },
+    input: { punchId: string; projectId: string; tagId?: string | null; accept: boolean; comment?: string },
   ): Promise<{ error?: string }> => {
-    const { supabase, userId, orgId } = ctx
-    const today = new Date().toISOString().split('T')[0]
-
-    const { error } = await supabase
-      .from('punches')
-      .update({ status: 'closed', closed_date: today })
-      .eq('id', input.punchId)
-
-    if (error) return { error: error.message }
-
-    if (input.resolutionComment) {
-      await supabase.from('punch_comments').insert({
-        punch_id: input.punchId,
-        user_id: userId,
-        comment: input.resolutionComment,
-      })
-    }
-
-    await logActivity(supabase, {
-      orgId,
-      userId,
-      entityType: 'punch',
-      entityId: input.punchId,
-      action: 'closed',
-      payload: { projectId: input.projectId, tagId: input.tagId ?? null },
+    const { error } = await ctx.supabase.rpc('verify_punch', {
+      p_punch_id: input.punchId,
+      p_accept: input.accept,
+      p_comment: input.comment, // la RPC recorta y trata '' como sin comentario
     })
+    if (error) return { error: error.message }
+    revalidatePunch(input.projectId, input.tagId)
+    return {}
+  },
+)
 
-    revalidatePath(`/projects/${input.projectId}/punches`)
-    if (input.tagId) {
-      revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
-    }
-
+/** Supervisor confirma o cambia la categoría (cambio con motivo obligatorio). */
+export const reviewPunchCategory = withAuth(
+  { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
+  async (
+    ctx,
+    input: { punchId: string; projectId: string; tagId?: string | null; category: 'A' | 'B' | 'C'; note?: string },
+  ): Promise<{ error?: string }> => {
+    if (!['A', 'B', 'C'].includes(input.category)) return { error: 'Categoría no válida' }
+    const { error } = await ctx.supabase.rpc('review_punch_category', {
+      p_punch_id: input.punchId,
+      p_category: input.category,
+      p_note: input.note, // la RPC recorta y trata '' como sin nota
+    })
+    if (error) return { error: error.message }
+    revalidatePunch(input.projectId, input.tagId)
     return {}
   },
 )

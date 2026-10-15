@@ -32,6 +32,7 @@ export default async function GlobalPunchListPage({ searchParams }: { searchPara
     category: r.category,
     description: r.description,
     status: r.status,
+    resolved_at: r.resolved_at,
     priority: r.priority,
     target_date: r.target_date,
     closed_date: r.closed_date,

@@ -3,7 +3,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { createPunch, updatePunchStatus, closePunch, addPunchComment, reassignPunch } from '@/app/actions/punches'
+import { createPunch, updatePunchStatus, addPunchComment, reassignPunch } from '@/app/actions/punches'
+import { PunchVerification } from '@/components/punch/PunchVerification'
+import { punchDisplayStatus } from '@/lib/punches/verification'
 import PunchPhotosSection from './PunchPhotosSection'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 
@@ -25,6 +27,9 @@ export type TagPunch = {
   assigned_to: string | null
   raised_by_profile: { full_name: string } | null
   assigned_to_profile: { full_name: string } | null
+  resolved_at: string | null
+  resolved_by: string | null
+  resolved_by_profile: { full_name: string } | null
 }
 
 export type OrgMemberForPunch = {
@@ -40,12 +45,14 @@ export default function TagPunchTab({
   tagId,
   orgMembers,
   currentUserRole,
+  currentUserId,
 }: {
   punches: TagPunch[]
   projectId: string
   tagId: string
   orgMembers: OrgMemberForPunch[]
   currentUserRole: string
+  currentUserId: string
 }) {
   const t = useTranslations('Tags')
   const router = useRouter()
@@ -121,8 +128,9 @@ export default function TagPunchTab({
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {displayed.map(punch => {
           const catCfg = CATEGORY_CFG[punch.category]
-          const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
-          const stLabel = t(`punches.status.${punch.status}` as Parameters<typeof t>[0])
+          const displayStatus = punchDisplayStatus(punch)
+          const stColors = STATUS_COLORS[displayStatus] ?? STATUS_COLORS.open
+          const stLabel = t(`punches.status.${displayStatus}` as Parameters<typeof t>[0])
           return (
             <div
               key={punch.id}
@@ -169,6 +177,8 @@ export default function TagPunchTab({
           tagId={tagId}
           orgMembers={orgMembers}
           canReassign={REASSIGN_ROLES.includes(currentUserRole)}
+          userId={currentUserId}
+          role={currentUserRole}
           onClose={() => setSelectedPunch(null)}
           onUpdated={() => { setSelectedPunch(null); refresh() }}
         />
@@ -312,6 +322,8 @@ function PunchDetailModal({
   tagId,
   orgMembers,
   canReassign,
+  userId,
+  role,
   onClose,
   onUpdated,
 }: {
@@ -320,6 +332,8 @@ function PunchDetailModal({
   tagId: string
   orgMembers: OrgMemberForPunch[]
   canReassign: boolean
+  userId: string
+  role: string
   onClose: () => void
   onUpdated: () => void
 }) {
@@ -331,22 +345,15 @@ function PunchDetailModal({
   const [photoCount, setPhotoCount] = useState<number | null>(null)
 
   const catCfg = CATEGORY_CFG[punch.category]
-  const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
-  const stLabel = t(`punches.status.${punch.status}` as Parameters<typeof t>[0])
+  const displayStatus = punchDisplayStatus(punch)
+  const stColors = STATUS_COLORS[displayStatus] ?? STATUS_COLORS.open
+  const stLabel = t(`punches.status.${displayStatus}` as Parameters<typeof t>[0])
   const isClosed = punch.status === 'closed' || punch.status === 'cancelled'
   const reassignDirty = (reassignTo || null) !== (punch.assigned_to ?? null)
 
-  function handleStatusChange(newStatus: 'open' | 'in_progress' | 'closed' | 'cancelled') {
-    if (newStatus === 'closed' && photoCount === 0) {
-      if (!confirm(t('punches.photos.confirmCloseWithoutPhotos'))) return
-    }
+  function handleStatusChange(newStatus: 'in_progress' | 'cancelled') {
     startTransition(async () => {
-      let res: { error?: string }
-      if (newStatus === 'closed') {
-        res = await closePunch({ punchId: punch.id, projectId, tagId, resolutionComment: comment || undefined })
-      } else {
-        res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId })
-      }
+      const res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId })
       if (res.error) { setError(res.error); return }
       onUpdated()
     })
@@ -412,6 +419,14 @@ function PunchDetailModal({
           onCountChange={setPhotoCount}
         />
 
+        {/* Resolver → verificar en campo (fase 4); resolver sin fotos pide confirmación */}
+        {!isClosed && (
+          <PunchVerification
+            punch={{ ...punch, resolved_by_name: punch.resolved_by_profile?.full_name ?? null }}
+            projectId={projectId} tagId={tagId} userId={userId} role={role} photoCount={photoCount} onUpdated={onUpdated}
+          />
+        )}
+
         {/* Status actions */}
         {!isClosed && (
           <div style={{ marginBottom: '20px' }}>
@@ -422,9 +437,6 @@ function PunchDetailModal({
                   {t('punches.detail.toInProgress')}
                 </button>
               )}
-              <button onClick={() => handleStatusChange('closed')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', cursor: 'pointer' }}>
-                {t('punches.detail.close')}
-              </button>
               <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}>
                 {t('punches.detail.cancel')}
               </button>

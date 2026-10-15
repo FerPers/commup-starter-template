@@ -6,7 +6,9 @@ import type { Enums } from '@/types/supabase.generated'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { updatePunchStatus, closePunch, addPunchComment, reassignPunch, createPunch } from '@/app/actions/punches'
+import { updatePunchStatus, addPunchComment, reassignPunch, createPunch } from '@/app/actions/punches'
+import { PunchVerification } from '@/components/punch/PunchVerification'
+import { punchDisplayStatus } from '@/lib/punches/verification'
 import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 import { Pagination } from '@/components/ui'
@@ -37,6 +39,9 @@ type Punch = {
   raised_by: string | null
   raised_by_profile: { full_name: string } | null
   assigned_to_profile: { full_name: string } | null
+  resolved_at: string | null
+  resolved_by: string | null
+  resolved_by_name: string | null
   tags: { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } } | null
   subsystems: { id: string; code: string; name: string; systems: { code: string; name: string } } | null
 }
@@ -56,6 +61,7 @@ export default function PunchListView({
   systems,
   orgMembers,
   currentUserRole,
+  currentUserId,
   total,
   page,
   pageSize,
@@ -70,6 +76,7 @@ export default function PunchListView({
   systems: System[]
   orgMembers: OrgMember[]
   currentUserRole: string
+  currentUserId: string
   total: number
   page: number
   pageSize: number
@@ -99,6 +106,7 @@ export default function PunchListView({
   const punchStatusLabels: Record<string, string> = {
     open:        t('punchStatus.open'),
     in_progress: t('punchStatus.in_progress'),
+    resolved:    t('punchStatus.resolved'),
     closed:      t('punchStatus.closed'),
     cancelled:   t('punchStatus.cancelled'),
   }
@@ -240,13 +248,6 @@ export default function PunchListView({
             {t('bulk.selected', { count: selected.size })}
           </span>
           <button
-            onClick={() => applyBulk('closed')}
-            disabled={isBulkPending}
-            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', cursor: 'pointer' }}
-          >
-            {t('bulk.close')}
-          </button>
-          <button
             onClick={() => applyBulk('cancelled')}
             disabled={isBulkPending}
             style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}
@@ -352,7 +353,8 @@ export default function PunchListView({
             <tbody>
               {filtered.map((punch, i) => {
                 const catCfg = CATEGORY_CFG[punch.category]
-                const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
+                const displayStatus = punchDisplayStatus(punch)
+                const stColors = STATUS_COLORS[displayStatus] ?? STATUS_COLORS.open
                 const isChecked = selected.has(punch.id)
                 return (
                   <tr
@@ -396,7 +398,7 @@ export default function PunchListView({
                     </td>
                     <td style={{ padding: '12px 14px' }}>
                       <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color, whiteSpace: 'nowrap' }}>
-                        {punchStatusLabels[punch.status] ?? punch.status}
+                        {punchStatusLabels[displayStatus] ?? punch.status}
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
@@ -422,6 +424,8 @@ export default function PunchListView({
           projectId={projectId}
           orgMembers={orgMembers}
           canReassign={REASSIGN_ROLES.includes(currentUserRole)}
+          userId={currentUserId}
+          role={currentUserRole}
           onClose={() => setSelectedPunch(null)}
           onUpdated={() => { setSelectedPunch(null); refresh() }}
         />
@@ -452,6 +456,8 @@ function PunchDetailModal({
   projectId,
   orgMembers,
   canReassign,
+  userId,
+  role,
   onClose,
   onUpdated,
 }: {
@@ -459,6 +465,8 @@ function PunchDetailModal({
   projectId: string
   orgMembers: OrgMember[]
   canReassign: boolean
+  userId: string
+  role: string
   onClose: () => void
   onUpdated: () => void
 }) {
@@ -471,24 +479,21 @@ function PunchDetailModal({
   const [reassignTo, setReassignTo] = useState<string>(punch.assigned_to ?? '')
 
   const catCfg = CATEGORY_CFG[punch.category]
-  const stColors = STATUS_COLORS[punch.status] ?? STATUS_COLORS.open
+  const displayStatus = punchDisplayStatus(punch)
+  const stColors = STATUS_COLORS[displayStatus] ?? STATUS_COLORS.open
   const punchStatusLabels: Record<string, string> = {
     open:        t('punchStatus.open'),
     in_progress: t('punchStatus.in_progress'),
+    resolved:    t('punchStatus.resolved'),
     closed:      t('punchStatus.closed'),
     cancelled:   t('punchStatus.cancelled'),
   }
   const isClosed = punch.status === 'closed' || punch.status === 'cancelled'
   const reassignDirty = (reassignTo || null) !== (punch.assigned_to ?? null)
 
-  function handleStatusChange(newStatus: 'open' | 'in_progress' | 'closed' | 'cancelled') {
+  function handleStatusChange(newStatus: 'in_progress' | 'cancelled') {
     startTransition(async () => {
-      let res: { error?: string }
-      if (newStatus === 'closed') {
-        res = await closePunch({ punchId: punch.id, projectId, tagId: punch.tags?.id ?? null, resolutionComment: comment || undefined })
-      } else {
-        res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId: punch.tags?.id ?? null })
-      }
+      const res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId: punch.tags?.id ?? null })
       if (res.error) { setError(res.error); return }
       onUpdated()
     })
@@ -531,7 +536,7 @@ function PunchDetailModal({
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'var(--text-muted)' }}>{punch.punch_number}</span>
               <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
-              <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{punchStatusLabels[punch.status] ?? punch.status}</span>
+              <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{punchStatusLabels[displayStatus] ?? punch.status}</span>
             </div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: 0, lineHeight: '1.4' }}>{punch.description}</p>
           </div>
@@ -560,6 +565,11 @@ function PunchDetailModal({
           {punch.closed_date && <span><strong>{t('detail.closedDate')}</strong> {punch.closed_date}</span>}
         </div>
 
+        {/* Resolver → verificar en campo (fase 4) */}
+        {!isClosed && (
+          <PunchVerification punch={punch} projectId={projectId} tagId={punch.tags?.id ?? null} userId={userId} role={role} onUpdated={onUpdated} />
+        )}
+
         {/* Status actions */}
         {!isClosed && (
           <div style={{ marginBottom: '20px' }}>
@@ -570,9 +580,6 @@ function PunchDetailModal({
                   {t('detail.toInProgress')}
                 </button>
               )}
-              <button onClick={() => handleStatusChange('closed')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', cursor: 'pointer' }}>
-                {t('detail.close')}
-              </button>
               <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}>
                 {t('detail.cancel')}
               </button>

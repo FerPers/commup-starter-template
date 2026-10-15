@@ -61,6 +61,9 @@ export default async function PunchListPage({
     assigned_to: r.assigned_to,
     raised_by: r.raised_by,
     raised_by_profile: r.raised_by_name ? { full_name: r.raised_by_name } : null,
+    resolved_at: r.resolved_at,
+    resolved_by: r.resolved_by,
+    resolved_by_name: r.resolved_by_name,
     assigned_to_profile: r.assigned_to_name ? { full_name: r.assigned_to_name } : null,
     tags: r.tag_id
       ? {
@@ -83,6 +86,7 @@ export default async function PunchListPage({
       projectId={projectId}
       projectName={project.name}
       currentUserRole={ctx.role}
+      currentUserId={ctx.userId}
       punches={punches}
       total={pageRes.total}
       page={page}

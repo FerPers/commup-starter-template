@@ -130,7 +130,8 @@ export default function RegistersView({ project, rows, activeKinds, canCreate }:
                 <td style={td}>{r.system ?? <span style={{ color: 'var(--gray-400)' }}>—</span>}</td>
                 <td style={{ ...td, ...small }}>{r.tags.slice(0, 3).join(', ')}{r.tags.length > 3 ? ` +${r.tags.length - 3}` : ''}</td>
                 <td style={td}><StatusChip kind={r.kind} status={r.status} /></td>
-                <td style={{ ...td, ...small, whiteSpace: 'nowrap' }}>{new Date(r.updated_at).toLocaleDateString()}</td>
+                {/* Hora local del navegador: difiere del render del servidor (UTC, otro locale). */}
+                <td style={{ ...td, ...small, whiteSpace: 'nowrap' }} suppressHydrationWarning>{new Date(r.updated_at).toLocaleDateString()}</td>
               </tr>
             ))}
             {filtered.length === 0 && <tr><td colSpan={7} style={{ ...td, ...small, textAlign: 'center', padding: 32 }}>{t('empty')}</td></tr>}

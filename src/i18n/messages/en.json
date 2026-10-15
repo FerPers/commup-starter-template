@@ -155,7 +155,8 @@
       "open": "Open",
       "in_progress": "In progress",
       "closed": "Closed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "resolved": "Resolved · to verify"
     },
     "kpi": {
       "punchesOpen": "Open Punch List",
@@ -349,7 +350,8 @@
       "open": "Open",
       "in_progress": "In progress",
       "closed": "Closed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "resolved": "Resolved · to verify"
     },
     "summary": {
       "catAOpen": "Cat A open",
@@ -1426,7 +1428,8 @@
         "open": "Open",
         "in_progress": "In progress",
         "closed": "Closed",
-        "cancelled": "Cancelled"
+        "cancelled": "Cancelled",
+        "resolved": "Resolved · to verify"
       },
       "create": {
         "title": "New Punch",
@@ -2247,7 +2250,8 @@
       "open": "Open",
       "in_progress": "In progress",
       "closed": "Closed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "resolved": "Resolved · to verify"
     }
   },
   "MobileTabBar": {
@@ -2886,5 +2890,19 @@
       "system": "System",
       "printed": "CommUp · controlled register labels · printed {date}"
     }
+  },
+  "PunchVerification": {
+    "resolveLabel": "What was done to resolve it?",
+    "resolvePlaceholder": "E.g. flange gasket replaced and bolts re-torqued to spec",
+    "resolve": "Mark resolved",
+    "resolveHint": "Someone else then verifies it in the field.",
+    "confirmNoPhotos": "This punch has no photos. Mark it resolved without photo evidence?",
+    "resolvedBy": "Resolved by {who} · {when}",
+    "someone": "a user",
+    "waitingOther": "Waiting for field verification by someone else.",
+    "verifyPlaceholder": "Verification notes (required to reject)",
+    "accept": "Verify and close",
+    "reject": "Reject resolution",
+    "verifyHint": "Verify in the field before closing. Rejecting sends the punch back to \"in progress\"."
   }
 }

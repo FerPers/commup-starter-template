@@ -39,6 +39,12 @@ export type PunchListRow = {
   subsystem_name: string | null
   system_code: string | null
   system_name: string | null
+  resolved_at: string | null
+  resolved_by: string | null
+  resolved_by_name: string | null
+  category_reviewed_at: string | null
+  impact: string | null
+  startup_disposition: string | null
 }
 
 /** Conteos categoría×estado → tarjetas resumen */
@@ -48,7 +54,8 @@ const VIEW_COLS =
   'id, project_id, project_name, project_code, punch_number, category, description, status, priority, ' +
   'target_date, closed_date, created_at, itr_id, assigned_to, raised_by, raised_by_name, assigned_to_name, ' +
   'discipline_code, discipline_name, discipline_color, tag_id, tag_number, tag_description, ' +
-  'subsystem_id, subsystem_code, subsystem_name, system_code, system_name'
+  'subsystem_id, subsystem_code, subsystem_name, system_code, system_name, ' +
+  'resolved_at, resolved_by, resolved_by_name, category_reviewed_at, impact, startup_disposition'
 
 const CATS = ['A', 'B', 'C']
 const STATUSES = ['open', 'in_progress', 'closed', 'cancelled']

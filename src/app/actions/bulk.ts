@@ -26,6 +26,8 @@ export const bulkUpdatePunchStatus = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, ids: string[], status: Enums<'punch_status'>): Promise<{ error?: string }> => {
     if (!ids.length) return {}
+    // Fase 4: cerrar exige verificación en campo por otra persona, punch por punch.
+    if (status === 'closed') return { error: 'Los punch se cierran verificándolos en campo, uno por uno' }
 
     const { error } = await ctx.supabase
       .from('punches')

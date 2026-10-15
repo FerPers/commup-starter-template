@@ -79,8 +79,9 @@ export default async function TagDetailPage({
       .from('punches')
       .select(`
         id, punch_number, category, description, status, priority,
-        target_date, closed_date, created_at, itr_id, assigned_to,
+        target_date, closed_date, created_at, itr_id, assigned_to, resolved_at, resolved_by,
         raised_by_profile:profiles!raised_by(full_name),
+        resolved_by_profile:profiles!resolved_by(full_name),
         assigned_to_profile:profiles!assigned_to(full_name)
       `)
       .eq('tag_id', tagId)
@@ -169,6 +170,7 @@ export default async function TagDetailPage({
       nextTagId={nextTagId}
       canEdit={canEdit}
       currentUserRole={membership.role}
+      currentUserId={ctx.userId}
       tagItrs={tagItrs ?? []}
       templates={templates ?? []}
       matrixTemplateIds={matrixTemplateIds}

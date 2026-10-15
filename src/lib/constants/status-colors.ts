@@ -20,6 +20,8 @@ export const PUNCH_CATEGORY_CFG = {
 export const PUNCH_STATUS_COLORS = {
   open:        { color: '#ef4444', bg: '#fee2e2' },
   in_progress: { color: '#3b82f6', bg: '#eff6ff' },
+  // Sub-estado de in_progress (resolved_at): espera verificación en campo por otra persona.
+  resolved:    { color: '#7c3aed', bg: '#f5f3ff' },
   closed:      { color: '#10b981', bg: '#ecfdf5' },
   cancelled:   { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
 } as const

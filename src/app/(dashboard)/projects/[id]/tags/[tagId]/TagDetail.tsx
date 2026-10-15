@@ -32,6 +32,7 @@ export default function TagDetail({
   nextTagId,
   canEdit,
   currentUserRole,
+  currentUserId,
   tagItrs,
   templates,
   orgMembers,
@@ -49,6 +50,7 @@ export default function TagDetail({
   nextTagId: string | null
   canEdit: boolean
   currentUserRole: string
+  currentUserId: string
   tagItrs: TagItr[]
   templates: ItrTemplate[]
   matrixTemplateIds?: string[]
@@ -332,6 +334,7 @@ export default function TagDetail({
                 tagId={tag.id}
                 orgMembers={orgMembers as OrgMemberForPunch[]}
                 currentUserRole={currentUserRole}
+                currentUserId={currentUserId}
               />
             )}
             {activeTab === 'photos'       && <TagPhotosTab photos={tagPhotos} />}

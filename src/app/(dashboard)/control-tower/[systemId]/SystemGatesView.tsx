@@ -271,7 +271,7 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
         if (attId) {
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={small}>“{String(d.comment)}” — {who(d.attested_by as string)}, {when(d.attested_at as string)}</span>
+              <span style={small} suppressHydrationWarning>“{String(d.comment)}” — {who(d.attested_by as string)}, {when(d.attested_at as string)}</span>
               <div style={{ display: 'flex', gap: 14 }}>
                 <button type="button" style={{ ...linkStyle, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => openEvidence(String(d.file_path))}>{t('attest.view')}</button>
@@ -372,7 +372,7 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
                     <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)', fontWeight: 600 }}>{t('signatures')}</span>
                     <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
                       {g.approval.signatures.map(sg => (
-                        <li key={sg.capacity}>
+                        <li key={sg.capacity} suppressHydrationWarning>
                           <strong style={{ color: 'var(--text-strong)' }}>{t(`capacity.${sg.capacity}`)}</strong>:{' '}
                           {t('signedBy', { name: who(sg.user_id), role: sg.user_role, date: when(sg.signed_at) })}
                           {sg.comments && <> — “{sg.comments}”</>}

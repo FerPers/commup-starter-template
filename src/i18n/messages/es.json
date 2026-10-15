@@ -155,7 +155,8 @@
       "open": "Abierto",
       "in_progress": "En proceso",
       "closed": "Cerrado",
-      "cancelled": "Cancelado"
+      "cancelled": "Cancelado",
+      "resolved": "Resuelto · por verificar"
     },
     "kpi": {
       "punchesOpen": "Punch List Abiertos",
@@ -349,7 +350,8 @@
       "open": "Abierto",
       "in_progress": "En proceso",
       "closed": "Cerrado",
-      "cancelled": "Cancelado"
+      "cancelled": "Cancelado",
+      "resolved": "Resuelto · por verificar"
     },
     "summary": {
       "catAOpen": "Cat A abiertos",
@@ -1426,7 +1428,8 @@
         "open": "Abierto",
         "in_progress": "En proceso",
         "closed": "Cerrado",
-        "cancelled": "Cancelado"
+        "cancelled": "Cancelado",
+        "resolved": "Resuelto · por verificar"
       },
       "create": {
         "title": "Nuevo Punch",
@@ -2247,7 +2250,8 @@
       "open": "Abierto",
       "in_progress": "En progreso",
       "closed": "Cerrado",
-      "cancelled": "Cancelado"
+      "cancelled": "Cancelado",
+      "resolved": "Resuelto · por verificar"
     }
   },
   "MobileTabBar": {
@@ -2886,5 +2890,19 @@
       "system": "Sistema",
       "printed": "CommUp · etiquetas de registros controlados · impreso {date}"
     }
+  },
+  "PunchVerification": {
+    "resolveLabel": "¿Qué se hizo para resolverlo?",
+    "resolvePlaceholder": "Ej.: se cambió la junta de la brida y se reapretó al torque especificado",
+    "resolve": "Marcar resuelto",
+    "resolveHint": "Después lo verifica en campo otra persona.",
+    "confirmNoPhotos": "Este punch no tiene fotos. ¿Marcarlo resuelto sin evidencia fotográfica?",
+    "resolvedBy": "Resuelto por {who} · {when}",
+    "someone": "un usuario",
+    "waitingOther": "Pendiente de verificación en campo por otra persona.",
+    "verifyPlaceholder": "Observaciones de la verificación (obligatorias si se rechaza)",
+    "accept": "Verificar y cerrar",
+    "reject": "Rechazar resolución",
+    "verifyHint": "Verifica en campo antes de cerrar. Rechazar devuelve el punch a «en curso»."
   }
 }

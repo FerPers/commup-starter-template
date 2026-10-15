@@ -14,6 +14,7 @@ import { Search, X, Download } from 'lucide-react'
 import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } from '@/components/ui'
 import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 import { reassignPunch } from '@/app/actions/punches'
+import { punchDisplayStatus } from '@/lib/punches/verification'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
@@ -38,6 +39,7 @@ type Punch = {
   raised_by: string | null
   raised_by_profile: { full_name: string } | null
   assigned_to_profile: { full_name: string } | null
+  resolved_at: string | null
   projects: { id: string; name: string; code: string } | null
   tags: { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } } | null
   subsystems: { id: string; code: string; name: string; systems: { code: string; name: string } } | null
@@ -52,6 +54,7 @@ const CATEGORY_CFG = {
 const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
   open:        { color: 'var(--danger-500)',  bg: 'var(--danger-50)' },
   in_progress: { color: 'var(--primary-500)', bg: 'var(--primary-50)' },
+  resolved:    { color: '#7c3aed', bg: '#f5f3ff' },
   closed:      { color: 'var(--success-500)', bg: 'var(--success-50)' },
   cancelled:   { color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
 }
@@ -93,6 +96,7 @@ export default function PunchListGlobal({
   const punchStatusLabels: Record<string, string> = {
     open:        t('punchStatus.open'),
     in_progress: t('punchStatus.in_progress'),
+    resolved:    t('punchStatus.resolved'),
     closed:      t('punchStatus.closed'),
     cancelled:   t('punchStatus.cancelled'),
   }
@@ -328,7 +332,8 @@ export default function PunchListGlobal({
             }}
           >
             <option value="">{tc('choose')}</option>
-            {PUNCH_STATUS_KEYS.map(k => (
+            {/* Cerrar no es masivo: exige verificación en campo, punch por punch (fase 4). */}
+            {PUNCH_STATUS_KEYS.filter(k => k !== 'closed').map(k => (
               <option key={k} value={k}>{punchStatusLabels[k]}</option>
             ))}
           </select>
@@ -485,10 +490,11 @@ export default function PunchListGlobal({
             width: 100,
             header: t('table.colStatus'),
             cell: (p) => {
-              const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
+              const ds = punchDisplayStatus(p)
+              const pStyle = PUNCH_STYLE[ds] ?? PUNCH_STYLE.open
               return (
                 <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>
-                  {punchStatusLabels[p.status] ?? p.status}
+                  {punchStatusLabels[ds] ?? p.status}
                 </span>
               )
             },

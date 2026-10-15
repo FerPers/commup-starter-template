@@ -261,9 +261,17 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 | F3 registros — sesión 1 (BD) | ✅ en prod | 9e0edce |
 | F3 registros — sesión 2 (pantallas) | ✅ en prod | 8c55523 |
 | F3 registros — sesión 3 (test packs: avance por línea/pack, Excel line list, pack ↔ ciegas; etiquetas QR + /scan) | ✅ hecha; DEMO con TPK-0001 (A100-S01, PL-102/105, vinculado a CIE-0001) y TPK-0002 (OS01-S01, PL-101/103) | 5816c20 |
-| F3 registros — sesión 4 (datos de DEMO) | ✅ DEMO con 30 registros (12 test packs, 6 ciegas, 4 temporales, 3 reinstalaciones, 3 bypass, 3 energizaciones) y 39 líneas nuevas; script re-ejecutable `scripts/demo-data/seed_registers_demo.sql` | (este commit) |
-| F4 calidad de evidencia en ITRs y punch | ⏳ siguiente | — |
+| F3 registros — sesión 4 (datos de DEMO) | ✅ DEMO con 30 registros (12 test packs, 6 ciegas, 4 temporales, 3 reinstalaciones, 3 bypass, 3 energizaciones) y 39 líneas nuevas; script re-ejecutable `scripts/demo-data/seed_registers_demo.sql` | cd338d2 |
+| F4-A sesión 1: punch resuelto → verificado por otra persona (BD + acciones + modales); columnas de impacto, disposición PSSR y revisión de categoría en BD | ✅ migración `20261016120000_punch_evidence` aplicada | (este commit) |
+| F4-A sesión 2: revisión de categoría (cola en Mi trabajo), impacto en el formulario, guía por disciplina + PDF del procedimiento, disposición en PSSR | ⏳ siguiente | — |
+| F4-B equipos de prueba · F4-C tipos de ítem · F4-D loops/C&E ejecutables | ⏳ | — |
 
 Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
 
 Pendiente de Luis: probar en commup.app el ciclo de CIE-0001 con dos personas (Outlook propone; `lf.perdomo+smtp` autoriza; verificar con el usuario que no retiró) y confirmar «Sugerir con IA» en producción.
+
+## 10. Decisiones de la fase 4 (Luis, 2026-10-15)
+1. **Orden por bloques: A → B → C → D.** A = punch (verificación, impacto, guía de categorización, disposición PSSR); B = equipos de prueba con calibración; C = nuevos tipos de ítem (as found/as left, esperado/real, serie de lecturas); D = loops e interlocks ejecutables (loop check, pruebas C&E, IA para importar la matriz). Estimación realista: ~5 sesiones.
+2. **Verificación en campo con estado «resuelto»** (implementado como sub-estado de `in_progress` con `resolved_at/by`, no como valor nuevo del enum: así gates, certificados, KPIs, API y export lo siguen contando como abierto sin tocar ~40 lugares): abierto → en curso → resuelto (quien lo arregló, con evidencia) → cerrado = verificado por **otra persona**. Un punch resuelto sigue abierto y bloqueando hasta verificarse (9.21).
+3. **Calibración vencida bloquea la firma del ITR:** se puede capturar y guardar, pero no firmar ni aprobar hasta reemplazar el equipo. El aviso aparece desde que se elige el equipo.
+4. **Revisión de categoría = marca + cola:** el punch cuenta con su categoría desde que se levanta; queda «sin revisar» y entra a la cola del supervisor en Mi trabajo, que confirma o recategoriza (con auditoría). Cat C sigue sin bloquear (§6.1).

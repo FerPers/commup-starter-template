@@ -90,6 +90,7 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
   const missing = next ? missingFieldsFor(item.kind, next, data) : []
   const rejected = next ? transitionBlockedReason(item.kind, next, data) === 'test_rejected' : false
   const who = (id: string | null | undefined) => (id ? names[id] : undefined) ?? t('detail.someone')
+  // Hora local del navegador; los elementos que la muestran llevan suppressHydrationWarning (SSR en UTC).
   const when = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleString() : '')
 
   // Las mismas reglas que la RPC, para avisar antes de intentar.
@@ -185,13 +186,13 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
               <li key={s} aria-current={current ? 'step' : undefined}
                 style={{ padding: 10, borderRadius: 8, border: `1px solid ${done ? st.border : 'var(--border)'}`, background: done ? st.bg : 'transparent', opacity: done || current ? 1 : 0.6 }}>
                 <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: done ? st.fg : 'var(--text-muted)' }}>{done ? '✓ ' : ''}{statusLabel(item.kind, s)}</div>
-                {done && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>{t('detail.by', { who: who(step.by), when: when(step.at) })}</div>}
+                {done && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }} suppressHydrationWarning>{t('detail.by', { who: who(step.by), when: when(step.at) })}</div>}
               </li>
             )
           })}
         </ol>
         {item.status === 'cancelled' && (
-          <p style={{ ...small, margin: '10px 0 0' }}>
+          <p style={{ ...small, margin: '10px 0 0' }} suppressHydrationWarning>
             {statusLabel(item.kind, 'cancelled')}: {t('detail.by', { who: who(item.steps.cancelled.by), when: when(item.steps.cancelled.at) })} — {item.cancel_reason}
           </p>
         )}
@@ -289,7 +290,7 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {[...events].reverse().map(e => (
             <li key={e.id} style={{ ...small, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ whiteSpace: 'nowrap' }}>{when(e.created_at)}</span>
+              <span style={{ whiteSpace: 'nowrap' }} suppressHydrationWarning>{when(e.created_at)}</span>
               <strong style={{ color: 'var(--text-strong)' }}>
                 {e.action === 'transition' && e.from_status && e.to_status
                   ? t('detail.event.transition', { from: statusLabel(item.kind, e.from_status), to: statusLabel(item.kind, e.to_status) })

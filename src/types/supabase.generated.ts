@@ -3533,12 +3533,15 @@ export type Database = {
         Row: {
           assigned_to: string | null
           category: Database["public"]["Enums"]["punch_category"]
+          category_reviewed_at: string | null
+          category_reviewed_by: string | null
           closed_date: string | null
           created_at: string
           created_via: string | null
           description: string
           discipline_id: string
           id: string
+          impact: string | null
           itr_id: string | null
           ops_notes: string | null
           ops_target_date: string | null
@@ -3548,22 +3551,29 @@ export type Database = {
           project_id: string
           punch_number: string
           raised_by: string
+          resolved_at: string | null
+          resolved_by: string | null
+          startup_disposition: string | null
           status: Database["public"]["Enums"]["punch_status"]
           subsystem_id: string
           tag_id: string | null
           target_date: string | null
           transferred_at: string | null
           transferred_to_user_id: string | null
+          verified_by: string | null
         }
         Insert: {
           assigned_to?: string | null
           category: Database["public"]["Enums"]["punch_category"]
+          category_reviewed_at?: string | null
+          category_reviewed_by?: string | null
           closed_date?: string | null
           created_at?: string
           created_via?: string | null
           description: string
           discipline_id: string
           id?: string
+          impact?: string | null
           itr_id?: string | null
           ops_notes?: string | null
           ops_target_date?: string | null
@@ -3573,22 +3583,29 @@ export type Database = {
           project_id: string
           punch_number: string
           raised_by: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          startup_disposition?: string | null
           status?: Database["public"]["Enums"]["punch_status"]
           subsystem_id: string
           tag_id?: string | null
           target_date?: string | null
           transferred_at?: string | null
           transferred_to_user_id?: string | null
+          verified_by?: string | null
         }
         Update: {
           assigned_to?: string | null
           category?: Database["public"]["Enums"]["punch_category"]
+          category_reviewed_at?: string | null
+          category_reviewed_by?: string | null
           closed_date?: string | null
           created_at?: string
           created_via?: string | null
           description?: string
           discipline_id?: string
           id?: string
+          impact?: string | null
           itr_id?: string | null
           ops_notes?: string | null
           ops_target_date?: string | null
@@ -3598,17 +3615,28 @@ export type Database = {
           project_id?: string
           punch_number?: string
           raised_by?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          startup_disposition?: string | null
           status?: Database["public"]["Enums"]["punch_status"]
           subsystem_id?: string
           tag_id?: string | null
           target_date?: string | null
           transferred_at?: string | null
           transferred_to_user_id?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "punches_assigned_to_fkey"
             columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_category_reviewed_by_fkey"
+            columns: ["category_reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3658,6 +3686,13 @@ export type Database = {
           {
             foreignKeyName: "punches_raised_by_fkey"
             columns: ["raised_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_resolved_by_fkey"
+            columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3721,6 +3756,13 @@ export type Database = {
           {
             foreignKeyName: "punches_transferred_to_user_id_fkey"
             columns: ["transferred_to_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_verified_by_fkey"
+            columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -5915,6 +5957,7 @@ export type Database = {
           assigned_to: string | null
           assigned_to_name: string | null
           category: Database["public"]["Enums"]["punch_category"] | null
+          category_reviewed_at: string | null
           closed_date: string | null
           created_at: string | null
           description: string | null
@@ -5923,6 +5966,7 @@ export type Database = {
           discipline_id: string | null
           discipline_name: string | null
           id: string | null
+          impact: string | null
           itr_id: string | null
           org_id: string | null
           priority: Database["public"]["Enums"]["punch_priority"] | null
@@ -5932,7 +5976,11 @@ export type Database = {
           punch_number: string | null
           raised_by: string | null
           raised_by_name: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          resolved_by_name: string | null
           search_text: string | null
+          startup_disposition: string | null
           status: Database["public"]["Enums"]["punch_status"] | null
           subsystem_code: string | null
           subsystem_id: string | null
@@ -5944,6 +5992,7 @@ export type Database = {
           tag_id: string | null
           tag_number: string | null
           target_date: string | null
+          verified_by: string | null
         }
         Relationships: [
           {
@@ -6003,6 +6052,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "punches_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "punches_subsystem_id_fkey"
             columns: ["subsystem_id"]
             isOneToOne: false
@@ -6056,6 +6112,13 @@ export type Database = {
             columns: ["tag_id"]
             isOneToOne: false
             referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -6648,6 +6711,18 @@ export type Database = {
           status: Database["public"]["Enums"]["punch_status"]
         }[]
       }
+      punch_caller_role: {
+        Args: { p_punch: Database["public"]["Tables"]["punches"]["Row"] }
+        Returns: string
+      }
+      punch_log: {
+        Args: {
+          p_action: string
+          p_payload: Json
+          p_punch: Database["public"]["Tables"]["punches"]["Row"]
+        }
+        Returns: undefined
+      }
       punch_summary_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {
@@ -6668,6 +6743,18 @@ export type Database = {
       reopen_itr_atomic: {
         Args: { p_itr_id: string; p_reason: string }
         Returns: Json
+      }
+      resolve_punch: {
+        Args: { p_comment: string; p_punch_id: string }
+        Returns: undefined
+      }
+      review_punch_category: {
+        Args: {
+          p_category: Database["public"]["Enums"]["punch_category"]
+          p_note?: string
+          p_punch_id: string
+        }
+        Returns: undefined
       }
       revoke_api_key: { Args: { p_key_id: string }; Returns: undefined }
       revoke_gate_attestation: {
@@ -6779,6 +6866,10 @@ export type Database = {
         Returns: string
       }
       user_in_project_org: { Args: { p_project_id: string }; Returns: boolean }
+      verify_punch: {
+        Args: { p_accept: boolean; p_comment?: string; p_punch_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       alert_severity: "info" | "warning" | "critical"
@@ -6962,9 +7053,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       alert_severity: ["info", "warning", "critical"],
