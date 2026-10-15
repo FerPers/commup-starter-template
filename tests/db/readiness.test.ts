@@ -188,7 +188,10 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
   })
 
   it('Cat A cerrado, 1 Cat B abierto: ámbar (listo con condiciones); TS amarillo', async () => {
-    await a.from('punches').update({ status: 'closed' }).eq('subsystem_id', ids.subsystem).eq('category', 'A')
+    // Cerrar exige verificación en campo por otra persona (fase 4, migración 20261016120000) y este test
+    // tiene un solo usuario: para el gate, cancelled es tan terminal como closed.
+    const { error: closeErr } = await a.from('punches').update({ status: 'cancelled' }).eq('subsystem_id', ids.subsystem).eq('category', 'A')
+    expect(closeErr).toBeNull()
     const r = await readiness()
     expect(gate(r)).toMatchObject({ level: 'yellow', ready: true })
     const el = await tsEligibility()
