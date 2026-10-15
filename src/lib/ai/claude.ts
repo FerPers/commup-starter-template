@@ -5,7 +5,7 @@ import Anthropic from '@anthropic-ai/sdk'
 // .env.local en desarrollo). Sin clave, las funciones de IA devuelven un error
 // claro en vez de fallar a mitad de camino.
 
-export const CLAUDE_MODEL = 'claude-opus-5'
+export const CLAUDE_MODEL = 'claude-opus-5-5'
 
 export function isAiConfigured(): boolean {
   return !!process.env.ANTHROPIC_API_KEY
