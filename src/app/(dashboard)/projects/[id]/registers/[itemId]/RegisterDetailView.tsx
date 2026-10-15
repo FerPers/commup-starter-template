@@ -98,8 +98,8 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
   if (next === 'verified' && item.steps.removed.by === userId) blockedBy = who(item.steps.removed.by)
   const roleAllows = next === 'authorized' ? AUTHORIZERS.includes(role) : role !== 'client'
   const neverAuthorized = !item.steps.authorized.at
-  // §8.8: verificar un pack con ciegas aún instaladas solo avisa (la ciega bloquea su gate por sí misma).
-  const openBlinds = linked.filter(l => l.kind === 'blind' && OPEN_STATUSES.includes(l.status))
+  // §8.8: verificar un pack con ciegas aún instaladas (activas) solo avisa (la ciega bloquea su gate por sí misma).
+  const openBlinds = linked.filter(l => l.kind === 'blind' && l.status === 'active')
   const canLink = role !== 'client' && item.kind === 'test_pack' && item.status !== 'cancelled'
   const advanceDisabled = isPending || missing.length > 0 || rejected || !!blockedBy || !roleAllows
 

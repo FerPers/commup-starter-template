@@ -260,8 +260,9 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 | F2 sistematización (BD, ficha, matriz, Excel, IA, P&ID por sistema) | ✅ en prod; DEMO sistematizado por IA (14 sistemas, 33 dependencias) | e9a0e06, 6f04b96, d4506b0, 1dae918 |
 | F3 registros — sesión 1 (BD) | ✅ en prod | 9e0edce |
 | F3 registros — sesión 2 (pantallas) | ✅ en prod | 8c55523 |
-| F3 registros — sesión 3 (test packs: avance por línea/pack, Excel line list, pack ↔ ciegas; etiquetas QR + /scan) | ✅ hecha; DEMO con TPK-0001 (A100-S01, PL-102/105, vinculado a CIE-0001) y TPK-0002 (OS01-S01, PL-101/103) | (este commit) |
-| F3 registros — sesión 4 (datos de DEMO) | ⏳ siguiente | — |
+| F3 registros — sesión 3 (test packs: avance por línea/pack, Excel line list, pack ↔ ciegas; etiquetas QR + /scan) | ✅ hecha; DEMO con TPK-0001 (A100-S01, PL-102/105, vinculado a CIE-0001) y TPK-0002 (OS01-S01, PL-101/103) | 5816c20 |
+| F3 registros — sesión 4 (datos de DEMO) | ✅ DEMO con 30 registros (12 test packs, 6 ciegas, 4 temporales, 3 reinstalaciones, 3 bypass, 3 energizaciones) y 39 líneas nuevas; script re-ejecutable `scripts/demo-data/seed_registers_demo.sql` | (este commit) |
+| F4 calidad de evidencia en ITRs y punch | ⏳ siguiente | — |
 
 Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
 

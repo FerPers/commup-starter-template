@@ -179,7 +179,9 @@ export default function TestPacksView({ project, packs, canEdit }: Props) {
             </thead>
             <tbody>
               {shownPacks.map(p => {
-                const openBlinds = p.blinds.filter(b => OPEN_STATUSES.includes(b.status)).length
+                // «Instaladas» = estado activo; ámbar mientras alguna ciega siga sin verificar.
+                const installed = p.blinds.filter(b => b.status === 'active').length
+                const pendingBlinds = p.blinds.some(b => OPEN_STATUSES.includes(b.status))
                 return (
                   <tr key={p.id}>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
@@ -197,8 +199,8 @@ export default function TestPacksView({ project, packs, canEdit }: Props) {
                     </td>
                     <td style={{ ...td, ...small }}>
                       {p.blinds.length === 0 ? '—' : (
-                        <span style={{ color: openBlinds ? '#b45309' : 'var(--success-700)', fontWeight: 600 }}>
-                          {t('blindsCount', { open: openBlinds, total: p.blinds.length })}
+                        <span style={{ color: pendingBlinds ? '#b45309' : 'var(--success-700)', fontWeight: 600 }}>
+                          {t('blindsCount', { open: installed, total: p.blinds.length })}
                         </span>
                       )}
                     </td>
