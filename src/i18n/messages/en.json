@@ -2284,6 +2284,7 @@
     },
     "kind": {
       "previous_gate": "Previous gate approved",
+      "dependencies_ready": "Systems it depends on",
       "itr_phase_approved": "Phase ITRs approved",
       "certificates_issued": "Certificates issued in every subsystem",
       "pssr_approved": "PSSR approved",
@@ -2293,6 +2294,10 @@
     "crit": {
       "previousOk": "The previous gate is approved.",
       "previousMissing": "The previous gate must be approved first.",
+      "depsSummary": "{ok}/{total} enabling systems ready",
+      "depsMissing": "{gate} missing",
+      "depsPending": "{gate} pending signatures",
+      "depsOk": "{gate} approved",
       "noPhase": "The gate has no phase: set it in Admin → Gates.",
       "itrSummary": "{approved}/{total} ITRs approved · {red} of {subsystems} subsystems not ready",
       "catBOpen": "{count} open Cat B (justification required)",

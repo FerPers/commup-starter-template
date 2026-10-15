@@ -226,3 +226,15 @@ Total aproximado: **22–27 sesiones**. Cada fase se puede vender y demostrar po
    - hace falta importación masiva desde Excel (line list + asignación a packs).
 4. **PTW / LOTO / MOC / SIMOPS se integran por referencia.** Cada compañía tiene sus propias reglas y procedimientos.
 5. **Sin cambio de prioridad comercial.** El objetivo es **presentar a Geopark en unos meses**. Para la demo, lo ideal es tener listas F0 + F1 + F2 + F3 (la historia del "motor de readiness" con registros); F4–F5 suman si da el tiempo.
+
+## 7. Decisiones de la fase 2 (Luis, 2026-10-15)
+1. **Dependencias por fila con valores por defecto.** Cada dependencia dice «A necesita que B tenga aprobado el gate X antes de su gate Y». Defaults por posición (las orgs usan códigos distintos):
+   - utility → proveedor en servicio (último gate, o `UTILITY` si la org lo activó) antes de comisionar el dependiente (penúltimo gate);
+   - proceso / otro → último gate antes del último gate.
+
+   En los gates aparece un criterio implícito «Sistemas de los que depende» (`dependencies_ready`), como el de gate anterior. Si el proveedor revoca, el dependiente aprobado queda *regresado*. No se permiten ciclos entre sistemas.
+2. **P&ID:** en F2 los pines de tags se colorean y filtran por sistema. Los polígonos dibujados a mano quedan para una fase posterior (DEMO no tiene P&IDs cargados).
+3. **Congelar límites es informativo + auditoría:** se registra quién y cuándo; los cambios posteriores de subsistemas/tags quedan en `activity_log` y se avisan, sin bloquear.
+4. **DEMO para Geopark:** renombrar los 14 sistemas con nombres creíbles, asignar tipo/prioridad y sembrar dependencias.
+
+Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, reglas puras en `src/lib/systems/dependencies.ts`, tests `tests/db/dependencies.test.ts`. Siguen la sesión 2 (ficha de sistema, matriz, importación Excel, Control Tower) y la 3 (IA, pines por sistema, datos de DEMO).

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import type { DependencyCriterionDetail } from '@/lib/systems/dependencies'
 import {
   approveSystemGate,
   attestGateCriterion,
@@ -139,6 +140,29 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
     switch (c.kind) {
       case 'previous_gate':
         return <span style={small}>{c.result === 'pass' ? t('crit.previousOk') : t('crit.previousMissing')}</span>
+
+      case 'dependencies_ready': {
+        const deps = (d as DependencyCriterionDetail).dependencies ?? []
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={small}>{t('crit.depsSummary', { ok: deps.filter(x => x.ok).length, total: deps.length })}</span>
+            <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
+              {deps.map(x => (
+                <li key={x.dependency_id}>
+                  <Link style={linkStyle} href={`/control-tower/${x.system_id}`}>{x.system_code}</Link>
+                  {x.system_name && x.system_name !== x.system_code && ` ${x.system_name}`}
+                  {' · '}
+                  <span style={{ color: x.ok ? 'var(--success-700)' : 'var(--danger-700)' }}>
+                    {x.ok ? t('crit.depsOk', { gate: x.gate_code })
+                      : x.provider_status === 'pending_signatures' ? t('crit.depsPending', { gate: x.gate_code })
+                      : t('crit.depsMissing', { gate: x.gate_code })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
 
       case 'itr_phase_approved': {
         if (d.error === 'no_phase') return <span style={small}>{t('crit.noPhase')}</span>

@@ -18,14 +18,18 @@ export type GateLevel = 'green' | 'yellow' | 'red'
 export type CriterionResult = 'pass' | 'warn' | 'fail'
 export type CriterionKind =
   | 'previous_gate'
+  | 'dependencies_ready'
   | 'itr_phase_approved'
   | 'certificates_issued'
   | 'pssr_approved'
   | 'critical_tags_ready'
   | 'manual_attestation'
 
-/** Criterios configurables por la org (previous_gate es implícito por `requires_previous`). */
-export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate'>[] = [
+/**
+ * Criterios configurables por la org. Dos son implícitos: previous_gate (por `requires_previous`)
+ * y dependencies_ready (aparece si el sistema tiene dependencias que bloquean ese gate, fase 2).
+ */
+export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready'>[] = [
   'itr_phase_approved',
   'certificates_issued',
   'pssr_approved',

@@ -4207,6 +4207,136 @@ export type Database = {
           },
         ]
       }
+      system_dependencies: {
+        Row: {
+          blocked_gate_id: string
+          created_at: string
+          created_by: string | null
+          depends_on_system_id: string
+          id: string
+          kind: string
+          notes: string | null
+          org_id: string
+          project_id: string
+          required_gate_id: string
+          source: string
+          system_id: string
+        }
+        Insert: {
+          blocked_gate_id: string
+          created_at?: string
+          created_by?: string | null
+          depends_on_system_id: string
+          id?: string
+          kind?: string
+          notes?: string | null
+          org_id: string
+          project_id: string
+          required_gate_id: string
+          source?: string
+          system_id: string
+        }
+        Update: {
+          blocked_gate_id?: string
+          created_at?: string
+          created_by?: string | null
+          depends_on_system_id?: string
+          id?: string
+          kind?: string
+          notes?: string | null
+          org_id?: string
+          project_id?: string
+          required_gate_id?: string
+          source?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_dependencies_blocked_gate_id_fkey"
+            columns: ["blocked_gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_depends_on_system_id_fkey"
+            columns: ["depends_on_system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_depends_on_system_id_fkey"
+            columns: ["depends_on_system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_depends_on_system_id_fkey"
+            columns: ["depends_on_system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_depends_on_system_id_fkey"
+            columns: ["depends_on_system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_required_gate_id_fkey"
+            columns: ["required_gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_dependencies_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       system_gate_approvals: {
         Row: {
           approved_at: string
@@ -4467,30 +4597,45 @@ export type Database = {
       systems: {
         Row: {
           area_id: string
+          battery_limits: Json
+          boundary_frozen_at: string | null
+          boundary_frozen_by: string | null
           code: string
           current_phase_id: string | null
           description: string | null
           id: string
           name: string
+          priority: number | null
           project_id: string
+          system_type: string | null
         }
         Insert: {
           area_id: string
+          battery_limits?: Json
+          boundary_frozen_at?: string | null
+          boundary_frozen_by?: string | null
           code: string
           current_phase_id?: string | null
           description?: string | null
           id?: string
           name: string
+          priority?: number | null
           project_id: string
+          system_type?: string | null
         }
         Update: {
           area_id?: string
+          battery_limits?: Json
+          boundary_frozen_at?: string | null
+          boundary_frozen_by?: string | null
           code?: string
           current_phase_id?: string | null
           description?: string | null
           id?: string
           name?: string
+          priority?: number | null
           project_id?: string
+          system_type?: string | null
         }
         Relationships: [
           {
@@ -4506,6 +4651,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["area_id"]
+          },
+          {
+            foreignKeyName: "systems_boundary_frozen_by_fkey"
+            columns: ["boundary_frozen_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "systems_current_phase_id_fkey"
@@ -6155,6 +6307,10 @@ export type Database = {
       sign_system_gate: {
         Args: { p_approval_id: string; p_capacity: string; p_comments?: string }
         Returns: string
+      }
+      storage_object_in_my_project: {
+        Args: { p_bucket: string; p_name: string }
+        Returns: boolean
       }
       subsystem_rollup: {
         Args: { p_project_id: string }

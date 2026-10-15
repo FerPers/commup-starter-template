@@ -2284,6 +2284,7 @@
     },
     "kind": {
       "previous_gate": "Gate anterior aprobado",
+      "dependencies_ready": "Sistemas de los que depende",
       "itr_phase_approved": "ITRs de la fase aprobados",
       "certificates_issued": "Certificados emitidos en todos los subsistemas",
       "pssr_approved": "PSSR aprobado",
@@ -2293,6 +2294,10 @@
     "crit": {
       "previousOk": "El gate anterior está aprobado.",
       "previousMissing": "Requiere aprobar primero el gate anterior.",
+      "depsSummary": "{ok}/{total} sistemas habilitantes listos",
+      "depsMissing": "Falta {gate}",
+      "depsPending": "{gate} pendiente de firmas",
+      "depsOk": "{gate} aprobado",
       "noPhase": "El gate no tiene una fase asociada: configúrala en Administración → Gates.",
       "itrSummary": "{approved}/{total} ITRs aprobados · {red} de {subsystems} subsistemas no listos",
       "catBOpen": "{count} Cat B abiertos (requieren justificación)",
