@@ -7,7 +7,7 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
-import { parseTableConfig, type TableConfig } from '@/lib/itr/table'
+import { checkTableConfig, type TableConfig } from '@/lib/itr/table'
 import { conditionRemaps, itemInsertRow, localState, orderedSections, templateContentHash, type CloneSectionSource, type LocalState } from '@/lib/itr/clone'
 import { detectItrPhase } from '@/lib/utils'
 import type { Enums } from '@/types/supabase.generated'
@@ -178,7 +178,7 @@ export const createItem = withAuthOnly(
     data: ItemPayload,
   ): Promise<{ id?: string; error?: string }> => {
     if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
-    if (data.item_type === 'table' && !parseTableConfig(data.options)) return { error: 'La tabla requiere columnas y filas válidas' }
+    if (data.item_type === 'table') { const c = checkTableConfig(data.options); if (!c.config) return { error: `Tabla inválida: ${c.issue}` } }
     if (!validateOptionOutcomes(data.options ?? null, data.option_outcomes ?? {})) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
     if (data.item_type !== 'select' && Object.keys(data.option_outcomes ?? {}).length) return { error: 'Solo las listas admiten resultados por opción' }
     const { data: item, error } = await ctx.supabase
@@ -200,7 +200,7 @@ export const updateItem = withAuthOnly(
     if (readError || !current) return { error: 'Ítem no encontrado o sin acceso' }
     const merged = { ...current, ...data }
     if (merged.item_type === 'select' && !(Array.isArray(merged.options) && merged.options.length)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
-    if (merged.item_type === 'table' && !parseTableConfig(merged.options)) return { error: 'La tabla requiere columnas y filas válidas' }
+    if (merged.item_type === 'table') { const c = checkTableConfig(merged.options); if (!c.config) return { error: `Tabla inválida: ${c.issue}` } }
     const outcomes = data.option_outcomes ?? current.option_outcomes ?? {}
     if (!validateOptionOutcomes(merged.options, outcomes)) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
     if (merged.item_type !== 'select' && Object.keys(outcomes).length) return { error: 'Solo las listas admiten resultados por opción' }

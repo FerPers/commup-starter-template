@@ -388,9 +388,15 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
               const v = row.cells[c.key]
               if (c.type === 'result') return v === 'pass' ? 'PASS' : v === 'fail' ? 'FAIL' : v === 'not_applicable' ? 'No aplica' : 'Pendiente'
               if (v === null || v === undefined || v === '') return '-'
+              // Desviación calculada (v2): 3 decimales; «as found» fuera de tolerancia lleva la marca AF.
+              if (c.type === 'computed' && typeof v === 'number') {
+                const out = c.tolerance !== null && c.tolerance !== undefined && Math.abs(v) > c.tolerance
+                return `${v.toFixed(3)}${out && c.pass === 'as_found' ? ' (AF)' : ''}`
+              }
+              if (c.type === 'datetime' && typeof v === 'string') return v.replace('T', ' ')
               return String(v)
             })]
-            const rowFail = config.columns.some(c => (c.type === 'result' && row.cells[c.key] === 'fail') || (c.type === 'number' && typeof row.cells[c.key] === 'number' && ((c.min !== null && (row.cells[c.key] as number) < c.min) || (c.max !== null && (row.cells[c.key] as number) > c.max))))
+            const rowFail = evaluation.rowFlags[row.id]?.fail || config.columns.some(c => c.type === 'result' && row.cells[c.key] === 'fail')
             const lines = cells.map((value, i) => wrapText(value, r.fontRegular, 7.5, widths[i] - 6))
             const total = Math.max(...lines.map(cell => cell.length), 1)
             let offset = 0
@@ -416,6 +422,15 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
               offset += count
             }
           }
+        }
+        if (evaluation.asFoundOut > 0) {
+          r.paragraph(`AF: ${evaluation.asFoundOut} punto(s) "as found" fuera de tolerancia (registrado; la aceptación se evalúa con "as left").`, {size: 7.5, color: COLOR.amber})
+        }
+        if (evaluation.stability && evaluation.config?.stability) {
+          const st = evaluation.config.stability
+          const limits = [st.min !== null ? `>= ${st.min}` : '', st.max !== null ? `<= ${st.max}` : ''].filter(Boolean).join(' y ')
+          const verdict = evaluation.stability.ok === null ? `faltan lecturas (${evaluation.stability.have}/${evaluation.stability.needed})` : evaluation.stability.ok ? 'CUMPLE' : 'NO CUMPLE'
+          r.paragraph(`Estabilidad / Stability: últimas ${st.last_n} lecturas ${limits} - ${verdict}`, {size: 8, color: evaluation.stability.ok === false ? COLOR.red : COLOR.text})
         }
         if (resp?.remarks) r.paragraph(`Observaciones generales: ${resp.remarks}`, {size: 8, oblique: true})
         const tableEvidence = evidenceSummary(attachmentsByItem.get(item.id) ?? [])

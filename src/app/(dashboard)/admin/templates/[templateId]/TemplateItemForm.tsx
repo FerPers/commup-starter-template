@@ -9,7 +9,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ItrItemType } from '@/types/database'
-import { parseTableConfig, type TableConfig } from '@/lib/itr/table'
+import { checkTableConfig, type TableConfig } from '@/lib/itr/table'
 import TableConfigEditor from './TableConfigEditor'
 import {
   ITEM_TYPE_DEFS,
@@ -74,9 +74,10 @@ export default function TemplateItemForm({
       }
     }
     if (isTable) {
-      options = parseTableConfig(tableConfig)
+      const checked = checkTableConfig(tableConfig)
+      options = checked.config
       if (!options) {
-        setError('La tabla necesita al menos una columna con etiqueta y filas válidas (etiquetas fijas o un rango).')
+        setError(`Tabla inválida: ${checked.issue ?? 'revisa columnas y filas'}.`)
         return
       }
     }

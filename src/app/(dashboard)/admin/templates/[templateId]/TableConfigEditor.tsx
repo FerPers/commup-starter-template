@@ -1,10 +1,12 @@
 'use client'
 
 // Editor de la configuración de un ítem `table` (columnas + filas). Se guarda
-// en itr_template_items.options y lo valida parseTableConfig (TS) e
-// itr_table_config_valid (SQL). Los presets no fijan tolerancias.
+// en itr_template_items.options y lo valida checkTableConfig (TS) e
+// itr_table_config_valid (SQL). Los presets no fijan tolerancias, span ni límites.
+// v2 (fase 4-C): desviación calculada con tolerancia, resultado automático,
+// as found / as left, fecha y hora, y criterio de estabilidad para series.
 
-import { TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TABLE_PRESETS, type TableColumn, type TableConfig } from '@/lib/itr/table'
+import { TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TABLE_PRESETS, checkTableConfig, type TableColumn, type TableConfig } from '@/lib/itr/table'
 import { fieldInput, fieldLabel } from './template-builder-shared'
 
 const EMPTY: TableConfig = { version: 1, columns: [], rows: { mode: 'fixed', labels: [] } }
@@ -15,11 +17,34 @@ function nextKey(columns: TableColumn[]): string {
   return `col${n}`
 }
 
+/** La versión 2 solo cuando se usa algo de la v2: las tablas simples siguen siendo v1. */
+function withVersion(config: TableConfig): TableConfig {
+  const v2 = !!config.stability || config.columns.some(c => c.type === 'computed' || c.type === 'datetime' || !!c.auto_from)
+  return { ...config, version: v2 ? 2 : 1 }
+}
+
+const num = (v: string) => (v === '' ? null : Number(v))
+
 export default function TableConfigEditor({ value, onChange }: { value: TableConfig | null; onChange: (config: TableConfig) => void }) {
   const config = value ?? EMPTY
-  const set = (patch: Partial<TableConfig>) => onChange({ ...config, ...patch, version: 1 })
+  const set = (patch: Partial<TableConfig>) => onChange(withVersion({ ...config, ...patch }))
   const setColumn = (index: number, patch: Partial<TableColumn>) => set({ columns: config.columns.map((column, i) => i === index ? { ...column, ...patch } : column) })
   const small = { ...fieldInput, padding: '6px 8px', fontSize: '12px' } as const
+  const numberCols = config.columns.filter(c => c.type === 'number')
+  const computedCols = config.columns.filter(c => c.type === 'computed')
+  const issue = config.columns.length ? checkTableConfig(config).issue : null
+
+  function changeType(index: number, type: TableColumn['type']) {
+    const column = config.columns[index]
+    const patch: Partial<TableColumn> = { type, options: type === 'select' ? (column.options ?? ['Opción 1']) : null, min: null, max: null, auto_from: undefined, formula: undefined, tolerance: undefined, pass: undefined }
+    if (type === 'computed') {
+      patch.formula = { observed: numberCols[1]?.key ?? numberCols[0]?.key ?? '', reference: numberCols[0]?.key ?? '', mode: 'abs', span: null }
+      patch.tolerance = null
+      patch.pass = null
+      patch.required = false
+    }
+    setColumn(index, patch)
+  }
 
   return (
     <div style={{ padding: '12px 14px', background: '#ecfeff', border: '1px solid #a5f3fc', borderRadius: '8px', marginBottom: '12px' }}>
@@ -34,7 +59,7 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
 
       <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '10px', marginBottom: '10px' }}>
         <label style={fieldLabel}>Filas
-          <select style={small} value={config.rows.mode} onChange={e => set({ rows: e.target.value === 'variable' ? { mode: 'variable', min: 1, max: 20, label: 'Fila' } : { mode: 'fixed', labels: config.rows.mode === 'fixed' ? config.rows.labels : [] } })}>
+          <select style={small} value={config.rows.mode} onChange={e => set({ rows: e.target.value === 'variable' ? { mode: 'variable', min: 1, max: 20, label: 'Fila' } : { mode: 'fixed', labels: config.rows.mode === 'fixed' ? config.rows.labels : [] }, stability: e.target.value === 'variable' ? config.stability : null })}>
             <option value="fixed">Fijas (una por línea)</option>
             <option value="variable">Variables (el inspector declara la cantidad)</option>
           </select>
@@ -53,31 +78,105 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
       </div>
 
       <div style={{ fontSize: '12px', fontWeight: 600, color: '#155e75', margin: '4px 0 6px' }}>Columnas ({config.columns.length}/{TABLE_MAX_COLUMNS})</div>
-      {config.columns.map((column, index) => (
-        <div key={column.key} style={{ display: 'grid', gridTemplateColumns: '1.4fr 110px 70px 1fr 70px 70px auto auto', gap: '6px', alignItems: 'end', marginBottom: '6px' }}>
-          <label style={fieldLabel}>Etiqueta<input style={small} value={column.label} onChange={e => setColumn(index, { label: e.target.value })} /></label>
-          <label style={fieldLabel}>Tipo
-            <select style={small} value={column.type} onChange={e => setColumn(index, { type: e.target.value as TableColumn['type'], options: e.target.value === 'select' ? (column.options ?? ['Opción 1']) : null, min: null, max: null })}>
-              <option value="number">Número</option>
-              <option value="text">Texto</option>
-              <option value="select">Selección</option>
-              <option value="result">Resultado</option>
-            </select>
-          </label>
-          <label style={fieldLabel}>Unidad<input style={small} value={column.unit ?? ''} disabled={column.type !== 'number'} onChange={e => setColumn(index, { unit: e.target.value || null })} /></label>
-          <label style={fieldLabel}>{column.type === 'select' ? 'Opciones (coma)' : 'Criterio'}
-            {column.type === 'select'
-              ? <input style={small} value={(column.options ?? []).join(', ')} onChange={e => setColumn(index, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
-              : <input style={{ ...small, color: 'var(--text-muted)' }} disabled value={column.type === 'number' ? 'min/max opcionales →' : column.type === 'result' ? 'Aceptado / Rechazado / No aplica' : 'Texto libre'} />}
-          </label>
-          <label style={fieldLabel}>Mín.<input style={small} type="number" step="any" disabled={column.type !== 'number'} value={column.min ?? ''} onChange={e => setColumn(index, { min: e.target.value === '' ? null : Number(e.target.value) })} /></label>
-          <label style={fieldLabel}>Máx.<input style={small} type="number" step="any" disabled={column.type !== 'number'} value={column.max ?? ''} onChange={e => setColumn(index, { max: e.target.value === '' ? null : Number(e.target.value) })} /></label>
-          <label style={{ ...fieldLabel, whiteSpace: 'nowrap' }}>Req.<br /><input type="checkbox" checked={column.required} onChange={e => setColumn(index, { required: e.target.checked })} /></label>
-          <button type="button" onClick={() => set({ columns: config.columns.filter((_, i) => i !== index) })} title="Quitar columna" style={{ padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer' }}>×</button>
-        </div>
-      ))}
+      {config.columns.map((column, index) => {
+        const numeric = column.type === 'number'
+        return (
+          <div key={column.key} style={{ marginBottom: '8px', paddingBottom: column.type === 'computed' || column.type === 'result' ? '6px' : 0, borderBottom: column.type === 'computed' || column.type === 'result' ? '1px dashed #a5f3fc' : 'none' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 130px 70px 1fr 70px 70px auto auto', gap: '6px', alignItems: 'end' }}>
+              <label style={fieldLabel}>Etiqueta<input style={small} value={column.label} onChange={e => setColumn(index, { label: e.target.value })} /></label>
+              <label style={fieldLabel}>Tipo
+                <select style={small} value={column.type} onChange={e => changeType(index, e.target.value as TableColumn['type'])}>
+                  <option value="number">Número</option>
+                  <option value="text">Texto</option>
+                  <option value="select">Selección</option>
+                  <option value="result">Resultado</option>
+                  <option value="computed">Desviación calculada</option>
+                  <option value="datetime">Fecha y hora</option>
+                </select>
+              </label>
+              <label style={fieldLabel}>Unidad<input style={small} value={column.unit ?? ''} disabled={!numeric && column.type !== 'computed'} onChange={e => setColumn(index, { unit: e.target.value || null })} /></label>
+              <label style={fieldLabel}>{column.type === 'select' ? 'Opciones (coma)' : 'Criterio'}
+                {column.type === 'select'
+                  ? <input style={small} value={(column.options ?? []).join(', ')} onChange={e => setColumn(index, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
+                  : <input style={{ ...small, color: 'var(--text-muted)' }} disabled value={numeric ? 'min/max opcionales →' : column.type === 'result' ? (column.auto_from ? 'Automático ↓' : 'Aceptado / Rechazado / No aplica') : column.type === 'computed' ? 'Se calcula ↓' : column.type === 'datetime' ? 'AAAA-MM-DD hh:mm' : 'Texto libre'} />}
+              </label>
+              <label style={fieldLabel}>Mín.<input style={small} type="number" step="any" disabled={!numeric} value={column.min ?? ''} onChange={e => setColumn(index, { min: num(e.target.value) })} /></label>
+              <label style={fieldLabel}>Máx.<input style={small} type="number" step="any" disabled={!numeric} value={column.max ?? ''} onChange={e => setColumn(index, { max: num(e.target.value) })} /></label>
+              <label style={{ ...fieldLabel, whiteSpace: 'nowrap' }}>Req.<br /><input type="checkbox" checked={column.required} disabled={column.type === 'computed' || !!column.auto_from} onChange={e => setColumn(index, { required: e.target.checked })} /></label>
+              <button type="button" onClick={() => set({ columns: config.columns.filter((_, i) => i !== index) })} title="Quitar columna" style={{ padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer' }}>×</button>
+            </div>
+
+            {column.type === 'computed' && column.formula && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 150px 80px 90px 110px', gap: '6px', marginTop: '6px', alignItems: 'end' }}>
+                <label style={fieldLabel}>Observado
+                  <select style={small} value={column.formula.observed} onChange={e => setColumn(index, { formula: { ...column.formula!, observed: e.target.value } })}>
+                    <option value="">—</option>{numberCols.map(c => <option key={c.key} value={c.key}>{c.label || c.key}</option>)}
+                  </select>
+                </label>
+                <label style={fieldLabel}>Referencia (esperado)
+                  <select style={small} value={column.formula.reference} onChange={e => setColumn(index, { formula: { ...column.formula!, reference: e.target.value } })}>
+                    <option value="">—</option>{numberCols.map(c => <option key={c.key} value={c.key}>{c.label || c.key}</option>)}
+                  </select>
+                </label>
+                <label style={fieldLabel}>Desviación
+                  <select style={small} value={column.formula.mode} onChange={e => setColumn(index, { formula: { ...column.formula!, mode: e.target.value as 'abs' | 'pct_span' | 'pct_reading', span: e.target.value === 'pct_span' ? column.formula!.span : null } })}>
+                    <option value="abs">Absoluta (obs − ref)</option>
+                    <option value="pct_span">% del span</option>
+                    <option value="pct_reading">% de la lectura</option>
+                  </select>
+                </label>
+                <label style={fieldLabel}>Span<input style={small} type="number" step="any" disabled={column.formula.mode !== 'pct_span'} value={column.formula.span ?? ''} placeholder="16" onChange={e => setColumn(index, { formula: { ...column.formula!, span: num(e.target.value) } })} /></label>
+                <label style={fieldLabel}>Tolerancia ±<input style={small} type="number" step="any" min={0} value={column.tolerance ?? ''} onChange={e => setColumn(index, { tolerance: num(e.target.value) })} /></label>
+                <label style={fieldLabel}>Pasada
+                  <select style={small} value={column.pass ?? ''} onChange={e => setColumn(index, { pass: (e.target.value || null) as TableColumn['pass'] })}>
+                    <option value="">Única</option>
+                    <option value="as_found">As found (solo marca)</option>
+                    <option value="as_left">As left (acepta/rechaza)</option>
+                  </select>
+                </label>
+              </div>
+            )}
+
+            {column.type === 'result' && (
+              <label style={{ ...fieldLabel, marginTop: '6px', maxWidth: '360px' }}>Resultado
+                <select style={small} value={column.auto_from ?? ''} onChange={e => setColumn(index, { auto_from: e.target.value || null, required: e.target.value ? false : true })}>
+                  <option value="">Manual (lo marca el inspector)</option>
+                  {computedCols.filter(c => c.pass !== 'as_found').map(c => <option key={c.key} value={c.key}>Automático según «{c.label || c.key}»</option>)}
+                </select>
+              </label>
+            )}
+          </div>
+        )
+      })}
       <button type="button" disabled={config.columns.length >= TABLE_MAX_COLUMNS} onClick={() => set({ columns: [...config.columns, { key: nextKey(config.columns), label: '', type: 'number', unit: null, options: null, min: null, max: null, required: true }] })} style={{ padding: '6px 12px', border: '1px dashed #67e8f9', borderRadius: '6px', background: 'var(--card-bg)', fontSize: '12px', color: '#0e7490', cursor: 'pointer' }}>+ Columna</button>
-      <p style={{ fontSize: '11px', color: '#155e75', margin: '8px 0 0' }}>Un «Resultado» rechazado o un número fuera de mín./máx. bloquean la firma. «No aplica» exige un texto en la fila. Sin mín./máx. la tabla no impone tolerancias.</p>
+
+      {config.rows.mode === 'variable' && (
+        <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #a5f3fc' }}>
+          <label style={{ ...fieldLabel, flexDirection: 'row', gap: '6px', alignItems: 'center', display: 'flex' }}>
+            <input type="checkbox" checked={!!config.stability}
+              onChange={e => set({ stability: e.target.checked ? { column: [...numberCols, ...computedCols][0]?.key ?? '', last_n: 3, min: null, max: null } : null })} />
+            Criterio de estabilidad (serie de lecturas): las últimas N lecturas dentro de los límites
+          </label>
+          {config.stability && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px', gap: '6px', marginTop: '6px', alignItems: 'end' }}>
+              <label style={fieldLabel}>Columna
+                <select style={small} value={config.stability.column} onChange={e => set({ stability: { ...config.stability!, column: e.target.value } })}>
+                  {[...numberCols, ...computedCols].map(c => <option key={c.key} value={c.key}>{c.label || c.key}</option>)}
+                </select>
+              </label>
+              <label style={fieldLabel}>Últimas N<input style={small} type="number" min={1} max={TABLE_MAX_ROWS} value={config.stability.last_n} onChange={e => set({ stability: { ...config.stability!, last_n: Number(e.target.value) } })} /></label>
+              <label style={fieldLabel}>Mín.<input style={small} type="number" step="any" value={config.stability.min ?? ''} onChange={e => set({ stability: { ...config.stability!, min: num(e.target.value) } })} /></label>
+              <label style={fieldLabel}>Máx.<input style={small} type="number" step="any" value={config.stability.max ?? ''} onChange={e => set({ stability: { ...config.stability!, max: num(e.target.value) } })} /></label>
+            </div>
+          )}
+        </div>
+      )}
+
+      {issue && <p role="status" style={{ fontSize: '12px', color: '#b45309', fontWeight: 600, margin: '10px 0 0' }}>Falta: {issue}</p>}
+      <p style={{ fontSize: '11px', color: '#155e75', margin: '8px 0 0' }}>
+        Un «Resultado» rechazado, un número fuera de mín./máx. o una desviación fuera de tolerancia bloquean la firma; «as found» fuera de tolerancia solo se marca.
+        La desviación y el resultado automático los calcula CommUp: el inspector no los edita. «No aplica» exige un texto en la fila. Sin tolerancias declaradas la tabla no impone criterios.
+      </p>
     </div>
   )
 }

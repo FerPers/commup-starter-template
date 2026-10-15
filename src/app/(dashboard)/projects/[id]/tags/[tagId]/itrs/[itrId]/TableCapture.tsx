@@ -3,7 +3,9 @@
 // Captura de un ítem `table`: columnas declaradas en la plantilla, filas fijas
 // (se muestran de inmediato) o variables (el inspector declara la cantidad).
 // Cada cambio envía la captura completa como JSON; la evaluación local es el
-// espejo de evaluate_itr_table en SQL.
+// espejo de evaluate_itr_table en SQL. v2 (fase 4-C): la desviación y el resultado
+// automático se muestran calculados (solo lectura); as found fuera de tolerancia se
+// marca en ámbar y la serie muestra si cumple el criterio de estabilidad.
 
 import { useEffect, useRef, useState } from 'react'
 import { evaluateTable, reshapeTable, type TableCapture as Capture, type TableCellValue } from '@/lib/itr/table'
@@ -29,6 +31,13 @@ export default function TableCapture({ options, value, disabled, onChange }: {
 
   if (!config) return <p role="alert" style={{ color: '#b91c1c', fontSize: '12px' }}>La plantilla no define columnas válidas para esta tabla; corrígela antes de ejecutar.</p>
 
+  // Lo calculado (desviación, resultado automático) no se guarda: CommUp y SQL lo recalculan siempre.
+  const serialize = (capture: Capture) => {
+    if (!config) return JSON.stringify(capture)
+    const derived = config.columns.filter(column => column.type === 'computed' || column.auto_from).map(column => column.key)
+    return JSON.stringify({ ...capture, rows: capture.rows.map(row => ({ ...row, cells: { ...row.cells, ...Object.fromEntries(derived.map(key => [key, null])) } })) })
+  }
+
   function configure() {
     if (!config) return
     const n = Number(count)
@@ -38,13 +47,13 @@ export default function TableCapture({ options, value, disabled, onChange }: {
     const next = reshapeTable(config, current.current, config.rows.mode === 'fixed' ? config.rows.labels.length : n)
     const removed = current.current?.rows.filter(row => !next.rows.some(other => other.id === row.id)) ?? []
     if (removed.some(row => Object.values(row.cells).some(cell => cell !== null && cell !== '')) && !window.confirm('Este cambio retira filas con información. ¿Confirmas cambiar la cantidad?')) return
-    setError(''); current.current = next; onChange(JSON.stringify(next))
+    setError(''); current.current = next; onChange(serialize(next))
   }
 
   function changeCell(rowId: string, key: string, cell: TableCellValue) {
     if (!current.current || disabled) return
     const next: Capture = { ...current.current, rows: current.current.rows.map(row => row.id === rowId ? { ...row, cells: { ...row.cells, [key]: cell } } : row) }
-    current.current = next; onChange(JSON.stringify(next))
+    current.current = next; onChange(serialize(next))
   }
 
   // Render from props (pure); the ref only seeds the next capture inside handlers.
@@ -68,18 +77,32 @@ export default function TableCapture({ options, value, disabled, onChange }: {
             <th style={{ padding: '6px 8px', textAlign: 'left', color: 'var(--text-muted)' }}>{rowsLabel}</th>
             {config.columns.map(column => (
               <th key={column.key} style={{ padding: '6px 8px', textAlign: 'left', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                {column.label}{column.unit ? ` (${column.unit})` : ''}{column.required ? '' : ' ·opc.'}
+                {column.label}{column.unit ? ` (${column.unit})` : ''}{column.type === 'computed' || column.auto_from ? ' ·calc.' : column.required ? '' : ' ·opc.'}
+                {column.type === 'computed' && column.tolerance !== null && column.tolerance !== undefined && <span style={{ fontWeight: 400 }}> ±{column.tolerance}</span>}
               </th>
             ))}
           </tr></thead>
           <tbody>{data.rows.map(row => {
-            const rowFail = config.columns.some(column => column.type === 'result' && row.cells[column.key] === 'fail')
+            const flags = evaluated.rowFlags[row.id]
+            const rowFail = flags?.fail || config.columns.some(column => column.type === 'result' && row.cells[column.key] === 'fail')
             return (
-              <tr key={row.id} style={{ background: rowFail ? '#fef2f2' : undefined }}>
+              <tr key={row.id} style={{ background: rowFail ? '#fef2f2' : flags?.asFoundOut ? '#fffbeb' : undefined }}>
                 <th scope="row" style={{ padding: '6px 8px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{row.label}</th>
                 {config.columns.map(column => {
                   const cell = row.cells[column.key]
                   const label = `${row.label} ${column.label}`
+                  if (column.type === 'computed') {
+                    const out = typeof cell === 'number' && column.tolerance !== null && column.tolerance !== undefined && Math.abs(cell) > column.tolerance
+                    return <td key={column.key} style={{ padding: '6px 8px', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: out ? (column.pass === 'as_found' ? '#b45309' : '#b91c1c') : 'var(--text-strong)' }} aria-label={label}>
+                      {typeof cell === 'number' ? cell.toFixed(3) : '—'}{out && column.pass === 'as_found' ? ' ⚑' : ''}
+                    </td>
+                  }
+                  if (column.type === 'result' && column.auto_from) {
+                    return <td key={column.key} style={{ padding: '6px 8px', fontWeight: 700, color: cell === 'fail' ? '#b91c1c' : cell === 'pass' ? '#047857' : 'var(--text-muted)' }} aria-label={label}>
+                      {cell === 'pass' ? 'Aceptado' : cell === 'fail' ? 'Rechazado' : 'Pendiente'}
+                    </td>
+                  }
+                  if (column.type === 'datetime') return <td key={column.key}><input aria-label={label} style={{ ...field, minWidth: '170px' }} type="datetime-local" value={typeof cell === 'string' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value)} /></td>
                   if (column.type === 'number') return <td key={column.key}><input aria-label={label} style={field} type="number" step="any" value={typeof cell === 'number' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value === '' || !Number.isFinite(e.target.valueAsNumber) ? null : e.target.valueAsNumber)} /></td>
                   if (column.type === 'select') return <td key={column.key}><select aria-label={label} style={field} value={typeof cell === 'string' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value)}><option value="">—</option>{(column.options ?? []).map(option => <option key={option} value={option}>{option}</option>)}</select></td>
                   if (column.type === 'result') return <td key={column.key}><select aria-label={label} style={{ ...field, color: cell === 'fail' ? '#b91c1c' : cell === 'pass' ? '#047857' : undefined }} value={typeof cell === 'string' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value)}><option value="">Pendiente</option><option value="pass">Aceptado</option><option value="fail">Rechazado</option><option value="not_applicable">No aplica</option></select></td>
@@ -90,6 +113,15 @@ export default function TableCapture({ options, value, disabled, onChange }: {
           })}</tbody>
         </table>
       </div>
+      {evaluated.asFoundOut > 0 && (
+        <p style={{ fontSize: '12px', margin: '6px 0 0', color: '#b45309' }}>⚑ {evaluated.asFoundOut} punto(s) «as found» fuera de tolerancia: queda registrado; la aceptación se evalúa con «as left».</p>
+      )}
+      {evaluated.stability && config.stability && (
+        <p style={{ fontSize: '12px', margin: '6px 0 0', fontWeight: 600, color: evaluated.stability.ok === false ? '#b91c1c' : evaluated.stability.ok ? '#047857' : 'var(--text-muted)' }}>
+          Estabilidad: últimas {config.stability.last_n} lecturas {config.stability.min !== null ? `≥ ${config.stability.min}` : ''}{config.stability.min !== null && config.stability.max !== null ? ' y ' : ''}{config.stability.max !== null ? `≤ ${config.stability.max}` : ''} —{' '}
+          {evaluated.stability.ok === null ? `faltan lecturas (${evaluated.stability.have}/${evaluated.stability.needed})` : evaluated.stability.ok ? 'cumple' : 'no cumple'}
+        </p>
+      )}
       <p role="status" style={{ fontSize: '12px', margin: '6px 0 0', color: evaluated.hasFail ? '#b91c1c' : 'var(--text-muted)' }}>
         {evaluated.hasFail ? 'Hay resultados rechazados o fuera del rango declarado.' : evaluated.isComplete ? 'Registro diligenciado; pendiente de las aprobaciones que correspondan.' : evaluated.data ? `Registro pendiente: ${evaluated.errors.slice(0, 3).join(' · ')}${evaluated.errors.length > 3 ? ` · +${evaluated.errors.length - 3}` : ''}` : 'Registro pendiente: diligencia las celdas requeridas.'}
       </p>

@@ -77,9 +77,10 @@ function ItemControl({ item }: { item: PreviewItem }) {
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', fontSize: '12px', width: '100%' }}>
           <thead><tr><th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)' }}>{config.rows.mode === 'fixed' ? 'Fila' : config.rows.label}</th>{config.columns.map(c => <th key={c.key} style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.label}{c.unit ? ` (${c.unit})` : ''}</th>)}</tr></thead>
-          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--gray-400)' }}>{c.type === 'result' ? 'Aceptado / Rechazado / N.A.' : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
+          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--gray-400)' }}>{c.type === 'result' ? (c.auto_from ? 'Automático' : 'Aceptado / Rechazado / N.A.') : c.type === 'computed' ? `calculado${c.tolerance !== null && c.tolerance !== undefined ? ` ±${c.tolerance}` : ''}${c.pass === 'as_found' ? ' (as found)' : ''}` : c.type === 'datetime' ? 'AAAA-MM-DD hh:mm' : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
         </table>
         {config.rows.mode === 'variable' && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Filas variables: el inspector declara entre {config.rows.min} y {config.rows.max}.</p>}
+        {config.stability && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Estabilidad: las últimas {config.stability.last_n} lecturas{config.stability.min !== null ? ` ≥ ${config.stability.min}` : ''}{config.stability.max !== null ? ` ≤ ${config.stability.max}` : ''}.</p>}
       </div>
     )
   }

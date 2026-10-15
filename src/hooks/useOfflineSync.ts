@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
 import { enqueueResponse, countPending, OUTBOX_CHANGED_EVENT } from '@/lib/offline-queue'
 import { upsertResponse } from '@/app/actions/itr-instances'
 import { replayQueueOnce } from '@/lib/sync/replay'
@@ -16,10 +16,22 @@ type ResponseData = {
 
 // Called with itrId + templateId for ITR execution context.
 // Called with no args from sidebar to get global online/pending status.
+// Estado de red sin romper la hidratación: el SSR (y el primer render del cliente) asumen «en línea»;
+// tras hidratar, React vuelve a renderizar con navigator.onLine y se suscribe a online/offline.
+function subscribeNetwork(onChange: () => void) {
+  window.addEventListener('online', onChange)
+  window.addEventListener('offline', onChange)
+  return () => {
+    window.removeEventListener('online', onChange)
+    window.removeEventListener('offline', onChange)
+  }
+}
+
 export function useOfflineSync(itrId = '', templateId = '') {
-  const [isOffline, setIsOffline] = useState(
-    () => typeof navigator !== 'undefined' ? !navigator.onLine : false,
-  )
+  const browserOffline = useSyncExternalStore(subscribeNetwork, () => !navigator.onLine, () => false)
+  // El navegador puede decir «en línea» y aun así fallar el guardado (red cautiva): eso también es sin red.
+  const [saveFailed, setSaveFailed] = useState(false)
+  const isOffline = browserOffline || saveFailed
   const [pendingCount, setPendingCount] = useState(0)
   const [syncing, setSyncing] = useState(false)
   const syncingRef = useRef(false)
@@ -49,14 +61,10 @@ export function useOfflineSync(itrId = '', templateId = '') {
 
   // Listen to browser online/offline events
   useEffect(() => {
-    const onOnline = () => { setIsOffline(false); void sync() }
-    const onOffline = () => setIsOffline(true)
+    // Al volver la red se vacía la cola (el estado `isOffline` lo lleva useSyncExternalStore).
+    const onOnline = () => { setSaveFailed(false); void sync() }
     window.addEventListener('online', onOnline)
-    window.addEventListener('offline', onOffline)
-    return () => {
-      window.removeEventListener('online', onOnline)
-      window.removeEventListener('offline', onOffline)
-    }
+    return () => window.removeEventListener('online', onOnline)
   }, [sync])
 
   // Save a response: try server action, fall back to IndexedDB on network failure
@@ -74,12 +82,13 @@ export function useOfflineSync(itrId = '', templateId = '') {
 
     try {
       const res = await upsertResponse({ itrId, itemId, templateId, ...data })
+      setSaveFailed(false)
       return res
     } catch {
       // Network error (fetch failed) → queue offline
       await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now })
       setPendingCount(c => c + 1)
-      setIsOffline(true)
+      setSaveFailed(true)
       return { queued: true }
     }
   }, [itrId, templateId])
