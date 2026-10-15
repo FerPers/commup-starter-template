@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { isEditor } from '@/lib/auth/permissions'
 import type { CeAction, CeCause, CeEffect, CeLink, CeVoting } from '@/lib/ce/matrix'
+import { loadGenerationTemplates, loadMembers, loadSourceItrs } from '@/lib/itr/source-itrs-server'
 import CeMatrixEditor from './CeMatrixEditor'
 
 // Una matriz C&E: causas (filas) × efectos (columnas) y sus cruces (fase 4-D, sesión 1).
@@ -38,8 +39,19 @@ export default async function CeMatrixPage({ params }: { params: Promise<{ id: s
     id: e.id, seq: e.seq, code: e.code, description: e.description, action: e.action as CeAction, notes: e.notes, tag_number: e.tags?.tag_number ?? null,
   }))
 
+  // Fase 4-D: ITR de prueba vigente por causa (estado, desactualizado, resultado por efecto) y generación.
+  const canEdit = isEditor(ctx.role)
+  const [causeItrs, templates, members] = await Promise.all([
+    loadSourceItrs(supabase, 'cause', causeRows.map(c => c.id)),
+    canEdit ? loadGenerationTemplates(supabase, ctx.orgId, 'ce_effects') : Promise.resolve([]),
+    canEdit ? loadMembers(supabase, ctx.orgId) : Promise.resolve([]),
+  ])
+
   return (
     <CeMatrixEditor
+      causeItrs={causeItrs}
+      templates={templates}
+      members={members}
       projectId={id}
       projectName={matrix.projects.name}
       matrix={{ id: matrix.id, code: matrix.code, title: matrix.title, revision: matrix.revision, sourceDocument: matrix.source_document, system: matrix.systems ? `${matrix.systems.code} · ${matrix.systems.name}` : null }}
@@ -47,7 +59,7 @@ export default async function CeMatrixPage({ params }: { params: Promise<{ id: s
       effects={effectRows}
       links={(links ?? []).map(l => ({ cause_id: l.cause_id, effect_id: l.effect_id, link_type: l.link_type as CeLink['link_type'], delay_s: l.delay_s }))}
       tagNumbers={(tags ?? []).map(t => t.tag_number)}
-      canEdit={isEditor(ctx.role)}
+      canEdit={canEdit}
     />
   )
 }

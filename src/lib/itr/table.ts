@@ -15,8 +15,13 @@
 //   · `datetime` y criterio de estabilidad (`stability`) para series de lecturas: las últimas N
 //     lecturas deben quedar dentro de [min, max] (punto de rocío, O₂, bitácora de prueba).
 // Las celdas calculadas/automáticas se recalculan siempre aquí y en SQL: lo que envíe el cliente no cuenta.
+//
+// Filas `source` (fase 4 · bloque D, sesión 2, decisiones §10.21–10.24): las filas salen de la foto que
+// el ITR tomó al generarse (itrs.source_rows): una por señal del lazo (loop check) o una por efecto de
+// la causa (prueba C&E). Las columnas `reference` muestran datos de esa foto (señal, cadena, efecto,
+// acción esperada) y no se capturan. Ver migración 20261016230000_itr_source_rows.
 
-export type TableColumnType = 'text' | 'number' | 'select' | 'result' | 'computed' | 'datetime'
+export type TableColumnType = 'text' | 'number' | 'select' | 'result' | 'computed' | 'datetime' | 'reference'
 export type DeviationMode = 'abs' | 'pct_span' | 'pct_reading'
 export type TolerancePass = 'as_found' | 'as_left'
 
@@ -39,11 +44,56 @@ export type TableColumn = {
   pass?: TolerancePass | null
   /** v2 · result: se calcula desde esta columna `computed` (con tolerancia). */
   auto_from?: string | null
+  /** v2 · reference: dato de la foto que se muestra (ver SOURCE_REFS). */
+  ref?: string
 }
 
 export type TableRowsSpec =
   | { mode: 'fixed'; labels: string[] }
   | { mode: 'variable'; min: number; max: number; label: string }
+  | { mode: 'source'; source: TableSource; label: string }
+
+/** Origen de las filas `source`: señales del lazo o efectos de una causa de la matriz C&E. */
+export type TableSource = 'loop_signals' | 'ce_effects'
+/** Una fila de la foto del ITR (itrs.source_rows). `key` = id de la señal o del efecto. */
+export type SourceRow = { key: string; label: string; refs: Record<string, string | null> }
+
+/** Datos de la foto que puede mostrar una columna `reference`, por origen. Espejo de itr_table_config_valid. */
+export const SOURCE_REFS: Record<TableSource, Record<string, string>> = {
+  loop_signals: {
+    signal_tag: 'Señal', signal_type: 'Tipo', instrument: 'Instrumento', service: 'Servicio', range: 'Rango',
+    alarms: 'Alarmas / set points', junction_box: 'JB', marshalling: 'Marshalling', io_card: 'Tarjeta I/O',
+    io_channel: 'Canal', dcs_tag: 'Tag DCS', hmi_display: 'HMI',
+  },
+  ce_effects: {
+    effect_code: 'Efecto', effect_description: 'Descripción', effect_tag: 'Elemento final', action: 'Acción esperada', link: 'Cruce',
+  },
+}
+export const TABLE_SOURCE_LABELS: Record<TableSource, string> = { loop_signals: 'Señales del lazo', ce_effects: 'Efectos de la causa (C&E)' }
+
+const ACTION_LABELS: Record<string, string> = { close: 'Cerrar', open: 'Abrir', trip: 'Disparo', start: 'Arrancar', stop: 'Parar', alarm: 'Alarma', other: 'Otra' }
+
+/** Valor legible de un dato de la foto (la acción C&E se guarda como código). */
+export function sourceRefText(ref: string, value: string | null | undefined): string {
+  if (value === null || value === undefined || value === '') return '—'
+  return ref === 'action' ? ACTION_LABELS[value] ?? value : value
+}
+
+/** Lee itrs.source_rows; null si no hay foto o no tiene la forma esperada. */
+export function parseSourceRows(value: unknown): SourceRow[] | null {
+  if (!Array.isArray(value)) return null
+  const rows: SourceRow[] = []
+  for (const raw of value) {
+    if (!raw || typeof raw !== 'object' || typeof (raw as SourceRow).key !== 'string' || typeof (raw as SourceRow).label !== 'string') return null
+    const refsRaw = (raw as { refs?: unknown }).refs
+    const refs: Record<string, string | null> = {}
+    if (refsRaw && typeof refsRaw === 'object' && !Array.isArray(refsRaw)) {
+      for (const [k, v] of Object.entries(refsRaw)) refs[k] = typeof v === 'string' ? v : null
+    }
+    rows.push({ key: (raw as SourceRow).key, label: (raw as SourceRow).label, refs })
+  }
+  return rows
+}
 
 export type TableStability = { column: string; last_n: number; min: number | null; max: number | null }
 
@@ -54,8 +104,8 @@ export type TableRow = { id: string; label: string; cells: Record<string, TableC
 export type TableCapture = { version: 1; count: number; rows: TableRow[] }
 
 export const TABLE_RESULT_VALUES = ['pass', 'fail', 'not_applicable'] as const
-const COLUMN_TYPES: readonly TableColumnType[] = ['text', 'number', 'select', 'result', 'computed', 'datetime']
-const V2_TYPES: readonly TableColumnType[] = ['computed', 'datetime']
+const COLUMN_TYPES: readonly TableColumnType[] = ['text', 'number', 'select', 'result', 'computed', 'datetime', 'reference']
+const V2_TYPES: readonly TableColumnType[] = ['computed', 'datetime', 'reference']
 const MODES: readonly DeviationMode[] = ['abs', 'pct_span', 'pct_reading']
 const KEY_PATTERN = /^[a-z][a-z0-9_]{0,31}$/
 const DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
@@ -110,7 +160,11 @@ export function checkTableConfig(options: unknown): Checked {
       key: raw.key, label: raw.label.trim(), type,
       unit: typeof raw.unit === 'string' && raw.unit.trim() ? raw.unit.trim() : null,
       options: selectOptions, min, max,
-      required: type === 'computed' ? false : typeof raw.required === 'boolean' ? raw.required : true,
+      required: type === 'computed' || type === 'reference' ? false : typeof raw.required === 'boolean' ? raw.required : true,
+    }
+    if (type === 'reference') {
+      if (typeof raw.ref !== 'string') return bad(`«${raw.label}»: indica qué dato de la foto muestra`)
+      column.ref = raw.ref
     }
     if (type === 'computed') {
       const f = raw.formula
@@ -158,7 +212,16 @@ export function checkTableConfig(options: unknown): Checked {
     const rmin = rowsRaw.min as number, rmax = rowsRaw.max as number
     if (rmin < 1 || rmax > TABLE_MAX_ROWS || rmin > rmax) return bad(`Filas variables: entre 1 y ${TABLE_MAX_ROWS}`)
     rows = { mode: 'variable', min: rmin, max: rmax, label: rowsRaw.label.trim() }
+  } else if (rowsRaw.mode === 'source') {
+    if (version !== 2) return bad('Las filas desde lazo o matriz C&E requieren la versión 2')
+    if (rowsRaw.source !== 'loop_signals' && rowsRaw.source !== 'ce_effects') return bad('Origen de filas no válido')
+    if (!text(rowsRaw.label)) return bad('Indica el nombre de la fila (p. ej. «Señal» o «Efecto»)')
+    const allowed = SOURCE_REFS[rowsRaw.source]
+    const wrong = columns.find(c => c.type === 'reference' && !(c.ref! in allowed))
+    if (wrong) return bad(`«${wrong.label}» no es un dato de ${TABLE_SOURCE_LABELS[rowsRaw.source].toLowerCase()}`)
+    rows = { mode: 'source', source: rowsRaw.source, label: rowsRaw.label.trim() }
   } else return bad('Filas inválidas')
+  if (rows.mode !== 'source' && columns.some(c => c.type === 'reference')) return bad('Las columnas de referencia solo existen en filas desde lazo o matriz C&E')
 
   const config: TableConfig = { version, columns, rows }
   if ('stability' in options && options.stability !== null && options.stability !== undefined) {
@@ -192,18 +255,19 @@ export function deviation(formula: TableFormula, observed: TableCellValue, refer
 
 const outOfTolerance = (v: number | null, tol: number | null | undefined) => v !== null && tol !== null && tol !== undefined && Math.abs(v) > tol + EPS
 
-/** Filas esperadas (ids R1..Rn) para una configuración y una cantidad declarada. */
-export function expectedTableRows(config: TableConfig, count: number): Array<{ id: string; label: string }> {
+/** Filas esperadas (ids R1..Rn) para una configuración y una cantidad declarada (o la foto del ITR). */
+export function expectedTableRows(config: TableConfig, count: number, sourceRows?: SourceRow[] | null): Array<{ id: string; label: string }> {
   if (config.rows.mode === 'fixed') return config.rows.labels.map((label, i) => ({ id: `R${i + 1}`, label }))
+  if (config.rows.mode === 'source') return (sourceRows ?? []).map((row, i) => ({ id: `R${i + 1}`, label: row.label }))
   if (!Number.isInteger(count) || count < config.rows.min || count > config.rows.max) return []
   const label = config.rows.label
   return Array.from({ length: count }, (_, i) => ({ id: `R${i + 1}`, label: `${label} ${i + 1}` }))
 }
 
 /** Captura vacía; conserva las celdas de `previous` cuyo id sigue existiendo. */
-export function reshapeTable(config: TableConfig, previous: TableCapture | null, count: number): TableCapture {
+export function reshapeTable(config: TableConfig, previous: TableCapture | null, count: number, sourceRows?: SourceRow[] | null): TableCapture {
   const existing = new Map(previous?.rows.map(row => [row.id, row]) ?? [])
-  const rows = expectedTableRows(config, count)
+  const rows = expectedTableRows(config, count, sourceRows)
   return {
     version: 1,
     count: rows.length,
@@ -217,7 +281,7 @@ export function reshapeTable(config: TableConfig, previous: TableCapture | null,
 export type TableRowFlags = { fail: boolean; asFoundOut: boolean }
 export type TableStabilityResult = { ok: boolean | null; needed: number; have: number }
 
-export function evaluateTable(options: unknown, value: string | null | undefined): {
+export function evaluateTable(options: unknown, value: string | null | undefined, sourceRows?: SourceRow[] | null): {
   isComplete: boolean; hasFail: boolean; errors: string[]; data: TableCapture | null; config: TableConfig | null
   /** v2: marcas por fila (rechazo / as found fuera de tolerancia) y criterio de estabilidad. */
   rowFlags: Record<string, TableRowFlags>; asFoundOut: number; stability: TableStabilityResult | null
@@ -240,8 +304,11 @@ export function evaluateTable(options: unknown, value: string | null | undefined
   }
   if (!object(d) || d.version !== 1 || !Number.isInteger(d.count) || !Array.isArray(d.rows)) return invalid('Registro de tabla inválido')
   const count = d.count as number
-  if (config.rows.mode === 'fixed' ? count !== config.rows.labels.length : count < config.rows.min || count > config.rows.max) return invalid('Cantidad de filas fuera de la configuración')
-  const expected = expectedTableRows(config, count)
+  if (config.rows.mode === 'source') {
+    if (!sourceRows?.length) return invalid('El ITR no tiene la foto de filas del lazo o de la causa')
+    if (count !== sourceRows.length) return invalid('Cantidad de filas distinta de la foto del ITR')
+  } else if (config.rows.mode === 'fixed' ? count !== config.rows.labels.length : count < config.rows.min || count > config.rows.max) return invalid('Cantidad de filas fuera de la configuración')
+  const expected = expectedTableRows(config, count, sourceRows)
   if (d.rows.length !== expected.length) return invalid('Faltan o sobran filas')
   const errors: string[] = []
   const rows: TableRow[] = []
@@ -262,6 +329,12 @@ export function evaluateTable(options: unknown, value: string | null | undefined
     // 1) Columnas capturadas por el inspector.
     for (const column of config.columns) {
       const cell = cells[column.key]
+      if (column.type === 'reference') {
+        // Dato de la foto: lo enviado no cuenta; se muestra el de itrs.source_rows.
+        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid('Registro de tabla inválido')
+        out[column.key] = sourceRefText(column.ref!, sourceRows?.[i]?.refs[column.ref!])
+        continue
+      }
       if (column.type === 'computed' || (column.type === 'result' && column.auto_from)) {
         // Valor derivado: se acepta cualquier valor de la forma correcta y se recalcula abajo.
         if (cell !== undefined && cell !== null && typeof cell !== (column.type === 'computed' ? 'number' : 'string')) return invalid('Registro de tabla inválido')
@@ -437,6 +510,39 @@ export const TABLE_PRESETS: ReadonlyArray<{ id: string; label: string; config: T
       col({ key: 'at', label: 'Fecha y hora', type: 'datetime' }),
       col({ key: 'point', label: 'Punto de muestreo', type: 'text', required: false }),
       col({ key: 'value', label: 'Lectura', type: 'number', unit: '°C' }),
+      col({ key: 'remarks', label: 'Observación', type: 'text', required: false }),
+    ] },
+  },
+  // ── Filas desde la foto del ITR (fase 4-D): loop check por lazo y prueba por causa C&E.
+  {
+    id: 'loop_check', label: 'Loop check: una fila por señal del lazo con su cadena',
+    config: { version: 2, rows: { mode: 'source', source: 'loop_signals', label: 'Señal' }, columns: [
+      col({ key: 'signal_type', label: 'Tipo', type: 'reference', required: false, ref: 'signal_type' }),
+      col({ key: 'range', label: 'Rango', type: 'reference', required: false, ref: 'range' }),
+      col({ key: 'junction_box', label: 'JB', type: 'reference', required: false, ref: 'junction_box' }),
+      col({ key: 'marshalling', label: 'Marshalling', type: 'reference', required: false, ref: 'marshalling' }),
+      col({ key: 'io', label: 'Tarjeta I/O', type: 'reference', required: false, ref: 'io_card' }),
+      col({ key: 'channel', label: 'Canal', type: 'reference', required: false, ref: 'io_channel' }),
+      col({ key: 'dcs_tag', label: 'Tag DCS', type: 'reference', required: false, ref: 'dcs_tag' }),
+      col({ key: 'hmi', label: 'HMI', type: 'reference', required: false, ref: 'hmi_display' }),
+      col({ key: 'wiring', label: 'Cableado, continuidad y polaridad', type: 'result' }),
+      col({ key: 'injected', label: 'Valor aplicado', type: 'number', required: false }),
+      col({ key: 'read', label: 'Lectura en DCS', type: 'number', required: false }),
+      col({ key: 'hmi_ok', label: 'Indicación HMI y alarmas', type: 'result' }),
+      col({ key: 'result', label: 'Resultado', type: 'result' }),
+      col({ key: 'remarks', label: 'Observación', type: 'text', required: false }),
+    ] },
+  },
+  {
+    id: 'ce_test', label: 'Prueba C&E: una fila por efecto de la causa',
+    config: { version: 2, rows: { mode: 'source', source: 'ce_effects', label: 'Efecto' }, columns: [
+      col({ key: 'description', label: 'Descripción', type: 'reference', required: false, ref: 'effect_description' }),
+      col({ key: 'action', label: 'Acción esperada', type: 'reference', required: false, ref: 'action' }),
+      col({ key: 'link', label: 'Cruce', type: 'reference', required: false, ref: 'link' }),
+      col({ key: 'executed', label: 'Ejecutó la acción', type: 'select', options: ['Sí', 'No'] }),
+      col({ key: 'response_s', label: 'Tiempo de respuesta', type: 'number', unit: 's', required: false }),
+      col({ key: 'feedback', label: 'Confirmación (feedback) en DCS', type: 'result' }),
+      col({ key: 'result', label: 'Resultado', type: 'result' }),
       col({ key: 'remarks', label: 'Observación', type: 'text', required: false }),
     ] },
   },

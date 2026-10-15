@@ -5,8 +5,10 @@
 // itr_table_config_valid (SQL). Los presets no fijan tolerancias, span ni límites.
 // v2 (fase 4-C): desviación calculada con tolerancia, resultado automático,
 // as found / as left, fecha y hora, y criterio de estabilidad para series.
+// Fase 4-D: filas desde el lazo (una por señal) o desde la matriz C&E (una por efecto) y
+// columnas de referencia que muestran datos de esa foto.
 
-import { TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TABLE_PRESETS, checkTableConfig, type TableColumn, type TableConfig } from '@/lib/itr/table'
+import { SOURCE_REFS, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TABLE_PRESETS, checkTableConfig, type TableColumn, type TableConfig, type TableSource } from '@/lib/itr/table'
 import { fieldInput, fieldLabel } from './template-builder-shared'
 
 const EMPTY: TableConfig = { version: 1, columns: [], rows: { mode: 'fixed', labels: [] } }
@@ -19,7 +21,7 @@ function nextKey(columns: TableColumn[]): string {
 
 /** La versión 2 solo cuando se usa algo de la v2: las tablas simples siguen siendo v1. */
 function withVersion(config: TableConfig): TableConfig {
-  const v2 = !!config.stability || config.columns.some(c => c.type === 'computed' || c.type === 'datetime' || !!c.auto_from)
+  const v2 = !!config.stability || config.rows.mode === 'source' || config.columns.some(c => c.type === 'computed' || c.type === 'datetime' || c.type === 'reference' || !!c.auto_from)
   return { ...config, version: v2 ? 2 : 1 }
 }
 
@@ -33,10 +35,26 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
   const numberCols = config.columns.filter(c => c.type === 'number')
   const computedCols = config.columns.filter(c => c.type === 'computed')
   const issue = config.columns.length ? checkTableConfig(config).issue : null
+  const source: TableSource | null = config.rows.mode === 'source' ? config.rows.source : null
+
+  function changeRows(mode: string) {
+    if (mode === 'loop_signals' || mode === 'ce_effects') {
+      set({ rows: { mode: 'source', source: mode, label: mode === 'loop_signals' ? 'Señal' : 'Efecto' }, stability: null,
+        // Las referencias del otro origen no aplican: se quitan.
+        columns: config.columns.filter(c => c.type !== 'reference' || (c.ref ?? '') in SOURCE_REFS[mode]) })
+      return
+    }
+    const columns = config.columns.filter(c => c.type !== 'reference')
+    set({ columns, rows: mode === 'variable' ? { mode: 'variable', min: 1, max: 20, label: 'Fila' } : { mode: 'fixed', labels: config.rows.mode === 'fixed' ? config.rows.labels : [] }, stability: mode === 'variable' ? config.stability : null })
+  }
 
   function changeType(index: number, type: TableColumn['type']) {
     const column = config.columns[index]
     const patch: Partial<TableColumn> = { type, options: type === 'select' ? (column.options ?? ['Opción 1']) : null, min: null, max: null, auto_from: undefined, formula: undefined, tolerance: undefined, pass: undefined }
+    if (type === 'reference' && config.rows.mode === 'source') {
+      patch.ref = Object.keys(SOURCE_REFS[config.rows.source])[0]
+      patch.required = false
+    }
     if (type === 'computed') {
       patch.formula = { observed: numberCols[1]?.key ?? numberCols[0]?.key ?? '', reference: numberCols[0]?.key ?? '', mode: 'abs', span: null }
       patch.tolerance = null
@@ -59,14 +77,20 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
 
       <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '10px', marginBottom: '10px' }}>
         <label style={fieldLabel}>Filas
-          <select style={small} value={config.rows.mode} onChange={e => set({ rows: e.target.value === 'variable' ? { mode: 'variable', min: 1, max: 20, label: 'Fila' } : { mode: 'fixed', labels: config.rows.mode === 'fixed' ? config.rows.labels : [] }, stability: e.target.value === 'variable' ? config.stability : null })}>
+          <select style={small} value={source ?? config.rows.mode} onChange={e => changeRows(e.target.value)}>
             <option value="fixed">Fijas (una por línea)</option>
             <option value="variable">Variables (el inspector declara la cantidad)</option>
+            <option value="loop_signals">Desde el lazo (una por señal)</option>
+            <option value="ce_effects">Desde la matriz C&E (una por efecto)</option>
           </select>
         </label>
         {config.rows.mode === 'fixed' ? (
           <label style={fieldLabel}>Etiquetas de fila (máx. 200)
             <textarea rows={3} style={{ ...small, fontFamily: 'monospace' }} value={config.rows.labels.join('\n')} placeholder={'0 %\n25 %\n50 %'} onChange={e => set({ rows: { mode: 'fixed', labels: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) } })} />
+          </label>
+        ) : config.rows.mode === 'source' ? (
+          <label style={fieldLabel}>Nombre de fila (se arma al generar el ITR desde {source === 'loop_signals' ? 'el lazo' : 'la causa'})
+            <input style={small} value={config.rows.label} onChange={e => set({ rows: { ...config.rows, label: e.target.value } as TableConfig['rows'] })} placeholder="Señal" />
           </label>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px', gap: '8px' }}>
@@ -92,17 +116,22 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
                   <option value="result">Resultado</option>
                   <option value="computed">Desviación calculada</option>
                   <option value="datetime">Fecha y hora</option>
+                  {source && <option value="reference">Dato del {source === 'loop_signals' ? 'lazo' : 'efecto'} (solo lectura)</option>}
                 </select>
               </label>
               <label style={fieldLabel}>Unidad<input style={small} value={column.unit ?? ''} disabled={!numeric && column.type !== 'computed'} onChange={e => setColumn(index, { unit: e.target.value || null })} /></label>
               <label style={fieldLabel}>{column.type === 'select' ? 'Opciones (coma)' : 'Criterio'}
-                {column.type === 'select'
+                {column.type === 'reference' && source
+                  ? <select style={small} value={column.ref ?? ''} onChange={e => setColumn(index, { ref: e.target.value })}>
+                      {Object.entries(SOURCE_REFS[source]).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                    </select>
+                  : column.type === 'select'
                   ? <input style={small} value={(column.options ?? []).join(', ')} onChange={e => setColumn(index, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
                   : <input style={{ ...small, color: 'var(--text-muted)' }} disabled value={numeric ? 'min/max opcionales →' : column.type === 'result' ? (column.auto_from ? 'Automático ↓' : 'Aceptado / Rechazado / No aplica') : column.type === 'computed' ? 'Se calcula ↓' : column.type === 'datetime' ? 'AAAA-MM-DD hh:mm' : 'Texto libre'} />}
               </label>
               <label style={fieldLabel}>Mín.<input style={small} type="number" step="any" disabled={!numeric} value={column.min ?? ''} onChange={e => setColumn(index, { min: num(e.target.value) })} /></label>
               <label style={fieldLabel}>Máx.<input style={small} type="number" step="any" disabled={!numeric} value={column.max ?? ''} onChange={e => setColumn(index, { max: num(e.target.value) })} /></label>
-              <label style={{ ...fieldLabel, whiteSpace: 'nowrap' }}>Req.<br /><input type="checkbox" checked={column.required} disabled={column.type === 'computed' || !!column.auto_from} onChange={e => setColumn(index, { required: e.target.checked })} /></label>
+              <label style={{ ...fieldLabel, whiteSpace: 'nowrap' }}>Req.<br /><input type="checkbox" checked={column.required} disabled={column.type === 'computed' || column.type === 'reference' || !!column.auto_from} onChange={e => setColumn(index, { required: e.target.checked })} /></label>
               <button type="button" onClick={() => set({ columns: config.columns.filter((_, i) => i !== index) })} title="Quitar columna" style={{ padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer' }}>×</button>
             </div>
 

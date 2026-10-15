@@ -5,7 +5,7 @@ import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import ContinuityCapture from './ContinuityCapture'
 import TableCapture from './TableCapture'
-import { evaluateTable } from '@/lib/itr/table'
+import { evaluateTable, type SourceRow } from '@/lib/itr/table'
 import { evaluateContinuity } from '@/lib/itr/continuity'
 import MicAppend from './MicAppend'
 import PhotoUpload from './PhotoUpload'
@@ -24,6 +24,7 @@ export default function ItemRow({
   onAttachmentAdded,
   onAttachmentRemoved,
   lang,
+  sourceRows = null,
 }: {
   item: Item
   response: Response | null
@@ -37,6 +38,8 @@ export default function ItemRow({
   onAttachmentAdded: (att: Attachment) => void
   onAttachmentRemoved: (attId: string) => void
   lang: 'es' | 'en'
+  /** Fase 4-D: foto del ITR para tablas con filas desde lazo o matriz C&E. */
+  sourceRows?: SourceRow[] | null
 }) {
   const t = useTranslations('ItrExecution')
   const isPassed = response?.is_passed
@@ -231,8 +234,8 @@ export default function ItemRow({
         />
       )}
 
-      {item.item_type === 'table' && <TableCapture options={item.options} value={response?.value_text ?? null} disabled={!canEdit} onChange={value => {
-        const result = evaluateTable(item.options, value)
+      {item.item_type === 'table' && <TableCapture options={item.options} value={response?.value_text ?? null} sourceRows={sourceRows} disabled={!canEdit} onChange={value => {
+        const result = evaluateTable(item.options, value, sourceRows)
         onSave(item.id, { valueText: value, isPassed: result.hasFail ? false : result.isComplete ? true : null })
       }} />}
 

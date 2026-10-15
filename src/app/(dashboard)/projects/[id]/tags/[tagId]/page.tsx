@@ -107,13 +107,22 @@ export default async function TagDetailPage({
   if (!tag) notFound()
 
   // Templates for this tag's discipline (sequential — needs disciplineId)
-  const { data: templates } = await supabase
+  const { data: allTemplates } = await supabase
     .from('itr_templates')
     .select('id, code, title, title_es, phase_id, equipment_type_id, project_phases(id, code, name, color)')
     .eq('org_id', membership.org_id)
     .eq('is_active', true)
     .eq('discipline_id', tag.disciplines.id)
     .order('code')
+  // Fase 4-D: las plantillas con tabla desde lazo o matriz C&E se generan en Lazos / Matrices C&E, no por tag.
+  const { data: sourceItems } = await supabase
+    .from('itr_template_items')
+    .select('template_id')
+    .in('template_id', (allTemplates ?? []).map(t => t.id))
+    .eq('item_type', 'table')
+    .eq('options->rows->>mode', 'source')
+  const sourceTemplateIds = new Set((sourceItems ?? []).map(i => i.template_id))
+  const templates = (allTemplates ?? []).filter(t => !sourceTemplateIds.has(t.id))
 
   // Matriz de la org: plantillas aceptadas para el tipo de equipo de este tag
   const { data: matrixRows } = tag.equipment_type_id

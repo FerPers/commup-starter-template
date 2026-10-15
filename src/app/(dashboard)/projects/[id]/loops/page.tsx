@@ -1,5 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
+import { isEditor } from '@/lib/auth/permissions'
+import { loadGenerationTemplates, loadMembers, loadSourceItrs } from '@/lib/itr/source-itrs-server'
 import LoopsView from './LoopsView'
 
 export default async function LoopsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -37,11 +39,23 @@ export default async function LoopsPage({ params }: { params: Promise<{ id: stri
     .eq('project_id', id)
     .order('loop_number')
 
+  // Fase 4-D: ITR de loop check por lazo (vigente, desactualizado, resultado por señal) y generación.
+  const canEdit = isEditor(ctx.role)
+  const [loopItrs, templates, members] = await Promise.all([
+    loadSourceItrs(supabase, 'loop', (loops ?? []).map(l => l.id)),
+    canEdit ? loadGenerationTemplates(supabase, ctx.orgId, 'loop_signals') : Promise.resolve([]),
+    canEdit ? loadMembers(supabase, ctx.orgId) : Promise.resolve([]),
+  ])
+
   return (
     <LoopsView
       projectId={project.id}
       projectName={project.name}
       loops={loops ?? []}
+      loopItrs={loopItrs}
+      templates={templates}
+      members={members}
+      canEdit={canEdit}
     />
   )
 }

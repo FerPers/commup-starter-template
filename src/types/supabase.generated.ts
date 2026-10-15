@@ -2037,6 +2037,7 @@ export type Database = {
           progress_pct: number
           project_id: string
           scheduled_date: string | null
+          source_rows: Json | null
           status: Database["public"]["Enums"]["itr_status"]
           subsystem_id: string
           tag_id: string | null
@@ -2053,6 +2054,7 @@ export type Database = {
           progress_pct?: number
           project_id: string
           scheduled_date?: string | null
+          source_rows?: Json | null
           status?: Database["public"]["Enums"]["itr_status"]
           subsystem_id: string
           tag_id?: string | null
@@ -2069,6 +2071,7 @@ export type Database = {
           progress_pct?: number
           project_id?: string
           scheduled_date?: string | null
+          source_rows?: Json | null
           status?: Database["public"]["Enums"]["itr_status"]
           subsystem_id?: string
           tag_id?: string | null
@@ -6949,10 +6952,12 @@ export type Database = {
       ensure_register_types: { Args: { p_org_id: string }; Returns: undefined }
       evaluate_itr_capture: { Args: { p_itr_id: string }; Returns: Json }
       evaluate_itr_continuity: { Args: { p_value: string }; Returns: Json }
-      evaluate_itr_table: {
-        Args: { p_options: Json; p_value: string }
-        Returns: Json
-      }
+      evaluate_itr_table:
+        | { Args: { p_options: Json; p_value: string }; Returns: Json }
+        | {
+            Args: { p_options: Json; p_source_count: number; p_value: string }
+            Returns: Json
+          }
       evaluate_signal_rules_for_batch: {
         Args: { p_batch_id: string }
         Returns: number
@@ -6992,6 +6997,8 @@ export type Database = {
       is_org_editor: { Args: { p_org_id: string }; Returns: boolean }
       is_project_editor: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      itr_cause_source_rows: { Args: { p_cause_id: string }; Returns: Json }
+      itr_loop_source_rows: { Args: { p_loop_id: string }; Returns: Json }
       itr_option_outcomes_valid: {
         Args: { p_options: Json; p_outcomes: Json }
         Returns: boolean

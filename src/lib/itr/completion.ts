@@ -1,5 +1,5 @@
 import { evaluateContinuity } from './continuity'
-import { evaluateTable } from './table'
+import { evaluateTable, type SourceRow } from './table'
 import { evaluateSelectionOutcome } from './selection-outcome'
 import type { ItrTemplateItem, ItrResponse, ItrAttachment } from '@/types/database'
 
@@ -15,6 +15,8 @@ export function evaluateItrCompletion(
   items: readonly CompletionItem[],
   responses: readonly CompletionResponse[],
   attachments: readonly CompletionAttachment[] = [],
+  /** Fase 4-D: foto del ITR (itrs.source_rows) para las tablas con filas desde lazo o matriz C&E. */
+  sourceRows: SourceRow[] | null = null,
 ) {
   const byId = new Map(items.map(item => [item.id, item]))
   const answers = new Map(responses.map(response => [response.item_id, response]))
@@ -58,7 +60,7 @@ export function evaluateItrCompletion(
     if (item.requires_measurement && !hasNumber(answer?.value_numeric)) return false
     switch (item.item_type) {
       case 'continuity': return evaluateContinuity(answer?.value_text).isComplete
-      case 'table': return evaluateTable(item.options, answer?.value_text).isComplete
+      case 'table': return evaluateTable(item.options, answer?.value_text, sourceRows).isComplete
       case 'text': return hasText(answer?.value_text)
       case 'number':
       case 'measurement': return hasNumber(answer?.value_numeric)
@@ -79,7 +81,7 @@ export function evaluateItrCompletion(
   }
   const applicableItems = items.filter(applicable)
   const required = applicableItems.filter(item => item.is_required || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answers.get(item.id)?.value_option).requiresJustification))
-  const rejectedItemIds = applicableItems.filter(item => (item.item_type === 'continuity' && evaluateContinuity(answers.get(item.id)?.value_text).hasFail) || (item.item_type === 'table' && evaluateTable(item.options, answers.get(item.id)?.value_text).hasFail) || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answers.get(item.id)?.value_option).outcome === 'fail')).map(item => item.id)
+  const rejectedItemIds = applicableItems.filter(item => (item.item_type === 'continuity' && evaluateContinuity(answers.get(item.id)?.value_text).hasFail) || (item.item_type === 'table' && evaluateTable(item.options, answers.get(item.id)?.value_text, sourceRows).hasFail) || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answers.get(item.id)?.value_option).outcome === 'fail')).map(item => item.id)
   const missingRequiredItemIds = required.filter(item => !filled(item)).map(item => item.id)
   const completedCount = applicableItems.filter(filled).length
   const completedRequiredCount = required.length - missingRequiredItemIds.length

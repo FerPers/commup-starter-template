@@ -97,6 +97,12 @@ export type ItrData = {
   itr_assignments: Array<{ id: string; user_id: string; role: string; profiles: { full_name: string } | null }>
   itr_responses: Response[]
   itr_signatures: Signature[]
+  /** Fase 4-D: ITR generado desde un lazo o una causa C&E y su foto de filas (inmutable). */
+  loop_id?: string | null
+  ce_cause_id?: string | null
+  source_rows?: Json | null
+  loops?: { id: string; loop_number: string } | null
+  ce_causes?: { id: string; code: string; description: string; ce_matrices: { id: string; code: string } | null } | null
 }
 
 /** Patch camelCase que aceptan upsertResponse / saveWithQueue. */

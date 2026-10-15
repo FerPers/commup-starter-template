@@ -12,6 +12,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { revokeItrApproval } from '@/app/actions/itr-instances'
 import { uploadOrQueuePhoto, pendingAttachment, pendingSignature, signOrQueue } from '@/lib/sync/outbox'
 import { evaluateItrCompletion } from '@/lib/itr/completion'
+import { parseSourceRows } from '@/lib/itr/table'
 import { localItrStatus } from '@/lib/sync/outbox-utils'
 import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
 import { useItrAutosave } from './useItrAutosave'
@@ -197,7 +198,8 @@ export default function ItrExecution({
     })) ?? []
 
   const allItems = sections.flatMap(s => s.itr_template_items)
-  const completion = evaluateItrCompletion(allItems, Object.values(responses), Object.values(attachmentMap).flat())
+  const sourceRows = parseSourceRows(itr.source_rows)
+  const completion = evaluateItrCompletion(allItems, Object.values(responses), Object.values(attachmentMap).flat(), sourceRows)
   const visibleIds = new Set(completion.applicableItemIds)
   const visibleItems = allItems.filter(item => visibleIds.has(item.id))
   const criticalBlocked = visibleItems.filter(
@@ -282,6 +284,14 @@ export default function ItrExecution({
                 {itr.itr_number}
               </span>
             </div>
+            {(itr.loops ?? itr.ce_causes) && (
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                {itr.loops
+                  ? <>Loop check del lazo <a href={`/projects/${projectId}/loops`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{itr.loops.loop_number}</a></>
+                  : <>Prueba de la causa <a href={`/projects/${projectId}/ce-matrices/${itr.ce_causes!.ce_matrices?.id ?? ''}`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{itr.ce_causes!.ce_matrices?.code} · {itr.ce_causes!.code}</a> — {itr.ce_causes!.description}</>}
+                {' '}· filas tomadas al generar el ITR ({sourceRows?.length ?? 0})
+              </div>
+            )}
             {template && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{template.title}</span>
@@ -484,6 +494,7 @@ export default function ItrExecution({
                   response={responses[item.id] ?? null}
                   canEdit={canCapture}
                   onSave={saveResponse}
+                  sourceRows={sourceRows}
                   onAddPunch={openPunchModal}
                   itrId={itr.id}
                   projectId={projectId}

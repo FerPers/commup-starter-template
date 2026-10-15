@@ -1,6 +1,6 @@
 'use client'
 
-import { parseTableConfig } from '@/lib/itr/table'
+import { SOURCE_REFS, TABLE_SOURCE_LABELS, parseTableConfig } from '@/lib/itr/table'
 
 import type { Json } from '@/types/supabase.generated'
 import { useState } from 'react'
@@ -73,12 +73,14 @@ function ItemControl({ item }: { item: PreviewItem }) {
     const config = parseTableConfig(item.options)
     if (!config) return <p style={{ color: '#b91c1c' }}>Tabla sin configuración válida.</p>
     const rows = config.rows.mode === 'fixed' ? config.rows.labels : [`${config.rows.label} 1`, `${config.rows.label} 2`, '…']
+    const source = config.rows.mode === 'source' ? config.rows.source : null
     return (
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', fontSize: '12px', width: '100%' }}>
           <thead><tr><th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)' }}>{config.rows.mode === 'fixed' ? 'Fila' : config.rows.label}</th>{config.columns.map(c => <th key={c.key} style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.label}{c.unit ? ` (${c.unit})` : ''}</th>)}</tr></thead>
-          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--gray-400)' }}>{c.type === 'result' ? (c.auto_from ? 'Automático' : 'Aceptado / Rechazado / N.A.') : c.type === 'computed' ? `calculado${c.tolerance !== null && c.tolerance !== undefined ? ` ±${c.tolerance}` : ''}${c.pass === 'as_found' ? ' (as found)' : ''}` : c.type === 'datetime' ? 'AAAA-MM-DD hh:mm' : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
+          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--gray-400)' }}>{c.type === 'reference' && source ? `‹${SOURCE_REFS[source][c.ref ?? ''] ?? c.ref}›` : c.type === 'result' ? (c.auto_from ? 'Automático' : 'Aceptado / Rechazado / N.A.') : c.type === 'computed' ? `calculado${c.tolerance !== null && c.tolerance !== undefined ? ` ±${c.tolerance}` : ''}${c.pass === 'as_found' ? ' (as found)' : ''}` : c.type === 'datetime' ? 'AAAA-MM-DD hh:mm' : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
         </table>
+        {source && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Filas desde {TABLE_SOURCE_LABELS[source].toLowerCase()}: se arman al generar el ITR (una por {source === 'loop_signals' ? 'señal' : 'efecto'}); los datos ‹entre comillas› se toman de esa foto.</p>}
         {config.rows.mode === 'variable' && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Filas variables: el inspector declara entre {config.rows.min} y {config.rows.max}.</p>}
         {config.stability && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Estabilidad: las últimas {config.stability.last_n} lecturas{config.stability.min !== null ? ` ≥ ${config.stability.min}` : ''}{config.stability.max !== null ? ` ≤ ${config.stability.max}` : ''}.</p>}
       </div>

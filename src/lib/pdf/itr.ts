@@ -1,5 +1,5 @@
 import { evaluateContinuity } from '../itr/continuity'
-import { evaluateTable } from '../itr/table'
+import { evaluateTable, parseSourceRows } from '../itr/table'
 import { drawItrSignatures } from './itr-signatures'
 import { calibrationState, isUsable } from '../test-equipment/calibration'
 /**
@@ -83,6 +83,10 @@ export type ItrPdfData = {
   itr_attachments?: ItrAttachmentRef[]
   /** Fase 4-B: equipos de prueba usados, con la calibración copiada al momento de uso. */
   itr_test_equipment?: ItrTestEquipmentRef[]
+  /** Fase 4-D: foto de filas (señales del lazo / efectos de la causa) y su origen. */
+  source_rows?: unknown
+  loops?: { loop_number: string } | null
+  ce_causes?: { code: string; description: string; ce_matrices: { code: string } | null } | null
 }
 
 export type ItrTestEquipmentRef = {
@@ -197,6 +201,8 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
   const metas: Array<[string, string | null | undefined]> = [
     ['Proyecto / Project',  itr.projects ? `${itr.projects.code} — ${itr.projects.name}` : null],
     ['Tag',                 itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : null],
+    ['Lazo / Loop',         itr.loops?.loop_number],
+    ['Causa C&E / C&E cause', itr.ce_causes ? `${itr.ce_causes.ce_matrices?.code ?? ''} · ${itr.ce_causes.code} — ${itr.ce_causes.description}` : null],
     ['Fabricante / Manufacturer', itr.tags?.manufacturer],
     ['Modelo / Model',      itr.tags?.model],
     ['Serie / Serial',      itr.tags?.serial_number],
@@ -358,7 +364,7 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
         r.paragraph(`${item.item_number ?? ''} ${item.description_es?.trim() ? item.description_es.trim() : item.description}`, {size: 9})
         if (item.description_es?.trim() && item.description_es.trim() !== item.description.trim()) r.paragraph(item.description, {size: 8, oblique: true})
         if (item.acceptance_text) r.paragraph(`Criterio: ${item.acceptance_text}`, {size: 8})
-        const evaluation = evaluateTable(item.options, resp?.value_text)
+        const evaluation = evaluateTable(item.options, resp?.value_text, parseSourceRows(itr.source_rows))
         if (!evaluation.config) {
           r.paragraph('Tabla sin configuración válida en la plantilla.', {color: COLOR.red})
         } else if (!evaluation.data) {

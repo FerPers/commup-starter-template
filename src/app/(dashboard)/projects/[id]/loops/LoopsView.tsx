@@ -2,6 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import GenerateSourceItrsModal, { type GenerationMember, type GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
+import { ITR_STATUS_LABELS } from '@/lib/ce/test-status'
+import type { SourceItrInfo } from '@/lib/itr/source-itrs-server'
 
 const STATUS_COLORS: Record<string, string> = {
   not_started: 'var(--gray-400)',
@@ -58,16 +61,28 @@ export default function LoopsView({
   projectId,
   projectName,
   loops,
+  loopItrs = {},
+  templates = [],
+  members = [],
+  canEdit = false,
 }: {
   projectId: string
   projectName: string
   loops: LoopRow[]
+  /** Fase 4-D: ITR de loop check vigente por lazo. */
+  loopItrs?: Record<string, SourceItrInfo>
+  templates?: GenerationTemplate[]
+  members?: GenerationMember[]
+  canEdit?: boolean
 }) {
   const t = useTranslations('Signals')
 
   const [search, setSearch]         = useState('')
   const [statusFilter, setStatus]   = useState<string>('all')
   const [selected, setSelected]     = useState<LoopRow | null>(null)
+  const [generate, setGenerate]     = useState<Array<{ id: string; label: string; revision?: boolean }> | null>(null)
+  // Lazos con señales y sin ITR de loop check: candidatos a «Generar faltantes».
+  const missing = loops.filter(l => l.signals.length > 0 && !loopItrs[l.id])
 
   const filtered = useMemo(() => {
     return loops.filter(l => {
@@ -103,6 +118,13 @@ export default function LoopsView({
           {t('loops.subtitle', { count: loops.length })}
         </p>
       </div>
+
+      {canEdit && missing.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', fontSize: '13px', color: 'var(--text-muted)' }}>
+          {missing.length} lazo{missing.length === 1 ? '' : 's'} con señales sin ITR de loop check.
+          <button type="button" onClick={() => setGenerate(missing.map(l => ({ id: l.id, label: l.loop_number })))} style={{ padding: '7px 12px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>Generar faltantes ({missing.length})</button>
+        </div>
+      )}
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -144,7 +166,7 @@ export default function LoopsView({
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ background: 'var(--gray-50)', borderBottom: '2px solid var(--border)' }}>
-                  {[t('loops.col.loopNumber'), t('loops.col.description'), t('loops.col.subsystem'), t('loops.col.discipline'), t('loops.col.tags'), 'Señales', t('col.status'), ''].map(h => (
+                  {[t('loops.col.loopNumber'), t('loops.col.description'), t('loops.col.subsystem'), t('loops.col.discipline'), t('loops.col.tags'), 'Señales', 'Loop check', t('col.status'), ''].map(h => (
                     <th key={h} style={{
                       padding: '10px 12px', textAlign: 'left',
                       fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px',
@@ -156,7 +178,7 @@ export default function LoopsView({
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '13px' }}>
+                    <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '13px' }}>
                       {t('noResults')}
                     </td>
                   </tr>
@@ -205,6 +227,9 @@ export default function LoopsView({
                         {loop.signals.length}
                         {loop.signals.some(s => CHAIN.some(c => !s[c.key])) && <span title="Cadena incompleta: faltan datos para el loop check" style={{ color: '#b45309', marginLeft: '4px' }}>⚠</span>}
                       </td>
+                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
+                        <LoopItrCell info={loopItrs[loop.id]} projectId={projectId} />
+                      </td>
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
@@ -231,6 +256,15 @@ export default function LoopsView({
                   {selected.loop_number} — {t('loops.tagsInLoop')}
                 </span>
                 <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '16px' }}>✕</button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', fontSize: '12px' }}>
+                <strong style={{ color: 'var(--text-strong)' }}>Loop check:</strong>
+                <LoopItrCell info={loopItrs[selected.id]} projectId={projectId} />
+                {canEdit && selected.signals.length > 0 && (
+                  <button type="button" onClick={() => setGenerate([{ id: selected.id, label: selected.loop_number, revision: !!loopItrs[selected.id] }])} style={{ padding: '6px 10px', borderRadius: '7px', border: '1px solid var(--border)', background: 'var(--card-bg)', fontSize: '12px', cursor: 'pointer' }}>
+                    {loopItrs[selected.id] ? 'Generar revisión (R2…)' : 'Generar ITR de loop check'}
+                  </button>
+                )}
               </div>
               {selected.loop_tags.length === 0 && <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>Sin instrumentos asociados.</p>}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -278,6 +312,23 @@ export default function LoopsView({
           </div>
         </div>
       )}
+      {generate && <GenerateSourceItrsModal projectId={projectId} kind="loop" items={generate} templates={templates} members={members} onClose={() => setGenerate(null)} />}
     </div>
+  )
+}
+
+/** Estado del ITR de loop check de un lazo: número (enlace), estado y aviso si la foto quedó desactualizada. */
+function LoopItrCell({ info, projectId }: { info: SourceItrInfo | undefined; projectId: string }) {
+  if (!info) return <span style={{ color: 'var(--gray-400)', fontSize: '12px' }}>Sin ITR</span>
+  const results = Object.values(info.rows)
+  const failed = results.filter(r => r === 'fail').length
+  const passed = results.filter(r => r === 'pass').length
+  const color = info.status === 'approved' ? '#047857' : failed ? '#b91c1c' : 'var(--text-strong)'
+  return (
+    <span style={{ fontSize: '12px', display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+      <a href={info.tagId ? `/projects/${projectId}/tags/${info.tagId}/itrs/${info.id}` : '#'} style={{ fontFamily: 'monospace', fontWeight: 600, color }}>{info.itrNumber}</a>
+      <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUS_LABELS[info.status] ?? info.status} · {passed}/{results.length}{failed ? ` · ${failed} ✗` : ''}</span>
+      {info.outdated && <span title="El lazo cambió (señales o cadena) después de generar el ITR" style={{ color: '#b45309', fontWeight: 600 }}>⚠ desactualizado</span>}
+    </span>
   )
 }

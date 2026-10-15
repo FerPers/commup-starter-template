@@ -26,6 +26,9 @@ export async function GET(
       template_id,
       project_id,
       tag_id,
+      source_rows,
+      loops ( loop_number ),
+      ce_causes ( code, description, ce_matrices ( code ) ),
       itr_templates (
         code,
         title,

@@ -3,11 +3,16 @@
 // Editor de una matriz C&E: causas en filas, efectos en columnas y cruces en las celdas
 // («X» directo, «T5s» con retardo). Al pulsar una celda se elige directo / con retardo / quitar.
 // Causas y efectos se dan de alta y se editan en el panel lateral.
+// Sesión 2: cada causa se prueba con su ITR (I30C); la columna «Prueba» muestra su estado y cada
+// celda el resultado de su efecto en ese ITR (✓ aprobado, ✗ rechazado).
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 import { deleteCeMatrix, deleteCeRow, saveCeCause, saveCeEffect, setCeLink } from '@/app/actions/ce-matrix'
+import GenerateSourceItrsModal, { type GenerationMember, type GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
+import { ITR_STATUS_LABELS } from '@/lib/ce/test-status'
+import type { SourceItrInfo } from '@/lib/itr/source-itrs-server'
 import {
   CE_ACTIONS, CE_ACTION_LABELS, CE_VOTINGS, CE_VOTING_LABELS, linkLabel, matrixGaps, nextSeq,
   type CeAction, type CeCause, type CeEffect, type CeLink, type CeVoting,
@@ -24,7 +29,7 @@ const primary = { padding: '8px 12px', borderRadius: '7px', border: 0, backgroun
 const secondary = { padding: '8px 12px', borderRadius: '7px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '12px', cursor: 'pointer' } as const
 const danger = { ...secondary, color: '#b91c1c', borderColor: '#fecaca' } as const
 
-export default function CeMatrixEditor({ projectId, projectName, matrix, causes, effects, links, tagNumbers, canEdit }: {
+export default function CeMatrixEditor({ projectId, projectName, matrix, causes, effects, links, tagNumbers, canEdit, causeItrs = {}, templates = [], members = [] }: {
   projectId: string
   projectName: string
   matrix: { id: string; code: string; title: string; revision: string | null; sourceDocument: string | null; system: string | null }
@@ -33,11 +38,18 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
   links: CeLink[]
   tagNumbers: string[]
   canEdit: boolean
+  causeItrs?: Record<string, SourceItrInfo>
+  templates?: GenerationTemplate[]
+  members?: GenerationMember[]
 }) {
   const router = useRouter()
   const [panel, setPanel] = useState<Panel>(null)
   const [error, setError] = useState('')
   const [pending, start] = useTransition()
+  const [generate, setGenerate] = useState<Array<{ id: string; label: string; revision?: boolean }> | null>(null)
+  const linkedCauseIds = new Set(links.map(l => l.cause_id))
+  const missing = causes.filter(c => linkedCauseIds.has(c.id) && !causeItrs[c.id])
+  const tested = causes.filter(c => causeItrs[c.id]?.status === 'approved').length
 
   const linkMap = useMemo(() => new Map(links.map(l => [`${l.cause_id}|${l.effect_id}`, l])), [links])
   const gaps = useMemo(() => matrixGaps(causes, effects, links), [causes, effects, links])
@@ -79,12 +91,13 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}><span style={{ fontFamily: 'monospace' }}>{matrix.code}</span> · {matrix.title}</h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
             {[matrix.system, matrix.revision && `Rev. ${matrix.revision}`, matrix.sourceDocument].filter(Boolean).join(' · ') || 'Sin sistema ni documento fuente'}
-            {' · '}{causes.length} causas · {effects.length} efectos · {links.length} cruces
+            {' · '}{causes.length} causas · {effects.length} efectos · {links.length} cruces · {tested}/{causes.length} causas con prueba aprobada
           </p>
         </div>
         {canEdit && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button type="button" style={primary} onClick={() => { setError(''); setPanel({ kind: 'cause', row: null }) }}>+ Causa</button>
           <button type="button" style={primary} onClick={() => { setError(''); setPanel({ kind: 'effect', row: null }) }}>+ Efecto</button>
+          {missing.length > 0 && <button type="button" style={secondary} onClick={() => setGenerate(missing.map(c => ({ id: c.id, label: c.code })))}>Generar pruebas faltantes ({missing.length})</button>}
           <button type="button" style={danger} disabled={pending} onClick={removeMatrix}>Borrar matriz</button>
         </div>}
       </div>
@@ -105,6 +118,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
               <thead>
                 <tr>
                   <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 3, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', minWidth: '280px' }}>Causa \ Efecto</th>
+                  <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-muted)', minWidth: '150px' }}>Prueba (ITR)</th>
                   {effects.map(e => (
                     <th key={e.id} scope="col" title={`${e.code} — ${e.description}${e.tag_number ? ` (${e.tag_number})` : ''}`} style={{ position: 'sticky', top: 0, zIndex: 2, background: loneEffects.has(e.id) ? '#fffbeb' : 'var(--gray-50)', borderBottom: '1px solid var(--border)', padding: '6px 4px', verticalAlign: 'bottom' }}>
                       <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'effect', row: e }) }} style={{ border: 0, background: 'transparent', cursor: canEdit ? 'pointer' : 'default', writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)', maxHeight: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}>
@@ -124,13 +138,18 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
                       </div>
                     </button>
                   </th>
+                  <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                    <CauseItrCell info={causeItrs[c.id]} projectId={projectId} />
+                  </td>
                   {effects.map(e => {
                     const link = linkMap.get(`${c.id}|${e.id}`)
+                    const tested = link ? causeItrs[c.id]?.rows[e.id] : undefined
                     const active = panel?.kind === 'cell' && panel.cause.id === c.id && panel.effect.id === e.id
                     return (
-                      <td key={e.id} aria-label={`${c.code} × ${e.code}: ${link ? linkLabel(link) : 'sin cruce'}`} style={cellStyle(link, active)}
+                      <td key={e.id} aria-label={`${c.code} × ${e.code}: ${link ? linkLabel(link) : 'sin cruce'}${tested === 'pass' ? ', prueba aprobada' : tested === 'fail' ? ', prueba rechazada' : ''}`}
+                        style={{ ...cellStyle(link, active), ...(tested === 'pass' ? { background: '#047857', color: '#fff' } : tested === 'fail' ? { background: '#b91c1c', color: '#fff' } : {}) }}
                         onClick={() => { if (canEdit) { setError(''); setPanel({ kind: 'cell', cause: c, effect: e }) } }}>
-                        {linkLabel(link)}
+                        {linkLabel(link)}{tested === 'pass' ? ' ✓' : tested === 'fail' ? ' ✗' : ''}
                       </td>
                     )
                   })}
@@ -144,6 +163,14 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
           <aside style={{ flex: '0 1 340px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px' }}>
             {panel.kind === 'cell' && <CellPanel key={`${panel.cause.id}|${panel.effect.id}`} cause={panel.cause} effect={panel.effect} link={linkMap.get(`${panel.cause.id}|${panel.effect.id}`)} pending={pending}
               onSave={delay => run(() => setCeLink({ projectId, matrixId: matrix.id, causeId: panel.cause.id, effectId: panel.effect.id, delay }))} onClose={() => setPanel(null)} />}
+            {panel.kind === 'cause' && panel.row && canEdit && linkedCauseIds.has(panel.row.id) && (
+              <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', fontSize: '12px' }}>
+                <div style={{ marginBottom: '6px' }}><strong>Prueba:</strong> <CauseItrCell info={causeItrs[panel.row.id]} projectId={projectId} /></div>
+                <button type="button" style={secondary} onClick={() => setGenerate([{ id: panel.row!.id, label: panel.row!.code, revision: !!causeItrs[panel.row!.id] }])}>
+                  {causeItrs[panel.row.id] ? 'Generar revisión (R2…)' : 'Generar ITR de prueba'}
+                </button>
+              </div>
+            )}
             {panel.kind === 'cause' && <CauseForm key={panel.row?.id ?? `new-${causes.length}`} row={panel.row} seq={nextSeq(causes)} pending={pending}
               onSave={input => run(() => saveCeCause({ projectId, matrixId: matrix.id, ...input }), !!panel.row)}
               onDelete={panel.row ? () => { if (window.confirm(`¿Borrar la causa ${panel.row!.code} y sus cruces?`)) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'cause', id: panel.row!.id })) } : undefined}
@@ -156,6 +183,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
           </aside>
         )}
       </div>
+      {generate && <GenerateSourceItrsModal projectId={projectId} kind="cause" items={generate} templates={templates} members={members} onClose={() => setGenerate(null)} />}
       <datalist id="ce-tags">{tagNumbers.map(t => <option key={t} value={t} />)}</datalist>
     </div>
   )
@@ -248,4 +276,17 @@ function FormButtons({ row, pending, onDelete, onClose }: { row: boolean; pendin
     {onDelete && <button type="button" style={danger} disabled={pending} onClick={onDelete}>Borrar</button>}
     <button type="button" style={secondary} onClick={onClose}>Cerrar</button>
   </div>
+}
+
+/** Estado del ITR de prueba de una causa: número (enlace), estado y aviso si la matriz cambió después. */
+function CauseItrCell({ info, projectId }: { info: SourceItrInfo | undefined; projectId: string }) {
+  if (!info) return <span style={{ color: 'var(--gray-400)' }}>Sin ITR</span>
+  const color = info.status === 'approved' ? '#047857' : Object.values(info.rows).includes('fail') ? '#b91c1c' : 'var(--text-strong)'
+  return (
+    <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <a href={info.tagId ? `/projects/${projectId}/tags/${info.tagId}/itrs/${info.id}` : '#'} style={{ fontFamily: 'monospace', fontWeight: 600, color }}>{info.itrNumber}</a>
+      <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUS_LABELS[info.status] ?? info.status}</span>
+      {info.outdated && <span title="La causa cambió de efectos o de cruces después de generar el ITR" style={{ color: '#b45309', fontWeight: 600 }}>⚠ desactualizado</span>}
+    </span>
+  )
 }

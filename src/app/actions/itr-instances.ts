@@ -1,7 +1,7 @@
 'use server'
 
 import { evaluateContinuity } from '@/lib/itr/continuity'
-import { evaluateTable } from '@/lib/itr/table'
+import { evaluateTable, parseSourceRows } from '@/lib/itr/table'
 import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
@@ -160,13 +160,14 @@ export const upsertResponse = withAuth(
     // status al final y pisaría 'approved' con 'in_progress'/'completed' (bug ses15).
     const { data: itrRow, error: itrReadError } = await ctx.supabase
       .from('itrs')
-      .select('status, template_id, project_id')
+      .select('status, template_id, project_id, source_rows')
       .eq('id', itrId)
       .single()
     if (itrReadError || !itrRow) return { error: 'ITR no encontrado o no accesible' }
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
     if (!access.ok) return { error: access.error }
     const templateId = itrRow.template_id
+    const sourceRows = parseSourceRows(itrRow.source_rows)
     if (input.templateId !== templateId) {
       return { error: 'La revisión indicada no corresponde a este ITR' }
     }
@@ -228,7 +229,7 @@ export const upsertResponse = withAuth(
       patch.is_passed = result.hasFail ? false : result.isComplete ? true : null
     }
     if (item.item_type === 'table') {
-      const result = evaluateTable(item.options, 'valueText' in input ? input.valueText : existing?.value_text)
+      const result = evaluateTable(item.options, 'valueText' in input ? input.valueText : existing?.value_text, sourceRows)
       if (!result.config) return { error: 'La plantilla no define una tabla válida para esta casilla' }
       if (('valueText' in input ? input.valueText : existing?.value_text) && !result.data) return { error: 'El registro de la tabla no corresponde a su configuración' }
       patch.is_passed = result.hasFail ? false : result.isComplete ? true : null
@@ -264,7 +265,7 @@ export const upsertResponse = withAuth(
       || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
       return { error: 'La respuesta se guardó, pero no se pudo comprobar el avance del ITR' }
     }
-    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
+    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data, sourceRows)
     const applicableIds = new Set(completion.applicableItemIds)
     const criticalIds = new Set(itemsResult.data.filter(item => item.is_critical && applicableIds.has(item.id)).map(item => item.id))
     const hasCriticalFail = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => criticalIds.has(response.item_id) && response.is_passed === false)
@@ -306,7 +307,7 @@ export const saveItrAttachment = withAuth(
     const { itrId, itemId, storagePath, fileType, latitude, longitude, projectId, tagId } = input
 
     const { data: itr, error: itrError } = await ctx.supabase.from('itrs')
-      .select('template_id, project_id, tag_id, status').eq('id', itrId).single()
+      .select('template_id, project_id, tag_id, status, source_rows').eq('id', itrId).single()
     if (itrError || !itr) return { error: 'ITR no encontrado' }
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itr.project_id)
     if (!access.ok) return { error: access.error }
@@ -350,7 +351,7 @@ export const saveItrAttachment = withAuth(
     if (itemsResult.error || responsesResult.error || attachmentsResult.error || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
       return { error: 'La evidencia cambió, pero no se pudo recalcular el avance; vuelve a intentarlo' }
     }
-    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
+    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data, parseSourceRows(itr.source_rows))
     const applicable = new Set(completion.applicableItemIds)
     const critical = new Set(itemsResult.data.filter(item => item.is_critical && applicable.has(item.id)).map(item => item.id))
     const rejected = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => critical.has(response.item_id) && response.is_passed === false)
@@ -382,7 +383,7 @@ export const deleteItrAttachment = withAuth(
     const { attachmentId, projectId, tagId, itrId } = input
 
     const { data: itr, error: itrError } = await ctx.supabase.from('itrs')
-      .select('template_id, project_id, tag_id, status').eq('id', itrId).single()
+      .select('template_id, project_id, tag_id, status, source_rows').eq('id', itrId).single()
     if (itrError || !itr) return { error: 'ITR no encontrado' }
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itr.project_id)
     if (!access.ok) return { error: access.error }
@@ -415,7 +416,7 @@ export const deleteItrAttachment = withAuth(
     if (itemsResult.error || responsesResult.error || attachmentsResult.error || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
       return { error: 'La evidencia cambió, pero no se pudo recalcular el avance; vuelve a intentarlo' }
     }
-    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data)
+    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data, parseSourceRows(itr.source_rows))
     const applicable = new Set(completion.applicableItemIds)
     const critical = new Set(itemsResult.data.filter(item => item.is_critical && applicable.has(item.id)).map(item => item.id))
     const rejected = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => critical.has(response.item_id) && response.is_passed === false)

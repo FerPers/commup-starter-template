@@ -19,7 +19,8 @@ export default async function ItrExecutionPage({
   const { data: itr } = await supabase
     .from('itrs')
     .select(`
-      id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id,
+      id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id, loop_id, ce_cause_id, source_rows,
+      loops(id, loop_number), ce_causes(id, code, description, ce_matrices(id, code)),
       itr_templates(
         id, code, title, version, requires_test_equipment,
         itr_template_sections(
