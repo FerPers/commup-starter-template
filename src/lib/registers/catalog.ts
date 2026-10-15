@@ -101,6 +101,7 @@ export const REGISTER_CATALOG: RegisterTypeDef[] = [
   {
     kind: 'test_pack', prefix: 'TPK', defaultBlocks: 'first', tagRoles: ['line', 'gauge'],
     fields: [
+      { key: 'pack_ref', type: 'text' },
       { key: 'test_type', type: 'select', options: ['hydrostatic', 'pneumatic', 'service'], requiredFor: 'authorized' },
       { key: 'medium', type: 'select', options: ['water', 'air', 'nitrogen', 'other'], requiredFor: 'authorized' },
       { key: 'design_pressure', type: 'number', unit: 'barg' },

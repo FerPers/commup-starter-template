@@ -2705,7 +2705,8 @@
       "hold_minutes": "Hold time",
       "achieved_pressure": "Achieved pressure",
       "result": "Result",
-      "witness": "Witness"
+      "witness": "Witness",
+      "pack_ref": "Client pack number"
     },
     "option": {
       "category": {
@@ -2772,7 +2773,8 @@
       "save": "Save changes",
       "saved": "Changes saved.",
       "requiredFor": "required for \"{status}\"",
-      "fields": "Register data"
+      "fields": "Register data",
+      "linkTo": "It will be linked to {number}."
     },
     "detail": {
       "back": "Project registers",
@@ -2796,7 +2798,17 @@
         "updated": "Data updated",
         "transition": "{from} → {to}"
       },
-      "rejected": "The test was rejected: repeat the test (new test pack) before reinstating or verifying."
+      "rejected": "The test was rejected: repeat the test (new test pack) before reinstating or verifying.",
+      "openBlinds": "Note: blinds {list} are still installed. You can verify the pack; each blind keeps blocking its gate until removed and verified.",
+      "label": "Print QR label",
+      "linkedBlinds": "Test blinds",
+      "linked": "Linked registers",
+      "linkedBlindsHelp": "Blinds installed for this test. Afterwards they are removed and verified in their own register.",
+      "unlink": "Unlink",
+      "noLinked": "No linked registers.",
+      "pickBlind": "Link an existing blind…",
+      "link": "Link",
+      "newBlind": "New blind for this pack"
     },
     "admin": {
       "title": "Controlled registers",
@@ -2805,6 +2817,74 @@
       "blocks": "Blocks gate",
       "none": "Does not block",
       "saved": "Saved."
+    },
+    "testPacksLink": "Test packs",
+    "printLabels": "QR labels",
+    "testPacks": {
+      "title": "Test packs",
+      "subtitle": "Pressure test progress by pack, line and system. A line is tested once a pack that contains it is verified.",
+      "labels": "QR labels",
+      "import": "Import Excel",
+      "new": "New test pack",
+      "kpi": {
+        "lines": "Lines",
+        "tested": "Tested",
+        "testedHint": "{n} lines",
+        "inTest": "Under test",
+        "pending": "Pending",
+        "openPacks": "Open packs",
+        "packsHint": "of {n} packs"
+      },
+      "bySystem": "Progress by system",
+      "systemLine": "{tested}/{total} · {pct}%",
+      "tab": {
+        "packs": "Packs",
+        "lines": "Lines"
+      },
+      "search": "Search pack or line…",
+      "allStates": "All states",
+      "lineState": {
+        "pending": "Pending",
+        "in_test": "Under test",
+        "tested": "Tested"
+      },
+      "col": {
+        "pack": "Pack",
+        "title": "Title",
+        "system": "System",
+        "lines": "Lines",
+        "blinds": "Blinds",
+        "status": "Status",
+        "progress": "Progress",
+        "line": "Line",
+        "packs": "Packs",
+        "lineState": "Line state"
+      },
+      "blindsCount": "{open} of {total} installed",
+      "emptyPacks": "No test packs yet. Create them one by one or import the line list.",
+      "emptyLines": "No lines assigned to packs.",
+      "importer": {
+        "title": "Import test packs and line list",
+        "template": "Download template",
+        "close": "Close",
+        "cancel": "Cancel",
+        "importing": "Importing…",
+        "submit": "Import",
+        "help": "\"Packs\" sheet: pack number (the client's, e.g. TP-101, or CommUp's TPK), title, system, test type, medium, pressures and hold time. \"Lines\" sheet: line (existing tag) and pack. New packs are created and open ones are completed; lines are added, never removed. Lines that do not exist as tags are reported.",
+        "file": "Excel file",
+        "nothingFound": "No packs or lines sheet found (TEST PACK and LINE columns).",
+        "readError": "The file could not be read.",
+        "sheetPacks": "Packs",
+        "sheetLines": "Lines",
+        "preview": "{packs} packs and {lines} lines ready to import.",
+        "skipped": "{count} rows with problems (skipped):",
+        "done": "Done: {created} packs created, {updated} updated, {lines} lines linked."
+      }
+    },
+    "labels": {
+      "scan": "Scan with CommUp to see the current status of the register.",
+      "system": "System",
+      "printed": "CommUp · controlled register labels · printed {date}"
     }
   }
 }

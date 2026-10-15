@@ -2705,7 +2705,8 @@
       "hold_minutes": "Tiempo de sostenimiento",
       "achieved_pressure": "Presión alcanzada",
       "result": "Resultado",
-      "witness": "Testigo"
+      "witness": "Testigo",
+      "pack_ref": "N.º de pack del cliente"
     },
     "option": {
       "category": {
@@ -2772,7 +2773,8 @@
       "save": "Guardar cambios",
       "saved": "Cambios guardados.",
       "requiredFor": "obligatorio para «{status}»",
-      "fields": "Datos del registro"
+      "fields": "Datos del registro",
+      "linkTo": "Quedará vinculado a {number}."
     },
     "detail": {
       "back": "Registros del proyecto",
@@ -2796,7 +2798,17 @@
         "updated": "Datos actualizados",
         "transition": "{from} → {to}"
       },
-      "rejected": "La prueba fue rechazada: repite la prueba (nuevo test pack) antes de restituir o verificar."
+      "rejected": "La prueba fue rechazada: repite la prueba (nuevo test pack) antes de restituir o verificar.",
+      "openBlinds": "Atención: siguen instaladas las ciegas {list}. Puedes verificar el pack; cada ciega seguirá bloqueando su gate hasta retirarse y verificarse.",
+      "label": "Imprimir etiqueta QR",
+      "linkedBlinds": "Ciegas de la prueba",
+      "linked": "Registros vinculados",
+      "linkedBlindsHelp": "Ciegas instaladas para esta prueba. Al terminar se retiran y se verifican en su propio registro.",
+      "unlink": "Desvincular",
+      "noLinked": "Sin registros vinculados.",
+      "pickBlind": "Vincular una ciega existente…",
+      "link": "Vincular",
+      "newBlind": "Nueva ciega para este pack"
     },
     "admin": {
       "title": "Registros controlados",
@@ -2805,6 +2817,74 @@
       "blocks": "Bloquea el gate",
       "none": "No bloquea",
       "saved": "Guardado."
+    },
+    "testPacksLink": "Test packs",
+    "printLabels": "Etiquetas QR",
+    "testPacks": {
+      "title": "Test packs",
+      "subtitle": "Avance de las pruebas de presión por pack, por línea y por sistema. Una línea queda probada cuando se verifica un pack que la contiene.",
+      "labels": "Etiquetas QR",
+      "import": "Importar Excel",
+      "new": "Nuevo test pack",
+      "kpi": {
+        "lines": "Líneas",
+        "tested": "Probadas",
+        "testedHint": "{n} líneas",
+        "inTest": "En prueba",
+        "pending": "Pendientes",
+        "openPacks": "Packs abiertos",
+        "packsHint": "de {n} packs"
+      },
+      "bySystem": "Avance por sistema",
+      "systemLine": "{tested}/{total} · {pct}%",
+      "tab": {
+        "packs": "Packs",
+        "lines": "Líneas"
+      },
+      "search": "Buscar pack o línea…",
+      "allStates": "Todos los estados",
+      "lineState": {
+        "pending": "Pendiente",
+        "in_test": "En prueba",
+        "tested": "Probada"
+      },
+      "col": {
+        "pack": "Pack",
+        "title": "Título",
+        "system": "Sistema",
+        "lines": "Líneas",
+        "blinds": "Ciegas",
+        "status": "Estado",
+        "progress": "Avance",
+        "line": "Línea",
+        "packs": "Packs",
+        "lineState": "Estado de la línea"
+      },
+      "blindsCount": "{open} de {total} instaladas",
+      "emptyPacks": "No hay test packs. Créalos uno a uno o importa el line list.",
+      "emptyLines": "No hay líneas asignadas a packs.",
+      "importer": {
+        "title": "Importar test packs y line list",
+        "template": "Descargar plantilla",
+        "close": "Cerrar",
+        "cancel": "Cancelar",
+        "importing": "Importando…",
+        "submit": "Importar",
+        "help": "Hoja «Packs»: número del pack (el del cliente, ej. TP-101, o el TPK de CommUp), título, sistema, tipo de prueba, medio, presiones y retención. Hoja «Líneas»: línea (tag existente) y pack. Se crean los packs nuevos y se completan los abiertos; las líneas se agregan, nunca se quitan. Las líneas que no existen como tag se reportan.",
+        "file": "Archivo Excel",
+        "nothingFound": "No se encontraron hojas de packs ni de líneas (columnas TEST PACK y LÍNEA).",
+        "readError": "No se pudo leer el archivo.",
+        "sheetPacks": "Packs",
+        "sheetLines": "Líneas",
+        "preview": "{packs} packs y {lines} líneas listas para importar.",
+        "skipped": "{count} filas con problemas (se omiten):",
+        "done": "Listo: {created} packs creados, {updated} actualizados, {lines} líneas vinculadas."
+      }
+    },
+    "labels": {
+      "scan": "Escanee con CommUp para ver el estado actual del registro.",
+      "system": "Sistema",
+      "printed": "CommUp · etiquetas de registros controlados · impreso {date}"
     }
   }
 }

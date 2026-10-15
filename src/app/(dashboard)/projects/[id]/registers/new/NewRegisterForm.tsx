@@ -15,9 +15,11 @@ type Props = {
   initialKind: RegisterKind
   systems: { id: string; code: string; name: string }[]
   initialSystemId: string
+  /** Registro al que quedará vinculado el nuevo (ej. una ciega creada desde su test pack). */
+  linkTo: { id: string; number: string } | null
 }
 
-export default function NewRegisterForm({ project, kinds, initialKind, systems, initialSystemId }: Props) {
+export default function NewRegisterForm({ project, kinds, initialKind, systems, initialSystemId, linkTo }: Props) {
   const t = useTranslations('Registers')
   const router = useRouter()
   const [kind, setKind] = useState(initialKind)
@@ -40,10 +42,10 @@ export default function NewRegisterForm({ project, kinds, initialKind, systems, 
     startTransition(async () => {
       const res = await createRegisterItem({
         projectId: project.id, kind, title, description, systemId: systemId || null, data,
-        tags: tags.map(({ tag_id, role }) => ({ tag_id, role })),
+        tags: tags.map(({ tag_id, role }) => ({ tag_id, role })), linkToId: linkTo?.id,
       })
       if (res.error || !res.id) { setError(res.error ?? 'Error'); return }
-      router.push(`/projects/${project.id}/registers/${res.id}`)
+      router.push(`/projects/${project.id}/registers/${linkTo?.id ?? res.id}`)
     })
   }
 
@@ -53,6 +55,7 @@ export default function NewRegisterForm({ project, kinds, initialKind, systems, 
         <Link href={`/projects/${project.id}/registers`} style={linkStyle}>← {t('detail.back')}</Link>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>{t('new')}</h1>
         <p style={{ ...small, margin: '4px 0 0' }}>{project.code} · {project.name}</p>
+        {linkTo && <p style={{ ...small, margin: '4px 0 0', fontWeight: 600 }}>{t('form.linkTo', { number: linkTo.number })}</p>}
       </div>
 
       {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}

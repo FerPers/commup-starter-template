@@ -10,10 +10,13 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { parseRegisterQr } from '@/lib/registers/qr';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 interface ScanResult {
   tag_id: string;
+  /** QR de etiqueta de registro controlado (`/r/<uuid>`): se abre el registro, no el tag. */
+  register_id?: string;
   tag_type: 'QR' | 'NFC' | 'MANUAL';
   raw: string;
   timestamp: string;
@@ -59,6 +62,14 @@ const COMMUP_TAG_PATTERNS = [
   /commup:\/\/tag\/([A-Z0-9\-_]+)/i,
   /^([A-Z]{2,4}-\d{3,6}-[A-Z0-9\-]+)$/i,
 ];
+
+/** Registro (`/r/<uuid>`) o tag; null si no se reconoce. */
+function parseScan(raw: string): { tag_id: string; register_id?: string } | null {
+  const registerId = parseRegisterQr(raw);
+  if (registerId) return { tag_id: '', register_id: registerId };
+  const tagId = parseTagId(raw);
+  return tagId ? { tag_id: tagId } : null;
+}
 
 function parseTagId(raw: string): string | null {
   for (const pattern of COMMUP_TAG_PATTERNS) {
@@ -108,10 +119,10 @@ function useNFCScan(
           }
         }
 
-        const tagId = parseTagId(raw);
-        if (tagId) {
+        const parsed = parseScan(raw);
+        if (parsed) {
           navigator.vibrate?.([100, 50, 100]);
-          onScan({ tag_id: tagId, tag_type: 'NFC', raw, timestamp: new Date().toISOString() });
+          onScan({ ...parsed, tag_type: 'NFC', raw, timestamp: new Date().toISOString() });
         } else {
           onError(`NFC tag no reconocido: ${raw}`);
         }
@@ -186,10 +197,10 @@ function useQRScan(
           ],
         },
         (decodedText: string) => {
-          const tagId = parseTagId(decodedText);
-          if (tagId) {
+          const parsed = parseScan(decodedText);
+          if (parsed) {
             navigator.vibrate?.([150]);
-            onScan({ tag_id: tagId, tag_type: 'QR', raw: decodedText, timestamp: new Date().toISOString() });
+            onScan({ ...parsed, tag_type: 'QR', raw: decodedText, timestamp: new Date().toISOString() });
           } else {
             onError(`Código no reconocido: ${decodedText.substring(0, 40)}...`);
           }
@@ -253,6 +264,12 @@ export default function QRNFCScanner() {
     setLastScan(result);
     setError(null);
 
+    // Etiqueta de registro: directo al registro (el historial es de tags).
+    if (result.register_id) {
+      setTimeout(() => router.push(`/r/${result.register_id}`), 300);
+      return;
+    }
+
     // Actualizar historial
     const newScan: RecentScan = {
       tag_id: result.tag_id,
@@ -297,9 +314,9 @@ export default function QRNFCScanner() {
   }, [mode, startNFC, startQR, stopNFC, stopQR]);
 
   const handleManualSubmit = () => {
-    const tagId = parseTagId(manualInput);
-    if (tagId) {
-      handleScan({ tag_id: tagId, tag_type: 'MANUAL', raw: manualInput, timestamp: new Date().toISOString() });
+    const parsed = parseScan(manualInput);
+    if (parsed) {
+      handleScan({ ...parsed, tag_type: 'MANUAL', raw: manualInput, timestamp: new Date().toISOString() });
     } else {
       handleError('ID de tag no válido. Formato: XX-000-NOMBRE-000');
     }
@@ -575,8 +592,8 @@ export default function QRNFCScanner() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 'var(--text-xl)' }}>✓</span>
             <div>
-              <div style={{ fontWeight: 700 }}>{lastScan.tag_id}</div>
-              <div style={{ fontSize: 'var(--text-sm)', opacity: 0.85 }}>Navegando a Tag 360°...</div>
+              <div style={{ fontWeight: 700 }}>{lastScan.register_id ? 'Registro controlado' : lastScan.tag_id}</div>
+              <div style={{ fontSize: 'var(--text-sm)', opacity: 0.85 }}>{lastScan.register_id ? 'Abriendo registro...' : 'Navegando a Tag 360°...'}</div>
             </div>
           </div>
         </div>

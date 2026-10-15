@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { deleteRegisterItem, transitionRegisterItem, updateRegisterItem } from '@/app/actions/registers'
+import { deleteRegisterItem, linkRegisterItems, transitionRegisterItem, updateRegisterItem } from '@/app/actions/registers'
 import {
   NEXT_STATUS,
   OPEN_STATUSES,
@@ -42,11 +42,23 @@ export type RegisterEvent = {
   created_at: string
 }
 
+export type LinkedRegister = {
+  id: string
+  number: string
+  kind: RegisterKind
+  title: string
+  status: RegisterStatus
+  /** out = este registro lo vinculó (pack → ciega); in = otro registro vinculó a este. */
+  direction: 'out' | 'in'
+}
+
 type Props = {
   project: { id: string; code: string; name: string }
   item: RegisterDetail
   tags: TagValue[]
   events: RegisterEvent[]
+  linked: LinkedRegister[]
+  blindCandidates: Omit<LinkedRegister, 'direction'>[]
   systems: { id: string; code: string; name: string }[]
   names: Record<string, string>
   userId: string
@@ -56,7 +68,7 @@ type Props = {
 const LIFECYCLE: RegisterStatus[] = ['proposed', 'authorized', 'active', 'removed', 'verified']
 const AUTHORIZERS = ['owner', 'admin', 'architect', 'leader']
 
-export default function RegisterDetailView({ project, item, tags: initialTags, events, systems, names, userId, role }: Props) {
+export default function RegisterDetailView({ project, item, tags: initialTags, events, linked, blindCandidates, systems, names, userId, role }: Props) {
   const t = useTranslations('Registers')
   const statusLabel = useStatusLabel()
   const router = useRouter()
@@ -70,6 +82,7 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
   const [data, setData] = useState<Record<string, unknown>>(item.data)
   const [tags, setTags] = useState<TagValue[]>(initialTags)
   const [comment, setComment] = useState('')
+  const [blindToLink, setBlindToLink] = useState('')
 
   const open = OPEN_STATUSES.includes(item.status)
   const editable = open && role !== 'client'
@@ -85,6 +98,9 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
   if (next === 'verified' && item.steps.removed.by === userId) blockedBy = who(item.steps.removed.by)
   const roleAllows = next === 'authorized' ? AUTHORIZERS.includes(role) : role !== 'client'
   const neverAuthorized = !item.steps.authorized.at
+  // §8.8: verificar un pack con ciegas aún instaladas solo avisa (la ciega bloquea su gate por sí misma).
+  const openBlinds = linked.filter(l => l.kind === 'blind' && OPEN_STATUSES.includes(l.status))
+  const canLink = role !== 'client' && item.kind === 'test_pack' && item.status !== 'cancelled'
   const advanceDisabled = isPending || missing.length > 0 || rejected || !!blockedBy || !roleAllows
 
   const base = { projectId: project.id, itemId: item.id }
@@ -125,6 +141,10 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
     run(() => transitionRegisterItem({ ...base, to: 'cancelled', comment: reason }))
   }
 
+  function link(linkedItemId: string, on: boolean) {
+    run(() => linkRegisterItems({ ...base, linkedItemId, link: on }), () => setBlindToLink(''))
+  }
+
   function remove() {
     if (!window.confirm(t('detail.deleteConfirm'))) return
     run(() => deleteRegisterItem(base), () => router.push(`/projects/${project.id}/registers`))
@@ -143,6 +163,10 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
         <p style={{ ...small, margin: 0 }}>
           {project.code} · {item.blocksGate ? t('detail.blocks', { gate: item.blocksGate }) : t('detail.noBlock')}
         </p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+          <a href={`/projects/${project.id}/registers/labels?ids=${item.id}`} target="_blank" rel="noopener" style={btn('outline')}>{t('detail.label')}</a>
+          {item.kind === 'test_pack' && <Link href={`/projects/${project.id}/registers/test-packs`} style={btn('outline')}>{t('testPacks.title')}</Link>}
+        </div>
       </div>
 
       {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
@@ -177,6 +201,9 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
             {rejected && <div role="alert" style={{ ...small, color: 'var(--danger-700)' }}>{t('detail.rejected')}</div>}
             {missing.length > 0 && (
               <div style={{ ...small, color: '#b45309' }}>{t('detail.missing', { fields: missing.map(f => t(`field.${f}`)).join(', ') })}</div>
+            )}
+            {next === 'verified' && item.kind === 'test_pack' && openBlinds.length > 0 && (
+              <div role="status" style={{ ...small, color: '#b45309' }}>{t('detail.openBlinds', { list: openBlinds.map(b => b.number).join(', ') })}</div>
             )}
             {blockedBy && <div style={{ ...small, color: '#b45309' }}>{t('detail.otherPerson', { who: blockedBy })}</div>}
             <input style={{ ...input, maxWidth: 560 }} placeholder={t('detail.commentPlaceholder')} value={comment} onChange={e => setComment(e.target.value)} />
@@ -221,6 +248,40 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
         </div>
         {editable && <div><button type="button" style={btn('outline')} disabled={isPending || !title.trim()} onClick={save}>{t('form.save')}</button></div>}
       </section>
+
+      {/* Registros vinculados (ej. ciegas de la prueba de un test pack) */}
+      {(linked.length > 0 || canLink) && (
+        <section style={card} aria-labelledby="reg-linked">
+          <h2 id="reg-linked" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>
+            {item.kind === 'test_pack' ? t('detail.linkedBlinds') : t('detail.linked')}
+          </h2>
+          {item.kind === 'test_pack' && <p style={{ ...small, margin: '0 0 10px' }}>{t('detail.linkedBlindsHelp')}</p>}
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {linked.map(l => (
+              <li key={`${l.direction}:${l.id}`} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 'var(--text-sm)' }}>
+                <Link href={`/projects/${project.id}/registers/${l.id}`} style={{ fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{l.number}</Link>
+                <span style={small}>{t(`kind.${l.kind}`)}</span>
+                <span style={{ color: 'var(--text-strong)' }}>{l.title}</span>
+                <StatusChip kind={l.kind} status={l.status} />
+                {canLink && l.direction === 'out' && (
+                  <button type="button" style={{ ...btn('outline'), padding: '3px 8px', fontSize: 'var(--text-xs)' }} disabled={isPending} onClick={() => link(l.id, false)}>{t('detail.unlink')}</button>
+                )}
+              </li>
+            ))}
+            {linked.length === 0 && <li style={small}>{t('detail.noLinked')}</li>}
+          </ul>
+          {canLink && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12, alignItems: 'center' }}>
+              <select aria-label={t('detail.pickBlind')} style={{ ...input, maxWidth: 360 }} value={blindToLink} onChange={e => setBlindToLink(e.target.value)}>
+                <option value="">{t('detail.pickBlind')}</option>
+                {blindCandidates.map(b => <option key={b.id} value={b.id}>{b.number} — {b.title}</option>)}
+              </select>
+              <button type="button" style={btn('outline', !blindToLink || isPending)} disabled={!blindToLink || isPending} onClick={() => link(blindToLink, true)}>{t('detail.link')}</button>
+              <Link href={`/projects/${project.id}/registers/new?kind=blind&linkTo=${item.id}`} style={btn('outline')}>+ {t('detail.newBlind')}</Link>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Línea de tiempo */}
       <section style={card} aria-labelledby="reg-timeline">

@@ -1,7 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import type { RegisterKind, RegisterStatus } from '@/lib/registers/catalog'
-import RegisterDetailView, { type RegisterDetail, type RegisterEvent } from './RegisterDetailView'
+import RegisterDetailView, { type LinkedRegister, type RegisterDetail, type RegisterEvent } from './RegisterDetailView'
 import type { TagValue } from '../RegisterFields'
 
 // Detalle de un registro controlado (fase 3): datos del catálogo, tags, ciclo de vida con
@@ -26,12 +26,22 @@ export default async function RegisterDetailPage({ params }: { params: Promise<{
     .maybeSingle()
   if (!item) notFound()
 
-  const [{ data: tags }, { data: events }, { data: systems }, { data: members }] = await Promise.all([
+  const linkedSel = 'id, number, kind, title, status'
+  const [{ data: tags }, { data: events }, { data: systems }, { data: members }, { data: outLinks }, { data: inLinks }, { data: blinds }] = await Promise.all([
     supabase.from('register_item_tags').select('tag_id, role, tags(tag_number)').eq('item_id', itemId),
     supabase.from('register_events').select('id, action, from_status, to_status, user_id, comment, created_at').eq('item_id', itemId).order('created_at'),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
+    supabase.from('register_item_links').select(`item:register_items!register_item_links_linked_item_id_fkey(${linkedSel})`).eq('item_id', itemId),
+    supabase.from('register_item_links').select(`item:register_items!register_item_links_item_id_fkey(${linkedSel})`).eq('linked_item_id', itemId),
+    // Candidatas para vincular a un test pack: ciegas del proyecto no canceladas.
+    item.kind === 'test_pack'
+      ? supabase.from('register_items').select(linkedSel).eq('project_id', id).eq('kind', 'blind').neq('status', 'cancelled').order('number').limit(1000)
+      : Promise.resolve({ data: [] }),
   ])
+  const linkedOf = (rows: { item: unknown }[] | null, direction: 'out' | 'in'): LinkedRegister[] =>
+    (rows ?? []).map(r => r.item as Omit<LinkedRegister, 'direction'> | null).filter((x): x is Omit<LinkedRegister, 'direction'> => !!x).map(x => ({ ...x, direction }))
+  const linked = [...linkedOf(outLinks, 'out'), ...linkedOf(inLinks, 'in')]
 
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
@@ -71,6 +81,8 @@ export default async function RegisterDetailPage({ params }: { params: Promise<{
         tag_number: (tg.tags as { tag_number: string } | null)?.tag_number ?? '?',
       }))}
       events={(events ?? []) as RegisterEvent[]}
+      linked={linked}
+      blindCandidates={((blinds ?? []) as Omit<LinkedRegister, 'direction'>[]).filter(b => !linked.some(l => l.id === b.id))}
       systems={systems ?? []}
       names={names}
       userId={ctx.userId}

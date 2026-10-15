@@ -61,9 +61,15 @@ export default function RegistersView({ project, rows, activeKinds, canCreate }:
             <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
             <p style={{ ...small, margin: '4px 0 0', maxWidth: 760 }}>{t('subtitle')}</p>
           </div>
-          {canCreate && activeKinds.length > 0 && (
-            <Link href={`/projects/${project.id}/registers/new${kind ? `?kind=${kind}` : ''}`} style={btn('primary')}>+ {t('new')}</Link>
-          )}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Link href={`/projects/${project.id}/registers/test-packs`} style={btn('outline')}>{t('testPacksLink')}</Link>
+            {rows.length > 0 && (
+              <a href={`/projects/${project.id}/registers/labels${kind ? `?kind=${kind}` : ''}`} target="_blank" rel="noopener" style={btn('outline')}>{t('printLabels')}</a>
+            )}
+            {canCreate && activeKinds.length > 0 && (
+              <Link href={`/projects/${project.id}/registers/new${kind ? `?kind=${kind}` : ''}`} style={btn('primary')}>+ {t('new')}</Link>
+            )}
+          </div>
         </div>
       </div>
 
