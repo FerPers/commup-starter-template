@@ -20,6 +20,7 @@ async function signedIn(email: string, password: string) {
   return c
 }
 
+// 30 s por test: dos logins + consultas, en paralelo con los demás archivos de BD contra el mismo proyecto.
 describe.skipIf(!enabled)('RLS multi-tenant smoke', () => {
   it('el usuario A ve tags de su proyecto; el usuario B no ve ninguno', async () => {
     const a = await signedIn(env.TEST_USER_A_EMAIL!, env.TEST_USER_A_PASSWORD!)
@@ -34,7 +35,7 @@ describe.skipIf(!enabled)('RLS multi-tenant smoke', () => {
     expect(rb.error).toBeNull()
     expect(ra.count ?? 0).toBeGreaterThan(0)
     expect(rb.count ?? 0).toBe(0)
-  })
+  }, 30_000)
 
   it('las vistas paginables y los RPC de conteo respetan RLS', async () => {
     const b = await signedIn(env.TEST_USER_B_EMAIL!, env.TEST_USER_B_PASSWORD!)
@@ -45,7 +46,7 @@ describe.skipIf(!enabled)('RLS multi-tenant smoke', () => {
     ])
     expect(v.count ?? 0).toBe(0)
     expect((rpc.data ?? []).length).toBe(0)
-  })
+  }, 30_000)
 
   it('my_work_counts de la org de A devuelve ceros para el usuario B (Sprint N)', async () => {
     const a = await signedIn(env.TEST_USER_A_EMAIL!, env.TEST_USER_A_PASSWORD!)
@@ -55,11 +56,11 @@ describe.skipIf(!enabled)('RLS multi-tenant smoke', () => {
     const { data, error } = await b.rpc('my_work_counts', { p_org_id: project!.org_id })
     expect(error).toBeNull()
     expect(Object.values((data ?? {}) as Record<string, number>).every(v => v === 0)).toBe(true)
-  })
+  }, 30_000)
 
   it('el usuario B no puede insertar en el proyecto de A', async () => {
     const b = await signedIn(env.TEST_USER_B_EMAIL!, env.TEST_USER_B_PASSWORD!)
     const { error } = await b.from('areas').insert({ project_id: env.TEST_PROJECT_A_ID!, code: 'HACK', name: 'x' })
     expect(error).not.toBeNull()
-  })
+  }, 30_000)
 })
