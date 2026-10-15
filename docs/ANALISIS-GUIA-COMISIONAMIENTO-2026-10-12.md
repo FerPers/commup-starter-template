@@ -245,3 +245,18 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 3. **Bloqueos por defecto del libro, editables:** ciegas y temporales → RFC (penúltimo gate); bypass y reinstalación → RFSU (último); test pack sin verificar → MC (primero); energización no bloquea. Bloquea todo ítem no verificado ni cancelado del sistema (por `system_id` o por sus tags).
 4. **F3 sale online.** Captura offline de registros, después de validar el flujo con usuarios.
 5. Ciclo común: propuesto → autorizado → activo → retirado/restaurado → verificado (+ cancelado). Autoriza una persona distinta de quien propuso; verifica una distinta de quien retiró. Escritura solo por RPC.
+
+## 9. Avance al cierre del 2026-10-15
+| Fase | Estado | Commits |
+|---|---|---|
+| F0 gates SQL = TS | ✅ en prod | 48842a0 |
+| F1 motor de gates + multifirma + storage aislado | ✅ en prod | 2b5c41f, 12bcc83, e5e4338, 83e0760 |
+| F2 sistematización (BD, ficha, matriz, Excel, IA, P&ID por sistema) | ✅ en prod; DEMO sistematizado por IA (14 sistemas, 33 dependencias) | e9a0e06, 6f04b96, d4506b0, 1dae918 |
+| F3 registros — sesión 1 (BD) | ✅ en prod | 9e0edce |
+| F3 registros — sesión 2 (pantallas) | ✅ en prod | 8c55523 |
+| F3 registros — sesión 3 (test packs: avance por línea/pack, Excel line list, pack ↔ ciegas; etiquetas QR + /scan) | ⏳ siguiente | — |
+| F3 registros — sesión 4 (datos de DEMO) | ⏳ | — |
+
+Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
+
+Pendiente de Luis: probar en commup.app el ciclo de CIE-0001 con dos personas (Outlook propone; `lf.perdomo+smtp` autoriza; verificar con el usuario que no retiró) y confirmar «Sugerir con IA» en producción.
