@@ -92,7 +92,7 @@
       "handover": "Handover",
       "opsPunches": "Tracking de Ops",
       "loops": "Loops",
-      "interlocks": "Interlocks",
+      "ceMatrices": "Matrices C&E",
       "pidDocuments": "P&IDs",
       "myWork": "Mi trabajo",
       "inbox": "Bandeja",
@@ -1666,22 +1666,6 @@
         "subsystem": "Subsistema",
         "discipline": "Disciplina",
         "tags": "Tags"
-      }
-    },
-    "interlocks": {
-      "title": "Interlocks / SIS",
-      "subtitle": "{count} interlocks en este proyecto",
-      "searchPlaceholder": "Buscar por número, descripción o tag…",
-      "emptyTitle": "Sin interlocks definidos",
-      "emptyDesc": "Los interlocks representan la lógica de seguridad causa-efecto (SIL/SIS). Se pueden importar o agregar manualmente.",
-      "col": {
-        "number": "No. Interlock",
-        "description": "Descripción",
-        "subsystem": "Subsistema",
-        "cause": "Tag Causa",
-        "effect": "Tag Efecto",
-        "setPoint": "Set Point",
-        "action": "Acción"
       }
     }
   },

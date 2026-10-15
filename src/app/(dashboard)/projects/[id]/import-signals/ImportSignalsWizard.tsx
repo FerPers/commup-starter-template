@@ -3,38 +3,10 @@
 import { useState } from 'react'
 import * as XLSX from 'xlsx'
 import { importSignals, type SignalRow, type SignalImportResult } from '@/app/actions/import-signals'
-import { pickBestSheet, detectHeaderRow, cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
+import { pickBestSheet, detectHeaderRow, cellText } from '@/lib/excel/detect-header'
+import { SIGNAL_COLS } from '@/lib/excel/signal-columns'
 
 const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
-
-// Misma detección de hoja/encabezado que el importador de tags: el encabezado
-// puede estar en cualquiera de las primeras 15 filas y la hoja correcta se
-// elige por coincidencias. Orden importante: "TAG INSTRUMENTO" se asigna antes
-// de que "TAG" (parcial) pueda quedarse con esa columna.
-const SIGNAL_COLS: ColumnKeywords = {
-  instrument_tag:  ['TAG INSTRUMENTO', 'INSTRUMENT TAG', 'INSTRUMENTO', 'TAG EQUIPO'],
-  signal_tag:      ['TAG DE SEÑAL', 'TAG SEÑAL', 'SIGNAL TAG', 'TAG'],
-  description:     ['DESCRIPCION', 'DESCRIPTION', 'DESC'],
-  signal_type:     ['TIPO DE SEÑAL', 'TIPO SEÑAL', 'SIGNAL TYPE', 'I/O TYPE', 'IO TYPE', 'TIPO'],
-  discipline:      ['DISCIPLINA', 'DISCIPLINE'],
-  service:         ['SERVICIO', 'SERVICE'],
-  range_min:       ['INF.', 'INF', 'RANGE MIN', 'RANGO INF', 'LRV'],
-  range_max:       ['SUP.', 'SUP', 'RANGE MAX', 'RANGO SUP', 'URV'],
-  eng_unit:        ['UNIDAD', 'UNIT', 'ENG UNIT', 'UNITS'],
-  alarms:          ['ALARMAS / SET POINT', 'ALARMAS', 'SETPOINT', 'SET POINT'],
-  origin:          ['ORIGEN DE LA SEÑAL', 'ORIGEN', 'ORIGIN'],
-  destination:     ['DESTINO DE LA SEÑAL', 'DESTINO', 'DESTINATION'],
-  pid:             ['P&ID', 'PID', 'PLANO P&ID'],
-  loop_diagram:    ['DIAGRAMA DE LAZO', 'LOOP DIAGRAM'],
-  wiring_diagram:  ['DIAGRAMA DE CABLEADO', 'WIRING DIAGRAM'],
-  notes:           ['NOTAS', 'NOTES', 'OBSERVACIONES'],
-  area_code:       ['AREA CODE', 'AREA', 'SITIO', 'UBICACION', 'LOCATION'],
-  area_name:       ['AREA NAME', 'NOMBRE AREA'],
-  system_code:     ['SYSTEM CODE', 'SISTEMA', 'SYSTEM'],
-  system_name:     ['SYSTEM NAME', 'NOMBRE SISTEMA'],
-  subsystem_code:  ['SUBSYSTEM CODE', 'SUBSISTEMA', 'SUBSYSTEM'],
-  subsystem_name:  ['SUBSYSTEM NAME', 'NOMBRE SUBSISTEMA'],
-}
 
 type Step = 'upload' | 'preview' | 'result'
 
@@ -109,6 +81,7 @@ export default function ImportSignalsWizard({
           const pid          = get('pid')
           const loopDiag     = get('loop_diagram')
           const wiringDiag   = get('wiring_diagram')
+          const loopNumber   = get('loop_number')
           const notes        = get('notes')
           const areaCode     = get('area_code') || 'GENERAL'
           const areaName     = get('area_name') || areaCode
@@ -141,6 +114,13 @@ export default function ImportSignalsWizard({
             pid_drawing:     pid,
             loop_diagram:    loopDiag,
             wiring_diagram:  wiringDiag,
+            loop_number:     loopNumber,
+            junction_box:    get('junction_box'),
+            marshalling:     get('marshalling'),
+            io_card:         get('io_card'),
+            io_channel:      get('io_channel'),
+            dcs_tag:         get('dcs_tag'),
+            hmi_display:     get('hmi_display'),
             notes,
             discipline_code: discipline,
             area_code:       areaCode,
@@ -197,7 +177,8 @@ export default function ImportSignalsWizard({
         'INF.': 0, 'SUP.': 100, 'UNIDAD': 'm³/h',
         'ALARMAS / Set Point': 'LAL=5 / LAH=95',
         'ORIGEN DE LA SEÑAL': 'FT-201 / 4-20mA', 'DESTINO DE LA SEÑAL': 'DCS-AI-001',
-        'P&ID': 'P&ID-001', 'DIAGRAMA DE LAZO': 'LD-201', 'DIAGRAMA DE CABLEADO': 'WD-201', 'NOTAS': '',
+        'P&ID': 'P&ID-001', 'DIAGRAMA DE LAZO': 'LD-201', 'DIAGRAMA DE CABLEADO': 'WD-201',
+        'LAZO': 'L-201', 'JB': 'JB-02', 'MARSHALLING': 'MC-01', 'TARJETA I/O': 'R1-S4', 'CANAL': 'CH-01', 'TAG DCS': 'FI-201', 'HMI': 'BOMBAS-01', 'NOTAS': '',
         'AREA_CODE': 'AREA-01', 'AREA_NAME': 'Area de Proceso', 'SYSTEM_CODE': 'SYS-01', 'SYSTEM_NAME': 'Sistema de Agua', 'SUBSYSTEM_CODE': 'SS-01', 'SUBSYSTEM_NAME': 'Feed System',
       },
       {
@@ -206,7 +187,8 @@ export default function ImportSignalsWizard({
         'INF.': 0, 'SUP.': 10, 'UNIDAD': 'bar',
         'ALARMAS / Set Point': 'LAL=0.5 / HAH=9',
         'ORIGEN DE LA SEÑAL': 'PT-101 / 4-20mA', 'DESTINO DE LA SEÑAL': 'DCS-AI-002',
-        'P&ID': 'P&ID-001', 'DIAGRAMA DE LAZO': 'LD-101', 'DIAGRAMA DE CABLEADO': 'WD-101', 'NOTAS': '',
+        'P&ID': 'P&ID-001', 'DIAGRAMA DE LAZO': 'LD-101', 'DIAGRAMA DE CABLEADO': 'WD-101',
+        'LAZO': 'L-101', 'JB': 'JB-01', 'MARSHALLING': 'MC-01', 'TARJETA I/O': 'R1-S3', 'CANAL': 'CH-04', 'TAG DCS': 'PI-101', 'HMI': 'BOMBAS-01', 'NOTAS': '',
         'AREA_CODE': 'AREA-01', 'AREA_NAME': 'Area de Proceso', 'SYSTEM_CODE': 'SYS-01', 'SYSTEM_NAME': 'Sistema de Agua', 'SUBSYSTEM_CODE': 'SS-01', 'SUBSYSTEM_NAME': 'Feed System',
       },
       {
@@ -215,13 +197,14 @@ export default function ImportSignalsWizard({
         'INF.': '', 'SUP.': '', 'UNIDAD': '',
         'ALARMAS / Set Point': '',
         'ORIGEN DE LA SEÑAL': 'XV-301 / ZO Contact', 'DESTINO DE LA SEÑAL': 'DCS-DI-005',
-        'P&ID': 'P&ID-002', 'DIAGRAMA DE LAZO': 'LD-301', 'DIAGRAMA DE CABLEADO': 'WD-301', 'NOTAS': 'Interlock SIS-01',
+        'P&ID': 'P&ID-002', 'DIAGRAMA DE LAZO': 'LD-301', 'DIAGRAMA DE CABLEADO': 'WD-301',
+        'LAZO': 'L-301', 'JB': 'JB-03', 'MARSHALLING': 'MC-01', 'TARJETA I/O': 'R1-S5', 'CANAL': 'CH-11', 'TAG DCS': 'ZSO-301', 'HMI': 'FEED-01', 'NOTAS': 'Causa C-01 de la matriz C&E',
         'AREA_CODE': 'AREA-01', 'AREA_NAME': 'Area de Proceso', 'SYSTEM_CODE': 'SYS-01', 'SYSTEM_NAME': 'Sistema de Agua', 'SUBSYSTEM_CODE': 'SS-01', 'SUBSYSTEM_NAME': 'Feed System',
       },
     ]
     const ws = XLSX.utils.json_to_sheet(template)
     // Set column widths
-    ws['!cols'] = [16, 16, 30, 14, 12, 20, 8, 8, 10, 20, 20, 20, 10, 14, 18, 10, 10, 12, 16, 14, 18].map(w => ({ wch: w }))
+    ws['!cols'] = [16, 16, 30, 14, 12, 20, 8, 8, 10, 20, 20, 20, 10, 14, 18, 10, 8, 10, 12, 8, 12, 12, 18, 10, 10, 12, 16, 14, 18].map(w => ({ wch: w }))
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Señales')
     XLSX.writeFile(wb, 'CommUp_Signals_Template.xlsx')
@@ -328,6 +311,10 @@ export default function ImportSignalsWizard({
               { col: 'ALARMAS / Set Point', req: false, desc: 'Niveles de alarma y setpoints' },
               { col: 'ORIGEN / DESTINO', req: false, desc: 'Origen y destino de la señal' },
               { col: 'P&ID / DIAGRAMAS', req: false, desc: 'Referencias de planos' },
+              { col: 'LAZO', req: false, desc: 'N° de lazo: crea el lazo si no existe y le asocia el instrumento' },
+              { col: 'JB / MARSHALLING', req: false, desc: 'Caja de conexiones y gabinete de marshalling' },
+              { col: 'TARJETA I/O / CANAL', req: false, desc: 'Tarjeta (rack-slot) y canal del sistema de control' },
+              { col: 'TAG DCS / HMI', req: false, desc: 'Tag en el sistema de control y despliegue HMI' },
               { col: 'NOTAS', req: false, desc: 'Notas adicionales' },
             ].map(item => (
               <div key={item.col} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-start' }}>
@@ -387,7 +374,7 @@ export default function ImportSignalsWizard({
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
                   <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
-                    {['#', 'Tag Señal', 'Tag Instr.', 'Tipo', 'Descripción', 'Servicio', 'Rango', 'Unidad', 'Alarmas', 'Origen → Destino', 'P&ID'].map(h => (
+                    {['#', 'Tag Señal', 'Tag Instr.', 'Tipo', 'Descripción', 'Servicio', 'Rango', 'Unidad', 'Alarmas', 'Origen → Destino', 'P&ID', 'Lazo', 'Cadena'].map(h => (
                       <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -420,6 +407,8 @@ export default function ImportSignalsWizard({
                           {row.origin && row.destination ? `${row.origin} → ${row.destination}` : row.origin || row.destination || '—'}
                         </td>
                         <td style={{ padding: '8px 10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{row.pid_drawing || '—'}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-strong)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{(row.loop_number ?? '') || '—'}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{[row.junction_box, row.marshalling, [row.io_card, row.io_channel].filter(Boolean).join('/'), row.dcs_tag, row.hmi_display].filter(Boolean).join(' → ') || '—'}</td>
                       </tr>
                     )
                   })}
@@ -477,6 +466,12 @@ export default function ImportSignalsWizard({
               <div style={{ padding: '16px 28px', background: '#f5f3ff', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#7c3aed' }}>{result.tagsCreated}</div>
                 <div style={{ fontSize: '13px', color: '#5b21b6' }}>Tags instrumento creados</div>
+              </div>
+            )}
+            {result.loopsCreated > 0 && (
+              <div style={{ padding: '16px 28px', background: '#ecfeff', borderRadius: '12px', border: '1px solid #a5f3fc' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: '#0891b2' }}>{result.loopsCreated}</div>
+                <div style={{ fontSize: '13px', color: '#155e75' }}>Lazos creados</div>
               </div>
             )}
             {result.skipped > 0 && (

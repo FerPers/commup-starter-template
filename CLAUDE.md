@@ -48,7 +48,7 @@ src/app/
     my-work/               # «Mi trabajo»: personal queues (ITRs to execute/review, punches, plan, signatures, preservation)
     dashboard/             # KPI overview (real queries)
     projects/[id]/         # Project hub: tags, itrs, punches, certificates,
-                           #   loops, signals, interlocks, work-plans, kpis,
+                           #   loops, signals, ce-matrices, work-plans, kpis,
                            #   pssr, import, import-signals, pid-documents,
                            #   explorer, twin, reports
     projects/[id]/tags/[tagId]/itrs/[itrId]/  # Field ITR execution
@@ -100,7 +100,7 @@ src/app/
 1. **Multi-tenancy** — `organizations`, `profiles`, `org_members`
 2. **Configuration** — `project_phases`, `disciplines`, `equipment_types` (all org-scoped, nothing hardcoded)
 3. **Hierarchy** — `projects` → `areas` → `systems` → `subsystems`
-4. **Assets** — `tags`, `cables`, `signals`, `loops`, `loop_tags`, `interlocks`
+4. **Assets** — `tags`, `cables`, `signals`, `loops`, `loop_tags` (signals carry the loop-check chain JB → marshalling → I/O → DCS → HMI); C&E matrices `ce_matrices` → `ce_causes` × `ce_effects` → `ce_links` (replaced `interlocks`, fase 4-D)
 5. **Preservation** — `procedures`, `plans`, `records`, `attachments` (PG trigger auto-updates `next_due_date`)
 6. **ITR Templates** — `itr_templates` → `sections` → `items` (types: checkbox/text/number/measurement/select/photo/signature/date/yes_no)
 7. **ITR Instances** — `itrs`, `assignments`, `responses`, `signatures`, `attachments`
@@ -154,7 +154,7 @@ Existing components use **inline styles** (React `style={{}}`) rather than Tailw
 
 ## State of the Product
 
-**Built and functional** (real DB reads+writes): auth + setup wizard, dashboard with real KPIs, full project hierarchy, Excel import (hierarchy + signals), ITR template builder, field ITR execution (photos, signatures, autosave), punch list lifecycle, preservation, certificates with punch blocking, PSSR, work plans, loops/signals/interlocks, P&ID documents with hotspots, digital twin/explorer views, reports (PDF via pdf-lib + Excel), public API v1, admin suite (users, config, api-keys, webhooks, audit, data-quality, workflows, handover), control tower, inbox, QR scan, PWA + web push, i18n, landing page.
+**Built and functional** (real DB reads+writes): auth + setup wizard, dashboard with real KPIs, full project hierarchy, Excel import (hierarchy + signals), ITR template builder, field ITR execution (photos, signatures, autosave), punch list lifecycle, preservation, certificates with punch blocking, PSSR, work plans, loops/signals/C&E matrices, P&ID documents with hotspots, digital twin/explorer views, reports (PDF via pdf-lib + Excel), public API v1, admin suite (users, config, api-keys, webhooks, audit, data-quality, workflows, handover), control tower, inbox, QR scan, PWA + web push, i18n, landing page.
 
 **Known gaps / active backlog:**
 - KPI history is project-level only (no per-phase snapshots → no S-curves yet)

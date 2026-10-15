@@ -50,7 +50,7 @@ const PROJECT_SUBLABELS: Record<string, string> = {
   pssr: 'pssr',
   kpis: 'kpis',
   loops: 'loops',
-  interlocks: 'interlocks',
+  'ce-matrices': 'ceMatrices',
   'pid-documents': 'pidDocuments',
 }
 

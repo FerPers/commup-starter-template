@@ -31,7 +31,8 @@ export default async function LoopsPage({ params }: { params: Promise<{ id: stri
           areas!inner ( id, code, name )
         )
       ),
-      loop_tags ( id, role_in_loop, tags ( id, tag_number ) )
+      loop_tags ( id, role_in_loop, tags ( id, tag_number ) ),
+      signals ( id, signal_tag, signal_type, origin, junction_box, marshalling, io_card, io_channel, dcs_tag, hmi_display, tags ( tag_number ) )
     `)
     .eq('project_id', id)
     .order('loop_number')

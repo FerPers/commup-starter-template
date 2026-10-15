@@ -380,6 +380,306 @@ export type Database = {
           },
         ]
       }
+      ce_causes: {
+        Row: {
+          code: string
+          condition: string | null
+          description: string
+          id: string
+          matrix_id: string
+          notes: string | null
+          project_id: string
+          seq: number
+          setpoint: string | null
+          signal_id: string | null
+          tag_id: string | null
+          voting: string | null
+        }
+        Insert: {
+          code: string
+          condition?: string | null
+          description: string
+          id?: string
+          matrix_id: string
+          notes?: string | null
+          project_id: string
+          seq?: number
+          setpoint?: string | null
+          signal_id?: string | null
+          tag_id?: string | null
+          voting?: string | null
+        }
+        Update: {
+          code?: string
+          condition?: string | null
+          description?: string
+          id?: string
+          matrix_id?: string
+          notes?: string | null
+          project_id?: string
+          seq?: number
+          setpoint?: string | null
+          signal_id?: string | null
+          tag_id?: string | null
+          voting?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ce_causes_matrix_id_fkey"
+            columns: ["matrix_id"]
+            isOneToOne: false
+            referencedRelation: "ce_matrices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_causes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_causes_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "signals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_causes_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "ce_causes_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_causes_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ce_effects: {
+        Row: {
+          action: string
+          code: string
+          description: string
+          id: string
+          matrix_id: string
+          notes: string | null
+          project_id: string
+          seq: number
+          tag_id: string | null
+        }
+        Insert: {
+          action?: string
+          code: string
+          description: string
+          id?: string
+          matrix_id: string
+          notes?: string | null
+          project_id: string
+          seq?: number
+          tag_id?: string | null
+        }
+        Update: {
+          action?: string
+          code?: string
+          description?: string
+          id?: string
+          matrix_id?: string
+          notes?: string | null
+          project_id?: string
+          seq?: number
+          tag_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ce_effects_matrix_id_fkey"
+            columns: ["matrix_id"]
+            isOneToOne: false
+            referencedRelation: "ce_matrices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_effects_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_effects_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "ce_effects_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_effects_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ce_links: {
+        Row: {
+          cause_id: string
+          delay_s: number | null
+          effect_id: string
+          link_type: string
+          note: string | null
+          project_id: string
+        }
+        Insert: {
+          cause_id: string
+          delay_s?: number | null
+          effect_id: string
+          link_type?: string
+          note?: string | null
+          project_id: string
+        }
+        Update: {
+          cause_id?: string
+          delay_s?: number | null
+          effect_id?: string
+          link_type?: string
+          note?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ce_links_cause_id_fkey"
+            columns: ["cause_id"]
+            isOneToOne: false
+            referencedRelation: "ce_causes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_links_effect_id_fkey"
+            columns: ["effect_id"]
+            isOneToOne: false
+            referencedRelation: "ce_effects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ce_matrices: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          org_id: string
+          project_id: string
+          revision: string | null
+          source: string
+          source_document: string | null
+          system_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          org_id: string
+          project_id: string
+          revision?: string | null
+          source?: string
+          source_document?: string | null
+          system_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          org_id?: string
+          project_id?: string
+          revision?: string | null
+          source?: string
+          source_document?: string | null
+          system_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ce_matrices_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_matrices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_matrices_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "ce_matrices_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "ce_matrices_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ce_matrices_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       certificate_punch_exceptions: {
         Row: {
           approved_at: string
@@ -992,127 +1292,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-        ]
-      }
-      interlocks: {
-        Row: {
-          action: string | null
-          cause_tag_id: string | null
-          description: string
-          effect_tag_id: string | null
-          id: string
-          interlock_number: string
-          project_id: string
-          set_point: string | null
-          subsystem_id: string
-        }
-        Insert: {
-          action?: string | null
-          cause_tag_id?: string | null
-          description: string
-          effect_tag_id?: string | null
-          id?: string
-          interlock_number: string
-          project_id: string
-          set_point?: string | null
-          subsystem_id: string
-        }
-        Update: {
-          action?: string | null
-          cause_tag_id?: string | null
-          description?: string
-          effect_tag_id?: string | null
-          id?: string
-          interlock_number?: string
-          project_id?: string
-          set_point?: string | null
-          subsystem_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "interlocks_cause_tag_id_fkey"
-            columns: ["cause_tag_id"]
-            isOneToOne: false
-            referencedRelation: "tag_360"
-            referencedColumns: ["tag_id"]
-          },
-          {
-            foreignKeyName: "interlocks_cause_tag_id_fkey"
-            columns: ["cause_tag_id"]
-            isOneToOne: false
-            referencedRelation: "tag_list_v"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "interlocks_cause_tag_id_fkey"
-            columns: ["cause_tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "interlocks_effect_tag_id_fkey"
-            columns: ["effect_tag_id"]
-            isOneToOne: false
-            referencedRelation: "tag_360"
-            referencedColumns: ["tag_id"]
-          },
-          {
-            foreignKeyName: "interlocks_effect_tag_id_fkey"
-            columns: ["effect_tag_id"]
-            isOneToOne: false
-            referencedRelation: "tag_list_v"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "interlocks_effect_tag_id_fkey"
-            columns: ["effect_tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "interlocks_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "interlocks_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_bottlenecks"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "interlocks_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "interlocks_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "interlocks_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "subsystems"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "interlocks_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "tag_360"
-            referencedColumns: ["subsystem_id"]
           },
         ]
       }
@@ -1848,10 +2027,12 @@ export type Database = {
       }
       itrs: {
         Row: {
+          ce_cause_id: string | null
           completed_date: string | null
           created_at: string
           id: string
           itr_number: string
+          loop_id: string | null
           phase_id: string
           progress_pct: number
           project_id: string
@@ -1862,10 +2043,12 @@ export type Database = {
           template_id: string
         }
         Insert: {
+          ce_cause_id?: string | null
           completed_date?: string | null
           created_at?: string
           id?: string
           itr_number: string
+          loop_id?: string | null
           phase_id: string
           progress_pct?: number
           project_id: string
@@ -1876,10 +2059,12 @@ export type Database = {
           template_id: string
         }
         Update: {
+          ce_cause_id?: string | null
           completed_date?: string | null
           created_at?: string
           id?: string
           itr_number?: string
+          loop_id?: string | null
           phase_id?: string
           progress_pct?: number
           project_id?: string
@@ -1890,6 +2075,20 @@ export type Database = {
           template_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "itrs_ce_cause_id_fkey"
+            columns: ["ce_cause_id"]
+            isOneToOne: false
+            referencedRelation: "ce_causes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itrs_loop_id_fkey"
+            columns: ["loop_id"]
+            isOneToOne: false
+            referencedRelation: "loops"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "itrs_phase_id_fkey"
             columns: ["phase_id"]
@@ -4418,16 +4617,22 @@ export type Database = {
         Row: {
           active: boolean
           alarm_setpoints: string | null
+          dcs_tag: string | null
           description: string | null
           destination: string | null
           eng_unit: string | null
           hi: number | null
           hi_hi: number | null
+          hmi_display: string | null
           id: string
+          io_card: string | null
+          io_channel: string | null
+          junction_box: string | null
           lo: number | null
           lo_lo: number | null
           loop_diagram: string | null
           loop_id: string | null
+          marshalling: string | null
           notes: string | null
           opc_node_id: string | null
           origin: string | null
@@ -4445,16 +4650,22 @@ export type Database = {
         Insert: {
           active?: boolean
           alarm_setpoints?: string | null
+          dcs_tag?: string | null
           description?: string | null
           destination?: string | null
           eng_unit?: string | null
           hi?: number | null
           hi_hi?: number | null
+          hmi_display?: string | null
           id?: string
+          io_card?: string | null
+          io_channel?: string | null
+          junction_box?: string | null
           lo?: number | null
           lo_lo?: number | null
           loop_diagram?: string | null
           loop_id?: string | null
+          marshalling?: string | null
           notes?: string | null
           opc_node_id?: string | null
           origin?: string | null
@@ -4472,16 +4683,22 @@ export type Database = {
         Update: {
           active?: boolean
           alarm_setpoints?: string | null
+          dcs_tag?: string | null
           description?: string | null
           destination?: string | null
           eng_unit?: string | null
           hi?: number | null
           hi_hi?: number | null
+          hmi_display?: string | null
           id?: string
+          io_card?: string | null
+          io_channel?: string | null
+          junction_box?: string | null
           lo?: number | null
           lo_lo?: number | null
           loop_diagram?: string | null
           loop_id?: string | null
+          marshalling?: string | null
           notes?: string | null
           opc_node_id?: string | null
           origin?: string | null
@@ -6787,6 +7004,10 @@ export type Database = {
         }[]
       }
       itr_table_config_valid: { Args: { p_options: Json }; Returns: boolean }
+      itr_table_deviation: {
+        Args: { p_formula: Json; p_observed: number; p_reference: number }
+        Returns: number
+      }
       itr_test_equipment_blocker: {
         Args: { p_itr_id: string }
         Returns: string

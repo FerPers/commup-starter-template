@@ -266,7 +266,9 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 | F4-A sesión 2: revisión de categoría (cola en Mi trabajo), impacto obligatorio en los 3 formularios, guía por disciplina + PDF del procedimiento, disposición en PSSR (bloquea enviar/aprobar) | ✅ sin migración; DEMO: P-0266 (Cat A, A100-S02) bloquea el PSSR-002 por «cerrar antes del arranque» | 69a67eb, 1bb0e2d |
 | F4-B equipos de prueba (calibración bloquea la firma del ITR) | ✅ migración `20261016150000_test_equipment`; inventario en /admin/test-equipment, sección en el ITR, PDF; 72 plantillas de DEMO y 44 del Catálogo marcadas | b866abb |
 | F4-C tabla v2 (desviación calculada + tolerancia, resultado automático, as found/as left, series con estabilidad) | ✅ migración `20261016180000_itr_table_v2`; 3 presets v2; plantilla DEMO-CAL-V2 + ITR DEMO-CAL-V2/PT-101 | bd0e802 |
-| F4-D loops/C&E ejecutables | ⏳ | — |
+| F4-D sesión 1: datos de lazos y matriz C&E (cadena JB → marshalling → I/O → DCS → HMI en señales; import de señales con columnas LAZO y cadena; pantalla de matrices C&E con causas, efectos y cruces directos o con retardo; reemplaza a `interlocks`) | ✅ migraciones `20261016210000_loops_ce_matrix` y `20261016220000_ce_guard_fix` (el trigger evaluaba `signal_id` también en efectos y fallaba toda inserción); DEMO: matriz CE-A100-S02 (C-01 PT-101 HH → E-01 ESDV-7621003, T5s) y lazo L-101 | (este commit) |
+| F4-D sesión 2: ITR de loop check (I29C v3) y de prueba por causa (I30C v3) generados con tabla automática; estado de prueba en cada celda de la matriz | ⏳ | — |
+| F4-D sesión 3: IA para importar matrices C&E (Excel/PDF) con revisión humana; seed DEMO de lazos, señales y matriz | ⏳ | — |
 | 📌 Pendiente: tablas de calibración del catálogo → tabla v2 con tolerancias reales (criterios con Luis; ver `PLAN-MIGRACION-ITR-V2` §9) | ⏳ | — |
 
 Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
@@ -296,3 +298,9 @@ Pendiente de Luis: probar en commup.app el ciclo de CIE-0001 con dos personas (O
 14. **Error y resultado calculados y bloqueados:** el inspector captura lo observado; la desviación (absoluta, % del span o % de la lectura) y el ✓/✗ salen de la tolerancia de la plantilla. CommUp y SQL recalculan siempre: lo que mande el cliente no cuenta.
 15. **As found fuera de tolerancia solo se marca** (dato para calidad/mantenimiento, en pantalla y PDF); la aceptación se evalúa con as left.
 16. **Serie de lecturas manual con criterio de estabilidad** (las últimas N lecturas dentro de [mín, máx]); traerlas de IIoT (`signal_samples`) queda para cuando haya datos.
+
+**Bloque D (Luis, 2026-10-15):**
+17. **Loop check y prueba C&E se ejecutan como ITR generado** desde una plantilla (I29C / I30C v3) con su tabla armada automáticamente: heredan firmas, equipo de prueba calibrado, tabla v2, PDF, offline y bloqueo de gates.
+18. **C&E: una prueba por causa** (disparo), con una fila por efecto: acción esperada/observada, realimentación, tiempo y reset. Se puede repartir entre cuadrillas.
+19. **El loop check se arma desde las señales del lazo:** cadena campo → JB → marshalling → canal I/O → tag DCS → HMI, puntos del rango y disparos de alarma; el técnico registra lo observado.
+20. **Importar la matriz C&E con IA desde Excel y PDF:** Claude propone causas, efectos y cruces; una persona revisa y acepta antes de guardar (nunca se guarda sin revisión).

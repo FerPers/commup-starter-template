@@ -16,6 +16,30 @@ type LoopTag = {
   tags: { id: string; tag_number: string } | null
 }
 
+// Cadena del loop check (fase 4-D): campo → JB → marshalling → tarjeta/canal I/O → tag DCS → HMI.
+type LoopSignal = {
+  id: string
+  signal_tag: string
+  signal_type: string
+  origin: string | null
+  junction_box: string | null
+  marshalling: string | null
+  io_card: string | null
+  io_channel: string | null
+  dcs_tag: string | null
+  hmi_display: string | null
+  tags: { tag_number: string } | null
+}
+
+const CHAIN: { key: keyof LoopSignal; label: string }[] = [
+  { key: 'junction_box', label: 'JB' },
+  { key: 'marshalling', label: 'Marshalling' },
+  { key: 'io_card', label: 'Tarjeta I/O' },
+  { key: 'io_channel', label: 'Canal' },
+  { key: 'dcs_tag', label: 'Tag DCS' },
+  { key: 'hmi_display', label: 'HMI' },
+]
+
 type LoopRow = {
   id: string
   loop_number: string
@@ -27,6 +51,7 @@ type LoopRow = {
     systems: { id: string; code: string; name: string; areas: { id: string; code: string; name: string } }
   } | null
   loop_tags: LoopTag[]
+  signals: LoopSignal[]
 }
 
 export default function LoopsView({
@@ -119,7 +144,7 @@ export default function LoopsView({
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ background: 'var(--gray-50)', borderBottom: '2px solid var(--border)' }}>
-                  {[t('loops.col.loopNumber'), t('loops.col.description'), t('loops.col.subsystem'), t('loops.col.discipline'), t('loops.col.tags'), t('col.status'), ''].map(h => (
+                  {[t('loops.col.loopNumber'), t('loops.col.description'), t('loops.col.subsystem'), t('loops.col.discipline'), t('loops.col.tags'), 'Señales', t('col.status'), ''].map(h => (
                     <th key={h} style={{
                       padding: '10px 12px', textAlign: 'left',
                       fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px',
@@ -131,7 +156,7 @@ export default function LoopsView({
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '13px' }}>
+                    <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '13px' }}>
                       {t('noResults')}
                     </td>
                   </tr>
@@ -176,6 +201,10 @@ export default function LoopsView({
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
                         {loop.loop_tags.length}
                       </td>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
+                        {loop.signals.length}
+                        {loop.signals.some(s => CHAIN.some(c => !s[c.key])) && <span title="Cadena incompleta: faltan datos para el loop check" style={{ color: '#b45309', marginLeft: '4px' }}>⚠</span>}
+                      </td>
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
@@ -195,7 +224,7 @@ export default function LoopsView({
           </div>
 
           {/* Tags detail panel */}
-          {selected && selected.loop_tags.length > 0 && (
+          {selected && (
             <div style={{ borderTop: '2px solid var(--border)', padding: '16px 24px', background: 'var(--gray-50)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
@@ -203,6 +232,7 @@ export default function LoopsView({
                 </span>
                 <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '16px' }}>✕</button>
               </div>
+              {selected.loop_tags.length === 0 && <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>Sin instrumentos asociados.</p>}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {selected.loop_tags.map(lt => lt.tags && (
                   <span key={lt.id} style={{
@@ -214,6 +244,32 @@ export default function LoopsView({
                   </span>
                 ))}
               </div>
+
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', margin: '18px 0 8px' }}>Señales y cadena del loop check</div>
+              {selected.signals.length === 0 ? (
+                <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>Sin señales en este lazo. Impórtalas con la columna LAZO en «Importar señales».</p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ borderCollapse: 'collapse', fontSize: '12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', minWidth: '100%' }}>
+                    <thead><tr>
+                      {['Señal', 'Tipo', 'Instrumento', ...CHAIN.map(c => c.label)].map(h => (
+                        <th key={h} style={{ padding: '7px 10px', textAlign: 'left', color: 'var(--text-muted)', fontSize: '11px', whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                      ))}
+                    </tr></thead>
+                    <tbody>{[...selected.signals].sort((a, b) => a.signal_tag.localeCompare(b.signal_tag)).map(sig => (
+                      <tr key={sig.id}>
+                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontWeight: 600, whiteSpace: 'nowrap' }}>{sig.signal_tag}</td>
+                        <td style={{ padding: '7px 10px' }}>{sig.signal_type}</td>
+                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{sig.tags?.tag_number ?? '—'}</td>
+                        {CHAIN.map(c => {
+                          const v = sig[c.key] as string | null
+                          return <td key={c.key} style={{ padding: '7px 10px', whiteSpace: 'nowrap', color: v ? 'var(--text-strong)' : '#b45309' }}>{v ?? 'falta'}</td>
+                        })}
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 

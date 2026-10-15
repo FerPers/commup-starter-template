@@ -19,7 +19,7 @@ type User = { id: string; full_name: string }
 
 const ENTITY_TYPES = [
   'tags', 'itrs', 'punches', 'certificates',
-  'systems', 'subsystems', 'loops', 'interlocks', 'signals',
+  'systems', 'subsystems', 'loops', 'ce_matrices', 'signals',
 ]
 
 const ACTION_COLORS: Record<string, string> = {

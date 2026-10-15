@@ -204,18 +204,6 @@ export interface Loop {
   status: TagStatus
 }
 
-export interface Interlock {
-  id: string
-  project_id: string
-  subsystem_id: string
-  interlock_number: string
-  description: string
-  cause_tag_id: string | null
-  effect_tag_id: string | null
-  set_point: string | null
-  action: string | null
-}
-
 // ── Module 5: Preservation ───────────────────────────────────
 
 export interface PreservationProcedure {

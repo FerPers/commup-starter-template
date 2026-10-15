@@ -149,7 +149,7 @@ function projectSections(projectId: string): ProjectSection[] {
       items: [
         { href: `${p}/signals`,       labelKey: 'signals',         icon: Activity },
         { href: `${p}/loops`,         labelKey: 'loops',           icon: GitBranch },
-        { href: `${p}/interlocks`,    labelKey: 'interlocks',      icon: Zap },
+        { href: `${p}/ce-matrices`,   labelKey: 'ceMatrices',      icon: Zap },
         { href: `${p}/pid-documents`, labelKey: 'pidDocuments',    icon: FileImage },
       ],
     },

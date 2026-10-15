@@ -23,6 +23,14 @@ export interface SignalRow {
   pid_drawing: string
   loop_diagram: string
   wiring_diagram: string
+  /** Fase 4-D: número de lazo y cadena del loop check (opcionales). */
+  loop_number?: string
+  junction_box?: string
+  marshalling?: string
+  io_card?: string
+  io_channel?: string
+  dcs_tag?: string
+  hmi_display?: string
   notes: string
   discipline_code: string
   area_code: string
@@ -37,6 +45,7 @@ export interface SignalImportResult {
   imported: number      // señales nuevas
   updated: number       // señales que ya existían
   tagsCreated: number   // tags instrumento creados porque no existían
+  loopsCreated: number  // lazos creados desde la columna LAZO
   skipped: number
   errors: { row: number; tag: string; reason: string }[]
   warnings: string[]
@@ -56,7 +65,7 @@ export const importSignals = withAuthOnly(
     if (!access.ok) return { error: access.error }
 
     const admin = createAdminClient()
-    const result: SignalImportResult = { imported: 0, updated: 0, tagsCreated: 0, skipped: 0, errors: [], warnings: [] }
+    const result: SignalImportResult = { imported: 0, updated: 0, tagsCreated: 0, loopsCreated: 0, skipped: 0, errors: [], warnings: [] }
 
     const { data: disciplinesData, error: discErr } = await admin
       .from('disciplines')
@@ -108,6 +117,36 @@ export const importSignals = withAuthOnly(
     const hier = await upsertHierarchy(admin, projectId, pending.map(p => p.row))
     if ('error' in hier) return { error: hier.error }
     result.warnings.push(...hier.warnings)
+
+    // ── Lazos (fase 4-D): se crean los que falten desde la columna LAZO ──
+    // Subsistema y disciplina del lazo = los de su primera señal en el archivo.
+    const loopIdMap = new Map<string, string>()
+    const loopSeeds = new Map<string, Pending>()
+    for (const p of pending) {
+      const loopNumber = normalizeCode(p.row.loop_number ?? '', '')
+      if (loopNumber && !loopSeeds.has(loopNumber)) loopSeeds.set(loopNumber, p)
+    }
+    if (loopSeeds.size > 0) {
+      const numbers = [...loopSeeds.keys()]
+      for (let i = 0; i < numbers.length; i += CHUNK) {
+        const { data: existingLoops, error: lErr } = await admin.from('loops').select('id, loop_number').eq('project_id', projectId).in('loop_number', numbers.slice(i, i + CHUNK))
+        if (lErr) return { error: lErr.message }
+        for (const l of existingLoops ?? []) loopIdMap.set(l.loop_number, l.id)
+      }
+      const newLoops: TablesInsert<'loops'>[] = []
+      for (const [loopNumber, p] of loopSeeds) {
+        if (loopIdMap.has(loopNumber)) continue
+        const subsystemId = hier.subsystemIdMap.get(normalizeCode(p.row.subsystem_code, DEFAULT_SUBSYSTEM))
+        if (!subsystemId) { result.warnings.push(`Lazo "${loopNumber}": subsistema "${p.row.subsystem_code}" no disponible`); continue }
+        newLoops.push({ project_id: projectId, subsystem_id: subsystemId, loop_number: loopNumber, discipline_id: p.discId, description: textOr(p.row.service, loopNumber) })
+      }
+      for (let i = 0; i < newLoops.length; i += CHUNK) {
+        const { data: inserted, error: insErr } = await admin.from('loops').insert(newLoops.slice(i, i + CHUNK)).select('id, loop_number')
+        if (insErr) return { error: `Lazos: ${insErr.message}` }
+        for (const l of inserted ?? []) loopIdMap.set(l.loop_number, l.id)
+        result.loopsCreated += inserted?.length ?? 0
+      }
+    }
 
     // ── Lotes ──────────────────────────────────────────────────
     for (let i = 0; i < pending.length; i += CHUNK) {
@@ -189,6 +228,13 @@ export const importSignals = withAuthOnly(
             loop_diagram: textOrNull(c.row.loop_diagram),
             wiring_diagram: textOrNull(c.row.wiring_diagram),
             notes: textOrNull(c.row.notes),
+            junction_box: textOrNull(c.row.junction_box),
+            marshalling: textOrNull(c.row.marshalling),
+            io_card: textOrNull(c.row.io_card),
+            io_channel: textOrNull(c.row.io_channel),
+            dcs_tag: textOrNull(c.row.dcs_tag),
+            hmi_display: textOrNull(c.row.hmi_display),
+            loop_id: loopIdMap.get(normalizeCode(c.row.loop_number ?? '', '')) ?? null,
           },
         })
       }
@@ -203,6 +249,13 @@ export const importSignals = withAuthOnly(
       const existingKeys = new Set((existingSigs ?? []).map(s => `${s.tag_id}|${s.signal_tag}`))
       const count = (p: TablesInsert<'signals'>) => {
         if (existingKeys.has(`${p.tag_id}|${p.signal_tag}`)) result.updated++; else result.imported++
+      }
+
+      // Instrumentos del lazo (loop_tags): idempotente por (loop_id, tag_id).
+      const loopTags = [...new Map(sigs.filter(s => s.payload.loop_id).map(s => [`${s.payload.loop_id}|${s.payload.tag_id}`, { loop_id: s.payload.loop_id!, tag_id: s.payload.tag_id }])).values()]
+      if (loopTags.length) {
+        const { error: ltErr } = await admin.from('loop_tags').upsert(loopTags, { onConflict: 'loop_id,tag_id', ignoreDuplicates: true })
+        if (ltErr) result.warnings.push(`Lazos ↔ instrumentos: ${ltErr.message}`)
       }
 
       const { error: batchErr } = await admin

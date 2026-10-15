@@ -26,7 +26,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     certCounts,
     { count: signalCount },
     { count: loopCount },
-    { count: interlockCount },
+    { count: ceMatrixCount },
   ] = await Promise.all([
     supabase
       .from('projects')
@@ -53,14 +53,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     fetchCertCounts(supabase, { projectId: id }),
     supabase
       .from('signals')
-      .select('id', { count: 'exact', head: true })
+      .select('id, tags!inner(project_id)', { count: 'exact', head: true })
       .eq('tags.project_id', id),
     supabase
       .from('loops')
       .select('id', { count: 'exact', head: true })
       .eq('project_id', id),
     supabase
-      .from('interlocks')
+      .from('ce_matrices')
       .select('id', { count: 'exact', head: true })
       .eq('project_id', id),
   ])
@@ -280,13 +280,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               actions={<ResourceLink href={`/projects/${project.id}/loops`}>Ver →</ResourceLink>}
             />
 
-            {/* Interlocks */}
+            {/* Matrices C&E (reemplazan a interlocks, fase 4-D) */}
             <ResourceRow
-              title="Interlocks / SIS"
-              detail={(interlockCount ?? 0) > 0
-                ? <span style={{ color: 'var(--danger-500)', fontWeight: 500 }}>{interlockCount} interlocks</span>
-                : 'Causa → efecto, set point y acción de seguridad'}
-              actions={<ResourceLink href={`/projects/${project.id}/interlocks`}>Ver →</ResourceLink>}
+              title="Matrices causa-efecto (SIS/ESD)"
+              detail={(ceMatrixCount ?? 0) > 0
+                ? <span style={{ color: 'var(--danger-500)', fontWeight: 500 }}>{ceMatrixCount} matrices C&E</span>
+                : 'Causas, efectos y cruces de la lógica de paro'}
+              actions={<ResourceLink href={`/projects/${project.id}/ce-matrices`}>Ver →</ResourceLink>}
             />
 
           </div>
