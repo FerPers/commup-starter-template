@@ -3856,6 +3856,362 @@ export type Database = {
           },
         ]
       }
+      register_events: {
+        Row: {
+          action: string
+          comment: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          item_id: string
+          org_id: string
+          project_id: string
+          to_status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          comment?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          item_id: string
+          org_id: string
+          project_id: string
+          to_status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          comment?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          item_id?: string
+          org_id?: string
+          project_id?: string
+          to_status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "register_events_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "register_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      register_item_links: {
+        Row: {
+          created_at: string
+          item_id: string
+          linked_item_id: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          item_id: string
+          linked_item_id: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          item_id?: string
+          linked_item_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "register_item_links_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "register_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_item_links_linked_item_id_fkey"
+            columns: ["linked_item_id"]
+            isOneToOne: false
+            referencedRelation: "register_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_item_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      register_item_tags: {
+        Row: {
+          item_id: string
+          project_id: string
+          role: string
+          tag_id: string
+        }
+        Insert: {
+          item_id: string
+          project_id: string
+          role?: string
+          tag_id: string
+        }
+        Update: {
+          item_id?: string
+          project_id?: string
+          role?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "register_item_tags_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "register_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_item_tags_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_item_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "register_item_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_item_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      register_items: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          authorized_at: string | null
+          authorized_by: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          data: Json
+          description: string | null
+          id: string
+          kind: string
+          number: string
+          org_id: string
+          owner_id: string | null
+          project_id: string
+          proposed_at: string
+          proposed_by: string | null
+          removed_at: string | null
+          removed_by: string | null
+          seq: number
+          status: string
+          system_id: string | null
+          title: string
+          type_id: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          authorized_at?: string | null
+          authorized_by?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          data?: Json
+          description?: string | null
+          id?: string
+          kind: string
+          number: string
+          org_id: string
+          owner_id?: string | null
+          project_id: string
+          proposed_at?: string
+          proposed_by?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          seq: number
+          status?: string
+          system_id?: string | null
+          title: string
+          type_id: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          authorized_at?: string | null
+          authorized_by?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          data?: Json
+          description?: string | null
+          id?: string
+          kind?: string
+          number?: string
+          org_id?: string
+          owner_id?: string | null
+          project_id?: string
+          proposed_at?: string
+          proposed_by?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          seq?: number
+          status?: string
+          system_id?: string | null
+          title?: string
+          type_id?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "register_items_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_items_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_items_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "register_items_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "register_items_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_items_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "register_items_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "register_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      register_types: {
+        Row: {
+          blocks_gate_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          kind: string
+          org_id: string
+          prefix: string
+        }
+        Insert: {
+          blocks_gate_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind: string
+          org_id: string
+          prefix: string
+        }
+        Update: {
+          blocks_gate_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          org_id?: string
+          prefix?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "register_types_blocks_gate_id_fkey"
+            columns: ["blocks_gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "register_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signal_sample_batches: {
         Row: {
           accepted_count: number
@@ -6082,6 +6438,14 @@ export type Database = {
           system_id: string
         }[]
       }
+      configure_register_type: {
+        Args: {
+          p_blocks_gate_id: string
+          p_is_active: boolean
+          p_type_id: string
+        }
+        Returns: undefined
+      }
       create_api_key: {
         Args: {
           p_expires_at?: string
@@ -6097,6 +6461,19 @@ export type Database = {
       }
       create_itr_template_revision: {
         Args: { p_template_id: string }
+        Returns: string
+      }
+      create_register_item: {
+        Args: {
+          p_data?: Json
+          p_description?: string
+          p_kind: string
+          p_owner_id?: string
+          p_project_id: string
+          p_system_id?: string
+          p_tags?: Json
+          p_title: string
+        }
         Returns: string
       }
       create_webhook_subscription: {
@@ -6145,10 +6522,12 @@ export type Database = {
         Args: { p_endpoint: string }
         Returns: undefined
       }
+      delete_register_item: { Args: { p_item_id: string }; Returns: undefined }
       delete_webhook_subscription: {
         Args: { p_sub_id: string }
         Returns: undefined
       }
+      ensure_register_types: { Args: { p_org_id: string }; Returns: undefined }
       evaluate_itr_capture: { Args: { p_itr_id: string }; Returns: Json }
       evaluate_itr_continuity: { Args: { p_value: string }; Returns: Json }
       evaluate_itr_table: {
@@ -6206,6 +6585,10 @@ export type Database = {
         }[]
       }
       itr_table_config_valid: { Args: { p_options: Json }; Returns: boolean }
+      link_register_items: {
+        Args: { p_item_id: string; p_link?: boolean; p_linked_item_id: string }
+        Returns: undefined
+      }
       list_catalog_template_updates: {
         Args: { p_org_id: string }
         Returns: {
@@ -6272,6 +6655,11 @@ export type Database = {
           n: number
           status: Database["public"]["Enums"]["punch_status"]
         }[]
+      }
+      register_caller_role: { Args: { p_project_id: string }; Returns: string }
+      register_set_tags: {
+        Args: { p_item_id: string; p_project_id: string; p_tags: Json }
+        Returns: undefined
       }
       reject_itr_suggestion: {
         Args: { p_note?: string; p_suggestion_id: string }
@@ -6346,6 +6734,15 @@ export type Database = {
         }
         Returns: string
       }
+      transition_register_item: {
+        Args: {
+          p_comment?: string
+          p_data?: Json
+          p_item_id: string
+          p_to: string
+        }
+        Returns: string
+      }
       update_punch_ops_status: {
         Args: {
           p_new_status: string
@@ -6357,6 +6754,18 @@ export type Database = {
       }
       update_push_subscription_topics: {
         Args: { p_endpoint: string; p_topics: string[] }
+        Returns: undefined
+      }
+      update_register_item: {
+        Args: {
+          p_data: Json
+          p_description: string
+          p_item_id: string
+          p_owner_id?: string
+          p_system_id: string
+          p_tags?: Json
+          p_title: string
+        }
         Returns: undefined
       }
       upsert_push_subscription: {

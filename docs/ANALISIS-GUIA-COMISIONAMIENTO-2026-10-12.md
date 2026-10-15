@@ -238,3 +238,10 @@ Total aproximado: **22–27 sesiones**. Cada fase se puede vender y demostrar po
 4. **DEMO para Geopark:** renombrar los 14 sistemas con nombres creíbles, asignar tipo/prioridad y sembrar dependencias.
 
 Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, reglas puras en `src/lib/systems/dependencies.ts`, tests `tests/db/dependencies.test.ts`. Siguen la sesión 2 (ficha de sistema, matriz, importación Excel, Control Tower) y la 3 (IA, pines por sistema, datos de DEMO).
+
+## 8. Decisiones de la fase 3 (Luis, 2026-10-15)
+1. **Un motor de registros** con tipos de un **catálogo fijo en código** (temporales, ciegas, reinstalación, bypass, energización, test pack). La org activa/desactiva tipos y ajusta qué gate bloquea cada uno; los campos personalizados quedan para después.
+2. **El test pack es el registro de prueba:** presión alcanzada, duración, resultado, testigo y firmas viven en el pack (su ciclo hace de firma). Relación pack ↔ líneas N:M (las líneas son tags). Las líneas quedan «probadas» cuando el pack se verifica. No se generan ITR por línea.
+3. **Bloqueos por defecto del libro, editables:** ciegas y temporales → RFC (penúltimo gate); bypass y reinstalación → RFSU (último); test pack sin verificar → MC (primero); energización no bloquea. Bloquea todo ítem no verificado ni cancelado del sistema (por `system_id` o por sus tags).
+4. **F3 sale online.** Captura offline de registros, después de validar el flujo con usuarios.
+5. Ciclo común: propuesto → autorizado → activo → retirado/restaurado → verificado (+ cancelado). Autoriza una persona distinta de quien propuso; verifica una distinta de quien retiró. Escritura solo por RPC.

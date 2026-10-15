@@ -166,6 +166,22 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
         )
       }
 
+      case 'registers_clear': {
+        const open = (d.open as { id: string; number: string; title: string; status: string }[]) ?? []
+        if (!open.length) return <span style={small}>{t('crit.registersNone')}</span>
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={small}>{t('crit.registersOpen', { count: open.length })}</span>
+            <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
+              {open.slice(0, 10).map(r => (
+                <li key={r.id}><strong style={{ color: 'var(--text-strong)' }}>{r.number}</strong> {r.title} · {t(`registerStatus.${r.status}`)}</li>
+              ))}
+              {open.length > 10 && <li>{t('andMore', { count: open.length - 10 })}</li>}
+            </ul>
+          </div>
+        )
+      }
+
       case 'itr_phase_approved': {
         if (d.error === 'no_phase') return <span style={small}>{t('crit.noPhase')}</span>
         const red = (d.red_subsystems as { id: string; code: string; reason: string; itr_total: number; itr_approved: number; open_a: number; open_b: number }[]) ?? []

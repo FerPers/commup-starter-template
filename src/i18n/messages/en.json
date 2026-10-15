@@ -2300,7 +2300,8 @@
       "certificates_issued": "Certificates issued in every subsystem",
       "pssr_approved": "PSSR approved",
       "critical_tags_ready": "Critical tags complete",
-      "manual_attestation": "Attestation with evidence"
+      "manual_attestation": "Attestation with evidence",
+      "registers_clear": "Controlled registers closed"
     },
     "crit": {
       "previousOk": "The previous gate is approved.",
@@ -2317,7 +2318,9 @@
       "pssrStatus": "PSSR {number}: {status}",
       "pssrNone": "No PSSR for this system.",
       "criticalSummary": "{total} critical tags · {failing} with pending items",
-      "criticalTagDetail": "{itrs} unapproved ITR(s) · {punches} open A/B punch(es)"
+      "criticalTagDetail": "{itrs} unapproved ITR(s) · {punches} open A/B punch(es)",
+      "registersNone": "No open registers (temporaries, blinds, bypasses…) block this gate.",
+      "registersOpen": "{count, plural, one {# open register} other {# open registers}}: they must be verified or cancelled."
     },
     "reason": {
       "cat_a": "{a} open Cat A punch(es)",
@@ -2364,7 +2367,15 @@
     },
     "dependsOn": "Depends on",
     "enables": "Enables",
-    "systemFile": "System page"
+    "systemFile": "System page",
+    "registerStatus": {
+      "proposed": "proposed",
+      "authorized": "authorized",
+      "active": "active",
+      "removed": "removed",
+      "verified": "verified",
+      "cancelled": "cancelled"
+    }
   },
   "GatesAdmin": {
     "title": "Gates (hold points)",
