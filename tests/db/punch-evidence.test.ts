@@ -10,7 +10,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  *   - quien levantó el punch no revisa su categoría.
  * La verificación aceptada por OTRA persona se prueba en la UI con dos usuarios.
  *
- * Crea un punch en un subsistema de TEST_PROJECT_A_ID y lo borra al final.
+ * Siembra su propia área/sistema/subsistema en TEST_PROJECT_A_ID (los tests de BD corren en paralelo:
+ * un punch en un subsistema ajeno altera los conteos de readiness.test) y la borra al final.
  */
 const env = process.env
 const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
@@ -18,6 +19,8 @@ const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TE
 const pid = env.TEST_PROJECT_A_ID!
 let a: SupabaseClient
 let punchId = ''
+let areaId = ''
+const stamp = `PE${Date.now().toString(36).toUpperCase()}`
 
 async function punch() {
   const { data, error } = await a.from('punches').select('status, resolved_at, resolved_by, category_reviewed_at').eq('id', punchId).single()
@@ -32,8 +35,13 @@ describe.skipIf(!enabled)('punch — resolver y verificar en campo por otra pers
     if (error) throw new Error(`login A: ${error.message}`)
 
     const { data: project } = await a.from('projects').select('org_id').eq('id', pid).single()
-    const { data: sub } = await a.from('subsystems').select('id, systems!inner(project_id)').eq('systems.project_id', pid).limit(1).single()
     const { data: disc } = await a.from('disciplines').select('id').eq('org_id', project!.org_id).limit(1).single()
+    const { data: area, error: aErr } = await a.from('areas').insert({ project_id: pid, code: `${stamp}-A`, name: 'test' }).select('id').single()
+    if (aErr) throw new Error(`area: ${aErr.message}`)
+    areaId = area!.id
+    const { data: sys } = await a.from('systems').insert({ project_id: pid, area_id: areaId, code: `${stamp}-S`, name: 'test' }).select('id').single()
+    const { data: sub, error: sErr } = await a.from('subsystems').insert({ project_id: pid, system_id: sys!.id, code: `${stamp}-SS`, name: 'test' }).select('id').single()
+    if (sErr) throw new Error(`subsystem: ${sErr.message}`)
     const { data: created, error: insErr } = await a.from('punches').insert({
       project_id: pid, subsystem_id: sub!.id, discipline_id: disc!.id, raised_by: auth.user!.id,
       category: 'B', description: `TEST evidencia ${Date.now().toString(36)}`, punch_number: 'TMP',
@@ -46,6 +54,7 @@ describe.skipIf(!enabled)('punch — resolver y verificar en campo por otra pers
 
   afterAll(async () => {
     if (punchId) await a.from('punches').delete().eq('id', punchId)
+    if (areaId) await a.from('areas').delete().eq('id', areaId)
   })
 
   it('al crear no se puede sembrar la resolución', async () => {
