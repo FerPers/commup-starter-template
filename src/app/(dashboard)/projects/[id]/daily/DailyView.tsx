@@ -166,10 +166,12 @@ export default function DailyView({ project, initialTab, actions, constraints, t
             {t(`tab.${k}`)} · {counts[k]}
           </button>
         ))}
-        <Link href={`/projects/${project.id}/daily/lookahead`}
-          style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>
-          {t('tab.lookahead')} →
-        </Link>
+        {(['lookahead', 'reports', 'handovers'] as const).map(k => (
+          <Link key={k} href={`/projects/${project.id}/daily/${k}`}
+            style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>
+            {t(`tab.${k}`)}
+          </Link>
+        ))}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>

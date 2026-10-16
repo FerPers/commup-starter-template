@@ -2241,7 +2241,8 @@
       "punchesReview": "Categories to review",
       "actions": "my actions",
       "actionsVerify": "actions to verify",
-      "constraints": "my constraints"
+      "constraints": "my constraints",
+      "handovers": "handovers to receive"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2254,7 +2255,8 @@
       "punchesReview": "Punch categories to review",
       "actions": "My actions",
       "actionsVerify": "Actions to verify",
-      "constraints": "My constraints"
+      "constraints": "My constraints",
+      "handovers": "Shift handovers to receive"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -2267,7 +2269,8 @@
       "punchesReview": "No categories to review.",
       "actions": "You have no open actions.",
       "actionsVerify": "No done actions waiting for verification.",
-      "constraints": "You have no open constraints."
+      "constraints": "You have no open constraints.",
+      "handovers": "No handovers waiting to be received."
     },
     "due": {
       "overdue": "due {date}",
@@ -2278,7 +2281,8 @@
       "sign": "sign",
       "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}",
       "verify": "Verify",
-      "escalate": "{days, plural, one {overdue # day} other {overdue # days}} · escalate"
+      "escalate": "{days, plural, one {overdue # day} other {overdue # days}} · escalate",
+      "receive": "Receive"
     },
     "punchStatus": {
       "open": "Open",
@@ -2287,7 +2291,12 @@
       "cancelled": "Cancelled",
       "resolved": "Resolved · to verify"
     },
-    "constraintLevel": "L{n}"
+    "constraintLevel": "L{n}",
+    "shift": {
+      "day": "Day",
+      "night": "Night",
+      "other": "Shift"
+    }
   },
   "MobileTabBar": {
     "aria": "Field navigation",
@@ -3105,7 +3114,9 @@
       "constraints": "Constraints",
       "tqs": "TQ",
       "decisions": "Decisions",
-      "lookahead": "Look-ahead"
+      "lookahead": "Look-ahead",
+      "reports": "Report",
+      "handovers": "Handover"
     },
     "kpi": {
       "actionsOpen": "Open",
@@ -3433,6 +3444,131 @@
       "reason": "Reason for the commitment change (required)",
       "saveChanges": "Save {n, plural, one {# change} other {# changes}}",
       "discard": "Discard"
+    },
+    "reports": {
+      "subtitle": "Daily project report: the day’s data comes from the database, AI drafts the text and the issuer reviews it. Once issued it is immutable (hash); corrections are issued as a revision."
+    },
+    "handovers": {
+      "subtitle": "Shift handover: what stays in the field (bypasses, blinds, temporaries, energised items, Cat A punches, constraints) plus pending items and safety notes. Signed by whoever hands over and whoever receives."
+    },
+    "report": {
+      "date": "Date",
+      "area": "Area",
+      "allAreas": "Whole project",
+      "generating": "Generating…",
+      "createDraft": "Generate draft",
+      "createHelp": "If a draft for that date exists, it opens and its data is refreshed. If it was issued, open it and create a revision.",
+      "col": {
+        "number": "Number",
+        "date": "Date",
+        "area": "Area",
+        "status": "Status",
+        "issued": "Issued"
+      },
+      "status": {
+        "draft": "Draft",
+        "issued": "Issued",
+        "superseded": "Superseded"
+      },
+      "empty": "No daily reports yet.",
+      "dataAt": "data as of {when}",
+      "aiAt": "AI draft {when}",
+      "issuedBy": "issued by {who} on {when}",
+      "revisionOf": "Revision R{n} — {reason}",
+      "superseded": "This report was superseded by",
+      "aiOff": "AI is not configured in this environment: fill in the sections manually.",
+      "ai": "Draft with AI",
+      "aiWorking": "Drafting…",
+      "refresh": "Refresh data",
+      "issue": "Issue",
+      "revise": "New revision",
+      "pdf": "View PDF",
+      "issueRole": "Only leaders or above issue the report.",
+      "sectionsTitle": "Report sections",
+      "section": {
+        "summary": "Summary",
+        "key_events": "Key events",
+        "issues": "Issues",
+        "constraints": "Constraints",
+        "next_day_plan": "Next-day plan"
+      },
+      "placeholder": {
+        "summary": "3–5 sentences: progress, the day’s highlights and the main risk.",
+        "key_events": "- Relevant ITRs, gates or punches of the day",
+        "issues": "- Failures, regressions, Cat A punches, overdue actions",
+        "constraints": "- L≥3 or overdue constraints and their recovery",
+        "next_day_plan": "- Tomorrow’s priorities (committed gates, constraints due)"
+      },
+      "dataTitle": "Day data (frozen snapshot)",
+      "fact": {
+        "weighted": "Weighted progress",
+        "noPrev": "no previous snapshot",
+        "gates": "Gates approved",
+        "itrs": "ITRs approved today",
+        "itrsSub": "{done} completed · {wip} in progress",
+        "punches": "Punches raised today",
+        "punchesSub": "{closed} closed · {a} open Cat A",
+        "constraints": "Open constraints",
+        "overdue": "{n} overdue",
+        "actions": "Open actions"
+      },
+      "list": {
+        "critical": "Critical constraints",
+        "regressed": "Regressed gates",
+        "field": "Temporary state in the field",
+        "lookahead": "Next 7 days",
+        "none": "None."
+      },
+      "dataNote": "PDF figures come from this data, not from the text. “Refresh data” retakes the snapshot (draft only).",
+      "aiReplaceConfirm": "The report already has text. Replace it with the AI draft? (Cancel = AI only fills empty sections)",
+      "issueConfirm": "Once issued the report becomes immutable. Issue now?",
+      "revisePrompt": "Reason for the revision:"
+    },
+    "handover": {
+      "date": "Shift date",
+      "shift": "Shift",
+      "label": {
+        "day": "Day",
+        "night": "Night",
+        "other": "Other"
+      },
+      "open": "Open handover",
+      "openHelp": "What is in the field today is preloaded; the snapshot is retaken when handing over.",
+      "col": {
+        "number": "Number",
+        "date": "Date",
+        "shift": "Shift",
+        "status": "Status",
+        "handedBy": "Handed over by",
+        "receivedBy": "Received by"
+      },
+      "status": {
+        "draft": "Draft",
+        "handed_over": "Handed over",
+        "accepted": "Received"
+      },
+      "toReceive": "to receive",
+      "empty": "No handovers yet.",
+      "snapshotAt": "Field state as of {when}",
+      "snapshotRefresh": "refreshed when handing over",
+      "safety": "Safety notes",
+      "safetyHint": "Isolations, active bypasses, hot work, restricted areas…",
+      "pending": "Pending items for the incoming shift",
+      "pendingHint": "- What to finish, what to watch, whom to call",
+      "handOver": "Hand over shift",
+      "handOverConfirm": "Handing over takes the final field snapshot and locks editing. Hand over?",
+      "onlyOpener": "Only {who} (who opened it) can edit and hand it over.",
+      "signatures": "Signatures",
+      "handedBy": "Handed over by",
+      "receivedBy": "Received by",
+      "commentHint": "Comment (optional): what you checked on receiving",
+      "accept": "Receive and sign",
+      "waiting": "Waiting for someone else to receive it.",
+      "registers": "Registers in the field (bypasses, blinds, temporaries, energised)",
+      "punchesA": "Open Cat A punches",
+      "constraints": "Open constraints",
+      "actionsOverdue": "Overdue actions",
+      "itrs": "ITRs in progress"
     }
   }
 }

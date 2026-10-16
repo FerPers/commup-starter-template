@@ -2241,7 +2241,8 @@
       "punchesReview": "Categorías por revisar",
       "actions": "acciones mías",
       "actionsVerify": "acciones por verificar",
-      "constraints": "restricciones mías"
+      "constraints": "restricciones mías",
+      "handovers": "relevos por recibir"
     },
     "queues": {
       "execute": "ITRs por ejecutar",
@@ -2254,7 +2255,8 @@
       "punchesReview": "Categoría de punch por revisar",
       "actions": "Mis acciones",
       "actionsVerify": "Acciones por verificar",
-      "constraints": "Mis restricciones"
+      "constraints": "Mis restricciones",
+      "handovers": "Relevos de turno por recibir"
     },
     "empty": {
       "execute": "No tienes ITRs pendientes de ejecución.",
@@ -2267,7 +2269,8 @@
       "punchesReview": "No hay categorías por revisar.",
       "actions": "No tienes acciones abiertas.",
       "actionsVerify": "No hay acciones hechas esperando verificación.",
-      "constraints": "No tienes restricciones abiertas."
+      "constraints": "No tienes restricciones abiertas.",
+      "handovers": "No hay relevos esperando que alguien los reciba."
     },
     "due": {
       "overdue": "vence {date}",
@@ -2278,7 +2281,8 @@
       "sign": "firmar",
       "overdueDays": "{days, plural, one {# día de atraso} other {# días de atraso}}",
       "verify": "Verificar",
-      "escalate": "{days, plural, one {vencida # día} other {vencida # días}} · escalar"
+      "escalate": "{days, plural, one {vencida # día} other {vencida # días}} · escalar",
+      "receive": "Recibir"
     },
     "punchStatus": {
       "open": "Abierto",
@@ -2287,7 +2291,12 @@
       "cancelled": "Cancelado",
       "resolved": "Resuelto · por verificar"
     },
-    "constraintLevel": "N{n}"
+    "constraintLevel": "N{n}",
+    "shift": {
+      "day": "Día",
+      "night": "Noche",
+      "other": "Turno"
+    }
   },
   "MobileTabBar": {
     "aria": "Navegación de campo",
@@ -3105,7 +3114,9 @@
       "constraints": "Restricciones",
       "tqs": "TQ",
       "decisions": "Decisiones",
-      "lookahead": "Look-ahead"
+      "lookahead": "Look-ahead",
+      "reports": "Reporte",
+      "handovers": "Relevo"
     },
     "kpi": {
       "actionsOpen": "Abiertas",
@@ -3433,6 +3444,131 @@
       "reason": "Motivo del cambio de compromiso (obligatorio)",
       "saveChanges": "Guardar {n, plural, one {# cambio} other {# cambios}}",
       "discard": "Descartar"
+    },
+    "reports": {
+      "subtitle": "Reporte diario del proyecto: los datos del día salen de la base de datos, la IA redacta un borrador y quien emite lo revisa. Emitido queda inmutable (hash); para corregir se emite una revisión."
+    },
+    "handovers": {
+      "subtitle": "Relevo de turno: lo que queda en campo (bypass, ciegas, temporales, energizados, punch A, restricciones) más pendientes y notas de seguridad. Lo firman quien entrega y quien recibe."
+    },
+    "report": {
+      "date": "Fecha",
+      "area": "Área",
+      "allAreas": "Todo el proyecto",
+      "generating": "Generando…",
+      "createDraft": "Generar borrador",
+      "createHelp": "Si ya hay un borrador de esa fecha, se abre y se actualizan sus datos. Si ya se emitió, ábrelo y crea una revisión.",
+      "col": {
+        "number": "Número",
+        "date": "Fecha",
+        "area": "Área",
+        "status": "Estado",
+        "issued": "Emitido"
+      },
+      "status": {
+        "draft": "Borrador",
+        "issued": "Emitido",
+        "superseded": "Reemplazado"
+      },
+      "empty": "Aún no hay reportes diarios.",
+      "dataAt": "datos al {when}",
+      "aiAt": "borrador IA {when}",
+      "issuedBy": "emitido por {who} el {when}",
+      "revisionOf": "Revisión R{n} — {reason}",
+      "superseded": "Este reporte fue reemplazado por",
+      "aiOff": "La IA no está configurada en este entorno: completa las secciones a mano.",
+      "ai": "Redactar con IA",
+      "aiWorking": "Redactando…",
+      "refresh": "Actualizar datos",
+      "issue": "Emitir",
+      "revise": "Nueva revisión",
+      "pdf": "Ver PDF",
+      "issueRole": "Solo líderes o superiores emiten el reporte.",
+      "sectionsTitle": "Secciones del reporte",
+      "section": {
+        "summary": "Resumen",
+        "key_events": "Eventos clave",
+        "issues": "Fallas y problemas",
+        "constraints": "Restricciones",
+        "next_day_plan": "Plan del día siguiente"
+      },
+      "placeholder": {
+        "summary": "3–5 frases: avance, lo más relevante del día y el principal riesgo.",
+        "key_events": "- ITR, gates o punch relevantes del día",
+        "issues": "- Fallas, regresiones, punch Cat A, acciones vencidas",
+        "constraints": "- Restricciones N≥3 o vencidas y su recuperación",
+        "next_day_plan": "- Prioridades de mañana (gates comprometidos, restricciones que vencen)"
+      },
+      "dataTitle": "Datos del día (foto congelada)",
+      "fact": {
+        "weighted": "Avance ponderado",
+        "noPrev": "sin snapshot previo",
+        "gates": "Gates aprobados",
+        "itrs": "ITR aprobados hoy",
+        "itrsSub": "{done} completados · {wip} en curso",
+        "punches": "Punch levantados hoy",
+        "punchesSub": "{closed} cerrados · {a} Cat A abiertos",
+        "constraints": "Restricciones abiertas",
+        "overdue": "{n} vencidas",
+        "actions": "Acciones abiertas"
+      },
+      "list": {
+        "critical": "Restricciones críticas",
+        "regressed": "Gates en regresión",
+        "field": "Estado temporal en campo",
+        "lookahead": "Próximos 7 días",
+        "none": "Nada."
+      },
+      "dataNote": "Las cifras del PDF salen de estos datos, no del texto. «Actualizar datos» vuelve a tomar la foto (solo en borrador).",
+      "aiReplaceConfirm": "Ya hay texto en el reporte. ¿Reemplazarlo por la redacción de la IA? (Cancelar = la IA solo llena las secciones vacías)",
+      "issueConfirm": "Al emitir, el reporte queda inmutable. ¿Emitir ahora?",
+      "revisePrompt": "Motivo de la revisión:"
+    },
+    "handover": {
+      "date": "Fecha del turno",
+      "shift": "Turno",
+      "label": {
+        "day": "Día",
+        "night": "Noche",
+        "other": "Otro"
+      },
+      "open": "Abrir relevo",
+      "openHelp": "Se precarga lo que está hoy en campo; al entregar se vuelve a tomar la foto.",
+      "col": {
+        "number": "Número",
+        "date": "Fecha",
+        "shift": "Turno",
+        "status": "Estado",
+        "handedBy": "Entrega",
+        "receivedBy": "Recibe"
+      },
+      "status": {
+        "draft": "Borrador",
+        "handed_over": "Entregado",
+        "accepted": "Recibido"
+      },
+      "toReceive": "por recibir",
+      "empty": "Aún no hay relevos.",
+      "snapshotAt": "Estado en campo al {when}",
+      "snapshotRefresh": "se actualiza al entregar",
+      "safety": "Notas de seguridad",
+      "safetyHint": "Aislamientos, bypass activos, trabajos en caliente, áreas restringidas…",
+      "pending": "Pendientes para el turno entrante",
+      "pendingHint": "- Qué dejar terminado, qué vigilar, a quién llamar",
+      "handOver": "Entregar turno",
+      "handOverConfirm": "Al entregar se toma la foto final del campo y ya no se puede editar. ¿Entregar?",
+      "onlyOpener": "Solo {who} (quien lo abrió) lo edita y entrega.",
+      "signatures": "Firmas",
+      "handedBy": "Entrega",
+      "receivedBy": "Recibe",
+      "commentHint": "Comentario (opcional): qué verificaste al recibir",
+      "accept": "Recibir y firmar",
+      "waiting": "Esperando que otra persona lo reciba.",
+      "registers": "Registros en campo (bypass, ciegas, temporales, energizados)",
+      "punchesA": "Punch Cat A abiertos",
+      "constraints": "Restricciones abiertas",
+      "actionsOverdue": "Acciones vencidas",
+      "itrs": "ITR en curso"
     }
   }
 }

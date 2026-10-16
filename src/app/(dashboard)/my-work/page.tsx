@@ -58,7 +58,7 @@ export default async function MyWorkPage() {
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }] = await Promise.all([
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }] = await Promise.all([
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
     supabase
       .from('itr_assignments')
@@ -141,6 +141,15 @@ export default async function MyWorkPage() {
       .in('project_id', projectIds)
       .order('need_date', { ascending: true })
       .limit(QUEUE_LIMIT + 1),
+    // Fase 5 (sesión 3): relevos entregados por otros, por recibir.
+    role === 'client' || projectIds.length === 0 ? none : supabase
+      .from('shift_handovers')
+      .select('id, number, shift_date, shift_label, handed_at, project_id, projects(code)')
+      .eq('status', 'handed_over')
+      .neq('handed_by', userId)
+      .in('project_id', projectIds)
+      .order('handed_at', { ascending: true })
+      .limit(QUEUE_LIMIT + 1),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -158,6 +167,9 @@ export default async function MyWorkPage() {
     id: string; number: string; title: string; escalation_level: number; need_date: string; project_id: string
     projects: { code: string } | null; systems: { code: string } | null
   }[]
+  const handoverRows = (handovers ?? []) as unknown as {
+    id: string; number: string; shift_date: string; shift_label: string; handed_at: string; project_id: string; projects: { code: string } | null
+  }[]
   const dailyHref = (projectId: string | undefined, tab: string) => (projectId ? `/projects/${projectId}/daily?tab=${tab}` : '/projects')
 
   const projectsInvolved = new Set<string>([
@@ -170,7 +182,7 @@ export default async function MyWorkPage() {
     ...constraintRows.map(c => c.project_id),
   ].filter(Boolean))
   const personalTotal = counts.itrs_execute + counts.itrs_review + counts.punches + counts.plan_items + (signer ? counts.signatures : 0)
-    + counts.actions_mine + counts.constraints_mine
+    + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0)
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
@@ -212,6 +224,7 @@ export default async function MyWorkPage() {
         <Chip n={counts.actions_mine} label={t('chips.actions')} tone={counts.actions_mine > 0 ? 'warning' : 'neutral'} />
         {role !== 'client' && <Chip n={counts.actions_verify} label={t('chips.actionsVerify')} tone={counts.actions_verify > 0 ? 'info' : 'neutral'} />}
         <Chip n={counts.constraints_mine} label={t('chips.constraints')} tone={counts.constraints_mine > 0 ? 'danger' : 'neutral'} />
+        {role !== 'client' && <Chip n={counts.handovers_to_receive} label={t('chips.handovers')} tone={counts.handovers_to_receive > 0 ? 'info' : 'neutral'} />}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -316,6 +329,17 @@ export default async function MyWorkPage() {
               <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe="#7c3aed"
                 code={a.number} what={a.title} project={a.projects?.code}
                 right={<Pill tone="info" style={{ background: '#f5f3ff', color: '#7c3aed' }}>{t('due.verify')}</Pill>} />
+            ))}
+          </Queue>
+        )}
+
+        {/* Relevos de turno por recibir (fase 5, sesión 3) */}
+        {role !== 'client' && (
+          <Queue title={t('queues.handovers')} count={Math.min(handoverRows.length, QUEUE_LIMIT)} total={counts.handovers_to_receive} emptyText={t('empty.handovers')} moreHref={handoverRows[0] ? `/projects/${handoverRows[0].project_id}/daily/handovers` : '/projects'} moreLabel={t('viewAll', { count: counts.handovers_to_receive })} limit={QUEUE_LIMIT}>
+            {handoverRows.slice(0, QUEUE_LIMIT).map(h => (
+              <Row key={h.id} href={`/projects/${h.project_id}/daily/handovers/${h.id}`} stripe="#1d4ed8"
+                code={h.number} what={`${h.shift_date} · ${t(`shift.${h.shift_label}`)}`} project={h.projects?.code}
+                right={<Pill tone="info">{t('due.receive')}</Pill>} />
             ))}
           </Queue>
         )}

@@ -220,7 +220,7 @@ export function Evidence({ projectId, kind, entityId, attachments, names, canAdd
 }
 
 /** Cabecera y pestañas como enlaces (para subpáginas del hub, p. ej. el look-ahead). */
-export function DailyTabs({ project, active }: { project: { id: string; code: string; name: string }; active: 'lookahead' }) {
+export function DailyTabs({ project, active }: { project: { id: string; code: string; name: string }; active: 'lookahead' | 'reports' | 'handovers' }) {
   const t = useTranslations('Daily')
   const base = `/projects/${project.id}/daily`
   const tab = (on: boolean): React.CSSProperties => ({
@@ -237,7 +237,9 @@ export function DailyTabs({ project, active }: { project: { id: string; code: st
       </div>
       <nav aria-label={t('title')} style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
         {(['actions', 'constraints', 'tqs', 'decisions'] as const).map(k => <Link key={k} href={`${base}?tab=${k}`} style={tab(false)}>{t(`tab.${k}`)}</Link>)}
-        <Link href={`${base}/lookahead`} aria-current="page" style={tab(active === 'lookahead')}>{t('tab.lookahead')}</Link>
+        {(['lookahead', 'reports', 'handovers'] as const).map(k => (
+          <Link key={k} href={`${base}/${k}`} aria-current={active === k ? 'page' : undefined} style={tab(active === k)}>{t(`tab.${k}`)}</Link>
+        ))}
       </nav>
     </div>
   )

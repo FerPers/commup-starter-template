@@ -22,11 +22,13 @@ export type MyWorkCounts = {
   actions_verify: number
   /** Restricciones abiertas de las que soy responsable (fase 5). */
   constraints_mine: number
+  /** Relevos de turno entregados por otros, esperando que alguien los reciba (fase 5, sesión 3). */
+  handovers_to_receive: number
 }
 
 export const EMPTY_COUNTS: MyWorkCounts = {
   itrs_execute: 0, itrs_review: 0, punches: 0, plan_items: 0, signatures: 0, preservation_overdue: 0,
-  punches_verify: 0, punches_review: 0, actions_mine: 0, actions_verify: 0, constraints_mine: 0,
+  punches_verify: 0, punches_review: 0, actions_mine: 0, actions_verify: 0, constraints_mine: 0, handovers_to_receive: 0,
 }
 
 const SIGNER_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect']
@@ -43,6 +45,7 @@ export function parseCounts(raw: unknown): MyWorkCounts {
     plan_items: n('plan_items'), signatures: n('signatures'), preservation_overdue: n('preservation_overdue'),
     punches_verify: n('punches_verify'), punches_review: n('punches_review'),
     actions_mine: n('actions_mine'), actions_verify: n('actions_verify'), constraints_mine: n('constraints_mine'),
+    handovers_to_receive: n('handovers_to_receive'),
   }
 }
 
@@ -65,6 +68,7 @@ export function seesPreservation(role: OrgMemberRole): boolean {
 export function badgeTotal(c: MyWorkCounts, role: OrgMemberRole): number {
   return c.itrs_execute + c.itrs_review + c.punches + c.plan_items + (canSignCertificates(role) ? c.signatures : 0)
     + (seesPreservation(role) ? c.punches_review : 0) + c.actions_mine + c.constraints_mine
+    + (role !== 'client' ? c.handovers_to_receive : 0)
 }
 
 export type DueState = 'overdue' | 'today' | 'future' | null

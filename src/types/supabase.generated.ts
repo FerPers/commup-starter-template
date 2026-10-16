@@ -1055,6 +1055,132 @@ export type Database = {
           },
         ]
       }
+      daily_reports: {
+        Row: {
+          ai_draft: Json | null
+          ai_generated_at: string | null
+          ai_model: string | null
+          area_id: string | null
+          constraints_text: string | null
+          content_hash: string | null
+          created_at: string
+          created_by: string | null
+          data: Json
+          data_at: string
+          id: string
+          issued_at: string | null
+          issued_by: string | null
+          issues: string | null
+          key_events: string | null
+          next_day_plan: string | null
+          number: string
+          org_id: string
+          project_id: string
+          report_date: string
+          revision: number
+          revision_reason: string | null
+          status: string
+          summary: string | null
+          supersedes_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ai_draft?: Json | null
+          ai_generated_at?: string | null
+          ai_model?: string | null
+          area_id?: string | null
+          constraints_text?: string | null
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          data_at?: string
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          issues?: string | null
+          key_events?: string | null
+          next_day_plan?: string | null
+          number: string
+          org_id: string
+          project_id: string
+          report_date: string
+          revision?: number
+          revision_reason?: string | null
+          status?: string
+          summary?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ai_draft?: Json | null
+          ai_generated_at?: string | null
+          ai_model?: string | null
+          area_id?: string | null
+          constraints_text?: string | null
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          data_at?: string
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          issues?: string | null
+          key_events?: string | null
+          next_day_plan?: string | null
+          number?: string
+          org_id?: string
+          project_id?: string
+          report_date?: string
+          revision?: number
+          revision_reason?: string | null
+          status?: string
+          summary?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_reports_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["area_id"]
+          },
+          {
+            foreignKeyName: "daily_reports_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decisions: {
         Row: {
           attendees: string | null
@@ -5098,6 +5224,93 @@ export type Database = {
           },
         ]
       }
+      shift_handovers: {
+        Row: {
+          content_hash: string | null
+          handed_at: string | null
+          handed_by: string | null
+          id: string
+          number: string
+          opened_at: string
+          opened_by: string | null
+          org_id: string
+          pending_items: string | null
+          project_id: string
+          received_at: string | null
+          received_by: string | null
+          receiver_comment: string | null
+          safety_notes: string | null
+          seq: number
+          shift_date: string
+          shift_label: string
+          snapshot: Json
+          snapshot_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          content_hash?: string | null
+          handed_at?: string | null
+          handed_by?: string | null
+          id?: string
+          number: string
+          opened_at?: string
+          opened_by?: string | null
+          org_id: string
+          pending_items?: string | null
+          project_id: string
+          received_at?: string | null
+          received_by?: string | null
+          receiver_comment?: string | null
+          safety_notes?: string | null
+          seq: number
+          shift_date: string
+          shift_label?: string
+          snapshot?: Json
+          snapshot_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          content_hash?: string | null
+          handed_at?: string | null
+          handed_by?: string | null
+          id?: string
+          number?: string
+          opened_at?: string
+          opened_by?: string | null
+          org_id?: string
+          pending_items?: string | null
+          project_id?: string
+          received_at?: string | null
+          received_by?: string | null
+          receiver_comment?: string | null
+          safety_notes?: string | null
+          seq?: number
+          shift_date?: string
+          shift_label?: string
+          snapshot?: Json
+          snapshot_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_handovers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_handovers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signal_sample_batches: {
         Row: {
           accepted_count: number
@@ -7800,6 +8013,10 @@ export type Database = {
         Args: { p_note?: string; p_suggestion_id: string }
         Returns: string
       }
+      accept_shift_handover: {
+        Args: { p_comment?: string; p_handover_id: string }
+        Returns: string
+      }
       activate_itr_template_revision: {
         Args: { p_template_id: string }
         Returns: Json
@@ -8013,6 +8230,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_daily_report_draft: {
+        Args: { p_area_id?: string; p_date?: string; p_project_id: string }
+        Returns: string
+      }
       create_itr_template_revision: {
         Args: { p_template_id: string }
         Returns: string
@@ -8057,6 +8278,14 @@ export type Database = {
           secret: string
         }[]
       }
+      daily_report_data: {
+        Args: { p_area_id?: string; p_date?: string; p_project_id: string }
+        Returns: Json
+      }
+      daily_report_hash: {
+        Args: { r: Database["public"]["Tables"]["daily_reports"]["Row"] }
+        Returns: string
+      }
       data_quality_list: {
         Args: {
           p_category?: string
@@ -8086,6 +8315,10 @@ export type Database = {
           severity: string
         }[]
       }
+      delete_daily_report_draft: {
+        Args: { p_report_id: string }
+        Returns: undefined
+      }
       delete_mgmt_item: {
         Args: { p_entity_id: string; p_entity_kind: string }
         Returns: undefined
@@ -8095,6 +8328,10 @@ export type Database = {
         Returns: undefined
       }
       delete_register_item: { Args: { p_item_id: string }; Returns: undefined }
+      delete_shift_handover_draft: {
+        Args: { p_handover_id: string }
+        Returns: undefined
+      }
       delete_webhook_subscription: {
         Args: { p_sub_id: string }
         Returns: undefined
@@ -8135,6 +8372,12 @@ export type Database = {
           user_id: string
         }[]
       }
+      hand_over_shift: { Args: { p_handover_id: string }; Returns: undefined }
+      handover_hash: {
+        Args: { h: Database["public"]["Tables"]["shift_handovers"]["Row"] }
+        Returns: string
+      }
+      handover_snapshot: { Args: { p_project_id: string }; Returns: Json }
       increment_webhook_failure_count: {
         Args: { sub_id: string }
         Returns: undefined
@@ -8155,6 +8398,7 @@ export type Database = {
       is_org_editor: { Args: { p_org_id: string }; Returns: boolean }
       is_project_editor: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      issue_daily_report: { Args: { p_report_id: string }; Returns: string }
       itr_cause_source_rows: { Args: { p_cause_id: string }; Returns: Json }
       itr_loop_source_rows: { Args: { p_loop_id: string }; Returns: Json }
       itr_option_outcomes_valid: {
@@ -8246,6 +8490,14 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: string
       }
+      open_shift_handover: {
+        Args: {
+          p_project_id: string
+          p_shift_date?: string
+          p_shift_label?: string
+        }
+        Returns: string
+      }
       org_cat_b_limit: { Args: { p_org_id: string }; Returns: number }
       project_cert_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
@@ -8312,6 +8564,10 @@ export type Database = {
         }
         Returns: string
       }
+      refresh_daily_report_data: {
+        Args: { p_report_id: string }
+        Returns: undefined
+      }
       register_caller_role: { Args: { p_project_id: string }; Returns: string }
       register_set_tags: {
         Args: { p_item_id: string; p_project_id: string; p_tags: Json }
@@ -8337,6 +8593,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      revise_daily_report: {
+        Args: { p_reason: string; p_report_id: string }
+        Returns: string
+      }
       revoke_api_key: { Args: { p_key_id: string }; Returns: undefined }
       revoke_gate_attestation: {
         Args: { p_attestation_id: string }
@@ -8349,6 +8609,10 @@ export type Database = {
       seed_default_gate_for_phase: {
         Args: { p_phase_id: string }
         Returns: string
+      }
+      set_daily_report_ai_draft: {
+        Args: { p_draft: Json; p_model: string; p_report_id: string }
+        Returns: undefined
       }
       set_gate_commitment: {
         Args: {
@@ -8482,6 +8746,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_daily_report_sections: {
+        Args: { p_report_id: string; p_sections: Json }
+        Returns: undefined
+      }
       update_punch_ops_status: {
         Args: {
           p_new_status: string
@@ -8505,6 +8773,10 @@ export type Database = {
           p_tags?: Json
           p_title: string
         }
+        Returns: undefined
+      }
+      update_shift_handover: {
+        Args: { p_handover_id: string; p_pending: string; p_safety: string }
         Returns: undefined
       }
       update_tq: {

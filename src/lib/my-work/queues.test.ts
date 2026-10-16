@@ -54,6 +54,12 @@ describe('parseCounts / badgeTotal', () => {
     expect(parseCounts({ actions_mine: '2', actions_verify: 4, constraints_mine: 1 })).toMatchObject({ actions_mine: 2, actions_verify: 4, constraints_mine: 1 })
   })
 
+  it('fase 5 (relevo): los relevos por recibir suman al badge salvo para client', () => {
+    const c = { ...EMPTY_COUNTS, handovers_to_receive: 2 }
+    expect(badgeTotal(c, 'inspector')).toBe(2)
+    expect(badgeTotal(c, 'client')).toBe(0)
+  })
+
   it('roles: firmantes y supervisión de preservación', () => {
     expect(['owner', 'admin', 'architect', 'leader', 'inspector', 'client'].map(r => canSignCertificates(r as never))).toEqual([true, true, true, false, false, false])
     expect(['owner', 'admin', 'architect', 'leader', 'inspector', 'client'].map(r => seesPreservation(r as never))).toEqual([true, true, true, true, false, false])
