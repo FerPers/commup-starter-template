@@ -65,6 +65,11 @@ describe('parseCounts / badgeTotal', () => {
     expect(badgeTotal(c, 'leader')).toBe(3)
   })
 
+  it('fase 6 (sesión 3): los traspasos por firmar suman al badge', () => {
+    expect(badgeTotal({ ...EMPTY_COUNTS, transfers_to_sign: 2 }, 'client')).toBe(2)
+    expect(parseCounts({ transfers_to_sign: '3' }).transfers_to_sign).toBe(3)
+  })
+
   it('roles: firmantes y supervisión de preservación', () => {
     expect(['owner', 'admin', 'architect', 'leader', 'inspector', 'client'].map(r => canSignCertificates(r as never))).toEqual([true, true, true, false, false, false])
     expect(['owner', 'admin', 'architect', 'leader', 'inspector', 'client'].map(r => seesPreservation(r as never))).toEqual([true, true, true, true, false, false])

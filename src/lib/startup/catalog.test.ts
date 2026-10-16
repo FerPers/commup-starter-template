@@ -55,3 +55,22 @@ describe('arranque — bitácora', () => {
     expect(chartWindow('2026-10-16T10:00:00.000Z')).toEqual({ from: '2026-10-16T09:30:00.000Z', to: '2026-10-16T10:30:00.000Z' })
   })
 })
+
+describe('arranque — propiedad del sistema', () => {
+  it('etapas, nivel vigente y firmas posibles', async () => {
+    const { nextStage, previousStages, currentLevel, signableCapacities } = await import('./catalog')
+    expect(nextStage('commissioning')).toBe('shadowing')
+    expect(nextStage('operations')).toBeNull()
+    expect(previousStages('joint_operation')).toEqual(['commissioning', 'shadowing'])
+    const recs = [
+      { level: 2, assessed_at: '2026-01-01', created_at: 'a', expires_at: null },
+      { level: 3, assessed_at: '2026-06-01', created_at: 'b', expires_at: '2026-09-01' },
+    ]
+    expect(currentLevel(recs, '2026-08-01')).toBe(3)
+    expect(currentLevel(recs, '2026-10-01')).toBe(0)
+    expect(currentLevel([], '2026-10-01')).toBe(0)
+    expect(signableCapacities('leader', 'u1', { commissioning_signed_by: null, operations_signed_by: null })).toEqual(['commissioning', 'operations'])
+    expect(signableCapacities('client', 'u1', { commissioning_signed_by: 'u2', operations_signed_by: null })).toEqual(['operations'])
+    expect(signableCapacities('leader', 'u2', { commissioning_signed_by: 'u2', operations_signed_by: null })).toEqual([])
+  })
+})

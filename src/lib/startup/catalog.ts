@@ -127,3 +127,39 @@ export function chartWindow(occurredAt: string, minutes = 30): { from: string; t
   const t = Date.parse(occurredAt)
   return { from: new Date(t - minutes * 60_000).toISOString(), to: new Date(t + minutes * 60_000).toISOString() }
 }
+
+// ── Readiness de operaciones y propiedad del sistema (sesión 3) ─────────
+export const OWNERSHIP_STAGES = ['commissioning', 'shadowing', 'joint_operation', 'operations'] as const
+export type OwnershipStage = (typeof OWNERSHIP_STAGES)[number]
+export const COMPETENCY_LEVELS = [0, 1, 2, 3, 4] as const
+export const EVIDENCE_KINDS = ['course', 'ojt', 'assessment', 'other'] as const
+export type EvidenceKind = (typeof EVIDENCE_KINDS)[number]
+export const SPARE_STATUSES = ['available', 'ordered', 'not_available'] as const
+export type SpareStatus = (typeof SPARE_STATUSES)[number]
+
+export function nextStage(s: OwnershipStage): OwnershipStage | null {
+  const i = OWNERSHIP_STAGES.indexOf(s)
+  return i >= 0 && i < OWNERSHIP_STAGES.length - 1 ? OWNERSHIP_STAGES[i + 1] : null
+}
+export function previousStages(s: OwnershipStage): OwnershipStage[] {
+  return OWNERSHIP_STAGES.slice(0, OWNERSHIP_STAGES.indexOf(s))
+}
+
+/** Nivel vigente (= SQL person_system_level): última evaluación; vencida = 0; sin registros = 0. */
+export function currentLevel(records: { level: number; assessed_at: string; created_at: string; expires_at: string | null }[], today: string): number {
+  const last = [...records].sort((a, b) => b.assessed_at.localeCompare(a.assessed_at) || b.created_at.localeCompare(a.created_at))[0]
+  if (!last) return 0
+  return last.expires_at && last.expires_at < today ? 0 : last.level
+}
+
+export type ChecklistItem = { key: string; ok: boolean; detail: Record<string, unknown> }
+/** Las firmas que el usuario puede aportar a un traspaso pendiente (= reglas de sign_ownership_transfer). */
+export function signableCapacities(
+  role: string, userId: string, t: { commissioning_signed_by: string | null; operations_signed_by: string | null },
+): ('commissioning' | 'operations')[] {
+  if (userId === t.commissioning_signed_by || userId === t.operations_signed_by) return []
+  const out: ('commissioning' | 'operations')[] = []
+  if (!t.commissioning_signed_by && HOLD_RELEASE_ROLES.commissioning.includes(role)) out.push('commissioning')
+  if (!t.operations_signed_by && HOLD_RELEASE_ROLES.operations.includes(role)) out.push('operations')
+  return out
+}

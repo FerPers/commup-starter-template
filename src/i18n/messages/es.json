@@ -2247,7 +2247,8 @@
       "handovers": "relevos por recibir",
       "holds": "hold points por liberar",
       "lineup": "válvulas por verificar",
-      "milestones": "hitos por atestiguar"
+      "milestones": "hitos por atestiguar",
+      "transfers": "Traspasos por firmar"
     },
     "queues": {
       "execute": "ITRs por ejecutar",
@@ -2264,7 +2265,8 @@
       "handovers": "Relevos de turno por recibir",
       "holds": "Hold points por liberar",
       "lineup": "Line-up: válvulas críticas por verificar",
-      "milestones": "Hitos de arranque por atestiguar"
+      "milestones": "Hitos de arranque por atestiguar",
+      "transfers": "Traspasos de propiedad por firmar"
     },
     "empty": {
       "execute": "No tienes ITRs pendientes de ejecución.",
@@ -2281,7 +2283,8 @@
       "handovers": "No hay relevos esperando que alguien los reciba.",
       "holds": "No hay hold points esperando tu liberación.",
       "lineup": "No hay válvulas críticas por verificar.",
-      "milestones": "No hay hitos esperando tu firma."
+      "milestones": "No hay hitos esperando tu firma.",
+      "transfers": "Nada por firmar."
     },
     "due": {
       "overdue": "vence {date}",
@@ -2476,6 +2479,10 @@
       "first_hydrocarbon": "Primer HC",
       "first_stable_operation": "Op. estable",
       "first_on_spec_product": "On-spec"
+    },
+    "ownership": {
+      "link": "Ver readiness de operaciones",
+      "pending": "Traspaso pendiente de firmas"
     }
   },
   "GatesAdmin": {
@@ -3606,7 +3613,8 @@
     "tab": {
       "procedures": "Procedimientos",
       "lineups": "Line-ups",
-      "events": "Bitácora"
+      "events": "Bitácora",
+      "operations": "Operaciones"
     },
     "newProcedure": "Nuevo procedimiento",
     "newLineup": "Nuevo line-up",
@@ -3945,6 +3953,148 @@
       "noParams": "Sin parámetros.",
       "window": "−30/+30 min",
       "noSeries": "Sin muestras en la ventana."
+    },
+    "ops": {
+      "subtitle": "Etapa de propiedad de cada sistema (Comisionamiento → Shadowing → Operación conjunta → Operaciones), traspasos firmados, competencias del personal de operaciones y repuestos críticos.",
+      "view": {
+        "systems": "Sistemas y traspasos",
+        "competency": "Matriz de competencias",
+        "personnel": "Personal",
+        "spares": "Repuestos críticos"
+      },
+      "stage": {
+        "commissioning": "Comisionamiento",
+        "shadowing": "Shadowing",
+        "joint_operation": "Operación conjunta",
+        "operations": "Operaciones"
+      },
+      "status": {
+        "pending_signatures": "Pendiente de firmas",
+        "completed": "Completado",
+        "cancelled": "Cancelado"
+      },
+      "col": {
+        "stage": "Etapa",
+        "required": "Dotación por turno",
+        "pending": "Traspaso pendiente",
+        "change": "Cambio",
+        "status": "Estado",
+        "date": "Fecha"
+      },
+      "since": "desde",
+      "request": "Pedir traspaso",
+      "requestTitle": "Pedir traspaso — {system}",
+      "toStage": "Etapa destino",
+      "reversalTo": "Reversión a {stage}",
+      "reversal": "Reversión",
+      "reversalReason": "Motivo de la reversión",
+      "reason": "Motivo",
+      "reasonOptional": "Comentario (opcional)",
+      "min10": "10 caracteres o más",
+      "loading": "Calculando checklist…",
+      "justify": "Justificación de la excepción",
+      "justifyPlaceholder": "Justifica la excepción (10 caracteres o más)",
+      "submitRequest": "Pedir traspaso",
+      "close": "Cerrar",
+      "history": "Historial de traspasos",
+      "noTransfers": "Sin traspasos todavía.",
+      "noCriteria": "Sin criterios para esta etapa.",
+      "exception": "Excepción",
+      "check": {
+        "startup_procedure": "Procedimiento de arranque aprobado y verificado en campo",
+        "staff_level_1": "Personal con nivel ≥ 1 en cada turno",
+        "startup_gate": "Gate de arranque aprobado",
+        "lineup_verified": "Line-up verificado y vigente",
+        "first_startup_witnessed": "Primer arranque atestiguado",
+        "staff_level_2": "Personal con nivel ≥ 2 en cada turno",
+        "staff_level_3": "Personal con nivel ≥ 3 en cada turno",
+        "critical_spares": "Repuestos críticos disponibles",
+        "no_open_cat_a": "Sin punch Cat A abiertos"
+      },
+      "detail": {
+        "noStaff": "Sin personal evaluado en este sistema",
+        "noProcedure": "Sin procedimiento de arranque aprobado",
+        "noGate": "Sin gate de arranque",
+        "stale": "desactualizado",
+        "noLineup": "Sin hoja verificada",
+        "noFirstStartup": "Hito no registrado o sin atestiguar",
+        "sparesOk": "Todo disponible",
+        "catA": "{n} abiertos"
+      },
+      "shift": "Turno",
+      "level": {
+        "0": "Sin competencia",
+        "1": "Conoce el sistema",
+        "2": "Opera con supervisión",
+        "3": "Opera de forma autónoma",
+        "4": "Puede entrenar y evaluar"
+      },
+      "expiredHint": "tachado = evaluación vencida (cuenta como 0)",
+      "noPeople": "Registra primero al personal de operaciones (pestaña Personal).",
+      "person": "Persona",
+      "expiredOn": "Venció el {date}",
+      "expiresOn": "Vence el {date}",
+      "atLevel3": "Con nivel ≥ 3",
+      "assessTitle": "Evaluar a {person} en {system}",
+      "levelLabel": "Nivel",
+      "evidenceKind": "Tipo de evidencia",
+      "evidence": {
+        "course": "Curso",
+        "ojt": "Entrenamiento en el puesto",
+        "assessment": "Evaluación práctica",
+        "other": "Otra"
+      },
+      "assessedAt": "Fecha de evaluación",
+      "expiresAt": "Vence",
+      "evidenceText": "Evidencia / comentario",
+      "addPerson": "Agregar persona",
+      "fullName": "Nombre",
+      "company": "Empresa",
+      "position": "Cargo",
+      "user": "Usuario de CommUp",
+      "noUser": "Sin usuario",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "edit": "Editar",
+      "addSpare": "Agregar repuesto",
+      "item": "Ítem",
+      "spareKind": {
+        "spare": "Repuesto",
+        "special_tool": "Herramienta especial"
+      },
+      "partNumber": "N.º de parte",
+      "qtyRequired": "Cantidad requerida",
+      "qtyAvailable": "Cantidad disponible",
+      "qty": "Disp. / req.",
+      "spareStatus": {
+        "available": "Disponible",
+        "ordered": "Pedido",
+        "not_available": "No disponible"
+      },
+      "eta": "Llegada estimada",
+      "critical": "Crítico",
+      "criticalHint": "Bloquea el traspaso a Operaciones",
+      "notes": "Notas",
+      "noSpares": "Sin repuestos registrados.",
+      "confirmDelete": "¿Borrar este repuesto?",
+      "delete": "Borrar",
+      "requestedBy": "Pedido por {name} · {date}",
+      "cancelledBy": "Cancelado por {name} · {date}: {reason}",
+      "checklistAtRequest": "Checklist al pedir el traspaso",
+      "signatures": "Firmas",
+      "awaitingSignature": "Pendiente",
+      "sign": "Firmar",
+      "confirmSign": "¿Firmar este traspaso como {capacity}?",
+      "handoverFailed": "El traspaso se completó, pero el paquete de handover no se generó: {error}. Usa «Generar paquete» para reintentar.",
+      "handover": "Paquete de handover",
+      "handoverReady": "Versión {version} · {status} · {date}",
+      "handoverMissing": "El paquete de handover del sistema aún no se generó.",
+      "downloadPdf": "Descargar PDF",
+      "generateHandover": "Generar paquete",
+      "generating": "Generando…",
+      "cancel": "Cancelar traspaso",
+      "cancelReason": "Motivo de la cancelación",
+      "confirmCancel": "Cancelar traspaso"
     }
   }
 }

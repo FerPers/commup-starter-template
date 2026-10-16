@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
-import { HOLD_RELEASE_ROLES, type HoldCapacity } from '@/lib/startup/catalog'
+import { HOLD_RELEASE_ROLES, signableCapacities, type HoldCapacity } from '@/lib/startup/catalog'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { CATEGORY_CFG, ITR_STYLE, PUNCH_STYLE } from '@/components/dashboard/widgets/_shared'
 import {
@@ -45,9 +45,10 @@ export default async function MyWorkPage() {
   const signer = canSignCertificates(role)
   const oversight = seesPreservation(role)
 
-  const [t, tGuide, locale, { data: profile }, { data: projects }] = await Promise.all([
+  const [t, tGuide, tStartup, locale, { data: profile }, { data: projects }] = await Promise.all([
     getTranslations('MyWork'),
     getTranslations('PunchGuide'),
+    getTranslations('Startup'),
     getLocale(),
     supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle(),
     supabase.from('projects').select('id, code').eq('org_id', orgId),
@@ -59,7 +60,7 @@ export default async function MyWorkPage() {
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }] = await Promise.all([
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }] = await Promise.all([
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
     supabase
       .from('itr_assignments')
@@ -177,6 +178,14 @@ export default async function MyWorkPage() {
       .in('project_id', projectIds)
       .order('occurred_at', { ascending: true })
       .limit(QUEUE_LIMIT + 1),
+    // Fase 6 (sesión 3): traspasos de propiedad por firmar (se filtra por rol y firmas abajo).
+    projectIds.length === 0 ? none : supabase
+      .from('ownership_transfers')
+      .select('id, number, to_stage, is_reversal, commissioning_signed_by, operations_signed_by, project_id, projects(code), systems(code)')
+      .eq('status', 'pending_signatures')
+      .in('project_id', projectIds)
+      .order('requested_at', { ascending: true })
+      .limit(50),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -211,6 +220,10 @@ export default async function MyWorkPage() {
   const milestoneRows = ((pendingMilestones ?? []) as unknown as {
     id: string; number: string; title: string; witness_capacity: string; project_id: string; projects: { code: string } | null; systems: { code: string } | null
   }[]).filter(m => HOLD_RELEASE_ROLES[m.witness_capacity as HoldCapacity]?.includes(role))
+  const transferRows = ((pendingTransfers ?? []) as unknown as {
+    id: string; number: string; to_stage: string; is_reversal: boolean; commissioning_signed_by: string | null; operations_signed_by: string | null
+    project_id: string; projects: { code: string } | null; systems: { code: string } | null
+  }[]).filter(x => signableCapacities(role, userId, x).length > 0)
   const dailyHref = (projectId: string | undefined, tab: string) => (projectId ? `/projects/${projectId}/daily?tab=${tab}` : '/projects')
 
   const projectsInvolved = new Set<string>([
@@ -223,7 +236,7 @@ export default async function MyWorkPage() {
     ...constraintRows.map(c => c.project_id),
   ].filter(Boolean))
   const personalTotal = counts.itrs_execute + counts.itrs_review + counts.punches + counts.plan_items + (signer ? counts.signatures : 0)
-    + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0) + counts.holds_to_release + counts.milestones_to_witness
+    + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0) + counts.holds_to_release + counts.milestones_to_witness + counts.transfers_to_sign
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
@@ -269,6 +282,7 @@ export default async function MyWorkPage() {
         {counts.holds_to_release > 0 && <Chip n={counts.holds_to_release} label={t('chips.holds')} tone="warning" />}
         {counts.lineup_to_verify > 0 && <Chip n={counts.lineup_to_verify} label={t('chips.lineup')} tone="info" />}
         {counts.milestones_to_witness > 0 && <Chip n={counts.milestones_to_witness} label={t('chips.milestones')} tone="warning" />}
+        {counts.transfers_to_sign > 0 && <Chip n={counts.transfers_to_sign} label={t('chips.transfers')} tone="warning" />}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -395,6 +409,17 @@ export default async function MyWorkPage() {
               <Row key={m.id} href={`/projects/${m.project_id}/startup/events/${m.id}`} stripe="#7c3aed"
                 code={m.number} what={`${m.title}${m.systems?.code ? ` · ${m.systems.code}` : ''}`} project={m.projects?.code}
                 right={<Pill tone="warning">{t('due.witness')}</Pill>} />
+            ))}
+          </Queue>
+        )}
+
+        {/* Traspasos de propiedad por firmar (fase 6, sesión 3) */}
+        {counts.transfers_to_sign > 0 && (
+          <Queue title={t('queues.transfers')} count={Math.min(transferRows.length, QUEUE_LIMIT)} total={counts.transfers_to_sign} emptyText={t('empty.transfers')} moreHref={transferRows[0] ? `/projects/${transferRows[0].project_id}/startup/operations` : '/projects'} moreLabel={t('viewAll', { count: counts.transfers_to_sign })} limit={QUEUE_LIMIT}>
+            {transferRows.slice(0, QUEUE_LIMIT).map(x => (
+              <Row key={x.id} href={`/projects/${x.project_id}/startup/transfers/${x.id}`} stripe="#047857"
+                code={x.number} what={`${x.systems?.code ?? ''} → ${tStartup(`ops.stage.${x.to_stage}`)}${x.is_reversal ? ` (${tStartup('ops.reversal')})` : ''}`} project={x.projects?.code}
+                right={<Pill tone="warning">{t('due.sign')}</Pill>} />
             ))}
           </Queue>
         )}

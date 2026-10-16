@@ -2247,7 +2247,8 @@
       "handovers": "handovers to receive",
       "holds": "hold points to release",
       "lineup": "valves to verify",
-      "milestones": "milestones to witness"
+      "milestones": "milestones to witness",
+      "transfers": "Transfers to sign"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2264,7 +2265,8 @@
       "handovers": "Shift handovers to receive",
       "holds": "Hold points to release",
       "lineup": "Line-up: critical valves to verify",
-      "milestones": "Start-up milestones to witness"
+      "milestones": "Start-up milestones to witness",
+      "transfers": "Ownership transfers to sign"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -2281,7 +2283,8 @@
       "handovers": "No handovers waiting to be received.",
       "holds": "No hold points waiting for your release.",
       "lineup": "No critical valves to verify.",
-      "milestones": "No milestones waiting for you."
+      "milestones": "No milestones waiting for you.",
+      "transfers": "Nothing to sign."
     },
     "due": {
       "overdue": "due {date}",
@@ -2476,6 +2479,10 @@
       "first_hydrocarbon": "First HC",
       "first_stable_operation": "Stable op.",
       "first_on_spec_product": "On-spec"
+    },
+    "ownership": {
+      "link": "View operations readiness",
+      "pending": "Transfer pending signatures"
     }
   },
   "GatesAdmin": {
@@ -3606,7 +3613,8 @@
     "tab": {
       "procedures": "Procedures",
       "lineups": "Line-ups",
-      "events": "Log"
+      "events": "Log",
+      "operations": "Operations"
     },
     "newProcedure": "New procedure",
     "newLineup": "New line-up",
@@ -3945,6 +3953,148 @@
       "noParams": "No parameters.",
       "window": "−30/+30 min",
       "noSeries": "No samples in the window."
+    },
+    "ops": {
+      "subtitle": "Ownership stage of each system (Commissioning → Shadowing → Joint operation → Operations), signed transfers, operations staff competency and critical spares.",
+      "view": {
+        "systems": "Systems & transfers",
+        "competency": "Competency matrix",
+        "personnel": "Personnel",
+        "spares": "Critical spares"
+      },
+      "stage": {
+        "commissioning": "Commissioning",
+        "shadowing": "Shadowing",
+        "joint_operation": "Joint operation",
+        "operations": "Operations"
+      },
+      "status": {
+        "pending_signatures": "Pending signatures",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "col": {
+        "stage": "Stage",
+        "required": "Staff per shift",
+        "pending": "Pending transfer",
+        "change": "Change",
+        "status": "Status",
+        "date": "Date"
+      },
+      "since": "since",
+      "request": "Request transfer",
+      "requestTitle": "Request transfer — {system}",
+      "toStage": "Target stage",
+      "reversalTo": "Reversal to {stage}",
+      "reversal": "Reversal",
+      "reversalReason": "Reversal reason",
+      "reason": "Reason",
+      "reasonOptional": "Comment (optional)",
+      "min10": "10 characters or more",
+      "loading": "Computing checklist…",
+      "justify": "Exception justification",
+      "justifyPlaceholder": "Justify the exception (10 characters or more)",
+      "submitRequest": "Request transfer",
+      "close": "Close",
+      "history": "Transfer history",
+      "noTransfers": "No transfers yet.",
+      "noCriteria": "No criteria for this stage.",
+      "exception": "Exception",
+      "check": {
+        "startup_procedure": "Start-up procedure approved and field-verified",
+        "staff_level_1": "Staff at level ≥ 1 on every shift",
+        "startup_gate": "Start-up gate approved",
+        "lineup_verified": "Line-up verified and current",
+        "first_startup_witnessed": "First start-up witnessed",
+        "staff_level_2": "Staff at level ≥ 2 on every shift",
+        "staff_level_3": "Staff at level ≥ 3 on every shift",
+        "critical_spares": "Critical spares available",
+        "no_open_cat_a": "No open Cat A punches"
+      },
+      "detail": {
+        "noStaff": "No staff assessed on this system",
+        "noProcedure": "No approved start-up procedure",
+        "noGate": "No start-up gate",
+        "stale": "stale",
+        "noLineup": "No verified sheet",
+        "noFirstStartup": "Milestone not recorded or not witnessed",
+        "sparesOk": "All available",
+        "catA": "{n} open"
+      },
+      "shift": "Shift",
+      "level": {
+        "0": "No competency",
+        "1": "Knows the system",
+        "2": "Operates under supervision",
+        "3": "Operates independently",
+        "4": "Can train and assess"
+      },
+      "expiredHint": "struck through = expired assessment (counts as 0)",
+      "noPeople": "Register the operations staff first (Personnel tab).",
+      "person": "Person",
+      "expiredOn": "Expired on {date}",
+      "expiresOn": "Expires on {date}",
+      "atLevel3": "At level ≥ 3",
+      "assessTitle": "Assess {person} on {system}",
+      "levelLabel": "Level",
+      "evidenceKind": "Evidence type",
+      "evidence": {
+        "course": "Course",
+        "ojt": "On-the-job training",
+        "assessment": "Practical assessment",
+        "other": "Other"
+      },
+      "assessedAt": "Assessment date",
+      "expiresAt": "Expires",
+      "evidenceText": "Evidence / comment",
+      "addPerson": "Add person",
+      "fullName": "Name",
+      "company": "Company",
+      "position": "Position",
+      "user": "CommUp user",
+      "noUser": "No user",
+      "active": "Active",
+      "inactive": "Inactive",
+      "edit": "Edit",
+      "addSpare": "Add spare",
+      "item": "Item",
+      "spareKind": {
+        "spare": "Spare",
+        "special_tool": "Special tool"
+      },
+      "partNumber": "Part number",
+      "qtyRequired": "Required qty",
+      "qtyAvailable": "Available qty",
+      "qty": "Avail. / req.",
+      "spareStatus": {
+        "available": "Available",
+        "ordered": "Ordered",
+        "not_available": "Not available"
+      },
+      "eta": "ETA",
+      "critical": "Critical",
+      "criticalHint": "Blocks the transfer to Operations",
+      "notes": "Notes",
+      "noSpares": "No spares registered.",
+      "confirmDelete": "Delete this spare?",
+      "delete": "Delete",
+      "requestedBy": "Requested by {name} · {date}",
+      "cancelledBy": "Cancelled by {name} · {date}: {reason}",
+      "checklistAtRequest": "Checklist at request",
+      "signatures": "Signatures",
+      "awaitingSignature": "Pending",
+      "sign": "Sign",
+      "confirmSign": "Sign this transfer as {capacity}?",
+      "handoverFailed": "The transfer was completed but the handover package was not generated: {error}. Use “Generate package” to retry.",
+      "handover": "Handover package",
+      "handoverReady": "Version {version} · {status} · {date}",
+      "handoverMissing": "The system handover package has not been generated yet.",
+      "downloadPdf": "Download PDF",
+      "generateHandover": "Generate package",
+      "generating": "Generating…",
+      "cancel": "Cancel transfer",
+      "cancelReason": "Cancellation reason",
+      "confirmCancel": "Cancel transfer"
     }
   }
 }

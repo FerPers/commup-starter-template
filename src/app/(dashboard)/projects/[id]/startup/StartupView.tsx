@@ -79,6 +79,9 @@ export default function StartupView({ project, initialTab, procedures, sheets, s
         <Link href={`${root}/events`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>
           {t('tab.events')}
         </Link>
+        <Link href={`${root}/operations`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>
+          {t('tab.operations')}
+        </Link>
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}

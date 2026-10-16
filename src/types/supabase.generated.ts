@@ -1055,6 +1055,222 @@ export type Database = {
           },
         ]
       }
+      competency_records: {
+        Row: {
+          assessed_at: string
+          assessed_by: string | null
+          created_at: string
+          evidence: string | null
+          evidence_kind: string
+          expires_at: string | null
+          id: string
+          level: number
+          org_id: string
+          person_id: string
+          project_id: string
+          system_id: string
+        }
+        Insert: {
+          assessed_at?: string
+          assessed_by?: string | null
+          created_at?: string
+          evidence?: string | null
+          evidence_kind?: string
+          expires_at?: string | null
+          id?: string
+          level: number
+          org_id: string
+          person_id: string
+          project_id: string
+          system_id: string
+        }
+        Update: {
+          assessed_at?: string
+          assessed_by?: string | null
+          created_at?: string
+          evidence?: string | null
+          evidence_kind?: string
+          expires_at?: string | null
+          id?: string
+          level?: number
+          org_id?: string
+          person_id?: string
+          project_id?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competency_records_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competency_records_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "ops_personnel"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competency_records_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competency_records_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "competency_records_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "competency_records_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competency_records_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      critical_spares: {
+        Row: {
+          eta: string | null
+          id: string
+          is_critical: boolean
+          item: string
+          kind: string
+          notes: string | null
+          org_id: string
+          part_number: string | null
+          project_id: string
+          qty_available: number
+          qty_required: number
+          status: string
+          system_id: string
+          tag_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          eta?: string | null
+          id?: string
+          is_critical?: boolean
+          item: string
+          kind?: string
+          notes?: string | null
+          org_id: string
+          part_number?: string | null
+          project_id: string
+          qty_available?: number
+          qty_required?: number
+          status?: string
+          system_id: string
+          tag_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          eta?: string | null
+          id?: string
+          is_critical?: boolean
+          item?: string
+          kind?: string
+          notes?: string | null
+          org_id?: string
+          part_number?: string | null
+          project_id?: string
+          qty_available?: number
+          qty_required?: number
+          status?: string
+          system_id?: string
+          tag_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "critical_spares_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critical_spares_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critical_spares_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "critical_spares_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "critical_spares_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critical_spares_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "critical_spares_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "critical_spares_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critical_spares_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_reports: {
         Row: {
           ai_draft: Json | null
@@ -3312,6 +3528,73 @@ export type Database = {
           },
         ]
       }
+      ops_personnel: {
+        Row: {
+          active: boolean
+          company: string | null
+          created_at: string
+          created_by: string | null
+          full_name: string
+          id: string
+          org_id: string
+          position: string | null
+          project_id: string
+          shift: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          full_name: string
+          id?: string
+          org_id: string
+          position?: string | null
+          project_id: string
+          shift?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          full_name?: string
+          id?: string
+          org_id?: string
+          position?: string | null
+          project_id?: string
+          shift?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_personnel_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_personnel_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_personnel_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_members: {
         Row: {
           id: string
@@ -3380,6 +3663,140 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      ownership_transfers: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          checklist: Json
+          commissioning_signed_at: string | null
+          commissioning_signed_by: string | null
+          completed_at: string | null
+          content_hash: string | null
+          exceptions: Json
+          from_stage: string
+          handover_package_id: string | null
+          id: string
+          is_reversal: boolean
+          number: string
+          operations_signed_at: string | null
+          operations_signed_by: string | null
+          org_id: string
+          project_id: string
+          reason: string | null
+          requested_at: string
+          requested_by: string | null
+          seq: number
+          status: string
+          system_id: string
+          to_stage: string
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          checklist?: Json
+          commissioning_signed_at?: string | null
+          commissioning_signed_by?: string | null
+          completed_at?: string | null
+          content_hash?: string | null
+          exceptions?: Json
+          from_stage: string
+          handover_package_id?: string | null
+          id?: string
+          is_reversal?: boolean
+          number: string
+          operations_signed_at?: string | null
+          operations_signed_by?: string | null
+          org_id: string
+          project_id: string
+          reason?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          seq: number
+          status?: string
+          system_id: string
+          to_stage: string
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          checklist?: Json
+          commissioning_signed_at?: string | null
+          commissioning_signed_by?: string | null
+          completed_at?: string | null
+          content_hash?: string | null
+          exceptions?: Json
+          from_stage?: string
+          handover_package_id?: string | null
+          id?: string
+          is_reversal?: boolean
+          number?: string
+          operations_signed_at?: string | null
+          operations_signed_by?: string | null
+          org_id?: string
+          project_id?: string
+          reason?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          seq?: number
+          status?: string
+          system_id?: string
+          to_stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_transfers_handover_package_id_fkey"
+            columns: ["handover_package_id"]
+            isOneToOne: false
+            referencedRelation: "handover_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_transfers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_transfers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_transfers_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "ownership_transfers_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "ownership_transfers_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_transfers_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
       }
       pid_documents: {
         Row: {
@@ -6607,6 +7024,66 @@ export type Database = {
           },
         ]
       }
+      system_competency_targets: {
+        Row: {
+          project_id: string
+          required: number
+          system_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          project_id: string
+          required?: number
+          system_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          project_id?: string
+          required?: number
+          system_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_competency_targets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_competency_targets_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_competency_targets_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_competency_targets_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_competency_targets_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       system_dependencies: {
         Row: {
           blocked_gate_id: string
@@ -7178,6 +7655,83 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_ownership: {
+        Row: {
+          last_transfer_id: string | null
+          org_id: string
+          project_id: string
+          since: string
+          stage: string
+          system_id: string
+        }
+        Insert: {
+          last_transfer_id?: string | null
+          org_id: string
+          project_id: string
+          since?: string
+          stage?: string
+          system_id: string
+        }
+        Update: {
+          last_transfer_id?: string | null
+          org_id?: string
+          project_id?: string
+          since?: string
+          stage?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_ownership_last_transfer_fk"
+            columns: ["last_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_ownership_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_ownership_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_ownership_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_ownership_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_ownership_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_ownership_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
           },
         ]
       }
@@ -9015,6 +9569,10 @@ export type Database = {
         Args: { p_sub_id: string }
         Returns: undefined
       }
+      cancel_ownership_transfer: {
+        Args: { p_reason: string; p_transfer_id: string }
+        Returns: undefined
+      }
       cleanup_signal_samples_retention: { Args: never; Returns: number }
       clone_itr_template_from_catalog: {
         Args: {
@@ -9287,6 +9845,10 @@ export type Database = {
           severity: string
         }[]
       }
+      delete_critical_spare: {
+        Args: { p_spare_id: string }
+        Returns: undefined
+      }
       delete_daily_report_draft: {
         Args: { p_report_id: string }
         Returns: undefined
@@ -9412,6 +9974,10 @@ export type Database = {
         Args: { p_item_id: string; p_link?: boolean; p_linked_item_id: string }
         Returns: undefined
       }
+      link_transfer_handover: {
+        Args: { p_package_id: string; p_transfer_id: string }
+        Returns: undefined
+      }
       list_catalog_template_updates: {
         Args: { p_org_id: string }
         Returns: {
@@ -9494,6 +10060,15 @@ export type Database = {
         Returns: string
       }
       org_cat_b_limit: { Args: { p_org_id: string }; Returns: number }
+      ownership_checklist: {
+        Args: { p_system_id: string; p_to_stage: string }
+        Returns: Json
+      }
+      ownership_stage_index: { Args: { p_stage: string }; Returns: number }
+      person_system_level: {
+        Args: { p_person_id: string; p_system_id: string }
+        Returns: number
+      }
       procedure_revision_hash: {
         Args: { p_revision_id: string }
         Returns: string
@@ -9553,6 +10128,18 @@ export type Database = {
           status: Database["public"]["Enums"]["punch_status"]
         }[]
       }
+      record_competency: {
+        Args: {
+          p_assessed_at?: string
+          p_evidence?: string
+          p_evidence_kind?: string
+          p_expires_at?: string
+          p_level: number
+          p_person_id: string
+          p_system_id: string
+        }
+        Returns: string
+      }
       record_decision: {
         Args: {
           p_attendees?: string
@@ -9609,6 +10196,15 @@ export type Database = {
         Args: { p_itr_id: string; p_reason: string }
         Returns: Json
       }
+      request_ownership_transfer: {
+        Args: {
+          p_exceptions?: Json
+          p_reason?: string
+          p_system_id: string
+          p_to_stage: string
+        }
+        Returns: string
+      }
       resolve_punch: {
         Args: { p_comment: string; p_punch_id: string }
         Returns: undefined
@@ -9650,6 +10246,10 @@ export type Database = {
       seed_default_gate_for_phase: {
         Args: { p_phase_id: string }
         Returns: string
+      }
+      set_competency_target: {
+        Args: { p_required: number; p_system_id: string }
+        Returns: undefined
       }
       set_daily_report_ai_draft: {
         Args: { p_draft: Json; p_model: string; p_report_id: string }
@@ -9699,6 +10299,10 @@ export type Database = {
         Args: { p_itr_id: string; p_role: string; p_signature_image?: string }
         Returns: Json
       }
+      sign_ownership_transfer: {
+        Args: { p_capacity: string; p_transfer_id: string }
+        Returns: string
+      }
       sign_system_gate: {
         Args: { p_approval_id: string; p_capacity: string; p_comments?: string }
         Returns: string
@@ -9739,6 +10343,10 @@ export type Database = {
       }
       system_phase_level: {
         Args: { p_limit: number; p_phase_id: string; p_system_id: string }
+        Returns: Json
+      }
+      system_staffing: {
+        Args: { p_level: number; p_system_id: string }
         Returns: Json
       }
       tag_discipline_counts: {
@@ -9885,6 +10493,37 @@ export type Database = {
           p_tq_id: string
         }
         Returns: undefined
+      }
+      upsert_critical_spare: {
+        Args: {
+          p_eta?: string
+          p_is_critical?: boolean
+          p_item: string
+          p_kind?: string
+          p_notes?: string
+          p_part_number?: string
+          p_project_id: string
+          p_qty_available?: number
+          p_qty_required?: number
+          p_spare_id: string
+          p_status?: string
+          p_system_id: string
+          p_tag_id?: string
+        }
+        Returns: string
+      }
+      upsert_ops_person: {
+        Args: {
+          p_active?: boolean
+          p_company?: string
+          p_full_name: string
+          p_person_id: string
+          p_position?: string
+          p_project_id: string
+          p_shift?: string
+          p_user_id?: string
+        }
+        Returns: string
       }
       upsert_push_subscription: {
         Args: {

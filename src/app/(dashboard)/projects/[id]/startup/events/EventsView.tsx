@@ -116,6 +116,7 @@ export default function EventsView({ project, systems, initialSystemId, events, 
           <Link key={k} href={`${root}?tab=${k}`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t(`tab.${k}`)}</Link>
         ))}
         <span aria-current="page" style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600, #2563eb)', borderBottom: '2px solid var(--primary-500)', marginBottom: -1 }}>{t('tab.events')}</span>
+        <Link href={`${root}/operations`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t('tab.operations')}</Link>
       </nav>
 
       {error && <Alert kind="error">{error}</Alert>}

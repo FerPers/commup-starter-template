@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import type { SystemGate } from '@/lib/readiness/gates'
+import type { OwnershipStage } from '@/lib/startup/catalog'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import SystemGatesView from './SystemGatesView'
 import type { GatePlanEvent } from './GatePlanPanel'
@@ -27,7 +28,7 @@ export default async function SystemGatesPage({
   if (!system || !project || project.org_id !== ctx.orgId) notFound()
   const area = system.areas as { code: string; name: string } | null
 
-  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }, { data: constraints }, { data: actions }, { data: progress }, { data: plans }, { data: planEvents }, { data: milestones }] = await Promise.all([
+  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }, { data: constraints }, { data: actions }, { data: progress }, { data: plans }, { data: planEvents }, { data: milestones }, { data: ownership }, { data: pendingTransfer }] = await Promise.all([
     supabase.rpc('compute_system_gates', { p_system_id: systemId }),
     supabase.from('project_phases').select('id, code').eq('org_id', ctx.orgId),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
@@ -54,6 +55,9 @@ export default async function SystemGatesPage({
     // Bitácora de arranque (fase 6, sesión 2): hitos vigentes del sistema.
     supabase.from('startup_events').select('id, milestone, occurred_at, status')
       .eq('system_id', systemId).eq('kind', 'milestone').neq('status', 'voided'),
+    // Readiness de operaciones (fase 6, sesión 3): etapa de propiedad y traspaso pendiente.
+    supabase.from('system_ownership').select('stage').eq('system_id', systemId).maybeSingle(),
+    supabase.from('ownership_transfers').select('id').eq('system_id', systemId).eq('status', 'pending_signatures').maybeSingle(),
   ])
   type Ref = { id: string; code: string }
   const dependsOn = (deps ?? []).filter(d => d.system_id === systemId).map(d => d.provider as unknown as Ref).filter(Boolean)
@@ -88,6 +92,7 @@ export default async function SystemGatesPage({
         events: (planEvents ?? []) as unknown as (GatePlanEvent & { gate_id: string })[],
         canCommit: EDITOR_ROLES.includes(ctx.role),
       }}
+      ownership={{ stage: (ownership?.stage ?? 'commissioning') as OwnershipStage, pendingTransferId: pendingTransfer?.id ?? null }}
       milestones={(milestones ?? []).map(m => ({ id: m.id, milestone: m.milestone as string, occurredAt: m.occurred_at, status: m.status }))}
       daily={{
         constraints: (constraints ?? []).map(c => ({ ...c, gate: (c.readiness_gates as unknown as { code: string } | null)?.code ?? null })),

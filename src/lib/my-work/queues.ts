@@ -30,11 +30,13 @@ export type MyWorkCounts = {
   lineup_to_verify: number
   /** Hitos de arranque registrados por otros que mi rol puede atestiguar (fase 6, sesión 2). */
   milestones_to_witness: number
+  /** Traspasos de propiedad del sistema pendientes de una firma que mi rol puede dar (fase 6, sesión 3). */
+  transfers_to_sign: number
 }
 
 export const EMPTY_COUNTS: MyWorkCounts = {
   itrs_execute: 0, itrs_review: 0, punches: 0, plan_items: 0, signatures: 0, preservation_overdue: 0,
-  punches_verify: 0, punches_review: 0, actions_mine: 0, actions_verify: 0, constraints_mine: 0, handovers_to_receive: 0, holds_to_release: 0, lineup_to_verify: 0, milestones_to_witness: 0,
+  punches_verify: 0, punches_review: 0, actions_mine: 0, actions_verify: 0, constraints_mine: 0, handovers_to_receive: 0, holds_to_release: 0, lineup_to_verify: 0, milestones_to_witness: 0, transfers_to_sign: 0,
 }
 
 const SIGNER_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect']
@@ -52,7 +54,7 @@ export function parseCounts(raw: unknown): MyWorkCounts {
     punches_verify: n('punches_verify'), punches_review: n('punches_review'),
     actions_mine: n('actions_mine'), actions_verify: n('actions_verify'), constraints_mine: n('constraints_mine'),
     handovers_to_receive: n('handovers_to_receive'), holds_to_release: n('holds_to_release'), lineup_to_verify: n('lineup_to_verify'),
-    milestones_to_witness: n('milestones_to_witness'),
+    milestones_to_witness: n('milestones_to_witness'), transfers_to_sign: n('transfers_to_sign'),
   }
 }
 
@@ -75,7 +77,7 @@ export function seesPreservation(role: OrgMemberRole): boolean {
 export function badgeTotal(c: MyWorkCounts, role: OrgMemberRole): number {
   return c.itrs_execute + c.itrs_review + c.punches + c.plan_items + (canSignCertificates(role) ? c.signatures : 0)
     + (seesPreservation(role) ? c.punches_review : 0) + c.actions_mine + c.constraints_mine
-    + (role !== 'client' ? c.handovers_to_receive : 0) + c.holds_to_release + c.milestones_to_witness
+    + (role !== 'client' ? c.handovers_to_receive : 0) + c.holds_to_release + c.milestones_to_witness + c.transfers_to_sign
 }
 
 export type DueState = 'overdue' | 'today' | 'future' | null

@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
-import { MILESTONES } from '@/lib/startup/catalog'
+import { MILESTONES, type OwnershipStage } from '@/lib/startup/catalog'
+import { StageChip } from '@/app/(dashboard)/projects/[id]/startup/operations/ownership-ui'
 import GatePlanPanel, { type GatePlan, type GatePlanEvent, type GateProgress } from './GatePlanPanel'
 import { createClient } from '@/lib/supabase/client'
 import type { DependencyCriterionDetail } from '@/lib/systems/dependencies'
@@ -50,6 +51,8 @@ type Props = {
   }
   /** Hitos de arranque vigentes del sistema (fase 6, sesión 2). */
   milestones: { id: string; milestone: string; occurredAt: string; status: string }[]
+  /** Etapa de propiedad del sistema (fase 6, sesión 3). */
+  ownership: { stage: OwnershipStage; pendingTransferId: string | null }
   /** Gestión diaria del sistema (fase 5): restricciones no cerradas y acciones vivas. */
   daily: {
     constraints: { id: string; number: string; title: string; status: string; escalation_level: number; need_date: string; gate: string | null }[]
@@ -91,7 +94,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, daily }: Props) {
+export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, ownership, daily }: Props) {
   const t = useTranslations('Gates')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -357,6 +360,12 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 2px' }}>
           {system.code}{system.name && system.name !== system.code ? ` — ${system.name}` : ''}
         </h1>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', margin: '4px 0' }}>
+          <StageChip stage={ownership.stage} />
+          <Link href={ownership.pendingTransferId ? `/projects/${project.id}/startup/transfers/${ownership.pendingTransferId}` : `/projects/${project.id}/startup/operations`} style={linkStyle}>
+            {ownership.pendingTransferId ? t('ownership.pending') : t('ownership.link')}
+          </Link>
+        </div>
         <p style={{ ...small, margin: 0 }}>
           {project.code} · {project.name}{system.area ? ` · ${system.area}` : ''}
           {' · '}<Link href={`/projects/${project.id}/systems/${system.id}`} style={linkStyle}>{t('systemFile')}</Link>
