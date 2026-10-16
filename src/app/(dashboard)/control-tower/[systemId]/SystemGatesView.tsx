@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
+import GatePlanPanel, { type GatePlan, type GatePlanEvent, type GateProgress } from './GatePlanPanel'
 import { createClient } from '@/lib/supabase/client'
 import type { DependencyCriterionDetail } from '@/lib/systems/dependencies'
 import {
@@ -38,6 +39,14 @@ type Props = {
   phaseCodes: Record<string, string>
   dependsOn: { id: string; code: string }[]
   enables: { id: string; code: string }[]
+  /** Planificación (fase 5, sesión 2): avance ponderado por gate y forecast/compromiso. */
+  planning: {
+    progress: Record<string, GateProgress>
+    weightedPct: number
+    plans: Record<string, GatePlan>
+    events: (GatePlanEvent & { gate_id: string })[]
+    canCommit: boolean
+  }
   /** Gestión diaria del sistema (fase 5): restricciones no cerradas y acciones vivas. */
   daily: {
     constraints: { id: string; number: string; title: string; status: string; escalation_level: number; need_date: string; gate: string | null }[]
@@ -79,7 +88,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, daily }: Props) {
+export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, daily }: Props) {
   const t = useTranslations('Gates')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -334,6 +343,14 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
           {project.code} · {project.name}{system.area ? ` · ${system.area}` : ''}
           {' · '}<Link href={`/projects/${project.id}/systems/${system.id}`} style={linkStyle}>{t('systemFile')}</Link>
         </p>
+        <p style={{ ...small, margin: '6px 0 0' }}>
+          <strong style={{ color: 'var(--text-strong)' }}>{t('plan.header', {
+            pct: (planning.weightedPct * 100).toFixed(1),
+            approved: gates.filter(g => g.status === 'approved' || g.status === 'approved_with_conditions').length,
+            total: gates.length,
+          })}</strong>
+          {' · '}<Link href={`/projects/${project.id}/daily/lookahead`} style={linkStyle}>{t('plan.lookahead')}</Link>
+        </p>
         {(dependsOn.length > 0 || enables.length > 0) && (
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8, ...small }}>
             {([['dependsOn', dependsOn], ['enables', enables]] as const).map(([key, list]) => list.length > 0 && (
@@ -395,6 +412,14 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
               </div>
               <StatusBadge status={g.status} label={t(`status.${g.status}`)} />
             </div>
+
+            <GatePlanPanel
+              projectId={project.id} systemId={system.id} gateId={g.gate_id}
+              progress={planning.progress[g.gate_id]} plan={planning.plans[g.gate_id]}
+              events={planning.events.filter(e => e.gate_id === g.gate_id)} names={names}
+              canEdit={role !== 'client'} canCommit={planning.canCommit}
+              settled={g.status === 'approved' || g.status === 'approved_with_conditions'}
+            />
 
             <ul style={{ listStyle: 'none', margin: '16px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
               {g.criteria.map((c, i) => {

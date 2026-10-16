@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { SystemGate } from '@/lib/readiness/gates'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import SystemGatesView from './SystemGatesView'
+import type { GatePlanEvent } from './GatePlanPanel'
 
 // Detalle de gates de un sistema (fase 1 plan readiness): criterios con su evidencia,
 // bloqueos con enlace y aprobación formal del hold point.
@@ -26,7 +27,7 @@ export default async function SystemGatesPage({
   if (!system || !project || project.org_id !== ctx.orgId) notFound()
   const area = system.areas as { code: string; name: string } | null
 
-  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }, { data: constraints }, { data: actions }] = await Promise.all([
+  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }, { data: constraints }, { data: actions }, { data: progress }, { data: plans }, { data: planEvents }] = await Promise.all([
     supabase.rpc('compute_system_gates', { p_system_id: systemId }),
     supabase.from('project_phases').select('id, code').eq('org_id', ctx.orgId),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
@@ -45,6 +46,11 @@ export default async function SystemGatesPage({
       .select('id, number, title, status, priority, due_date, owner_id')
       .eq('system_id', systemId).in('status', ['open', 'in_progress', 'done'])
       .order('due_date', { ascending: true, nullsFirst: false }).limit(50),
+    // Planificación (fase 5, sesión 2): avance ponderado por gate y forecast/compromiso con historial.
+    supabase.rpc('compute_system_progress', { p_system_id: systemId }),
+    supabase.from('system_gate_plans').select('gate_id, forecast_date, commitment_date').eq('system_id', systemId),
+    supabase.from('system_gate_plan_events').select('id, gate_id, kind, from_date, to_date, reason, user_id, created_at')
+      .eq('system_id', systemId).order('created_at'),
   ])
   type Ref = { id: string; code: string }
   const dependsOn = (deps ?? []).filter(d => d.system_id === systemId).map(d => d.provider as unknown as Ref).filter(Boolean)
@@ -72,6 +78,13 @@ export default async function SystemGatesPage({
       phaseCodes={phaseCodes}
       dependsOn={dependsOn}
       enables={enables}
+      planning={{
+        progress: Object.fromEntries((progress ?? []).map(p => [p.gate_id, { weight: Number(p.weight), itr_total: p.itr_total, itr_approved: p.itr_approved, pct: Number(p.pct) }])),
+        weightedPct: (progress ?? []).reduce((sum, p) => sum + Number(p.weight) * Number(p.pct), 0),
+        plans: Object.fromEntries((plans ?? []).map(p => [p.gate_id, { forecast_date: p.forecast_date, commitment_date: p.commitment_date }])),
+        events: (planEvents ?? []) as unknown as (GatePlanEvent & { gate_id: string })[],
+        canCommit: EDITOR_ROLES.includes(ctx.role),
+      }}
       daily={{
         constraints: (constraints ?? []).map(c => ({ ...c, gate: (c.readiness_gates as unknown as { code: string } | null)?.code ?? null })),
         actions: actions ?? [],

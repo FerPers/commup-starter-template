@@ -1,6 +1,9 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import KpiDashboard from './KpiDashboard'
+import ReadinessKpis, { type MgmtSnapshot } from './ReadinessKpis'
+import { todayIso } from '@/lib/daily/catalog'
+import { addDays } from '@/lib/readiness/planning'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
 import { getProjectAlerts } from '@/app/actions/alerts'
 import { fetchItrPhaseCounts, sumItr } from '@/lib/list/kpi-query'
@@ -49,7 +52,18 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
     return { id: phase.id, code: phase.code, name: phase.name, color: phase.color, total, approved, pct }
   })
 
+  // Readiness (fase 5, sesión 2): avance ponderado en vivo + snapshots diarios (curva S, KPIs).
+  const since = addDays(todayIso(), -180)
+  const [{ data: progress }, { data: mgmtSnaps }] = await Promise.all([
+    supabase.rpc('compute_project_progress', { p_project_id: projectId }),
+    supabase.from('mgmt_kpi_snapshots').select('snapshot_date, weighted_pct, gates_approved, gates_total, kpis')
+      .eq('project_id', projectId).gte('snapshot_date', since).order('snapshot_date'),
+  ])
+  const itrSum = (progress ?? []).reduce((sum, p) => sum + p.itr_total, 0)
+  const livePct = itrSum > 0 ? (progress ?? []).reduce((sum, p) => sum + Number(p.weighted_pct) * p.itr_total, 0) / itrSum : 0
+
   return (
+    <>
     <KpiDashboard
       projectId={projectId}
       projectName={project.name}
@@ -62,5 +76,15 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
       canEdit={canEdit}
       alerts={alerts}
     />
+    <ReadinessKpis
+      projectId={projectId}
+      livePct={livePct}
+      liveGates={{
+        approved: (progress ?? []).reduce((sum, p) => sum + p.gates_approved, 0),
+        total: (progress ?? []).reduce((sum, p) => sum + p.gates_total, 0),
+      }}
+      snapshots={(mgmtSnaps ?? []).map(m => ({ ...m, weighted_pct: Number(m.weighted_pct), kpis: m.kpis as MgmtSnapshot['kpis'] }))}
+    />
+    </>
   )
 }

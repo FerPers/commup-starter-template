@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -215,5 +216,29 @@ export function Evidence({ projectId, kind, entityId, attachments, names, canAdd
         </div>
       )}
     </section>
+  )
+}
+
+/** Cabecera y pestañas como enlaces (para subpáginas del hub, p. ej. el look-ahead). */
+export function DailyTabs({ project, active }: { project: { id: string; code: string; name: string }; active: 'lookahead' }) {
+  const t = useTranslations('Daily')
+  const base = `/projects/${project.id}/daily`
+  const tab = (on: boolean): React.CSSProperties => ({
+    padding: '8px 14px', textDecoration: 'none', fontSize: 'var(--text-sm)', fontWeight: 600,
+    color: on ? 'var(--primary-600, #2563eb)' : 'var(--text-muted)',
+    borderBottom: on ? '2px solid var(--primary-500)' : '2px solid transparent', marginBottom: -1,
+  })
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div>
+        <Link href={`/projects/${project.id}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>← {project.code} · {project.name}</Link>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>{t('title')}</h1>
+        <p style={{ ...small, margin: '4px 0 0', maxWidth: 760 }}>{t(`${active}.subtitle`)}</p>
+      </div>
+      <nav aria-label={t('title')} style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+        {(['actions', 'constraints', 'tqs', 'decisions'] as const).map(k => <Link key={k} href={`${base}?tab=${k}`} style={tab(false)}>{t(`tab.${k}`)}</Link>)}
+        <Link href={`${base}/lookahead`} aria-current="page" style={tab(active === 'lookahead')}>{t('tab.lookahead')}</Link>
+      </nav>
+    </div>
   )
 }

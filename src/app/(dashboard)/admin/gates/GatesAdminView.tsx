@@ -45,7 +45,7 @@ const btn = (primary = false): React.CSSProperties => ({
 })
 const linkBtn: React.CSSProperties = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }
 
-export default function GatesAdminView({ gates, criteria, phases }: { gates: Gate[]; criteria: Crit[]; phases: Phase[] }) {
+export default function GatesAdminView({ gates, criteria, phases, weights }: { gates: Gate[]; criteria: Crit[]; phases: Phase[]; weights?: React.ReactNode }) {
   const t = useTranslations('GatesAdmin')
   const tg = useTranslations('Gates')
   const router = useRouter()
@@ -77,6 +77,9 @@ export default function GatesAdminView({ gates, criteria, phases }: { gates: Gat
           {error}
         </div>
       )}
+
+      {/* Pesos en el avance físico ponderado (fase 5, sesión 2) */}
+      {weights}
 
       {gates.map((g, idx) => {
         const crits = criteria.filter(c => c.gate_id === g.id)

@@ -824,6 +824,27 @@
       "footerComplete": "{count} completed at 100%",
       "footerPunchA": "{count} Punch A open",
       "footerPunchB": "{count} Punch B open"
+    },
+    "readiness": {
+      "title": "Readiness and daily management",
+      "lookahead": "View look-ahead →",
+      "asOf": "KPIs as of {date} (daily snapshot).",
+      "noSnapshot": "No daily-management snapshot yet: taken nightly or with “Take snapshot”.",
+      "later": "First start-up success, repeat failures, document completeness and vendor readiness come with phases 6–8.",
+      "weighted": "Weighted physical progress",
+      "weightedHint": "Live · approved ITRs per gate × weight",
+      "readiness": "Readiness",
+      "readinessHint": "Approved gates / gates with a phase (live)",
+      "commitments": "Commitment compliance",
+      "commitmentsHint": "Gates approved on time · {n} in 30 days",
+      "tq": "TQs answered on time",
+      "tqHint": "{closed} closed in 30 d · {days} d average · {open} open",
+      "actions": "Actions on time",
+      "actionsHint": "{open} open · {overdue} overdue · {verify} to verify",
+      "constraints": "Open constraints",
+      "constraintsHint": "L1 {l1} · L2 {l2} · L3 {l3} · L4 {l4} · average age {age} d",
+      "curve": "S-curve — weighted physical progress",
+      "curveEmpty": "The curve appears from the second daily snapshot."
     }
   },
   "Projects": {
@@ -1687,7 +1708,8 @@
       "catBNoLimit": "No limit on open Cat B per subsystem",
       "approvedByGate": "Systems approved per gate",
       "toApprove": "{count} to approve",
-      "toSign": "{count} to sign"
+      "toSign": "{count} to sign",
+      "weighted": "Weighted progress by gate: {pct} %"
     },
     "col": {
       "area": "Area",
@@ -1722,7 +1744,8 @@
       "process": "Process",
       "utility": "Utility",
       "safety": "Safety"
-    }
+    },
+    "weightedShort": "weighted {pct} %"
   },
   "DataQuality": {
     "title": "Data Quality & Bottlenecks",
@@ -2401,6 +2424,21 @@
     "daily": {
       "title": "System daily management",
       "link": "Go to daily management →"
+    },
+    "plan": {
+      "progress": "Physical progress",
+      "progressValue": "{pct} % ({approved}/{total} ITRs approved)",
+      "noItrs": "0 % · no ITRs in this phase",
+      "weight": "weight {pct} %",
+      "gap": "gap {n} d",
+      "forecast": "Forecast",
+      "commitment": "Commitment",
+      "reason": "Reason for the commitment change",
+      "save": "Save dates",
+      "showHistory": "Date history ({n})",
+      "hideHistory": "Hide history",
+      "header": "Weighted physical progress {pct} % · Readiness {approved}/{total} gates",
+      "lookahead": "Look-ahead →"
     }
   },
   "GatesAdmin": {
@@ -2439,7 +2477,14 @@
       "client": "Client"
     },
     "requiredSignatures": "Additional signatures required",
-    "cosignRoles": "Can co-sign"
+    "cosignRoles": "Can co-sign",
+    "weights": {
+      "title": "Weights in physical progress",
+      "help": "How much each gate adds to a system’s weighted progress (approved ITRs of its phase × weight). Empty = 1; normalized over active gates with a phase. Readiness (approved gates) is measured separately.",
+      "none": "No active gates with a phase.",
+      "save": "Save weights",
+      "invalid": "Weights must be between 0 and 1000."
+    }
   },
   "Systems": {
     "title": "Systems",
@@ -3059,7 +3104,8 @@
       "actions": "Actions",
       "constraints": "Constraints",
       "tqs": "TQ",
-      "decisions": "Decisions"
+      "decisions": "Decisions",
+      "lookahead": "Look-ahead"
     },
     "kpi": {
       "actionsOpen": "Open",
@@ -3340,6 +3386,53 @@
       "recordedBy": "Recorded by {who} on {when}",
       "replaces": "Supersedes",
       "supersede": "Supersede decision"
+    },
+    "lookahead": {
+      "subtitle": "What is due in the next 7, 30 or 90 days: gates by forecast or commitment, actions, constraints, TQs and work plans. Overdue items keep showing until closed.",
+      "window": "{n} days",
+      "basis": {
+        "forecast": "By forecast",
+        "commitment": "By commitment"
+      },
+      "editDates": "Edit dates",
+      "closeEdit": "Back to look-ahead",
+      "kpi": {
+        "items": "Due in {n} days",
+        "atRisk": "Gates at risk",
+        "behind": "Forecast behind commitment",
+        "progress": "Weighted progress"
+      },
+      "saved": "{n, plural, one {# date saved} other {# dates saved}}.",
+      "savedPartial": "{n} saved before the error",
+      "help": "Up to {end}. Risk = the gate is due in the window and is not ready. Gap = forecast − commitment (positive: late against commitment).",
+      "empty": "Nothing due in this window.",
+      "noSystem": "No system",
+      "systemProgress": "weighted progress {pct} · gates approved {approved}/{total}",
+      "kind": {
+        "gate": "Gate",
+        "action": "Action",
+        "constraint": "Constraint",
+        "tq": "TQ",
+        "work_plan": "Work plan"
+      },
+      "gateStatus": {
+        "pending_signatures": "Pending signatures",
+        "approved": "Approved",
+        "approved_with_conditions": "Approved with conditions",
+        "regressed": "Regressed",
+        "ready": "Ready",
+        "ready_with_conditions": "Ready with conditions",
+        "not_ready": "Not ready"
+      },
+      "gap": "gap {n} d",
+      "risk": "at risk",
+      "editHelp": "F = forecast (best estimate, adjust freely). C = commitment (firm date; changing it needs a reason and is logged).",
+      "editHelpNoCommit": "F = forecast. Only leaders or above set commitments.",
+      "f": "F",
+      "c": "C",
+      "reason": "Reason for the commitment change (required)",
+      "saveChanges": "Save {n, plural, one {# change} other {# changes}}",
+      "discard": "Discard"
     }
   }
 }

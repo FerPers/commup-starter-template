@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import GatesAdminView from './GatesAdminView'
+import GateWeightsCard from './GateWeightsCard'
 
 // Configuración de gates / hold points de la org (fase 1 plan readiness).
 export default async function AdminGatesPage() {
@@ -13,7 +14,7 @@ export default async function AdminGatesPage() {
   const [{ data: gates }, { data: criteria }, { data: phases }] = await Promise.all([
     supabase
       .from('readiness_gates')
-      .select('id, code, name, description, order_index, phase_id, requires_previous, is_active, approval_roles, required_signatures, cosign_roles')
+      .select('id, code, name, description, order_index, phase_id, requires_previous, is_active, approval_roles, required_signatures, cosign_roles, weight')
       .eq('org_id', ctx.orgId)
       .order('order_index')
       .order('code'),
@@ -34,6 +35,7 @@ export default async function AdminGatesPage() {
       gates={gates ?? []}
       criteria={(criteria ?? []).map(c => ({ ...c, label: (c.params as { label?: string } | null)?.label ?? null }))}
       phases={phases ?? []}
+      weights={<GateWeightsCard gates={(gates ?? []).map(g => ({ ...g, weight: g.weight === null ? null : Number(g.weight) }))} />}
     />
   )
 }

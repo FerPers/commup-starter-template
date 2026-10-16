@@ -2869,6 +2869,60 @@ export type Database = {
           },
         ]
       }
+      mgmt_kpi_snapshots: {
+        Row: {
+          created_at: string
+          gates_approved: number
+          gates_total: number
+          id: string
+          itr_total: number
+          kpis: Json
+          org_id: string
+          project_id: string
+          snapshot_date: string
+          weighted_pct: number
+        }
+        Insert: {
+          created_at?: string
+          gates_approved?: number
+          gates_total?: number
+          id?: string
+          itr_total?: number
+          kpis?: Json
+          org_id: string
+          project_id: string
+          snapshot_date: string
+          weighted_pct?: number
+        }
+        Update: {
+          created_at?: string
+          gates_approved?: number
+          gates_total?: number
+          id?: string
+          itr_total?: number
+          kpis?: Json
+          org_id?: string
+          project_id?: string
+          snapshot_date?: string
+          weighted_pct?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mgmt_kpi_snapshots_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mgmt_kpi_snapshots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -4637,6 +4691,7 @@ export type Database = {
           phase_id: string | null
           required_signatures: string[]
           requires_previous: boolean
+          weight: number | null
         }
         Insert: {
           approval_roles?: string[]
@@ -4652,6 +4707,7 @@ export type Database = {
           phase_id?: string | null
           required_signatures?: string[]
           requires_previous?: boolean
+          weight?: number | null
         }
         Update: {
           approval_roles?: string[]
@@ -4667,6 +4723,7 @@ export type Database = {
           phase_id?: string | null
           required_signatures?: string[]
           requires_previous?: boolean
+          weight?: number | null
         }
         Relationships: [
           {
@@ -5739,6 +5796,193 @@ export type Database = {
           },
         ]
       }
+      system_gate_plan_events: {
+        Row: {
+          created_at: string
+          from_date: string | null
+          gate_id: string
+          id: string
+          kind: string
+          org_id: string
+          project_id: string
+          reason: string | null
+          system_id: string
+          to_date: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_date?: string | null
+          gate_id: string
+          id?: string
+          kind: string
+          org_id: string
+          project_id: string
+          reason?: string | null
+          system_id: string
+          to_date?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_date?: string | null
+          gate_id?: string
+          id?: string
+          kind?: string
+          org_id?: string
+          project_id?: string
+          reason?: string | null
+          system_id?: string
+          to_date?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_gate_plan_events_gate_id_fkey"
+            columns: ["gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_plan_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_plan_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_plan_events_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_plan_events_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_plan_events_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_plan_events_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      system_gate_plans: {
+        Row: {
+          commitment_at: string | null
+          commitment_by: string | null
+          commitment_date: string | null
+          forecast_at: string | null
+          forecast_by: string | null
+          forecast_date: string | null
+          gate_id: string
+          notes: string | null
+          org_id: string
+          project_id: string
+          system_id: string
+          updated_at: string
+        }
+        Insert: {
+          commitment_at?: string | null
+          commitment_by?: string | null
+          commitment_date?: string | null
+          forecast_at?: string | null
+          forecast_by?: string | null
+          forecast_date?: string | null
+          gate_id: string
+          notes?: string | null
+          org_id: string
+          project_id: string
+          system_id: string
+          updated_at?: string
+        }
+        Update: {
+          commitment_at?: string | null
+          commitment_by?: string | null
+          commitment_date?: string | null
+          forecast_at?: string | null
+          forecast_by?: string | null
+          forecast_date?: string | null
+          gate_id?: string
+          notes?: string | null
+          org_id?: string
+          project_id?: string
+          system_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_gate_plans_gate_id_fkey"
+            columns: ["gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_plans_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_plans_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_plans_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_plans_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_plans_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_plans_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       system_gate_signatures: {
         Row: {
           approval_id: string
@@ -5794,6 +6038,94 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_progress_snapshots: {
+        Row: {
+          created_at: string
+          gates_approved: number
+          gates_total: number
+          id: string
+          itr_approved: number
+          itr_total: number
+          org_id: string
+          per_gate: Json
+          project_id: string
+          snapshot_date: string
+          system_id: string
+          weighted_pct: number
+        }
+        Insert: {
+          created_at?: string
+          gates_approved?: number
+          gates_total?: number
+          id?: string
+          itr_approved?: number
+          itr_total?: number
+          org_id: string
+          per_gate?: Json
+          project_id: string
+          snapshot_date: string
+          system_id: string
+          weighted_pct?: number
+        }
+        Update: {
+          created_at?: string
+          gates_approved?: number
+          gates_total?: number
+          id?: string
+          itr_approved?: number
+          itr_total?: number
+          org_id?: string
+          per_gate?: Json
+          project_id?: string
+          snapshot_date?: string
+          system_id?: string
+          weighted_pct?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_progress_snapshots_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_progress_snapshots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_progress_snapshots_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_progress_snapshots_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_progress_snapshots_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_progress_snapshots_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
           },
         ]
       }
@@ -7550,6 +7882,18 @@ export type Database = {
           system_name: string
         }[]
       }
+      compute_project_progress: {
+        Args: { p_project_id: string }
+        Returns: {
+          gates_approved: number
+          gates_total: number
+          itr_approved: number
+          itr_total: number
+          system_code: string
+          system_id: string
+          weighted_pct: number
+        }[]
+      }
       compute_project_readiness: {
         Args: { p_project_id: string }
         Returns: {
@@ -7585,6 +7929,20 @@ export type Database = {
           required_signatures: string[]
           requires_previous: boolean
           status: string
+        }[]
+      }
+      compute_system_progress: {
+        Args: { p_system_id: string }
+        Returns: {
+          approved: boolean
+          gate_code: string
+          gate_id: string
+          gate_order: number
+          itr_approved: number
+          itr_total: number
+          pct: number
+          phase_id: string
+          weight: number
         }[]
       }
       compute_system_readiness: {
@@ -7757,6 +8115,10 @@ export type Database = {
       evaluate_signal_rules_for_batch: {
         Args: { p_batch_id: string }
         Returns: number
+      }
+      gate_plan_context: {
+        Args: { p_gate_id: string; p_system_id: string }
+        Returns: Record<string, unknown>
       }
       generate_handover_package: {
         Args: { p_project_id: string; p_system_ids?: string[] }
@@ -7988,6 +8350,28 @@ export type Database = {
         Args: { p_phase_id: string }
         Returns: string
       }
+      set_gate_commitment: {
+        Args: {
+          p_date: string
+          p_gate_id: string
+          p_reason?: string
+          p_system_id: string
+        }
+        Returns: undefined
+      }
+      set_gate_forecast: {
+        Args: {
+          p_date: string
+          p_gate_id: string
+          p_note?: string
+          p_system_id: string
+        }
+        Returns: undefined
+      }
+      set_gate_weights: {
+        Args: { p_org_id: string; p_weights: Json }
+        Returns: undefined
+      }
       set_webhook_enabled: {
         Args: { p_enabled: boolean; p_sub_id: string }
         Returns: undefined
@@ -8030,6 +8414,10 @@ export type Database = {
           discipline_name: string
           n: number
         }[]
+      }
+      take_mgmt_snapshot: {
+        Args: { p_date?: string; p_project_id: string }
+        Returns: Json
       }
       tq_set_tags: {
         Args: { p_project_id: string; p_tag_ids: string[]; p_tq_id: string }

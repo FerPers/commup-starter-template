@@ -824,6 +824,27 @@
       "footerComplete": "{count} completados al 100%",
       "footerPunchA": "{count} Punch A abiertos",
       "footerPunchB": "{count} Punch B abiertos"
+    },
+    "readiness": {
+      "title": "Readiness y gestión diaria",
+      "lookahead": "Ver look-ahead →",
+      "asOf": "KPIs al {date} (snapshot diario).",
+      "noSnapshot": "Aún no hay snapshot de gestión diaria: se toma cada noche o con «Tomar snapshot».",
+      "later": "Primer arranque, falla repetida, completitud documental y readiness de vendors llegan con las fases 6–8.",
+      "weighted": "Avance físico ponderado",
+      "weightedHint": "En vivo · ITR aprobados por gate × peso",
+      "readiness": "Readiness",
+      "readinessHint": "Gates aprobados / gates con fase (en vivo)",
+      "commitments": "Cumplimiento del compromiso",
+      "commitmentsHint": "Gates aprobados a tiempo · {n} en 30 días",
+      "tq": "TQ respondidos a tiempo",
+      "tqHint": "{closed} cerrados en 30 d · {days} d promedio · {open} abiertos",
+      "actions": "Acciones a tiempo",
+      "actionsHint": "{open} abiertas · {overdue} vencidas · {verify} por verificar",
+      "constraints": "Restricciones abiertas",
+      "constraintsHint": "N1 {l1} · N2 {l2} · N3 {l3} · N4 {l4} · edad promedio {age} d",
+      "curve": "Curva S — avance físico ponderado",
+      "curveEmpty": "La curva aparece desde el segundo snapshot diario."
     }
   },
   "Projects": {
@@ -1687,7 +1708,8 @@
       "catBNoLimit": "Sin límite de Cat B abiertos por subsistema",
       "approvedByGate": "Sistemas aprobados por gate",
       "toApprove": "{count} por aprobar",
-      "toSign": "{count} por firmar"
+      "toSign": "{count} por firmar",
+      "weighted": "Avance ponderado por gate: {pct} %"
     },
     "col": {
       "area": "Área",
@@ -1722,7 +1744,8 @@
       "process": "Proceso",
       "utility": "Utility",
       "safety": "Seguridad"
-    }
+    },
+    "weightedShort": "ponderado {pct} %"
   },
   "DataQuality": {
     "title": "Calidad de Datos & Cuellos de Botella",
@@ -2401,6 +2424,21 @@
     "daily": {
       "title": "Gestión diaria del sistema",
       "link": "Ir a gestión diaria →"
+    },
+    "plan": {
+      "progress": "Avance físico",
+      "progressValue": "{pct} % ({approved}/{total} ITR aprobados)",
+      "noItrs": "0 % · sin ITR en esta fase",
+      "weight": "peso {pct} %",
+      "gap": "brecha {n} d",
+      "forecast": "Forecast",
+      "commitment": "Compromiso",
+      "reason": "Motivo del cambio de compromiso",
+      "save": "Guardar fechas",
+      "showHistory": "Historial de fechas ({n})",
+      "hideHistory": "Ocultar historial",
+      "header": "Avance físico ponderado {pct} % · Readiness {approved}/{total} gates",
+      "lookahead": "Look-ahead →"
     }
   },
   "GatesAdmin": {
@@ -2439,7 +2477,14 @@
       "client": "Cliente"
     },
     "requiredSignatures": "Firmas adicionales requeridas",
-    "cosignRoles": "Pueden co-firmar"
+    "cosignRoles": "Pueden co-firmar",
+    "weights": {
+      "title": "Pesos en el avance físico",
+      "help": "Cuánto aporta cada gate al avance ponderado de un sistema (ITR aprobados de su fase × peso). Vacío = 1; se normaliza sobre los gates activos con fase. El readiness (gates aprobados) se mide aparte.",
+      "none": "No hay gates activos con fase.",
+      "save": "Guardar pesos",
+      "invalid": "Los pesos deben estar entre 0 y 1000."
+    }
   },
   "Systems": {
     "title": "Sistemas",
@@ -3059,7 +3104,8 @@
       "actions": "Acciones",
       "constraints": "Restricciones",
       "tqs": "TQ",
-      "decisions": "Decisiones"
+      "decisions": "Decisiones",
+      "lookahead": "Look-ahead"
     },
     "kpi": {
       "actionsOpen": "Abiertas",
@@ -3340,6 +3386,53 @@
       "recordedBy": "Registrada por {who} el {when}",
       "replaces": "Reemplaza a",
       "supersede": "Reemplazar decisión"
+    },
+    "lookahead": {
+      "subtitle": "Qué vence en los próximos 7, 30 o 90 días: gates por forecast o compromiso, acciones, restricciones, TQ y work plans. Lo vencido sigue apareciendo hasta cerrarse.",
+      "window": "{n} días",
+      "basis": {
+        "forecast": "Por forecast",
+        "commitment": "Por compromiso"
+      },
+      "editDates": "Editar fechas",
+      "closeEdit": "Volver al look-ahead",
+      "kpi": {
+        "items": "Vence en {n} días",
+        "atRisk": "Gates en riesgo",
+        "behind": "Forecast detrás del compromiso",
+        "progress": "Avance ponderado"
+      },
+      "saved": "{n, plural, one {# fecha guardada} other {# fechas guardadas}}.",
+      "savedPartial": "se guardaron {n} antes del error",
+      "help": "Hasta el {end}. Riesgo = el gate vence en la ventana y no está listo. Brecha = forecast − compromiso (positivo: atraso contra lo comprometido).",
+      "empty": "Nada vence en esta ventana.",
+      "noSystem": "Sin sistema",
+      "systemProgress": "avance ponderado {pct} · gates aprobados {approved}/{total}",
+      "kind": {
+        "gate": "Gate",
+        "action": "Acción",
+        "constraint": "Restricción",
+        "tq": "TQ",
+        "work_plan": "Work plan"
+      },
+      "gateStatus": {
+        "pending_signatures": "Pendiente de firmas",
+        "approved": "Aprobado",
+        "approved_with_conditions": "Aprobado con condiciones",
+        "regressed": "Regresión",
+        "ready": "Listo",
+        "ready_with_conditions": "Listo con condiciones",
+        "not_ready": "No listo"
+      },
+      "gap": "brecha {n} d",
+      "risk": "en riesgo",
+      "editHelp": "F = forecast (mejor estimación, se ajusta libremente). C = compromiso (fecha firme; cambiarla pide motivo y queda en el historial).",
+      "editHelpNoCommit": "F = forecast. El compromiso solo lo fijan líderes o superiores.",
+      "f": "F",
+      "c": "C",
+      "reason": "Motivo del cambio de compromiso (obligatorio)",
+      "saveChanges": "Guardar {n, plural, one {# cambio} other {# cambios}}",
+      "discard": "Descartar"
     }
   }
 }

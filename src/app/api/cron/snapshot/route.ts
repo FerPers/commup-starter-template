@@ -141,7 +141,10 @@ export async function POST(req: NextRequest) {
         phaseErr = phaseInsertErr?.message
       }
 
-      const errMsg = insertErr?.message ?? phaseErr
+      // ── Readiness (fase 5): avance ponderado por sistema y KPIs de gestión diaria, en SQL ──
+      const { error: mgmtErr } = await supabase.rpc('take_mgmt_snapshot', { p_project_id: pid, p_date: today })
+
+      const errMsg = insertErr?.message ?? phaseErr ?? mgmtErr?.message
       results.push({ projectId: pid, ok: !errMsg, error: errMsg })
     } catch (err) {
       results.push({ projectId: pid, ok: false, error: String(err) })

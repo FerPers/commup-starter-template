@@ -103,13 +103,17 @@ export default async function ControlTowerPage({
   const gatesBySystem = new Map<string, MatrixGate[]>()
   let blocks = new Map<string, string[]>()
   const sysInfo = new Map<string, { code: string; system_type: SystemType | null; priority: number | null }>()
+  // Avance físico ponderado por gate (fase 5, sesión 2), aparte del readiness.
+  const weighted = new Map<string, { pct: number; itrs: number }>()
   if (projectId) {
-    const [readiness, gates, deps, systems] = await Promise.all([
+    const [readiness, gates, deps, systems, progress] = await Promise.all([
       supabase.rpc('compute_project_readiness', { p_project_id: projectId }),
       supabase.rpc('compute_project_gates', { p_project_id: projectId }),
       supabase.from('system_dependencies').select('system_id, depends_on_system_id, required_gate_id, blocked_gate_id').eq('project_id', projectId),
       supabase.from('systems').select('id, code, system_type, priority').eq('project_id', projectId),
+      supabase.rpc('compute_project_progress', { p_project_id: projectId }),
     ])
+    for (const p of progress.data ?? []) weighted.set(p.system_id, { pct: Number(p.weighted_pct), itrs: p.itr_total })
     for (const s of systems.data ?? []) sysInfo.set(s.id, { code: s.code, system_type: s.system_type as SystemType | null, priority: s.priority })
     if (readiness.error) console.error('[ControlTower] readiness rpc error:', readiness.error)
     else rows = (readiness.data ?? []) as unknown as Readiness[]
@@ -132,6 +136,8 @@ export default async function ControlTowerPage({
     { systems: 0, punchesA: 0, punchesB: 0, itrPctSum: 0 },
   )
   const avgItrPct = totals.systems > 0 ? totals.itrPctSum / totals.systems : 0
+  const weightedItrs = [...weighted.values()].reduce((sum, w) => sum + w.itrs, 0)
+  const projectWeighted = weightedItrs > 0 ? [...weighted.values()].reduce((sum, w) => sum + w.pct * w.itrs, 0) / weightedItrs : 0
 
   // Por gate: sistemas aprobados y, aparte, los que ya están listos para aprobar.
   const gateDefs = rows.length > 0 ? (gatesBySystem.get(rows[0].system_id) ?? []) : []
@@ -192,6 +198,7 @@ export default async function ControlTowerPage({
             <div style={kpiLabel}>{t('kpi.systems')}</div>
             <div style={{ ...kpiValue, color: 'var(--text-strong)' }}>{totals.systems}</div>
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.avgItr', { pct: avgItrPct.toFixed(1) })}</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.weighted', { pct: (projectWeighted * 100).toFixed(1) })}</div>
           </Card>
           <Card padding="md" style={{ gridColumn: 'span 2' }}>
             <div style={kpiLabel}>{t('kpi.approvedByGate')}</div>
@@ -268,6 +275,7 @@ export default async function ControlTowerPage({
                         <Bar pct={Number(r.itr_pct)} />
                         <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
                           {r.itr_approved}/{r.itr_total} {t('approved')}
+                          {weighted.has(r.system_id) && <> · {t('weightedShort', { pct: ((weighted.get(r.system_id)?.pct ?? 0) * 100).toFixed(1) })}</>}
                         </div>
                       </TD>
                       <TD style={{ textAlign: 'center', color: r.open_punches_a > 0 ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: 600 }}>

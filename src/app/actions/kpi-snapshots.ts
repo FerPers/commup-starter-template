@@ -5,6 +5,7 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchSubsystemRollup } from '@/lib/list/kpi-query'
 
 // getSubsystemKpis / getProjectSnapshots devuelven arrays pelados (no satisfacen
@@ -208,6 +209,11 @@ export const takeProjectSnapshot = withAuthOnly(
     const { error: phaseErr } = await supabase.from('kpi_snapshots').insert(phaseRows)
     if (phaseErr) return { success: false, error: `Snapshot de proyecto OK pero fases fallaron: ${phaseErr.message}` }
   }
+
+    // Readiness (fase 5): avance ponderado y KPIs de gestión diaria. take_mgmt_snapshot es solo de
+    // service_role (escribe snapshots sin políticas de escritura); el proyecto ya se verificó arriba.
+    const { error: mgmtErr } = await createAdminClient().rpc('take_mgmt_snapshot', { p_project_id: projectId, p_date: today })
+    if (mgmtErr) return { success: false, error: mgmtErr.message }
 
     revalidatePath(`/projects/${projectId}/kpis`)
     return { success: true }
