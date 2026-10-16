@@ -280,7 +280,7 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 
 Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
 
-Pendiente de Luis: probar en commup.app el ciclo de CIE-0001 con dos personas (Outlook propone; `lf.perdomo+smtp` autoriza; verificar con el usuario que no retiró) y confirmar «Sugerir con IA» en producción.
+Pendiente de Luis: probar en commup.app el ciclo de CIE-0001 con dos personas (Outlook propone; `lf.perdomo+smtp` autoriza; verificar con el usuario que no retiró) y confirmar «Sugerir con IA» en producción. → Lista completa y vigente de pendientes en §13.
 
 ## 10. Decisiones de la fase 4 (Luis, 2026-10-15)
 1. **Orden por bloques: A → B → C → D.** A = punch (verificación, impacto, guía de categorización, disposición PSSR); B = equipos de prueba con calibración; C = nuevos tipos de ítem (as found/as left, esperado/real, serie de lecturas); D = loops e interlocks ejecutables (loop check, pruebas C&E, IA para importar la matriz). Estimación realista: ~5 sesiones.
@@ -390,3 +390,57 @@ Pendiente de Luis: probar en commup.app el ciclo de CIE-0001 con dos personas (O
 24. **Esquema S3:** `ops_personnel`, `competency_records` (historial; el nivel vigente es la última evaluación no vencida; una vencida cuenta como 0; la registra un líder+ o una persona de nivel 4 en el sistema, nunca uno mismo), `system_competency_targets`, `critical_spares`, `system_ownership` (sembrada en `commissioning`) y `ownership_transfers` (TRF-0001; checklist congelado + excepciones justificadas; firma Comisionamiento (líder+) y Operaciones (líder+ o client), dos personas; la segunda firma recalcula el checklist; reversión a una etapa anterior sin checklist y con motivo). RPCs `ownership_checklist`, `request/sign/cancel_ownership_transfer`, `link_transfer_handover`; `my_work_counts.transfers_to_sign`. UI: pestaña «Operaciones» (sistemas, matriz de competencias, personal, repuestos), detalle del traspaso, chip en Control Tower.
 25. **El umbral de personal competente se cuenta por turno** (por defecto 2 por cada turno registrado del personal del sistema); sin turnos cargados, en total.
 26. **Si un sistema en Operaciones se revierte, su paquete de handover pasa a SUPERSEDED** y se vuelve a generar en el próximo traspaso a Operaciones.
+
+---
+
+## 13. Pendientes consolidados (cierre del 2026-10-16)
+
+Hoy quedaron en prod las **fases 5 y 6 completas** (6 sesiones + offline): c8646fc, 31aaacc, fd1a33f, f1df321, d25b8f6, 3c56c02 y 6521d5f. Del plan readiness están hechas F0–F6.
+
+### 13.1 Fases del plan que faltan (5–6 sesiones)
+
+| Fase | Sesiones | Alcance (ver §4) |
+|---|---|---|
+| **F7 — Prueba de desempeño** | 2–3 | Definición (frontera, objetivo, criterios, condiciones, duración, frecuencia de datos, correcciones, incertidumbre); ejecución con estabilización vs periodo formal, perturbaciones, datos manuales o desde `signal_samples`, validación y reconciliación entre medidores; resultado en 5 categorías; certificado con aceptación de Comisionamiento, Operaciones y Cliente + PDF de 14 secciones. |
+| **F8 — Vendors y control documental** | 3 | Entidad empresa/parte (RACI y firmas por empresa); paquetes de vendor (límites e interfaces, gate de movilización, FAT/SAT con hallazgos, recomendaciones solo con MOC, desmovilización); registro maestro de documentos con revisiones y aviso de revisión superada en ITR/procedimientos. |
+
+### 13.2 Pendientes menores del propio plan
+
+- **F1:** notificaciones de gate (listo para aprobar / pendiente de firma).
+- **F5:** KPIs que dependen de F6–F8 (primer arranque, falla repetida, completitud documental, readiness de vendors), §11.13. Los de F6 ya tienen datos (bitácora y traspasos); falta sumarlos al snapshot.
+- **F6-S3:** en local no se puede generar el paquete de handover porque `HANDOVER_SIGNING_SECRET` solo existe en Cloudflare. Opcional: agregar un valor de prueba a `.env.local`.
+- **Fechas en pantalla:** algunos detalles (traspaso, bitácora) mezclan el formato del servidor y del navegador (`toLocaleString` con `suppressHydrationWarning`). Cosmético: unificar con un componente de hora local.
+- **F4-D:** importación de señales con columnas de la cadena (JB → HMI) no probada de punta a punta en el navegador (subir xlsx).
+- **F2:** P&ID coloreado por estado/sistema no verificado visualmente (DEMO no tiene P&IDs cargados).
+
+### 13.3 Pruebas pendientes de Luis en commup.app
+
+- **F6-S3:** completar un traspaso a Operaciones con dos personas y confirmar que el paquete de handover se genera y el PDF descarga. La 2.ª firma, el aviso de fallo y «Generar paquete» ya se verificaron en DEMO (datos borrados).
+- **F5:** ciclo de una acción con dos personas (cerrar con evidencia → verificar) y subir evidencia (el navegador integrado no adjunta archivos).
+- **F4:** P-0006 y P-0266 (impacto/disposición; PSSR-002 bloqueado), firma de E14-1B/BAT-101 R2 con equipo de prueba, DEMO-CAL-V2/PT-101, revisar y activar las revisiones «F4-D» I29C/I30C, «Importar con IA» (C&E).
+- **F3:** ciclo de CIE-0001 con dos personas (Outlook propone; `lf.perdomo+smtp` autoriza; verifica alguien distinto de quien retiró), QR imprimibles y `/scan`.
+- **F2:** confirmar «Sugerir con IA» en producción.
+- **F6-S1:** PDF de un procedimiento.
+
+### 13.4 Aplazado por decisión de Luis
+
+- **Validación campo por campo de los ITR** → después, pasar las tablas de calibración del catálogo a tabla v2 con tolerancias reales (I10A v3, I05A, I11A, P03A, E32A; y reemplazar por la sección de equipos de prueba las tablas E26A M.2, E49BV-1 M.3/M.5/M.7, I33C T.1). No proponer hasta que Luis lo retome.
+- **Plan de migración ITR v2** (`docs/PLAN-MIGRACION-ITR-V2-2026-09-09.md`): activar los borradores v2 por lote en DEMO y re-sincronizar el catálogo; queda detrás de la validación anterior.
+
+### 13.5 Arrastrados de antes del plan readiness (verificar si siguen vigentes)
+
+Del lado de Luis:
+- Supabase Pro y, con él, «leaked password protection» (pospuesto hasta la reunión con Geopark; si piden BD propia cambia el plan).
+- Regla WAF de Cloudflare para `/api/v1/*` y `/login`: falta la prueba de ráfaga con 429.
+- Admin → Plantillas «ES · Traducir faltantes»; revisar la matriz IA; Excel de matriz mental.
+- Excel de Geopark (cable schedule, line list, equipos): bloquea los bloques de cables/líneas y la org Geopark.
+- Validar en prod el diálogo «Remover» con contexto (699b741) y la barra inferior móvil en el teléfono (33d4048).
+- Baja prioridad: push en su navegador, token de Cloudflare Web Analytics, social proof (espera primeros clientes).
+
+Del lado de Claude (proponer antes de codear):
+- One-pager para Geopark «dónde vive la BD» (RLS / proyecto Supabase dedicado / self-hosted, costos y garantías).
+- «Mi perfil» + avatar + logo de la org; opción B de marca (maqueta primero); etiqueta «(inactivo)» transversal.
+- Deuda técnica: componentes grandes (`ItrExecution.tsx`, `TemplateBuilder.tsx`, `TagDetail.tsx`) y casts `as unknown as` residuales.
+- Basura en DEMO: 4 plantillas QA-*-20260909 con 1 ITR cada una; M13B nueva inactiva que no está en Catálogo.
+- Superusuario de plataforma: pospuesto hasta tener clientes reales.
+- CLAUDE.md da la paginación (Sprint E) como pendiente, pero ITRs, tags, punches, KPIs y explorer se paginaron/agregaron en septiembre (641a1fc, 85db944, 2a98b70): revisar qué listados quedan sin paginar y corregir el texto.
