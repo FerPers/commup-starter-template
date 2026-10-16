@@ -6,12 +6,17 @@
 //   itr_snapshots  — copia completa del ITR para verlo sin red.
 //   outbox         — Sprint O (2026-09-07): fotos (blob), punches y firmas capturados
 //                    sin red, en orden de captura. Se drenan en src/lib/sync/replay.ts.
+//   startup_outbox — fase 6 (2026-10-16): pasos de ejecución, «Detener» y posiciones de line-up
+//                    capturados sin red. Reglas en src/lib/sync/startup-outbox-utils.ts.
+
+import type { StartupEntry, StartupOp } from './sync/startup-outbox-utils'
 
 const DB_NAME = 'commup-offline'
-const DB_VERSION = 3
+const DB_VERSION = 4
 const STORE = 'itr_responses'
 const SNAPSHOTS_STORE = 'itr_snapshots'
 const OUTBOX_STORE = 'outbox'
+const STARTUP_STORE = 'startup_outbox'
 
 /** Evento de ventana que se dispara cuando cambia la bandeja de salida (para refrescar contadores y miniaturas). */
 export const OUTBOX_CHANGED_EVENT = 'commup:outbox-changed'
@@ -20,6 +25,8 @@ export const SYNC_DONE_EVENT = 'commup:sync-done'
 /** Evento de ventana cuando el replay descarta una entrada (rechazo definitivo del servidor). detail: SyncDroppedDetail. */
 export const SYNC_DROPPED_EVENT = 'commup:sync-dropped'
 export type SyncDroppedDetail = { kind: OutboxInput['kind']; itrId: string; error: string }
+/** Evento de ventana cuando el replay deja registros de arranque rechazados o en conflicto. detail: { count }. */
+export const STARTUP_SYNC_ISSUE_EVENT = 'commup:startup-sync-issue'
 
 export type OutboxPhoto = {
   kind: 'photo'
@@ -90,6 +97,9 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(OUTBOX_STORE)) {
         db.createObjectStore(OUTBOX_STORE, { keyPath: 'id', autoIncrement: true })
+      }
+      if (!db.objectStoreNames.contains(STARTUP_STORE)) {
+        db.createObjectStore(STARTUP_STORE, { keyPath: 'id', autoIncrement: true })
       }
     }
     req.onsuccess = e => resolve((e.target as IDBOpenDBRequest).result)
@@ -217,9 +227,62 @@ export async function markOutboxAttempt(id: number, lastError: string): Promise<
   })
 }
 
-/** Total de pendientes (respuestas + bandeja de salida), opcionalmente de un solo ITR. */
+/** Total de pendientes (respuestas + bandeja de salida; sin filtro, también arranque), opcionalmente de un solo ITR. */
 export async function countPending(itrId?: string): Promise<number> {
-  const [responses, outbox] = await Promise.all([getAllQueued(), getOutbox()])
+  const [responses, outbox, startup] = await Promise.all([getAllQueued(), getOutbox(), itrId ? Promise.resolve([]) : getStartupOutbox()])
   const match = (id: string) => !itrId || id === itrId
-  return responses.filter(r => match(r.itrId)).length + outbox.filter(o => match(o.itrId)).length
+  return responses.filter(r => match(r.itrId)).length + outbox.filter(o => match(o.itrId)).length + startup.length
+}
+
+// ── Bandeja de arranque — ejecuciones y line-ups (fase 6) ─────────────
+
+/** Encola una captura (o reemplaza `replaceId`, para re-fijar una fila) y devuelve su id. */
+export async function enqueueStartup(op: StartupOp, replaceId: number | null = null): Promise<number> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STARTUP_STORE, 'readwrite')
+    const store = tx.objectStore(STARTUP_STORE)
+    if (replaceId !== null) store.delete(replaceId)
+    const entry: StartupEntry = { ...op, capturedAt: new Date().toISOString(), state: 'pending', error: null, remote: null }
+    const req = store.add(entry)
+    let key = 0
+    req.onsuccess = () => { key = Number(req.result) }
+    tx.oncomplete = () => { db.close(); notifyOutboxChanged(); resolve(key) }
+    tx.onerror = () => { db.close(); reject(tx.error) }
+  })
+}
+
+export async function getStartupOutbox(): Promise<StartupEntry[]> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STARTUP_STORE, 'readonly')
+    const req = tx.objectStore(STARTUP_STORE).getAll()
+    req.onsuccess = () => { db.close(); resolve(req.result as StartupEntry[]) }
+    req.onerror = () => { db.close(); reject(req.error) }
+  })
+}
+
+export async function patchStartupEntry(id: number, patch: Partial<StartupEntry>): Promise<void> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STARTUP_STORE, 'readwrite')
+    const store = tx.objectStore(STARTUP_STORE)
+    const req = store.get(id)
+    req.onsuccess = () => {
+      const row = req.result as StartupEntry | undefined
+      if (row) store.put({ ...row, ...patch, id })
+    }
+    tx.oncomplete = () => { db.close(); notifyOutboxChanged(); resolve() }
+    tx.onerror = () => { db.close(); reject(tx.error) }
+  })
+}
+
+export async function removeStartupEntry(id: number): Promise<void> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STARTUP_STORE, 'readwrite')
+    tx.objectStore(STARTUP_STORE).delete(id)
+    tx.oncomplete = () => { db.close(); notifyOutboxChanged(); resolve() }
+    tx.onerror = () => { db.close(); reject(tx.error) }
+  })
 }

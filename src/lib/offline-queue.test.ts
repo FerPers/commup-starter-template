@@ -3,8 +3,8 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
-  countPending, enqueueOutbox, enqueueResponse, getAllQueued, getOutbox,
-  markOutboxAttempt, removeFromOutbox,
+  countPending, enqueueOutbox, enqueueResponse, enqueueStartup, getAllQueued, getOutbox, getStartupOutbox,
+  markOutboxAttempt, patchStartupEntry, removeFromOutbox, removeStartupEntry,
 } from './offline-queue'
 
 async function resetDb() {
@@ -54,5 +54,27 @@ describe('offline outbox (IndexedDB)', () => {
     await removeFromOutbox(id)
     expect(await getOutbox()).toEqual([])
     expect(await countPending()).toBe(0)
+  })
+})
+
+describe('bandeja de arranque (IndexedDB)', () => {
+  beforeEach(resetDb)
+
+  it('encola en orden, reemplaza una fila re-fijada y cuenta en el total global', async () => {
+    const a = await enqueueStartup({ kind: 'run_step', projectId: 'p', runId: 'r1', stepId: 's1', ord: 1, isHold: false, na: false, actual: null, comment: null })
+    const b = await enqueueStartup({ kind: 'lineup_set', projectId: 'p', sheetId: 'sh', itemId: 'i1', found: 'open', remarks: null, expectedSetAt: null, expectedVerifiedAt: null })
+    const c = await enqueueStartup({ kind: 'lineup_set', projectId: 'p', sheetId: 'sh', itemId: 'i1', found: 'closed', remarks: null, expectedSetAt: null, expectedVerifiedAt: null }, b)
+    expect(c).toBeGreaterThan(a)
+    const rows = await getStartupOutbox()
+    expect(rows.map(r => r.id)).toEqual([a, c])
+    expect(rows[0]).toMatchObject({ state: 'pending', error: null })
+    expect(rows[0].capturedAt).toMatch(/^\d{4}-/)
+    expect(await countPending()).toBe(2)
+    expect(await countPending('itr1')).toBe(0)
+
+    await patchStartupEntry(a, { state: 'rejected', error: 'La ejecución no está en curso (stopped)' })
+    expect((await getStartupOutbox())[0]).toMatchObject({ id: a, state: 'rejected', error: 'La ejecución no está en curso (stopped)', kind: 'run_step' })
+    await removeStartupEntry(a)
+    expect((await getStartupOutbox()).length).toBe(1)
   })
 })

@@ -2016,7 +2016,8 @@
         "photo": "a photo",
         "punch": "a punch",
         "signature": "a signature"
-      }
+      },
+      "startupIssue": "{n, plural, =1 {A start-up record did not sync} other {# start-up records did not sync}}: review them in the run or line-up sheet."
     }
   },
   "Landing": {
@@ -3818,6 +3819,33 @@
       "otherVerifies": "Someone else verifies it.",
       "complete": "Complete line-up",
       "progressHelp": "{pending} pending, {misaligned} misaligned and {toVerify} critical to verify."
+    },
+    "offline": {
+      "offline": "Offline: what you record is saved on this device and syncs when the network is back.",
+      "pending": "{n, plural, =1 {# record} other {# records}} pending sync",
+      "syncNow": "Sync now",
+      "syncing": "Syncing…",
+      "chipPending": "⏳ Not synced",
+      "chipConflict": "⚠ Conflict",
+      "trayTitle": "Not synced ({n})",
+      "trayHelp": "The server did not accept these records. Nothing is discarded unless you decide: retry (e.g. after the run is resumed) or discard it (it stays in the conflict log).",
+      "captured": "Captured in the field on {when}",
+      "reason": "Reason: {error}",
+      "held": "Waiting: it is sent once you resolve the previous record (steps go in order).",
+      "retry": "Retry",
+      "discard": "Discard",
+      "discardConfirm": "Discard this record? It stays in the conflict log.",
+      "applyMine": "Apply mine",
+      "conflictMine": "Your capture: {pos} ({when})",
+      "conflictServer": "On the server: {pos} — {who}, {when}",
+      "conflictVerified": "verified by {who}",
+      "conflictHelp": "Someone else changed or verified this row after your capture. \"Apply mine\" records your position and clears their verification.",
+      "needsNetwork": "Requires a connection.",
+      "syncFirst": "Sync the pending records before this action.",
+      "locked": "There are unsynced records: resolve them to continue the run.",
+      "holdPending": "Release will be requested on sync: someone else does it online.",
+      "stepLabel": "Step {n}",
+      "stopLabel": "Stop: {reason}"
     }
   }
 }

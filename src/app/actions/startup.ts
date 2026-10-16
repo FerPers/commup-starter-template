@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth/withAuth'
 import type { Json } from '@/types/supabase.generated'
+import type { LineupRemote } from '@/lib/sync/startup-outbox-utils'
 import {
   HOLD_CAPACITIES, LINEUP_PURPOSES, PROCEDURE_KINDS, PROCEDURE_SECTIONS, VALVE_POSITIONS,
   type LineupPurpose, type ProcedureKind, type ProcedureSection, type StepDraft, type ValvePosition,
@@ -30,6 +31,9 @@ async function owned(db: SupabaseClient, table: 'procedures' | 'procedure_revisi
 }
 
 const nullable = (v: string | null | undefined) => ((v ?? '') === '' ? null : v) as unknown as string
+
+/** Hora de captura offline (ISO) → parámetro p_captured_at; la RPC la acota a [límite lógico, now()]. */
+const capturedParam = (iso: string | undefined) => (iso && !Number.isNaN(Date.parse(iso)) ? iso : undefined)
 
 // ── Procedimientos ──────────────────────────────────────────────────────
 export const createProcedure = withAuth(
@@ -164,13 +168,13 @@ export const startProcedureRun = withAuth(
 
 export const completeRunStep = withAuth(
   { guards: projectGuard },
-  async (ctx, input: { projectId: string; runId: string; stepId: string; actual?: string; comment?: string; na?: boolean }): Promise<{ status?: string; error?: string }> => {
+  async (ctx, input: { projectId: string; runId: string; stepId: string; actual?: string; comment?: string; na?: boolean; capturedAt?: string }): Promise<{ status?: string; error?: string }> => {
     if (!(await owned(ctx.supabase, 'procedure_runs', input.runId, input.projectId))) return { error: 'Ejecución no encontrada' }
     const { data, error } = await ctx.supabase.rpc('complete_run_step', {
       p_run_id: input.runId, p_step_id: input.stepId,
       p_actual: input.actual?.trim() ? input.actual.trim().slice(0, 500) : undefined,
       p_comment: input.comment?.trim() ? input.comment.trim().slice(0, 2000) : undefined,
-      p_na: !!input.na,
+      p_na: !!input.na, p_captured_at: capturedParam(input.capturedAt),
     })
     if (error) return { error: error.message }
     revalidate(input.projectId, `runs/${input.runId}`)
@@ -193,10 +197,11 @@ export const releaseHoldPoint = withAuth(
 
 export const transitionProcedureRun = withAuth(
   { guards: projectGuard },
-  async (ctx, input: { projectId: string; runId: string; to: 'stopped' | 'in_progress' | 'completed' | 'aborted'; comment?: string }): Promise<{ error?: string }> => {
+  async (ctx, input: { projectId: string; runId: string; to: 'stopped' | 'in_progress' | 'completed' | 'aborted'; comment?: string; capturedAt?: string }): Promise<{ error?: string }> => {
     if (!(await owned(ctx.supabase, 'procedure_runs', input.runId, input.projectId))) return { error: 'Ejecución no encontrada' }
     const { error } = await ctx.supabase.rpc('transition_procedure_run', {
       p_run_id: input.runId, p_to: input.to, p_comment: input.comment?.trim() ? input.comment.trim().slice(0, 2000) : undefined,
+      p_captured_at: input.to === 'stopped' ? capturedParam(input.capturedAt) : undefined,
     })
     if (error) return { error: error.message }
     revalidate(input.projectId, `runs/${input.runId}`)
@@ -258,17 +263,41 @@ export const transitionLineupSheet = withAuth(
   },
 )
 
+/**
+ * Fija la posición encontrada. Desde el replay offline llega con `capturedAt` y compare-and-set (`check` +
+ * set_at/verified_at que vio el dispositivo): si la fila cambió en el servidor devuelve `conflict` con su
+ * estado actual; si ya tenía la misma posición, `status: 'redundant'` (no se toca la verificación).
+ */
 export const setLineupItem = withAuth(
   { guards: projectGuard },
-  async (ctx, input: { projectId: string; sheetId: string; itemId: string; found: ValvePosition; remarks?: string }): Promise<{ error?: string }> => {
+  async (
+    ctx,
+    input: {
+      projectId: string; sheetId: string; itemId: string; found: ValvePosition; remarks?: string
+      capturedAt?: string; check?: boolean; expectedSetAt?: string | null; expectedVerifiedAt?: string | null
+    },
+  ): Promise<{ status?: 'applied' | 'redundant'; error?: string; conflict?: LineupRemote }> => {
     if (!VALVE_POSITIONS.includes(input.found)) return { error: 'Posición no válida' }
     if (!(await owned(ctx.supabase, 'lineup_items', input.itemId, input.projectId))) return { error: 'Fila no encontrada' }
-    const { error } = await ctx.supabase.rpc('set_lineup_item', {
+    const { data, error } = await ctx.supabase.rpc('set_lineup_item', {
       p_item_id: input.itemId, p_found: input.found, p_remarks: input.remarks?.trim() ? input.remarks.trim().slice(0, 1000) : undefined,
+      p_captured_at: capturedParam(input.capturedAt), p_check_expected: !!input.check,
+      p_expected_set_at: input.expectedSetAt ?? undefined, p_expected_verified_at: input.expectedVerifiedAt ?? undefined,
     })
-    if (error) return { error: error.message }
+    if (error) {
+      if (error.code !== 'CU409') return { error: error.message }
+      const { data: row } = await ctx.supabase.from('lineup_items')
+        .select('found_position, set_by, set_at, verified_by, verified_at').eq('id', input.itemId).maybeSingle()
+      return {
+        error: error.message,
+        conflict: {
+          found: (row?.found_position ?? null) as ValvePosition | null, setBy: row?.set_by ?? null, setAt: row?.set_at ?? null,
+          verifiedBy: row?.verified_by ?? null, verifiedAt: row?.verified_at ?? null,
+        },
+      }
+    }
     revalidate(input.projectId, `lineups/${input.sheetId}`)
-    return {}
+    return { status: data === 'redundant' ? 'redundant' : 'applied' }
   },
 )
 

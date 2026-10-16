@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { saveLineupItems, setLineupItem, transitionLineupSheet, verifyLineupItem, type LineupItemDraft } from '@/app/actions/startup'
 import { VALVE_POSITIONS, lineupItemState, lineupProgress, type ValvePosition } from '@/lib/startup/catalog'
+import { networkActionsAllowed, overlayLineup, type StartupEntry } from '@/lib/sync/startup-outbox-utils'
+import { SyncBanner, SyncTray, useStartupOutbox } from '../../OfflineSync'
 import { TagPicker } from '../../../registers/RegisterFields'
 import { Alert, Chip, btn, card, input, small } from '../../../daily/daily-ui'
 import { SHEET_TONE } from '../../StartupView'
@@ -22,22 +24,28 @@ type Sheet = {
 const STATE_TONE = { pending: 'muted', misaligned: 'red', aligned: 'green', to_verify: 'amber', verified: 'green' } as const
 const KIND_TONE: Record<string, 'red' | 'amber' | 'violet' | 'blue' | 'muted'> = { bypass: 'red', blind: 'amber', temporary: 'violet', energization: 'red', reinstatement: 'blue', test_pack: 'muted' }
 
-export default function LineupView({ project, sheet, items, registers, names, userId, role }: {
+export default function LineupView({ project, sheet, items: serverItems, registers, names, userId, role }: {
   project: { id: string; code: string; name: string }; sheet: Sheet; items: Item[]
   registers: { id: string; number: string; kind: string; status: string; title: string }[]
   names: Record<string, string>; userId: string; role: string
 }) {
   const t = useTranslations('Startup')
+  const tOff = useTranslations('Startup.offline')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<(LineupItemDraft & { tag_number?: string | null })[]>(() =>
-    items.map(i => ({ tag_id: i.tag_id, tag_number: i.tag_number, label: i.label, required_position: i.required_position, required_note: i.required_note, is_critical: i.is_critical })))
+    serverItems.map(i => ({ tag_id: i.tag_id, tag_number: i.tag_number, label: i.label, required_position: i.required_position, required_note: i.required_note, is_critical: i.is_critical })))
   const [newTags, setNewTags] = useState<{ tag_id: string; tag_number: string; role: 'subject' }[]>([])
   const isClient = role === 'client'
   const draft = sheet.status === 'draft'
   const executing = sheet.status === 'issued' || sheet.status === 'in_progress'
+  // Offline (F6): las posiciones fijadas sin red se superponen hasta sincronizar.
+  const outbox = useStartupOutbox('sheet', sheet.id)
+  const items = overlayLineup(serverItems, outbox.entries, userId)
   const prog = lineupProgress(items)
+  const netOk = networkActionsAllowed(!outbox.isOffline, outbox.entries.length)
+  const online = !outbox.isOffline
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
   const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
   const ids = { projectId: project.id, sheetId: sheet.id }
@@ -54,6 +62,33 @@ export default function LineupView({ project, sheet, items, registers, names, us
   const save = () => saveLineupItems({ ...ids, items: drafts })
   const setD = (i: number, p: Partial<LineupItemDraft>) => setDrafts(list => list.map((d, j) => (j === i ? { ...d, ...p } : d)))
   const allRequired = drafts.length > 0 && drafts.every(d => d.required_position)
+  /** Fijar posición: en línea si se puede; si no (o si la fila ya tiene una captura en cola), queda en el dispositivo. */
+  function setPosition(i: (typeof serverItems)[number], found: ValvePosition) {
+    const base = serverItems.find(x => x.id === i.id) ?? i
+    const queuedRow = outbox.entries.some(e => e.kind === 'lineup_set' && e.itemId === i.id)
+    setError(null)
+    startTransition(async () => {
+      const res = await outbox.capture(
+        { kind: 'lineup_set', ...ids, itemId: i.id, found, remarks: null, expectedSetAt: base.set_at, expectedVerifiedAt: base.verified_at },
+        () => setLineupItem({ ...ids, itemId: i.id, found }),
+        queuedRow,
+      )
+      if ('error' in res) setError(res.error)
+    })
+  }
+  const pos = (p: ValvePosition | null) => (p ? t(`position.${p}`) : '—')
+  const itemLabel = (e: StartupEntry) => {
+    if (e.kind !== 'lineup_set') return ''
+    const i = serverItems.find(x => x.id === e.itemId)
+    return `${i?.tag_number ?? i?.label ?? '?'} → ${pos(e.found)}`
+  }
+  const conflictDetail = (e: StartupEntry) => e.kind === 'lineup_set' && e.remote ? (
+    <span style={{ ...small, display: 'flex', flexDirection: 'column' }} suppressHydrationWarning>
+      <span>{tOff('conflictMine', { pos: pos(e.found), when: when(e.capturedAt) })}</span>
+      <span>{tOff('conflictServer', { pos: pos(e.remote.found), who: who(e.remote.setBy), when: when(e.remote.setAt) })}
+        {e.remote.verifiedAt ? ` · ${tOff('conflictVerified', { who: who(e.remote.verifiedBy) })}` : ''}</span>
+    </span>
+  ) : null
 
   return (
     <div style={{ padding: '20px 16px', maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -73,7 +108,9 @@ export default function LineupView({ project, sheet, items, registers, names, us
         {sheet.verifiedAt && <p style={{ ...small, margin: '2px 0 0' }} suppressHydrationWarning>{t('lineup.verifiedBy', { who: who(sheet.verifiedBy), when: when(sheet.verifiedAt) })} · sha256 {sheet.hash?.slice(0, 16)}</p>}
       </div>
 
+      {!draft && <SyncBanner isOffline={outbox.isOffline} count={outbox.sendable} syncing={outbox.syncing} onSync={() => void outbox.sync()} />}
       {error && <Alert kind="error">{error}</Alert>}
+      <SyncTray entries={outbox.entries} isOffline={outbox.isOffline} describe={itemLabel} conflictDetail={conflictDetail} onChanged={() => void outbox.sync()} />
       {sheet.stale && <Alert kind="warn">{t('lineup.staleHelp')}</Alert>}
 
       {registers.length > 0 && (
@@ -146,7 +183,11 @@ export default function LineupView({ project, sheet, items, registers, names, us
                   <strong style={{ fontFamily: 'ui-monospace, monospace', minWidth: 130 }}>{i.tag_number ?? i.label}</strong>
                   {i.is_critical && <Chip tone="red">{t('lineup.critical')}</Chip>}
                   <span style={small}>{t('lineup.requiredShort')}: <strong style={{ color: 'var(--text-strong)' }}>{i.required_position ? t(`position.${i.required_position}`) : '—'}</strong>{i.required_note ? ` · ${i.required_note}` : ''}</span>
-                  <span style={{ marginLeft: 'auto' }}><Chip tone={STATE_TONE[st]}>{t(`itemState.${st}`)}</Chip></span>
+                  <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 4, flexWrap: 'wrap' }}>
+                    {i.sync === 'pending' && <Chip tone="blue">{tOff('chipPending')}</Chip>}
+                    {i.sync === 'conflict' && <Chip tone="red">{tOff('chipConflict')}</Chip>}
+                    <Chip tone={STATE_TONE[st]}>{t(`itemState.${st}`)}</Chip>
+                  </span>
                 </div>
                 {i.description && <span style={{ ...small, fontSize: 'var(--text-xs)' }}>{i.description}</span>}
                 {i.set_at && (
@@ -160,10 +201,11 @@ export default function LineupView({ project, sheet, items, registers, names, us
                     {!isClient && VALVE_POSITIONS.filter(p => p === i.required_position || ['open', 'closed'].includes(p)).map(p => (
                       <button key={p} type="button" disabled={isPending}
                         style={{ ...btn(i.found_position === p ? 'primary' : 'outline', isPending), padding: '8px 12px' }}
-                        onClick={() => act(() => setLineupItem({ ...ids, itemId: i.id, found: p }))}>{t(`position.${p}`)}</button>
+                        onClick={() => setPosition(i, p)}>{t(`position.${p}`)}</button>
                     ))}
-                    {(st === 'to_verify' || (st === 'aligned' && !i.verified_at)) && i.set_by !== userId && (
-                      <button type="button" style={{ ...btn('primary', isPending), padding: '8px 12px', background: 'var(--success-700, #047857)' }} disabled={isPending}
+                    {(st === 'to_verify' || (st === 'aligned' && !i.verified_at)) && i.set_by !== userId && !i.sync && (
+                      <button type="button" style={{ ...btn('primary', isPending || !online), padding: '8px 12px', background: 'var(--success-700, #047857)' }} disabled={isPending || !online}
+                        title={online ? undefined : tOff('needsNetwork')}
                         onClick={() => act(() => verifyLineupItem({ ...ids, itemId: i.id }))}>✓ {t('lineup.verify')}</button>
                     )}
                     {st === 'to_verify' && i.set_by === userId && <span style={{ ...small, alignSelf: 'center' }}>{t('lineup.otherVerifies')}</span>}
@@ -176,9 +218,10 @@ export default function LineupView({ project, sheet, items, registers, names, us
       )}
 
       {executing && !isClient && (
-        <button type="button" style={{ ...btn('primary', isPending || !prog.complete), padding: '12px 18px' }} disabled={isPending || !prog.complete}
+        <button type="button" style={{ ...btn('primary', isPending || !prog.complete || !netOk), padding: '12px 18px' }} disabled={isPending || !prog.complete || !netOk}
           onClick={() => act(() => transitionLineupSheet({ ...ids, to: 'verified' }))}>{t('lineup.complete')}</button>
       )}
+      {executing && prog.complete && !netOk && <p style={{ ...small, margin: 0 }}>{outbox.isOffline ? tOff('needsNetwork') : tOff('syncFirst')}</p>}
       {executing && !prog.complete && <p style={{ ...small, margin: 0 }}>{t('lineup.progressHelp', { pending: prog.pending, misaligned: prog.misaligned, toVerify: prog.toVerify })}</p>}
     </div>
   )

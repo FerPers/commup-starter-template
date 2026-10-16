@@ -11,6 +11,8 @@
  * cuenta un intento y, al agotar la política (outboxPolicy: 3 para fotos/punches,
  * 1 para firmas), descarta la entrada dejando rastro en sync_conflicts y avisando
  * a la UI con SYNC_DROPPED_EVENT.
+ *
+ * Fase 6 (2026-10-16): al final drena la bandeja de arranque (src/lib/sync/startup-outbox.ts).
  */
 
 import {
@@ -19,6 +21,7 @@ import {
 } from '@/lib/offline-queue'
 import { uploadPhoto, isNetworkFailure } from '@/lib/sync/outbox'
 import { outboxPolicy } from '@/lib/sync/outbox-utils'
+import { replayStartupOnce } from '@/lib/sync/startup-outbox'
 import { signItr } from '@/app/actions/itr-instances'
 import { createPunch } from '@/app/actions/punches'
 import type { Json } from '@/types/supabase.generated'
@@ -133,7 +136,12 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
     flushed += outbox.flushed
     conflicts += outbox.dropped
 
-    const remaining = (await getAllQueued()).length + outbox.remaining
+    // Fase 6: pasos de ejecución, «Detener» y posiciones de line-up (bandeja propia, rechazos visibles).
+    const startup = await replayStartupOnce()
+    flushed += startup.flushed
+    conflicts += startup.issues
+
+    const remaining = (await getAllQueued()).length + outbox.remaining + startup.remaining
     if (flushed > 0 && typeof window !== 'undefined') window.dispatchEvent(new Event(SYNC_DONE_EVENT))
     return { flushed, conflicts, remaining }
   } finally {

@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { completeRunStep, releaseHoldPoint, transitionProcedureRun } from '@/app/actions/startup'
 import { canReleaseHold, nextRunStep, runProgress, type HoldCapacity, type RunStepStatus } from '@/lib/startup/catalog'
+import { networkActionsAllowed, overlayRun, type StartupEntry } from '@/lib/sync/startup-outbox-utils'
 import { Alert, Chip, btn, card, input, small } from '../../../daily/daily-ui'
+import { SyncBanner, SyncTray, useStartupOutbox } from '../../OfflineSync'
 
 type Step = {
   stepId: string; ord: number; status: RunStepStatus; actual: string | null; comment: string | null
@@ -23,10 +25,11 @@ const STEP_TONE: Record<RunStepStatus, 'muted' | 'green' | 'amber' | 'violet'> =
 const LEADERS = ['owner', 'admin', 'architect', 'leader']
 const big = (primary: boolean, disabled = false): React.CSSProperties => ({ ...btn(primary ? 'primary' : 'outline', disabled), padding: '12px 18px', fontSize: 'var(--text-base)' })
 
-export default function RunView({ project, run, steps, names, userId, role }: {
+export default function RunView({ project, run: serverRun, steps: serverSteps, names, userId, role }: {
   project: { id: string; code: string; name: string }; run: Run; steps: Step[]; names: Record<string, string>; userId: string; role: string
 }) {
   const t = useTranslations('Startup')
+  const tOff = useTranslations('Startup.offline')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -34,8 +37,15 @@ export default function RunView({ project, run, steps, names, userId, role }: {
   const [note, setNote] = useState('')
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
   const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
-  const ids = { projectId: project.id, runId: run.id }
-  const next = run.status === 'in_progress' ? nextRunStep(steps) : null
+  const ids = { projectId: project.id, runId: serverRun.id }
+  // Offline (F6): lo capturado sin red se superpone a lo que trajo el servidor hasta sincronizar.
+  const outbox = useStartupOutbox('run', serverRun.id)
+  const ov = overlayRun(serverRun, serverSteps, outbox.entries, userId)
+  const run = { ...serverRun, status: ov.status, stopReason: ov.stopReason }
+  const steps = ov.steps
+  const netOk = networkActionsAllowed(!outbox.isOffline, outbox.entries.length)
+  const netHint = outbox.isOffline ? tOff('needsNetwork') : tOff('syncFirst')
+  const next = run.status === 'in_progress' && !ov.locked ? nextRunStep(steps) : null
   const hold = steps.find(s => s.status === 'at_hold')
   const prog = runProgress(steps)
   const isClient = role === 'client'
@@ -51,6 +61,21 @@ export default function RunView({ project, run, steps, names, userId, role }: {
     })
   }
   const askThen = (msg: string, fn: (c: string) => Promise<{ error?: string }>) => { const c = window.prompt(msg); if (c?.trim()) act(() => fn(c)) }
+  /** Paso o «Detener»: en línea si se puede; si no, queda en el dispositivo (se envía en orden al volver la red). */
+  function capture(op: Parameters<typeof outbox.capture>[0], send: () => Promise<{ error?: string }>) {
+    setError(null)
+    startTransition(async () => {
+      const res = await outbox.capture(op, send, outbox.entries.length > 0)
+      if ('error' in res) { setError(res.error); return }
+      setActual(''); setNote('')
+    })
+  }
+  const stepLabel = (e: StartupEntry) => {
+    if (e.kind === 'run_stop') return `⛔ ${tOff('stopLabel', { reason: e.comment })}`
+    if (e.kind !== 'run_step') return ''
+    const s = serverSteps.find(x => x.stepId === e.stepId)
+    return `${tOff('stepLabel', { n: e.ord })} · ${e.na ? t('run.na') : t('run.done')}${s ? ` — ${s.action}` : ''}`
+  }
 
   return (
     <div style={{ padding: '20px 16px', maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -65,7 +90,10 @@ export default function RunView({ project, run, steps, names, userId, role }: {
         <p style={{ ...small, margin: '2px 0 0' }} suppressHydrationWarning>{run.system ?? '—'} · {t('run.startedBy', { who: who(run.startedBy), when: when(run.startedAt) })}</p>
       </div>
 
+      <SyncBanner isOffline={outbox.isOffline} count={outbox.sendable} syncing={outbox.syncing} onSync={() => void outbox.sync()} />
       {error && <Alert kind="error">{error}</Alert>}
+      <SyncTray entries={outbox.entries} isOffline={outbox.isOffline} describe={stepLabel} onChanged={() => void outbox.sync()} />
+      {ov.locked && <Alert kind="warn">{tOff('locked')}</Alert>}
       {(!!run.safety || !!run.stopCriteria) && (
         <details style={{ ...card, padding: 12 }}>
           <summary style={{ fontWeight: 600, cursor: 'pointer' }}>{t('run.safetyAndStop')}</summary>
@@ -77,8 +105,8 @@ export default function RunView({ project, run, steps, names, userId, role }: {
       {run.status === 'stopped' && (
         <Alert kind="error">
           {t('run.stopped', { reason: run.stopReason ?? '' })}
-          {LEADERS.includes(role) && <div style={{ marginTop: 8 }}><button type="button" style={btn('primary', isPending)} disabled={isPending}
-            onClick={() => askThen(t('run.resumePrompt'), c => transitionProcedureRun({ ...ids, to: 'in_progress', comment: c }))}>{t('run.resume')}</button></div>}
+          {LEADERS.includes(role) && <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}><button type="button" style={btn('primary', isPending || !netOk)} disabled={isPending || !netOk}
+            onClick={() => askThen(t('run.resumePrompt'), c => transitionProcedureRun({ ...ids, to: 'in_progress', comment: c }))}>{t('run.resume')}</button>{!netOk && <span style={small}>{netHint}</span>}</div>}
         </Alert>
       )}
       {run.status === 'aborted' && <Alert kind="warn">{t('run.aborted', { reason: run.abortReason ?? '' })}</Alert>}
@@ -88,11 +116,12 @@ export default function RunView({ project, run, steps, names, userId, role }: {
         <section style={{ ...card, borderColor: '#fcd34d', background: '#fffbeb', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <strong style={{ color: '#b45309' }}>⏸ {t('run.holdTitle', { n: hold.ord, who: t(`capacity.${hold.capacity}`) })}</strong>
           <span style={small} suppressHydrationWarning>{t('run.holdDoneBy', { who: who(hold.doneBy), when: when(hold.doneAt) })}</span>
-          {canReleaseHold(role, hold.capacity, userId, hold.doneBy) ? (
+          {hold.sync === 'pending' ? <span style={small}>{tOff('holdPending')}</span> : canReleaseHold(role, hold.capacity, userId, hold.doneBy) ? (
             <>
               <input style={input} placeholder={t('run.releaseComment')} value={note} onChange={e => setNote(e.target.value)} />
-              <button type="button" style={big(true, isPending)} disabled={isPending}
+              <button type="button" style={big(true, isPending || !netOk)} disabled={isPending || !netOk}
                 onClick={() => act(() => releaseHoldPoint({ ...ids, stepId: hold.stepId, comment: note }))}>{t('run.release')}</button>
+              {!netOk && <span style={small}>{netHint}</span>}
             </>
           ) : <span style={small}>{hold.doneBy === userId ? t('run.holdOther') : t('run.holdRole', { who: t(`capacity.${hold.capacity}`) })}</span>}
         </section>
@@ -115,20 +144,32 @@ export default function RunView({ project, run, steps, names, userId, role }: {
           <input style={input} placeholder={t('run.comment')} value={note} onChange={e => setNote(e.target.value)} />
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button type="button" style={big(true, isPending)} disabled={isPending}
-              onClick={() => act(() => completeRunStep({ ...ids, stepId: next.stepId, actual, comment: note }))}>✓ {next.isHold ? t('run.doneHold') : t('run.done')}</button>
+              onClick={() => capture(
+                { kind: 'run_step', ...ids, stepId: next.stepId, ord: next.ord, isHold: next.isHold, na: false, actual: actual.trim() || null, comment: note.trim() || null },
+                () => completeRunStep({ ...ids, stepId: next.stepId, actual, comment: note }),
+              )}>✓ {next.isHold ? t('run.doneHold') : t('run.done')}</button>
             {!next.isHold && <button type="button" style={big(false, isPending || note.trim().length < 3)} disabled={isPending || note.trim().length < 3}
-              onClick={() => act(() => completeRunStep({ ...ids, stepId: next.stepId, comment: note, na: true }))}>{t('run.na')}</button>}
+              onClick={() => capture(
+                { kind: 'run_step', ...ids, stepId: next.stepId, ord: next.ord, isHold: false, na: true, actual: null, comment: note.trim() },
+                () => completeRunStep({ ...ids, stepId: next.stepId, comment: note, na: true }),
+              )}>{t('run.na')}</button>}
           </div>
         </section>
       )}
 
       {run.status === 'in_progress' && !next && !hold && prog.closed === prog.total && !isClient && (
-        <button type="button" style={big(true, isPending)} disabled={isPending} onClick={() => act(() => transitionProcedureRun({ ...ids, to: 'completed' }))}>{t('run.complete')}</button>
+        <>
+          <button type="button" style={big(true, isPending || !netOk)} disabled={isPending || !netOk} onClick={() => act(() => transitionProcedureRun({ ...ids, to: 'completed' }))}>{t('run.complete')}</button>
+          {!netOk && <span style={small}>{netHint}</span>}
+        </>
       )}
 
       {live && !isClient && run.status !== 'stopped' && (
         <button type="button" style={{ ...big(false, isPending), color: '#fff', background: 'var(--danger-500)', border: 'none' }} disabled={isPending}
-          onClick={() => askThen(t('run.stopPrompt'), c => transitionProcedureRun({ ...ids, to: 'stopped', comment: c }))}>⛔ {t('run.stop')}</button>
+          onClick={() => {
+            const c = window.prompt(t('run.stopPrompt'))
+            if (c?.trim()) capture({ kind: 'run_stop', ...ids, comment: c.trim() }, () => transitionProcedureRun({ ...ids, to: 'stopped', comment: c }))
+          }}>⛔ {t('run.stop')}</button>
       )}
 
       <section style={{ ...card, padding: 0 }}>
@@ -145,14 +186,17 @@ export default function RunView({ project, run, steps, names, userId, role }: {
                   </div>
                 )}
               </div>
-              <Chip tone={STEP_TONE[s.status]}>{t(`stepStatus.${s.status}`)}</Chip>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                <Chip tone={STEP_TONE[s.status]}>{t(`stepStatus.${s.status}`)}</Chip>
+                {s.sync === 'pending' && <Chip tone="blue">{tOff('chipPending')}</Chip>}
+              </span>
             </li>
           ))}
         </ol>
       </section>
 
       {live && LEADERS.includes(role) && (
-        <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)', alignSelf: 'flex-start' }} disabled={isPending}
+        <button type="button" style={{ ...btn('outline', !netOk), color: 'var(--danger-700)', alignSelf: 'flex-start' }} disabled={isPending || !netOk} title={netOk ? undefined : netHint}
           onClick={() => askThen(t('run.abortPrompt'), c => transitionProcedureRun({ ...ids, to: 'aborted', comment: c }))}>{t('run.abort')}</button>
       )}
     </div>

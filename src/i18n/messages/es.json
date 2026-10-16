@@ -2016,7 +2016,8 @@
         "photo": "una foto",
         "punch": "un punch",
         "signature": "una firma"
-      }
+      },
+      "startupIssue": "{n, plural, =1 {Un registro de arranque no se sincronizó} other {# registros de arranque no se sincronizaron}}: revísalos en la ejecución u hoja de line-up."
     }
   },
   "Landing": {
@@ -3818,6 +3819,33 @@
       "otherVerifies": "La verifica otra persona.",
       "complete": "Completar line-up",
       "progressHelp": "Faltan {pending} pendientes, {misaligned} desalineadas y {toVerify} críticas por verificar."
+    },
+    "offline": {
+      "offline": "Sin conexión: lo que registres queda guardado en este dispositivo y se sincroniza al volver la red.",
+      "pending": "{n, plural, =1 {# registro pendiente} other {# registros pendientes}} de sincronizar",
+      "syncNow": "Sincronizar ahora",
+      "syncing": "Sincronizando…",
+      "chipPending": "⏳ Sin sincronizar",
+      "chipConflict": "⚠ Conflicto",
+      "trayTitle": "No sincronizado ({n})",
+      "trayHelp": "El servidor no aceptó estos registros. Nada se descarta sin que lo decidas: reintenta (p. ej. tras reanudar la ejecución) o descártalo (queda en el registro de conflictos).",
+      "captured": "Capturado en campo el {when}",
+      "reason": "Motivo: {error}",
+      "held": "En espera: se envía cuando resuelvas el registro anterior (los pasos van en orden).",
+      "retry": "Reintentar",
+      "discard": "Descartar",
+      "discardConfirm": "¿Descartar este registro? Queda constancia en el registro de conflictos.",
+      "applyMine": "Aplicar la mía",
+      "conflictMine": "Tu captura: {pos} ({when})",
+      "conflictServer": "En el servidor: {pos} — {who}, {when}",
+      "conflictVerified": "verificada por {who}",
+      "conflictHelp": "Otra persona cambió o verificó esta fila después de tu captura. «Aplicar la mía» registra tu posición y borra su verificación.",
+      "needsNetwork": "Requiere conexión.",
+      "syncFirst": "Sincroniza los registros pendientes antes de esta acción.",
+      "locked": "Hay registros no sincronizados: resuélvelos para seguir con la ejecución.",
+      "holdPending": "Se pedirá la liberación al sincronizar: la hace otra persona con conexión.",
+      "stepLabel": "Paso {n}",
+      "stopLabel": "Detener: {reason}"
     }
   }
 }

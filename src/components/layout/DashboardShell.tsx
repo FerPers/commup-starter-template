@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { DrawerContext } from './DrawerContext'
 import { useToast } from '@/components/ui'
-import { SYNC_DROPPED_EVENT, type SyncDroppedDetail } from '@/lib/offline-queue'
+import { STARTUP_SYNC_ISSUE_EVENT, SYNC_DROPPED_EVENT, type SyncDroppedDetail } from '@/lib/offline-queue'
 
 interface DashboardShellProps {
   sidebar: ReactNode
@@ -28,8 +28,17 @@ export default function DashboardShell({ sidebar, topbar, tabbar = null, childre
       if (!d) return
       toast.error(tSync('dropped', { kind: tSync(`kind.${d.kind}`), error: d.error }))
     }
+    // Fase 6: registros de arranque rechazados o en conflicto (quedan en la bandeja de la ejecución/hoja).
+    const onStartupIssue = (e: Event) => {
+      const n = (e as CustomEvent<{ count: number }>).detail?.count ?? 0
+      if (n > 0) toast.error(tSync('startupIssue', { n }))
+    }
     window.addEventListener(SYNC_DROPPED_EVENT, onDropped)
-    return () => window.removeEventListener(SYNC_DROPPED_EVENT, onDropped)
+    window.addEventListener(STARTUP_SYNC_ISSUE_EVENT, onStartupIssue)
+    return () => {
+      window.removeEventListener(SYNC_DROPPED_EVENT, onDropped)
+      window.removeEventListener(STARTUP_SYNC_ISSUE_EVENT, onStartupIssue)
+    }
   }, [toast, tSync])
 
   const close = useCallback(() => setIsOpen(false), [])

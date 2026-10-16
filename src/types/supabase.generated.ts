@@ -2758,6 +2758,7 @@ export type Database = {
           set_at: string | null
           set_by: string | null
           sheet_id: string
+          synced_at: string | null
           tag_id: string | null
           verified_at: string | null
           verified_by: string | null
@@ -2775,6 +2776,7 @@ export type Database = {
           set_at?: string | null
           set_by?: string | null
           sheet_id: string
+          synced_at?: string | null
           tag_id?: string | null
           verified_at?: string | null
           verified_by?: string | null
@@ -2792,6 +2794,7 @@ export type Database = {
           set_at?: string | null
           set_by?: string | null
           sheet_id?: string
+          synced_at?: string | null
           tag_id?: string | null
           verified_at?: string | null
           verified_by?: string | null
@@ -4007,6 +4010,7 @@ export type Database = {
           run_id: string
           status: string
           step_id: string
+          synced_at: string | null
         }
         Insert: {
           actual_value?: string | null
@@ -4021,6 +4025,7 @@ export type Database = {
           run_id: string
           status?: string
           step_id: string
+          synced_at?: string | null
         }
         Update: {
           actual_value?: string | null
@@ -4035,6 +4040,7 @@ export type Database = {
           run_id?: string
           status?: string
           step_id?: string
+          synced_at?: string | null
         }
         Relationships: [
           {
@@ -4078,6 +4084,7 @@ export type Database = {
           started_by: string | null
           status: string
           stop_reason: string | null
+          stop_synced_at: string | null
           stopped_at: string | null
           stopped_by: string | null
           system_id: string | null
@@ -4100,6 +4107,7 @@ export type Database = {
           started_by?: string | null
           status?: string
           stop_reason?: string | null
+          stop_synced_at?: string | null
           stopped_at?: string | null
           stopped_by?: string | null
           system_id?: string | null
@@ -4122,6 +4130,7 @@ export type Database = {
           started_by?: string | null
           status?: string
           stop_reason?: string | null
+          stop_synced_at?: string | null
           stopped_at?: string | null
           stopped_by?: string | null
           system_id?: string | null
@@ -8759,6 +8768,7 @@ export type Database = {
         Args: {
           p_actual?: string
           p_comment?: string
+          p_captured_at?: string
           p_na?: boolean
           p_run_id: string
           p_step_id: string
@@ -9387,8 +9397,16 @@ export type Database = {
         Returns: undefined
       }
       set_lineup_item: {
-        Args: { p_found: string; p_item_id: string; p_remarks?: string }
-        Returns: undefined
+        Args: {
+          p_captured_at?: string
+          p_check_expected?: boolean
+          p_expected_set_at?: string
+          p_expected_verified_at?: string
+          p_found: string
+          p_item_id: string
+          p_remarks?: string
+        }
+        Returns: string
       }
       set_webhook_enabled: {
         Args: { p_enabled: boolean; p_sub_id: string }
@@ -9467,7 +9485,12 @@ export type Database = {
         Returns: string
       }
       transition_procedure_run: {
-        Args: { p_comment?: string; p_run_id: string; p_to: string }
+        Args: {
+          p_captured_at?: string
+          p_comment?: string
+          p_run_id: string
+          p_to: string
+        }
         Returns: string
       }
       transition_register_item: {
