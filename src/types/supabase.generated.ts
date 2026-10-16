@@ -2744,6 +2744,212 @@ export type Database = {
         }
         Relationships: []
       }
+      lineup_items: {
+        Row: {
+          found_position: string | null
+          id: string
+          is_critical: boolean
+          label: string | null
+          ord: number
+          project_id: string
+          remarks: string | null
+          required_note: string | null
+          required_position: string | null
+          set_at: string | null
+          set_by: string | null
+          sheet_id: string
+          tag_id: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          found_position?: string | null
+          id?: string
+          is_critical?: boolean
+          label?: string | null
+          ord: number
+          project_id: string
+          remarks?: string | null
+          required_note?: string | null
+          required_position?: string | null
+          set_at?: string | null
+          set_by?: string | null
+          sheet_id: string
+          tag_id?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          found_position?: string | null
+          id?: string
+          is_critical?: boolean
+          label?: string | null
+          ord?: number
+          project_id?: string
+          remarks?: string | null
+          required_note?: string | null
+          required_position?: string | null
+          set_at?: string | null
+          set_by?: string | null
+          sheet_id?: string
+          tag_id?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lineup_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lineup_items_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "lineup_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lineup_items_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "lineup_items_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lineup_items_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lineup_sheets: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          issued_at: string | null
+          issued_by: string | null
+          number: string
+          org_id: string
+          procedure_id: string | null
+          project_id: string
+          purpose: string
+          seq: number
+          status: string
+          superseded_at: string | null
+          system_id: string
+          title: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          number: string
+          org_id: string
+          procedure_id?: string | null
+          project_id: string
+          purpose?: string
+          seq: number
+          status?: string
+          superseded_at?: string | null
+          system_id: string
+          title: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          number?: string
+          org_id?: string
+          procedure_id?: string | null
+          project_id?: string
+          purpose?: string
+          seq?: number
+          status?: string
+          superseded_at?: string | null
+          system_id?: string
+          title?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lineup_sheets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lineup_sheets_procedure_id_fkey"
+            columns: ["procedure_id"]
+            isOneToOne: false
+            referencedRelation: "procedures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lineup_sheets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lineup_sheets_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "lineup_sheets_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "lineup_sheets_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lineup_sheets_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       loop_tags: {
         Row: {
           id: string
@@ -3693,6 +3899,463 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tags"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      procedure_revisions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          change_reason: string | null
+          content_hash: string | null
+          created_at: string
+          created_by: string | null
+          field_verified_at: string | null
+          field_verified_by: string | null
+          id: string
+          org_id: string
+          procedure_id: string
+          project_id: string
+          returned_reason: string | null
+          rev: number
+          sections: Json
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+          walkdown_note: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          field_verified_at?: string | null
+          field_verified_by?: string | null
+          id?: string
+          org_id: string
+          procedure_id: string
+          project_id: string
+          returned_reason?: string | null
+          rev: number
+          sections?: Json
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          walkdown_note?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          field_verified_at?: string | null
+          field_verified_by?: string | null
+          id?: string
+          org_id?: string
+          procedure_id?: string
+          project_id?: string
+          returned_reason?: string | null
+          rev?: number
+          sections?: Json
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          walkdown_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_revisions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_revisions_procedure_id_fkey"
+            columns: ["procedure_id"]
+            isOneToOne: false
+            referencedRelation: "procedures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_revisions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procedure_run_steps: {
+        Row: {
+          actual_value: string | null
+          comment: string | null
+          done_at: string | null
+          done_by: string | null
+          ord: number
+          project_id: string
+          release_role: string | null
+          released_at: string | null
+          released_by: string | null
+          run_id: string
+          status: string
+          step_id: string
+        }
+        Insert: {
+          actual_value?: string | null
+          comment?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          ord: number
+          project_id: string
+          release_role?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          run_id: string
+          status?: string
+          step_id: string
+        }
+        Update: {
+          actual_value?: string | null
+          comment?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          ord?: number
+          project_id?: string
+          release_role?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          run_id?: string
+          status?: string
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_run_steps_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_run_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_run_steps_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procedure_runs: {
+        Row: {
+          abort_reason: string | null
+          aborted_at: string | null
+          aborted_by: string | null
+          completed_at: string | null
+          completed_by: string | null
+          id: string
+          number: string
+          org_id: string
+          procedure_id: string
+          project_id: string
+          revision_id: string
+          seq: number
+          started_at: string
+          started_by: string | null
+          status: string
+          stop_reason: string | null
+          stopped_at: string | null
+          stopped_by: string | null
+          system_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          abort_reason?: string | null
+          aborted_at?: string | null
+          aborted_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          id?: string
+          number: string
+          org_id: string
+          procedure_id: string
+          project_id: string
+          revision_id: string
+          seq: number
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          stop_reason?: string | null
+          stopped_at?: string | null
+          stopped_by?: string | null
+          system_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          abort_reason?: string | null
+          aborted_at?: string | null
+          aborted_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          id?: string
+          number?: string
+          org_id?: string
+          procedure_id?: string
+          project_id?: string
+          revision_id?: string
+          seq?: number
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          stop_reason?: string | null
+          stopped_at?: string | null
+          stopped_by?: string | null
+          system_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_runs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_runs_procedure_id_fkey"
+            columns: ["procedure_id"]
+            isOneToOne: false
+            referencedRelation: "procedures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_runs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_runs_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_runs_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "procedure_runs_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "procedure_runs_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_runs_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      procedure_steps: {
+        Row: {
+          action: string
+          expected_value: string | null
+          hold_capacity: string | null
+          id: string
+          is_hold_point: boolean
+          ord: number
+          project_id: string
+          responsible: string | null
+          revision_id: string
+          stop_criteria: string | null
+          tag_id: string | null
+        }
+        Insert: {
+          action: string
+          expected_value?: string | null
+          hold_capacity?: string | null
+          id?: string
+          is_hold_point?: boolean
+          ord: number
+          project_id: string
+          responsible?: string | null
+          revision_id: string
+          stop_criteria?: string | null
+          tag_id?: string | null
+        }
+        Update: {
+          action?: string
+          expected_value?: string | null
+          hold_capacity?: string | null
+          id?: string
+          is_hold_point?: boolean
+          ord?: number
+          project_id?: string
+          responsible?: string | null
+          revision_id?: string
+          stop_criteria?: string | null
+          tag_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_steps_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_steps_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_steps_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "procedure_steps_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_steps_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procedures: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_revision_id: string | null
+          id: string
+          kind: string
+          number: string
+          org_id: string
+          project_id: string
+          seq: number
+          system_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_revision_id?: string | null
+          id?: string
+          kind?: string
+          number: string
+          org_id: string
+          project_id: string
+          seq: number
+          system_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_revision_id?: string | null
+          id?: string
+          kind?: string
+          number?: string
+          org_id?: string
+          project_id?: string
+          seq?: number
+          system_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedures_current_revision_fk"
+            columns: ["current_revision_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedures_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedures_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedures_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "procedures_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "procedures_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedures_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
           },
         ]
       }
@@ -4816,6 +5479,7 @@ export type Database = {
           org_id: string
           phase_id: string | null
           required_signatures: string[]
+          requires_lineup: boolean
           requires_previous: boolean
           weight: number | null
         }
@@ -4832,6 +5496,7 @@ export type Database = {
           org_id: string
           phase_id?: string | null
           required_signatures?: string[]
+          requires_lineup?: boolean
           requires_previous?: boolean
           weight?: number | null
         }
@@ -4848,6 +5513,7 @@ export type Database = {
           org_id?: string
           phase_id?: string | null
           required_signatures?: string[]
+          requires_lineup?: boolean
           requires_previous?: boolean
           weight?: number | null
         }
@@ -8088,6 +8754,17 @@ export type Database = {
         }
         Returns: Json
       }
+      complete_lineup_sheet: { Args: { p_sheet_id: string }; Returns: string }
+      complete_run_step: {
+        Args: {
+          p_actual?: string
+          p_comment?: string
+          p_na?: boolean
+          p_run_id: string
+          p_step_id: string
+        }
+        Returns: string
+      }
       compute_project_gates: {
         Args: { p_project_id: string }
         Returns: {
@@ -8185,6 +8862,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      copy_procedure: {
+        Args: { p_source_procedure_id: string; p_target_project_id: string }
+        Returns: string
+      }
       create_action: {
         Args: {
           p_description?: string
@@ -8236,6 +8917,26 @@ export type Database = {
       }
       create_itr_template_revision: {
         Args: { p_template_id: string }
+        Returns: string
+      }
+      create_lineup_sheet: {
+        Args: {
+          p_generate?: boolean
+          p_procedure_id?: string
+          p_project_id: string
+          p_purpose?: string
+          p_system_id: string
+          p_title: string
+        }
+        Returns: string
+      }
+      create_procedure: {
+        Args: {
+          p_kind?: string
+          p_project_id: string
+          p_system_id?: string
+          p_title: string
+        }
         Returns: string
       }
       create_register_item: {
@@ -8319,8 +9020,16 @@ export type Database = {
         Args: { p_report_id: string }
         Returns: undefined
       }
+      delete_lineup_sheet_draft: {
+        Args: { p_sheet_id: string }
+        Returns: undefined
+      }
       delete_mgmt_item: {
         Args: { p_entity_id: string; p_entity_kind: string }
+        Returns: undefined
+      }
+      delete_procedure_draft: {
+        Args: { p_procedure_id: string }
         Returns: undefined
       }
       delete_push_subscription: {
@@ -8353,6 +9062,10 @@ export type Database = {
         Args: { p_batch_id: string }
         Returns: number
       }
+      field_verify_procedure_revision: {
+        Args: { p_note: string; p_revision_id: string }
+        Returns: undefined
+      }
       gate_plan_context: {
         Args: { p_gate_id: string; p_system_id: string }
         Returns: Record<string, unknown>
@@ -8378,6 +9091,7 @@ export type Database = {
         Returns: string
       }
       handover_snapshot: { Args: { p_project_id: string }; Returns: Json }
+      hold_release_roles: { Args: { p_capacity: string }; Returns: string[] }
       increment_webhook_failure_count: {
         Args: { sub_id: string }
         Returns: undefined
@@ -8399,6 +9113,7 @@ export type Database = {
       is_project_editor: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       issue_daily_report: { Args: { p_report_id: string }; Returns: string }
+      issue_lineup_sheet: { Args: { p_sheet_id: string }; Returns: undefined }
       itr_cause_source_rows: { Args: { p_cause_id: string }; Returns: Json }
       itr_loop_source_rows: { Args: { p_loop_id: string }; Returns: Json }
       itr_option_outcomes_valid: {
@@ -8421,6 +9136,7 @@ export type Database = {
         Args: { p_itr_id: string }
         Returns: string
       }
+      lineup_is_stale: { Args: { p_sheet_id: string }; Returns: boolean }
       link_register_items: {
         Args: { p_item_id: string; p_link?: boolean; p_linked_item_id: string }
         Returns: undefined
@@ -8486,6 +9202,10 @@ export type Database = {
       }
       mgmt_text: { Args: { p_max?: number; p_value: string }; Returns: string }
       my_work_counts: { Args: { p_org_id: string }; Returns: Json }
+      new_procedure_revision: {
+        Args: { p_procedure_id: string; p_reason: string }
+        Returns: string
+      }
       next_punch_number_atomic: {
         Args: { p_project_id: string }
         Returns: string
@@ -8499,6 +9219,19 @@ export type Database = {
         Returns: string
       }
       org_cat_b_limit: { Args: { p_org_id: string }; Returns: number }
+      procedure_revision_hash: {
+        Args: { p_revision_id: string }
+        Returns: string
+      }
+      procedure_section_keys: { Args: never; Returns: string[] }
+      procedure_write_content: {
+        Args: {
+          p_sections: Json
+          p_steps: Json
+          r: Database["public"]["Tables"]["procedure_revisions"]["Row"]
+        }
+        Returns: undefined
+      }
       project_cert_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {
@@ -8577,6 +9310,10 @@ export type Database = {
         Args: { p_note?: string; p_suggestion_id: string }
         Returns: string
       }
+      release_hold_point: {
+        Args: { p_comment?: string; p_run_id: string; p_step_id: string }
+        Returns: undefined
+      }
       reopen_itr_atomic: {
         Args: { p_itr_id: string; p_reason: string }
         Returns: Json
@@ -8604,6 +9341,19 @@ export type Database = {
       }
       revoke_system_gate_approval: {
         Args: { p_approval_id: string; p_reason: string }
+        Returns: undefined
+      }
+      save_lineup_items: {
+        Args: { p_items: Json; p_sheet_id: string }
+        Returns: undefined
+      }
+      save_procedure_revision: {
+        Args: {
+          p_change_reason?: string
+          p_revision_id: string
+          p_sections: Json
+          p_steps: Json
+        }
         Returns: undefined
       }
       seed_default_gate_for_phase: {
@@ -8636,6 +9386,10 @@ export type Database = {
         Args: { p_org_id: string; p_weights: Json }
         Returns: undefined
       }
+      set_lineup_item: {
+        Args: { p_found: string; p_item_id: string; p_remarks?: string }
+        Returns: undefined
+      }
       set_webhook_enabled: {
         Args: { p_enabled: boolean; p_sub_id: string }
         Returns: undefined
@@ -8648,6 +9402,10 @@ export type Database = {
       }
       sign_system_gate: {
         Args: { p_approval_id: string; p_capacity: string; p_comments?: string }
+        Returns: string
+      }
+      start_procedure_run: {
+        Args: { p_procedure_id: string; p_system_id?: string }
         Returns: string
       }
       storage_object_in_my_project: {
@@ -8704,6 +9462,14 @@ export type Database = {
         Args: { p_comment?: string; p_constraint_id: string; p_to: string }
         Returns: string
       }
+      transition_procedure_revision: {
+        Args: { p_comment?: string; p_revision_id: string; p_to: string }
+        Returns: string
+      }
+      transition_procedure_run: {
+        Args: { p_comment?: string; p_run_id: string; p_to: string }
+        Returns: string
+      }
       transition_register_item: {
         Args: {
           p_comment?: string
@@ -8748,6 +9514,15 @@ export type Database = {
       }
       update_daily_report_sections: {
         Args: { p_report_id: string; p_sections: Json }
+        Returns: undefined
+      }
+      update_procedure: {
+        Args: {
+          p_kind: string
+          p_procedure_id: string
+          p_system_id: string
+          p_title: string
+        }
         Returns: undefined
       }
       update_punch_ops_status: {
@@ -8804,6 +9579,7 @@ export type Database = {
         Returns: string
       }
       user_in_project_org: { Args: { p_project_id: string }; Returns: boolean }
+      verify_lineup_item: { Args: { p_item_id: string }; Returns: undefined }
       verify_punch: {
         Args: { p_accept: boolean; p_comment?: string; p_punch_id: string }
         Returns: undefined

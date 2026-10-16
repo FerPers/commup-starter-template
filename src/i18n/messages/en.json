@@ -104,6 +104,7 @@
       "gates": "Gates (hold points)",
       "registers": "Registers",
       "daily": "Daily management",
+      "startup": "Start-up",
       "registerTypes": "Controlled registers",
       "testEquipment": "Test equipment"
     },
@@ -2242,7 +2243,9 @@
       "actions": "my actions",
       "actionsVerify": "actions to verify",
       "constraints": "my constraints",
-      "handovers": "handovers to receive"
+      "handovers": "handovers to receive",
+      "holds": "hold points to release",
+      "lineup": "valves to verify"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2256,7 +2259,9 @@
       "actions": "My actions",
       "actionsVerify": "Actions to verify",
       "constraints": "My constraints",
-      "handovers": "Shift handovers to receive"
+      "handovers": "Shift handovers to receive",
+      "holds": "Hold points to release",
+      "lineup": "Line-up: critical valves to verify"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -2270,7 +2275,9 @@
       "actions": "You have no open actions.",
       "actionsVerify": "No done actions waiting for verification.",
       "constraints": "You have no open constraints.",
-      "handovers": "No handovers waiting to be received."
+      "handovers": "No handovers waiting to be received.",
+      "holds": "No hold points waiting for your release.",
+      "lineup": "No critical valves to verify."
     },
     "due": {
       "overdue": "due {date}",
@@ -2282,7 +2289,8 @@
       "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}",
       "verify": "Verify",
       "escalate": "{days, plural, one {overdue # day} other {overdue # days}} · escalate",
-      "receive": "Receive"
+      "receive": "Receive",
+      "release": "Release"
     },
     "punchStatus": {
       "open": "Open",
@@ -2352,7 +2360,8 @@
       "critical_tags_ready": "Critical tags complete",
       "manual_attestation": "Attestation with evidence",
       "registers_clear": "Controlled registers closed",
-      "constraints_clear": "Gate constraints closed"
+      "constraints_clear": "Gate constraints closed",
+      "lineup_verified": "Line-up verified and current"
     },
     "crit": {
       "previousOk": "The previous gate is approved.",
@@ -2373,7 +2382,10 @@
       "registersNone": "No open registers (temporaries, blinds, bypasses…) block this gate.",
       "registersOpen": "{count, plural, one {# open register} other {# open registers}}: they must be verified or cancelled.",
       "constraintsOpen": "{count, plural, one {# unclosed constraint} other {# unclosed constraints}} on this gate{blocking, plural, =0 {: ready with conditions.} one {; # at level 4 blocks it.} other {; # at level 4 block it.}}",
-      "constraintLevel": "L{n}"
+      "constraintLevel": "L{n}",
+      "lineupMissing": "No verified line-up sheet for this system.",
+      "lineupStale": "verified, but an F3 register changed afterwards: issue a new one",
+      "lineupOk": "verified and current"
     },
     "reason": {
       "cat_a": "{a} open Cat A punch(es)",
@@ -2386,7 +2398,8 @@
       "punches": "View punches",
       "certificates": "View certificates",
       "pssr": "View PSSR",
-      "registers": "View registers"
+      "registers": "View registers",
+      "lineups": "View line-ups →"
     },
     "pssrStatus": {
       "draft": "draft",
@@ -2493,7 +2506,8 @@
       "none": "No active gates with a phase.",
       "save": "Save weights",
       "invalid": "Weights must be between 0 and 1000."
-    }
+    },
+    "requiresLineup": "Requires a verified line-up (before start-up)"
   },
   "Systems": {
     "title": "Systems",
@@ -3569,6 +3583,241 @@
       "constraints": "Open constraints",
       "actionsOverdue": "Overdue actions",
       "itrs": "ITRs in progress"
+    }
+  },
+  "Startup": {
+    "title": "Start-up",
+    "subtitle": "Procedures with hold points and stop criteria, and line-up sheets with independent verification. A gate that requires a line-up cannot be approved without a verified, current sheet for the system.",
+    "tab": {
+      "procedures": "Procedures",
+      "lineups": "Line-ups"
+    },
+    "newProcedure": "New procedure",
+    "newLineup": "New line-up",
+    "create": "Create",
+    "orCopy": "or",
+    "copyFrom": "Copy from another project…",
+    "copy": "Copy",
+    "error": "Could not save.",
+    "save": "Save",
+    "saved": "Changes saved.",
+    "generate": "Generate rows from the system valves (ESD, block and relief valves marked critical)",
+    "field": {
+      "title": "Title",
+      "kind": "Type",
+      "system": "System",
+      "anySystem": "Any system",
+      "pick": "Choose…",
+      "purpose": "Purpose",
+      "procedure": "Procedure",
+      "changeReason": "Reason for change"
+    },
+    "kind": {
+      "precommissioning": "Pre-commissioning",
+      "commissioning": "Commissioning",
+      "startup": "Start-up",
+      "shutdown": "Shutdown",
+      "emergency": "Emergency",
+      "normal_operation": "Normal operation"
+    },
+    "purpose": {
+      "startup": "Start-up",
+      "test": "Test",
+      "other": "Other"
+    },
+    "col": {
+      "number": "Number",
+      "title": "Title",
+      "kind": "Type",
+      "system": "System",
+      "revision": "Revision",
+      "runs": "Runs",
+      "purpose": "Purpose",
+      "progress": "Progress",
+      "status": "Status"
+    },
+    "approved": "approved",
+    "notApproved": "Not approved",
+    "fieldVerified": "Field verified",
+    "notFieldVerified": "Not field verified",
+    "liveRuns": "{n} live",
+    "toVerify": "{n} to verify",
+    "misaligned": "{n} misaligned",
+    "emptyProcedures": "No procedures yet.",
+    "emptyLineups": "No line-up sheets yet.",
+    "revStatus": {
+      "draft": "Draft",
+      "in_review": "In review",
+      "approved": "Approved",
+      "superseded": "Superseded"
+    },
+    "runStatus": {
+      "in_progress": "In progress",
+      "at_hold": "At hold point",
+      "stopped": "Stopped",
+      "completed": "Completed",
+      "aborted": "Aborted"
+    },
+    "stepStatus": {
+      "pending": "Pending",
+      "done": "Done",
+      "at_hold": "Hold point",
+      "released": "Released",
+      "na": "N/A"
+    },
+    "sheetStatus": {
+      "draft": "Draft",
+      "issued": "Issued",
+      "in_progress": "In progress",
+      "verified": "Verified",
+      "superseded": "Superseded"
+    },
+    "capacity": {
+      "commissioning": "Commissioning",
+      "operations": "Operations",
+      "hse": "HSE"
+    },
+    "section": {
+      "purpose": "Purpose",
+      "scope": "Scope and boundaries",
+      "references": "References (P&IDs, documents)",
+      "definitions": "Definitions",
+      "responsibilities": "Responsibilities",
+      "safety": "Safety and HSE",
+      "prerequisites": "Prerequisites",
+      "isolations": "Isolations and temporary state",
+      "equipment": "Equipment and tools",
+      "initial_lineup": "Initial line-up",
+      "sequence": "Sequence (steps)",
+      "stop_criteria": "Stop criteria and contingencies",
+      "acceptance": "Acceptance criteria",
+      "reinstatement": "Reinstatement and final state",
+      "records": "Records and attachments"
+    },
+    "hint": {
+      "purpose": "What this procedure is meant to achieve.",
+      "scope": "System, equipment included and battery limits.",
+      "references": "P&IDs, datasheets, vendor manuals, related procedures.",
+      "definitions": "Acronyms and terms used.",
+      "responsibilities": "Who executes, who supervises, who releases each hold point.",
+      "safety": "PTW, PPE, hazards and controls, communications.",
+      "prerequisites": "Approved gates, ITRs, closed F3 registers, utilities available.",
+      "isolations": "Isolations, blinds and bypasses required and their state.",
+      "equipment": "Test instruments, special tools, consumables.",
+      "initial_lineup": "Reference to the line-up sheet (LU-…) or key positions.",
+      "sequence": "",
+      "stop_criteria": "Conditions that force a stop and what to do.",
+      "acceptance": "Values and conditions that close the procedure.",
+      "reinstatement": "State the system must be left in at the end.",
+      "records": "Forms, ITRs and evidence to attach."
+    },
+    "position": {
+      "open": "Open",
+      "closed": "Closed",
+      "locked_open": "Locked open (LO)",
+      "locked_closed": "Locked closed (LC)",
+      "auto": "Auto",
+      "manual": "Manual",
+      "throttled": "Throttled",
+      "other": "Other"
+    },
+    "itemState": {
+      "pending": "Pending",
+      "misaligned": "Misaligned",
+      "aligned": "Aligned",
+      "to_verify": "To verify",
+      "verified": "Verified"
+    },
+    "editor": {
+      "current": "Current",
+      "author": "Prepared by {who}",
+      "approvedBy": "Approved by {who} on {when}",
+      "verifiedBy": "Field verified by {who} on {when}",
+      "submit": "Submit for review",
+      "return": "Return",
+      "returnPrompt": "Reason for returning the revision:",
+      "returned": "Returned: {reason}",
+      "approve": "Approve",
+      "approveConfirm": "Approving makes this revision current and immutable. Approve?",
+      "fieldVerify": "Field verify",
+      "walkdownPrompt": "Describe the walkdown (with whom, what was checked):",
+      "newRev": "New revision",
+      "newRevPrompt": "Reason for the new revision:",
+      "delete": "Delete draft",
+      "deleteConfirm": "Delete this draft? This cannot be undone.",
+      "otherApproves": "Approval must come from someone other than the author or submitter.",
+      "otherVerifies": "Field verification must be done by someone other than the approver.",
+      "sections": "Procedure sections",
+      "runs": "Runs",
+      "startRun": "Start run",
+      "needsApproval": "The procedure needs an approved revision before it can be run.",
+      "noRuns": "No runs."
+    },
+    "step": {
+      "action": "Action",
+      "responsible": "Responsible",
+      "expected": "Expected value",
+      "stop": "Stop criterion",
+      "stopHint": "e.g. vibration > 7 mm/s",
+      "hold": "Hold point",
+      "capacity": "Released by",
+      "releasedBy": "Released by {who}",
+      "add": "Add step",
+      "none": "No steps yet.",
+      "up": "Move up",
+      "down": "Move down",
+      "remove": "Remove"
+    },
+    "run": {
+      "startedBy": "started by {who} on {when}",
+      "safetyAndStop": "Safety and stop criteria",
+      "stopped": "Run stopped: {reason}",
+      "resume": "Resume",
+      "resumePrompt": "Why is it safe to resume?",
+      "aborted": "Run aborted: {reason}",
+      "completed": "Run completed on {when}.",
+      "holdTitle": "Step {n}: hold point — released by {who}",
+      "holdDoneBy": "Executed by {who} on {when}",
+      "releaseComment": "Release comment (optional)",
+      "release": "Release hold point",
+      "holdOther": "You executed it: someone else must release it.",
+      "holdRole": "Waiting for {who} to release it.",
+      "stopIf": "Stop if: {c}",
+      "isHold": "Hold point: once marked, the run waits for {who} to release it.",
+      "actual": "Measured value (optional)",
+      "actualFor": "Measured value (expected: {e})",
+      "comment": "Comment (required for N/A)",
+      "done": "Done",
+      "doneHold": "Done — request release",
+      "na": "Not applicable",
+      "complete": "Complete run",
+      "stop": "Stop (stop criterion)",
+      "stopPrompt": "Which stop criterion was met?",
+      "abort": "Abort run",
+      "abortPrompt": "Reason for aborting:",
+      "releasedBy": "released by {who} on {when}"
+    },
+    "lineup": {
+      "stale": "Possibly out of date",
+      "staleHelp": "An F3 register on the system (blind, bypass, temporary…) changed state after this sheet was verified: the gate treats it as expired. Issue and execute a new sheet.",
+      "verifiedBy": "Verified by {who} on {when}",
+      "registers": "F3 registers in the field on this system ({n})",
+      "draftHelp": "Set the required position of each valve and flag the critical ones (they need independent verification). You can add tags or manual rows.",
+      "label": "Untagged valve (description)",
+      "required": "Required position",
+      "requiredPick": "Required position…",
+      "note": "Note (e.g. lock no.)",
+      "critical": "Critical",
+      "addManual": "Manual row",
+      "issue": "Issue sheet",
+      "needRequired": "Every row needs its required position before issuing.",
+      "requiredShort": "Required",
+      "found": "Found",
+      "verifiedItem": "verified by {who} on {when}",
+      "verify": "Verify",
+      "otherVerifies": "Someone else verifies it.",
+      "complete": "Complete line-up",
+      "progressHelp": "{pending} pending, {misaligned} misaligned and {toVerify} critical to verify."
     }
   }
 }

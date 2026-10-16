@@ -1,0 +1,185 @@
+'use client'
+
+import Link from 'next/link'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { saveLineupItems, setLineupItem, transitionLineupSheet, verifyLineupItem, type LineupItemDraft } from '@/app/actions/startup'
+import { VALVE_POSITIONS, lineupItemState, lineupProgress, type ValvePosition } from '@/lib/startup/catalog'
+import { TagPicker } from '../../../registers/RegisterFields'
+import { Alert, Chip, btn, card, input, small } from '../../../daily/daily-ui'
+import { SHEET_TONE } from '../../StartupView'
+
+type Item = {
+  id: string; ord: number; tag_id: string | null; tag_number: string | null; description: string | null; label: string
+  required_position: ValvePosition | null; required_note: string; is_critical: boolean; found_position: ValvePosition | null; remarks: string | null
+  set_by: string | null; set_at: string | null; verified_by: string | null; verified_at: string | null
+}
+type Sheet = {
+  id: string; number: string; title: string; purpose: string; status: string; system: string; procedure: { id: string; number: string; title: string } | null
+  verifiedBy: string | null; verifiedAt: string | null; issuedAt: string | null; hash: string | null; stale: boolean; createdBy: string | null
+}
+const STATE_TONE = { pending: 'muted', misaligned: 'red', aligned: 'green', to_verify: 'amber', verified: 'green' } as const
+const KIND_TONE: Record<string, 'red' | 'amber' | 'violet' | 'blue' | 'muted'> = { bypass: 'red', blind: 'amber', temporary: 'violet', energization: 'red', reinstatement: 'blue', test_pack: 'muted' }
+
+export default function LineupView({ project, sheet, items, registers, names, userId, role }: {
+  project: { id: string; code: string; name: string }; sheet: Sheet; items: Item[]
+  registers: { id: string; number: string; kind: string; status: string; title: string }[]
+  names: Record<string, string>; userId: string; role: string
+}) {
+  const t = useTranslations('Startup')
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const [drafts, setDrafts] = useState<(LineupItemDraft & { tag_number?: string | null })[]>(() =>
+    items.map(i => ({ tag_id: i.tag_id, tag_number: i.tag_number, label: i.label, required_position: i.required_position, required_note: i.required_note, is_critical: i.is_critical })))
+  const [newTags, setNewTags] = useState<{ tag_id: string; tag_number: string; role: 'subject' }[]>([])
+  const isClient = role === 'client'
+  const draft = sheet.status === 'draft'
+  const executing = sheet.status === 'issued' || sheet.status === 'in_progress'
+  const prog = lineupProgress(items)
+  const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
+  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const ids = { projectId: project.id, sheetId: sheet.id }
+
+  function act(fn: () => Promise<{ error?: string }>, after?: () => void) {
+    setError(null)
+    startTransition(async () => {
+      const res = await fn()
+      if (res.error) { setError(res.error); return }
+      after?.()
+      router.refresh()
+    })
+  }
+  const save = () => saveLineupItems({ ...ids, items: drafts })
+  const setD = (i: number, p: Partial<LineupItemDraft>) => setDrafts(list => list.map((d, j) => (j === i ? { ...d, ...p } : d)))
+  const allRequired = drafts.length > 0 && drafts.every(d => d.required_position)
+
+  return (
+    <div style={{ padding: '20px 16px', maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div>
+        <Link href={`/projects/${project.id}/startup?tab=lineups`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {t('tab.lineups')}</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{sheet.number}</h1>
+          <Chip tone={SHEET_TONE[sheet.status] ?? 'muted'}>{t(`sheetStatus.${sheet.status}`)}</Chip>
+          {sheet.stale && <Chip tone="red">{t('lineup.stale')}</Chip>}
+          <span style={small}>{prog.done}/{prog.total}</span>
+        </div>
+        <p style={{ margin: '4px 0 0', color: 'var(--text-strong)' }}>{sheet.title}</p>
+        <p style={{ ...small, margin: '2px 0 0' }}>
+          {sheet.system} · {t(`purpose.${sheet.purpose}`)}
+          {sheet.procedure && <> · <Link href={`/projects/${project.id}/startup/procedures/${sheet.procedure.id}`} style={{ color: 'var(--primary-600, #2563eb)' }}>{sheet.procedure.number}</Link></>}
+        </p>
+        {sheet.verifiedAt && <p style={{ ...small, margin: '2px 0 0' }} suppressHydrationWarning>{t('lineup.verifiedBy', { who: who(sheet.verifiedBy), when: when(sheet.verifiedAt) })} · sha256 {sheet.hash?.slice(0, 16)}</p>}
+      </div>
+
+      {error && <Alert kind="error">{error}</Alert>}
+      {sheet.stale && <Alert kind="warn">{t('lineup.staleHelp')}</Alert>}
+
+      {registers.length > 0 && (
+        <section style={{ ...card, padding: 12 }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>{t('lineup.registers', { n: registers.length })}</div>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {registers.map(r => (
+              <li key={r.id} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 'var(--text-sm)' }}>
+                <Link href={`/projects/${project.id}/registers/${r.id}`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace', color: 'var(--text-strong)', textDecoration: 'none' }}>{r.number}</Link>
+                <Chip tone={KIND_TONE[r.kind] ?? 'muted'}>{r.kind}</Chip>
+                <span>{r.title}</span><span style={small}>· {r.status}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Borrador: definir filas */}
+      {draft && !isClient && (
+        <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <p style={{ ...small, margin: 0 }}>{t('lineup.draftHelp')}</p>
+          {drafts.map((d, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+              <strong style={{ width: 24, fontFamily: 'ui-monospace, monospace' }}>{i + 1}</strong>
+              {d.tag_id
+                ? <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, minWidth: 140 }}>{d.tag_number ?? '?'}</span>
+                : <input aria-label={t('lineup.label')} placeholder={t('lineup.label')} style={{ ...input, width: 180 }} value={d.label} onChange={e => setD(i, { label: e.target.value })} />}
+              <select aria-label={t('lineup.required')} style={{ ...input, width: 170 }} value={d.required_position ?? ''} onChange={e => setD(i, { required_position: (e.target.value || null) as ValvePosition | null })}>
+                <option value="">{t('lineup.requiredPick')}</option>
+                {VALVE_POSITIONS.map(p => <option key={p} value={p}>{t(`position.${p}`)}</option>)}
+              </select>
+              <input aria-label={t('lineup.note')} placeholder={t('lineup.note')} style={{ ...input, flex: 1, minWidth: 140 }} value={d.required_note} onChange={e => setD(i, { required_note: e.target.value })} />
+              <label style={{ ...small, display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+                <input type="checkbox" checked={d.is_critical} onChange={e => setD(i, { is_critical: e.target.checked })} /> {t('lineup.critical')}
+              </label>
+              <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} aria-label={t('step.remove')} onClick={() => setDrafts(l => l.filter((_, j) => j !== i))}>✕</button>
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ minWidth: 280, flex: 1 }}>
+              <TagPicker projectId={project.id} kind="temporary" value={newTags} onChange={v => {
+                const added = v.filter(x => !drafts.some(d => d.tag_id === x.tag_id))
+                setDrafts(l => [...l, ...added.map(x => ({ tag_id: x.tag_id, tag_number: x.tag_number, label: '', required_position: null, required_note: '', is_critical: false }))])
+                setNewTags([])
+              }} />
+            </div>
+            <button type="button" style={btn('outline')} onClick={() => setDrafts(l => [...l, { tag_id: null, label: '', required_position: null, required_note: '', is_critical: false }])}>+ {t('lineup.addManual')}</button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" style={btn('outline', isPending)} disabled={isPending} onClick={() => act(save)}>{t('save')}</button>
+            <button type="button" style={btn('primary', isPending || !allRequired)} disabled={isPending || !allRequired}
+              onClick={() => act(async () => { const s = await save(); if (s.error) return s; return transitionLineupSheet({ ...ids, to: 'issued' }) })}>{t('lineup.issue')}</button>
+            {(sheet.createdBy === userId || role === 'owner' || role === 'admin') && (
+              <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} disabled={isPending}
+                onClick={() => { if (window.confirm(t('editor.deleteConfirm'))) act(() => transitionLineupSheet({ ...ids, to: 'deleted' }), () => router.push(`/projects/${project.id}/startup?tab=lineups`)) }}>{t('editor.delete')}</button>
+            )}
+          </div>
+          {!allRequired && drafts.length > 0 && <p style={{ ...small, margin: 0, color: '#b45309' }}>{t('lineup.needRequired')}</p>}
+        </section>
+      )}
+
+      {/* Ejecución / consulta */}
+      {!draft && (
+        <section style={{ ...card, padding: 0 }}>
+          {items.map(i => {
+            const st = lineupItemState(i)
+            return (
+              <div key={i.id} style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <strong style={{ fontFamily: 'ui-monospace, monospace', minWidth: 130 }}>{i.tag_number ?? i.label}</strong>
+                  {i.is_critical && <Chip tone="red">{t('lineup.critical')}</Chip>}
+                  <span style={small}>{t('lineup.requiredShort')}: <strong style={{ color: 'var(--text-strong)' }}>{i.required_position ? t(`position.${i.required_position}`) : '—'}</strong>{i.required_note ? ` · ${i.required_note}` : ''}</span>
+                  <span style={{ marginLeft: 'auto' }}><Chip tone={STATE_TONE[st]}>{t(`itemState.${st}`)}</Chip></span>
+                </div>
+                {i.description && <span style={{ ...small, fontSize: 'var(--text-xs)' }}>{i.description}</span>}
+                {i.set_at && (
+                  <span style={{ ...small, fontSize: 'var(--text-xs)' }} suppressHydrationWarning>
+                    {t('lineup.found')}: {i.found_position ? t(`position.${i.found_position}`) : '—'} · {who(i.set_by)} {when(i.set_at)}{i.remarks ? ` — ${i.remarks}` : ''}
+                    {i.verified_at && ` · ${t('lineup.verifiedItem', { who: who(i.verified_by), when: when(i.verified_at) })}`}
+                  </span>
+                )}
+                {executing && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {!isClient && VALVE_POSITIONS.filter(p => p === i.required_position || ['open', 'closed'].includes(p)).map(p => (
+                      <button key={p} type="button" disabled={isPending}
+                        style={{ ...btn(i.found_position === p ? 'primary' : 'outline', isPending), padding: '8px 12px' }}
+                        onClick={() => act(() => setLineupItem({ ...ids, itemId: i.id, found: p }))}>{t(`position.${p}`)}</button>
+                    ))}
+                    {(st === 'to_verify' || (st === 'aligned' && !i.verified_at)) && i.set_by !== userId && (
+                      <button type="button" style={{ ...btn('primary', isPending), padding: '8px 12px', background: 'var(--success-700, #047857)' }} disabled={isPending}
+                        onClick={() => act(() => verifyLineupItem({ ...ids, itemId: i.id }))}>✓ {t('lineup.verify')}</button>
+                    )}
+                    {st === 'to_verify' && i.set_by === userId && <span style={{ ...small, alignSelf: 'center' }}>{t('lineup.otherVerifies')}</span>}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </section>
+      )}
+
+      {executing && !isClient && (
+        <button type="button" style={{ ...btn('primary', isPending || !prog.complete), padding: '12px 18px' }} disabled={isPending || !prog.complete}
+          onClick={() => act(() => transitionLineupSheet({ ...ids, to: 'verified' }))}>{t('lineup.complete')}</button>
+      )}
+      {executing && !prog.complete && <p style={{ ...small, margin: 0 }}>{t('lineup.progressHelp', { pending: prog.pending, misaligned: prog.misaligned, toVerify: prog.toVerify })}</p>}
+    </div>
+  )
+}

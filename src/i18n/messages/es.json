@@ -104,6 +104,7 @@
       "gates": "Gates (hold points)",
       "registers": "Registros",
       "daily": "Gestión diaria",
+      "startup": "Arranque",
       "registerTypes": "Registros controlados",
       "testEquipment": "Equipos de prueba"
     },
@@ -2242,7 +2243,9 @@
       "actions": "acciones mías",
       "actionsVerify": "acciones por verificar",
       "constraints": "restricciones mías",
-      "handovers": "relevos por recibir"
+      "handovers": "relevos por recibir",
+      "holds": "hold points por liberar",
+      "lineup": "válvulas por verificar"
     },
     "queues": {
       "execute": "ITRs por ejecutar",
@@ -2256,7 +2259,9 @@
       "actions": "Mis acciones",
       "actionsVerify": "Acciones por verificar",
       "constraints": "Mis restricciones",
-      "handovers": "Relevos de turno por recibir"
+      "handovers": "Relevos de turno por recibir",
+      "holds": "Hold points por liberar",
+      "lineup": "Line-up: válvulas críticas por verificar"
     },
     "empty": {
       "execute": "No tienes ITRs pendientes de ejecución.",
@@ -2270,7 +2275,9 @@
       "actions": "No tienes acciones abiertas.",
       "actionsVerify": "No hay acciones hechas esperando verificación.",
       "constraints": "No tienes restricciones abiertas.",
-      "handovers": "No hay relevos esperando que alguien los reciba."
+      "handovers": "No hay relevos esperando que alguien los reciba.",
+      "holds": "No hay hold points esperando tu liberación.",
+      "lineup": "No hay válvulas críticas por verificar."
     },
     "due": {
       "overdue": "vence {date}",
@@ -2282,7 +2289,8 @@
       "overdueDays": "{days, plural, one {# día de atraso} other {# días de atraso}}",
       "verify": "Verificar",
       "escalate": "{days, plural, one {vencida # día} other {vencida # días}} · escalar",
-      "receive": "Recibir"
+      "receive": "Recibir",
+      "release": "Liberar"
     },
     "punchStatus": {
       "open": "Abierto",
@@ -2352,7 +2360,8 @@
       "critical_tags_ready": "Tags críticos completos",
       "manual_attestation": "Declaración con evidencia",
       "registers_clear": "Registros controlados cerrados",
-      "constraints_clear": "Restricciones del gate cerradas"
+      "constraints_clear": "Restricciones del gate cerradas",
+      "lineup_verified": "Line-up verificado y vigente"
     },
     "crit": {
       "previousOk": "El gate anterior está aprobado.",
@@ -2373,7 +2382,10 @@
       "registersNone": "No hay registros abiertos (temporales, ciegas, bypass…) que bloqueen este gate.",
       "registersOpen": "{count, plural, one {# registro abierto} other {# registros abiertos}}: deben verificarse o cancelarse.",
       "constraintsOpen": "{count, plural, one {# restricción sin cerrar} other {# restricciones sin cerrar}} en este gate{blocking, plural, =0 {: queda con condiciones.} one {; # en nivel 4 lo bloquea.} other {; # en nivel 4 lo bloquean.}}",
-      "constraintLevel": "N{n}"
+      "constraintLevel": "N{n}",
+      "lineupMissing": "No hay una hoja de line-up verificada para este sistema.",
+      "lineupStale": "verificada, pero un registro F3 cambió después: emite una nueva",
+      "lineupOk": "verificada y vigente"
     },
     "reason": {
       "cat_a": "{a} punch(es) Cat A abiertos",
@@ -2386,7 +2398,8 @@
       "punches": "Ver punches",
       "certificates": "Ver certificados",
       "pssr": "Ver PSSR",
-      "registers": "Ver registros"
+      "registers": "Ver registros",
+      "lineups": "Ver line-ups →"
     },
     "pssrStatus": {
       "draft": "borrador",
@@ -2493,7 +2506,8 @@
       "none": "No hay gates activos con fase.",
       "save": "Guardar pesos",
       "invalid": "Los pesos deben estar entre 0 y 1000."
-    }
+    },
+    "requiresLineup": "Exige line-up verificado (antes de arrancar)"
   },
   "Systems": {
     "title": "Sistemas",
@@ -3569,6 +3583,241 @@
       "constraints": "Restricciones abiertas",
       "actionsOverdue": "Acciones vencidas",
       "itrs": "ITR en curso"
+    }
+  },
+  "Startup": {
+    "title": "Arranque",
+    "subtitle": "Procedimientos con hold points y criterios de parada, y hojas de line-up con verificación independiente. Un gate que exige line-up no se aprueba sin una hoja verificada y vigente del sistema.",
+    "tab": {
+      "procedures": "Procedimientos",
+      "lineups": "Line-ups"
+    },
+    "newProcedure": "Nuevo procedimiento",
+    "newLineup": "Nuevo line-up",
+    "create": "Crear",
+    "orCopy": "o",
+    "copyFrom": "Copiar desde otro proyecto…",
+    "copy": "Copiar",
+    "error": "No se pudo guardar.",
+    "save": "Guardar",
+    "saved": "Cambios guardados.",
+    "generate": "Generar filas con las válvulas del sistema (ESD, bloqueo y alivio quedan críticas)",
+    "field": {
+      "title": "Título",
+      "kind": "Tipo",
+      "system": "Sistema",
+      "anySystem": "Cualquier sistema",
+      "pick": "Elegir…",
+      "purpose": "Propósito",
+      "procedure": "Procedimiento",
+      "changeReason": "Motivo del cambio"
+    },
+    "kind": {
+      "precommissioning": "Pre-comisionamiento",
+      "commissioning": "Comisionamiento",
+      "startup": "Arranque",
+      "shutdown": "Parada",
+      "emergency": "Emergencia",
+      "normal_operation": "Operación normal"
+    },
+    "purpose": {
+      "startup": "Arranque",
+      "test": "Prueba",
+      "other": "Otro"
+    },
+    "col": {
+      "number": "Número",
+      "title": "Título",
+      "kind": "Tipo",
+      "system": "Sistema",
+      "revision": "Revisión",
+      "runs": "Ejecuciones",
+      "purpose": "Propósito",
+      "progress": "Avance",
+      "status": "Estado"
+    },
+    "approved": "aprobada",
+    "notApproved": "Sin aprobar",
+    "fieldVerified": "Verificado en campo",
+    "notFieldVerified": "Sin verificar en campo",
+    "liveRuns": "{n} en curso",
+    "toVerify": "{n} por verificar",
+    "misaligned": "{n} desalineadas",
+    "emptyProcedures": "Aún no hay procedimientos.",
+    "emptyLineups": "Aún no hay hojas de line-up.",
+    "revStatus": {
+      "draft": "Borrador",
+      "in_review": "En revisión",
+      "approved": "Aprobada",
+      "superseded": "Reemplazada"
+    },
+    "runStatus": {
+      "in_progress": "En curso",
+      "at_hold": "En hold point",
+      "stopped": "Detenida",
+      "completed": "Completada",
+      "aborted": "Abortada"
+    },
+    "stepStatus": {
+      "pending": "Pendiente",
+      "done": "Hecho",
+      "at_hold": "Hold point",
+      "released": "Liberado",
+      "na": "N/A"
+    },
+    "sheetStatus": {
+      "draft": "Borrador",
+      "issued": "Emitida",
+      "in_progress": "En ejecución",
+      "verified": "Verificada",
+      "superseded": "Reemplazada"
+    },
+    "capacity": {
+      "commissioning": "Comisionamiento",
+      "operations": "Operaciones",
+      "hse": "HSE"
+    },
+    "section": {
+      "purpose": "Propósito",
+      "scope": "Alcance y límites",
+      "references": "Referencias (P&ID, documentos)",
+      "definitions": "Definiciones",
+      "responsibilities": "Responsabilidades",
+      "safety": "Seguridad y HSE",
+      "prerequisites": "Prerrequisitos",
+      "isolations": "Aislamientos y estado temporal",
+      "equipment": "Equipos y herramientas",
+      "initial_lineup": "Line-up inicial",
+      "sequence": "Secuencia (pasos)",
+      "stop_criteria": "Criterios de parada y contingencias",
+      "acceptance": "Criterios de aceptación",
+      "reinstatement": "Restitución y estado final",
+      "records": "Registros y anexos"
+    },
+    "hint": {
+      "purpose": "Qué se busca lograr con este procedimiento.",
+      "scope": "Sistema, equipos incluidos y límites de batería.",
+      "references": "P&ID, hojas de datos, manuales del vendor, procedimientos relacionados.",
+      "definitions": "Siglas y términos usados.",
+      "responsibilities": "Quién ejecuta, quién supervisa, quién libera cada hold point.",
+      "safety": "PTW, EPP, riesgos y controles, comunicaciones.",
+      "prerequisites": "Gates aprobados, ITR, registros F3 cerrados, servicios disponibles.",
+      "isolations": "Aislamientos, ciegas y bypass requeridos y su estado.",
+      "equipment": "Instrumentos de prueba, herramientas especiales, consumibles.",
+      "initial_lineup": "Referencia a la hoja de line-up (LU-…) o posiciones clave.",
+      "sequence": "",
+      "stop_criteria": "Condiciones que obligan a detener y qué hacer.",
+      "acceptance": "Valores y condiciones que dan el procedimiento por cumplido.",
+      "reinstatement": "Estado en que debe quedar el sistema al terminar.",
+      "records": "Formatos, ITR y evidencias a adjuntar."
+    },
+    "position": {
+      "open": "Abierta",
+      "closed": "Cerrada",
+      "locked_open": "Abierta con candado (LO)",
+      "locked_closed": "Cerrada con candado (LC)",
+      "auto": "Automático",
+      "manual": "Manual",
+      "throttled": "Estrangulada",
+      "other": "Otra"
+    },
+    "itemState": {
+      "pending": "Pendiente",
+      "misaligned": "Desalineada",
+      "aligned": "Alineada",
+      "to_verify": "Por verificar",
+      "verified": "Verificada"
+    },
+    "editor": {
+      "current": "Vigente",
+      "author": "Redactó {who}",
+      "approvedBy": "Aprobó {who} el {when}",
+      "verifiedBy": "Verificó en campo {who} el {when}",
+      "submit": "Enviar a revisión",
+      "return": "Devolver",
+      "returnPrompt": "Motivo para devolver la revisión:",
+      "returned": "Devuelta: {reason}",
+      "approve": "Aprobar",
+      "approveConfirm": "Al aprobar, esta revisión pasa a ser la vigente y queda inmutable. ¿Aprobar?",
+      "fieldVerify": "Verificar en campo",
+      "walkdownPrompt": "Describe el walkdown realizado (con quién, qué se verificó):",
+      "newRev": "Nueva revisión",
+      "newRevPrompt": "Motivo de la nueva revisión:",
+      "delete": "Borrar borrador",
+      "deleteConfirm": "¿Borrar este borrador? No se puede deshacer.",
+      "otherApproves": "Aprueba una persona distinta de quien redactó o envió.",
+      "otherVerifies": "La verificación en campo la hace una persona distinta de quien aprobó.",
+      "sections": "Secciones del procedimiento",
+      "runs": "Ejecuciones",
+      "startRun": "Iniciar ejecución",
+      "needsApproval": "Para ejecutar, el procedimiento necesita una revisión aprobada.",
+      "noRuns": "Sin ejecuciones."
+    },
+    "step": {
+      "action": "Acción",
+      "responsible": "Responsable",
+      "expected": "Valor esperado",
+      "stop": "Criterio de parada",
+      "stopHint": "p. ej. vibración > 7 mm/s",
+      "hold": "Hold point",
+      "capacity": "Quién libera",
+      "releasedBy": "Libera {who}",
+      "add": "Agregar paso",
+      "none": "Sin pasos todavía.",
+      "up": "Subir",
+      "down": "Bajar",
+      "remove": "Quitar"
+    },
+    "run": {
+      "startedBy": "iniciada por {who} el {when}",
+      "safetyAndStop": "Seguridad y criterios de parada",
+      "stopped": "Ejecución detenida: {reason}",
+      "resume": "Reanudar",
+      "resumePrompt": "¿Por qué es seguro reanudar?",
+      "aborted": "Ejecución abortada: {reason}",
+      "completed": "Ejecución completada el {when}.",
+      "holdTitle": "Paso {n}: hold point — lo libera {who}",
+      "holdDoneBy": "Ejecutado por {who} el {when}",
+      "releaseComment": "Comentario de liberación (opcional)",
+      "release": "Liberar hold point",
+      "holdOther": "Lo ejecutaste tú: lo libera otra persona.",
+      "holdRole": "Espera la liberación de {who}.",
+      "stopIf": "Detener si: {c}",
+      "isHold": "Hold point: al marcarlo, la ejecución espera la liberación de {who}.",
+      "actual": "Valor medido (opcional)",
+      "actualFor": "Valor medido (esperado: {e})",
+      "comment": "Comentario (obligatorio para N/A)",
+      "done": "Hecho",
+      "doneHold": "Hecho — pedir liberación",
+      "na": "No aplica",
+      "complete": "Completar ejecución",
+      "stop": "Detener (criterio de parada)",
+      "stopPrompt": "¿Qué criterio de parada se cumplió?",
+      "abort": "Abortar ejecución",
+      "abortPrompt": "Motivo para abortar:",
+      "releasedBy": "liberó {who} el {when}"
+    },
+    "lineup": {
+      "stale": "Posiblemente desactualizada",
+      "staleHelp": "Un registro F3 del sistema (ciega, bypass, temporal…) cambió de estado después de verificar esta hoja: el gate la considera vencida. Emite y ejecuta una hoja nueva.",
+      "verifiedBy": "Verificada por {who} el {when}",
+      "registers": "Registros F3 en campo en este sistema ({n})",
+      "draftHelp": "Define la posición requerida de cada válvula y marca las críticas (exigen verificación independiente). Puedes agregar tags o filas manuales.",
+      "label": "Válvula sin tag (descripción)",
+      "required": "Posición requerida",
+      "requiredPick": "Posición requerida…",
+      "note": "Nota (p. ej. candado n.º)",
+      "critical": "Crítica",
+      "addManual": "Fila manual",
+      "issue": "Emitir hoja",
+      "needRequired": "Todas las filas necesitan su posición requerida para emitir.",
+      "requiredShort": "Requerida",
+      "found": "Encontrada",
+      "verifiedItem": "verificó {who} el {when}",
+      "verify": "Verificar",
+      "otherVerifies": "La verifica otra persona.",
+      "complete": "Completar line-up",
+      "progressHelp": "Faltan {pending} pendientes, {misaligned} desalineadas y {toVerify} críticas por verificar."
     }
   }
 }

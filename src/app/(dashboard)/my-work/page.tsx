@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { HOLD_RELEASE_ROLES, type HoldCapacity } from '@/lib/startup/catalog'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { CATEGORY_CFG, ITR_STYLE, PUNCH_STYLE } from '@/components/dashboard/widgets/_shared'
 import {
@@ -58,7 +59,7 @@ export default async function MyWorkPage() {
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }] = await Promise.all([
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }] = await Promise.all([
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
     supabase
       .from('itr_assignments')
@@ -150,6 +151,23 @@ export default async function MyWorkPage() {
       .in('project_id', projectIds)
       .order('handed_at', { ascending: true })
       .limit(QUEUE_LIMIT + 1),
+    // Fase 6: hold points detenidos (la RPC decide si mi rol puede liberarlos) y filas críticas por verificar.
+    projectIds.length === 0 ? none : supabase
+      .from('procedure_run_steps')
+      .select('run_id, ord, done_by, project_id, procedure_steps(action, hold_capacity), procedure_runs(number, status), projects(code)')
+      .eq('status', 'at_hold')
+      .neq('done_by', userId)
+      .in('project_id', projectIds)
+      .limit(QUEUE_LIMIT + 1),
+    projectIds.length === 0 ? none : supabase
+      .from('lineup_items')
+      .select('id, label, sheet_id, project_id, tags(tag_number), lineup_sheets(number, status), projects(code)')
+      .eq('is_critical', true)
+      .not('set_at', 'is', null)
+      .is('verified_at', null)
+      .neq('set_by', userId)
+      .in('project_id', projectIds)
+      .limit(QUEUE_LIMIT + 1),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -170,6 +188,17 @@ export default async function MyWorkPage() {
   const handoverRows = (handovers ?? []) as unknown as {
     id: string; number: string; shift_date: string; shift_label: string; handed_at: string; project_id: string; projects: { code: string } | null
   }[]
+  const holdRows = ((holds ?? []) as unknown as {
+    run_id: string; ord: number; project_id: string; procedure_steps: { action: string; hold_capacity: string } | null
+    procedure_runs: { number: string; status: string } | null; projects: { code: string } | null
+  }[]).filter(h => {
+    const cap = h.procedure_steps?.hold_capacity as HoldCapacity | undefined
+    return !!cap && HOLD_RELEASE_ROLES[cap].includes(role)
+  })
+  const lineupRows = ((lineupItems ?? []) as unknown as {
+    id: string; label: string | null; sheet_id: string; project_id: string; tags: { tag_number: string } | null
+    lineup_sheets: { number: string; status: string } | null; projects: { code: string } | null
+  }[]).filter(i => i.lineup_sheets && ['issued', 'in_progress'].includes(i.lineup_sheets.status))
   const dailyHref = (projectId: string | undefined, tab: string) => (projectId ? `/projects/${projectId}/daily?tab=${tab}` : '/projects')
 
   const projectsInvolved = new Set<string>([
@@ -182,7 +211,7 @@ export default async function MyWorkPage() {
     ...constraintRows.map(c => c.project_id),
   ].filter(Boolean))
   const personalTotal = counts.itrs_execute + counts.itrs_review + counts.punches + counts.plan_items + (signer ? counts.signatures : 0)
-    + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0)
+    + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0) + counts.holds_to_release
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
@@ -225,6 +254,8 @@ export default async function MyWorkPage() {
         {role !== 'client' && <Chip n={counts.actions_verify} label={t('chips.actionsVerify')} tone={counts.actions_verify > 0 ? 'info' : 'neutral'} />}
         <Chip n={counts.constraints_mine} label={t('chips.constraints')} tone={counts.constraints_mine > 0 ? 'danger' : 'neutral'} />
         {role !== 'client' && <Chip n={counts.handovers_to_receive} label={t('chips.handovers')} tone={counts.handovers_to_receive > 0 ? 'info' : 'neutral'} />}
+        {counts.holds_to_release > 0 && <Chip n={counts.holds_to_release} label={t('chips.holds')} tone="warning" />}
+        {counts.lineup_to_verify > 0 && <Chip n={counts.lineup_to_verify} label={t('chips.lineup')} tone="info" />}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -329,6 +360,28 @@ export default async function MyWorkPage() {
               <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe="#7c3aed"
                 code={a.number} what={a.title} project={a.projects?.code}
                 right={<Pill tone="info" style={{ background: '#f5f3ff', color: '#7c3aed' }}>{t('due.verify')}</Pill>} />
+            ))}
+          </Queue>
+        )}
+
+        {/* Hold points por liberar (fase 6) */}
+        {counts.holds_to_release > 0 && (
+          <Queue title={t('queues.holds')} count={Math.min(holdRows.length, QUEUE_LIMIT)} total={counts.holds_to_release} emptyText={t('empty.holds')} moreHref={holdRows[0] ? `/projects/${holdRows[0].project_id}/startup` : '/projects'} moreLabel={t('viewAll', { count: counts.holds_to_release })} limit={QUEUE_LIMIT}>
+            {holdRows.slice(0, QUEUE_LIMIT).map(h => (
+              <Row key={`${h.run_id}:${h.ord}`} href={`/projects/${h.project_id}/startup/runs/${h.run_id}`} stripe="#b45309"
+                code={h.procedure_runs?.number ?? ''} what={`${h.ord}. ${h.procedure_steps?.action ?? ''}`} project={h.projects?.code}
+                right={<Pill tone="warning">{t('due.release')}</Pill>} />
+            ))}
+          </Queue>
+        )}
+
+        {/* Filas críticas de line-up por verificar (fase 6) */}
+        {counts.lineup_to_verify > 0 && (
+          <Queue title={t('queues.lineup')} count={Math.min(lineupRows.length, QUEUE_LIMIT)} total={counts.lineup_to_verify} emptyText={t('empty.lineup')} moreHref={lineupRows[0] ? `/projects/${lineupRows[0].project_id}/startup?tab=lineups` : '/projects'} moreLabel={t('viewAll', { count: counts.lineup_to_verify })} limit={QUEUE_LIMIT}>
+            {lineupRows.slice(0, QUEUE_LIMIT).map(i => (
+              <Row key={i.id} href={`/projects/${i.project_id}/startup/lineups/${i.sheet_id}`} stripe="#1d4ed8"
+                code={i.lineup_sheets?.number ?? ''} what={i.tags?.tag_number ?? i.label ?? ''} project={i.projects?.code}
+                right={<Pill tone="info">{t('due.verify')}</Pill>} />
             ))}
           </Queue>
         )}

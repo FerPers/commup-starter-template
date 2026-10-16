@@ -222,6 +222,21 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
         )
       }
 
+      case 'lineup_verified': {
+        if (d.missing) return (
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={small}>{t('crit.lineupMissing')}</span>
+            <Link style={linkStyle} href={`/projects/${project.id}/startup?tab=lineups`}>{t('link.lineups')}</Link>
+          </div>
+        )
+        return (
+          <span style={small}>
+            <Link href={`/projects/${project.id}/startup/lineups/${String(d.id)}`} style={{ ...linkStyle, fontWeight: 700 }}>{String(d.number)}</Link>
+            {' · '}{d.stale ? t('crit.lineupStale') : t('crit.lineupOk')}
+          </span>
+        )
+      }
+
       case 'itr_phase_approved': {
         if (d.error === 'no_phase') return <span style={small}>{t('crit.noPhase')}</span>
         const red = (d.red_subsystems as { id: string; code: string; reason: string; itr_total: number; itr_approved: number; open_a: number; open_b: number }[]) ?? []

@@ -60,6 +60,11 @@ describe('parseCounts / badgeTotal', () => {
     expect(badgeTotal(c, 'client')).toBe(0)
   })
 
+  it('fase 6: los hold points por liberar suman; las filas de line-up por verificar no', () => {
+    const c = { ...EMPTY_COUNTS, holds_to_release: 2, lineup_to_verify: 5 }
+    expect(badgeTotal(c, 'leader')).toBe(2)
+  })
+
   it('roles: firmantes y supervisión de preservación', () => {
     expect(['owner', 'admin', 'architect', 'leader', 'inspector', 'client'].map(r => canSignCertificates(r as never))).toEqual([true, true, true, false, false, false])
     expect(['owner', 'admin', 'architect', 'leader', 'inspector', 'client'].map(r => seesPreservation(r as never))).toEqual([true, true, true, true, false, false])
