@@ -2246,7 +2246,8 @@
       "constraints": "my constraints",
       "handovers": "handovers to receive",
       "holds": "hold points to release",
-      "lineup": "valves to verify"
+      "lineup": "valves to verify",
+      "milestones": "milestones to witness"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2262,7 +2263,8 @@
       "constraints": "My constraints",
       "handovers": "Shift handovers to receive",
       "holds": "Hold points to release",
-      "lineup": "Line-up: critical valves to verify"
+      "lineup": "Line-up: critical valves to verify",
+      "milestones": "Start-up milestones to witness"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -2278,7 +2280,8 @@
       "constraints": "You have no open constraints.",
       "handovers": "No handovers waiting to be received.",
       "holds": "No hold points waiting for your release.",
-      "lineup": "No critical valves to verify."
+      "lineup": "No critical valves to verify.",
+      "milestones": "No milestones waiting for you."
     },
     "due": {
       "overdue": "due {date}",
@@ -2291,7 +2294,8 @@
       "verify": "Verify",
       "escalate": "{days, plural, one {overdue # day} other {overdue # days}} · escalate",
       "receive": "Receive",
-      "release": "Release"
+      "release": "Release",
+      "witness": "Witness"
     },
     "punchStatus": {
       "open": "Open",
@@ -2462,6 +2466,16 @@
       "hideHistory": "Hide history",
       "header": "Weighted physical progress {pct} % · Readiness {approved}/{total} gates",
       "lookahead": "Look-ahead →"
+    },
+    "milestones": {
+      "title": "Start-up milestones",
+      "link": "Log →",
+      "first_energization": "Energisation",
+      "first_rotation": "Rotation",
+      "first_startup": "Start-up",
+      "first_hydrocarbon": "First HC",
+      "first_stable_operation": "Stable op.",
+      "first_on_spec_product": "On-spec"
     }
   },
   "GatesAdmin": {
@@ -3591,7 +3605,8 @@
     "subtitle": "Procedures with hold points and stop criteria, and line-up sheets with independent verification. A gate that requires a line-up cannot be approved without a verified, current sheet for the system.",
     "tab": {
       "procedures": "Procedures",
-      "lineups": "Line-ups"
+      "lineups": "Line-ups",
+      "events": "Log"
     },
     "newProcedure": "New procedure",
     "newLineup": "New line-up",
@@ -3611,7 +3626,8 @@
       "pick": "Choose…",
       "purpose": "Purpose",
       "procedure": "Procedure",
-      "changeReason": "Reason for change"
+      "changeReason": "Reason for change",
+      "tags": "Tags"
     },
     "kind": {
       "precommissioning": "Pre-commissioning",
@@ -3846,6 +3862,89 @@
       "holdPending": "Release will be requested on sync: someone else does it online.",
       "stepLabel": "Step {n}",
       "stopLabel": "Stop: {reason}"
+    },
+    "milestone": {
+      "first_energization": "First energisation",
+      "first_rotation": "First rotation",
+      "first_startup": "First start-up",
+      "first_hydrocarbon": "First hydrocarbon (HC)",
+      "first_stable_operation": "First stable operation",
+      "first_on_spec_product": "First on-spec product"
+    },
+    "milestoneShort": {
+      "first_energization": "Energisation",
+      "first_rotation": "Rotation",
+      "first_startup": "Start-up",
+      "first_hydrocarbon": "First HC",
+      "first_stable_operation": "Stable op.",
+      "first_on_spec_product": "On-spec"
+    },
+    "category": {
+      "trip": "Trip",
+      "alarm": "Relevant alarm",
+      "deviation": "Deviation",
+      "shutdown": "Shutdown",
+      "observation": "Observation"
+    },
+    "eventStatus": {
+      "pending_witness": "Awaiting witness",
+      "witnessed": "Witnessed",
+      "recorded": "Recorded",
+      "voided": "Voided"
+    },
+    "events": {
+      "subtitle": "Start-up log: per-system milestones (once each, witnessed) and free events. Recording freezes the IIoT signal readings at that time; first start-up and first HC require the start-up gate and PSSR approved.",
+      "record": "Record event",
+      "type": "Event type",
+      "milestones": "Milestones",
+      "free": "Events",
+      "occurredAt": "Date and time",
+      "description": "Description",
+      "run": "Procedure run",
+      "witnessBy": "This milestone is witnessed by {who} (someone else).",
+      "already": "This milestone is already recorded for the system; void the previous one to correct it.",
+      "blocked": "Cannot be recorded yet:",
+      "needGate": "gate {gate} must be approved with all signatures (now: {status}).",
+      "needPssr": "PSSR {pssr} must be approved (now: {status}).",
+      "prereqOk": "Start-up prerequisites met: {gate} approved and {pssr} approved.",
+      "signals": "IIoT signals to freeze",
+      "pickSystem": "Choose a system to see its signals.",
+      "noSignals": "The system has no signals.",
+      "snapshotHelp": "The sample closest to the event time is stored (±5 min, good quality preferred). With no data it stays “no data” for manual entry.",
+      "manual": "Manual parameters",
+      "param": "Parameter",
+      "value": "Value",
+      "unit": "Unit",
+      "addParam": "Add parameter",
+      "save": "Record",
+      "cancel": "Cancel",
+      "allSystems": "All systems with events",
+      "noMilestones": "No milestones recorded yet.",
+      "empty": "No events.",
+      "paramsN": "{n} parameters",
+      "voidPrompt": "Reason for voiding:",
+      "voided": "Voided by {who} on {when}: {reason}",
+      "signatures": "Record and witness",
+      "recordedBy": "Recorded by {who} on {when}",
+      "witnessedBy": "Witnessed by {who} ({cap}) on {when}",
+      "witness": "Witness as {cap}",
+      "witnessOther": "You recorded it: someone else must witness it.",
+      "witnessRole": "Waiting for a {cap} witness.",
+      "void": "Void",
+      "col": {
+        "param": "Parameter",
+        "value": "Value",
+        "source": "Source",
+        "sampledAt": "Sample"
+      },
+      "source": {
+        "iiot": "IIoT",
+        "manual": "Manual",
+        "iiot_missing": "No IIoT data"
+      },
+      "noParams": "No parameters.",
+      "window": "−30/+30 min",
+      "noSeries": "No samples in the window."
     }
   }
 }

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
+import { MILESTONES } from '@/lib/startup/catalog'
 import GatePlanPanel, { type GatePlan, type GatePlanEvent, type GateProgress } from './GatePlanPanel'
 import { createClient } from '@/lib/supabase/client'
 import type { DependencyCriterionDetail } from '@/lib/systems/dependencies'
@@ -47,6 +48,8 @@ type Props = {
     events: (GatePlanEvent & { gate_id: string })[]
     canCommit: boolean
   }
+  /** Hitos de arranque vigentes del sistema (fase 6, sesión 2). */
+  milestones: { id: string; milestone: string; occurredAt: string; status: string }[]
   /** Gestión diaria del sistema (fase 5): restricciones no cerradas y acciones vivas. */
   daily: {
     constraints: { id: string; number: string; title: string; status: string; escalation_level: number; need_date: string; gate: string | null }[]
@@ -88,7 +91,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, daily }: Props) {
+export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, daily }: Props) {
   const t = useTranslations('Gates')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -381,6 +384,26 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
       </div>
 
       <p style={{ ...small, margin: 0, lineHeight: 1.5 }}>{t('intro')}</p>
+
+      <section style={{ ...card, padding: 12 }} aria-label={t('milestones.title')}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+          <strong style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{t('milestones.title')}</strong>
+          <Link href={`/projects/${project.id}/startup/events?system=${system.id}`} style={linkStyle}>{t('milestones.link')}</Link>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 6 }}>
+          {MILESTONES.map(m => {
+            const ev = milestones.find(x => x.milestone === m)
+            return (
+              <div key={m} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: ev?.status === 'witnessed' ? 'var(--success-50)' : ev ? '#fffbeb' : 'transparent' }}>
+                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>{t(`milestones.${m}`)}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }} suppressHydrationWarning>
+                  {ev ? <Link href={`/projects/${project.id}/startup/events/${ev.id}`} style={{ color: 'inherit' }}>{ev.status === 'witnessed' ? '✓ ' : '⏳ '}{new Date(ev.occurredAt).toLocaleDateString()}</Link> : '—'}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
 
       {(daily.constraints.length > 0 || daily.actions.length > 0) && (
         <section style={card} aria-labelledby="system-daily">

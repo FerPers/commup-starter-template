@@ -99,3 +99,31 @@ export function lineupProgress(items: LineupItemState[]) {
     complete: items.length > 0 && done === items.length,
   }
 }
+
+// ── Bitácora de arranque (sesión 2) ─────────────────────────────────────
+/** Hitos por sistema (17.27 / 17.33), en orden; uno vigente por sistema (índice parcial en SQL). */
+export const MILESTONES = [
+  'first_energization', 'first_rotation', 'first_startup', 'first_hydrocarbon', 'first_stable_operation', 'first_on_spec_product',
+] as const
+export type Milestone = (typeof MILESTONES)[number]
+export const EVENT_CATEGORIES = ['trip', 'alarm', 'deviation', 'shutdown', 'observation'] as const
+export type EventCategory = (typeof EVENT_CATEGORIES)[number]
+export type StartupEventStatus = 'pending_witness' | 'witnessed' | 'recorded' | 'voided'
+
+/** Hitos con bloqueo duro: gate de arranque aprobado con todas sus firmas + PSSR aprobado (§12.12). */
+export const GATED_MILESTONES: readonly Milestone[] = ['first_startup', 'first_hydrocarbon']
+
+/** Capacidad del testigo (= SQL milestone_witness_capacity). */
+export function milestoneCapacity(m: Milestone): HoldCapacity {
+  return m === 'first_energization' || m === 'first_rotation' ? 'commissioning' : 'operations'
+}
+
+export function canWitness(role: string, m: Milestone, userId: string, recordedBy: string | null): boolean {
+  return canReleaseHold(role, milestoneCapacity(m), userId, recordedBy)
+}
+
+/** Ventana del gráfico alrededor del evento: −30/+30 min. */
+export function chartWindow(occurredAt: string, minutes = 30): { from: string; to: string } {
+  const t = Date.parse(occurredAt)
+  return { from: new Date(t - minutes * 60_000).toISOString(), to: new Date(t + minutes * 60_000).toISOString() }
+}

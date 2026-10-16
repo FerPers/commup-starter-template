@@ -38,6 +38,9 @@ export type ReportData = {
   tqs: { issued_today: number; answered_today: number; overdue: number; design_changes_today: number }
   registers_in_field: ({ number: string; kind: string; status: string; title: string } & Sys)[]
   lookahead_7d: ({ kind: 'gate' | 'constraint' | 'action'; ref: string; title: string; date: string } & Sys)[]
+  /** F6-S2: hitos y eventos de arranque del día (ausente en reportes congelados antes de la bitácora). */
+  startup_events_today?: ({ number: string; kind: 'milestone' | 'free'; code: string; title: string; occurred_at: string; status: string;
+    params: { label: string; value: string | null; unit: string | null }[] } & Sys)[]
 }
 
 /** Delta de avance ponderado en puntos porcentuales (null si no hay snapshot previo). */
@@ -73,6 +76,9 @@ export function reportFacts(d: ReportData): string {
     `TQ: ${d.tqs.issued_today} emitidos hoy, ${d.tqs.answered_today} respondidos hoy, ${d.tqs.overdue} vencidos, ${d.tqs.design_changes_today} con cambio de diseño hoy.`,
     `ESTADO TEMPORAL EN CAMPO (registros activos o por verificar): ${d.registers_in_field.length}.`,
     list(d.registers_in_field, r => `${r.number} (${r.kind}, ${r.status}): ${r.title}${sys(r)}`),
+    'EVENTOS DE ARRANQUE HOY (bitácora):',
+    list(d.startup_events_today ?? [], r => `${r.occurred_at.slice(11, 16)} ${r.number} ${r.kind === 'milestone' ? 'HITO' : 'evento'} ${r.code}: ${r.title}${sys(r)} (${r.status})`
+      + (r.params.length ? ` · ${r.params.map(p => `${p.label}=${p.value ?? '—'}${p.unit ? ` ${p.unit}` : ''}`).join(', ')}` : ''), '(ninguno)'),
     'PRÓXIMOS 7 DÍAS:',
     list(d.lookahead_7d, r => `${r.date} · ${r.kind} ${r.ref}: ${r.title}${sys(r)}`, '(nada comprometido)'),
   ].join('\n')

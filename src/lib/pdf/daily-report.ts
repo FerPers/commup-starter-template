@@ -37,6 +37,7 @@ const T = {
   overdueActions: { es: 'Acciones vencidas', en: 'Overdue actions' },
   field: { es: 'Estado temporal en campo', en: 'Temporary state in the field' },
   lookahead: { es: 'Próximos 7 días', en: 'Next 7 days' },
+  startup: { es: 'Bitácora de arranque', en: 'Start-up log' },
   none: { es: 'Sin registros.', en: 'None.' },
   issuedBy: { es: 'Emitido por', en: 'Issued by' },
   hash: { es: 'Hash', en: 'Hash' },
@@ -181,6 +182,11 @@ export async function renderDailyReportPdf(x: DailyReportPdfInput): Promise<Uint
   r.paragraph(T.field[L], { size: 9 })
   table(r, [{ label: T.col.number[L], w: w(0.15) }, { label: T.col.kind[L], w: w(0.15) }, { label: T.col.status[L], w: w(0.12) }, { label: T.col.title[L], w: w(0.43) }, { label: T.col.system[L], w: w(0.15) }],
     d.registers_in_field.map(g => [g.number, g.kind, g.status, g.title, g.system ?? '']), L)
+  if ((d.startup_events_today ?? []).length > 0) {
+    r.paragraph(T.startup[L], { size: 9 })
+    table(r, [{ label: T.col.date[L], w: w(0.1) }, { label: T.col.number[L], w: w(0.12) }, { label: T.col.title[L], w: w(0.4) }, { label: T.col.system[L], w: w(0.13) }, { label: T.col.status[L], w: w(0.25) }],
+      (d.startup_events_today ?? []).map(e => [e.occurred_at.slice(11, 16), e.number, e.title, e.system ?? '', e.params.map(p => `${p.label} ${p.value ?? ''}${p.unit ? ` ${p.unit}` : ''}`).join(' · ') || e.status]), L)
+  }
   r.paragraph(T.lookahead[L], { size: 9 })
   table(r, [{ label: T.col.date[L], w: w(0.14) }, { label: T.col.kind[L], w: w(0.12) }, { label: T.col.number[L], w: w(0.14) }, { label: T.col.title[L], w: w(0.45) }, { label: T.col.system[L], w: w(0.15) }],
     d.lookahead_7d.map(i => [i.date, i.kind, i.ref, i.title, i.system ?? '']), L)

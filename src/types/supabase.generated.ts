@@ -6206,6 +6206,258 @@ export type Database = {
           },
         ]
       }
+      startup_event_params: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          event_id: string
+          id: string
+          label: string
+          offset_s: number | null
+          project_id: string
+          quality: number | null
+          sampled_at: string | null
+          signal_id: string | null
+          source: string
+          unit: string | null
+          value: number | null
+          value_text: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          label: string
+          offset_s?: number | null
+          project_id: string
+          quality?: number | null
+          sampled_at?: string | null
+          signal_id?: string | null
+          source: string
+          unit?: string | null
+          value?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          label?: string
+          offset_s?: number | null
+          project_id?: string
+          quality?: number | null
+          sampled_at?: string | null
+          signal_id?: string | null
+          source?: string
+          unit?: string | null
+          value?: number | null
+          value_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_event_params_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "startup_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_event_params_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_event_params_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "signals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_event_tags: {
+        Row: {
+          event_id: string
+          project_id: string
+          tag_id: string
+        }
+        Insert: {
+          event_id: string
+          project_id: string
+          tag_id: string
+        }
+        Update: {
+          event_id?: string
+          project_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_event_tags_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "startup_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_event_tags_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_event_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "startup_event_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_event_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_events: {
+        Row: {
+          category: string | null
+          description: string | null
+          id: string
+          kind: string
+          milestone: string | null
+          number: string
+          occurred_at: string
+          org_id: string
+          project_id: string
+          recorded_at: string
+          recorded_by: string | null
+          run_id: string | null
+          seq: number
+          status: string
+          system_id: string
+          title: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+          witness_at: string | null
+          witness_by: string | null
+          witness_capacity: string | null
+        }
+        Insert: {
+          category?: string | null
+          description?: string | null
+          id?: string
+          kind: string
+          milestone?: string | null
+          number: string
+          occurred_at: string
+          org_id: string
+          project_id: string
+          recorded_at?: string
+          recorded_by?: string | null
+          run_id?: string | null
+          seq: number
+          status: string
+          system_id: string
+          title: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+          witness_at?: string | null
+          witness_by?: string | null
+          witness_capacity?: string | null
+        }
+        Update: {
+          category?: string | null
+          description?: string | null
+          id?: string
+          kind?: string
+          milestone?: string | null
+          number?: string
+          occurred_at?: string
+          org_id?: string
+          project_id?: string
+          recorded_at?: string
+          recorded_by?: string | null
+          run_id?: string | null
+          seq?: number
+          status?: string
+          system_id?: string
+          title?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+          witness_at?: string | null
+          witness_by?: string | null
+          witness_capacity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_events_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "startup_events_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "startup_events_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_events_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       subsystems: {
         Row: {
           code: string
@@ -8707,6 +8959,15 @@ export type Database = {
         }
         Returns: string
       }
+      add_startup_event_param: {
+        Args: {
+          p_event_id: string
+          p_label: string
+          p_unit?: string
+          p_value: string
+        }
+        Returns: undefined
+      }
       analytics_project_forecast: {
         Args: { p_project_id: string }
         Returns: {
@@ -8767,8 +9028,8 @@ export type Database = {
       complete_run_step: {
         Args: {
           p_actual?: string
-          p_comment?: string
           p_captured_at?: string
+          p_comment?: string
           p_na?: boolean
           p_run_id: string
           p_step_id: string
@@ -9211,6 +9472,10 @@ export type Database = {
         Returns: number
       }
       mgmt_text: { Args: { p_max?: number; p_value: string }; Returns: string }
+      milestone_witness_capacity: {
+        Args: { p_milestone: string }
+        Returns: string
+      }
       my_work_counts: { Args: { p_org_id: string }; Returns: Json }
       new_procedure_revision: {
         Args: { p_procedure_id: string; p_reason: string }
@@ -9303,6 +9568,22 @@ export type Database = {
           p_supersede_reason?: string
           p_supersedes_id?: string
           p_system_id?: string
+          p_title: string
+        }
+        Returns: string
+      }
+      record_startup_event: {
+        Args: {
+          p_code: string
+          p_description?: string
+          p_kind: string
+          p_manual?: Json
+          p_occurred_at: string
+          p_project_id: string
+          p_run_id?: string
+          p_signal_ids?: string[]
+          p_system_id: string
+          p_tag_ids?: string[]
           p_title: string
         }
         Returns: string
@@ -9425,6 +9706,20 @@ export type Database = {
       start_procedure_run: {
         Args: { p_procedure_id: string; p_system_id?: string }
         Returns: string
+      }
+      startup_field_time: {
+        Args: { p_captured_at: string; p_floor: string }
+        Returns: string
+      }
+      startup_prerequisites: { Args: { p_system_id: string }; Returns: Json }
+      startup_snapshot_param: {
+        Args: {
+          p_at: string
+          p_event_id: string
+          p_project_id: string
+          p_signal_id: string
+        }
+        Returns: undefined
       }
       storage_object_in_my_project: {
         Args: { p_bucket: string; p_name: string }
@@ -9605,6 +9900,14 @@ export type Database = {
       verify_lineup_item: { Args: { p_item_id: string }; Returns: undefined }
       verify_punch: {
         Args: { p_accept: boolean; p_comment?: string; p_punch_id: string }
+        Returns: undefined
+      }
+      void_startup_event: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
+      }
+      witness_startup_event: {
+        Args: { p_event_id: string }
         Returns: undefined
       }
     }

@@ -27,7 +27,7 @@ export default async function SystemGatesPage({
   if (!system || !project || project.org_id !== ctx.orgId) notFound()
   const area = system.areas as { code: string; name: string } | null
 
-  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }, { data: constraints }, { data: actions }, { data: progress }, { data: plans }, { data: planEvents }] = await Promise.all([
+  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }, { data: constraints }, { data: actions }, { data: progress }, { data: plans }, { data: planEvents }, { data: milestones }] = await Promise.all([
     supabase.rpc('compute_system_gates', { p_system_id: systemId }),
     supabase.from('project_phases').select('id, code').eq('org_id', ctx.orgId),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
@@ -51,6 +51,9 @@ export default async function SystemGatesPage({
     supabase.from('system_gate_plans').select('gate_id, forecast_date, commitment_date').eq('system_id', systemId),
     supabase.from('system_gate_plan_events').select('id, gate_id, kind, from_date, to_date, reason, user_id, created_at')
       .eq('system_id', systemId).order('created_at'),
+    // Bitácora de arranque (fase 6, sesión 2): hitos vigentes del sistema.
+    supabase.from('startup_events').select('id, milestone, occurred_at, status')
+      .eq('system_id', systemId).eq('kind', 'milestone').neq('status', 'voided'),
   ])
   type Ref = { id: string; code: string }
   const dependsOn = (deps ?? []).filter(d => d.system_id === systemId).map(d => d.provider as unknown as Ref).filter(Boolean)
@@ -85,6 +88,7 @@ export default async function SystemGatesPage({
         events: (planEvents ?? []) as unknown as (GatePlanEvent & { gate_id: string })[],
         canCommit: EDITOR_ROLES.includes(ctx.role),
       }}
+      milestones={(milestones ?? []).map(m => ({ id: m.id, milestone: m.milestone as string, occurredAt: m.occurred_at, status: m.status }))}
       daily={{
         constraints: (constraints ?? []).map(c => ({ ...c, gate: (c.readiness_gates as unknown as { code: string } | null)?.code ?? null })),
         actions: actions ?? [],

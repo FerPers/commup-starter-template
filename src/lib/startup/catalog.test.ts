@@ -42,3 +42,16 @@ describe('arranque — line-up', () => {
     expect(lineupProgress([]).complete).toBe(false)
   })
 })
+
+describe('arranque — bitácora', () => {
+  it('testigo por hito y bloqueo duro', async () => {
+    const { milestoneCapacity, canWitness, GATED_MILESTONES, chartWindow } = await import('./catalog')
+    expect(milestoneCapacity('first_rotation')).toBe('commissioning')
+    expect(milestoneCapacity('first_hydrocarbon')).toBe('operations')
+    expect(canWitness('client', 'first_hydrocarbon', 'u2', 'u1')).toBe(true)
+    expect(canWitness('client', 'first_rotation', 'u2', 'u1')).toBe(false)
+    expect(canWitness('owner', 'first_rotation', 'u1', 'u1')).toBe(false)
+    expect(GATED_MILESTONES).toEqual(['first_startup', 'first_hydrocarbon'])
+    expect(chartWindow('2026-10-16T10:00:00.000Z')).toEqual({ from: '2026-10-16T09:30:00.000Z', to: '2026-10-16T10:30:00.000Z' })
+  })
+})

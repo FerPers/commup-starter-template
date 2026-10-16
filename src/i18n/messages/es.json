@@ -2246,7 +2246,8 @@
       "constraints": "restricciones mías",
       "handovers": "relevos por recibir",
       "holds": "hold points por liberar",
-      "lineup": "válvulas por verificar"
+      "lineup": "válvulas por verificar",
+      "milestones": "hitos por atestiguar"
     },
     "queues": {
       "execute": "ITRs por ejecutar",
@@ -2262,7 +2263,8 @@
       "constraints": "Mis restricciones",
       "handovers": "Relevos de turno por recibir",
       "holds": "Hold points por liberar",
-      "lineup": "Line-up: válvulas críticas por verificar"
+      "lineup": "Line-up: válvulas críticas por verificar",
+      "milestones": "Hitos de arranque por atestiguar"
     },
     "empty": {
       "execute": "No tienes ITRs pendientes de ejecución.",
@@ -2278,7 +2280,8 @@
       "constraints": "No tienes restricciones abiertas.",
       "handovers": "No hay relevos esperando que alguien los reciba.",
       "holds": "No hay hold points esperando tu liberación.",
-      "lineup": "No hay válvulas críticas por verificar."
+      "lineup": "No hay válvulas críticas por verificar.",
+      "milestones": "No hay hitos esperando tu firma."
     },
     "due": {
       "overdue": "vence {date}",
@@ -2291,7 +2294,8 @@
       "verify": "Verificar",
       "escalate": "{days, plural, one {vencida # día} other {vencida # días}} · escalar",
       "receive": "Recibir",
-      "release": "Liberar"
+      "release": "Liberar",
+      "witness": "Atestiguar"
     },
     "punchStatus": {
       "open": "Abierto",
@@ -2462,6 +2466,16 @@
       "hideHistory": "Ocultar historial",
       "header": "Avance físico ponderado {pct} % · Readiness {approved}/{total} gates",
       "lookahead": "Look-ahead →"
+    },
+    "milestones": {
+      "title": "Hitos de arranque",
+      "link": "Bitácora →",
+      "first_energization": "Energización",
+      "first_rotation": "Rotación",
+      "first_startup": "Arranque",
+      "first_hydrocarbon": "Primer HC",
+      "first_stable_operation": "Op. estable",
+      "first_on_spec_product": "On-spec"
     }
   },
   "GatesAdmin": {
@@ -3591,7 +3605,8 @@
     "subtitle": "Procedimientos con hold points y criterios de parada, y hojas de line-up con verificación independiente. Un gate que exige line-up no se aprueba sin una hoja verificada y vigente del sistema.",
     "tab": {
       "procedures": "Procedimientos",
-      "lineups": "Line-ups"
+      "lineups": "Line-ups",
+      "events": "Bitácora"
     },
     "newProcedure": "Nuevo procedimiento",
     "newLineup": "Nuevo line-up",
@@ -3611,7 +3626,8 @@
       "pick": "Elegir…",
       "purpose": "Propósito",
       "procedure": "Procedimiento",
-      "changeReason": "Motivo del cambio"
+      "changeReason": "Motivo del cambio",
+      "tags": "Tags"
     },
     "kind": {
       "precommissioning": "Pre-comisionamiento",
@@ -3846,6 +3862,89 @@
       "holdPending": "Se pedirá la liberación al sincronizar: la hace otra persona con conexión.",
       "stepLabel": "Paso {n}",
       "stopLabel": "Detener: {reason}"
+    },
+    "milestone": {
+      "first_energization": "Primera energización",
+      "first_rotation": "Primera rotación",
+      "first_startup": "Primer arranque",
+      "first_hydrocarbon": "Primer hidrocarburo (HC)",
+      "first_stable_operation": "Primera operación estable",
+      "first_on_spec_product": "Primer producto on-spec"
+    },
+    "milestoneShort": {
+      "first_energization": "Energización",
+      "first_rotation": "Rotación",
+      "first_startup": "Arranque",
+      "first_hydrocarbon": "Primer HC",
+      "first_stable_operation": "Op. estable",
+      "first_on_spec_product": "On-spec"
+    },
+    "category": {
+      "trip": "Disparo / trip",
+      "alarm": "Alarma relevante",
+      "deviation": "Desviación",
+      "shutdown": "Parada",
+      "observation": "Observación"
+    },
+    "eventStatus": {
+      "pending_witness": "Esperando testigo",
+      "witnessed": "Atestiguado",
+      "recorded": "Registrado",
+      "voided": "Anulado"
+    },
+    "events": {
+      "subtitle": "Bitácora de arranque: hitos por sistema (una vez cada uno, con testigo) y eventos libres. Al registrar se congela la lectura de las señales IIoT en esa hora; primer arranque y primer HC exigen el gate de arranque y el PSSR aprobados.",
+      "record": "Registrar evento",
+      "type": "Tipo de evento",
+      "milestones": "Hitos",
+      "free": "Eventos",
+      "occurredAt": "Fecha y hora",
+      "description": "Descripción",
+      "run": "Ejecución de procedimiento",
+      "witnessBy": "Este hito lo atestigua {who} (otra persona).",
+      "already": "Este hito ya está registrado en el sistema; para corregirlo, anula el anterior.",
+      "blocked": "No se puede registrar todavía:",
+      "needGate": "falta el gate {gate} aprobado con todas sus firmas (hoy: {status}).",
+      "needPssr": "falta el PSSR {pssr} aprobado (hoy: {status}).",
+      "prereqOk": "Prerrequisitos de arranque cumplidos: {gate} aprobado y {pssr} aprobado.",
+      "signals": "Señales IIoT a congelar",
+      "pickSystem": "Elige un sistema para ver sus señales.",
+      "noSignals": "El sistema no tiene señales cargadas.",
+      "snapshotHelp": "Se guarda la muestra más cercana a la hora del evento (±5 min, prefiere buena calidad). Si no hay dato, queda «sin dato» para completar a mano.",
+      "manual": "Parámetros manuales",
+      "param": "Parámetro",
+      "value": "Valor",
+      "unit": "Unidad",
+      "addParam": "Agregar parámetro",
+      "save": "Registrar",
+      "cancel": "Cancelar",
+      "allSystems": "Todos los sistemas con eventos",
+      "noMilestones": "Aún no hay hitos registrados.",
+      "empty": "Sin eventos.",
+      "paramsN": "{n} parámetros",
+      "voidPrompt": "Motivo de la anulación:",
+      "voided": "Anulado por {who} el {when}: {reason}",
+      "signatures": "Registro y testigo",
+      "recordedBy": "Registró {who} el {when}",
+      "witnessedBy": "Atestiguó {who} ({cap}) el {when}",
+      "witness": "Atestiguar como {cap}",
+      "witnessOther": "Lo registraste tú: lo atestigua otra persona.",
+      "witnessRole": "Espera el testigo de {cap}.",
+      "void": "Anular",
+      "col": {
+        "param": "Parámetro",
+        "value": "Valor",
+        "source": "Origen",
+        "sampledAt": "Muestra"
+      },
+      "source": {
+        "iiot": "IIoT",
+        "manual": "Manual",
+        "iiot_missing": "Sin dato IIoT"
+      },
+      "noParams": "Sin parámetros.",
+      "window": "−30/+30 min",
+      "noSeries": "Sin muestras en la ventana."
     }
   }
 }

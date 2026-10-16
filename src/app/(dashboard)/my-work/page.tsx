@@ -59,7 +59,7 @@ export default async function MyWorkPage() {
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }] = await Promise.all([
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }] = await Promise.all([
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
     supabase
       .from('itr_assignments')
@@ -168,6 +168,15 @@ export default async function MyWorkPage() {
       .neq('set_by', userId)
       .in('project_id', projectIds)
       .limit(QUEUE_LIMIT + 1),
+    // Fase 6 (sesión 2): hitos de arranque por atestiguar (se filtra por capacidad abajo).
+    projectIds.length === 0 ? none : supabase
+      .from('startup_events')
+      .select('id, number, title, milestone, witness_capacity, occurred_at, project_id, projects(code), systems(code)')
+      .eq('status', 'pending_witness')
+      .neq('recorded_by', userId)
+      .in('project_id', projectIds)
+      .order('occurred_at', { ascending: true })
+      .limit(QUEUE_LIMIT + 1),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -199,6 +208,9 @@ export default async function MyWorkPage() {
     id: string; label: string | null; sheet_id: string; project_id: string; tags: { tag_number: string } | null
     lineup_sheets: { number: string; status: string } | null; projects: { code: string } | null
   }[]).filter(i => i.lineup_sheets && ['issued', 'in_progress'].includes(i.lineup_sheets.status))
+  const milestoneRows = ((pendingMilestones ?? []) as unknown as {
+    id: string; number: string; title: string; witness_capacity: string; project_id: string; projects: { code: string } | null; systems: { code: string } | null
+  }[]).filter(m => HOLD_RELEASE_ROLES[m.witness_capacity as HoldCapacity]?.includes(role))
   const dailyHref = (projectId: string | undefined, tab: string) => (projectId ? `/projects/${projectId}/daily?tab=${tab}` : '/projects')
 
   const projectsInvolved = new Set<string>([
@@ -211,7 +223,7 @@ export default async function MyWorkPage() {
     ...constraintRows.map(c => c.project_id),
   ].filter(Boolean))
   const personalTotal = counts.itrs_execute + counts.itrs_review + counts.punches + counts.plan_items + (signer ? counts.signatures : 0)
-    + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0) + counts.holds_to_release
+    + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0) + counts.holds_to_release + counts.milestones_to_witness
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
@@ -256,6 +268,7 @@ export default async function MyWorkPage() {
         {role !== 'client' && <Chip n={counts.handovers_to_receive} label={t('chips.handovers')} tone={counts.handovers_to_receive > 0 ? 'info' : 'neutral'} />}
         {counts.holds_to_release > 0 && <Chip n={counts.holds_to_release} label={t('chips.holds')} tone="warning" />}
         {counts.lineup_to_verify > 0 && <Chip n={counts.lineup_to_verify} label={t('chips.lineup')} tone="info" />}
+        {counts.milestones_to_witness > 0 && <Chip n={counts.milestones_to_witness} label={t('chips.milestones')} tone="warning" />}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -371,6 +384,17 @@ export default async function MyWorkPage() {
               <Row key={`${h.run_id}:${h.ord}`} href={`/projects/${h.project_id}/startup/runs/${h.run_id}`} stripe="#b45309"
                 code={h.procedure_runs?.number ?? ''} what={`${h.ord}. ${h.procedure_steps?.action ?? ''}`} project={h.projects?.code}
                 right={<Pill tone="warning">{t('due.release')}</Pill>} />
+            ))}
+          </Queue>
+        )}
+
+        {/* Hitos de arranque por atestiguar (fase 6, sesión 2) */}
+        {counts.milestones_to_witness > 0 && (
+          <Queue title={t('queues.milestones')} count={Math.min(milestoneRows.length, QUEUE_LIMIT)} total={counts.milestones_to_witness} emptyText={t('empty.milestones')} moreHref={milestoneRows[0] ? `/projects/${milestoneRows[0].project_id}/startup/events` : '/projects'} moreLabel={t('viewAll', { count: counts.milestones_to_witness })} limit={QUEUE_LIMIT}>
+            {milestoneRows.slice(0, QUEUE_LIMIT).map(m => (
+              <Row key={m.id} href={`/projects/${m.project_id}/startup/events/${m.id}`} stripe="#7c3aed"
+                code={m.number} what={`${m.title}${m.systems?.code ? ` · ${m.systems.code}` : ''}`} project={m.projects?.code}
+                right={<Pill tone="warning">{t('due.witness')}</Pill>} />
             ))}
           </Queue>
         )}
