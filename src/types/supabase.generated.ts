@@ -18,33 +18,151 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
+      actions: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          closure_note: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          done_at: string | null
+          done_by: string | null
+          due_date: string | null
+          id: string
+          number: string
+          org_id: string
+          owner_id: string | null
+          priority: string
+          project_id: string
+          seq: number
+          source_id: string | null
+          source_kind: string
+          source_ref: string | null
+          status: string
+          system_id: string | null
+          title: string
+          updated_at: string
+          verification_method: string
+          verified_at: string | null
+          verified_by: string | null
+          verify_comment: string | null
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closure_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          due_date?: string | null
+          id?: string
+          number: string
+          org_id: string
+          owner_id?: string | null
+          priority?: string
+          project_id: string
+          seq: number
+          source_id?: string | null
+          source_kind?: string
+          source_ref?: string | null
+          status?: string
+          system_id?: string | null
+          title: string
+          updated_at?: string
+          verification_method?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verify_comment?: string | null
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closure_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          due_date?: string | null
+          id?: string
+          number?: string
+          org_id?: string
+          owner_id?: string | null
+          priority?: string
+          project_id?: string
+          seq?: number
+          source_id?: string | null
+          source_kind?: string
+          source_ref?: string | null
+          status?: string
+          system_id?: string | null
+          title?: string
+          updated_at?: string
+          verification_method?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verify_comment?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actions_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actions_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "actions_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "actions_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actions_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       activity_log: {
         Row: {
           action: string
@@ -930,6 +1048,138 @@ export type Database = {
           },
           {
             foreignKeyName: "certificates_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      decisions: {
+        Row: {
+          attendees: string | null
+          context: string | null
+          created_at: string
+          decided_at: string
+          decided_by: string | null
+          decision: string
+          id: string
+          number: string
+          org_id: string
+          project_id: string
+          rationale: string | null
+          recorded_by: string | null
+          seq: number
+          source_id: string | null
+          source_kind: string
+          source_ref: string | null
+          status: string
+          supersede_reason: string | null
+          superseded_at: string | null
+          superseded_by: string | null
+          system_id: string | null
+          title: string
+        }
+        Insert: {
+          attendees?: string | null
+          context?: string | null
+          created_at?: string
+          decided_at?: string
+          decided_by?: string | null
+          decision: string
+          id?: string
+          number: string
+          org_id: string
+          project_id: string
+          rationale?: string | null
+          recorded_by?: string | null
+          seq: number
+          source_id?: string | null
+          source_kind?: string
+          source_ref?: string | null
+          status?: string
+          supersede_reason?: string | null
+          superseded_at?: string | null
+          superseded_by?: string | null
+          system_id?: string | null
+          title: string
+        }
+        Update: {
+          attendees?: string | null
+          context?: string | null
+          created_at?: string
+          decided_at?: string
+          decided_by?: string | null
+          decision?: string
+          id?: string
+          number?: string
+          org_id?: string
+          project_id?: string
+          rationale?: string | null
+          recorded_by?: string | null
+          seq?: number
+          source_id?: string | null
+          source_kind?: string
+          source_ref?: string | null
+          status?: string
+          supersede_reason?: string | null
+          superseded_at?: string | null
+          superseded_by?: string | null
+          system_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decisions_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisions_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisions_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "decisions_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "decisions_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisions_system_id_fkey"
             columns: ["system_id"]
             isOneToOne: false
             referencedRelation: "tag_360"
@@ -2505,6 +2755,120 @@ export type Database = {
           },
         ]
       }
+      mgmt_attachments: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_kind: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          org_id: string
+          project_id: string
+          size_bytes: number | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_kind: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          org_id: string
+          project_id: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_kind?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          org_id?: string
+          project_id?: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mgmt_attachments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mgmt_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mgmt_events: {
+        Row: {
+          action: string
+          comment: string | null
+          created_at: string
+          entity_id: string
+          entity_kind: string
+          from_value: string | null
+          id: string
+          org_id: string
+          project_id: string
+          to_value: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          comment?: string | null
+          created_at?: string
+          entity_id: string
+          entity_kind: string
+          from_value?: string | null
+          id?: string
+          org_id: string
+          project_id: string
+          to_value?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          comment?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_kind?: string
+          from_value?: string | null
+          id?: string
+          org_id?: string
+          project_id?: string
+          to_value?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mgmt_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mgmt_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -3178,6 +3542,156 @@ export type Database = {
           locale?: string | null
         }
         Relationships: []
+      }
+      project_constraints: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          escalation_level: number
+          gate_id: string | null
+          id: string
+          impact: string | null
+          impact_kind: string
+          last_overdue_notif_at: string | null
+          need_date: string
+          number: string
+          org_id: string
+          owner_id: string | null
+          project_id: string
+          recovery_plan: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          seq: number
+          status: string
+          system_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          escalation_level?: number
+          gate_id?: string | null
+          id?: string
+          impact?: string | null
+          impact_kind: string
+          last_overdue_notif_at?: string | null
+          need_date: string
+          number: string
+          org_id: string
+          owner_id?: string | null
+          project_id: string
+          recovery_plan?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          seq: number
+          status?: string
+          system_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          escalation_level?: number
+          gate_id?: string | null
+          id?: string
+          impact?: string | null
+          impact_kind?: string
+          last_overdue_notif_at?: string | null
+          need_date?: string
+          number?: string
+          org_id?: string
+          owner_id?: string | null
+          project_id?: string
+          recovery_plan?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          seq?: number
+          status?: string
+          system_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_constraints_gate_id_fkey"
+            columns: ["gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_constraints_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_constraints_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_constraints_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_constraints_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "project_constraints_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "project_constraints_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_constraints_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
       }
       project_phases: {
         Row: {
@@ -5530,6 +6044,213 @@ export type Database = {
           },
         ]
       }
+      technical_queries: {
+        Row: {
+          addressed_to: string
+          addressed_to_name: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          design_change: boolean
+          discipline_id: string | null
+          id: string
+          issued_at: string | null
+          issued_by: string | null
+          moc_ref: string | null
+          number: string
+          org_id: string
+          project_id: string
+          question: string
+          raised_by: string | null
+          required_by: string | null
+          responded_at: string | null
+          responded_by: string | null
+          responded_by_name: string | null
+          response: string | null
+          seq: number
+          status: string
+          subject: string
+          system_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          addressed_to?: string
+          addressed_to_name?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          design_change?: boolean
+          discipline_id?: string | null
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          moc_ref?: string | null
+          number: string
+          org_id: string
+          project_id: string
+          question: string
+          raised_by?: string | null
+          required_by?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          responded_by_name?: string | null
+          response?: string | null
+          seq: number
+          status?: string
+          subject: string
+          system_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          addressed_to?: string
+          addressed_to_name?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          design_change?: boolean
+          discipline_id?: string | null
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          moc_ref?: string | null
+          number?: string
+          org_id?: string
+          project_id?: string
+          question?: string
+          raised_by?: string | null
+          required_by?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          responded_by_name?: string | null
+          response?: string | null
+          seq?: number
+          status?: string
+          subject?: string
+          system_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_queries_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_queries_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["discipline_id"]
+          },
+          {
+            foreignKeyName: "technical_queries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_queries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_queries_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "technical_queries_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "technical_queries_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_queries_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      technical_query_tags: {
+        Row: {
+          project_id: string
+          tag_id: string
+          tq_id: string
+        }
+        Insert: {
+          project_id: string
+          tag_id: string
+          tq_id: string
+        }
+        Update: {
+          project_id?: string
+          tag_id?: string
+          tq_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_query_tags_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_query_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "technical_query_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_query_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_query_tags_tq_id_fkey"
+            columns: ["tq_id"]
+            isOneToOne: false
+            referencedRelation: "technical_queries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test_equipment: {
         Row: {
           calibrated_on: string
@@ -6751,6 +7472,17 @@ export type Database = {
         Args: { p_template_id: string }
         Returns: Json
       }
+      add_mgmt_attachment: {
+        Args: {
+          p_entity_id: string
+          p_entity_kind: string
+          p_file_name: string
+          p_file_path: string
+          p_mime_type?: string
+          p_size_bytes?: number
+        }
+        Returns: string
+      }
       analytics_project_forecast: {
         Args: { p_project_id: string }
         Returns: {
@@ -6765,6 +7497,16 @@ export type Database = {
           total_itrs: number
           velocity_per_day: number
         }[]
+      }
+      answer_tq: {
+        Args: {
+          p_design_change?: boolean
+          p_moc_ref?: string
+          p_responded_by_name?: string
+          p_response: string
+          p_tq_id: string
+        }
+        Returns: undefined
       }
       approve_system_gate: {
         Args: {
@@ -6868,6 +7610,22 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_action: {
+        Args: {
+          p_description?: string
+          p_due_date?: string
+          p_owner_id: string
+          p_priority?: string
+          p_project_id: string
+          p_source_id?: string
+          p_source_kind?: string
+          p_source_ref?: string
+          p_system_id?: string
+          p_title: string
+          p_verification_method?: string
+        }
+        Returns: string
+      }
       create_api_key: {
         Args: {
           p_expires_at?: string
@@ -6880,6 +7638,22 @@ export type Database = {
           key_prefix: string
           token: string
         }[]
+      }
+      create_constraint: {
+        Args: {
+          p_description: string
+          p_gate_id?: string
+          p_impact?: string
+          p_impact_kind: string
+          p_level?: number
+          p_need_date: string
+          p_owner_id: string
+          p_project_id: string
+          p_recovery_plan?: string
+          p_system_id: string
+          p_title: string
+        }
+        Returns: string
       }
       create_itr_template_revision: {
         Args: { p_template_id: string }
@@ -6895,6 +7669,20 @@ export type Database = {
           p_system_id?: string
           p_tags?: Json
           p_title: string
+        }
+        Returns: string
+      }
+      create_tq: {
+        Args: {
+          p_addressed_to?: string
+          p_addressed_to_name?: string
+          p_discipline_id?: string
+          p_project_id: string
+          p_question: string
+          p_required_by?: string
+          p_subject: string
+          p_system_id?: string
+          p_tag_ids?: string[]
         }
         Returns: string
       }
@@ -6940,6 +7728,10 @@ export type Database = {
           severity: string
         }[]
       }
+      delete_mgmt_item: {
+        Args: { p_entity_id: string; p_entity_kind: string }
+        Returns: undefined
+      }
       delete_push_subscription: {
         Args: { p_endpoint: string }
         Returns: undefined
@@ -6950,6 +7742,10 @@ export type Database = {
         Returns: undefined
       }
       ensure_register_types: { Args: { p_org_id: string }; Returns: undefined }
+      escalate_constraint: {
+        Args: { p_constraint_id: string; p_level: number; p_reason: string }
+        Returns: undefined
+      }
       evaluate_itr_capture: { Args: { p_itr_id: string }; Returns: Json }
       evaluate_itr_continuity: { Args: { p_value: string }; Returns: Json }
       evaluate_itr_table:
@@ -7050,6 +7846,39 @@ export type Database = {
         }
         Returns: string
       }
+      mgmt_check_refs: {
+        Args: {
+          p_discipline_id?: string
+          p_gate_id?: string
+          p_org_id: string
+          p_owner_id: string
+          p_project_id: string
+          p_system_id: string
+        }
+        Returns: undefined
+      }
+      mgmt_check_source: {
+        Args: { p_kind: string; p_project_id: string; p_source_id: string }
+        Returns: undefined
+      }
+      mgmt_log: {
+        Args: {
+          p_action: string
+          p_comment?: string
+          p_from?: string
+          p_id: string
+          p_kind: string
+          p_org: string
+          p_project: string
+          p_to?: string
+        }
+        Returns: undefined
+      }
+      mgmt_next_seq: {
+        Args: { p_project_id: string; p_table: string }
+        Returns: number
+      }
+      mgmt_text: { Args: { p_max?: number; p_value: string }; Returns: string }
       my_work_counts: { Args: { p_org_id: string }; Returns: Json }
       next_punch_number_atomic: {
         Args: { p_project_id: string }
@@ -7101,6 +7930,25 @@ export type Database = {
           n: number
           status: Database["public"]["Enums"]["punch_status"]
         }[]
+      }
+      record_decision: {
+        Args: {
+          p_attendees?: string
+          p_context?: string
+          p_decided_at?: string
+          p_decided_by?: string
+          p_decision: string
+          p_project_id: string
+          p_rationale?: string
+          p_source_id?: string
+          p_source_kind?: string
+          p_source_ref?: string
+          p_supersede_reason?: string
+          p_supersedes_id?: string
+          p_system_id?: string
+          p_title: string
+        }
+        Returns: string
       }
       register_caller_role: { Args: { p_project_id: string }; Returns: string }
       register_set_tags: {
@@ -7183,6 +8031,10 @@ export type Database = {
           n: number
         }[]
       }
+      tq_set_tags: {
+        Args: { p_project_id: string; p_tag_ids: string[]; p_tq_id: string }
+        Returns: undefined
+      }
       transfer_punch_to_ops: {
         Args: {
           p_notes?: string
@@ -7190,6 +8042,14 @@ export type Database = {
           p_punch_id: string
           p_transferred_to: string
         }
+        Returns: string
+      }
+      transition_action: {
+        Args: { p_action_id: string; p_comment?: string; p_to: string }
+        Returns: string
+      }
+      transition_constraint: {
+        Args: { p_comment?: string; p_constraint_id: string; p_to: string }
         Returns: string
       }
       transition_register_item: {
@@ -7200,6 +8060,39 @@ export type Database = {
           p_to: string
         }
         Returns: string
+      }
+      transition_tq: {
+        Args: { p_comment?: string; p_to: string; p_tq_id: string }
+        Returns: string
+      }
+      update_action: {
+        Args: {
+          p_action_id: string
+          p_description: string
+          p_due_date: string
+          p_owner_id: string
+          p_priority: string
+          p_source_ref?: string
+          p_system_id: string
+          p_title: string
+          p_verification_method: string
+        }
+        Returns: undefined
+      }
+      update_constraint: {
+        Args: {
+          p_constraint_id: string
+          p_description: string
+          p_gate_id: string
+          p_impact: string
+          p_impact_kind: string
+          p_need_date: string
+          p_owner_id: string
+          p_recovery_plan: string
+          p_system_id: string
+          p_title: string
+        }
+        Returns: undefined
       }
       update_punch_ops_status: {
         Args: {
@@ -7223,6 +8116,20 @@ export type Database = {
           p_system_id: string
           p_tags?: Json
           p_title: string
+        }
+        Returns: undefined
+      }
+      update_tq: {
+        Args: {
+          p_addressed_to: string
+          p_addressed_to_name: string
+          p_discipline_id: string
+          p_question: string
+          p_required_by: string
+          p_subject: string
+          p_system_id: string
+          p_tag_ids?: string[]
+          p_tq_id: string
         }
         Returns: undefined
       }

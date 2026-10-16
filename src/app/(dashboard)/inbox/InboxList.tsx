@@ -23,6 +23,7 @@ const KIND_LABELS: Record<string, string> = {
   pssr_submitted_for_approval: 'PSSR enviado para aprobación',
   pssr_approved: 'PSSR aprobado',
   pssr_rejected: 'PSSR rechazado',
+  constraint_overdue: 'Restricción vencida',
 }
 
 const KIND_FILTER_OPTIONS = Object.entries(KIND_LABELS)

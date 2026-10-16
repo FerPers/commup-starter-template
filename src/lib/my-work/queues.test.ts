@@ -34,7 +34,7 @@ describe('parseCounts / badgeTotal', () => {
   })
 
   it('el badge suma lo personal; las firmas solo para roles firmantes; preservación nunca', () => {
-    const c = { itrs_execute: 2, itrs_review: 1, punches: 3, plan_items: 1, signatures: 4, preservation_overdue: 9, punches_verify: 0, punches_review: 0 }
+    const c = { ...EMPTY_COUNTS, itrs_execute: 2, itrs_review: 1, punches: 3, plan_items: 1, signatures: 4, preservation_overdue: 9 }
     expect(badgeTotal(c, 'inspector')).toBe(7)
     expect(badgeTotal(c, 'leader')).toBe(7)
     expect(badgeTotal(c, 'architect')).toBe(11)
@@ -46,6 +46,12 @@ describe('parseCounts / badgeTotal', () => {
     expect(badgeTotal(c, 'leader')).toBe(2)
     expect(badgeTotal(c, 'inspector')).toBe(0)
     expect(parseCounts({ punches_verify: '5', punches_review: 2 })).toMatchObject({ punches_verify: 5, punches_review: 2 })
+  })
+
+  it('fase 5: mis acciones y restricciones suman; las acciones por verificar no', () => {
+    const c = { ...EMPTY_COUNTS, actions_mine: 2, constraints_mine: 1, actions_verify: 4 }
+    expect(badgeTotal(c, 'inspector')).toBe(3)
+    expect(parseCounts({ actions_mine: '2', actions_verify: 4, constraints_mine: 1 })).toMatchObject({ actions_mine: 2, actions_verify: 4, constraints_mine: 1 })
   })
 
   it('roles: firmantes y supervisión de preservación', () => {

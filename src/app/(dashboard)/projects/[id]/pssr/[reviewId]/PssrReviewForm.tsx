@@ -20,7 +20,7 @@ import PssrItemsChecklist from './PssrItemsChecklist'
 import PssrSignaturesPanel from './PssrSignaturesPanel'
 import PssrSignModal from './PssrSignModal'
 import PssrPunchDisposition, { type SystemPunch } from './PssrPunchDisposition'
-import type { ItemStatus, ReviewItem, ReviewStatus, Signature } from './pssr-review-shared'
+import type { ItemAction, ItemStatus, ReviewItem, ReviewStatus, Signature } from './pssr-review-shared'
 
 interface Props {
   projectId: string
@@ -44,12 +44,14 @@ interface Props {
   totalItems: number
   systemPunches: SystemPunch[]
   canEditPunches: boolean
+  /** Acción vinculada por ítem (fase 5); llega del servidor y se refresca tras marcar «no». */
+  itemActions: Record<string, ItemAction>
 }
 
 export default function PssrReviewForm({
   projectId, review, items: initialItems, signatures: initialSigs,
   project, currentUserId, currentUserName, canApprove,
-  totalItems, systemPunches, canEditPunches,
+  totalItems, systemPunches, canEditPunches, itemActions,
 }: Props) {
   const t = useTranslations('PSSR')
   const router = useRouter()
@@ -77,6 +79,9 @@ export default function PssrReviewForm({
       if (res.error) {
         // Revert
         setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: item.status } : i))
+      } else if (status === 'no') {
+        // El trigger creó la acción del tracker: refrescar para mostrar su chip.
+        router.refresh()
       }
     })
   }
@@ -212,7 +217,9 @@ export default function PssrReviewForm({
 
       {/* Checklist items ─────────────────────────────────────── */}
       <PssrItemsChecklist
+        projectId={projectId}
         items={items}
+        itemActions={itemActions}
         readonly={readonly}
         onStatusChange={handleStatusChange}
         onFieldSave={handleFieldSave}

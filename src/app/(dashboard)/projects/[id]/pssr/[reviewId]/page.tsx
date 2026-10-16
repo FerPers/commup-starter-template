@@ -62,6 +62,21 @@ export default async function PssrReviewPage({
 
   const totalItems = items?.length ?? 0
 
+  // Fase 5: acción del tracker por ítem (la viva primero; si no, la última).
+  const itemIds = (items ?? []).map(i => i.id)
+  const { data: linkedActions } = itemIds.length
+    ? await supabase.from('actions').select('id, number, status, source_id, seq')
+        .eq('project_id', projectId).eq('source_kind', 'pssr').in('source_id', itemIds).order('seq')
+    : { data: [] }
+  const itemActions: Record<string, { id: string; number: string; status: string }> = {}
+  for (const a of linkedActions ?? []) {
+    const cur = a.source_id ? itemActions[a.source_id] : undefined
+    const live = ['open', 'in_progress', 'done'].includes(a.status)
+    if (a.source_id && (!cur || live || !['open', 'in_progress', 'done'].includes(cur.status))) {
+      itemActions[a.source_id] = { id: a.id, number: a.number, status: a.status }
+    }
+  }
+
   return (
     <div style={{ padding: '32px' }}>
       <PssrReviewForm
@@ -76,6 +91,7 @@ export default async function PssrReviewPage({
         totalItems={totalItems}
         systemPunches={(systemPunches ?? []) as unknown as SystemPunch[]}
         canEditPunches={ctx.role !== 'client'}
+        itemActions={itemActions}
       />
     </div>
   )

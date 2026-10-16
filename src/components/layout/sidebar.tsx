@@ -11,7 +11,7 @@ import {
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
   Bell, Database, History, Tag, Activity, Boxes, FolderTree,
   RotateCw, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
-  ChevronDown, ChevronRight, Milestone, Gauge,
+  ChevronDown, ChevronRight, Milestone, Gauge, CalendarCheck,
   type LucideIcon,
 } from 'lucide-react'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
@@ -140,6 +140,7 @@ function projectSections(projectId: string): ProjectSection[] {
         { href: `${p}/itrs`,          labelKey: 'itrs',            icon: ClipboardCheck },
         { href: `${p}/punches`,       labelKey: 'punchList',       icon: Flag },
         { href: `${p}/registers`,     labelKey: 'registers',       icon: ClipboardList },
+        { href: `${p}/daily`,         labelKey: 'daily',           icon: CalendarCheck },
         { href: `${p}/certificates`,  labelKey: 'certificates',    icon: Award },
         { href: `${p}/kpis`,          labelKey: 'kpis',            icon: TrendingUp },
       ],

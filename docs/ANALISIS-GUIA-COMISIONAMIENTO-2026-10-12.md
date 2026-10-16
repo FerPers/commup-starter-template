@@ -269,7 +269,8 @@ Sesión 1 (BD) hecha: migración `20261015120000_system_dependencies.sql`, regla
 | F4-D sesión 1: datos de lazos y matriz C&E (cadena JB → marshalling → I/O → DCS → HMI en señales; import de señales con columnas LAZO y cadena; pantalla de matrices C&E con causas, efectos y cruces directos o con retardo; reemplaza a `interlocks`) | ✅ migraciones `20261016210000_loops_ce_matrix` y `20261016220000_ce_guard_fix` (el trigger evaluaba `signal_id` también en efectos y fallaba toda inserción); DEMO: matriz CE-A100-S02 (C-01 PT-101 HH → E-01 ESDV-7621003, T5s) y lazo L-101 | a24fa94 |
 | F4-D sesión 2: ITR de loop check (I29C) y de prueba por causa (I30C) generados con tabla automática (filas `source` + columnas `reference`, foto inmutable); estado por cruce en la matriz y por lazo | ✅ migración `20261016230000_itr_source_rows`; revisiones F4-D en borrador (Catálogo v2, DEMO v3 activadas); DEMO: I29C/L-101 (fila aceptada) e I30C/CE-A100-S02/C-01 (E-01 aprobado) | 00d1df9 |
 | F4-D sesión 3: IA para importar matrices C&E (Excel/PDF) con revisión humana; seed DEMO de lazos, señales y matrices | ✅ sin migración; probado con IA real: el PDF y el Excel de ejemplo dan 6×5 y 20/20 cruces (incl. T10), 4 tags en ámbar; DEMO: CE-A300-S01 importada del PDF; scripts `seed_loops_ce_demo.sql` y `make_ce_samples.mjs` | 2411f97 |
-| 📌 Pendiente: tablas de calibración del catálogo → tabla v2 con tolerancias reales (criterios con Luis; ver `PLAN-MIGRACION-ITR-V2` §9) | ⏳ | — |
+| F5 sesión 1: gestión diaria — acciones (ACC), restricciones (RES, escalamiento 1–4), TQ y decisiones (DEC, inmutables); hub `/projects/[id]/daily`, detalle con evidencia y línea de tiempo, Excel; PSSR «no» → acción; criterio `constraints_clear` en gates; colas en Mi trabajo; cron `constraints-overdue` | ✅ migración `20261017120000_daily_management` (probada con rollback: 33 casos) | (este commit) |
+| 📌 Aplazado (Luis, 2026-10-16): tablas de calibración del catálogo → tabla v2; antes, validación campo por campo de los ITR | ⏸ | — |
 
 Otros hechos del día: CI verde otra vez (estaba rojo desde 2026-09-09), `gh` CLI activo, org Ecopetrol borrada (quedan CommUp Catálogo y DEMO), API key de Anthropic rotada, IA migrada a `claude-opus-5-5`.
 
@@ -312,3 +313,16 @@ Pendiente de Luis: probar en commup.app el ciclo de CIE-0001 con dos personas (O
 26. **Tags no encontrados: marcar y seguir:** se emparejan sin mayúsculas/espacios; los que no existen quedan en ámbar y se guardan sin tag, con el número leído en las notas.
 27. **Una matriz por archivo:** Excel con hoja elegida; si el documento trae varias, se indica cuál en la indicación para la IA.
 28. **Seed DEMO medio + archivos:** 12 lazos con 20 señales y cadena (A100-S02 y A200-S01), CE-A100-S02 (6×5, 19 cruces) y CE-A200-S01 (5×4, 15 cruces); ejemplos `docs/samples/CE-A300-S01-001.xlsx` y `.pdf` (deetanizadora, con tags inexistentes a propósito).
+
+## 11. Decisiones de la fase 5 (Luis, 2026-10-16)
+1. **Orden en 3 sesiones: registros → planificación → reporte.** S1 = tracker de acciones unificado + registro de restricciones + TQ + log de decisiones. S2 = forecasts por sistema × gate + look-ahead 90/30/7 + avance ponderado por gate y KPIs nuevos. S3 = reporte diario PDF con borrador IA + relevo de turno.
+2. **Modelo: acciones + 3 registros.** Una tabla `actions` con origen polimórfico (PSSR / restricción / reunión / TQ / vendor / desempeño), dueño, fecha, prioridad, método de verificación y evidencia de cierre; tablas propias para restricciones (8 campos del libro, escalamiento 1–4), TQ y decisiones. Restricciones y TQ generan acciones; un ítem PSSR en «no» crea su acción automáticamente.
+3. **Forecast manual + compromiso por sistema × gate.** Forecast = mejor estimación (editable libremente); compromiso = fecha firme con historial de cambios y motivo. El look-ahead combina ambas con las fechas planificadas de los work plans.
+4. **Reporte diario: borrador IA editable + emisión.** Cada día se genera un borrador (datos + redacción de Claude); el responsable lo edita y lo emite, y queda inmutable en PDF. El relevo de turno es un formulario precargado (bypasses, aislamientos y temporales activos de la F3, más pendientes) que firman quien entrega y quien recibe.
+
+**Sesión 1 — esquema (Luis, 2026-10-16):**
+5. **Tablas:** `actions` (ACC), `project_constraints` (RES), `technical_queries` (TQ), `decisions` (DEC, inmutables; solo se reemplazan con `superseded_by`), más `mgmt_events` (línea de tiempo común) y `mgmt_attachments` + bucket `mgmt-evidence` (`<project_id>/<kind>/<entity_id>/…`, inmutable). RLS de solo lectura con `get_my_project_ids()`; escritura solo por RPC SECURITY DEFINER. `client` solo lee, pero puede responder TQ. UI: hub `/projects/[id]/daily` con pestañas, colas en Mi trabajo, bloque en Control Tower y chip en el PSSR.
+6. **Restricciones en los gates: condición, no bloqueo.** Una restricción abierta con gate asignado deja el gate en «listo con condiciones»; si es de nivel 4, lo bloquea.
+7. **Escalamiento manual con motivo + aviso al vencer:** al pasar la fecha requerida se marca vencida, sale en Mi trabajo y el cron notifica al responsable sugiriendo escalar.
+8. **PSSR «no» → acción automática; al verificarse la acción solo se avisa:** el ítem lo pasa a «sí» quien ejecuta el PSSR.
+9. **Las acciones las verifica siempre otra persona** distinta de quien las cerró.

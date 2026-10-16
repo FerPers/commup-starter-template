@@ -26,7 +26,7 @@ export default async function SystemGatesPage({
   if (!system || !project || project.org_id !== ctx.orgId) notFound()
   const area = system.areas as { code: string; name: string } | null
 
-  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }] = await Promise.all([
+  const [{ data: gates, error: gatesError }, { data: phases }, { data: members }, { data: deps }, { data: constraints }, { data: actions }] = await Promise.all([
     supabase.rpc('compute_system_gates', { p_system_id: systemId }),
     supabase.from('project_phases').select('id, code').eq('org_id', ctx.orgId),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
@@ -36,6 +36,15 @@ export default async function SystemGatesPage({
         dependent:systems!system_dependencies_system_id_fkey(id, code)`)
       .eq('project_id', system.project_id)
       .or(`system_id.eq.${systemId},depends_on_system_id.eq.${systemId}`),
+    // Gestión diaria (fase 5): nada oculto en el detalle del sistema.
+    supabase.from('project_constraints')
+      .select('id, number, title, status, escalation_level, need_date, readiness_gates(code)')
+      .eq('system_id', systemId).in('status', ['open', 'resolved'])
+      .order('escalation_level', { ascending: false }).order('need_date'),
+    supabase.from('actions')
+      .select('id, number, title, status, priority, due_date, owner_id')
+      .eq('system_id', systemId).in('status', ['open', 'in_progress', 'done'])
+      .order('due_date', { ascending: true, nullsFirst: false }).limit(50),
   ])
   type Ref = { id: string; code: string }
   const dependsOn = (deps ?? []).filter(d => d.system_id === systemId).map(d => d.provider as unknown as Ref).filter(Boolean)
@@ -63,6 +72,10 @@ export default async function SystemGatesPage({
       phaseCodes={phaseCodes}
       dependsOn={dependsOn}
       enables={enables}
+      daily={{
+        constraints: (constraints ?? []).map(c => ({ ...c, gate: (c.readiness_gates as unknown as { code: string } | null)?.code ?? null })),
+        actions: actions ?? [],
+      }}
     />
   )
 }

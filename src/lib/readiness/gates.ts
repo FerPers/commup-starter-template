@@ -20,6 +20,7 @@ export type CriterionKind =
   | 'previous_gate'
   | 'dependencies_ready'
   | 'registers_clear'
+  | 'constraints_clear'
   | 'itr_phase_approved'
   | 'certificates_issued'
   | 'pssr_approved'
@@ -27,11 +28,12 @@ export type CriterionKind =
   | 'manual_attestation'
 
 /**
- * Criterios configurables por la org. Tres son implícitos: previous_gate (por `requires_previous`),
- * dependencies_ready (dependencias que bloquean ese gate, fase 2) y registers_clear (algún tipo de
- * registro controlado bloquea ese gate, fase 3).
+ * Criterios configurables por la org. Cuatro son implícitos: previous_gate (por `requires_previous`),
+ * dependencies_ready (dependencias que bloquean ese gate, fase 2), registers_clear (algún tipo de
+ * registro controlado bloquea ese gate, fase 3) y constraints_clear (restricciones no cerradas del
+ * sistema asignadas a ese gate: condición; abierta en nivel 4, bloqueo — fase 5).
  */
-export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready' | 'registers_clear'>[] = [
+export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready' | 'registers_clear' | 'constraints_clear'>[] = [
   'itr_phase_approved',
   'certificates_issued',
   'pssr_approved',

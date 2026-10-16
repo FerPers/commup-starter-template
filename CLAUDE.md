@@ -116,7 +116,7 @@ All 65 tables have **Postgres Row Level Security** enabled (199 policies routed 
 
 Rules for every new page/query/action:
 - Always go through an authenticated Supabase client; never the service-role key in client code.
-- **All server actions use `withAuth`/`withAuthOnly`** (`src/lib/auth/withAuth.ts`) — 33/36 modules; the 3 exceptions (`alerts`, `locale`, `theme`) are user-scoped preferences with no org data. Keep it that way for every new action.
+- **All server actions use `withAuth`/`withAuthOnly`** (`src/lib/auth/withAuth.ts`) — 34/37 modules; the 3 exceptions (`alerts`, `locale`, `theme`) are user-scoped preferences with no org data. Keep it that way for every new action.
 - Any client-supplied ID (`projectId`, `tagId`, …) must be ownership-verified against the caller's org (`src/lib/auth/access.ts`) before use — especially before any admin-client (service-role) query or `SECURITY DEFINER` RPC.
 - New `SECURITY DEFINER` functions must check `is_project_member`/`is_org_member` internally — they bypass RLS. Revoke `EXECUTE` from `anon` on helpers (see migration `20260903150000`).
 - **Edge Functions** (`supabase/functions/evaluate-workflow`, `webhook-dispatcher`) are deployed with `verify_jwt=false` because the pg_net trigger sends the Vault-stored service key. Each function authenticates by itself (`requireServiceCaller`: Bearer must equal the runtime service key or pass the Auth Admin API probe). Every executor mutation is scoped to `event.project_id`/`event.org_id`; outbound `fetch` goes through `assertPublicHttpsUrl` (https only, no private/loopback/metadata hosts, `redirect: 'manual'`). Never add an action that takes a free table name or id.
@@ -132,6 +132,12 @@ Rules for every new page/query/action:
 - Multifirma (migración `20261012200000`): quien aprueba firma como Comisionamiento y el gate queda `pending_signatures` hasta que firmen Operaciones y HSE (`readiness_gates.required_signatures`, roles en `cosign_roles`), cada firma de una persona distinta (`sign_system_gate`). Un gate pendiente de firmas no habilita al siguiente.
 - Escritura SOLO por RPCs SECURITY DEFINER (`approve_system_gate`, `sign_system_gate`, `revoke_system_gate_approval`, `attest_gate_criterion`, `revoke_gate_attestation`): las tablas de aprobaciones/declaraciones no tienen políticas de escritura. Evidencia en bucket `gate-evidence` con ruta `<org>/<system>/…`, inmutable.
 - UI: Control Tower = matriz sistema × gate → `/control-tower/[systemId]` (detalle + aprobación); configuración en `/admin/gates`. `tags.criticality` (safety/process/normal) alimenta `critical_tags_ready`.
+
+## Gestión diaria — fase 5 del plan readiness
+
+- Migración `20261017120000_daily_management.sql`; decisiones en el doc del plan §11. Hub `/projects/[id]/daily` (pestañas Acciones · Restricciones · TQ · Decisiones), detalle `/daily/[kind]/[itemId]`, Excel `/daily/export`; lógica pura en `src/lib/daily/catalog.ts`; acciones en `src/app/actions/daily.ts`.
+- `actions` (ACC, origen polimórfico; «hecha» exige evidencia salvo método revisión; verifica otra persona), `project_constraints` (RES, escalamiento 1–4 manual con motivo), `technical_queries` (TQ; el rol client puede responder), `decisions` (DEC, inmutables, se reemplazan con `superseded_by`); `mgmt_events` (línea de tiempo) y `mgmt_attachments` + bucket `mgmt-evidence` (`<project_id>/<kind>/<entity_id>/…`, inmutable). Escritura SOLO por RPC SECURITY DEFINER.
+- Un ítem PSSR que pasa a «no» crea su acción (trigger `pssr_item_create_action`). `compute_system_gates` suma el criterio implícito `constraints_clear`: restricción no cerrada con gate → condición; abierta en nivel 4 → bloqueo. Cron `/api/cron/constraints-overdue` avisa vencidas.
 
 ## AI (Claude) — matriz ITR híbrida
 

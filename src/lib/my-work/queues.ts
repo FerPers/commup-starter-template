@@ -16,11 +16,17 @@ export type MyWorkCounts = {
   punches_verify: number
   /** Punch sin revisión de categoría levantados por otros (solo supervisores; la RPC da 0 al resto). */
   punches_review: number
+  /** Acciones abiertas o en curso de las que soy responsable (fase 5). */
+  actions_mine: number
+  /** Acciones hechas por otros, esperando verificación (la RPC da 0 al rol client). */
+  actions_verify: number
+  /** Restricciones abiertas de las que soy responsable (fase 5). */
+  constraints_mine: number
 }
 
 export const EMPTY_COUNTS: MyWorkCounts = {
   itrs_execute: 0, itrs_review: 0, punches: 0, plan_items: 0, signatures: 0, preservation_overdue: 0,
-  punches_verify: 0, punches_review: 0,
+  punches_verify: 0, punches_review: 0, actions_mine: 0, actions_verify: 0, constraints_mine: 0,
 }
 
 const SIGNER_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect']
@@ -36,6 +42,7 @@ export function parseCounts(raw: unknown): MyWorkCounts {
     itrs_execute: n('itrs_execute'), itrs_review: n('itrs_review'), punches: n('punches'),
     plan_items: n('plan_items'), signatures: n('signatures'), preservation_overdue: n('preservation_overdue'),
     punches_verify: n('punches_verify'), punches_review: n('punches_review'),
+    actions_mine: n('actions_mine'), actions_verify: n('actions_verify'), constraints_mine: n('constraints_mine'),
   }
 }
 
@@ -52,11 +59,12 @@ export function seesPreservation(role: OrgMemberRole): boolean {
 /**
  * Total del badge del sidebar: solo lo que es personal o que ese rol debe atender. La revisión de
  * categoría es tarea del supervisor (cuenta); la verificación en campo la puede hacer cualquiera
- * distinto de quien resolvió, así que se muestra en su cola pero no infla el badge de todos.
+ * distinto de quien resolvió, así que se muestra en su cola pero no infla el badge de todos (igual las
+ * acciones por verificar). Mis acciones y mis restricciones sí cuentan: son personales.
  */
 export function badgeTotal(c: MyWorkCounts, role: OrgMemberRole): number {
   return c.itrs_execute + c.itrs_review + c.punches + c.plan_items + (canSignCertificates(role) ? c.signatures : 0)
-    + (seesPreservation(role) ? c.punches_review : 0)
+    + (seesPreservation(role) ? c.punches_review : 0) + c.actions_mine + c.constraints_mine
 }
 
 export type DueState = 'overdue' | 'today' | 'future' | null

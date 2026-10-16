@@ -4,17 +4,22 @@
 // PssrReviewForm.tsx (Q4). El estado de expansión es local; los cambios de
 // estado/campos suben por callbacks.
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { catColor, type ItemStatus, type ReviewItem } from './pssr-review-shared'
+import { catColor, type ItemAction, type ItemStatus, type ReviewItem } from './pssr-review-shared'
 
 export default function PssrItemsChecklist({
+  projectId,
   items,
+  itemActions,
   readonly,
   onStatusChange,
   onFieldSave,
 }: {
+  projectId: string
   items: ReviewItem[]
+  itemActions: Record<string, ItemAction>
   readonly: boolean
   onStatusChange: (item: ReviewItem, status: ItemStatus) => void
   onFieldSave: (item: ReviewItem, field: 'responsible' | 'actions' | 'completion_date', value: string) => void
@@ -130,6 +135,12 @@ export default function PssrItemsChecklist({
                       <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                         {item.requirement}
                       </div>
+                      {itemActions[item.id] && (
+                        <Link href={`/projects/${projectId}/daily/action/${itemActions[item.id].id}`}
+                          style={{ display: 'inline-block', marginTop: 4, fontSize: '11px', fontWeight: 700, color: '#7c3aed', textDecoration: 'none' }}>
+                          ⚑ {t('review.itemAction', { number: itemActions[item.id].number, status: t(`review.itemActionStatus.${itemActions[item.id].status}`) })}
+                        </Link>
+                      )}
                       {item.notes_hint && (
                         <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '4px', fontStyle: 'italic' }}>
                           💡 {item.notes_hint}

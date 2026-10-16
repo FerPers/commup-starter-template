@@ -224,6 +224,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               actions={<ResourceLink href={`/projects/${project.id}/registers`}>Ver registros →</ResourceLink>}
             />
 
+            {/* Gestión diaria (fase 5 plan readiness) */}
+            <ResourceRow
+              title="Gestión diaria"
+              detail="Acciones, restricciones, TQ y decisiones"
+              actions={<ResourceLink href={`/projects/${project.id}/daily`}>Ver gestión diaria →</ResourceLink>}
+            />
+
             {/* Tags de Equipos */}
             <ResourceRow
               title="Tags de Equipos"

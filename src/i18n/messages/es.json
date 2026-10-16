@@ -103,6 +103,7 @@
       "allWorkPlans": "Todos los planes",
       "gates": "Gates (hold points)",
       "registers": "Registros",
+      "daily": "Gestión diaria",
       "registerTypes": "Registros controlados",
       "testEquipment": "Equipos de prueba"
     },
@@ -1942,7 +1943,15 @@
       "signEmptyDraft": "Completa todos los ítems antes de agregar firmas",
       "signEmpty": "Sin firmas aún — los responsables deben firmar antes de aprobar",
       "signUserFallback": "Usuario",
-      "removeSig": "Eliminar"
+      "removeSig": "Eliminar",
+      "itemAction": "Acción {number} · {status}",
+      "itemActionStatus": {
+        "open": "abierta",
+        "in_progress": "en curso",
+        "done": "por verificar",
+        "verified": "verificada",
+        "cancelled": "cancelada"
+      }
     },
     "signModal": {
       "title": "Firma de aprobación",
@@ -2206,7 +2215,10 @@
       "signatures": "firmas pendientes",
       "preservation": "preservaciones vencidas",
       "punchesVerify": "Punch por verificar",
-      "punchesReview": "Categorías por revisar"
+      "punchesReview": "Categorías por revisar",
+      "actions": "acciones mías",
+      "actionsVerify": "acciones por verificar",
+      "constraints": "restricciones mías"
     },
     "queues": {
       "execute": "ITRs por ejecutar",
@@ -2216,7 +2228,10 @@
       "signatures": "Certificados por firmar",
       "preservation": "Preservación vencida",
       "punchesVerify": "Punch por verificar en campo",
-      "punchesReview": "Categoría de punch por revisar"
+      "punchesReview": "Categoría de punch por revisar",
+      "actions": "Mis acciones",
+      "actionsVerify": "Acciones por verificar",
+      "constraints": "Mis restricciones"
     },
     "empty": {
       "execute": "No tienes ITRs pendientes de ejecución.",
@@ -2226,7 +2241,10 @@
       "signatures": "No hay certificados esperando firma de completion.",
       "preservation": "No hay preservaciones vencidas.",
       "punchesVerify": "No hay punch resueltos esperando verificación.",
-      "punchesReview": "No hay categorías por revisar."
+      "punchesReview": "No hay categorías por revisar.",
+      "actions": "No tienes acciones abiertas.",
+      "actionsVerify": "No hay acciones hechas esperando verificación.",
+      "constraints": "No tienes restricciones abiertas."
     },
     "due": {
       "overdue": "vence {date}",
@@ -2236,7 +2254,8 @@
       "readyToApprove": "listo para aprobar",
       "sign": "firmar",
       "overdueDays": "{days, plural, one {# día de atraso} other {# días de atraso}}",
-      "verify": "Verificar"
+      "verify": "Verificar",
+      "escalate": "{days, plural, one {vencida # día} other {vencida # días}} · escalar"
     },
     "punchStatus": {
       "open": "Abierto",
@@ -2244,7 +2263,8 @@
       "closed": "Cerrado",
       "cancelled": "Cancelado",
       "resolved": "Resuelto · por verificar"
-    }
+    },
+    "constraintLevel": "N{n}"
   },
   "MobileTabBar": {
     "aria": "Navegación de campo",
@@ -2299,7 +2319,8 @@
       "pssr_approved": "PSSR aprobado",
       "critical_tags_ready": "Tags críticos completos",
       "manual_attestation": "Declaración con evidencia",
-      "registers_clear": "Registros controlados cerrados"
+      "registers_clear": "Registros controlados cerrados",
+      "constraints_clear": "Restricciones del gate cerradas"
     },
     "crit": {
       "previousOk": "El gate anterior está aprobado.",
@@ -2318,7 +2339,9 @@
       "criticalSummary": "{total} tags críticos · {failing} con pendientes",
       "criticalTagDetail": "{itrs} ITR(s) sin aprobar · {punches} punch(es) A/B abiertos",
       "registersNone": "No hay registros abiertos (temporales, ciegas, bypass…) que bloqueen este gate.",
-      "registersOpen": "{count, plural, one {# registro abierto} other {# registros abiertos}}: deben verificarse o cancelarse."
+      "registersOpen": "{count, plural, one {# registro abierto} other {# registros abiertos}}: deben verificarse o cancelarse.",
+      "constraintsOpen": "{count, plural, one {# restricción sin cerrar} other {# restricciones sin cerrar}} en este gate{blocking, plural, =0 {: queda con condiciones.} one {; # en nivel 4 lo bloquea.} other {; # en nivel 4 lo bloquean.}}",
+      "constraintLevel": "N{n}"
     },
     "reason": {
       "cat_a": "{a} punch(es) Cat A abiertos",
@@ -2374,6 +2397,10 @@
       "removed": "retirado",
       "verified": "verificado",
       "cancelled": "cancelado"
+    },
+    "daily": {
+      "title": "Gestión diaria del sistema",
+      "link": "Ir a gestión diaria →"
     }
   },
   "GatesAdmin": {
@@ -3017,5 +3044,302 @@
     "pickExpiring": "Vence en menos de 30 días.",
     "noInventory": "No hay más equipos activos en el inventario.",
     "goInventory": "Ir al inventario"
+  },
+  "Daily": {
+    "title": "Gestión diaria",
+    "subtitle": "Acciones, restricciones, consultas técnicas (TQ) y decisiones del proyecto. Nada oculto: una restricción abierta deja su gate con condiciones y, en nivel 4, lo bloquea.",
+    "export": "Exportar Excel",
+    "new": {
+      "action": "Nueva acción",
+      "constraint": "Nueva restricción",
+      "tq": "Nuevo TQ",
+      "decision": "Nueva decisión"
+    },
+    "tab": {
+      "actions": "Acciones",
+      "constraints": "Restricciones",
+      "tqs": "TQ",
+      "decisions": "Decisiones"
+    },
+    "kpi": {
+      "actionsOpen": "Abiertas",
+      "overdue": "Vencidas",
+      "toVerify": "Por verificar",
+      "mine": "Mías",
+      "constraintsOpen": "Abiertas",
+      "level4": "Nivel 4",
+      "resolved": "Resueltas sin cerrar",
+      "tqDraft": "Borradores",
+      "tqIssued": "Emitidos",
+      "tqAnswered": "Respondidos",
+      "decisionsActive": "Vigentes",
+      "decisionsSuperseded": "Reemplazadas"
+    },
+    "filter": {
+      "search": "Buscar número, título, sistema…",
+      "activeOnly": "Solo vigentes",
+      "liveOnly": "Solo abiertos",
+      "mine": "Solo mías",
+      "overdue": "Solo vencidas",
+      "allSources": "Todos los orígenes",
+      "allLevels": "Todos los niveles"
+    },
+    "col": {
+      "number": "Número",
+      "title": "Título",
+      "priority": "Prioridad",
+      "owner": "Responsable",
+      "due": "Fecha",
+      "source": "Origen",
+      "system": "Sistema",
+      "status": "Estado",
+      "level": "Nivel",
+      "gate": "Gate",
+      "needDate": "Fecha requerida",
+      "impact": "Impacto",
+      "subject": "Asunto",
+      "addressedTo": "Dirigido a",
+      "discipline": "Disciplina",
+      "requiredBy": "Requerido para",
+      "decidedAt": "Fecha",
+      "decidedBy": "Decidió"
+    },
+    "empty": "No hay registros que coincidan.",
+    "status": {
+      "action": {
+        "open": "Abierta",
+        "in_progress": "En curso",
+        "done": "Hecha (por verificar)",
+        "verified": "Verificada",
+        "cancelled": "Cancelada"
+      },
+      "constraint": {
+        "open": "Abierta",
+        "resolved": "Resuelta",
+        "closed": "Cerrada",
+        "cancelled": "Cancelada"
+      },
+      "tq": {
+        "draft": "Borrador",
+        "issued": "Emitido",
+        "answered": "Respondido",
+        "closed": "Cerrado",
+        "cancelled": "Cancelado"
+      },
+      "decision": {
+        "active": "Vigente",
+        "superseded": "Reemplazada"
+      }
+    },
+    "priority": {
+      "critical": "Crítica",
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "level": {
+      "1": "Equipo de campo",
+      "2": "Gerente de comisionamiento",
+      "3": "Gerente de proyecto",
+      "4": "Cliente / sponsor"
+    },
+    "levelShort": "N{n}",
+    "overdue": "Vencida {n} d",
+    "source": {
+      "manual": "Manual",
+      "pssr": "PSSR",
+      "constraint": "Restricción",
+      "meeting": "Reunión",
+      "tq": "TQ",
+      "vendor": "Vendor",
+      "performance": "Desempeño"
+    },
+    "impact": {
+      "safety": "Seguridad",
+      "schedule": "Plazo",
+      "cost": "Costo",
+      "quality": "Calidad",
+      "environment": "Ambiente"
+    },
+    "addressee": {
+      "engineering": "Ingeniería",
+      "vendor": "Vendor",
+      "client": "Cliente",
+      "other": "Otro"
+    },
+    "decisionSource": {
+      "meeting": "Reunión",
+      "tq": "TQ",
+      "constraint": "Restricción",
+      "other": "Otro"
+    },
+    "method": {
+      "field": "Verificación en campo",
+      "document": "Documento",
+      "test": "Prueba",
+      "review": "Revisión"
+    },
+    "someone": "alguien",
+    "timeline": "Línea de tiempo",
+    "event": {
+      "created": "Creado",
+      "updated": "Datos actualizados",
+      "transition": "{from} → {to}",
+      "rejected": "Cierre rechazado",
+      "escalated": "Escalada N{from} → N{to}",
+      "deescalated": "Desescalada N{from} → N{to}",
+      "reassigned": "Reasignada a {to}",
+      "dateChanged": "Fecha {from} → {to}",
+      "attachment": "Evidencia adjunta",
+      "answered": "Respuesta registrada",
+      "recorded": "Decisión registrada",
+      "superseded": "Reemplazada"
+    },
+    "evidence": {
+      "title": "Evidencia",
+      "help": "Fotos, documentos o actas que respaldan el registro. La evidencia no se borra.",
+      "required": "Obligatoria para marcar la acción como hecha (método distinto de «revisión»). La evidencia no se borra.",
+      "none": "Sin evidencia todavía.",
+      "add": "Adjuntar archivo",
+      "uploading": "Subiendo…",
+      "tooBig": "{name} supera los 20 MB.",
+      "openError": "No se pudo abrir el archivo."
+    },
+    "field": {
+      "title": "Título",
+      "description": "Descripción",
+      "owner": "Responsable",
+      "dueDate": "Fecha compromiso",
+      "priority": "Prioridad",
+      "verificationMethod": "Método de verificación",
+      "system": "Sistema",
+      "noSystem": "Sin sistema",
+      "sourceRef": "Referencia",
+      "sourceRefHint": "Reunión, vendor, n.º de PTW/MOC…",
+      "constraintDescription": "Qué impide avanzar",
+      "pick": "Elegir…",
+      "gate": "Gate afectado",
+      "noGate": "Ninguno",
+      "needDate": "Fecha requerida",
+      "impactKind": "Tipo de impacto",
+      "impact": "Impacto",
+      "impactHint": "Qué se atrasa o qué riesgo genera",
+      "recoveryPlan": "Plan de recuperación",
+      "subject": "Asunto",
+      "question": "Pregunta",
+      "addressedTo": "Dirigido a",
+      "addressedToName": "Destinatario (nombre/empresa)",
+      "requiredBy": "Respuesta requerida para",
+      "discipline": "Disciplina",
+      "noDiscipline": "Sin disciplina",
+      "tags": "Tags",
+      "context": "Contexto",
+      "decision": "Decisión",
+      "rationale": "Fundamento",
+      "decidedBy": "Decidió",
+      "decidedAt": "Fecha de la decisión",
+      "attendees": "Asistentes",
+      "attendeesHint": "Nombres y empresas",
+      "decisionSource": "Origen",
+      "level": "Nivel de escalamiento",
+      "supersedeReason": "Por qué se reemplaza la decisión anterior"
+    },
+    "form": {
+      "error": "No se pudo guardar.",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "save": "Guardar cambios",
+      "saved": "Cambios guardados.",
+      "supersedeTitle": "Reemplazar {number}",
+      "fromSource": "Desde {number} — {title}",
+      "previousDecision": "Decisión vigente {number}:",
+      "create": {
+        "action": "Crear acción",
+        "constraint": "Registrar restricción",
+        "tq": "Crear TQ (borrador)",
+        "decision": "Registrar decisión"
+      }
+    },
+    "help": {
+      "action": "Una acción tiene un responsable, una fecha y un método de verificación. La cierra quien la ejecuta y la verifica otra persona.",
+      "constraint": "Algo que impide avanzar un sistema: con responsable, fecha requerida, impacto y plan de recuperación.",
+      "tq": "Consulta técnica a ingeniería, vendor o cliente. Se crea en borrador y se emite cuando está lista.",
+      "decision": "Queda en el log del proyecto. No se edita: si cambia, se reemplaza por otra.",
+      "constraintGate": "Si eliges un gate, la restricción abierta lo deja «listo con condiciones»; en nivel 4 lo bloquea.",
+      "decisionImmutable": "Las decisiones no se editan ni se borran: se reemplazan y la anterior queda en el log."
+    },
+    "detail": {
+      "lifecycle": "Ciclo de vida",
+      "cancel": "Cancelar",
+      "delete": "Borrar borrador",
+      "data": "Datos",
+      "closed": "Registro cerrado: solo lectura.",
+      "cancelPrompt": "Motivo de la cancelación:",
+      "deleteConfirm": "¿Borrar este borrador? No se puede deshacer."
+    },
+    "action": {
+      "owner": "Responsable: {who}",
+      "method": "verificación: {method}",
+      "doneBy": "Hecha por {who} el {when}",
+      "verifiedBy": "Verificada por {who} el {when}",
+      "cancelledBy": "Cancelada por {who} el {when}",
+      "needsEvidence": "Adjunta la evidencia antes de marcarla como hecha.",
+      "otherPerson": "La cerraste tú: la verificación debe hacerla otra persona.",
+      "closePlaceholder": "Cómo se cerró (obligatorio para marcarla hecha)",
+      "verifyPlaceholder": "Comentario de verificación (obligatorio si se rechaza)",
+      "start": "Iniciar",
+      "markDone": "Marcar hecha",
+      "verify": "Verificar",
+      "reject": "Rechazar cierre"
+    },
+    "constraint": {
+      "gate": "Afecta el gate {gate}",
+      "noGate": "Sin gate asignado",
+      "blocksGate": "Abierta en nivel 4: bloquea el gate {gate} de este sistema.",
+      "conditionsGate": "Mientras esté abierta, el gate {gate} de este sistema queda «listo con condiciones».",
+      "overdueHint": "Vencida hace {n} días: considera escalarla.",
+      "resolvedBy": "Resuelta por {who} el {when}",
+      "closedBy": "Cerrada por {who} el {when}",
+      "openActions": "Acciones sin verificar: {list}. Verifícalas para poder cerrar.",
+      "resolvePlaceholder": "Cómo se resolvió (obligatorio)",
+      "reopenPlaceholder": "Motivo para reabrir (obligatorio para reabrir)",
+      "resolve": "Marcar resuelta",
+      "close": "Cerrar",
+      "reopen": "Reabrir",
+      "escalation": "Escalamiento",
+      "escalationHelp": "1 equipo · 2 gerente de comisionamiento · 3 gerente de proyecto · 4 cliente/sponsor. Cada cambio queda con su motivo.",
+      "reason": "Motivo del cambio de nivel",
+      "escalate": "Escalar",
+      "deescalate": "Bajar nivel"
+    },
+    "tq": {
+      "designChange": "Cambio de diseño",
+      "raisedBy": "Creado por {who} el {when}",
+      "issuedBy": "Emitido por {who} el {when}",
+      "response": "Respuesta",
+      "respondedBy": "Respondió {who} el {when}",
+      "reissued": "Reemitido: la respuesta anterior no fue suficiente.",
+      "answer": "Registrar respuesta",
+      "respondedByName": "Quién responde (si no eres tú)",
+      "mocRef": "N.º de MOC",
+      "designChangeQ": "La respuesta implica un cambio de diseño",
+      "saveAnswer": "Guardar respuesta",
+      "reissuePlaceholder": "Por qué la respuesta no es suficiente (para reemitir)",
+      "issue": "Emitir",
+      "close": "Cerrar TQ",
+      "reissue": "Reemitir",
+      "lockedAnswered": "Respondido: ciérralo o reemítelo.",
+      "lockedQuestion": "Emitido: el asunto y la pregunta ya no cambian."
+    },
+    "linked": {
+      "title": "Acciones y decisiones vinculadas",
+      "none": "Nada vinculado todavía."
+    },
+    "decision": {
+      "supersededBy": "Reemplazada por",
+      "recordedBy": "Registrada por {who} el {when}",
+      "replaces": "Reemplaza a",
+      "supersede": "Reemplazar decisión"
+    }
   }
 }

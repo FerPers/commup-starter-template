@@ -38,6 +38,11 @@ type Props = {
   phaseCodes: Record<string, string>
   dependsOn: { id: string; code: string }[]
   enables: { id: string; code: string }[]
+  /** Gestión diaria del sistema (fase 5): restricciones no cerradas y acciones vivas. */
+  daily: {
+    constraints: { id: string; number: string; title: string; status: string; escalation_level: number; need_date: string; gate: string | null }[]
+    actions: { id: string; number: string; title: string; status: string; priority: string; due_date: string | null; owner_id: string | null }[]
+  }
 }
 
 const RESULT_STYLE: Record<string, { icon: string; color: string }> = {
@@ -74,7 +79,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables }: Props) {
+export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, daily }: Props) {
   const t = useTranslations('Gates')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -181,6 +186,25 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
               {open.slice(0, 10).map(r => (
                 <li key={r.id}>
                   <Link href={`/projects/${project.id}/registers/${r.id}`} style={{ ...linkStyle, fontWeight: 700 }}>{r.number}</Link> {r.title} · {t(`registerStatus.${r.status}`)}
+                </li>
+              ))}
+              {open.length > 10 && <li>{t('andMore', { count: open.length - 10 })}</li>}
+            </ul>
+          </div>
+        )
+      }
+
+      case 'constraints_clear': {
+        const open = (d.open as { id: string; number: string; title: string; status: string; level: number; need_date: string }[]) ?? []
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={small}>{t('crit.constraintsOpen', { count: open.length, blocking: Number(d.blocking_count ?? 0) })}</span>
+            <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
+              {open.slice(0, 10).map(r => (
+                <li key={r.id}>
+                  <Link href={`/projects/${project.id}/daily/constraint/${r.id}`} style={{ ...linkStyle, fontWeight: 700 }}>{r.number}</Link> {r.title}
+                  {' · '}<span style={{ color: r.level >= 4 && r.status === 'open' ? 'var(--danger-700)' : undefined, fontWeight: 600 }}>{t('crit.constraintLevel', { n: r.level })}</span>
+                  {' · '}{r.need_date}
                 </li>
               ))}
               {open.length > 10 && <li>{t('andMore', { count: open.length - 10 })}</li>}
@@ -325,6 +349,31 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
       </div>
 
       <p style={{ ...small, margin: 0, lineHeight: 1.5 }}>{t('intro')}</p>
+
+      {(daily.constraints.length > 0 || daily.actions.length > 0) && (
+        <section style={card} aria-labelledby="system-daily">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            <h2 id="system-daily" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('daily.title')}</h2>
+            <Link href={`/projects/${project.id}/daily`} style={linkStyle}>{t('daily.link')}</Link>
+          </div>
+          <ul style={{ margin: '10px 0 0', paddingLeft: 18, ...small, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {daily.constraints.map(c => (
+              <li key={c.id}>
+                <Link href={`/projects/${project.id}/daily/constraint/${c.id}`} style={{ ...linkStyle, fontWeight: 700 }}>{c.number}</Link> {c.title}
+                {' · '}<span style={{ fontWeight: 600, color: c.escalation_level >= 4 && c.status === 'open' ? 'var(--danger-700)' : undefined }}>{t('crit.constraintLevel', { n: c.escalation_level })}</span>
+                {c.gate ? ` · ${c.gate}` : ''}{' · '}{c.need_date}
+              </li>
+            ))}
+            {daily.actions.slice(0, 10).map(a => (
+              <li key={a.id}>
+                <Link href={`/projects/${project.id}/daily/action/${a.id}`} style={{ ...linkStyle, fontWeight: 700 }}>{a.number}</Link> {a.title}
+                {' · '}{who(a.owner_id ?? undefined)}{a.due_date ? ` · ${a.due_date}` : ''}
+              </li>
+            ))}
+            {daily.actions.length > 10 && <li>{t('andMore', { count: daily.actions.length - 10 })}</li>}
+          </ul>
+        </section>
+      )}
 
       {error && (
         <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>

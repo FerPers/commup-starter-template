@@ -57,7 +57,8 @@ export default async function MyWorkPage() {
 
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }] = await Promise.all([
+  const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }] = await Promise.all([
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
     supabase
       .from('itr_assignments')
@@ -115,6 +116,31 @@ export default async function MyWorkPage() {
       .in('project_id', projectIds)
       .order('created_at', { ascending: true })
       .limit(QUEUE_LIMIT + 1),
+    // Fase 5: mis acciones abiertas, acciones hechas por otros por verificar y mis restricciones.
+    projectIds.length === 0 ? none : supabase
+      .from('actions')
+      .select(actionSel)
+      .eq('owner_id', userId)
+      .in('status', ['open', 'in_progress'])
+      .in('project_id', projectIds)
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(QUEUE_LIMIT + 1),
+    role === 'client' || projectIds.length === 0 ? none : supabase
+      .from('actions')
+      .select(`${actionSel}, done_at`)
+      .eq('status', 'done')
+      .neq('done_by', userId)
+      .in('project_id', projectIds)
+      .order('done_at', { ascending: true })
+      .limit(QUEUE_LIMIT + 1),
+    projectIds.length === 0 ? none : supabase
+      .from('project_constraints')
+      .select('id, number, title, escalation_level, need_date, project_id, projects(code), systems(code)')
+      .eq('owner_id', userId)
+      .eq('status', 'open')
+      .in('project_id', projectIds)
+      .order('need_date', { ascending: true })
+      .limit(QUEUE_LIMIT + 1),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -125,6 +151,14 @@ export default async function MyWorkPage() {
   const overduePres = (preservation ?? []) as unknown as PreservationRow[]
   const verifyRows = (toVerify ?? []) as unknown as PunchRow[]
   const reviewRows = (toReview ?? []) as unknown as (PunchRow & { impact: string | null })[]
+  type ActionQueueRow = { id: string; number: string; title: string; priority: string; due_date: string | null; project_id: string; projects: { code: string } | null }
+  const actionRows = (myActions ?? []) as unknown as ActionQueueRow[]
+  const actionVerifyRows = (actionsVerify ?? []) as unknown as ActionQueueRow[]
+  const constraintRows = (myConstraints ?? []) as unknown as {
+    id: string; number: string; title: string; escalation_level: number; need_date: string; project_id: string
+    projects: { code: string } | null; systems: { code: string } | null
+  }[]
+  const dailyHref = (projectId: string | undefined, tab: string) => (projectId ? `/projects/${projectId}/daily?tab=${tab}` : '/projects')
 
   const projectsInvolved = new Set<string>([
     ...queues.execute.map(r => r.itrs!.project_id),
@@ -132,8 +166,11 @@ export default async function MyWorkPage() {
     ...myPunches.map(p => p.project_id),
     ...plan.map(p => p.work_plans?.project_id ?? ''),
     ...(signer ? pendingCerts.map(c => c.project_id) : []),
+    ...actionRows.map(a => a.project_id),
+    ...constraintRows.map(c => c.project_id),
   ].filter(Boolean))
   const personalTotal = counts.itrs_execute + counts.itrs_review + counts.punches + counts.plan_items + (signer ? counts.signatures : 0)
+    + counts.actions_mine + counts.constraints_mine
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
@@ -172,6 +209,9 @@ export default async function MyWorkPage() {
         {oversight && <Chip n={counts.preservation_overdue} label={t('chips.preservation')} tone={counts.preservation_overdue > 0 ? 'danger' : 'neutral'} />}
         <Chip n={counts.punches_verify} label={t('chips.punchesVerify')} tone={counts.punches_verify > 0 ? 'info' : 'neutral'} />
         {oversight && <Chip n={counts.punches_review} label={t('chips.punchesReview')} tone={counts.punches_review > 0 ? 'warning' : 'neutral'} />}
+        <Chip n={counts.actions_mine} label={t('chips.actions')} tone={counts.actions_mine > 0 ? 'warning' : 'neutral'} />
+        {role !== 'client' && <Chip n={counts.actions_verify} label={t('chips.actionsVerify')} tone={counts.actions_verify > 0 ? 'info' : 'neutral'} />}
+        <Chip n={counts.constraints_mine} label={t('chips.constraints')} tone={counts.constraints_mine > 0 ? 'danger' : 'neutral'} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -260,6 +300,39 @@ export default async function MyWorkPage() {
             })}
           </Queue>
         )}
+
+        {/* Mis acciones (fase 5) */}
+        <Queue title={t('queues.actions')} count={Math.min(actionRows.length, QUEUE_LIMIT)} total={counts.actions_mine} emptyText={t('empty.actions')} moreHref={dailyHref(actionRows[0]?.project_id, 'actions')} moreLabel={t('viewAll', { count: counts.actions_mine })} limit={QUEUE_LIMIT}>
+          {actionRows.slice(0, QUEUE_LIMIT).map(a => (
+            <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe={a.priority === 'critical' ? 'var(--danger-500)' : a.priority === 'high' ? 'var(--warning-600)' : 'var(--primary-500)'}
+              code={a.number} what={a.title} project={a.projects?.code} right={duePill(a.due_date)} />
+          ))}
+        </Queue>
+
+        {/* Acciones por verificar (fase 5): hechas por otros */}
+        {role !== 'client' && (
+          <Queue title={t('queues.actionsVerify')} count={Math.min(actionVerifyRows.length, QUEUE_LIMIT)} total={counts.actions_verify} emptyText={t('empty.actionsVerify')} moreHref={dailyHref(actionVerifyRows[0]?.project_id, 'actions')} moreLabel={t('viewAll', { count: counts.actions_verify })} limit={QUEUE_LIMIT}>
+            {actionVerifyRows.slice(0, QUEUE_LIMIT).map(a => (
+              <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe="#7c3aed"
+                code={a.number} what={a.title} project={a.projects?.code}
+                right={<Pill tone="info" style={{ background: '#f5f3ff', color: '#7c3aed' }}>{t('due.verify')}</Pill>} />
+            ))}
+          </Queue>
+        )}
+
+        {/* Mis restricciones (fase 5): vencidas → sugerir escalar */}
+        <Queue title={t('queues.constraints')} count={Math.min(constraintRows.length, QUEUE_LIMIT)} total={counts.constraints_mine} emptyText={t('empty.constraints')} moreHref={dailyHref(constraintRows[0]?.project_id, 'constraints')} moreLabel={t('viewAll', { count: counts.constraints_mine })} limit={QUEUE_LIMIT}>
+          {constraintRows.slice(0, QUEUE_LIMIT).map(c => (
+            <Row key={c.id} href={`/projects/${c.project_id}/daily/constraint/${c.id}`} stripe={c.escalation_level >= 4 ? 'var(--danger-500)' : c.escalation_level >= 3 ? 'var(--warning-600)' : 'var(--primary-500)'}
+              code={c.number}
+              tag={<span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--gray-100)', color: 'var(--text-strong)' }}>{t('constraintLevel', { n: c.escalation_level })}</span>}
+              what={`${c.title}${c.systems?.code ? ` · ${c.systems.code}` : ''}`}
+              project={c.projects?.code}
+              right={dueState(c.need_date, today) === 'overdue'
+                ? <Pill tone="danger">{t('due.escalate', { days: daysOverdue(c.need_date, today) })}</Pill>
+                : duePill(c.need_date)} />
+          ))}
+        </Queue>
 
         {/* Plan de trabajo */}
         <Queue title={t('queues.plan')} count={Math.min(plan.length, QUEUE_LIMIT)} total={counts.plan_items} emptyText={t('empty.plan')} moreHref="/work-plans" moreLabel={t('viewAll', { count: counts.plan_items })} limit={QUEUE_LIMIT}>

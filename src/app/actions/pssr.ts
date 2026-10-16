@@ -226,6 +226,7 @@ export const updatePssrReviewItem = withAuth(
       .eq('status', 'draft')
 
     revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
+    if (input.status === 'no') revalidatePath(`/projects/${input.projectId}/daily`)
     return {}
   },
 )

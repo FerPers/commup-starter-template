@@ -17,6 +17,9 @@ export interface ReviewItem {
   completion_date: string | null
 }
 
+/** Acción del tracker creada al marcar el ítem «no» (fase 5; trigger pssr_item_create_action). */
+export type ItemAction = { id: string; number: string; status: string }
+
 export interface Signature {
   id: string
   user_id: string

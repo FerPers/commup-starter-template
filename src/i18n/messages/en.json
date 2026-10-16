@@ -103,6 +103,7 @@
       "allWorkPlans": "All work plans",
       "gates": "Gates (hold points)",
       "registers": "Registers",
+      "daily": "Daily management",
       "registerTypes": "Controlled registers",
       "testEquipment": "Test equipment"
     },
@@ -1942,7 +1943,15 @@
       "signEmptyDraft": "Complete all items before adding signatures",
       "signEmpty": "No signatures yet — leads must sign before approval",
       "signUserFallback": "User",
-      "removeSig": "Remove"
+      "removeSig": "Remove",
+      "itemAction": "Action {number} · {status}",
+      "itemActionStatus": {
+        "open": "open",
+        "in_progress": "in progress",
+        "done": "to verify",
+        "verified": "verified",
+        "cancelled": "cancelled"
+      }
     },
     "signModal": {
       "title": "Approval signature",
@@ -2206,7 +2215,10 @@
       "signatures": "pending signatures",
       "preservation": "overdue preservation",
       "punchesVerify": "Punches to verify",
-      "punchesReview": "Categories to review"
+      "punchesReview": "Categories to review",
+      "actions": "my actions",
+      "actionsVerify": "actions to verify",
+      "constraints": "my constraints"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2216,7 +2228,10 @@
       "signatures": "Certificates to sign",
       "preservation": "Overdue preservation",
       "punchesVerify": "Punches to verify in the field",
-      "punchesReview": "Punch categories to review"
+      "punchesReview": "Punch categories to review",
+      "actions": "My actions",
+      "actionsVerify": "Actions to verify",
+      "constraints": "My constraints"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -2226,7 +2241,10 @@
       "signatures": "No certificates are waiting for a completion signature.",
       "preservation": "No overdue preservation tasks.",
       "punchesVerify": "No resolved punches waiting for verification.",
-      "punchesReview": "No categories to review."
+      "punchesReview": "No categories to review.",
+      "actions": "You have no open actions.",
+      "actionsVerify": "No done actions waiting for verification.",
+      "constraints": "You have no open constraints."
     },
     "due": {
       "overdue": "due {date}",
@@ -2236,7 +2254,8 @@
       "readyToApprove": "ready to approve",
       "sign": "sign",
       "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}",
-      "verify": "Verify"
+      "verify": "Verify",
+      "escalate": "{days, plural, one {overdue # day} other {overdue # days}} · escalate"
     },
     "punchStatus": {
       "open": "Open",
@@ -2244,7 +2263,8 @@
       "closed": "Closed",
       "cancelled": "Cancelled",
       "resolved": "Resolved · to verify"
-    }
+    },
+    "constraintLevel": "L{n}"
   },
   "MobileTabBar": {
     "aria": "Field navigation",
@@ -2299,7 +2319,8 @@
       "pssr_approved": "PSSR approved",
       "critical_tags_ready": "Critical tags complete",
       "manual_attestation": "Attestation with evidence",
-      "registers_clear": "Controlled registers closed"
+      "registers_clear": "Controlled registers closed",
+      "constraints_clear": "Gate constraints closed"
     },
     "crit": {
       "previousOk": "The previous gate is approved.",
@@ -2318,7 +2339,9 @@
       "criticalSummary": "{total} critical tags · {failing} with pending items",
       "criticalTagDetail": "{itrs} unapproved ITR(s) · {punches} open A/B punch(es)",
       "registersNone": "No open registers (temporaries, blinds, bypasses…) block this gate.",
-      "registersOpen": "{count, plural, one {# open register} other {# open registers}}: they must be verified or cancelled."
+      "registersOpen": "{count, plural, one {# open register} other {# open registers}}: they must be verified or cancelled.",
+      "constraintsOpen": "{count, plural, one {# unclosed constraint} other {# unclosed constraints}} on this gate{blocking, plural, =0 {: ready with conditions.} one {; # at level 4 blocks it.} other {; # at level 4 block it.}}",
+      "constraintLevel": "L{n}"
     },
     "reason": {
       "cat_a": "{a} open Cat A punch(es)",
@@ -2374,6 +2397,10 @@
       "removed": "removed",
       "verified": "verified",
       "cancelled": "cancelled"
+    },
+    "daily": {
+      "title": "System daily management",
+      "link": "Go to daily management →"
     }
   },
   "GatesAdmin": {
@@ -3017,5 +3044,302 @@
     "pickExpiring": "Expires in less than 30 days.",
     "noInventory": "No more active equipment in the inventory.",
     "goInventory": "Go to inventory"
+  },
+  "Daily": {
+    "title": "Daily management",
+    "subtitle": "Project actions, constraints, technical queries (TQ) and decisions. No hidden constraints: an open constraint puts its gate under conditions and, at level 4, blocks it.",
+    "export": "Export Excel",
+    "new": {
+      "action": "New action",
+      "constraint": "New constraint",
+      "tq": "New TQ",
+      "decision": "New decision"
+    },
+    "tab": {
+      "actions": "Actions",
+      "constraints": "Constraints",
+      "tqs": "TQ",
+      "decisions": "Decisions"
+    },
+    "kpi": {
+      "actionsOpen": "Open",
+      "overdue": "Overdue",
+      "toVerify": "To verify",
+      "mine": "Mine",
+      "constraintsOpen": "Open",
+      "level4": "Level 4",
+      "resolved": "Resolved, not closed",
+      "tqDraft": "Drafts",
+      "tqIssued": "Issued",
+      "tqAnswered": "Answered",
+      "decisionsActive": "Active",
+      "decisionsSuperseded": "Superseded"
+    },
+    "filter": {
+      "search": "Search number, title, system…",
+      "activeOnly": "Active only",
+      "liveOnly": "Open only",
+      "mine": "Mine only",
+      "overdue": "Overdue only",
+      "allSources": "All sources",
+      "allLevels": "All levels"
+    },
+    "col": {
+      "number": "Number",
+      "title": "Title",
+      "priority": "Priority",
+      "owner": "Owner",
+      "due": "Due",
+      "source": "Source",
+      "system": "System",
+      "status": "Status",
+      "level": "Level",
+      "gate": "Gate",
+      "needDate": "Need date",
+      "impact": "Impact",
+      "subject": "Subject",
+      "addressedTo": "Addressed to",
+      "discipline": "Discipline",
+      "requiredBy": "Required by",
+      "decidedAt": "Date",
+      "decidedBy": "Decided by"
+    },
+    "empty": "No matching records.",
+    "status": {
+      "action": {
+        "open": "Open",
+        "in_progress": "In progress",
+        "done": "Done (to verify)",
+        "verified": "Verified",
+        "cancelled": "Cancelled"
+      },
+      "constraint": {
+        "open": "Open",
+        "resolved": "Resolved",
+        "closed": "Closed",
+        "cancelled": "Cancelled"
+      },
+      "tq": {
+        "draft": "Draft",
+        "issued": "Issued",
+        "answered": "Answered",
+        "closed": "Closed",
+        "cancelled": "Cancelled"
+      },
+      "decision": {
+        "active": "Active",
+        "superseded": "Superseded"
+      }
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "level": {
+      "1": "Field team",
+      "2": "Commissioning manager",
+      "3": "Project manager",
+      "4": "Client / sponsor"
+    },
+    "levelShort": "L{n}",
+    "overdue": "Overdue {n} d",
+    "source": {
+      "manual": "Manual",
+      "pssr": "PSSR",
+      "constraint": "Constraint",
+      "meeting": "Meeting",
+      "tq": "TQ",
+      "vendor": "Vendor",
+      "performance": "Performance"
+    },
+    "impact": {
+      "safety": "Safety",
+      "schedule": "Schedule",
+      "cost": "Cost",
+      "quality": "Quality",
+      "environment": "Environment"
+    },
+    "addressee": {
+      "engineering": "Engineering",
+      "vendor": "Vendor",
+      "client": "Client",
+      "other": "Other"
+    },
+    "decisionSource": {
+      "meeting": "Meeting",
+      "tq": "TQ",
+      "constraint": "Constraint",
+      "other": "Other"
+    },
+    "method": {
+      "field": "Field verification",
+      "document": "Document",
+      "test": "Test",
+      "review": "Review"
+    },
+    "someone": "someone",
+    "timeline": "Timeline",
+    "event": {
+      "created": "Created",
+      "updated": "Details updated",
+      "transition": "{from} → {to}",
+      "rejected": "Closure rejected",
+      "escalated": "Escalated L{from} → L{to}",
+      "deescalated": "De-escalated L{from} → L{to}",
+      "reassigned": "Reassigned to {to}",
+      "dateChanged": "Date {from} → {to}",
+      "attachment": "Evidence attached",
+      "answered": "Answer recorded",
+      "recorded": "Decision recorded",
+      "superseded": "Superseded"
+    },
+    "evidence": {
+      "title": "Evidence",
+      "help": "Photos, documents or minutes that back up the record. Evidence cannot be deleted.",
+      "required": "Required to mark the action as done (method other than “review”). Evidence cannot be deleted.",
+      "none": "No evidence yet.",
+      "add": "Attach file",
+      "uploading": "Uploading…",
+      "tooBig": "{name} exceeds 20 MB.",
+      "openError": "Could not open the file."
+    },
+    "field": {
+      "title": "Title",
+      "description": "Description",
+      "owner": "Owner",
+      "dueDate": "Due date",
+      "priority": "Priority",
+      "verificationMethod": "Verification method",
+      "system": "System",
+      "noSystem": "No system",
+      "sourceRef": "Reference",
+      "sourceRefHint": "Meeting, vendor, PTW/MOC no.…",
+      "constraintDescription": "What is blocking progress",
+      "pick": "Choose…",
+      "gate": "Affected gate",
+      "noGate": "None",
+      "needDate": "Need date",
+      "impactKind": "Impact type",
+      "impact": "Impact",
+      "impactHint": "What gets delayed or what risk it creates",
+      "recoveryPlan": "Recovery plan",
+      "subject": "Subject",
+      "question": "Question",
+      "addressedTo": "Addressed to",
+      "addressedToName": "Recipient (name/company)",
+      "requiredBy": "Answer required by",
+      "discipline": "Discipline",
+      "noDiscipline": "No discipline",
+      "tags": "Tags",
+      "context": "Context",
+      "decision": "Decision",
+      "rationale": "Rationale",
+      "decidedBy": "Decided by",
+      "decidedAt": "Decision date",
+      "attendees": "Attendees",
+      "attendeesHint": "Names and companies",
+      "decisionSource": "Source",
+      "level": "Escalation level",
+      "supersedeReason": "Why the previous decision is superseded"
+    },
+    "form": {
+      "error": "Could not save.",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saved": "Changes saved.",
+      "supersedeTitle": "Supersede {number}",
+      "fromSource": "From {number} — {title}",
+      "previousDecision": "Current decision {number}:",
+      "create": {
+        "action": "Create action",
+        "constraint": "Log constraint",
+        "tq": "Create TQ (draft)",
+        "decision": "Record decision"
+      }
+    },
+    "help": {
+      "action": "An action has an owner, a date and a verification method. Whoever does it closes it; someone else verifies it.",
+      "constraint": "Something blocking a system: with owner, need date, impact and recovery plan.",
+      "tq": "Technical query to engineering, a vendor or the client. Created as a draft and issued when ready.",
+      "decision": "Stays in the project log. It is not edited: if it changes, it is superseded by a new one.",
+      "constraintGate": "If you pick a gate, the open constraint puts it “ready with conditions”; at level 4 it blocks it.",
+      "decisionImmutable": "Decisions are never edited or deleted: they are superseded and the previous one stays in the log."
+    },
+    "detail": {
+      "lifecycle": "Lifecycle",
+      "cancel": "Cancel",
+      "delete": "Delete draft",
+      "data": "Details",
+      "closed": "Closed record: read only.",
+      "cancelPrompt": "Reason for cancelling:",
+      "deleteConfirm": "Delete this draft? This cannot be undone."
+    },
+    "action": {
+      "owner": "Owner: {who}",
+      "method": "verification: {method}",
+      "doneBy": "Done by {who} on {when}",
+      "verifiedBy": "Verified by {who} on {when}",
+      "cancelledBy": "Cancelled by {who} on {when}",
+      "needsEvidence": "Attach the evidence before marking it done.",
+      "otherPerson": "You closed it: someone else must verify it.",
+      "closePlaceholder": "How it was closed (required to mark done)",
+      "verifyPlaceholder": "Verification comment (required to reject)",
+      "start": "Start",
+      "markDone": "Mark done",
+      "verify": "Verify",
+      "reject": "Reject closure"
+    },
+    "constraint": {
+      "gate": "Affects gate {gate}",
+      "noGate": "No gate assigned",
+      "blocksGate": "Open at level 4: blocks gate {gate} for this system.",
+      "conditionsGate": "While open, gate {gate} for this system is “ready with conditions”.",
+      "overdueHint": "Overdue by {n} days: consider escalating.",
+      "resolvedBy": "Resolved by {who} on {when}",
+      "closedBy": "Closed by {who} on {when}",
+      "openActions": "Unverified actions: {list}. Verify them to close.",
+      "resolvePlaceholder": "How it was resolved (required)",
+      "reopenPlaceholder": "Reason to reopen (required to reopen)",
+      "resolve": "Mark resolved",
+      "close": "Close",
+      "reopen": "Reopen",
+      "escalation": "Escalation",
+      "escalationHelp": "1 team · 2 commissioning manager · 3 project manager · 4 client/sponsor. Every change keeps its reason.",
+      "reason": "Reason for the level change",
+      "escalate": "Escalate",
+      "deescalate": "Lower level"
+    },
+    "tq": {
+      "designChange": "Design change",
+      "raisedBy": "Raised by {who} on {when}",
+      "issuedBy": "Issued by {who} on {when}",
+      "response": "Answer",
+      "respondedBy": "Answered by {who} on {when}",
+      "reissued": "Reissued: the previous answer was not enough.",
+      "answer": "Record answer",
+      "respondedByName": "Who answers (if not you)",
+      "mocRef": "MOC no.",
+      "designChangeQ": "The answer implies a design change",
+      "saveAnswer": "Save answer",
+      "reissuePlaceholder": "Why the answer is not enough (to reissue)",
+      "issue": "Issue",
+      "close": "Close TQ",
+      "reissue": "Reissue",
+      "lockedAnswered": "Answered: close or reissue it.",
+      "lockedQuestion": "Issued: subject and question can no longer change."
+    },
+    "linked": {
+      "title": "Linked actions and decisions",
+      "none": "Nothing linked yet."
+    },
+    "decision": {
+      "supersededBy": "Superseded by",
+      "recordedBy": "Recorded by {who} on {when}",
+      "replaces": "Supersedes",
+      "supersede": "Supersede decision"
+    }
   }
 }
