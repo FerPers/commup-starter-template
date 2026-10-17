@@ -3798,6 +3798,697 @@ export type Database = {
           },
         ]
       }
+      performance_criteria: {
+        Row: {
+          band_hi: number | null
+          band_lo: number | null
+          id: string
+          label: string | null
+          operator: string
+          ord: number
+          project_id: string
+          revision_id: string
+          statistic: string
+          target: number
+          target_hi: number | null
+          total_basis: string | null
+          uncertainty: number
+          uncertainty_mode: string
+          variable_key: string
+        }
+        Insert: {
+          band_hi?: number | null
+          band_lo?: number | null
+          id?: string
+          label?: string | null
+          operator: string
+          ord: number
+          project_id: string
+          revision_id: string
+          statistic: string
+          target: number
+          target_hi?: number | null
+          total_basis?: string | null
+          uncertainty?: number
+          uncertainty_mode?: string
+          variable_key: string
+        }
+        Update: {
+          band_hi?: number | null
+          band_lo?: number | null
+          id?: string
+          label?: string | null
+          operator?: string
+          ord?: number
+          project_id?: string
+          revision_id?: string
+          statistic?: string
+          target?: number
+          target_hi?: number | null
+          total_basis?: string | null
+          uncertainty?: number
+          uncertainty_mode?: string
+          variable_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_criteria_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_criteria_revision_id_variable_key_fkey"
+            columns: ["revision_id", "variable_key"]
+            isOneToOne: false
+            referencedRelation: "performance_variables"
+            referencedColumns: ["revision_id", "key"]
+          },
+        ]
+      }
+      performance_disturbances: {
+        Row: {
+          description: string
+          ended_at: string | null
+          excluded: boolean
+          excluded_at: string | null
+          excluded_by: string | null
+          exclusion_reason: string | null
+          id: string
+          kind: string
+          project_id: string
+          recorded_at: string
+          recorded_by: string | null
+          run_id: string
+          started_at: string
+        }
+        Insert: {
+          description: string
+          ended_at?: string | null
+          excluded?: boolean
+          excluded_at?: string | null
+          excluded_by?: string | null
+          exclusion_reason?: string | null
+          id?: string
+          kind: string
+          project_id: string
+          recorded_at?: string
+          recorded_by?: string | null
+          run_id: string
+          started_at: string
+        }
+        Update: {
+          description?: string
+          ended_at?: string | null
+          excluded?: boolean
+          excluded_at?: string | null
+          excluded_by?: string | null
+          exclusion_reason?: string | null
+          id?: string
+          kind?: string
+          project_id?: string
+          recorded_at?: string
+          recorded_by?: string | null
+          run_id?: string
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_disturbances_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_disturbances_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_meter_pairs: {
+        Row: {
+          id: string
+          max_diff_pct: number
+          ord: number
+          project_id: string
+          revision_id: string
+          variable_a: string
+          variable_b: string
+        }
+        Insert: {
+          id?: string
+          max_diff_pct: number
+          ord: number
+          project_id: string
+          revision_id: string
+          variable_a: string
+          variable_b: string
+        }
+        Update: {
+          id?: string
+          max_diff_pct?: number
+          ord?: number
+          project_id?: string
+          revision_id?: string
+          variable_a?: string
+          variable_b?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_meter_pairs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_meter_pairs_revision_id_variable_a_fkey"
+            columns: ["revision_id", "variable_a"]
+            isOneToOne: false
+            referencedRelation: "performance_variables"
+            referencedColumns: ["revision_id", "key"]
+          },
+          {
+            foreignKeyName: "performance_meter_pairs_revision_id_variable_b_fkey"
+            columns: ["revision_id", "variable_b"]
+            isOneToOne: false
+            referencedRelation: "performance_variables"
+            referencedColumns: ["revision_id", "key"]
+          },
+        ]
+      }
+      performance_revision_systems: {
+        Row: {
+          project_id: string
+          revision_id: string
+          system_id: string
+        }
+        Insert: {
+          project_id: string
+          revision_id: string
+          system_id: string
+        }
+        Update: {
+          project_id?: string
+          revision_id?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_revision_systems_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_revision_systems_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "performance_test_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_revision_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "performance_revision_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "performance_revision_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_revision_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      performance_run_data: {
+        Row: {
+          avg_val: number | null
+          bucket: string
+          entered_at: string
+          entered_by: string | null
+          max_val: number | null
+          min_val: number | null
+          n_bad: number
+          n_good: number
+          project_id: string
+          run_id: string
+          source: string
+          variable_id: string
+        }
+        Insert: {
+          avg_val?: number | null
+          bucket: string
+          entered_at?: string
+          entered_by?: string | null
+          max_val?: number | null
+          min_val?: number | null
+          n_bad?: number
+          n_good?: number
+          project_id: string
+          run_id: string
+          source: string
+          variable_id: string
+        }
+        Update: {
+          avg_val?: number | null
+          bucket?: string
+          entered_at?: string
+          entered_by?: string | null
+          max_val?: number | null
+          min_val?: number | null
+          n_bad?: number
+          n_good?: number
+          project_id?: string
+          run_id?: string
+          source?: string
+          variable_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_run_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_run_data_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_run_data_variable_id_fkey"
+            columns: ["variable_id"]
+            isOneToOne: false
+            referencedRelation: "performance_variables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_runs: {
+        Row: {
+          abort_reason: string | null
+          aborted_at: string | null
+          aborted_by: string | null
+          attempt: number
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          created_by: string | null
+          early_close: boolean
+          early_close_reason: string | null
+          formal_start_note: string | null
+          formal_started_at: string | null
+          formal_started_by: string | null
+          frozen_at: string | null
+          frozen_rows: number | null
+          id: string
+          number: string
+          org_id: string
+          project_id: string
+          revision_id: string
+          stabilization_started_at: string | null
+          stabilization_started_by: string | null
+          status: string
+          test_id: string
+          updated_at: string
+        }
+        Insert: {
+          abort_reason?: string | null
+          aborted_at?: string | null
+          aborted_by?: string | null
+          attempt: number
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          early_close?: boolean
+          early_close_reason?: string | null
+          formal_start_note?: string | null
+          formal_started_at?: string | null
+          formal_started_by?: string | null
+          frozen_at?: string | null
+          frozen_rows?: number | null
+          id?: string
+          number: string
+          org_id: string
+          project_id: string
+          revision_id: string
+          stabilization_started_at?: string | null
+          stabilization_started_by?: string | null
+          status?: string
+          test_id: string
+          updated_at?: string
+        }
+        Update: {
+          abort_reason?: string | null
+          aborted_at?: string | null
+          aborted_by?: string | null
+          attempt?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          early_close?: boolean
+          early_close_reason?: string | null
+          formal_start_note?: string | null
+          formal_started_at?: string | null
+          formal_started_by?: string | null
+          frozen_at?: string | null
+          frozen_rows?: number | null
+          id?: string
+          number?: string
+          org_id?: string
+          project_id?: string
+          revision_id?: string
+          stabilization_started_at?: string | null
+          stabilization_started_by?: string | null
+          status?: string
+          test_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_runs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "performance_test_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "performance_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_test_revisions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          change_reason: string | null
+          content_hash: string | null
+          created_at: string
+          created_by: string | null
+          formal_min: number
+          id: string
+          min_coverage_pct: number
+          org_id: string
+          procedure_id: string | null
+          project_id: string
+          returned_reason: string | null
+          rev: number
+          sample_interval_s: number
+          sections: Json
+          stabilization_min: number
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          test_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          formal_min?: number
+          id?: string
+          min_coverage_pct?: number
+          org_id: string
+          procedure_id?: string | null
+          project_id: string
+          returned_reason?: string | null
+          rev: number
+          sample_interval_s?: number
+          sections?: Json
+          stabilization_min?: number
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          test_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          formal_min?: number
+          id?: string
+          min_coverage_pct?: number
+          org_id?: string
+          procedure_id?: string | null
+          project_id?: string
+          returned_reason?: string | null
+          rev?: number
+          sample_interval_s?: number
+          sections?: Json
+          stabilization_min?: number
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          test_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_test_revisions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_test_revisions_procedure_id_fkey"
+            columns: ["procedure_id"]
+            isOneToOne: false
+            referencedRelation: "procedures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_test_revisions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_test_revisions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "performance_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_tests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_revision_id: string | null
+          id: string
+          number: string
+          org_id: string
+          primary_system_id: string
+          project_id: string
+          seq: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_revision_id?: string | null
+          id?: string
+          number: string
+          org_id: string
+          primary_system_id: string
+          project_id: string
+          seq: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_revision_id?: string | null
+          id?: string
+          number?: string
+          org_id?: string
+          primary_system_id?: string
+          project_id?: string
+          seq?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_tests_current_revision_fk"
+            columns: ["current_revision_id"]
+            isOneToOne: false
+            referencedRelation: "performance_test_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_tests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_tests_primary_system_id_fkey"
+            columns: ["primary_system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "performance_tests_primary_system_id_fkey"
+            columns: ["primary_system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "performance_tests_primary_system_id_fkey"
+            columns: ["primary_system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_tests_primary_system_id_fkey"
+            columns: ["primary_system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "performance_tests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_variables: {
+        Row: {
+          id: string
+          key: string
+          label: string
+          max_step: number | null
+          op: string | null
+          operand_a: string | null
+          operand_b: string | null
+          ord: number
+          project_id: string
+          revision_id: string
+          signal_id: string | null
+          source: string
+          unit: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          label: string
+          max_step?: number | null
+          op?: string | null
+          operand_a?: string | null
+          operand_b?: string | null
+          ord: number
+          project_id: string
+          revision_id: string
+          signal_id?: string | null
+          source: string
+          unit?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          label?: string
+          max_step?: number | null
+          op?: string | null
+          operand_a?: string | null
+          operand_b?: string | null
+          ord?: number
+          project_id?: string
+          revision_id?: string
+          signal_id?: string | null
+          source?: string
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_variables_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_variables_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "performance_test_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_variables_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "signals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pid_documents: {
         Row: {
           created_at: string | null
@@ -9490,6 +10181,10 @@ export type Database = {
       }
     }
     Functions: {
+      abort_performance_run: {
+        Args: { p_reason: string; p_run_id: string }
+        Returns: undefined
+      }
       accept_itr_suggestion: {
         Args: { p_note?: string; p_suggestion_id: string }
         Returns: string
@@ -9513,6 +10208,15 @@ export type Database = {
         }
         Returns: string
       }
+      add_performance_manual_reading: {
+        Args: {
+          p_at: string
+          p_run_id: string
+          p_value: number
+          p_variable_id: string
+        }
+        Returns: undefined
+      }
       add_startup_event_param: {
         Args: {
           p_event_id: string
@@ -9521,6 +10225,15 @@ export type Database = {
           p_value: string
         }
         Returns: undefined
+      }
+      advance_performance_run: {
+        Args: {
+          p_at?: string
+          p_comment?: string
+          p_run_id: string
+          p_to: string
+        }
+        Returns: string
       }
       analytics_project_forecast: {
         Args: { p_project_id: string }
@@ -9581,6 +10294,10 @@ export type Database = {
           p_target_org_id: string
         }
         Returns: Json
+      }
+      close_performance_run: {
+        Args: { p_at?: string; p_reason?: string; p_run_id: string }
+        Returns: number
       }
       complete_lineup_sheet: { Args: { p_sheet_id: string }; Returns: string }
       complete_run_step: {
@@ -9759,6 +10476,14 @@ export type Database = {
         }
         Returns: string
       }
+      create_performance_test: {
+        Args: {
+          p_primary_system_id: string
+          p_project_id: string
+          p_title: string
+        }
+        Returns: string
+      }
       create_procedure: {
         Args: {
           p_kind?: string
@@ -9861,6 +10586,14 @@ export type Database = {
         Args: { p_entity_id: string; p_entity_kind: string }
         Returns: undefined
       }
+      delete_performance_manual_reading: {
+        Args: { p_bucket: string; p_run_id: string; p_variable_id: string }
+        Returns: undefined
+      }
+      delete_performance_test_draft: {
+        Args: { p_test_id: string }
+        Returns: undefined
+      }
       delete_procedure_draft: {
         Args: { p_procedure_id: string }
         Returns: undefined
@@ -9876,6 +10609,10 @@ export type Database = {
       }
       delete_webhook_subscription: {
         Args: { p_sub_id: string }
+        Returns: undefined
+      }
+      end_performance_disturbance: {
+        Args: { p_disturbance_id: string; p_ended_at?: string }
         Returns: undefined
       }
       ensure_register_types: { Args: { p_org_id: string }; Returns: undefined }
@@ -10043,6 +10780,10 @@ export type Database = {
         Returns: string
       }
       my_work_counts: { Args: { p_org_id: string }; Returns: Json }
+      new_performance_revision: {
+        Args: { p_reason: string; p_test_id: string }
+        Returns: string
+      }
       new_procedure_revision: {
         Args: { p_procedure_id: string; p_reason: string }
         Returns: string
@@ -10065,6 +10806,24 @@ export type Database = {
         Returns: Json
       }
       ownership_stage_index: { Args: { p_stage: string }; Returns: number }
+      performance_check_at: {
+        Args: { p_at: string; p_floor: string }
+        Returns: string
+      }
+      performance_freeze_run: { Args: { p_run_id: string }; Returns: number }
+      performance_is_lead: { Args: { p_role: string }; Returns: boolean }
+      performance_revision_hash: {
+        Args: { p_revision_id: string }
+        Returns: string
+      }
+      performance_section_keys: { Args: never; Returns: string[] }
+      performance_write_content: {
+        Args: {
+          p_content: Json
+          r: Database["public"]["Tables"]["performance_test_revisions"]["Row"]
+        }
+        Returns: undefined
+      }
       person_system_level: {
         Args: { p_person_id: string; p_system_id: string }
         Returns: number
@@ -10159,6 +10918,16 @@ export type Database = {
         }
         Returns: string
       }
+      record_performance_disturbance: {
+        Args: {
+          p_description: string
+          p_ended_at?: string
+          p_kind: string
+          p_run_id: string
+          p_started_at: string
+        }
+        Returns: string
+      }
       record_startup_event: {
         Args: {
           p_code: string
@@ -10175,6 +10944,7 @@ export type Database = {
         }
         Returns: string
       }
+      refreeze_performance_run: { Args: { p_run_id: string }; Returns: number }
       refresh_daily_report_data: {
         Args: { p_report_id: string }
         Returns: undefined
@@ -10234,6 +11004,14 @@ export type Database = {
         Args: { p_items: Json; p_sheet_id: string }
         Returns: undefined
       }
+      save_performance_revision: {
+        Args: {
+          p_change_reason?: string
+          p_content: Json
+          p_revision_id: string
+        }
+        Returns: undefined
+      }
       save_procedure_revision: {
         Args: {
           p_change_reason?: string
@@ -10289,6 +11067,14 @@ export type Database = {
         }
         Returns: string
       }
+      set_performance_disturbance_exclusion: {
+        Args: {
+          p_disturbance_id: string
+          p_excluded: boolean
+          p_reason: string
+        }
+        Returns: undefined
+      }
       set_webhook_enabled: {
         Args: { p_enabled: boolean; p_sub_id: string }
         Returns: undefined
@@ -10307,6 +11093,7 @@ export type Database = {
         Args: { p_approval_id: string; p_capacity: string; p_comments?: string }
         Returns: string
       }
+      start_performance_run: { Args: { p_test_id: string }; Returns: string }
       start_procedure_run: {
         Args: { p_procedure_id: string; p_system_id?: string }
         Returns: string
@@ -10383,6 +11170,10 @@ export type Database = {
         Args: { p_comment?: string; p_constraint_id: string; p_to: string }
         Returns: string
       }
+      transition_performance_revision: {
+        Args: { p_comment?: string; p_revision_id: string; p_to: string }
+        Returns: string
+      }
       transition_procedure_revision: {
         Args: { p_comment?: string; p_revision_id: string; p_to: string }
         Returns: string
@@ -10440,6 +11231,14 @@ export type Database = {
       }
       update_daily_report_sections: {
         Args: { p_report_id: string; p_sections: Json }
+        Returns: undefined
+      }
+      update_performance_test: {
+        Args: {
+          p_primary_system_id: string
+          p_test_id: string
+          p_title: string
+        }
         Returns: undefined
       }
       update_procedure: {

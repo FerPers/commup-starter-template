@@ -1,0 +1,85 @@
+import { getActiveMembership } from '@/lib/supabase/membership'
+import { notFound, redirect } from 'next/navigation'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { DisturbanceKind, PerfRunStatus, VariableSource } from '@/lib/performance/catalog'
+import RunConsole from './RunConsole'
+
+// Consola de un intento de prueba de desempeño (fase 7, sesión 1): periodos, reloj, gráfico por variable
+// (en vivo desde signal_samples_1min; congelado desde performance_run_data al cerrar), perturbaciones y
+// lecturas manuales.
+
+const PAGE = 1000
+const CAP = 30000
+
+/** PostgREST corta en 1000 filas: pagina hasta CAP. */
+async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null }>): Promise<T[]> {
+  const out: T[] = []
+  for (let from = 0; from < CAP; from += PAGE) {
+    const { data } = await page(from, from + PAGE - 1)
+    out.push(...(data ?? []))
+    if (!data || data.length < PAGE) break
+  }
+  return out
+}
+
+export default async function PerformanceRunPage({ params }: { params: Promise<{ id: string; runId: string }> }) {
+  const { id, runId } = await params
+  const ctx = await getActiveMembership()
+  if (!ctx) redirect('/login')
+  const supabase = ctx.supabase as SupabaseClient
+
+  const { data: project } = await ctx.supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
+  if (!project) notFound()
+  const { data: run } = await ctx.supabase.from('performance_runs').select('*').eq('id', runId).eq('project_id', id).maybeSingle()
+  if (!run) notFound()
+
+  const [{ data: test }, { data: rev }, { data: vars }, { data: disturbances }, { data: members }] = await Promise.all([
+    ctx.supabase.from('performance_tests').select('id, number, title, current_revision_id').eq('id', run.test_id).single(),
+    ctx.supabase.from('performance_test_revisions').select('id, rev, status, stabilization_min, formal_min, sample_interval_s, min_coverage_pct').eq('id', run.revision_id).single(),
+    ctx.supabase.from('performance_variables').select('id, key, label, unit, source, signal_id').eq('revision_id', run.revision_id).order('ord'),
+    ctx.supabase.from('performance_disturbances').select('*').eq('run_id', runId).order('started_at'),
+    ctx.supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
+  ])
+  if (!test || !rev) notFound()
+
+  const variables = vars ?? []
+  const frozen = run.status === 'closed'
+  type Point = { variableId: string; bucket: string; value: number | null; source: 'iiot' | 'manual'; enteredBy: string | null }
+  let points: Point[] = []
+  if (frozen || run.stabilization_started_at) {
+    // Datos del intento (congelados y manuales).
+    const stored = await fetchAll<{ variable_id: string; bucket: string; avg_val: number | null; source: string; entered_by: string | null }>((a, b) =>
+      supabase.from('performance_run_data').select('variable_id, bucket, avg_val, source, entered_by').eq('run_id', runId).order('bucket').range(a, b))
+    points = stored.map(r => ({ variableId: r.variable_id, bucket: r.bucket, value: r.avg_val, source: r.source as 'iiot' | 'manual', enteredBy: r.entered_by }))
+    // En curso: las señales se leen en vivo desde la vista de 1 minuto.
+    const live = variables.filter(v => v.source === 'signal' && v.signal_id)
+    if (!frozen && live.length) {
+      const bySignal = new Map(live.map(v => [v.signal_id as string, v.id]))
+      const rows = await fetchAll<{ signal_id: string; bucket: string; avg_val: number | null }>((a, b) =>
+        supabase.from('signal_samples_1min').select('signal_id, bucket, avg_val').in('signal_id', [...bySignal.keys()])
+          .gte('bucket', run.stabilization_started_at!).order('bucket').range(a, b))
+      points.push(...rows.map(r => ({ variableId: bySignal.get(r.signal_id)!, bucket: r.bucket, value: r.avg_val, source: 'iiot' as const, enteredBy: null })))
+    }
+  }
+
+  const names: Record<string, string> = {}
+  for (const m of members ?? []) {
+    const p = m.profiles as unknown as { full_name: string | null } | null
+    if (p?.full_name) names[m.user_id] = p.full_name
+  }
+
+  return (
+    <RunConsole
+      project={project}
+      test={{ id: test.id, number: test.number, title: test.title }}
+      run={{ ...run, status: run.status as PerfRunStatus }}
+      rev={{ rev: rev.rev, stabilization_min: rev.stabilization_min, formal_min: rev.formal_min, sample_interval_s: rev.sample_interval_s, outdated: test.current_revision_id !== rev.id }}
+      variables={variables.map(v => ({ id: v.id, key: v.key, label: v.label, unit: v.unit, source: v.source as VariableSource }))}
+      points={points.map(p => ({ ...p, value: p.value === null ? null : Number(p.value) }))}
+      disturbances={(disturbances ?? []).map(d => ({ ...d, kind: d.kind as DisturbanceKind }))}
+      names={names}
+      userId={ctx.userId}
+      role={ctx.role}
+    />
+  )
+}

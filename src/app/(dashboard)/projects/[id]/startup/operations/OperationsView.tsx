@@ -110,6 +110,7 @@ export default function OperationsView({ project, initialView, systems, transfer
         ))}
         <Link href={`${root}/events`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t('tab.events')}</Link>
         <span aria-current="page" style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600, #2563eb)', borderBottom: '2px solid var(--primary-500)', marginBottom: -1 }}>{t('tab.operations')}</span>
+        <Link href={`${root}/performance`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t('tab.performance')}</Link>
       </nav>
 
       <div role="tablist" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
