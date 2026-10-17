@@ -76,6 +76,14 @@ export default function RunConsole({ project, test, run, rev, variables, points,
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
   const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
   const clock = now ? runClock(run, rev, now) : null
+  // El campo de hora no tiene segundos: el mismo minuto del inicio de la estabilización cuenta desde ese instante.
+  const inWindow = (v: string) => {
+    const iso = localToIso(v)
+    if (!iso || !run.stabilization_started_at) return iso
+    const start = Date.parse(run.stabilization_started_at)
+    // +1 ms: la BD guarda microsegundos y el ISO de JS solo milisegundos.
+    return Date.parse(iso) <= start && Date.parse(iso) > start - 60000 ? new Date(start + 1).toISOString() : iso
+  }
 
   function act(fn: () => Promise<{ error?: string; rows?: number }>, after?: (res: { rows?: number }) => void) {
     setError(null); setNotice(null)
@@ -246,7 +254,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
             <Field text={t('perf.dist.description')} wide required><input style={input} value={dist.description} maxLength={2000} onChange={e => setDist({ ...dist, description: e.target.value })} /></Field>
             <div>
               <button type="button" style={btn('outline', isPending || !dist.startedAt || dist.description.trim().length < 3)} disabled={isPending || !dist.startedAt || dist.description.trim().length < 3}
-                onClick={() => act(() => recordPerformanceDisturbance({ ...ids, kind: dist.kind, description: dist.description, startedAt: localToIso(dist.startedAt)!, endedAt: localToIso(dist.endedAt) }),
+                onClick={() => act(() => recordPerformanceDisturbance({ ...ids, kind: dist.kind, description: dist.description, startedAt: inWindow(dist.startedAt)!, endedAt: localToIso(dist.endedAt) }),
                   () => setDist({ kind: 'load_change', description: '', startedAt: '', endedAt: '' }))}>+ {t('perf.dist.add')}</button>
             </div>
           </div>
@@ -267,7 +275,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
               <Field text={t('perf.readingTime')}><input type="datetime-local" style={{ ...input, width: 210 }} value={reading.at} onChange={e => setReading({ ...reading, at: e.target.value })} /></Field>
               <Field text={t('perf.value')}><input inputMode="decimal" style={{ ...input, width: 140 }} value={reading.value} onChange={e => setReading({ ...reading, value: e.target.value })} /></Field>
               <button type="button" style={btn('outline', isPending || !reading.value.trim())} disabled={isPending || !reading.value.trim()}
-                onClick={() => act(() => addPerformanceManualReading({ ...ids, variableId: reading.variableId, at: localToIso(reading.at) ?? new Date().toISOString(), value: reading.value }),
+                onClick={() => act(() => addPerformanceManualReading({ ...ids, variableId: reading.variableId, at: inWindow(reading.at) ?? new Date().toISOString(), value: reading.value }),
                   () => setReading({ ...reading, at: '', value: '' }))}>+ {t('perf.addReading')}</button>
             </div>
           )}
