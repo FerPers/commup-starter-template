@@ -2369,7 +2369,8 @@
       "manual_attestation": "Declaración con evidencia",
       "registers_clear": "Registros controlados cerrados",
       "constraints_clear": "Restricciones del gate cerradas",
-      "lineup_verified": "Line-up verificado y vigente"
+      "lineup_verified": "Line-up verificado y vigente",
+      "performance_accepted": "Prueba de desempeño aceptada (certificado PTC)"
     },
     "crit": {
       "previousOk": "El gate anterior está aprobado.",
@@ -2393,7 +2394,10 @@
       "constraintLevel": "N{n}",
       "lineupMissing": "No hay una hoja de line-up verificada para este sistema.",
       "lineupStale": "verificada, pero un registro F3 cambió después: emite una nueva",
-      "lineupOk": "verificada y vigente"
+      "lineupOk": "verificada y vigente",
+      "performanceNa": "No aplica: el sistema no es principal de ninguna prueba de desempeño",
+      "performanceOk": "certificado {cert} aceptado",
+      "performanceMissing": "sin certificado PTC aceptado"
     },
     "reason": {
       "cat_a": "{a} punch(es) Cat A abiertos",
@@ -2529,7 +2533,8 @@
       "save": "Guardar pesos",
       "invalid": "Los pesos deben estar entre 0 y 1000."
     },
-    "requiresLineup": "Exige line-up verificado (antes de arrancar)"
+    "requiresLineup": "Exige line-up verificado (antes de arrancar)",
+    "requiresPerformance": "Exige prueba de desempeño aceptada (sistemas con prueba)"
   },
   "Systems": {
     "title": "Sistemas",

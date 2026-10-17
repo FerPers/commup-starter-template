@@ -25,6 +25,7 @@ type Gate = {
   phase_id: string | null
   requires_previous: boolean
   requires_lineup: boolean
+  requires_performance: boolean
   is_active: boolean
   approval_roles: string[]
   required_signatures: string[]
@@ -128,6 +129,11 @@ export default function GatesAdminView({ gates, criteria, phases, weights }: { g
                   onChange={e => act(() => updateGate(g.id, { requiresLineup: e.target.checked }))} />
                 {t('requiresLineup')}
               </label>
+              <label style={{ ...small, display: 'flex', alignItems: 'center', gap: 8, marginTop: 18 }}>
+                <input type="checkbox" checked={g.requires_performance} disabled={isPending}
+                  onChange={e => act(() => updateGate(g.id, { requiresPerformance: e.target.checked }))} />
+                {t('requiresPerformance')}
+              </label>
               <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
                 <legend style={small}>{t('approvalRoles')}</legend>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
@@ -179,6 +185,7 @@ export default function GatesAdminView({ gates, criteria, phases, weights }: { g
               <div style={{ ...small, fontWeight: 600, marginBottom: 6 }}>{t('criteria')}</div>
               {g.requires_previous && idx > 0 && <div style={{ ...small, marginBottom: 6 }}>• {tg('kind.previous_gate')}</div>}
               {g.requires_lineup && <div style={{ ...small, marginBottom: 6 }}>• {tg('kind.lineup_verified')}</div>}
+              {g.requires_performance && <div style={{ ...small, marginBottom: 6 }}>• {tg('kind.performance_accepted')}</div>}
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {crits.map(c => (
                   <li key={c.id} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', fontSize: 'var(--text-sm)' }}>

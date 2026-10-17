@@ -243,6 +243,21 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
         )
       }
 
+      case 'performance_accepted': {
+        if (d.not_applicable) return <span style={small}>{t('crit.performanceNa')}</span>
+        const tests = (d.tests as { test_id: string; test: string; title: string; certificate: string | null; ok: boolean }[]) ?? []
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {tests.map(x => (
+              <span key={x.test_id} style={small}>
+                <Link href={`/projects/${project.id}/startup/performance/${x.test_id}`} style={{ ...linkStyle, fontWeight: 700 }}>{x.test}</Link>
+                {' · '}{x.title}{' · '}{x.ok ? t('crit.performanceOk', { cert: x.certificate ?? '' }) : t('crit.performanceMissing')}
+              </span>
+            ))}
+          </div>
+        )
+      }
+
       case 'itr_phase_approved': {
         if (d.error === 'no_phase') return <span style={small}>{t('crit.noPhase')}</span>
         const red = (d.red_subsystems as { id: string; code: string; reason: string; itr_total: number; itr_approved: number; open_a: number; open_b: number }[]) ?? []

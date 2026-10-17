@@ -2369,7 +2369,8 @@
       "manual_attestation": "Attestation with evidence",
       "registers_clear": "Controlled registers closed",
       "constraints_clear": "Gate constraints closed",
-      "lineup_verified": "Line-up verified and current"
+      "lineup_verified": "Line-up verified and current",
+      "performance_accepted": "Performance test accepted (PTC certificate)"
     },
     "crit": {
       "previousOk": "The previous gate is approved.",
@@ -2393,7 +2394,10 @@
       "constraintLevel": "L{n}",
       "lineupMissing": "No verified line-up sheet for this system.",
       "lineupStale": "verified, but an F3 register changed afterwards: issue a new one",
-      "lineupOk": "verified and current"
+      "lineupOk": "verified and current",
+      "performanceNa": "Not applicable: the system is not the primary system of any performance test",
+      "performanceOk": "certificate {cert} accepted",
+      "performanceMissing": "no accepted PTC certificate"
     },
     "reason": {
       "cat_a": "{a} open Cat A punch(es)",
@@ -2529,7 +2533,8 @@
       "save": "Save weights",
       "invalid": "Weights must be between 0 and 1000."
     },
-    "requiresLineup": "Requires a verified line-up (before start-up)"
+    "requiresLineup": "Requires a verified line-up (before start-up)",
+    "requiresPerformance": "Requires accepted performance test (systems with a test)"
   },
   "Systems": {
     "title": "Systems",

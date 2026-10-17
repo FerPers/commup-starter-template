@@ -22,6 +22,7 @@ export type CriterionKind =
   | 'registers_clear'
   | 'constraints_clear'
   | 'lineup_verified'
+  | 'performance_accepted'
   | 'itr_phase_approved'
   | 'certificates_issued'
   | 'pssr_approved'
@@ -33,9 +34,10 @@ export type CriterionKind =
  * dependencies_ready (dependencias que bloquean ese gate, fase 2), registers_clear (algún tipo de
  * registro controlado bloquea ese gate, fase 3) y constraints_clear (restricciones no cerradas del
  * sistema asignadas a ese gate: condición; abierta en nivel 4, bloqueo — fase 5). lineup_verified es
- * implícito en los gates con `requires_lineup` (hoja de line-up verificada y vigente — fase 6).
+ * implícito en los gates con `requires_lineup` (hoja de line-up verificada y vigente — fase 6) y
+ * performance_accepted en los gates con `requires_performance` (certificado PTC aceptado — fase 7).
  */
-export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready' | 'registers_clear' | 'constraints_clear' | 'lineup_verified'>[] = [
+export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready' | 'registers_clear' | 'constraints_clear' | 'lineup_verified' | 'performance_accepted'>[] = [
   'itr_phase_approved',
   'certificates_issued',
   'pssr_approved',

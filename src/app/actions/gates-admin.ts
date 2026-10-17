@@ -116,6 +116,7 @@ export const updateGate = withAuthOnly(
       phaseId?: string | null
       requiresPrevious?: boolean
       requiresLineup?: boolean
+      requiresPerformance?: boolean
       isActive?: boolean
       approvalRoles?: string[]
       requiredSignatures?: string[]
@@ -137,6 +138,7 @@ export const updateGate = withAuthOnly(
     }
     if ('requiresPrevious' in patch) row.requires_previous = !!patch.requiresPrevious
     if ('requiresLineup' in patch) row.requires_lineup = !!patch.requiresLineup
+    if ('requiresPerformance' in patch) row.requires_performance = !!patch.requiresPerformance
     if ('isActive' in patch) row.is_active = !!patch.isActive
     if ('approvalRoles' in patch) {
       const roles = (patch.approvalRoles ?? []).filter(r => (GATE_APPROVAL_ROLES as readonly string[]).includes(r))
