@@ -3798,6 +3798,135 @@ export type Database = {
           },
         ]
       }
+      performance_certificates: {
+        Row: {
+          client_signed_at: string | null
+          client_signed_by: string | null
+          commissioning_signed_at: string | null
+          commissioning_signed_by: string | null
+          content_hash: string | null
+          created_at: string
+          id: string
+          number: string
+          operations_signed_at: string | null
+          operations_signed_by: string | null
+          org_id: string
+          project_id: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          run_id: string
+          seq: number
+          status: string
+          superseded_at: string | null
+          system_id: string
+          test_id: string
+        }
+        Insert: {
+          client_signed_at?: string | null
+          client_signed_by?: string | null
+          commissioning_signed_at?: string | null
+          commissioning_signed_by?: string | null
+          content_hash?: string | null
+          created_at?: string
+          id?: string
+          number: string
+          operations_signed_at?: string | null
+          operations_signed_by?: string | null
+          org_id: string
+          project_id: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          run_id: string
+          seq: number
+          status?: string
+          superseded_at?: string | null
+          system_id: string
+          test_id: string
+        }
+        Update: {
+          client_signed_at?: string | null
+          client_signed_by?: string | null
+          commissioning_signed_at?: string | null
+          commissioning_signed_by?: string | null
+          content_hash?: string | null
+          created_at?: string
+          id?: string
+          number?: string
+          operations_signed_at?: string | null
+          operations_signed_by?: string | null
+          org_id?: string
+          project_id?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          run_id?: string
+          seq?: number
+          status?: string
+          superseded_at?: string | null
+          system_id?: string
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_certificates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_certificates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_certificates_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: true
+            referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_certificates_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "performance_certificates_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "performance_certificates_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_certificates_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "performance_certificates_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "performance_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_criteria: {
         Row: {
           band_hi: number | null
@@ -4115,6 +4244,7 @@ export type Database = {
           abort_reason: string | null
           aborted_at: string | null
           aborted_by: string | null
+          action_id: string | null
           attempt: number
           closed_at: string | null
           closed_by: string | null
@@ -4122,6 +4252,8 @@ export type Database = {
           created_by: string | null
           early_close: boolean
           early_close_reason: string | null
+          evaluation: Json | null
+          evaluation_hash: string | null
           formal_start_note: string | null
           formal_started_at: string | null
           formal_started_by: string | null
@@ -4131,10 +4263,15 @@ export type Database = {
           number: string
           org_id: string
           project_id: string
+          result: string | null
+          result_at: string | null
+          result_by: string | null
+          result_reason: string | null
           revision_id: string
           stabilization_started_at: string | null
           stabilization_started_by: string | null
           status: string
+          suggested_result: string | null
           test_id: string
           updated_at: string
         }
@@ -4142,6 +4279,7 @@ export type Database = {
           abort_reason?: string | null
           aborted_at?: string | null
           aborted_by?: string | null
+          action_id?: string | null
           attempt: number
           closed_at?: string | null
           closed_by?: string | null
@@ -4149,6 +4287,8 @@ export type Database = {
           created_by?: string | null
           early_close?: boolean
           early_close_reason?: string | null
+          evaluation?: Json | null
+          evaluation_hash?: string | null
           formal_start_note?: string | null
           formal_started_at?: string | null
           formal_started_by?: string | null
@@ -4158,10 +4298,15 @@ export type Database = {
           number: string
           org_id: string
           project_id: string
+          result?: string | null
+          result_at?: string | null
+          result_by?: string | null
+          result_reason?: string | null
           revision_id: string
           stabilization_started_at?: string | null
           stabilization_started_by?: string | null
           status?: string
+          suggested_result?: string | null
           test_id: string
           updated_at?: string
         }
@@ -4169,6 +4314,7 @@ export type Database = {
           abort_reason?: string | null
           aborted_at?: string | null
           aborted_by?: string | null
+          action_id?: string | null
           attempt?: number
           closed_at?: string | null
           closed_by?: string | null
@@ -4176,6 +4322,8 @@ export type Database = {
           created_by?: string | null
           early_close?: boolean
           early_close_reason?: string | null
+          evaluation?: Json | null
+          evaluation_hash?: string | null
           formal_start_note?: string | null
           formal_started_at?: string | null
           formal_started_by?: string | null
@@ -4185,14 +4333,26 @@ export type Database = {
           number?: string
           org_id?: string
           project_id?: string
+          result?: string | null
+          result_at?: string | null
+          result_by?: string | null
+          result_reason?: string | null
           revision_id?: string
           stabilization_started_at?: string | null
           stabilization_started_by?: string | null
           status?: string
+          suggested_result?: string | null
           test_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "performance_runs_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "performance_runs_org_id_fkey"
             columns: ["org_id"]
@@ -4424,6 +4584,7 @@ export type Database = {
           id: string
           key: string
           label: string
+          manual_every_min: number
           max_step: number | null
           op: string | null
           operand_a: string | null
@@ -4439,6 +4600,7 @@ export type Database = {
           id?: string
           key: string
           label: string
+          manual_every_min?: number
           max_step?: number | null
           op?: string | null
           operand_a?: string | null
@@ -4454,6 +4616,7 @@ export type Database = {
           id?: string
           key?: string
           label?: string
+          manual_every_min?: number
           max_step?: number | null
           op?: string | null
           operand_a?: string | null
@@ -6597,6 +6760,7 @@ export type Database = {
           phase_id: string | null
           required_signatures: string[]
           requires_lineup: boolean
+          requires_performance: boolean
           requires_previous: boolean
           weight: number | null
         }
@@ -6614,6 +6778,7 @@ export type Database = {
           phase_id?: string | null
           required_signatures?: string[]
           requires_lineup?: boolean
+          requires_performance?: boolean
           requires_previous?: boolean
           weight?: number | null
         }
@@ -6631,6 +6796,7 @@ export type Database = {
           phase_id?: string | null
           required_signatures?: string[]
           requires_lineup?: boolean
+          requires_performance?: boolean
           requires_previous?: boolean
           weight?: number | null
         }
@@ -10628,6 +10794,7 @@ export type Database = {
             Args: { p_options: Json; p_source_count: number; p_value: string }
             Returns: Json
           }
+      evaluate_performance_run: { Args: { p_run_id: string }; Returns: Json }
       evaluate_signal_rules_for_batch: {
         Args: { p_batch_id: string }
         Returns: number
@@ -10684,6 +10851,10 @@ export type Database = {
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       issue_daily_report: { Args: { p_report_id: string }; Returns: string }
       issue_lineup_sheet: { Args: { p_sheet_id: string }; Returns: undefined }
+      issue_performance_certificate: {
+        Args: { p_run_id: string }
+        Returns: string
+      }
       itr_cause_source_rows: { Args: { p_cause_id: string }; Returns: Json }
       itr_loop_source_rows: { Args: { p_loop_id: string }; Returns: Json }
       itr_option_outcomes_valid: {
@@ -10810,6 +10981,10 @@ export type Database = {
         Args: { p_at: string; p_floor: string }
         Returns: string
       }
+      performance_compute_evaluation: {
+        Args: { p_run_id: string }
+        Returns: Json
+      }
       performance_freeze_run: { Args: { p_run_id: string }; Returns: number }
       performance_is_lead: { Args: { p_role: string }; Returns: boolean }
       performance_revision_hash: {
@@ -10928,6 +11103,10 @@ export type Database = {
         }
         Returns: string
       }
+      record_performance_result: {
+        Args: { p_reason?: string; p_result: string; p_run_id: string }
+        Returns: string
+      }
       record_startup_event: {
         Args: {
           p_code: string
@@ -10994,6 +11173,10 @@ export type Database = {
       revoke_api_key: { Args: { p_key_id: string }; Returns: undefined }
       revoke_gate_attestation: {
         Args: { p_attestation_id: string }
+        Returns: undefined
+      }
+      revoke_performance_certificate: {
+        Args: { p_certificate_id: string; p_reason: string }
         Returns: undefined
       }
       revoke_system_gate_approval: {
@@ -11087,6 +11270,10 @@ export type Database = {
       }
       sign_ownership_transfer: {
         Args: { p_capacity: string; p_transfer_id: string }
+        Returns: string
+      }
+      sign_performance_certificate: {
+        Args: { p_capacity: string; p_certificate_id: string }
         Returns: string
       }
       sign_system_gate: {

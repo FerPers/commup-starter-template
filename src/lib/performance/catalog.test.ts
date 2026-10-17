@@ -18,6 +18,7 @@ describe('performance catalog', () => {
     expect(checkVariables([v('A', 'manual'), v('a', 'manual')])).toMatch(/repetida/)
     expect(checkVariables([{ ...v('P', 'signal'), signal_id: null }])).toMatch(/necesita una señal/)
     expect(checkVariables([v('X', 'derived', 'A', 'B')])).toMatch(/no existe/)
+    expect(checkVariables([{ ...v('KW', 'manual'), manual_every_min: '0' }])).toMatch(/1 a 1440/)
   })
 
   it('detecta ciclos directos e indirectos', () => {
@@ -48,7 +49,7 @@ describe('performance catalog', () => {
     const p = toPayload(c)
     expect(p.sections).toEqual({ purpose: 'Capacidad' })
     expect(p.settings.procedure_id).toBeNull()
-    expect(p.variables[1]).toMatchObject({ key: 'ESP', operand_a: 'F1', signal_id: null, op: '/' })
+    expect(p.variables[1]).toMatchObject({ key: 'ESP', operand_a: 'F1', signal_id: null, op: '/', manual_every_min: 60 })
     expect(p.criteria[0]).toMatchObject({ variable_key: 'F1', target: 17.5, target_hi: null, band_lo: null, total_basis: null, uncertainty: 1 })
     expect(criterionText(c.criteria[0], 'MMSCFD')).toBe('prom(F1) ≥ 17,5 MMSCFD ± 1 %')
   })

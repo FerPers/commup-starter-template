@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth/withAuth'
 import type { Json } from '@/types/supabase.generated'
-import { DISTURBANCE_KINDS, checkContent, toPayload, type ContentDraft, type DisturbanceKind } from '@/lib/performance/catalog'
+import {
+  DISTURBANCE_KINDS, PERF_RESULTS, checkContent, toPayload, type ContentDraft, type DisturbanceKind, type Evaluation, type PerfResult,
+} from '@/lib/performance/catalog'
 
 // Prueba de desempeño (fase 7 plan readiness, sesión 1). Toda escritura pasa por RPC SECURITY DEFINER
 // (migración 20261019120000), que aplica roles, «otra persona» al aprobar, un intento vivo, ventanas de
@@ -235,5 +237,35 @@ export const deletePerformanceManualReading = withAuth(
     if (error) return { error: error.message }
     revalidate(input.projectId, `runs/${input.runId}`)
     return {}
+  },
+)
+
+// ── Evaluación y resultado (sesión 2) ────────────────────────────────────
+/** Evaluación en vivo de un intento cerrado (o la congelada si ya tiene resultado). La calcula la BD. */
+export const evaluatePerformanceRun = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; runId: string }): Promise<{ data?: Evaluation; error?: string }> => {
+    if (!(await owned(ctx.supabase, 'performance_runs', input.runId, input.projectId))) return { error: 'Intento no encontrado' }
+    const { data, error } = await ctx.supabase.rpc('evaluate_performance_run', { p_run_id: input.runId })
+    if (error) return { error: error.message }
+    return { data: data as unknown as Evaluation }
+  },
+)
+
+export const recordPerformanceResult = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; runId: string; result: PerfResult; reason?: string }): Promise<{ actionId?: string | null; error?: string }> => {
+    if (!PERF_RESULTS.includes(input.result)) return { error: 'Resultado no válido' }
+    if (!(await owned(ctx.supabase, 'performance_runs', input.runId, input.projectId))) return { error: 'Intento no encontrado' }
+    const { data, error } = await ctx.supabase.rpc('record_performance_result', {
+      p_run_id: input.runId, p_result: input.result,
+      p_reason: input.reason?.trim() ? input.reason.trim().slice(0, 2000) : undefined,
+    })
+    if (error) return { error: error.message }
+    revalidate(input.projectId, `runs/${input.runId}`)
+    revalidatePath(`/projects/${input.projectId}/daily`)
+    revalidatePath('/my-work')
+    revalidatePath('/control-tower', 'layout')
+    return { actionId: (data as string | null) ?? null }
   },
 )

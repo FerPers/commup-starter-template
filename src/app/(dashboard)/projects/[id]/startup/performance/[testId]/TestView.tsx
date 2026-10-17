@@ -10,7 +10,7 @@ import {
 import {
   DERIVED_OPS, OPERATORS, PERFORMANCE_SECTIONS, STATISTICS, TOTAL_BASES, UNCERTAINTY_MODES, VARIABLE_SOURCES, LIVE_RUN_STATUSES,
   checkContent, criterionText, emptyCriterion, emptyPair, emptyVariable, isPerformanceLead, normKey,
-  type ContentDraft, type CriterionDraft, type PairDraft, type PerfRunStatus, type RevisionStatus, type VariableDraft,
+  RESULT_TONE, type ContentDraft, type CriterionDraft, type PairDraft, type PerfResult, type PerfRunStatus, type RevisionStatus, type VariableDraft,
 } from '@/lib/performance/catalog'
 import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, label, small } from '../../../daily/daily-ui'
 import { REV_TONE, RUN_TONE } from '../PerformanceView'
@@ -21,7 +21,7 @@ type Rev = {
 }
 type Run = {
   id: string; number: string; attempt: number; status: PerfRunStatus; rev: number | null; created_at: string
-  stabilization_started_at: string | null; formal_started_at: string | null; closed_at: string | null; early_close: boolean; aborted_at: string | null
+  stabilization_started_at: string | null; formal_started_at: string | null; closed_at: string | null; early_close: boolean; aborted_at: string | null; result: PerfResult | null
 }
 type Signal = { id: string; tag: string; unit: string | null; systemId: string | null }
 
@@ -194,6 +194,7 @@ export default function TestView({ project, test, revisions, shownId, content, r
                 <Chip tone={RUN_TONE[r.status]}>{t(`perf.runStatus.${r.status}`)}</Chip>
                 <span style={small}>R{r.rev}</span>
                 {r.early_close && <Chip tone="amber">{t('perf.earlyClose')}</Chip>}
+                {r.result && <Chip tone={RESULT_TONE[r.result]}>{t(`perf.result.${r.result}`)}</Chip>}
                 {r.rev !== null && test.currentRevisionId && r.rev !== revisions.find(x => x.id === test.currentRevisionId)?.rev && LIVE_RUN_STATUSES.includes(r.status) && <Chip tone="amber">{t('perf.outdated')}</Chip>}
                 <span style={small} suppressHydrationWarning>{when(r.closed_at ?? r.formal_started_at ?? r.stabilization_started_at ?? r.created_at)}</span>
               </Link>
@@ -276,7 +277,14 @@ export default function TestView({ project, test, revisions, shownId, content, r
                         {keySelect(v.operand_b, x => setVar(i, { operand_b: x }), 'B')}
                       </div>
                     )}
-                    {v.source === 'manual' && <span style={small}>{t('perf.manualHint')}</span>}
+                    {v.source === 'manual' && (
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <span style={{ ...small, whiteSpace: 'nowrap' }}>{t('perf.everyLabel')}</span>
+                        <input aria-label={t('perf.everyLabel')} type="number" min={1} max={1440} style={{ ...cell, width: 80 }} disabled={!editable}
+                          value={v.manual_every_min} onChange={e => setVar(i, { manual_every_min: e.target.value })} />
+                        <span style={small}>min</span>
+                      </div>
+                    )}
                   </td>
                   <td style={{ ...td, width: 110 }}><input aria-label={t('perf.var.unit')} style={cell} disabled={!editable} value={v.unit} maxLength={40} onChange={e => setVar(i, { unit: e.target.value })} /></td>
                   <td style={{ ...td, width: 100 }}>{v.source !== 'derived' && <input aria-label={t('perf.var.maxStep')} type="number" style={cell} disabled={!editable} value={v.max_step} onChange={e => setVar(i, { max_step: e.target.value })} />}</td>

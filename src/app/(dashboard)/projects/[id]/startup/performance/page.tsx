@@ -1,6 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
-import type { PerfRunStatus, RevisionStatus } from '@/lib/performance/catalog'
+import type { PerfResult, PerfRunStatus, RevisionStatus } from '@/lib/performance/catalog'
 import PerformanceView from './PerformanceView'
 
 // Pruebas de desempeño del proyecto (fase 7 plan readiness, sesión 1): lista con revisión vigente y último intento.
@@ -15,13 +15,13 @@ export default async function PerformancePage({ params }: { params: Promise<{ id
 
   const [{ data: tests }, { data: systems }] = await Promise.all([
     supabase.from('performance_tests')
-      .select('id, number, title, current_revision_id, systems(code, name), performance_test_revisions!performance_test_revisions_test_id_fkey(id, rev, status), performance_runs(id, attempt, number, status, closed_at, aborted_at, created_at)')
+      .select('id, number, title, current_revision_id, systems!performance_tests_primary_system_id_fkey(code, name), performance_test_revisions!performance_test_revisions_test_id_fkey(id, rev, status), performance_runs!performance_runs_test_id_fkey(id, attempt, number, status, result, closed_at, aborted_at, created_at)')
       .eq('project_id', id).order('seq', { ascending: false }).limit(1000),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
   ])
 
   type Rev = { id: string; rev: number; status: RevisionStatus }
-  type Run = { id: string; attempt: number; number: string; status: PerfRunStatus }
+  type Run = { id: string; attempt: number; number: string; status: PerfRunStatus; result: PerfResult | null }
   return (
     <PerformanceView
       project={project}

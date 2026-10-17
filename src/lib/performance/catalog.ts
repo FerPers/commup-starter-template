@@ -30,7 +30,42 @@ export const DISTURBANCE_KINDS = ['trip', 'load_change', 'instrument_fault', 'pr
 export type DisturbanceKind = (typeof DISTURBANCE_KINDS)[number]
 
 export type RevisionStatus = 'draft' | 'in_review' | 'approved' | 'superseded'
-export type PerfRunStatus = 'planned' | 'stabilizing' | 'formal' | 'closed' | 'aborted'
+export type PerfRunStatus = 'planned' | 'stabilizing' | 'formal' | 'closed' | 'evaluated' | 'aborted'
+
+/** Resultado (18.35). «repeat» solo lo registra una persona; la BD sugiere los otros cuatro. */
+export const PERF_RESULTS = ['accepted', 'accepted_with_deviation', 'repeat', 'failed', 'inconclusive'] as const
+export type PerfResult = (typeof PERF_RESULTS)[number]
+export type CriterionOutcome = 'pass' | 'within_uncertainty' | 'fail' | 'not_evaluable'
+export type InconclusiveReason = 'coverage' | 'unit' | 'pair' | 'early_close' | 'no_valid_data' | 'not_evaluable'
+
+/** Salida de `evaluate_performance_run` (congelada en el intento al registrar el resultado). */
+export type Evaluation = {
+  run: string; revision: number; revision_hash: string | null; computed_at: string
+  window: { from: string; to: string; total_min: number; excluded_min: number; valid_min: number; formal_min: number; min_coverage_pct: number; early_close: boolean }
+  variables: {
+    key: string; label: string; unit: string | null; source: VariableSource; signal?: string | null; formula?: string
+    expected?: number; present: number; coverage_pct: number; coverage_ok?: boolean; bad_pct?: number; spikes?: number; out_of_range?: number
+    unit_ok?: boolean; evaluable: boolean
+  }[]
+  criteria: {
+    ord: number; variable_key: string; label: string | null; statistic: Statistic; band_lo: number | null; band_hi: number | null
+    total_basis: TotalBasis | null; operator: Operator; target: number; target_hi: number | null; uncertainty: number
+    uncertainty_mode: UncertaintyMode; value: number | null; outcome: CriterionOutcome
+  }[]
+  pairs: { variable_a: string; variable_b: string; max_diff_pct: number; diff_pct: number | null; minutes: number; ok: boolean }[]
+  reasons: InconclusiveReason[]
+  suggested: Exclude<PerfResult, 'repeat'>
+  result?: PerfResult; result_reason?: string | null; result_by?: string; result_at?: string
+}
+
+export const RESULT_TONE: Record<PerfResult, 'green' | 'amber' | 'red' | 'muted' | 'violet'> = {
+  accepted: 'green', accepted_with_deviation: 'amber', repeat: 'violet', failed: 'red', inconclusive: 'muted',
+}
+export const OUTCOME_TONE: Record<CriterionOutcome, 'green' | 'amber' | 'red' | 'muted'> = {
+  pass: 'green', within_uncertainty: 'amber', fail: 'red', not_evaluable: 'muted',
+}
+/** Registrar un resultado distinto del sugerido exige motivo (igual que la RPC). */
+export const needsResultReason = (result: PerfResult, suggested: string) => result !== suggested
 export const LIVE_RUN_STATUSES: readonly PerfRunStatus[] = ['planned', 'stabilizing', 'formal']
 
 /** Quien dirige la prueba (crear, aprobar, arrancar, cerrar, excluir perturbaciones) = `performance_is_lead()`. */
@@ -49,6 +84,7 @@ export type VariableDraft = {
   operand_a: string
   operand_b: string
   max_step: string
+  manual_every_min: string
 }
 export type CriterionDraft = {
   variable_key: string
@@ -76,7 +112,7 @@ export type ContentDraft = {
 }
 
 export function emptyVariable(source: VariableSource = 'signal'): VariableDraft {
-  return { key: '', label: '', unit: '', source, signal_id: null, op: '/', operand_a: '', operand_b: '', max_step: '' }
+  return { key: '', label: '', unit: '', source, signal_id: null, op: '/', operand_a: '', operand_b: '', max_step: '', manual_every_min: '60' }
 }
 export function emptyCriterion(variableKey = ''): CriterionDraft {
   return {
@@ -94,7 +130,7 @@ const num = (s: string) => (s.trim() === '' ? null : Number(s.replace(',', '.'))
 const isNum = (s: string) => s.trim() !== '' && Number.isFinite(Number(s.replace(',', '.')))
 
 /** Primer problema de las variables (mismas reglas que la BD), o null. */
-export function checkVariables(vars: Pick<VariableDraft, 'key' | 'source' | 'signal_id' | 'operand_a' | 'operand_b'>[]): string | null {
+export function checkVariables(vars: (Pick<VariableDraft, 'key' | 'source' | 'signal_id' | 'operand_a' | 'operand_b'> & { manual_every_min?: string })[]): string | null {
   const keys = vars.map(v => normKey(v.key))
   for (const k of keys) if (!KEY_RE.test(k)) return `Clave no válida: «${k || '(vacía)'}» (letra inicial, mayúsculas, dígitos o _, máx. 10)`
   const dup = keys.find((k, i) => keys.indexOf(k) !== i)
@@ -102,6 +138,10 @@ export function checkVariables(vars: Pick<VariableDraft, 'key' | 'source' | 'sig
   const set = new Set(keys)
   for (const v of vars) {
     if (v.source === 'signal' && !v.signal_id) return `La variable ${normKey(v.key)} necesita una señal`
+    if (v.source === 'manual' && v.manual_every_min !== undefined) {
+      const n = Number(v.manual_every_min)
+      if (!Number.isInteger(n) || n < 1 || n > 1440) return `La variable ${normKey(v.key)}: «lectura cada» va de 1 a 1440 min`
+    }
     if (v.source === 'derived') {
       const a = normKey(v.operand_a), b = normKey(v.operand_b)
       if (!set.has(a) || !set.has(b)) return `La variable derivada ${normKey(v.key)} usa un operando que no existe`
@@ -176,6 +216,7 @@ export function toPayload(c: ContentDraft) {
       operand_a: v.source === 'derived' ? normKey(v.operand_a) : null,
       operand_b: v.source === 'derived' ? normKey(v.operand_b) : null,
       max_step: num(v.max_step),
+      manual_every_min: v.source === 'manual' ? num(v.manual_every_min) ?? 60 : 60,
     })),
     criteria: c.criteria.map(cr => ({
       variable_key: normKey(cr.variable_key), label: cr.label.trim() || null, statistic: cr.statistic,
@@ -216,7 +257,7 @@ export function runClock(
     const e = mins(run.formal_started_at, nowMs)
     return { phase: 'formal', elapsedMin: e, targetMin: rev.formal_min, remainingMin: Math.max(0, rev.formal_min - e), done: e >= rev.formal_min }
   }
-  if (run.status === 'closed' && run.formal_started_at && run.closed_at) {
+  if ((run.status === 'closed' || run.status === 'evaluated') && run.formal_started_at && run.closed_at) {
     const e = mins(run.formal_started_at, Date.parse(run.closed_at))
     return { phase: 'closed', elapsedMin: e, targetMin: rev.formal_min, remainingMin: 0, done: true }
   }

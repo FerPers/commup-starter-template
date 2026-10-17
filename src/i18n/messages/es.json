@@ -4117,7 +4117,8 @@
         "stabilizing": "Estabilizando",
         "formal": "Periodo formal",
         "closed": "Cerrado",
-        "aborted": "Abortado"
+        "aborted": "Abortado",
+        "evaluated": "Evaluado"
       },
       "cancel": "Cancelar",
       "editHead": "Editar",
@@ -4254,7 +4255,6 @@
       "frozenRows": "Datos IIoT congelados: {n, plural, one {# fila} other {# filas}} de 1 minuto.",
       "frozenAt": "{n, plural, one {# fila congelada} other {# filas congeladas}} (IIoT + manuales) · {when}",
       "refreeze": "Re-congelar datos IIoT",
-      "resultPending": "La validación y el resultado llegan en la sesión 2.",
       "noData": "Sin datos aún.",
       "disturbances": "Perturbaciones",
       "disturbancesHint": "Registra trips, cambios de carga o fallas de instrumento. Un líder puede excluir la ventana del cálculo con motivo.",
@@ -4292,7 +4292,68 @@
         "value": "Valor",
         "by": "Registró"
       },
-      "noReadings": "Sin lecturas."
+      "noReadings": "Sin lecturas.",
+      "everyLabel": "Lectura cada",
+      "result": {
+        "accepted": "Aceptada",
+        "accepted_with_deviation": "Aceptada con desviación",
+        "repeat": "Repetir",
+        "failed": "Falló",
+        "inconclusive": "No concluyente"
+      },
+      "outcome": {
+        "pass": "Cumple",
+        "within_uncertainty": "Dentro de la incertidumbre",
+        "fail": "No cumple",
+        "not_evaluable": "No evaluable"
+      },
+      "reason": {
+        "coverage": "cobertura de datos insuficiente",
+        "unit": "unidad de una señal distinta a la definida",
+        "pair": "medidores sin reconciliar",
+        "early_close": "cierre anticipado",
+        "no_valid_data": "sin minutos válidos",
+        "not_evaluable": "criterio no evaluable"
+      },
+      "eval": {
+        "title": "Evaluación",
+        "suggested": "Sugerido:",
+        "suggestedShort": "sugerido",
+        "recorded": "registrado",
+        "window": "Periodo formal: {valid} min válidos de {total} ({excluded} excluidos por perturbaciones). Cobertura mínima {cov} %.",
+        "reasonsLead": "No concluyente por:",
+        "col": {
+          "criterion": "Criterio",
+          "value": "Obtenido",
+          "outcome": "Resultado"
+        },
+        "validation": "Validación de datos",
+        "vcol": {
+          "variable": "Variable",
+          "coverage": "Cobertura",
+          "quality": "Calidad mala",
+          "spikes": "Picos",
+          "unit": "Unidad",
+          "state": "Estado"
+        },
+        "oor": "{n} fuera de rango",
+        "unitBad": "No coincide",
+        "evaluable": "Evaluable",
+        "notEvaluable": "No evaluable",
+        "pairDiff": "diferencia promedio {diff} % (máx. {max} %, {n} min)",
+        "pairOk": "Reconciliados",
+        "pairBad": "Fuera de tolerancia",
+        "result": "Resultado",
+        "reasonRequired": "Motivo (obligatorio: distinto del sugerido)",
+        "reasonOptional": "Comentario (opcional)",
+        "record": "Registrar resultado",
+        "confirm": "¿Registrar el resultado? La evaluación queda congelada y el intento ya no se puede modificar.",
+        "actionHint": "Se creará una acción en Gestión diaria.",
+        "leadOnly": "El resultado lo registra un líder o superior.",
+        "recordedBy": "Registró {who} · {when}",
+        "reason": "Motivo",
+        "action": "Acción"
+      }
     }
   }
 }

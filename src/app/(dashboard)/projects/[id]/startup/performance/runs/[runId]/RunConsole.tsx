@@ -10,9 +10,10 @@ import {
   endPerformanceDisturbance, recordPerformanceDisturbance, refreezePerformanceRun, setPerformanceDisturbanceExclusion,
 } from '@/app/actions/performance'
 import {
-  DISTURBANCE_KINDS, fmtMinutes, isPerformanceLead, runClock, toLocalInput,
-  type DisturbanceKind, type PerfRunStatus, type VariableSource,
+  DISTURBANCE_KINDS, RESULT_TONE, fmtMinutes, isPerformanceLead, runClock, toLocalInput,
+  type DisturbanceKind, type Evaluation, type PerfResult, type PerfRunStatus, type VariableSource,
 } from '@/lib/performance/catalog'
+import EvaluationPanel from './EvaluationPanel'
 import { Alert, Chip, Field, btn, card, grid, input, label, small } from '../../../../daily/daily-ui'
 import { RUN_TONE } from '../../PerformanceView'
 
@@ -22,6 +23,7 @@ type Run = {
   formal_started_by: string | null; formal_started_at: string | null; formal_start_note: string | null
   closed_by: string | null; closed_at: string | null; early_close: boolean; early_close_reason: string | null
   frozen_at: string | null; frozen_rows: number | null; aborted_by: string | null; aborted_at: string | null; abort_reason: string | null
+  result: PerfResult | null; result_reason: string | null; result_by: string | null; result_at: string | null; evaluation_hash: string | null
 }
 type Variable = { id: string; key: string; label: string; unit: string | null; source: VariableSource }
 type Point = { variableId: string; bucket: string; value: number | null; source: 'iiot' | 'manual'; enteredBy: string | null }
@@ -49,10 +51,11 @@ const th: React.CSSProperties = { textAlign: 'left', padding: '6px 8px', fontSiz
 const td: React.CSSProperties = { padding: '6px 8px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const sectionTitle: React.CSSProperties = { fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }
 
-export default function RunConsole({ project, test, run, rev, variables, points, disturbances, names, userId, role }: {
+export default function RunConsole({ project, test, run, rev, variables, points, disturbances, names, userId, role, evaluation, evaluationError, action }: {
   project: { id: string; code: string; name: string }
   test: { id: string; number: string; title: string }
   run: Run
+  evaluation: Evaluation | null; evaluationError: string | null; action: { id: string; number: string; status: string } | null
   rev: { rev: number; stabilization_min: number; formal_min: number; sample_interval_s: number; outdated: boolean }
   variables: Variable[]; points: Point[]; disturbances: Disturbance[]
   names: Record<string, string>; userId: string; role: string
@@ -111,6 +114,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
           <Chip tone={RUN_TONE[run.status]}>{t(`perf.runStatus.${run.status}`)}</Chip>
           <span style={small}>R{rev.rev}</span>
           {run.early_close && <Chip tone="amber">{t('perf.earlyClose')}</Chip>}
+          {run.result && <Chip tone={RESULT_TONE[run.result]}>{t(`perf.result.${run.result}`)}</Chip>}
         </div>
       </div>
 
@@ -125,7 +129,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
           {(['stabilizing', 'formal', 'closed'] as const).map(phase => {
             const startedAt = phase === 'stabilizing' ? run.stabilization_started_at : phase === 'formal' ? run.formal_started_at : run.closed_at
             const by = phase === 'stabilizing' ? run.stabilization_started_by : phase === 'formal' ? run.formal_started_by : run.closed_by
-            const active = run.status === phase
+            const active = run.status === phase || (phase === 'closed' && run.status === 'evaluated')
             return (
               <div key={phase} style={{ padding: 12, borderRadius: 10, border: `1px solid ${active ? 'var(--primary-500)' : 'var(--border)'}`, background: active ? '#eff6ff' : undefined }}>
                 <div style={label}>{t(`perf.phase.${phase}`)}</div>
@@ -167,15 +171,18 @@ export default function RunConsole({ project, test, run, rev, variables, points,
               onClick={() => { const r = window.prompt(t('perf.abortPrompt')); if (r?.trim()) act(() => abortPerformanceRun({ ...ids, reason: r.trim() })) }}>{t('perf.abort')}</button>
           </div>
         )}
-        {run.status === 'closed' && (
+        {(run.status === 'closed' || run.status === 'evaluated') && (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={small} suppressHydrationWarning>{t('perf.frozenAt', { n: run.frozen_rows ?? 0, when: when(run.frozen_at) })}</span>
-            {lead && <button type="button" style={btn('outline', isPending)} disabled={isPending}
+            {lead && run.status === 'closed' && <button type="button" style={btn('outline', isPending)} disabled={isPending}
               onClick={() => act(() => refreezePerformanceRun(ids), res => setNotice(t('perf.frozenRows', { n: res.rows ?? 0 })))}>{t('perf.refreeze')}</button>}
-            <span style={small}>{t('perf.resultPending')}</span>
           </div>
         )}
       </section>
+
+      {(run.status === 'closed' || run.status === 'evaluated') && (
+        <EvaluationPanel projectId={project.id} run={run} evaluation={evaluation} evaluationError={evaluationError} action={action} names={names} canLead={lead} />
+      )}
 
       {/* Gráficos */}
       {chartFrom && chartTo && charted.length > 0 && (

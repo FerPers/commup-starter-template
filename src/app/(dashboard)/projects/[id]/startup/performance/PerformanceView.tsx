@@ -5,18 +5,18 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createPerformanceTest } from '@/app/actions/performance'
-import type { PerfRunStatus, RevisionStatus } from '@/lib/performance/catalog'
+import { RESULT_TONE, type PerfResult, type PerfRunStatus, type RevisionStatus } from '@/lib/performance/catalog'
 import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, linkStyle, small } from '../../daily/daily-ui'
 import StartupTabs from '../StartupTabs'
 
 type TestRow = {
   id: string; number: string; title: string; system: string; currentRev: number | null
   openRev: { id: string; rev: number; status: RevisionStatus } | null
-  lastRun: { id: string; number: string; status: PerfRunStatus } | null
+  lastRun: { id: string; number: string; status: PerfRunStatus; result: PerfResult | null } | null
 }
 
 export const RUN_TONE: Record<PerfRunStatus, 'muted' | 'blue' | 'amber' | 'green' | 'struck'> = {
-  planned: 'muted', stabilizing: 'amber', formal: 'blue', closed: 'green', aborted: 'struck',
+  planned: 'muted', stabilizing: 'amber', formal: 'blue', closed: 'amber', evaluated: 'green', aborted: 'struck',
 }
 export const REV_TONE: Record<RevisionStatus, 'muted' | 'blue' | 'green' | 'struck'> = { draft: 'muted', in_review: 'blue', approved: 'green', superseded: 'struck' }
 
@@ -105,7 +105,9 @@ export default function PerformanceView({ project, systems, tests, canLead }: {
                   {x.lastRun
                     ? <Link href={`${root}/runs/${x.lastRun.id}`} style={{ textDecoration: 'none', display: 'inline-flex', gap: 6, alignItems: 'center' }}>
                         <span style={{ ...mono, fontWeight: 600 }}>{x.lastRun.number}</span>
-                        <Chip tone={RUN_TONE[x.lastRun.status]}>{t(`perf.runStatus.${x.lastRun.status}`)}</Chip>
+                        {x.lastRun.result
+                          ? <Chip tone={RESULT_TONE[x.lastRun.result]}>{t(`perf.result.${x.lastRun.result}`)}</Chip>
+                          : <Chip tone={RUN_TONE[x.lastRun.status]}>{t(`perf.runStatus.${x.lastRun.status}`)}</Chip>}
                       </Link>
                     : <span style={small}>—</span>}
                 </td>

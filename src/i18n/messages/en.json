@@ -4117,7 +4117,8 @@
         "stabilizing": "Stabilizing",
         "formal": "Formal period",
         "closed": "Closed",
-        "aborted": "Aborted"
+        "aborted": "Aborted",
+        "evaluated": "Evaluated"
       },
       "cancel": "Cancel",
       "editHead": "Edit",
@@ -4254,7 +4255,6 @@
       "frozenRows": "IIoT data frozen: {n, plural, one {# one-minute row} other {# one-minute rows}}.",
       "frozenAt": "{n, plural, one {# row frozen} other {# rows frozen}} (IIoT + manual) · {when}",
       "refreeze": "Re-freeze IIoT data",
-      "resultPending": "Validation and result come in session 2.",
       "noData": "No data yet.",
       "disturbances": "Disturbances",
       "disturbancesHint": "Record trips, load changes or instrument faults. A leader may exclude the window from the calculation with a reason.",
@@ -4292,7 +4292,68 @@
         "value": "Value",
         "by": "Entered by"
       },
-      "noReadings": "No readings."
+      "noReadings": "No readings.",
+      "everyLabel": "Reading every",
+      "result": {
+        "accepted": "Accepted",
+        "accepted_with_deviation": "Accepted with deviation",
+        "repeat": "Repeat",
+        "failed": "Failed",
+        "inconclusive": "Inconclusive"
+      },
+      "outcome": {
+        "pass": "Meets",
+        "within_uncertainty": "Within uncertainty",
+        "fail": "Does not meet",
+        "not_evaluable": "Not evaluable"
+      },
+      "reason": {
+        "coverage": "insufficient data coverage",
+        "unit": "signal unit differs from the definition",
+        "pair": "meters not reconciled",
+        "early_close": "early close",
+        "no_valid_data": "no valid minutes",
+        "not_evaluable": "criterion not evaluable"
+      },
+      "eval": {
+        "title": "Evaluation",
+        "suggested": "Suggested:",
+        "suggestedShort": "suggested",
+        "recorded": "recorded",
+        "window": "Formal period: {valid} valid min of {total} ({excluded} excluded by disturbances). Minimum coverage {cov} %.",
+        "reasonsLead": "Inconclusive because of:",
+        "col": {
+          "criterion": "Criterion",
+          "value": "Obtained",
+          "outcome": "Result"
+        },
+        "validation": "Data validation",
+        "vcol": {
+          "variable": "Variable",
+          "coverage": "Coverage",
+          "quality": "Bad quality",
+          "spikes": "Spikes",
+          "unit": "Unit",
+          "state": "State"
+        },
+        "oor": "{n} out of range",
+        "unitBad": "Mismatch",
+        "evaluable": "Evaluable",
+        "notEvaluable": "Not evaluable",
+        "pairDiff": "average difference {diff} % (max {max} %, {n} min)",
+        "pairOk": "Reconciled",
+        "pairBad": "Out of tolerance",
+        "result": "Result",
+        "reasonRequired": "Reason (required: differs from suggested)",
+        "reasonOptional": "Comment (optional)",
+        "record": "Record result",
+        "confirm": "Record the result? The evaluation is frozen and the attempt can no longer be changed.",
+        "actionHint": "An action will be created in Daily management.",
+        "leadOnly": "A leader or above records the result.",
+        "recordedBy": "Recorded by {who} · {when}",
+        "reason": "Reason",
+        "action": "Action"
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import type {
-  ContentDraft, CriterionDraft, DerivedOp, PerfRunStatus, PerformanceSection, RevisionStatus, Statistic, TotalBasis, UncertaintyMode, VariableSource,
+  ContentDraft, CriterionDraft, DerivedOp, PerfResult, PerfRunStatus, PerformanceSection, RevisionStatus, Statistic, TotalBasis, UncertaintyMode, VariableSource,
 } from '@/lib/performance/catalog'
 import TestView from './TestView'
 
@@ -24,7 +24,7 @@ export default async function PerformanceTestPage({ params, searchParams }: {
 
   const [{ data: revisions }, { data: runs }, { data: systems }, { data: signals }, { data: procedures }, { data: members }] = await Promise.all([
     supabase.from('performance_test_revisions').select('*').eq('test_id', testId).order('rev', { ascending: false }),
-    supabase.from('performance_runs').select('id, number, attempt, status, revision_id, created_at, stabilization_started_at, formal_started_at, closed_at, early_close, aborted_at')
+    supabase.from('performance_runs').select('id, number, attempt, status, revision_id, created_at, stabilization_started_at, formal_started_at, closed_at, early_close, aborted_at, result')
       .eq('test_id', testId).order('attempt', { ascending: false }),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('signals').select('id, signal_tag, eng_unit, tags!inner(project_id, subsystems(system_id))').eq('tags.project_id', id).order('signal_tag').limit(2000),
@@ -58,7 +58,7 @@ export default async function PerformanceTestPage({ params, searchParams }: {
     system_ids: (rsys ?? []).map(r => r.system_id).filter(x => x !== test.primary_system_id),
     variables: (vars ?? []).map(v => ({
       key: v.key, label: v.label, unit: v.unit ?? '', source: v.source as VariableSource, signal_id: v.signal_id,
-      op: (v.op ?? '/') as DerivedOp, operand_a: v.operand_a ?? '', operand_b: v.operand_b ?? '', max_step: s(v.max_step),
+      op: (v.op ?? '/') as DerivedOp, operand_a: v.operand_a ?? '', operand_b: v.operand_b ?? '', max_step: s(v.max_step), manual_every_min: s(v.manual_every_min),
     })),
     criteria: (crit ?? []).map((c): CriterionDraft => ({
       variable_key: c.variable_key, label: c.label ?? '', statistic: c.statistic as Statistic, band_lo: s(c.band_lo), band_hi: s(c.band_hi),
@@ -79,7 +79,7 @@ export default async function PerformanceTestPage({ params, searchParams }: {
       }))}
       shownId={shown.id}
       content={content}
-      runs={(runs ?? []).map(r => ({ ...r, status: r.status as PerfRunStatus, rev: revs.find(x => x.id === r.revision_id)?.rev ?? null }))}
+      runs={(runs ?? []).map(r => ({ ...r, status: r.status as PerfRunStatus, result: r.result as PerfResult | null, rev: revs.find(x => x.id === r.revision_id)?.rev ?? null }))}
       systems={systems ?? []}
       signals={(signals ?? []).map(x => ({
         id: x.id, tag: x.signal_tag, unit: x.eng_unit,

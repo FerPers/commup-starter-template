@@ -1,7 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { DisturbanceKind, PerfRunStatus, VariableSource } from '@/lib/performance/catalog'
+import type { DisturbanceKind, Evaluation, PerfResult, PerfRunStatus, VariableSource } from '@/lib/performance/catalog'
 import RunConsole from './RunConsole'
 
 // Consola de un intento de prueba de desempeño (fase 7, sesión 1): periodos, reloj, gráfico por variable
@@ -62,6 +62,19 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
     }
   }
 
+  // Evaluación: en vivo (la calcula la BD) mientras está cerrado; congelada una vez registrado el resultado.
+  let evaluation: Evaluation | null = null
+  let evaluationError: string | null = null
+  if (run.status === 'evaluated') evaluation = run.evaluation as unknown as Evaluation
+  else if (run.status === 'closed') {
+    const { data, error } = await ctx.supabase.rpc('evaluate_performance_run', { p_run_id: runId })
+    if (error) evaluationError = error.message
+    else evaluation = data as unknown as Evaluation
+  }
+  const { data: action } = run.action_id
+    ? await ctx.supabase.from('actions').select('id, number, status').eq('id', run.action_id).maybeSingle()
+    : { data: null }
+
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
     const p = m.profiles as unknown as { full_name: string | null } | null
@@ -72,7 +85,10 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
     <RunConsole
       project={project}
       test={{ id: test.id, number: test.number, title: test.title }}
-      run={{ ...run, status: run.status as PerfRunStatus }}
+      run={{ ...run, status: run.status as PerfRunStatus, result: run.result as PerfResult | null }}
+      evaluation={evaluation}
+      evaluationError={evaluationError}
+      action={action}
       rev={{ rev: rev.rev, stabilization_min: rev.stabilization_min, formal_min: rev.formal_min, sample_interval_s: rev.sample_interval_s, outdated: test.current_revision_id !== rev.id }}
       variables={variables.map(v => ({ id: v.id, key: v.key, label: v.label, unit: v.unit, source: v.source as VariableSource }))}
       points={points.map(p => ({ ...p, value: p.value === null ? null : Number(p.value) }))}
