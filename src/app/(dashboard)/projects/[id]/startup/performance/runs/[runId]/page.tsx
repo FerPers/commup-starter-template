@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { DisturbanceKind, Evaluation, PerfResult, PerfRunStatus, VariableSource } from '@/lib/performance/catalog'
 import RunConsole from './RunConsole'
+import type { Certificate } from './CertificateCard'
 
 // Consola de un intento de prueba de desempeño (fase 7, sesión 1): periodos, reloj, gráfico por variable
 // (en vivo desde signal_samples_1min; congelado desde performance_run_data al cerrar), perturbaciones y
@@ -71,6 +72,9 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
     if (error) evaluationError = error.message
     else evaluation = data as unknown as Evaluation
   }
+  const { data: certificate } = await ctx.supabase.from('performance_certificates')
+    .select('id, number, status, content_hash, commissioning_signed_by, commissioning_signed_at, operations_signed_by, operations_signed_at, client_signed_by, client_signed_at, revoked_by, revoked_at, revoke_reason')
+    .eq('run_id', runId).maybeSingle()
   const { data: action } = run.action_id
     ? await ctx.supabase.from('actions').select('id, number, status').eq('id', run.action_id).maybeSingle()
     : { data: null }
@@ -89,6 +93,7 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
       evaluation={evaluation}
       evaluationError={evaluationError}
       action={action}
+      certificate={certificate as Certificate | null}
       rev={{ rev: rev.rev, stabilization_min: rev.stabilization_min, formal_min: rev.formal_min, sample_interval_s: rev.sample_interval_s, outdated: test.current_revision_id !== rev.id }}
       variables={variables.map(v => ({ id: v.id, key: v.key, label: v.label, unit: v.unit, source: v.source as VariableSource }))}
       points={points.map(p => ({ ...p, value: p.value === null ? null : Number(p.value) }))}

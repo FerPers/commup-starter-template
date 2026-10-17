@@ -68,6 +68,8 @@ describe('parseCounts / badgeTotal', () => {
   it('fase 6 (sesión 3): los traspasos por firmar suman al badge', () => {
     expect(badgeTotal({ ...EMPTY_COUNTS, transfers_to_sign: 2 }, 'client')).toBe(2)
     expect(parseCounts({ transfers_to_sign: '3' }).transfers_to_sign).toBe(3)
+    expect(badgeTotal({ ...EMPTY_COUNTS, performance_to_decide: 1, performance_to_sign: 2 }, 'leader')).toBe(3)
+    expect(parseCounts({ performance_to_sign: '4' }).performance_to_sign).toBe(4)
   })
 
   it('roles: firmantes y supervisión de preservación', () => {

@@ -2248,7 +2248,9 @@
       "holds": "hold points to release",
       "lineup": "valves to verify",
       "milestones": "milestones to witness",
-      "transfers": "Transfers to sign"
+      "transfers": "Transfers to sign",
+      "performanceDecide": "Performance results",
+      "performanceSign": "PTC to sign"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2266,7 +2268,9 @@
       "holds": "Hold points to release",
       "lineup": "Line-up: critical valves to verify",
       "milestones": "Start-up milestones to witness",
-      "transfers": "Ownership transfers to sign"
+      "transfers": "Ownership transfers to sign",
+      "performanceDecide": "Performance tests to decide",
+      "performanceSign": "PTC certificates to sign"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -2284,7 +2288,9 @@
       "holds": "No hold points waiting for your release.",
       "lineup": "No critical valves to verify.",
       "milestones": "No milestones waiting for you.",
-      "transfers": "Nothing to sign."
+      "transfers": "Nothing to sign.",
+      "performanceDecide": "Nothing to decide.",
+      "performanceSign": "Nothing to sign."
     },
     "due": {
       "overdue": "due {date}",
@@ -2298,7 +2304,8 @@
       "escalate": "{days, plural, one {overdue # day} other {overdue # days}} · escalate",
       "receive": "Receive",
       "release": "Release",
-      "witness": "Witness"
+      "witness": "Witness",
+      "decide": "Decide"
     },
     "punchStatus": {
       "open": "Open",
@@ -3558,7 +3565,8 @@
         "regressed": "Regressed gates",
         "field": "Temporary state in the field",
         "lookahead": "Next 7 days",
-        "none": "None."
+        "none": "None.",
+        "performance": "Performance tests"
       },
       "dataNote": "PDF figures come from this data, not from the text. “Refresh data” retakes the snapshot (draft only).",
       "aiReplaceConfirm": "The report already has text. Replace it with the AI draft? (Cancel = AI only fills empty sections)",
@@ -4358,6 +4366,32 @@
         "recordedBy": "Recorded by {who} · {when}",
         "reason": "Reason",
         "action": "Action"
+      },
+      "cert": {
+        "title": "Performance test certificate (PTC)",
+        "pdf": "PDF report",
+        "issue": "Issue PTC certificate",
+        "issueConfirm": "Issue the certificate? You sign as Commissioning; Operations and Client remain.",
+        "leadIssues": "A leader or above issues the certificate.",
+        "notCertifiable": "Only an accepted (or accepted with deviation) attempt can be certified.",
+        "cap": {
+          "commissioning": "Commissioning",
+          "operations": "Operations",
+          "client": "Client"
+        },
+        "sign": "Sign",
+        "signConfirm": "Sign the certificate? Your signature is recorded with date and time.",
+        "waitOps": "Pending: Operations signature (another person)",
+        "waitClient": "Pending: Client signature (user with client role)",
+        "revoke": "Revoke certificate",
+        "revokePrompt": "Reason for revoking",
+        "revoked": "Revoked by {who} · {when}: {reason}"
+      },
+      "certStatus": {
+        "pending_signatures": "Pending signatures",
+        "accepted": "Accepted",
+        "revoked": "Revoked",
+        "superseded": "Superseded"
       }
     }
   }

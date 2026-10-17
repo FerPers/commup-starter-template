@@ -41,6 +41,8 @@ export type ReportData = {
   /** F6-S2: hitos y eventos de arranque del día (ausente en reportes congelados antes de la bitácora). */
   startup_events_today?: ({ number: string; kind: 'milestone' | 'free'; code: string; title: string; occurred_at: string; status: string;
     params: { label: string; value: string | null; unit: string | null }[] } & Sys)[]
+  /** F7: intentos de prueba de desempeño cerrados o con resultado hoy y certificados PTC aceptados hoy. */
+  performance_today?: ({ kind: 'run' | 'certificate'; number: string; title: string; status: string; result?: string | null; early_close?: boolean; at: string } & Sys)[]
 }
 
 /** Delta de avance ponderado en puntos porcentuales (null si no hay snapshot previo). */
@@ -79,6 +81,10 @@ export function reportFacts(d: ReportData): string {
     'EVENTOS DE ARRANQUE HOY (bitácora):',
     list(d.startup_events_today ?? [], r => `${r.occurred_at.slice(11, 16)} ${r.number} ${r.kind === 'milestone' ? 'HITO' : 'evento'} ${r.code}: ${r.title}${sys(r)} (${r.status})`
       + (r.params.length ? ` · ${r.params.map(p => `${p.label}=${p.value ?? '—'}${p.unit ? ` ${p.unit}` : ''}`).join(', ')}` : ''), '(ninguno)'),
+    'PRUEBAS DE DESEMPEÑO HOY:',
+    list(d.performance_today ?? [], r => r.kind === 'run'
+      ? `${r.number}: ${r.title}${sys(r)} — ${r.result ? `resultado ${r.result}` : 'cerrado, sin resultado'}${r.early_close ? ' (cierre anticipado)' : ''}`
+      : `${r.number}: certificado PTC aceptado (${r.title})${sys(r)}`, '(ninguna)'),
     'PRÓXIMOS 7 DÍAS:',
     list(d.lookahead_7d, r => `${r.date} · ${r.kind} ${r.ref}: ${r.title}${sys(r)}`, '(nada comprometido)'),
   ].join('\n')

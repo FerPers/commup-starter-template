@@ -131,8 +131,8 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
 
       {/* Resultado */}
       {frozen ? (
-        <div style={{ ...small, display: 'flex', flexDirection: 'column', gap: 2 }} suppressHydrationWarning>
-          <span>{t('perf.eval.recordedBy', { who: who(run.result_by), when: run.result_at ? new Date(run.result_at).toLocaleString() : '' })}</span>
+        <div style={{ ...small, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span suppressHydrationWarning>{t('perf.eval.recordedBy', { who: who(run.result_by), when: run.result_at ? new Date(run.result_at).toLocaleString() : '' })}</span>
           {run.result_reason && <span>{t('perf.eval.reason')}: {run.result_reason}</span>}
           {action && <span>{t('perf.eval.action')}: <Link href={`/projects/${projectId}/daily/action/${action.id}`} style={{ color: 'var(--primary-600, #2563eb)' }}>{action.number}</Link></span>}
           {run.evaluation_hash && <span style={{ fontFamily: 'ui-monospace, monospace' }}>sha256 {run.evaluation_hash.slice(0, 16)}…</span>}

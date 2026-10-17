@@ -1,7 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import type {
-  ContentDraft, CriterionDraft, DerivedOp, PerfResult, PerfRunStatus, PerformanceSection, RevisionStatus, Statistic, TotalBasis, UncertaintyMode, VariableSource,
+  CertificateStatus, ContentDraft, CriterionDraft, DerivedOp, PerfResult, PerfRunStatus, PerformanceSection, RevisionStatus, Statistic, TotalBasis, UncertaintyMode, VariableSource,
 } from '@/lib/performance/catalog'
 import TestView from './TestView'
 
@@ -32,6 +32,8 @@ export default async function PerformanceTestPage({ params, searchParams }: {
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
   ])
   const revs = revisions ?? []
+  const { data: liveCert } = await supabase.from('performance_certificates').select('id, number, status, run_id')
+    .eq('test_id', testId).in('status', ['pending_signatures', 'accepted']).maybeSingle()
   // Revisión mostrada: ?rev=N, si no la abierta (borrador / en revisión), si no la vigente.
   const shown = revs.find(r => String(r.rev) === sp.rev) ?? revs.find(r => r.status === 'draft' || r.status === 'in_review')
     ?? revs.find(r => r.id === test.current_revision_id) ?? revs[0]
@@ -78,6 +80,7 @@ export default async function PerformanceTestPage({ params, searchParams }: {
         createdBy: r.created_by, submittedBy: r.submitted_by, submittedAt: r.submitted_at, approvedBy: r.approved_by, approvedAt: r.approved_at, hash: r.content_hash,
       }))}
       shownId={shown.id}
+      liveCertificate={liveCert ? { ...liveCert, status: liveCert.status as CertificateStatus } : null}
       content={content}
       runs={(runs ?? []).map(r => ({ ...r, status: r.status as PerfRunStatus, result: r.result as PerfResult | null, rev: revs.find(x => x.id === r.revision_id)?.rev ?? null }))}
       systems={systems ?? []}

@@ -269,3 +269,52 @@ export const recordPerformanceResult = withAuth(
     return { actionId: (data as string | null) ?? null }
   },
 )
+
+// ── Certificado PTC (sesión 2b) ───────────────────────────────────────────
+async function ownedCertificate(db: SupabaseClient, id: string, projectId: string) {
+  const { data } = await db.from('performance_certificates').select('id, run_id').eq('id', id).eq('project_id', projectId).maybeSingle()
+  return data as { id: string; run_id: string } | null
+}
+
+function revalidateCertificate(projectId: string, runId: string) {
+  revalidate(projectId, `runs/${runId}`)
+  revalidatePath('/my-work')
+  revalidatePath('/control-tower', 'layout')
+}
+
+/** Emite el PTC de un intento aceptado; quien emite firma como Comisionamiento. */
+export const issuePerformanceCertificate = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; runId: string }): Promise<{ id?: string; error?: string }> => {
+    if (!(await owned(ctx.supabase, 'performance_runs', input.runId, input.projectId))) return { error: 'Intento no encontrado' }
+    const { data, error } = await ctx.supabase.rpc('issue_performance_certificate', { p_run_id: input.runId })
+    if (error) return { error: error.message }
+    revalidateCertificate(input.projectId, input.runId)
+    return { id: data as string }
+  },
+)
+
+export const signPerformanceCertificate = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; certificateId: string; capacity: 'operations' | 'client' }): Promise<{ status?: string; error?: string }> => {
+    if (!['operations', 'client'].includes(input.capacity)) return { error: 'Capacidad no válida' }
+    const cert = await ownedCertificate(ctx.supabase, input.certificateId, input.projectId)
+    if (!cert) return { error: 'Certificado no encontrado' }
+    const { data, error } = await ctx.supabase.rpc('sign_performance_certificate', { p_certificate_id: input.certificateId, p_capacity: input.capacity })
+    if (error) return { error: error.message }
+    revalidateCertificate(input.projectId, cert.run_id)
+    return { status: data as string }
+  },
+)
+
+export const revokePerformanceCertificate = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; certificateId: string; reason: string }): Promise<{ error?: string }> => {
+    const cert = await ownedCertificate(ctx.supabase, input.certificateId, input.projectId)
+    if (!cert) return { error: 'Certificado no encontrado' }
+    const { error } = await ctx.supabase.rpc('revoke_performance_certificate', { p_certificate_id: input.certificateId, p_reason: input.reason.slice(0, 2000) })
+    if (error) return { error: error.message }
+    revalidateCertificate(input.projectId, cert.run_id)
+    return {}
+  },
+)

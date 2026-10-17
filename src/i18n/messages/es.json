@@ -2248,7 +2248,9 @@
       "holds": "hold points por liberar",
       "lineup": "válvulas por verificar",
       "milestones": "hitos por atestiguar",
-      "transfers": "Traspasos por firmar"
+      "transfers": "Traspasos por firmar",
+      "performanceDecide": "Resultados de desempeño",
+      "performanceSign": "PTC por firmar"
     },
     "queues": {
       "execute": "ITRs por ejecutar",
@@ -2266,7 +2268,9 @@
       "holds": "Hold points por liberar",
       "lineup": "Line-up: válvulas críticas por verificar",
       "milestones": "Hitos de arranque por atestiguar",
-      "transfers": "Traspasos de propiedad por firmar"
+      "transfers": "Traspasos de propiedad por firmar",
+      "performanceDecide": "Pruebas de desempeño por decidir",
+      "performanceSign": "Certificados PTC por firmar"
     },
     "empty": {
       "execute": "No tienes ITRs pendientes de ejecución.",
@@ -2284,7 +2288,9 @@
       "holds": "No hay hold points esperando tu liberación.",
       "lineup": "No hay válvulas críticas por verificar.",
       "milestones": "No hay hitos esperando tu firma.",
-      "transfers": "Nada por firmar."
+      "transfers": "Nada por firmar.",
+      "performanceDecide": "Nada por decidir.",
+      "performanceSign": "Nada por firmar."
     },
     "due": {
       "overdue": "vence {date}",
@@ -2298,7 +2304,8 @@
       "escalate": "{days, plural, one {vencida # día} other {vencida # días}} · escalar",
       "receive": "Recibir",
       "release": "Liberar",
-      "witness": "Atestiguar"
+      "witness": "Atestiguar",
+      "decide": "Decidir"
     },
     "punchStatus": {
       "open": "Abierto",
@@ -3558,7 +3565,8 @@
         "regressed": "Gates en regresión",
         "field": "Estado temporal en campo",
         "lookahead": "Próximos 7 días",
-        "none": "Nada."
+        "none": "Nada.",
+        "performance": "Pruebas de desempeño"
       },
       "dataNote": "Las cifras del PDF salen de estos datos, no del texto. «Actualizar datos» vuelve a tomar la foto (solo en borrador).",
       "aiReplaceConfirm": "Ya hay texto en el reporte. ¿Reemplazarlo por la redacción de la IA? (Cancelar = la IA solo llena las secciones vacías)",
@@ -4358,6 +4366,32 @@
         "recordedBy": "Registró {who} · {when}",
         "reason": "Motivo",
         "action": "Acción"
+      },
+      "cert": {
+        "title": "Certificado de prueba de desempeño (PTC)",
+        "pdf": "Reporte PDF",
+        "issue": "Emitir certificado PTC",
+        "issueConfirm": "¿Emitir el certificado? Firmas como Comisionamiento; faltarán Operaciones y Cliente.",
+        "leadIssues": "El certificado lo emite un líder o superior.",
+        "notCertifiable": "Solo se certifica un intento aceptado o aceptado con desviación.",
+        "cap": {
+          "commissioning": "Comisionamiento",
+          "operations": "Operaciones",
+          "client": "Cliente"
+        },
+        "sign": "Firmar",
+        "signConfirm": "¿Firmar el certificado? Tu firma queda registrada con fecha y hora.",
+        "waitOps": "Pendiente: firma de Operaciones (persona distinta)",
+        "waitClient": "Pendiente: firma del Cliente (usuario con rol cliente)",
+        "revoke": "Revocar certificado",
+        "revokePrompt": "Motivo de la revocación",
+        "revoked": "Revocado por {who} · {when}: {reason}"
+      },
+      "certStatus": {
+        "pending_signatures": "Pendiente de firmas",
+        "accepted": "Aceptado",
+        "revoked": "Revocado",
+        "superseded": "Reemplazado"
       }
     }
   }

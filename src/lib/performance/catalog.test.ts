@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   PERFORMANCE_SECTIONS, checkContent, checkCriterion, checkVariables, criterionText, emptyCriterion, emptyVariable,
-  findCycle, runClock, toPayload, type ContentDraft,
+  canSignCertificate, findCycle, runClock, toPayload, type ContentDraft,
 } from './catalog'
 
 const v = (key: string, source: 'signal' | 'manual' | 'derived', a = '', b = '') =>
@@ -62,5 +62,18 @@ describe('performance catalog', () => {
     const formal = { ...base, status: 'formal' as const, formal_started_at: '2026-10-17T10:40:00Z' }
     expect(runClock(formal, rev, t0 + 105 * 60000)).toMatchObject({ phase: 'formal', elapsedMin: 65, remainingMin: 0, done: true })
     expect(runClock({ ...formal, status: 'closed', closed_at: '2026-10-17T11:20:00Z' }, rev, t0)).toMatchObject({ elapsedMin: 40 })
+  })
+})
+
+describe('firmas del certificado PTC', () => {
+  const c = { status: 'pending_signatures' as const, commissioning_signed_by: 'a', operations_signed_by: null, client_signed_by: null }
+  it('exige otra persona y la capacidad correcta', () => {
+    expect(canSignCertificate(c, 'operations', 'leader', 'a')).toBe(false)
+    expect(canSignCertificate(c, 'operations', 'leader', 'b')).toBe(true)
+    expect(canSignCertificate(c, 'operations', 'inspector', 'b')).toBe(false)
+    expect(canSignCertificate(c, 'client', 'admin', 'b')).toBe(false)
+    expect(canSignCertificate(c, 'client', 'client', 'c')).toBe(true)
+    expect(canSignCertificate({ ...c, operations_signed_by: 'c' }, 'client', 'client', 'c')).toBe(false)
+    expect(canSignCertificate({ ...c, status: 'accepted' }, 'client', 'client', 'd')).toBe(false)
   })
 })

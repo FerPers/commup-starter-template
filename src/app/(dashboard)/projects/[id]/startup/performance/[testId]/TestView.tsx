@@ -10,7 +10,7 @@ import {
 import {
   DERIVED_OPS, OPERATORS, PERFORMANCE_SECTIONS, STATISTICS, TOTAL_BASES, UNCERTAINTY_MODES, VARIABLE_SOURCES, LIVE_RUN_STATUSES,
   checkContent, criterionText, emptyCriterion, emptyPair, emptyVariable, isPerformanceLead, normKey,
-  RESULT_TONE, type ContentDraft, type CriterionDraft, type PairDraft, type PerfResult, type PerfRunStatus, type RevisionStatus, type VariableDraft,
+  CERT_TONE, RESULT_TONE, type CertificateStatus, type ContentDraft, type CriterionDraft, type PairDraft, type PerfResult, type PerfRunStatus, type RevisionStatus, type VariableDraft,
 } from '@/lib/performance/catalog'
 import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, label, small } from '../../../daily/daily-ui'
 import { REV_TONE, RUN_TONE } from '../PerformanceView'
@@ -30,10 +30,11 @@ const td: React.CSSProperties = { padding: '6px 8px', borderBottom: '1px solid v
 const cell: React.CSSProperties = { ...input, padding: '6px 8px' }
 const sectionTitle: React.CSSProperties = { fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }
 
-export default function TestView({ project, test, revisions, shownId, content, runs, systems, signals, procedures, names, userId, role }: {
+export default function TestView({ project, test, revisions, shownId, liveCertificate, content, runs, systems, signals, procedures, names, userId, role }: {
   project: { id: string; code: string; name: string }
   test: { id: string; number: string; title: string; primarySystemId: string; currentRevisionId: string | null; createdBy: string | null }
   revisions: Rev[]; shownId: string; content: ContentDraft; runs: Run[]
+  liveCertificate: { id: string; number: string; status: CertificateStatus; run_id: string } | null
   systems: { id: string; code: string; name: string }[]; signals: Signal[]; procedures: { id: string; label: string }[]
   names: Record<string, string>; userId: string; role: string
 }) {
@@ -112,6 +113,11 @@ export default function TestView({ project, test, revisions, shownId, content, r
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
               <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, fontFamily: 'ui-monospace, monospace', color: 'var(--text-strong)' }}>{test.number}</h1>
               {test.currentRevisionId ? <Chip tone="green">{t('perf.approvedRev', { rev: revisions.find(r => r.id === test.currentRevisionId)?.rev ?? 0 })}</Chip> : <Chip tone="muted">{t('notApproved')}</Chip>}
+              {liveCertificate && (
+                <Link href={`${root}/runs/${liveCertificate.run_id}`} style={{ textDecoration: 'none' }}>
+                  <Chip tone={CERT_TONE[liveCertificate.status]}>{liveCertificate.number} · {t(`perf.certStatus.${liveCertificate.status}`)}</Chip>
+                </Link>
+              )}
               {lead && <button type="button" style={{ ...btn('outline'), padding: '3px 10px' }} onClick={() => setEditingHead(true)}>{t('perf.editHead')}</button>}
             </div>
             <p style={{ margin: '4px 0 0', color: 'var(--text-strong)', fontSize: 'var(--text-base)' }}>{test.title}</p>
@@ -133,10 +139,10 @@ export default function TestView({ project, test, revisions, shownId, content, r
             </Link>
           ))}
         </div>
-        <div style={{ ...small, display: 'flex', flexDirection: 'column', gap: 2 }} suppressHydrationWarning>
+        <div style={{ ...small, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span>{t('perf.authoredBy', { who: who(shown.createdBy) })}{shown.changeReason ? ` · ${shown.changeReason}` : ''}</span>
-          {shown.submittedAt && <span>{t('perf.submittedBy', { who: who(shown.submittedBy), when: when(shown.submittedAt) })}</span>}
-          {shown.approvedAt && <span>{t('perf.approvedBy', { who: who(shown.approvedBy), when: when(shown.approvedAt) })}</span>}
+          {shown.submittedAt && <span suppressHydrationWarning>{t('perf.submittedBy', { who: who(shown.submittedBy), when: when(shown.submittedAt) })}</span>}
+          {shown.approvedAt && <span suppressHydrationWarning>{t('perf.approvedBy', { who: who(shown.approvedBy), when: when(shown.approvedAt) })}</span>}
           {shown.hash && <span style={{ fontFamily: 'ui-monospace, monospace' }}>sha256 {shown.hash.slice(0, 16)}…</span>}
         </div>
         {shown.status === 'draft' && shown.returnedReason && <Alert kind="warn">{t('perf.returned', { reason: shown.returnedReason })}</Alert>}

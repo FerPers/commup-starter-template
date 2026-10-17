@@ -276,3 +276,22 @@ export function toLocalInput(iso: string | number): string {
   const p = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
 }
+
+// ── Certificado PTC (sesión 2b) ───────────────────────────────────────────
+export type CertificateStatus = 'pending_signatures' | 'accepted' | 'revoked' | 'superseded'
+export type CertCapacity = 'commissioning' | 'operations' | 'client'
+export const CERT_TONE: Record<CertificateStatus, 'amber' | 'green' | 'red' | 'struck'> = {
+  pending_signatures: 'amber', accepted: 'green', revoked: 'red', superseded: 'struck',
+}
+/** Roles que firman por Operaciones (= hold_release_roles('operations')); el Cliente firma solo con rol client. */
+const OPERATIONS_SIGNERS: readonly string[] = ['owner', 'admin', 'architect', 'leader', 'client']
+
+export type CertSigners = { status: CertificateStatus; commissioning_signed_by: string | null; operations_signed_by: string | null; client_signed_by: string | null }
+
+/** ¿Puede esta persona firmar el certificado en esa capacidad? (mismas reglas que sign_performance_certificate). */
+export function canSignCertificate(c: CertSigners, capacity: Exclude<CertCapacity, 'commissioning'>, role: string, userId: string): boolean {
+  if (c.status !== 'pending_signatures') return false
+  if ([c.commissioning_signed_by, c.operations_signed_by, c.client_signed_by].includes(userId)) return false
+  if (capacity === 'operations') return c.operations_signed_by === null && OPERATIONS_SIGNERS.includes(role)
+  return c.client_signed_by === null && role === 'client'
+}

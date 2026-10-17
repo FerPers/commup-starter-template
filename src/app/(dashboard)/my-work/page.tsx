@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { HOLD_RELEASE_ROLES, signableCapacities, type HoldCapacity } from '@/lib/startup/catalog'
+import { canSignCertificate, isPerformanceLead, type CertSigners } from '@/lib/performance/catalog'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { CATEGORY_CFG, ITR_STYLE, PUNCH_STYLE } from '@/components/dashboard/widgets/_shared'
 import {
@@ -60,7 +61,7 @@ export default async function MyWorkPage() {
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }] = await Promise.all([
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }, { data: perfToDecide }, { data: perfCerts }] = await Promise.all([
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
     supabase
       .from('itr_assignments')
@@ -186,6 +187,21 @@ export default async function MyWorkPage() {
       .in('project_id', projectIds)
       .order('requested_at', { ascending: true })
       .limit(50),
+    // Fase 7: intentos de prueba de desempeño cerrados sin resultado (solo líderes+) y PTC por firmar.
+    projectIds.length === 0 || !isPerformanceLead(role) ? none : supabase
+      .from('performance_runs')
+      .select('id, number, closed_at, early_close, project_id, projects!performance_runs_project_id_fkey(code), performance_tests!performance_runs_test_id_fkey(title)')
+      .eq('status', 'closed')
+      .in('project_id', projectIds)
+      .order('closed_at', { ascending: true })
+      .limit(QUEUE_LIMIT + 1),
+    projectIds.length === 0 ? none : supabase
+      .from('performance_certificates')
+      .select('id, number, run_id, status, commissioning_signed_by, operations_signed_by, client_signed_by, project_id, projects(code), systems(code)')
+      .eq('status', 'pending_signatures')
+      .in('project_id', projectIds)
+      .order('created_at', { ascending: true })
+      .limit(50),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -224,6 +240,12 @@ export default async function MyWorkPage() {
     id: string; number: string; to_stage: string; is_reversal: boolean; commissioning_signed_by: string | null; operations_signed_by: string | null
     project_id: string; projects: { code: string } | null; systems: { code: string } | null
   }[]).filter(x => signableCapacities(role, userId, x).length > 0)
+  const perfDecideRows = (perfToDecide ?? []) as unknown as {
+    id: string; number: string; early_close: boolean; project_id: string; projects: { code: string } | null; performance_tests: { title: string } | null
+  }[]
+  const perfSignRows = ((perfCerts ?? []) as unknown as (CertSigners & {
+    id: string; number: string; run_id: string; project_id: string; projects: { code: string } | null; systems: { code: string } | null
+  })[]).filter(c => canSignCertificate(c, 'operations', role, userId) || canSignCertificate(c, 'client', role, userId))
   const dailyHref = (projectId: string | undefined, tab: string) => (projectId ? `/projects/${projectId}/daily?tab=${tab}` : '/projects')
 
   const projectsInvolved = new Set<string>([
@@ -237,6 +259,7 @@ export default async function MyWorkPage() {
   ].filter(Boolean))
   const personalTotal = counts.itrs_execute + counts.itrs_review + counts.punches + counts.plan_items + (signer ? counts.signatures : 0)
     + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0) + counts.holds_to_release + counts.milestones_to_witness + counts.transfers_to_sign
+    + counts.performance_to_decide + counts.performance_to_sign
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
@@ -283,6 +306,8 @@ export default async function MyWorkPage() {
         {counts.lineup_to_verify > 0 && <Chip n={counts.lineup_to_verify} label={t('chips.lineup')} tone="info" />}
         {counts.milestones_to_witness > 0 && <Chip n={counts.milestones_to_witness} label={t('chips.milestones')} tone="warning" />}
         {counts.transfers_to_sign > 0 && <Chip n={counts.transfers_to_sign} label={t('chips.transfers')} tone="warning" />}
+        {counts.performance_to_decide > 0 && <Chip n={counts.performance_to_decide} label={t('chips.performanceDecide')} tone="warning" />}
+        {counts.performance_to_sign > 0 && <Chip n={counts.performance_to_sign} label={t('chips.performanceSign')} tone="warning" />}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -419,6 +444,26 @@ export default async function MyWorkPage() {
             {transferRows.slice(0, QUEUE_LIMIT).map(x => (
               <Row key={x.id} href={`/projects/${x.project_id}/startup/transfers/${x.id}`} stripe="#047857"
                 code={x.number} what={`${x.systems?.code ?? ''} → ${tStartup(`ops.stage.${x.to_stage}`)}${x.is_reversal ? ` (${tStartup('ops.reversal')})` : ''}`} project={x.projects?.code}
+                right={<Pill tone="warning">{t('due.sign')}</Pill>} />
+            ))}
+          </Queue>
+        )}
+
+        {/* Pruebas de desempeño: resultados por registrar y PTC por firmar (fase 7) */}
+        {counts.performance_to_decide > 0 && (
+          <Queue title={t('queues.performanceDecide')} count={Math.min(perfDecideRows.length, QUEUE_LIMIT)} total={counts.performance_to_decide} emptyText={t('empty.performanceDecide')} moreHref={perfDecideRows[0] ? `/projects/${perfDecideRows[0].project_id}/startup/performance` : '/projects'} moreLabel={t('viewAll', { count: counts.performance_to_decide })} limit={QUEUE_LIMIT}>
+            {perfDecideRows.slice(0, QUEUE_LIMIT).map(x => (
+              <Row key={x.id} href={`/projects/${x.project_id}/startup/performance/runs/${x.id}`} stripe="#b45309"
+                code={x.number} what={x.performance_tests?.title ?? ''} project={x.projects?.code}
+                right={<Pill tone="warning">{t('due.decide')}</Pill>} />
+            ))}
+          </Queue>
+        )}
+        {counts.performance_to_sign > 0 && (
+          <Queue title={t('queues.performanceSign')} count={Math.min(perfSignRows.length, QUEUE_LIMIT)} total={counts.performance_to_sign} emptyText={t('empty.performanceSign')} moreHref={perfSignRows[0] ? `/projects/${perfSignRows[0].project_id}/startup/performance` : '/projects'} moreLabel={t('viewAll', { count: counts.performance_to_sign })} limit={QUEUE_LIMIT}>
+            {perfSignRows.slice(0, QUEUE_LIMIT).map(x => (
+              <Row key={x.id} href={`/projects/${x.project_id}/startup/performance/runs/${x.run_id}`} stripe="#047857"
+                code={x.number} what={x.systems?.code ?? ''} project={x.projects?.code}
                 right={<Pill tone="warning">{t('due.sign')}</Pill>} />
             ))}
           </Queue>

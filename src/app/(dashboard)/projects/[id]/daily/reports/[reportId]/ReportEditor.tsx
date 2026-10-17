@@ -30,6 +30,7 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
   aiConfigured: boolean
 }) {
   const t = useTranslations('Daily')
+  const tStartup = useTranslations('Startup')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [busy, setBusy] = useState<string | null>(null)
@@ -183,6 +184,9 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
           <List title={t('report.list.critical')} rows={d.constraints.open_high.map(c => `${c.number} N${c.level} · ${c.title}${c.system ? ` [${c.system}]` : ''} · ${c.need_date}`)} empty={t('report.list.none')} />
           <List title={t('report.list.regressed')} rows={d.gates.regressed.map(g => `${g.system} ${g.gate}`)} empty={t('report.list.none')} />
           <List title={t('report.list.field')} rows={d.registers_in_field.map(r => `${r.number} · ${r.kind} · ${r.title}${r.system ? ` [${r.system}]` : ''}`)} empty={t('report.list.none')} />
+          {(d.performance_today ?? []).length > 0 && (
+            <List title={t('report.list.performance')} rows={(d.performance_today ?? []).map(p => `${p.number} · ${p.title}${p.system ? ` [${p.system}]` : ''} · ${p.kind === 'run' ? (p.result ? tStartup(`perf.result.${p.result}`) : tStartup(`perf.runStatus.${p.status}`)) : tStartup(`perf.certStatus.${p.status}`)}`)} empty={t('report.list.none')} />
+          )}
           <List title={t('report.list.lookahead')} rows={d.lookahead_7d.map(i => `${i.date} · ${i.ref} · ${i.title}${i.system ? ` [${i.system}]` : ''}`)} empty={t('report.list.none')} />
           <p style={mini}>{t('report.dataNote')}</p>
         </aside>
