@@ -11,7 +11,7 @@ import {
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
   Bell, Database, History, Tag, Activity, Boxes, FolderTree,
   RotateCw, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
-  ChevronDown, ChevronRight, Milestone, Gauge, CalendarCheck, Power,
+  ChevronDown, ChevronRight, Milestone, Gauge, CalendarCheck, Power, FileText, Building2,
   type LucideIcon,
 } from 'lucide-react'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
@@ -142,6 +142,7 @@ function projectSections(projectId: string): ProjectSection[] {
         { href: `${p}/registers`,     labelKey: 'registers',       icon: ClipboardList },
         { href: `${p}/daily`,         labelKey: 'daily',           icon: CalendarCheck },
         { href: `${p}/startup`,       labelKey: 'startup',         icon: Power },
+        { href: `${p}/documents`,     labelKey: 'documents',       icon: FileText },
         { href: `${p}/certificates`,  labelKey: 'certificates',    icon: Award },
         { href: `${p}/kpis`,          labelKey: 'kpis',            icon: TrendingUp },
       ],
@@ -198,6 +199,7 @@ const ADMIN_GROUP: NavGroup = {
     { href: '/admin/registers',              labelKey: 'registerTypes',         icon: ClipboardList, roles: PRIVILEGED_ROLES },
     { href: '/admin/test-equipment',         labelKey: 'testEquipment',         icon: Gauge,         roles: EDITOR_ROLES },
     { href: '/admin/users',                  labelKey: 'users',                 icon: Users,         roles: ADMIN_ROLES },
+    { href: '/admin/companies',              labelKey: 'companies',             icon: Building2,     roles: EDITOR_ROLES },
     { href: '/admin/workflows',              labelKey: 'workflows',             icon: Workflow,      roles: PRIVILEGED_ROLES },
     { href: '/admin/api-keys',               labelKey: 'apiKeys',               icon: Key,           roles: PRIVILEGED_ROLES },
     { href: '/admin/webhooks',               labelKey: 'webhooks',              icon: Webhook,       roles: PRIVILEGED_ROLES },

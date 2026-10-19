@@ -106,7 +106,9 @@
       "daily": "Daily management",
       "startup": "Start-up",
       "registerTypes": "Controlled registers",
-      "testEquipment": "Test equipment"
+      "testEquipment": "Test equipment",
+      "documents": "Documents",
+      "companies": "Companies"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -901,7 +903,9 @@
       "lastActiveYesterday": "Yesterday",
       "lastActiveDaysAgo": "{days}d ago",
       "empty": "No members",
-      "emptyFiltered": "No members match the filters"
+      "emptyFiltered": "No members match the filters",
+      "colCompany": "Company",
+      "noCompany": "No company"
     },
     "filters": {
       "role": "Role",
@@ -2383,7 +2387,8 @@
       "registers_clear": "Controlled registers closed",
       "constraints_clear": "Gate constraints closed",
       "lineup_verified": "Line-up verified and current",
-      "performance_accepted": "Performance test accepted (PTC certificate)"
+      "performance_accepted": "Performance test accepted (PTC certificate)",
+      "documents_current": "Current documents"
     },
     "crit": {
       "previousOk": "The previous gate is approved.",
@@ -2410,7 +2415,11 @@
       "lineupOk": "verified and current",
       "performanceNa": "Not applicable: the system is not the primary system of any performance test",
       "performanceOk": "certificate {cert} accepted",
-      "performanceMissing": "no accepted PTC certificate"
+      "performanceMissing": "no accepted PTC certificate",
+      "documentsOutdated": "{count, plural, one {One signed record uses} other {# signed records use}} a superseded document revision (condition).",
+      "documentsRow": "{doc}: uses Rev {used}, current Rev {current}",
+      "documentsOpen": "Open procedure",
+      "documentsRegister": "View document register →"
     },
     "reason": {
       "cat_a": "{a} open Cat A punch(es)",
@@ -4402,6 +4411,154 @@
         "revoked": "Revoked",
         "superseded": "Superseded"
       }
+    }
+  },
+  "Documents": {
+    "title": "Document register",
+    "subtitle": "controlled revisions by number, status and system",
+    "new": "New document",
+    "create": "Create document",
+    "save": "Save",
+    "cancel": "Cancel",
+    "editDoc": "Edit details",
+    "search": "Search number or title",
+    "allTypes": "All types",
+    "allStatus": "All statuses",
+    "allSystems": "All systems",
+    "filterNoRev": "No issued revision",
+    "filterOutdated": "With superseded references",
+    "kpi": {
+      "total": "Documents",
+      "noRev": "No issued revision",
+      "asBuilt": "As-Built / Final",
+      "outdated": "With superseded references"
+    },
+    "f": {
+      "number": "Number",
+      "type": "Type",
+      "title": "Title",
+      "discipline": "Discipline",
+      "company": "Originating company",
+      "systems": "Systems",
+      "status": "Status"
+    },
+    "col": {
+      "rev": "Current revision",
+      "refs": "References"
+    },
+    "type": {
+      "pid": "P&ID",
+      "pfd": "PFD",
+      "datasheet": "Datasheet",
+      "drawing": "Drawing",
+      "specification": "Specification",
+      "procedure": "Procedure",
+      "manual": "Manual",
+      "calculation": "Calculation",
+      "vendor": "Vendor document",
+      "other": "Other"
+    },
+    "status": {
+      "draft": "Draft",
+      "ifr": "IFR · for review",
+      "ifa": "IFA · for approval",
+      "ifc": "IFC · for construction",
+      "as_built": "As-Built",
+      "final": "Final"
+    },
+    "noMatch": "No document matches the filter.",
+    "empty": "No documents registered yet.",
+    "noRev": "No issued revision",
+    "draftPending": "Draft pending",
+    "outdatedN": "{n} on a superseded revision",
+    "currentRev": "Rev {rev} current",
+    "noSystems": "No systems",
+    "current": "Current",
+    "superseded": "Superseded",
+    "rev": {
+      "title": "Revisions",
+      "new": "New revision",
+      "help": "The current one is the latest issued revision. When a new one is issued, ITRs and procedures using the previous one cannot be signed or approved until their reference is updated.",
+      "rev": "Revision",
+      "issuedOn": "Issue date",
+      "file": "File (PDF, image, DWG)",
+      "url": "EDMS link (https)",
+      "notes": "Notes",
+      "supersedes": "Issuing it supersedes Rev {rev} ({n, plural, one {# reference affected} other {# references affected}}).",
+      "save": "Register revision",
+      "draftPending": "Draft Rev {rev} pending:",
+      "issue": "Issue",
+      "discard": "Discard draft",
+      "discardConfirm": "Discard the draft? This cannot be undone.",
+      "source": "File / link",
+      "by": "Registered by",
+      "empty": "No revisions.",
+      "pdf": "File",
+      "edms": "EDMS",
+      "httpsOnly": "The link must start with https://",
+      "tooBig": "The file exceeds 50 MB.",
+      "openError": "Could not open the file"
+    },
+    "usage": {
+      "title": "Where used",
+      "empty": "No ITR or procedure references this document.",
+      "itr": "ITR",
+      "procedure_revision": "Procedure",
+      "outdated": "Uses Rev {rev} · superseded",
+      "current": "Rev {rev} · current",
+      "revalidated": "revalidated with reason"
+    },
+    "refs": {
+      "title": "Reference documents",
+      "register": "Document register →",
+      "empty": "No referenced documents.",
+      "outdatedItr": "{n, plural, one {One document has} other {# documents have}} a newer revision: update the reference before signing.",
+      "outdatedProc": "{n, plural, one {One document has} other {# documents have}} a newer revision: update the reference before submitting or approving.",
+      "outdatedLocked": "{n, plural, one {One document was superseded} other {# documents were superseded}} after signing: the system gate carries a condition until a leader revalidates it or the record is redone.",
+      "outdatedChip": "Uses Rev {used} · current {current}",
+      "currentChip": "Rev {rev} · current",
+      "update": "Update to current",
+      "revalidate": "Revalidate",
+      "remove": "Remove",
+      "revalidated": "Revalidated from Rev {from} to Rev {to}",
+      "reason": "Revalidation reason",
+      "reasonPh": "Why it is still valid (min. {n} characters)",
+      "confirm": "Confirm",
+      "add": "Add",
+      "pick": "Pick a document…",
+      "none": "No documents with an issued revision",
+      "lockedItr": "The ITR already has signatures: its references cannot change (revalidation with reason only).",
+      "lockedProc": "The revision is not a draft: its references cannot change (revalidation with reason only)."
+    }
+  },
+  "Companies": {
+    "title": "Companies",
+    "subtitle": "Owner/client, EPC, vendors and subcontractors. Signatures keep “name · company” as of signing.",
+    "new": "New company",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "No companies yet.",
+    "inactive": "Inactive",
+    "f": {
+      "name": "Name",
+      "shortName": "Short name",
+      "kind": "Type",
+      "taxId": "Tax ID",
+      "notes": "Notes",
+      "active": "Active"
+    },
+    "kind": {
+      "owner": "Owner / client",
+      "epc": "EPC / contractor",
+      "vendor": "Vendor",
+      "subcontractor": "Subcontractor",
+      "other": "Other"
+    },
+    "col": {
+      "members": "Users",
+      "personnel": "Operations staff",
+      "equipment": "Test equipment"
     }
   }
 }

@@ -2,6 +2,9 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import type { HoldCapacity } from '@/lib/startup/catalog'
 import ProcedureEditor from './ProcedureEditor'
+import DocumentReferences from '@/components/documents/DocumentReferences'
+import { loadDocumentRefs } from '@/lib/documents/refs-server'
+import { isDocumentController } from '@/lib/documents/catalog'
 
 // Procedimiento (fase 6, sesión 1): revisión abierta (o la vigente) con sus 15 secciones y pasos;
 // ciclo borrador → en revisión → aprobado, «verificado en campo», nuevas revisiones y ejecuciones.
@@ -35,6 +38,7 @@ export default async function ProcedurePage({ params, searchParams }: {
   const { data: steps } = await supabase.from('procedure_steps')
     .select('id, ord, action, responsible, expected_value, tag_id, is_hold_point, hold_capacity, stop_criteria, tags(tag_number)')
     .eq('revision_id', selected.id).order('ord')
+  const docRefs = await loadDocumentRefs(supabase, id, 'procedure_revision', selected.id)
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
     const p = m.profiles as unknown as { full_name: string | null } | null
@@ -62,6 +66,10 @@ export default async function ProcedurePage({ params, searchParams }: {
       names={names}
       userId={ctx.userId}
       role={ctx.role}
+      documentsSlot={
+        <DocumentReferences projectId={id} kind="procedure_revision" targetId={selected.id} refs={docRefs.refs} options={docRefs.options}
+          locked={selected.status !== 'draft'} canEdit={ctx.role !== 'client'} canRevalidate={isDocumentController(ctx.role)} />
+      }
     />
   )
 }

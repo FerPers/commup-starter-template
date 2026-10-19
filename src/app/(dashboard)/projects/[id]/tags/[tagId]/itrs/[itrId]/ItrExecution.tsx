@@ -34,6 +34,7 @@ export default function ItrExecution({
   attachments: initialAttachments = [],
   memberIds: memberIdList = [],
   testEquipment,
+  documentsSlot,
 }: {
   itr: ItrData
   projectId: string
@@ -46,6 +47,8 @@ export default function ItrExecution({
   memberIds?: string[]
   /** Fase 4-B: equipos de prueba usados e inventario activo de la org. */
   testEquipment?: { requires: boolean; used: EquipmentUsed[]; options: EquipmentOption[] }
+  /** Fase 8: documentos referenciados (bloquea la firma con una revisión superada). */
+  documentsSlot?: React.ReactNode
 }) {
   const router = useRouter()
   const t = useTranslations('ItrExecution')
@@ -414,7 +417,7 @@ export default function ItrExecution({
                   {sig && (
                     <>
                       <div style={{ fontSize: '11px', color: 'var(--gray-700)', fontWeight: 500, marginLeft: '17px' }}>
-                        <PersonName name={sig.profiles?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />
+                        <PersonName name={sig.profiles?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />{sig.signer_company ? ` · ${sig.signer_company}` : ''}
                       </div>
                       <div style={{ fontSize: '10px', color: sig.pending ? '#b45309' : 'var(--gray-400)', marginLeft: '17px', marginTop: '1px' }}>
                         {sig.pending ? t('sync.pending') : `${signedDate} ${signedTime}`}
@@ -460,6 +463,9 @@ export default function ItrExecution({
           </div>
         )}
       </div>
+
+      {/* ── Documentos referenciados (fase 8) ────────────────────────── */}
+      {documentsSlot && <div style={{ padding: '0 32px 16px' }}>{documentsSlot}</div>}
 
       {/* ── Equipos de prueba (fase 4-B) ─────────────────────────────── */}
       {testEquipment && (

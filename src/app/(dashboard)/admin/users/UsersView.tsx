@@ -4,6 +4,7 @@ import type { OrgMemberRole } from '@/types/database'
 import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { inviteUser, updateMemberRole, removeMember, getMemberRemovalContext, type MemberRemovalContext } from '@/app/actions/users'
+import { setMemberCompany } from '@/app/actions/documents'
 
 type Member = {
   id: string
@@ -14,6 +15,7 @@ type Member = {
   avatarUrl: string | null
   email: string
   lastActive: string | null
+  companyId: string | null
 }
 
 type PendingInvite = {
@@ -86,11 +88,14 @@ export default function UsersView({
   pendingInvites,
   currentUserId,
   currentRole,
+  companies = [],
 }: {
   members: Member[]
   pendingInvites: PendingInvite[]
   currentUserId: string
   currentRole: string
+  /** Fase 8: empresas de la org (la firma muestra «nombre · empresa»). */
+  companies?: { id: string; name: string }[]
 }) {
   const t = useTranslations('Users')
   const [isPending, startTransition] = useTransition()
@@ -148,6 +153,14 @@ export default function UsersView({
       setInviteEmail('')
       setShowInvite(false)
       notify(t('invite.successEmail'))
+    })
+  }
+
+  async function handleCompanyChange(userId: string, companyId: string) {
+    setError(null)
+    startTransition(async () => {
+      const res = await setMemberCompany({ userId, companyId: companyId || null })
+      if (res.error) setError(res.error)
     })
   }
 
@@ -384,6 +397,7 @@ export default function UsersView({
                     t('table.colUser'),
                     t('table.colEmail'),
                     t('table.colRole'),
+                    t('table.colCompany'),
                     t('table.colSince'),
                     t('table.colLastActive'),
                     '',
@@ -449,6 +463,20 @@ export default function UsersView({
                         ) : (
                           <RoleBadge role={m.role} label={roleLabels[m.role] ?? m.role} />
                         )}
+                      </td>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                        {isAdmin ? (
+                          <select
+                            value={m.companyId ?? ''}
+                            aria-label={t('table.colCompany')}
+                            onChange={e => handleCompanyChange(m.userId, e.target.value)}
+                            disabled={isPending}
+                            style={{ padding: '4px 8px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', maxWidth: 180, background: 'var(--card-bg)', color: 'var(--text-strong)' }}
+                          >
+                            <option value="">{t('table.noCompany')}</option>
+                            {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          </select>
+                        ) : (companies.find(c => c.id === m.companyId)?.name ?? '—')}
                       </td>
                       <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--gray-400)' }}>
                         {formatJoinedDate(m.joinedAt)}

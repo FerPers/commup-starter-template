@@ -15,6 +15,7 @@ export type Certificate = {
   commissioning_signed_by: string | null; commissioning_signed_at: string | null
   operations_signed_by: string | null; operations_signed_at: string | null
   client_signed_by: string | null; client_signed_at: string | null
+  commissioning_company?: string | null; operations_company?: string | null; client_company?: string | null
   revoked_by: string | null; revoked_at: string | null; revoke_reason: string | null
 }
 
@@ -49,10 +50,10 @@ export default function CertificateCard({ projectId, run, certificate, names, us
 
   if (run.status !== 'evaluated') return null
 
-  const slots: { cap: CertCapacity; by: string | null; at: string | null }[] = certificate ? [
-    { cap: 'commissioning', by: certificate.commissioning_signed_by, at: certificate.commissioning_signed_at },
-    { cap: 'operations', by: certificate.operations_signed_by, at: certificate.operations_signed_at },
-    { cap: 'client', by: certificate.client_signed_by, at: certificate.client_signed_at },
+  const slots: { cap: CertCapacity; by: string | null; at: string | null; company?: string | null }[] = certificate ? [
+    { cap: 'commissioning', by: certificate.commissioning_signed_by, at: certificate.commissioning_signed_at, company: certificate.commissioning_company },
+    { cap: 'operations', by: certificate.operations_signed_by, at: certificate.operations_signed_at, company: certificate.operations_company },
+    { cap: 'client', by: certificate.client_signed_by, at: certificate.client_signed_at, company: certificate.client_company },
   ] : []
 
   return (
@@ -83,7 +84,7 @@ export default function CertificateCard({ projectId, run, certificate, names, us
               <div key={s.cap} style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: s.by ? 'var(--success-50)' : undefined }}>
                 <div style={label}>{t(`perf.cert.cap.${s.cap}`)}</div>
                 {s.by
-                  ? <div style={{ ...small, marginTop: 4 }} suppressHydrationWarning>✓ {who(s.by)}<br />{when(s.at)}</div>
+                  ? <div style={{ ...small, marginTop: 4 }} suppressHydrationWarning>✓ {who(s.by)}{s.company ? ` · ${s.company}` : ''}<br />{when(s.at)}</div>
                   : s.cap !== 'commissioning' && canSignCertificate(certificate, s.cap, role, userId)
                     ? <button type="button" style={{ ...btn('primary', isPending), marginTop: 6 }} disabled={isPending}
                         onClick={() => { if (window.confirm(t('perf.cert.signConfirm'))) act(() => signPerformanceCertificate({ projectId, certificateId: certificate.id, capacity: s.cap as 'operations' | 'client' })) }}>

@@ -271,6 +271,25 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
         )
       }
 
+      case 'documents_current': {
+        const rows = (d.outdated as { reference_id: string; document: string; used: string; current: string; kind: 'itr' | 'procedure'; target: string; target_id: string }[]) ?? []
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={small}>{t('crit.documentsOutdated', { count: rows.length })}</span>
+            <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
+              {rows.slice(0, 10).map(r => (
+                <li key={r.reference_id}>
+                  <strong>{r.target}</strong>{' · '}{t('crit.documentsRow', { doc: r.document, used: r.used, current: r.current })}
+                  {r.kind === 'procedure' && <>{' · '}<Link href={`/projects/${project.id}/startup/procedures/${r.target_id}`} style={linkStyle}>{t('crit.documentsOpen')}</Link></>}
+                </li>
+              ))}
+              {rows.length > 10 && <li>{t('andMore', { count: rows.length - 10 })}</li>}
+            </ul>
+            <Link href={`/projects/${project.id}/documents`} style={linkStyle}>{t('crit.documentsRegister')}</Link>
+          </div>
+        )
+      }
+
       case 'itr_phase_approved': {
         if (d.error === 'no_phase') return <span style={small}>{t('crit.noPhase')}</span>
         const red = (d.red_subsystems as { id: string; code: string; reason: string; itr_total: number; itr_approved: number; open_a: number; open_b: number }[]) ?? []
@@ -532,7 +551,7 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
                       {g.approval.signatures.map(sg => (
                         <li key={sg.capacity} suppressHydrationWarning>
                           <strong style={{ color: 'var(--text-strong)' }}>{t(`capacity.${sg.capacity}`)}</strong>:{' '}
-                          {t('signedBy', { name: who(sg.user_id), role: sg.user_role, date: when(sg.signed_at) })}
+                          {t('signedBy', { name: sg.signer_company ? `${who(sg.user_id)} · ${sg.signer_company}` : who(sg.user_id), role: sg.user_role, date: when(sg.signed_at) })}
                           {sg.comments && <> — “{sg.comments}”</>}
                         </li>
                       ))}

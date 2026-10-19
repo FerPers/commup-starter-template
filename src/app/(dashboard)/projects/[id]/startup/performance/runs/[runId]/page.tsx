@@ -73,7 +73,7 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
     else evaluation = data as unknown as Evaluation
   }
   const { data: certificate } = await ctx.supabase.from('performance_certificates')
-    .select('id, number, status, content_hash, commissioning_signed_by, commissioning_signed_at, operations_signed_by, operations_signed_at, client_signed_by, client_signed_at, revoked_by, revoked_at, revoke_reason')
+    .select('id, number, status, content_hash, commissioning_signed_by, commissioning_signed_at, operations_signed_by, operations_signed_at, client_signed_by, client_signed_at, commissioning_company, operations_company, client_company, revoked_by, revoked_at, revoke_reason')
     .eq('run_id', runId).maybeSingle()
   const { data: action } = run.action_id
     ? await ctx.supabase.from('actions').select('id, number, status').eq('id', run.action_id).maybeSingle()

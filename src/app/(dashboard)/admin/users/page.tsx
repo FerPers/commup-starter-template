@@ -22,10 +22,11 @@ export default async function AdminUsersPage() {
     { data: emails },
     { data: invitedActivity },
     { data: recentActivity },
+    { data: companies },
   ] = await Promise.all([
     supabase
       .from('org_members')
-      .select('id, user_id, role, joined_at, profiles(full_name, avatar_url)')
+      .select('id, user_id, role, joined_at, company_id, profiles(full_name, avatar_url)')
       .eq('org_id', orgId)
       .order('joined_at'),
     supabase.rpc('get_org_member_emails', { p_org_id: orgId }),
@@ -43,6 +44,7 @@ export default async function AdminUsersPage() {
       .not('user_id', 'is', null)
       .order('created_at', { ascending: false })
       .limit(2000),
+    supabase.from('companies').select('id, name, short_name').eq('org_id', orgId).eq('is_active', true).order('name'),
   ])
 
   // Build last-active map: most recent activity_log row per user.
@@ -64,6 +66,7 @@ export default async function AdminUsersPage() {
     avatarUrl: m.profiles?.avatar_url ?? null,
     email: emailMap.get(m.user_id) ?? '—',
     lastActive: lastActiveMap.get(m.user_id) ?? null,
+    companyId: m.company_id,
   }))
 
   // Pending invites: user_ids in activity_log(action='invited') that don't show up
@@ -107,6 +110,7 @@ export default async function AdminUsersPage() {
 
   return (
     <UsersView
+      companies={(companies ?? []).map(c => ({ id: c.id, name: c.short_name?.trim() ? c.short_name : c.name }))}
       members={membersWithEmail}
       pendingInvites={pendingInvites}
       currentUserId={ctx.userId}

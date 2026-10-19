@@ -156,6 +156,13 @@ Rules for every new page/query/action:
 - KPIs en `take_mgmt_snapshot`: `startup` (éxito de primer arranque), `trips` (falla repetida F6), `performance` (aceptadas al primer intento). Seed DEMO: `scripts/demo-data/seed_performance_demo.sql`.
 - Las acciones de resultado/PTC usan `window.confirm`: en el navegador integrado se cancela solo (para probar, sobrescribir `window.confirm`).
 
+## Vendors y control documental — fase 8 del plan readiness
+
+- Decisiones doc §15. Sesión 1 (migraciones `20261021120000` + `20261021130000`): `companies` por org (owner/admin; `company_id` en `org_members`, `ops_personnel`, `test_equipment.owner_company_id`); la empresa del firmante se congela por trigger en `itr_signatures`, `system_gate_signatures`/`approvals`, `performance_certificates` y `ownership_transfers`.
+- Registro maestro `/projects/[id]/documents`: `documents` → `document_revisions` (draft/ifr/ifa/ifc/as_built/final; vigente = última emitida, `documents.current_revision_id` lo mantiene `document_refresh_current`) + `document_systems`; PDF en bucket `project-documents` (`<project_id>/<document_id>/…`, inmutable) y/o `external_url` https. Control documental = líder+. Lógica pura en `src/lib/documents/catalog.ts`; acciones en `src/app/actions/documents.ts`.
+- `document_references` (ITR o revisión de procedimiento → revisión usada). Revisión superada = **bloqueo duro** en `sign_itr_atomic` y `transition_procedure_revision` (`document_references_blocker`); ya firmado/aprobado → criterio implícito `documents_current` (condición, amarillo) hasta revalidar (líder+, motivo ≥ 10) o rehacer. Panel `src/components/documents/DocumentReferences.tsx`.
+- Gates nuevos: `seed_default_gate_for_phase` enciende `requires_lineup` en RFSU / fase SU.
+
 ## AI (Claude) — matriz ITR híbrida
 
 - `src/lib/ai/claude.ts` crea el cliente (`@anthropic-ai/sdk`, modelo `claude-opus-5-5`). Requiere el secreto `ANTHROPIC_API_KEY` (Wrangler secret en Cloudflare; `.env.local` en dev). Sin clave, las acciones de IA devuelven un error claro y la UI lo muestra.

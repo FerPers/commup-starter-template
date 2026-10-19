@@ -53,6 +53,8 @@ export type Signature = {
   user_id: string
   signature_image: string | null
   profiles: { full_name: string } | null
+  /** Fase 8: empresa del firmante congelada al firmar. */
+  signer_company?: string | null
   /** Sprint O: aún en la bandeja de salida (sin red). */
   pending?: boolean
 }

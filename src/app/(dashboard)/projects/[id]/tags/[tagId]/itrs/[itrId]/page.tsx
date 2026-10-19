@@ -3,6 +3,9 @@ import { redirect, notFound } from 'next/navigation'
 import ItrExecution from './ItrExecution'
 import type { EquipmentOption, EquipmentUsed } from './TestEquipmentSection'
 import SuggestionsBar, { type ItrSuggestion } from '@/components/itr/SuggestionsBar'
+import DocumentReferences from '@/components/documents/DocumentReferences'
+import { loadDocumentRefs } from '@/lib/documents/refs-server'
+import { isDocumentController } from '@/lib/documents/catalog'
 
 export default async function ItrExecutionPage({
   params,
@@ -38,7 +41,7 @@ export default async function ItrExecutionPage({
       project_phases(code, name, color),
       itr_assignments(id, user_id, role, profiles(full_name)),
       itr_responses(id, item_id, value_text, value_numeric, value_bool, value_option, remarks, is_passed, responded_at),
-      itr_signatures(id, role, signed_at, user_id, signature_image, profiles(full_name))
+      itr_signatures(id, role, signed_at, user_id, signature_image, signer_company, profiles(full_name))
     `)
     .eq('id', itrId)
     .eq('project_id', projectId)
@@ -87,6 +90,9 @@ export default async function ItrExecutionPage({
     .eq('status', 'pending')
     .order('suggested_at', { ascending: false })
 
+  const docRefs = await loadDocumentRefs(supabase, projectId, 'itr', itrId)
+  const signed = ((itr.itr_signatures as unknown as unknown[] | null) ?? []).length > 0
+
   return (
     <>
       <div style={{ padding: '16px 32px 0' }}>
@@ -106,6 +112,10 @@ export default async function ItrExecutionPage({
           used: (equipmentUsed ?? []) as EquipmentUsed[],
           options: (equipmentOptions ?? []) as EquipmentOption[],
         }}
+        documentsSlot={(docRefs.refs.length > 0 || canEdit) && (
+          <DocumentReferences projectId={projectId} kind="itr" targetId={itrId} refs={docRefs.refs} options={docRefs.options}
+            locked={signed} canEdit={membership.role !== 'client'} canRevalidate={isDocumentController(membership.role)} />
+        )}
       />
     </>
   )

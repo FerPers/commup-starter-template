@@ -106,7 +106,9 @@
       "daily": "Gestión diaria",
       "startup": "Arranque",
       "registerTypes": "Registros controlados",
-      "testEquipment": "Equipos de prueba"
+      "testEquipment": "Equipos de prueba",
+      "documents": "Documentos",
+      "companies": "Empresas"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -901,7 +903,9 @@
       "lastActiveYesterday": "Ayer",
       "lastActiveDaysAgo": "Hace {days}d",
       "empty": "No hay miembros",
-      "emptyFiltered": "No hay miembros que coincidan con los filtros"
+      "emptyFiltered": "No hay miembros que coincidan con los filtros",
+      "colCompany": "Empresa",
+      "noCompany": "Sin empresa"
     },
     "filters": {
       "role": "Rol",
@@ -2383,7 +2387,8 @@
       "registers_clear": "Registros controlados cerrados",
       "constraints_clear": "Restricciones del gate cerradas",
       "lineup_verified": "Line-up verificado y vigente",
-      "performance_accepted": "Prueba de desempeño aceptada (certificado PTC)"
+      "performance_accepted": "Prueba de desempeño aceptada (certificado PTC)",
+      "documents_current": "Documentos vigentes"
     },
     "crit": {
       "previousOk": "El gate anterior está aprobado.",
@@ -2410,7 +2415,11 @@
       "lineupOk": "verificada y vigente",
       "performanceNa": "No aplica: el sistema no es principal de ninguna prueba de desempeño",
       "performanceOk": "certificado {cert} aceptado",
-      "performanceMissing": "sin certificado PTC aceptado"
+      "performanceMissing": "sin certificado PTC aceptado",
+      "documentsOutdated": "{count, plural, one {Un registro firmado usa} other {# registros firmados usan}} una revisión de documento superada (condición).",
+      "documentsRow": "{doc}: usa Rev {used}, vigente Rev {current}",
+      "documentsOpen": "Abrir procedimiento",
+      "documentsRegister": "Ver registro de documentos →"
     },
     "reason": {
       "cat_a": "{a} punch(es) Cat A abiertos",
@@ -4402,6 +4411,154 @@
         "revoked": "Revocado",
         "superseded": "Reemplazado"
       }
+    }
+  },
+  "Documents": {
+    "title": "Registro de documentos",
+    "subtitle": "revisiones controladas por número, estado y sistema",
+    "new": "Nuevo documento",
+    "create": "Crear documento",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "editDoc": "Editar ficha",
+    "search": "Buscar número o título",
+    "allTypes": "Todos los tipos",
+    "allStatus": "Todos los estados",
+    "allSystems": "Todos los sistemas",
+    "filterNoRev": "Sin revisión emitida",
+    "filterOutdated": "Con referencias superadas",
+    "kpi": {
+      "total": "Documentos",
+      "noRev": "Sin revisión emitida",
+      "asBuilt": "As-Built / Final",
+      "outdated": "Con referencias superadas"
+    },
+    "f": {
+      "number": "Número",
+      "type": "Tipo",
+      "title": "Título",
+      "discipline": "Disciplina",
+      "company": "Empresa emisora",
+      "systems": "Sistemas",
+      "status": "Estado"
+    },
+    "col": {
+      "rev": "Revisión vigente",
+      "refs": "Referencias"
+    },
+    "type": {
+      "pid": "P&ID",
+      "pfd": "PFD",
+      "datasheet": "Hoja de datos",
+      "drawing": "Plano",
+      "specification": "Especificación",
+      "procedure": "Procedimiento",
+      "manual": "Manual",
+      "calculation": "Memoria de cálculo",
+      "vendor": "Documento de vendor",
+      "other": "Otro"
+    },
+    "status": {
+      "draft": "Borrador",
+      "ifr": "IFR · para revisión",
+      "ifa": "IFA · para aprobación",
+      "ifc": "IFC · para construcción",
+      "as_built": "As-Built",
+      "final": "Final"
+    },
+    "noMatch": "Ningún documento coincide con el filtro.",
+    "empty": "Aún no hay documentos registrados.",
+    "noRev": "Sin revisión emitida",
+    "draftPending": "Borrador pendiente",
+    "outdatedN": "{n} con revisión superada",
+    "currentRev": "Rev {rev} vigente",
+    "noSystems": "Sin sistemas",
+    "current": "Vigente",
+    "superseded": "Superada",
+    "rev": {
+      "title": "Revisiones",
+      "new": "Nueva revisión",
+      "help": "La vigente es la última revisión emitida. Al emitir una nueva, los ITR y procedimientos que usan la anterior quedan bloqueados para firmar o aprobar hasta actualizar su referencia.",
+      "rev": "Revisión",
+      "issuedOn": "Fecha de emisión",
+      "file": "Archivo (PDF, imagen, DWG)",
+      "url": "Enlace al EDMS (https)",
+      "notes": "Notas",
+      "supersedes": "Al emitirla, la Rev {rev} queda superada ({n, plural, one {# referencia afectada} other {# referencias afectadas}}).",
+      "save": "Registrar revisión",
+      "draftPending": "Borrador Rev {rev} pendiente:",
+      "issue": "Emitir",
+      "discard": "Descartar borrador",
+      "discardConfirm": "¿Descartar el borrador? No se puede deshacer.",
+      "source": "Archivo / enlace",
+      "by": "Registró",
+      "empty": "Sin revisiones.",
+      "pdf": "Archivo",
+      "edms": "EDMS",
+      "httpsOnly": "El enlace debe empezar con https://",
+      "tooBig": "El archivo supera 50 MB.",
+      "openError": "No se pudo abrir el archivo"
+    },
+    "usage": {
+      "title": "Dónde se usa",
+      "empty": "Ningún ITR ni procedimiento referencia este documento.",
+      "itr": "ITR",
+      "procedure_revision": "Procedimiento",
+      "outdated": "Usa Rev {rev} · superada",
+      "current": "Rev {rev} · vigente",
+      "revalidated": "revalidado con motivo"
+    },
+    "refs": {
+      "title": "Documentos de referencia",
+      "register": "Registro de documentos →",
+      "empty": "Sin documentos referenciados.",
+      "outdatedItr": "{n, plural, one {Un documento tiene} other {# documentos tienen}} una revisión más nueva: actualiza la referencia antes de firmar.",
+      "outdatedProc": "{n, plural, one {Un documento tiene} other {# documentos tienen}} una revisión más nueva: actualiza la referencia antes de enviar o aprobar.",
+      "outdatedLocked": "{n, plural, one {Un documento quedó superado} other {# documentos quedaron superados}} después de firmar: el gate del sistema queda con condición hasta que un líder lo revalide o se rehaga el registro.",
+      "outdatedChip": "Usa Rev {used} · vigente {current}",
+      "currentChip": "Rev {rev} · vigente",
+      "update": "Actualizar a la vigente",
+      "revalidate": "Revalidar",
+      "remove": "Quitar",
+      "revalidated": "Revalidado de Rev {from} a Rev {to}",
+      "reason": "Motivo de la revalidación",
+      "reasonPh": "Por qué sigue siendo válido (mín. {n} caracteres)",
+      "confirm": "Confirmar",
+      "add": "Agregar",
+      "pick": "Elige un documento…",
+      "none": "No hay documentos con revisión emitida",
+      "lockedItr": "El ITR ya tiene firmas: sus referencias no se cambian (solo revalidación con motivo).",
+      "lockedProc": "La revisión no está en borrador: sus referencias no se cambian (solo revalidación con motivo)."
+    }
+  },
+  "Companies": {
+    "title": "Empresas",
+    "subtitle": "Operadora/cliente, EPC, vendors y subcontratistas. Las firmas guardan «nombre · empresa» al momento de firmar.",
+    "new": "Nueva empresa",
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "empty": "Aún no hay empresas.",
+    "inactive": "Inactiva",
+    "f": {
+      "name": "Nombre",
+      "shortName": "Nombre corto",
+      "kind": "Tipo",
+      "taxId": "NIT / RUC / RIF",
+      "notes": "Notas",
+      "active": "Activa"
+    },
+    "kind": {
+      "owner": "Operadora / cliente",
+      "epc": "EPC / contratista",
+      "vendor": "Vendor",
+      "subcontractor": "Subcontratista",
+      "other": "Otra"
+    },
+    "col": {
+      "members": "Usuarios",
+      "personnel": "Personal de operaciones",
+      "equipment": "Equipos de prueba"
     }
   }
 }

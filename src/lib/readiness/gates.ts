@@ -23,6 +23,7 @@ export type CriterionKind =
   | 'constraints_clear'
   | 'lineup_verified'
   | 'performance_accepted'
+  | 'documents_current'
   | 'itr_phase_approved'
   | 'certificates_issued'
   | 'pssr_approved'
@@ -36,8 +37,10 @@ export type CriterionKind =
  * sistema asignadas a ese gate: condición; abierta en nivel 4, bloqueo — fase 5). lineup_verified es
  * implícito en los gates con `requires_lineup` (hoja de line-up verificada y vigente — fase 6) y
  * performance_accepted en los gates con `requires_performance` (certificado PTC aceptado — fase 7).
+ * documents_current aparece cuando un ITR firmado o un procedimiento aprobado del sistema usa una revisión de
+ * documento superada: condición, nunca bloqueo (fase 8).
  */
-export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready' | 'registers_clear' | 'constraints_clear' | 'lineup_verified' | 'performance_accepted'>[] = [
+export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready' | 'registers_clear' | 'constraints_clear' | 'lineup_verified' | 'performance_accepted' | 'documents_current'>[] = [
   'itr_phase_approved',
   'certificates_issued',
   'pssr_approved',
@@ -53,6 +56,8 @@ export type GateSignature = {
   capacity: SignatureCapacity
   user_id: string
   user_role: string
+  /** Empresa del firmante congelada al firmar (fase 8). */
+  signer_company?: string | null
   comments: string | null
   signed_at: string
 }
@@ -66,6 +71,7 @@ export type Approval = {
   notes: string | null
   approved_by: string
   approved_role: string
+  approved_company?: string | null
   approved_at: string
 }
 

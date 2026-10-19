@@ -1055,6 +1055,56 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          notes: string | null
+          org_id: string
+          short_name: string | null
+          tax_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+          notes?: string | null
+          org_id: string
+          short_name?: string | null
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          notes?: string | null
+          org_id?: string
+          short_name?: string | null
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competency_records: {
         Row: {
           assessed_at: string
@@ -1557,6 +1607,316 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_references: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_id: string
+          id: string
+          itr_id: string | null
+          procedure_revision_id: string | null
+          project_id: string
+          revalidated_at: string | null
+          revalidated_by: string | null
+          revalidated_from: string | null
+          revalidation_reason: string | null
+          revision_id: string
+          target_kind: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_id: string
+          id?: string
+          itr_id?: string | null
+          procedure_revision_id?: string | null
+          project_id: string
+          revalidated_at?: string | null
+          revalidated_by?: string | null
+          revalidated_from?: string | null
+          revalidation_reason?: string | null
+          revision_id: string
+          target_kind: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_id?: string
+          id?: string
+          itr_id?: string | null
+          procedure_revision_id?: string | null
+          project_id?: string
+          revalidated_at?: string | null
+          revalidated_by?: string | null
+          revalidated_from?: string | null
+          revalidation_reason?: string | null
+          revision_id?: string
+          target_kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_references_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_references_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_references_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itrs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_references_procedure_revision_id_fkey"
+            columns: ["procedure_revision_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_references_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_references_revalidated_from_fkey"
+            columns: ["revalidated_from"]
+            isOneToOne: false
+            referencedRelation: "document_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_references_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "document_revisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_revisions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_id: string
+          external_url: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string
+          issued_on: string | null
+          notes: string | null
+          project_id: string
+          rev: string
+          seq: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_id: string
+          external_url?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          issued_on?: string | null
+          notes?: string | null
+          project_id: string
+          rev: string
+          seq: number
+          status: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_id?: string
+          external_url?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          issued_on?: string | null
+          notes?: string | null
+          project_id?: string
+          rev?: string
+          seq?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_revisions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_revisions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_systems: {
+        Row: {
+          document_id: string
+          project_id: string
+          system_id: string
+        }
+        Insert: {
+          document_id: string
+          project_id: string
+          system_id: string
+        }
+        Update: {
+          document_id?: string
+          project_id?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_systems_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_systems_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "document_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "document_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          current_revision_id: string | null
+          discipline_id: string | null
+          doc_type: string
+          id: string
+          number: string
+          org_id: string
+          project_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_revision_id?: string | null
+          discipline_id?: string | null
+          doc_type?: string
+          id?: string
+          number: string
+          org_id: string
+          project_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_revision_id?: string | null
+          discipline_id?: string | null
+          doc_type?: string
+          id?: string
+          number?: string
+          org_id?: string
+          project_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_current_revision_fkey"
+            columns: ["current_revision_id"]
+            isOneToOne: false
+            referencedRelation: "document_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["discipline_id"]
+          },
+          {
+            foreignKeyName: "documents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -2087,6 +2447,7 @@ export type Database = {
           signature_image: string | null
           signature_url: string | null
           signed_at: string
+          signer_company: string | null
           user_id: string
         }
         Insert: {
@@ -2096,6 +2457,7 @@ export type Database = {
           signature_image?: string | null
           signature_url?: string | null
           signed_at?: string
+          signer_company?: string | null
           user_id: string
         }
         Update: {
@@ -2105,6 +2467,7 @@ export type Database = {
           signature_image?: string | null
           signature_url?: string | null
           signed_at?: string
+          signer_company?: string | null
           user_id?: string
         }
         Relationships: [
@@ -3532,6 +3895,7 @@ export type Database = {
         Row: {
           active: boolean
           company: string | null
+          company_id: string | null
           created_at: string
           created_by: string | null
           full_name: string
@@ -3546,6 +3910,7 @@ export type Database = {
         Insert: {
           active?: boolean
           company?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           full_name: string
@@ -3560,6 +3925,7 @@ export type Database = {
         Update: {
           active?: boolean
           company?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           full_name?: string
@@ -3572,6 +3938,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ops_personnel_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ops_personnel_org_id_fkey"
             columns: ["org_id"]
@@ -3597,6 +3970,7 @@ export type Database = {
       }
       org_members: {
         Row: {
+          company_id: string | null
           id: string
           joined_at: string
           org_id: string
@@ -3604,6 +3978,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           id?: string
           joined_at?: string
           org_id: string
@@ -3611,6 +3986,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           id?: string
           joined_at?: string
           org_id?: string
@@ -3618,6 +3994,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "org_members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "org_members_org_id_fkey"
             columns: ["org_id"]
@@ -3670,6 +4053,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           checklist: Json
+          commissioning_company: string | null
           commissioning_signed_at: string | null
           commissioning_signed_by: string | null
           completed_at: string | null
@@ -3680,6 +4064,7 @@ export type Database = {
           id: string
           is_reversal: boolean
           number: string
+          operations_company: string | null
           operations_signed_at: string | null
           operations_signed_by: string | null
           org_id: string
@@ -3697,6 +4082,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           checklist?: Json
+          commissioning_company?: string | null
           commissioning_signed_at?: string | null
           commissioning_signed_by?: string | null
           completed_at?: string | null
@@ -3707,6 +4093,7 @@ export type Database = {
           id?: string
           is_reversal?: boolean
           number: string
+          operations_company?: string | null
           operations_signed_at?: string | null
           operations_signed_by?: string | null
           org_id: string
@@ -3724,6 +4111,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           checklist?: Json
+          commissioning_company?: string | null
           commissioning_signed_at?: string | null
           commissioning_signed_by?: string | null
           completed_at?: string | null
@@ -3734,6 +4122,7 @@ export type Database = {
           id?: string
           is_reversal?: boolean
           number?: string
+          operations_company?: string | null
           operations_signed_at?: string | null
           operations_signed_by?: string | null
           org_id?: string
@@ -3800,14 +4189,17 @@ export type Database = {
       }
       performance_certificates: {
         Row: {
+          client_company: string | null
           client_signed_at: string | null
           client_signed_by: string | null
+          commissioning_company: string | null
           commissioning_signed_at: string | null
           commissioning_signed_by: string | null
           content_hash: string | null
           created_at: string
           id: string
           number: string
+          operations_company: string | null
           operations_signed_at: string | null
           operations_signed_by: string | null
           org_id: string
@@ -3823,14 +4215,17 @@ export type Database = {
           test_id: string
         }
         Insert: {
+          client_company?: string | null
           client_signed_at?: string | null
           client_signed_by?: string | null
+          commissioning_company?: string | null
           commissioning_signed_at?: string | null
           commissioning_signed_by?: string | null
           content_hash?: string | null
           created_at?: string
           id?: string
           number: string
+          operations_company?: string | null
           operations_signed_at?: string | null
           operations_signed_by?: string | null
           org_id: string
@@ -3846,14 +4241,17 @@ export type Database = {
           test_id: string
         }
         Update: {
+          client_company?: string | null
           client_signed_at?: string | null
           client_signed_by?: string | null
+          commissioning_company?: string | null
           commissioning_signed_at?: string | null
           commissioning_signed_by?: string | null
           content_hash?: string | null
           created_at?: string
           id?: string
           number?: string
+          operations_company?: string | null
           operations_signed_at?: string | null
           operations_signed_by?: string | null
           org_id?: string
@@ -8075,6 +8473,7 @@ export type Database = {
         Row: {
           approved_at: string
           approved_by: string
+          approved_company: string | null
           approved_role: string
           conditions: Json
           evidence: Json
@@ -8093,6 +8492,7 @@ export type Database = {
         Insert: {
           approved_at?: string
           approved_by: string
+          approved_company?: string | null
           approved_role: string
           conditions?: Json
           evidence?: Json
@@ -8111,6 +8511,7 @@ export type Database = {
         Update: {
           approved_at?: string
           approved_by?: string
+          approved_company?: string | null
           approved_role?: string
           conditions?: Json
           evidence?: Json
@@ -8466,6 +8867,7 @@ export type Database = {
           org_id: string
           project_id: string
           signed_at: string
+          signer_company: string | null
           user_id: string
           user_role: string
         }
@@ -8477,6 +8879,7 @@ export type Database = {
           org_id: string
           project_id: string
           signed_at?: string
+          signer_company?: string | null
           user_id: string
           user_role: string
         }
@@ -8488,6 +8891,7 @@ export type Database = {
           org_id?: string
           project_id?: string
           signed_at?: string
+          signer_company?: string | null
           user_id?: string
           user_role?: string
         }
@@ -9151,6 +9555,7 @@ export type Database = {
           notes: string | null
           org_id: string
           owner_company: string | null
+          owner_company_id: string | null
           serial_number: string
           updated_at: string
         }
@@ -9170,6 +9575,7 @@ export type Database = {
           notes?: string | null
           org_id: string
           owner_company?: string | null
+          owner_company_id?: string | null
           serial_number: string
           updated_at?: string
         }
@@ -9189,6 +9595,7 @@ export type Database = {
           notes?: string | null
           org_id?: string
           owner_company?: string | null
+          owner_company_id?: string | null
           serial_number?: string
           updated_at?: string
         }
@@ -9198,6 +9605,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_equipment_owner_company_id_fkey"
+            columns: ["owner_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -10363,6 +10777,23 @@ export type Database = {
         Args: { p_template_id: string }
         Returns: Json
       }
+      add_document_reference: {
+        Args: { p_document_id: string; p_kind: string; p_target_id: string }
+        Returns: string
+      }
+      add_document_revision: {
+        Args: {
+          p_document_id: string
+          p_external_url: string
+          p_file_name: string
+          p_file_path: string
+          p_issued_on: string
+          p_notes: string
+          p_rev: string
+          p_status: string
+        }
+        Returns: string
+      }
       add_mgmt_attachment: {
         Args: {
           p_entity_id: string
@@ -10777,6 +11208,28 @@ export type Database = {
         Args: { p_sub_id: string }
         Returns: undefined
       }
+      document_check_refs: {
+        Args: {
+          p_company_id: string
+          p_discipline_id: string
+          p_project_id: string
+          p_systems: string[]
+        }
+        Returns: undefined
+      }
+      document_is_controller: { Args: { p_role: string }; Returns: boolean }
+      document_reference_target: {
+        Args: { p_kind: string; p_target_id: string }
+        Returns: Record<string, unknown>
+      }
+      document_references_blocker: {
+        Args: { p_kind: string; p_target_id: string }
+        Returns: string
+      }
+      document_refresh_current: {
+        Args: { p_document_id: string }
+        Returns: string
+      }
       end_performance_disturbance: {
         Args: { p_disturbance_id: string; p_ended_at?: string }
         Returns: undefined
@@ -10850,6 +11303,10 @@ export type Database = {
       is_project_editor: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       issue_daily_report: { Args: { p_report_id: string }; Returns: string }
+      issue_document_revision: {
+        Args: { p_issued_on?: string; p_revision_id: string; p_status: string }
+        Returns: undefined
+      }
       issue_lineup_sheet: { Args: { p_sheet_id: string }; Returns: undefined }
       issue_performance_certificate: {
         Args: { p_run_id: string }
@@ -10913,6 +11370,10 @@ export type Database = {
         }
         Returns: string
       }
+      member_company_name: {
+        Args: { p_org_id: string; p_user_id: string }
+        Returns: string
+      }
       mgmt_check_refs: {
         Args: {
           p_discipline_id?: string
@@ -10971,6 +11432,7 @@ export type Database = {
         }
         Returns: string
       }
+      org_caller_role: { Args: { p_org_id: string }; Returns: string }
       org_cat_b_limit: { Args: { p_org_id: string }; Returns: number }
       ownership_checklist: {
         Args: { p_system_id: string; p_to_stage: string }
@@ -11141,6 +11603,10 @@ export type Database = {
         Args: { p_comment?: string; p_run_id: string; p_step_id: string }
         Returns: undefined
       }
+      remove_document_reference: {
+        Args: { p_reference_id: string }
+        Returns: undefined
+      }
       reopen_itr_atomic: {
         Args: { p_itr_id: string; p_reason: string }
         Returns: Json
@@ -11182,6 +11648,32 @@ export type Database = {
       revoke_system_gate_approval: {
         Args: { p_approval_id: string; p_reason: string }
         Returns: undefined
+      }
+      save_company: {
+        Args: {
+          p_id: string
+          p_is_active: boolean
+          p_kind: string
+          p_name: string
+          p_notes: string
+          p_org_id: string
+          p_short_name: string
+          p_tax_id: string
+        }
+        Returns: string
+      }
+      save_document: {
+        Args: {
+          p_company_id: string
+          p_discipline_id: string
+          p_doc_type: string
+          p_id: string
+          p_number: string
+          p_project_id: string
+          p_systems: string[]
+          p_title: string
+        }
+        Returns: string
       }
       save_lineup_items: {
         Args: { p_items: Json; p_sheet_id: string }
@@ -11249,6 +11741,10 @@ export type Database = {
           p_remarks?: string
         }
         Returns: string
+      }
+      set_member_company: {
+        Args: { p_company_id: string; p_org_id: string; p_user_id: string }
+        Returns: undefined
       }
       set_performance_disturbance_exclusion: {
         Args: {
@@ -11418,6 +11914,10 @@ export type Database = {
       }
       update_daily_report_sections: {
         Args: { p_report_id: string; p_sections: Json }
+        Returns: undefined
+      }
+      update_document_reference: {
+        Args: { p_reason?: string; p_reference_id: string }
         Returns: undefined
       }
       update_performance_test: {

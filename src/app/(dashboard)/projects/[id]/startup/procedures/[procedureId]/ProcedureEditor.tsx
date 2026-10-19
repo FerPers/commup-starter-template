@@ -24,7 +24,7 @@ const REV_TONE: Record<string, 'muted' | 'blue' | 'green' | 'struck'> = { draft:
 const RUN_TONE: Record<string, 'amber' | 'red' | 'green' | 'struck' | 'blue'> = { in_progress: 'blue', at_hold: 'amber', stopped: 'red', completed: 'green', aborted: 'struck' }
 const LEADERS = ['owner', 'admin', 'architect', 'leader']
 
-export default function ProcedureEditor({ project, procedure, revisions, revision, steps: initialSteps, runs, systems, names, userId, role }: {
+export default function ProcedureEditor({ project, procedure, revisions, revision, steps: initialSteps, runs, systems, names, userId, role, documentsSlot }: {
   project: { id: string; code: string; name: string }
   procedure: { id: string; number: string; title: string; kind: string; systemId: string | null; currentRevisionId: string | null }
   revisions: { id: string; rev: number; status: string }[]
@@ -35,6 +35,8 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
   names: Record<string, string>
   userId: string
   role: string
+  /** Fase 8: documentos referenciados por la revisión (bloquea enviar/aprobar con una revisión superada). */
+  documentsSlot?: React.ReactNode
 }) {
   const t = useTranslations('Startup')
   const router = useRouter()
@@ -173,6 +175,8 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
       </section>
 
       {/* 15 secciones */}
+      {documentsSlot}
+
       <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 6 }} aria-label={t('editor.sections')}>
         <div style={label}>{t('editor.sections')}</div>
         {PROCEDURE_SECTIONS.map((k, i) => (
