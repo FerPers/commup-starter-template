@@ -31,8 +31,8 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 
 | Sesión | Tema | Depende de | Decisiones | Estado |
 |---|---|---|---|---|
-| S1-v1 | Sesión arrancada con el brief v1: CI + flujo de campo | — | (D8 aplicada según recomendación) | ⏳ **En curso** (sesión «S1 — CI confiable + flujo de campo» en Claude Code) — ver §3 |
-| S01 | Red de seguridad: CI, deploy único y base de pruebas | S1-v1 | D1, D2, D3 | Pendiente (una parte la hace S1-v1) |
+| S1-v1 | Sesión arrancada con el brief v1: CI + flujo de campo | — | (D8 aplicada según recomendación) | ✅ **Hecha** 2026-10-19 (5dbde43 + 350b17f; migración 20261025120000 en prod; CI verde) — ver §3 |
+| S01 | Red de seguridad: CI, deploy único y base de pruebas | S1-v1 | D1, D2, D3 | ◐ **Código hecho** 2026-10-19 — falta aplicar A-14 en prod, D1 y D3 (Luis). Detalle en la cobertura |
 | S02 | Seguridad rápida | S01 | — | Pendiente |
 | S03 | SQL canónico | S01 | — | Pendiente |
 | S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | Pendiente (C-02 y C-17 provisional en S1-v1) |
@@ -90,9 +90,9 @@ Cada una trae mi recomendación. Se responden antes de la sesión que la necesit
 
 | # | Decisión | Mi recomendación | Sesión | Respuesta |
 |---|---|---|---|---|
-| D1 | Un solo camino de deploy | GitHub Actions con la CI como requisito (ya lo hace S1-v1). Tú desconectas Cloudflare Workers Builds en el panel de Cloudflare. | S01 | |
-| D2 | Dónde corren los tests de BD | Hoy corren **contra producción**. Recomiendo un proyecto Supabase de pruebas separado (el plan gratuito permite 2), con las migraciones aplicadas y usuarios por rol creados por el propio test. | S01 | |
-| D3 | Protección de la rama `main` | Activarla con la CI como check obligatorio (la activas tú en GitHub). | S01 | |
+| D1 | Un solo camino de deploy | GitHub Actions con la CI como requisito (ya lo hace S1-v1). Tú desconectas Cloudflare Workers Builds en el panel de Cloudflare. | S01 || Aceptada; Luis desconecta Workers Builds más adelante (pasos en el chat de la sesión S01, 2026-10-19). Pendiente de ejecutar. |
+| D2 | Dónde corren los tests de BD | Hoy corren **contra producción**. Recomiendo un proyecto Supabase de pruebas separado (el plan gratuito permite 2), con las migraciones aplicadas y usuarios por rol creados por el propio test. | S01 || 2026-10-19: **seguir en prod por ahora**. La suite se escribe igual; mover a proyecto de pruebas queda pendiente. |
+| D3 | Protección de la rama `main` | Activarla con la CI como check obligatorio (la activas tú en GitHub). | S01 || Aceptada; Luis la activa más adelante. Pendiente de ejecutar. |
 | D4 | Firmas requeridas del ITR por defecto | `{ejecutor, supervisor}`; cliente solo donde lo pida la plantilla o la fase. | S04 | |
 | D5 | ITR atascados en «completado» que ya cumplen las firmas nuevas | Listártelos primero y luego aprobarlos en la migración, con un evento de auditoría «aprobado por regla de firmas v2». | S04 | |
 | D6 | Independencia de firmas | Una persona no firma dos capacidades del mismo ITR o certificado. | S04, S17 | |

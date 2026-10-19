@@ -77,11 +77,30 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
+      # G-16: un solo juego de variables públicas para el build. La clave VAPID pública no es secreta
+      # (es la misma que el respaldo de PushNotificationManager); SITE_URL y el beacon son opcionales.
+      - name: Check public build env
+        run: node scripts/ci/check-public-env.mjs
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BBQUEtX69_ZQkpAsgIOxmlokvU31Uizx99xL4MkJsKV_qNGxDHNkDaZv-DuHyp4yfMPB2b0q8LeJv4OceDkTq2Y' }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://commup.app' }}
+          NEXT_PUBLIC_CF_BEACON_TOKEN: ${{ vars.NEXT_PUBLIC_CF_BEACON_TOKEN }}
+      - name: Build for Cloudflare
+        run: npx opennextjs-cloudflare build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BBQUEtX69_ZQkpAsgIOxmlokvU31Uizx99xL4MkJsKV_qNGxDHNkDaZv-DuHyp4yfMPB2b0q8LeJv4OceDkTq2Y' }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://commup.app' }}
+          NEXT_PUBLIC_CF_BEACON_TOKEN: ${{ vars.NEXT_PUBLIC_CF_BEACON_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # G-25: presupuesto de tamaño del Worker (falla > 6 MB gzip; el límite de Cloudflare es 10 MB).
+      - name: Worker size budget
+        run: node scripts/ci/worker-size.mjs
       - name: Deploy to Cloudflare Workers
-        run: npm run deploy
+        run: npx opennextjs-cloudflare deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

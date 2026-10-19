@@ -1,7 +1,7 @@
 -- Seed DEMO (fase 6, sesión 2, decisión §12.17): curva de arranque simulada del compresor C-103 (A100-S02)
 -- para mostrar la foto IIoT y el gráfico de la bitácora de arranque.
 --
--- Re-ejecutable: borra los lotes SIMULATOR anteriores de la org DEMO y genera 2 h de muestras por minuto que
+-- Re-ejecutable: borra su propio lote SIMULATOR anterior de la org DEMO y genera 2 h de muestras por minuto que
 -- terminan en el minuto actual (la curva queda fechada el día en que se corre). No crea eventos: el hito se
 -- registra en la app (Arranque → Bitácora) para ver cómo se congela la foto.
 --
@@ -21,8 +21,9 @@ DECLARE
   v_start   timestamptz := date_trunc('minute', now()) - interval '119 minutes';
   v_n       integer;
 BEGIN
-  DELETE FROM signal_samples WHERE source_batch IN (SELECT id FROM signal_sample_batches WHERE org_id = v_org AND source = 'SIMULATOR');
-  DELETE FROM signal_sample_batches WHERE org_id = v_org AND source = 'SIMULATOR';
+  -- E-35: solo el lote propio (por source_system); el de desempeño (seed_performance_demo.sql) se conserva.
+  DELETE FROM signal_samples WHERE source_batch IN (SELECT id FROM signal_sample_batches WHERE org_id = v_org AND source = 'SIMULATOR' AND source_system = 'CommUp DEMO · arranque C-103');
+  DELETE FROM signal_sample_batches WHERE org_id = v_org AND source = 'SIMULATOR' AND source_system = 'CommUp DEMO · arranque C-103';
 
   INSERT INTO signal_sample_batches (org_id, source, source_system)
   VALUES (v_org, 'SIMULATOR', 'CommUp DEMO · arranque C-103')
