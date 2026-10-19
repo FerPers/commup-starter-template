@@ -59,10 +59,10 @@ const fakeUuid = '00000000-0000-4000-8000-00000000a17a'
 
 const CASES: Case[] = [
   {
-    name: 'api_keys: crear una key', op: 'insert', table: 'api_keys',
+    // A-01 cerrado en el hotfix 7eb0a7c: api_keys solo tiene política de SELECT; se crea por la action.
+    name: 'api_keys: crear directo por PostgREST', op: 'insert', table: 'api_keys',
     payload: fx => ({ org_id: fx.orgId, name: 'authz-probe', key_prefix: 'probe' }), // falta key_hash
-    allow: ['owner', 'admin'],
-    gap: { roles: ['architect', 'leader', 'inspector', 'client'], finding: 'A-01', session: 'S02' },
+    allow: [],
   },
   {
     name: 'org_members: invitar un miembro', op: 'insert', table: 'org_members',

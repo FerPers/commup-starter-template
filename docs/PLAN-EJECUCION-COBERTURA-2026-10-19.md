@@ -71,7 +71,7 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 - G-26 ◐ CLAUDE.md actualizado. Idioma del perfil **aplazado**: `profiles.locale` tiene default `'es'` y no distingue «eligió» de «nunca eligió»; usarlo forzaría español a quien navega en inglés. Requiere default NULL → S15.
 - D-37 ✅ verificado: los 13 archivos de `tests/db` corren en CI (run 39280520991: 64/64 sin omitir).
 - E-35 ✅ el seed de arranque borra solo su lote (`source_system`); simulador 1 Hz por la API real en `scripts/demo-data/simulate-signals.mjs` (falta una API key DEMO para correrlo).
-- A-17 ✅ esqueleto `tests/db/authz-matrix.test.ts`: 13 casos × 6 roles + outsider, sondas que nunca escriben (D2 = prod). Huecos abiertos con `it.fails` (A-01/A-02 → S02, A-04 → S16, A-05 → S17, A-06 → S06). Solo corre la columna del rol de TEST_USER_A hasta que existan `TEST_ROLE_<ROL>_*`.
+- A-17 ✅ esqueleto `tests/db/authz-matrix.test.ts`: 13 casos × 6 roles + outsider, sondas que nunca escriben (D2 = prod). Huecos abiertos con `it.fails` (A-02 → S02, A-04 → S16, A-05 → S17, A-06 → S06); A-01 ya estaba cerrado por el hotfix 7eb0a7c y la suite lo confirma (nadie inserta en `api_keys` directo). Hoy corren solo admin (TEST_USER_A) y outsider (TEST_USER_B); las demás columnas esperan usuarios `TEST_ROLE_<ROL>_*`.
 - A-14 ◐ migración `20261026120000_privileges_storage_snapshot.sql` (9 buckets, 4 políticas no versionadas, EXECUTE de 260 funciones, desviaciones de tablas) + generador `scripts/db/dump-privileges.sql`. **Pendiente:** prueba con ROLLBACK y aplicar en prod (autorización de Luis).
 - **Hallazgo nuevo (S01-N1):** el bucket `org-assets` que usa `uploadOrgLogo` no existe en prod → subir el logo de la org falla. Va a S02.
 
