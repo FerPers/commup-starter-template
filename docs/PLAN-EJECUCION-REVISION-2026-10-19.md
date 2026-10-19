@@ -90,9 +90,9 @@ Cada una trae mi recomendación. Se responden antes de la sesión que la necesit
 
 | # | Decisión | Mi recomendación | Sesión | Respuesta |
 |---|---|---|---|---|
-| D1 | Un solo camino de deploy | GitHub Actions con la CI como requisito (ya lo hace S1-v1). Tú desconectas Cloudflare Workers Builds en el panel de Cloudflare. | S01 || Aceptada; Luis desconecta Workers Builds más adelante (pasos en el chat de la sesión S01, 2026-10-19). Pendiente de ejecutar. |
-| D2 | Dónde corren los tests de BD | Hoy corren **contra producción**. Recomiendo un proyecto Supabase de pruebas separado (el plan gratuito permite 2), con las migraciones aplicadas y usuarios por rol creados por el propio test. | S01 || 2026-10-19: **seguir en prod por ahora**. La suite se escribe igual; mover a proyecto de pruebas queda pendiente. |
-| D3 | Protección de la rama `main` | Activarla con la CI como check obligatorio (la activas tú en GitHub). | S01 || Aceptada; Luis la activa más adelante. Pendiente de ejecutar. |
+| D1 | Un solo camino de deploy | GitHub Actions con la CI como requisito (ya lo hace S1-v1). Tú desconectas Cloudflare Workers Builds en el panel de Cloudflare. | S01 | ✅ **Hecha** 2026-10-19: Luis desconectó Cloudflare Workers Builds; el único deploy es el job de `lint.yml` con `needs`. Web Analytics usa la configuración automática de Cloudflare (sin token: no crear `NEXT_PUBLIC_CF_BEACON_TOKEN`, contaría doble). |
+| D2 | Dónde corren los tests de BD | Hoy corren **contra producción**. Recomiendo un proyecto Supabase de pruebas separado (el plan gratuito permite 2), con las migraciones aplicadas y usuarios por rol creados por el propio test. | S01 | 2026-10-19: **seguir en prod por ahora**. La suite se escribe igual; mover a proyecto de pruebas queda pendiente. |
+| D3 | Protección de la rama `main` | Activarla con la CI como check obligatorio (la activas tú en GitHub). | S01 | ✅ **Hecha** 2026-10-19: ruleset `main` activo (restringe borrado, bloquea force push, exige TypeScript/ESLint/Vitest; bypass Repository admin para los push directos). |
 | D4 | Firmas requeridas del ITR por defecto | `{ejecutor, supervisor}`; cliente solo donde lo pida la plantilla o la fase. | S04 | |
 | D5 | ITR atascados en «completado» que ya cumplen las firmas nuevas | Listártelos primero y luego aprobarlos en la migración, con un evento de auditoría «aprobado por regla de firmas v2». | S04 | |
 | D6 | Independencia de firmas | Una persona no firma dos capacidades del mismo ITR o certificado. | S04, S17 | |
