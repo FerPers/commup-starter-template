@@ -35,7 +35,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S01 | Red de seguridad: CI, deploy único y base de pruebas | S1-v1 | D1, D2, D3 | ✅ **Hecha** 2026-10-19 (f5fb4f7, 1532c46 + migración 20261026120000 en prod; CI verde con deploy) — quedan D1 y D3 (Luis). Detalle en la cobertura |
 | S02 | Seguridad rápida | S01 | — | ✅ **Hecha** 2026-10-19 (649c2a5, 5999391; migración 20261027120000 en prod; edge `evaluate-workflow` desplegada) — A-02 adelantado (guarda), S01-N1 cerrado. Detalle en la cobertura |
 | S03 | SQL canónico | S01 | — | ✅ **Hecha** 2026-10-19 (6827c09; migración 20261028120000 en prod; 13 funciones en `supabase/functions-sql/`, test de deriva en CI) — B-28 cerrado. Detalle en la cobertura |
-| S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | ✅ **Hecha** 2026-10-19 (ver commit; migración 20261029120000 en prod, 17 escenarios con ROLLBACK) — D5 aprobó 0 ITR. Detalle en la cobertura |
+| S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | ✅ **Hecha** 2026-10-19 (ed0e4c6; migración 20261029120000 en prod, 17 escenarios con ROLLBACK) — D5 aprobó 0 ITR. Detalle en la cobertura |
 | S05 | ITR: contenido, estados y numeración | S04 | D7 | Pendiente |
 | S06 | Punch: permisos de campo y escritura por RPC | S03 | D8 | Pendiente (permisos de campo en S1-v1) |
 | S07 | Importaciones sin pérdida de datos | S03 | D9 | Pendiente |
