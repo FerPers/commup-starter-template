@@ -172,7 +172,7 @@ export function Evidence({ projectId, kind, entityId, attachments, names, canAdd
       for (const file of Array.from(files)) {
         if (file.size > 20 * 1024 * 1024) { setError(t('evidence.tooBig', { name: file.name })); return }
         const path = evidencePath(projectId, kind, entityId, file.name)
-        const { error: upErr } = await createClient().storage.from('mgmt-evidence').upload(path, file, { contentType: file.type || undefined })
+        const { error: upErr } = await createClient().storage.from('mgmt-evidence').upload(path, file, { contentType: file.type || 'application/octet-stream' })
         if (upErr) { setError(upErr.message); return }
         const res = await addMgmtAttachment({ projectId, kind, entityId, filePath: path, fileName: file.name, mimeType: file.type, sizeBytes: file.size })
         if (res.error) { setError(res.error); return }

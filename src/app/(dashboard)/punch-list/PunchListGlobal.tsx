@@ -15,6 +15,7 @@ import { Button, Input, Select, EmptyState, DataTable, type DataTableColumn } fr
 import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 import { reassignPunch } from '@/app/actions/punches'
 import { punchDisplayStatus } from '@/lib/punches/verification'
+import { toSafeCsv } from '@/lib/excel/sanitize'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
@@ -202,7 +203,7 @@ export default function PunchListGlobal({
         p.status,
         p.priority,
       ])
-      const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+      const csv = toSafeCsv([headers, ...rows])
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
       const href = URL.createObjectURL(blob)
       const a = document.createElement('a')

@@ -11,7 +11,8 @@
  * cells pass through unchanged.
  */
 
-const DANGEROUS_PREFIX = /^[=+\-@\t\r]/
+// A-29 (S02): también con espacios o saltos antes del signo (` =HYPERLINK(...)`); Excel los ignora.
+const DANGEROUS_PREFIX = /^[\s\u00a0]*[=+\-@]|^[\t\r\n]/
 
 export function sanitizeCell<T>(value: T): T | string {
   if (typeof value !== 'string') return value
@@ -25,4 +26,19 @@ export function sanitizeRow<T extends Record<string, unknown>>(row: T): T {
     out[k] = sanitizeCell(row[k])
   }
   return out as T
+}
+
+/** Matriz (array of arrays) lista para `aoa_to_sheet`: cada celda de texto pasa por `sanitizeCell`. */
+export function sanitizeAoa<T>(rows: T[][]): (T | string)[][] {
+  return rows.map(r => r.map(c => sanitizeCell(c)))
+}
+
+/**
+ * F-09 (S02): CSV con el guard anti fórmulas. Las comillas del CSV no impiden que Excel evalúe
+ * `=HYPERLINK(...)`, así que cada celda pasa por `sanitizeCell` antes de entrecomillarse.
+ */
+export function toSafeCsv(rows: unknown[][]): string {
+  return rows
+    .map(r => r.map(c => `"${String(sanitizeCell(c ?? '')).replace(/"/g, '""')}"`).join(','))
+    .join('\n')
 }

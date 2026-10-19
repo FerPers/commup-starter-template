@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import type { Json } from '@/types/supabase.generated'
+import { isAllowedPushEndpoint } from '@/lib/push/endpoint'
 
 /**
  * POST /api/push/subscribe — registra/upsertea una PushSubscription para el usuario actual.
@@ -21,6 +22,9 @@ export async function POST(req: NextRequest) {
 
   if (!body.endpoint || !body.p256dh || !body.auth) {
     return NextResponse.json({ error: 'endpoint, p256dh and auth are required' }, { status: 400 })
+  }
+  if (!isAllowedPushEndpoint(body.endpoint)) {
+    return NextResponse.json({ error: 'endpoint is not a known push service' }, { status: 400 })
   }
 
   const { data, error } = await supabase.rpc('upsert_push_subscription', {

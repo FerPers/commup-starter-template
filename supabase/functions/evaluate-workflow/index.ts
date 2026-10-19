@@ -16,6 +16,14 @@
 //    libres). `change_system_state` está deshabilitada (systems no tiene
 //    columna state). `webhook_call` solo a https públicos (anti-SSRF).
 //
+//
+// Anti-bucle (I-10, S02 2026-10-19):
+//  - Un `.created` de una fila creada por un workflow (created_via='workflow') no dispara reglas:
+//    «punch creado → crear punch» generaba punches sin fin.
+//  - Cada regla ejecuta su acción como máximo MAX_RUNS_PER_RULE_PER_MIN veces por minuto; el resto
+//    queda registrado en workflow_executions con el error, sin ejecutar.
+//  - block_certificate no reescribe un certificado ya bloqueado (no emite otro `.updated`).
+//
 // Deploy: supabase functions deploy evaluate-workflow --no-verify-jwt
 // ══════════════════════════════════════════════════════════════
 
@@ -27,6 +35,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const WEBHOOK_TIMEOUT_MS = 10_000
+const MAX_RUNS_PER_RULE_PER_MIN = 30
 
 type DomainEvent = {
   id: string
@@ -144,6 +153,12 @@ Deno.serve(async (req: Request) => {
     return new Response(`Event not found: ${evErr?.message ?? 'unknown'}`, { status: 404 })
   }
 
+  // I-10: lo que crea un workflow no vuelve a disparar workflows.
+  const created = event.payload?.new as Record<string, unknown> | undefined
+  if (event.event_type.endsWith('.created') && created?.created_via === 'workflow') {
+    return Response.json({ evaluated: 0, skipped: 'created_via_workflow' })
+  }
+
   // 2. Fetch matching enabled rules (solo de la org del evento)
   const { data: rules, error: rulesErr } = await supabase
     .from('workflow_rules')
@@ -174,6 +189,20 @@ Deno.serve(async (req: Request) => {
         : Boolean(jsonLogic.apply(rule.condition_jsonlogic, event.payload))
     } catch (e) {
       errorMessage = `Condition eval error: ${(e as Error).message}`
+    }
+
+    if (matched && !errorMessage) {
+      // I-10: tope de ejecuciones por regla (corta cualquier cadena que se realimente).
+      const since = new Date(Date.now() - 60_000).toISOString()
+      const { count: recent } = await supabase
+        .from('workflow_executions')
+        .select('id', { count: 'exact', head: true })
+        .eq('rule_id', rule.id)
+        .eq('matched', true)
+        .gte('executed_at', since)
+      if ((recent ?? 0) >= MAX_RUNS_PER_RULE_PER_MIN) {
+        errorMessage = `Rate limit: más de ${MAX_RUNS_PER_RULE_PER_MIN} ejecuciones por minuto; acción omitida`
+      }
     }
 
     if (matched && !errorMessage) {
@@ -223,9 +252,15 @@ async function executeAction(
         })
         .eq('id', certId)
         .eq('project_id', event.project_id)
+        .eq('is_blocked', false)
         .select('id')
       if (error) throw new Error(error.message)
-      if (!data || data.length === 0) throw new Error('Certificate not found in event project')
+      if (!data || data.length === 0) {
+        const { data: existing } = await supabase
+          .from('certificates').select('id').eq('id', certId).eq('project_id', event.project_id).maybeSingle()
+        if (!existing) throw new Error('Certificate not found in event project')
+        return { certificate_id: certId, blocked: true, already_blocked: true }
+      }
       return { certificate_id: certId, blocked: true }
     }
 

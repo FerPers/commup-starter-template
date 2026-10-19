@@ -70,7 +70,7 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
       let filePath: string | null = null
       if (rev.file) {
         filePath = documentPath(project.id, doc.id, rev.file.name, crypto.randomUUID())
-        const { error: up } = await createClient().storage.from('project-documents').upload(filePath, rev.file, { contentType: rev.file.type || undefined })
+        const { error: up } = await createClient().storage.from('project-documents').upload(filePath, rev.file, { contentType: rev.file.type || 'application/octet-stream' })
         if (up) return { error: up.message }
       }
       return addDocumentRevision({

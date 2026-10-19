@@ -367,7 +367,7 @@ export default function OrgConfigView({
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp"
                 style={{ display: 'none' }}
                 onChange={handleLogoUpload}
               />

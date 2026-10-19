@@ -13,6 +13,7 @@ import { exportItrList } from '@/app/actions/itr-list'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
 import type { SortDir } from '@/lib/list/params'
+import { toSafeCsv } from '@/lib/excel/sanitize'
 
 type Project    = { id: string; name: string; code: string }
 type Phase      = { id: string; code: string; name: string; color: string; order_index: number }
@@ -147,7 +148,7 @@ export default function ItrListGlobal({
           itr.signatures.some(s => s.role === 'client') ? 'S' : 'N',
         ]
       })
-      const csv = [headers, ...body].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+      const csv = toSafeCsv([headers, ...body])
       const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
       const href = URL.createObjectURL(blob)
       const a = document.createElement('a')

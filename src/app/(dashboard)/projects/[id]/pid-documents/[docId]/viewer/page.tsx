@@ -1,3 +1,4 @@
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import PidViewer from './PidViewer'
@@ -15,7 +16,8 @@ export default async function PidViewerPage({
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
+  // F-27: ubicar tags en el plano = EDITOR, igual que upsertHotspot (política 2026-05-24)
+  const canEdit = EDITOR_ROLES.includes(membership.role)
 
   // Verify project belongs to org
   const { data: project } = await supabase

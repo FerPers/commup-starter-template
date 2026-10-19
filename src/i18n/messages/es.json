@@ -632,7 +632,7 @@
       "sigCanvasPlaceholder": "Firma aquí con dedo o ratón",
       "revokeModal": {
         "title": "¿Revocar certificado?",
-        "body": "El certificado {certNumber} quedará en estado Revocado y se eliminarán las firmas actuales. Los firmantes serán notificados.",
+        "body": "El certificado <b>{certNumber}</b> quedará en estado Revocado y se eliminarán las firmas actuales. Los firmantes serán notificados.",
         "reasonLabel": "Motivo (obligatorio)",
         "reasonPlaceholder": "Ej. error en alcance, ITRs adicionales necesarios...",
         "cancel": "Cancelar",
@@ -642,7 +642,7 @@
       "reopenBtn": "Reabrir",
       "reopenModal": {
         "title": "¿Reabrir certificado?",
-        "body": "El certificado {certNumber} volverá al estado Emitido y necesitará nuevas firmas. Los firmantes previos serán notificados.",
+        "body": "El certificado <b>{certNumber}</b> volverá al estado Emitido y necesitará nuevas firmas. Los firmantes previos serán notificados.",
         "reasonLabel": "Motivo (obligatorio)",
         "reasonPlaceholder": "Ej. issues resueltos, ITRs ahora aprobados...",
         "cancel": "Cancelar",

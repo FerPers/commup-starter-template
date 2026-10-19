@@ -16,6 +16,8 @@
  * El cliente debe usar VAPID_PUBLIC_KEY (NEXT_PUBLIC_VAPID_PUBLIC_KEY).
  */
 
+import { isAllowedPushEndpoint } from './endpoint'
+
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY ?? ''
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY ?? ''
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT ?? 'mailto:noreply@commup.app'
@@ -197,6 +199,11 @@ export async function sendWebPush(args: {
 }): Promise<SendResult> {
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
     return { ok: false, status: 500, body: 'VAPID keys not configured' }
+  }
+
+  // A-23: suscripciones guardadas antes de la validación en /api/push/subscribe también se filtran aquí.
+  if (!isAllowedPushEndpoint(args.endpoint)) {
+    return { ok: false, status: 400, body: 'endpoint is not a known push service' }
   }
 
   const audience = new URL(args.endpoint).origin

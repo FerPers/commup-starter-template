@@ -12,7 +12,7 @@ type WebSpeechRecognizer = {
   maxAlternatives: number
   onstart: (() => void) | null
   onend: (() => void) | null
-  onerror: (() => void) | null
+  onerror: ((event: { error?: string }) => void) | null
   onresult: ((event: { results: SpeechRecognitionResultList }) => void) | null
   start: () => void
   stop: () => void
@@ -32,6 +32,8 @@ export default function MicAppend({
   const recognitionRef = useRef<WebSpeechRecognizer | null>(null)
   const [supported, setSupported] = useState(false)
   const [active, setActive] = useState(false)
+  // G-05 (S02): si el navegador niega el micrófono, avisarlo en vez de fallar en silencio
+  const [blocked, setBlocked] = useState(false)
 
   useEffect(() => {
     const w = window as unknown as {
@@ -58,7 +60,14 @@ export default function MicAppend({
     rec.maxAlternatives = 1
     rec.onstart = () => setActive(true)
     rec.onend = () => { setActive(false); recognitionRef.current = null }
-    rec.onerror = () => { setActive(false); recognitionRef.current = null }
+    rec.onerror = (event) => {
+      setActive(false)
+      recognitionRef.current = null
+      if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') {
+        setBlocked(true)
+        setTimeout(() => setBlocked(false), 4000)
+      }
+    }
     rec.onresult = (event) => {
       const text = event.results[0]?.[0]?.transcript?.trim()
       if (!text || !targetRef.current) return
@@ -78,7 +87,7 @@ export default function MicAppend({
     <button
       type="button"
       onClick={active ? stop : start}
-      title={active ? 'Detener dictado' : 'Dictar'}
+      title={blocked ? 'El navegador bloqueó el micrófono: habilítalo en los permisos del sitio' : active ? 'Detener dictado' : 'Dictar'}
       style={{
         padding: '4px 8px', borderRadius: '6px', fontSize: '11px',
         border: '1px solid', borderColor: active ? '#ef4444' : 'var(--gray-300)',
@@ -88,7 +97,7 @@ export default function MicAppend({
       }}
     >
       <span>{active ? '■' : '🎤'}</span>
-      <span>{active ? 'Detener' : 'Dictar'}</span>
+      <span>{blocked ? 'Micrófono bloqueado' : active ? 'Detener' : 'Dictar'}</span>
     </button>
   )
 }

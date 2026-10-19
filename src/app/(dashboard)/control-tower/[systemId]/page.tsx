@@ -38,7 +38,7 @@ export default async function SystemGatesPage({
         provider:systems!system_dependencies_depends_on_system_id_fkey(id, code),
         dependent:systems!system_dependencies_system_id_fkey(id, code)`)
       .eq('project_id', system.project_id)
-      .or(`system_id.eq.${systemId},depends_on_system_id.eq.${systemId}`),
+      .or(`system_id.eq.${system.id},depends_on_system_id.eq.${system.id}`),
     // Gestión diaria (fase 5): nada oculto en el detalle del sistema.
     supabase.from('project_constraints')
       .select('id, number, title, status, escalation_level, need_date, readiness_gates(code)')

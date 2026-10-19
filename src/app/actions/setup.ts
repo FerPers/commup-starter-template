@@ -6,37 +6,29 @@ import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { DEFAULT_PSSR_ITEMS } from '@/lib/constants/pssr'
 import { EQUIPMENT_TYPE_DEFAULTS } from '@/lib/equipment-types'
+import { setupInputSchema, type SetupInput } from '@/lib/setup/schema'
 
-interface PhaseInput {
-  code: string
-  name: string
-  order_index: number
-  color: string
-  certificate_name: string
-}
-
-interface DisciplineInput {
-  code: string
-  name: string
-  color: string
-}
-
-interface SetupInput {
-  userFullName: string
-  org: { name: string; slug: string }
-  project: { name: string; code: string; location: string; client: string; country: string; region: string; start_date: string; end_date: string }
-  phases: PhaseInput[]
-  disciplines: DisciplineInput[]
-}
-
-export async function completeSetup(input: SetupInput): Promise<{ error?: string; org_id?: string; project_id?: string }> {
+export async function completeSetup(raw: SetupInput): Promise<{ error?: string; org_id?: string; project_id?: string }> {
   // Verify authentication with the user-scoped client
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
-  const fullName = input.userFullName.trim()
-  if (fullName.length < 2) return { error: 'Ingresa tu nombre completo' }
+  // A-20 (S02): escribe con service role → entrada validada campo a campo y una sola org por usuario
+  // (el layout (setup) ya lo impide en la UI, pero la action se puede invocar directo).
+  const parsed = setupInputSchema.safeParse(raw)
+  if (!parsed.success) {
+    const fullNameIssue = parsed.error.issues.some(i => i.path[0] === 'userFullName')
+    return { error: fullNameIssue ? 'Ingresa tu nombre completo' : 'Datos de configuración no válidos' }
+  }
+  const input = parsed.data
+  const { count: memberships } = await supabase
+    .from('org_members')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+  if ((memberships ?? 0) > 0) return { error: 'Ya perteneces a una organización: crea el proyecto desde ella' }
+
+  const fullName = input.userFullName
   // Evita que el nombre quede como el email (problema heredado: PDFs mostraban email como firmante)
   if (fullName.toLowerCase() === (user.email ?? '').toLowerCase()) {
     return { error: 'El nombre no puede ser tu correo electrónico' }
@@ -80,8 +72,8 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
       code: input.project.code.toUpperCase(),
       location: input.project.location || null,
       client: input.project.client || null,
-      country: input.project.country.trim() || null,
-      region: input.project.region.trim() || null,
+      country: input.project.country || null,
+      region: input.project.region || null,
       start_date: input.project.start_date || null,
       end_date: input.project.end_date || null,
       status: 'active',
@@ -94,14 +86,17 @@ export async function completeSetup(input: SetupInput): Promise<{ error?: string
   // 4. Create phases
   const { error: phasesError } = await admin
     .from('project_phases')
-    .insert(input.phases.map(p => ({ ...p, org_id: org.id })))
+    .insert(input.phases.map(p => ({
+      org_id: org.id, code: p.code, name: p.name, order_index: p.order_index,
+      color: p.color, certificate_name: p.certificate_name,
+    })))
 
   if (phasesError) return { error: phasesError.message }
 
   // 5. Create disciplines
   const { error: disciplinesError } = await admin
     .from('disciplines')
-    .insert(input.disciplines.map(d => ({ ...d, org_id: org.id })))
+    .insert(input.disciplines.map(d => ({ org_id: org.id, code: d.code, name: d.name, color: d.color })))
 
   if (disciplinesError) return { error: disciplinesError.message }
 

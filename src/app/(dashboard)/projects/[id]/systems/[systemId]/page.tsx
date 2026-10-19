@@ -29,7 +29,7 @@ export default async function SystemDetailPage({ params }: { params: Promise<{ i
   const [subs, tags, { data: deps }, { data: projectSystems }, { data: gates }, { data: frozenBy }, { data: events }] = await Promise.all([
     supabase.from('subsystems').select('id', { count: 'exact', head: true }).eq('system_id', systemId),
     supabase.from('tags').select('id, subsystems!inner(system_id)', { count: 'exact', head: true }).eq('subsystems.system_id', systemId),
-    supabase.from('system_dependencies').select(depSelect).eq('project_id', id).or(`system_id.eq.${systemId},depends_on_system_id.eq.${systemId}`),
+    supabase.from('system_dependencies').select(depSelect).eq('project_id', id).or(`system_id.eq.${system.id},depends_on_system_id.eq.${system.id}`),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('readiness_gates').select('id, code, name, order_index, is_active').eq('org_id', ctx.orgId).order('order_index'),
     system.boundary_frozen_by

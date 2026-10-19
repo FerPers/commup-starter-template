@@ -25,6 +25,15 @@ export const upsertHotspot = withAuth(
     },
   ): Promise<{ id?: string; error?: string }> => {
 
+  // F-27 (S02): el documento debe ser del mismo proyecto que el tag (los guards cubren proyecto y tag).
+  const { data: doc } = await ctx.supabase
+    .from('pid_documents')
+    .select('id')
+    .eq('id', input.pid_document_id)
+    .eq('project_id', input.project_id)
+    .maybeSingle()
+  if (!doc) return { error: 'Documento P&ID no encontrado en el proyecto' }
+
   const { data, error } = await ctx.supabase
     .from('pid_hotspots')
     .upsert({

@@ -62,7 +62,8 @@ export async function submitLead(input: LeadInput): Promise<LeadResult> {
     const ip = h.get('cf-connecting-ip')
       ?? h.get('x-forwarded-for')?.split(',')[0]?.trim()
       ?? 'unknown'
-    const ipHash = await sha256Hex(`${ip}:${process.env.CRON_SECRET ?? 'commup-leads'}`)
+    // A-27: sal propia (LEADS_IP_SALT); CRON_SECRET queda solo como respaldo hasta que exista el secreto.
+    const ipHash = await sha256Hex(`${ip}:${process.env.LEADS_IP_SALT ?? process.env.CRON_SECRET ?? 'commup-leads'}`)
     const userAgent = (h.get('user-agent') ?? '').slice(0, 300) || null
 
     const admin = createAdminClient()

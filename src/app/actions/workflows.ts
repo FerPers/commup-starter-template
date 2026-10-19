@@ -4,6 +4,7 @@ import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 import type { Enums, Json } from '@/types/supabase.generated'
+import { reflexiveRuleError } from '@/lib/workflows/rules'
 
 export type WorkflowActionType = Enums<'workflow_action_type'>
 
@@ -22,6 +23,8 @@ function validate(input: WorkflowRuleInput): string | null {
   if (!input.name?.trim()) return 'Nombre requerido'
   if (!input.triggerEvent?.trim()) return 'Evento requerido'
   if (!input.actionType) return 'Acción requerida'
+  const loop = reflexiveRuleError(input.triggerEvent, input.actionType)
+  if (loop) return loop
   if (typeof input.conditionJsonlogic !== 'object' || input.conditionJsonlogic === null) {
     return 'Condición debe ser un objeto JsonLogic'
   }

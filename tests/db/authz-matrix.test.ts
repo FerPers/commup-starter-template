@@ -13,6 +13,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  *   - UPDATE: pone en NULL una columna NOT NULL de una fila existente. Denegado → el USING la filtra
  *     y no hay error (0 filas); permitido → 23502 (o el error de un trigger, que también prueba que la
  *     fila llegó a la escritura). La transacción falla, así que nada cambia.
+ *   - SELECT de una columna: denegado → 42501 (privilegio de columna); permitido → sin error. Solo lee.
  *   - DELETE no tiene sonda segura: queda para cuando exista la base de pruebas (D2).
  *
  * Usuarios: TEST_ROLE_<ROL>_EMAIL / TEST_ROLE_<ROL>_PASSWORD (OWNER, ADMIN, ARCHITECT, LEADER,
@@ -30,6 +31,7 @@ const ROLES = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client'] a
 type Role = (typeof ROLES)[number]
 type Actor = Role | 'outsider'
 const EDITORS: Role[] = ['owner', 'admin', 'architect', 'leader']
+const PRIVILEGED: Role[] = ['owner', 'admin', 'architect']
 
 type Fixtures = {
   orgId: string
@@ -46,6 +48,7 @@ type Fixtures = {
 type Probe =
   | { op: 'insert'; table: string; payload: (fx: Fixtures, uid: string) => Record<string, unknown> | null }
   | { op: 'update'; table: string; column: string; rowId: (fx: Fixtures) => string | null }
+  | { op: 'select'; table: string; column: string }
 
 type Case = Probe & {
   name: string
@@ -72,8 +75,7 @@ const CASES: Case[] = [
   {
     name: 'org_members: cambiar la fila de un owner', op: 'update', table: 'org_members', column: 'role',
     rowId: fx => fx.ownerMemberId,
-    allow: ['owner'],
-    gap: { roles: ['admin'], finding: 'A-02', session: 'S02' },
+    allow: ['owner'], // A-02 cerrado en S02: trigger org_members_owner_guard
   },
   {
     name: 'projects: editar el proyecto', op: 'update', table: 'projects', column: 'name',
@@ -128,6 +130,17 @@ const CASES: Case[] = [
     gap: { roles: [...ROLES], finding: 'A-04', session: 'S16' },
   },
   {
+    // I-11 (S02): las reglas llevan headers de terceros en action_payload; solo owner/admin/architect.
+    name: 'workflow_rules: crear una regla', op: 'insert', table: 'workflow_rules',
+    payload: fx => ({ org_id: fx.orgId, trigger_event: 'itrs.updated', action_type: 'notify_user' }), // falta name
+    allow: PRIVILEGED,
+  },
+  {
+    // I-11 (S02): el secreto HMAC solo se muestra al crearlo; nadie lo lee por PostgREST.
+    name: 'webhook_subscriptions: leer el secreto', op: 'select', table: 'webhook_subscriptions', column: 'secret',
+    allow: [],
+  },
+  {
     name: 'itr_signatures: insertar directo (solo por RPC)', op: 'insert', table: 'itr_signatures',
     payload: () => ({ itr_id: fakeUuid, user_id: fakeUuid }), // falta role; además sin GRANT de INSERT
     allow: [],
@@ -146,6 +159,12 @@ async function probe(c: SupabaseClient, p: Probe, fx: Fixtures): Promise<Outcome
     if (error.code === '42501') return 'deny'
     if (error.code === '23502') return 'allow'
     throw new Error(`${p.table}: resultado inesperado ${error.code} ${error.message}`)
+  }
+  if (p.op === 'select') {
+    const { error } = await c.from(p.table).select(p.column).limit(1)
+    if (!error) return 'allow'
+    if (error.code === '42501') return 'deny'
+    throw new Error(`${p.table}.${p.column}: resultado inesperado ${error.code} ${error.message}`)
   }
   const id = p.rowId(fx)
   if (!id) return 'n/a'
@@ -222,4 +241,35 @@ describe.skipIf(!enabled)('autorización rol × tabla × operación (A-17)', () 
       }
     })
   }
+})
+
+/**
+ * A-19 (S02): ninguna función de public es ejecutable por anon, y las DEFINER internas solo por service
+ * role. La sonda llama con un UUID que no existe: si la llamada pasara, no tocaría ninguna fila.
+ */
+describe.skipIf(!enabled)('EXECUTE de funciones (A-19)', () => {
+  const ghost = '00000000-0000-4000-8000-0000000a1900'
+
+  it('anon no ejecuta funciones de public', async () => {
+    const anon = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
+    for (const [fn, args] of [
+      ['document_is_controller', { p_role: 'owner' }],
+      ['vendor_checklist_keys', { p_phase: 'fat' }],
+      ['evaluate_itr_capture', { p_itr_id: ghost }],
+    ] as const) {
+      const { error } = await anon.rpc(fn, args)
+      expect(error?.code, fn).toBe('42501')
+    }
+  })
+
+  it('un miembro no ejecuta las DEFINER internas', async () => {
+    const a = await signIn(env.TEST_USER_A_EMAIL!, env.TEST_USER_A_PASSWORD!)
+    for (const [fn, args] of [
+      ['bump_push_subscription_failure', { p_sub_id: ghost }],
+      ['itr_test_equipment_blocker', { p_itr_id: ghost }],
+    ] as const) {
+      const { error } = await a.rpc(fn, args)
+      expect(error?.code, fn).toBe('42501')
+    }
+  })
 })

@@ -370,6 +370,8 @@ export const saveCatBLimit = withAuthOnly(
   },
 )
 
+const LOGO_MIME_EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
+
 export const uploadOrgLogo = withAuthOnly(
   { role: ADMIN_ROLES },
   async (
@@ -383,7 +385,10 @@ export const uploadOrgLogo = withAuthOnly(
     if (!file) return { error: 'No se adjuntó archivo' }
     if (file.size > 2 * 1024 * 1024) return { error: 'El archivo supera 2 MB' }
 
-    const ext = file.name.split('.').pop() ?? 'png'
+    // A-26 (S02): el bucket es público → solo imágenes rasterizadas (nunca SVG/HTML) y la extensión
+    // sale del MIME validado, no del nombre del archivo. El bucket repite la lista (migración S02).
+    const ext = LOGO_MIME_EXT[file.type]
+    if (!ext) return { error: 'El logo debe ser PNG, JPG o WebP' }
     const path = `${orgId}/logo.${ext}`
 
     const { error: upErr } = await ctx.supabase.storage
@@ -393,6 +398,7 @@ export const uploadOrgLogo = withAuthOnly(
     if (upErr) return { error: upErr.message }
 
     const { data } = ctx.supabase.storage.from('org-assets').getPublicUrl(path)
-    return { url: data.publicUrl }
+    // misma ruta al reemplazar el logo: el parámetro evita que el navegador muestre el anterior
+    return { url: `${data.publicUrl}?v=${Date.now()}` }
   },
 )

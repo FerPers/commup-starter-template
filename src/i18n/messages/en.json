@@ -632,7 +632,7 @@
       "sigCanvasPlaceholder": "Sign here with finger or mouse",
       "revokeModal": {
         "title": "Revoke certificate?",
-        "body": "Certificate {certNumber} will be set to Revoked status and current signatures will be deleted. Signers will be notified.",
+        "body": "Certificate <b>{certNumber}</b> will be set to Revoked status and current signatures will be deleted. Signers will be notified.",
         "reasonLabel": "Reason (required)",
         "reasonPlaceholder": "E.g. scope error, additional ITRs required...",
         "cancel": "Cancel",
@@ -642,7 +642,7 @@
       "reopenBtn": "Reopen",
       "reopenModal": {
         "title": "Reopen certificate?",
-        "body": "Certificate {certNumber} will return to Issued status and need new signatures. Previous signers will be notified.",
+        "body": "Certificate <b>{certNumber}</b> will return to Issued status and need new signatures. Previous signers will be notified.",
         "reasonLabel": "Reason (required)",
         "reasonPlaceholder": "E.g. issues resolved, ITRs now approved...",
         "cancel": "Cancel",

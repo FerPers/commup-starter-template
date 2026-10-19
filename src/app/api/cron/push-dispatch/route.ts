@@ -1,3 +1,4 @@
+import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendWebPush } from '@/lib/push/web-push'
@@ -93,7 +94,7 @@ function eventToTopic(ev: DomainEvent): { topic: string; title: string; body: st
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   if (!secret) return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
-  if ((req.headers.get('authorization') ?? '') !== `Bearer ${secret}`) {
+  if (!hasBearerSecret(req.headers.get('authorization'), secret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

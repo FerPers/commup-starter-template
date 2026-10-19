@@ -572,9 +572,9 @@ export default function CertificateDetail({
             <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
               {t('detail.reopenModal.title')}
             </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}
-               dangerouslySetInnerHTML={{ __html: t('detail.reopenModal.body', { certNumber: `<strong>${cert.certificate_number}</strong>` }) }}
-            />
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
+              {t.rich('detail.reopenModal.body', { certNumber: cert.certificate_number, b: chunks => <strong>{chunks}</strong> })}
+            </p>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-strong)' }}>
                 {t('detail.reopenModal.reasonLabel')}
@@ -622,9 +622,9 @@ export default function CertificateDetail({
             <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
               {t('detail.revokeModal.title')}
             </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}
-               dangerouslySetInnerHTML={{ __html: t('detail.revokeModal.body', { certNumber: `<strong>${cert.certificate_number}</strong>` }) }}
-            />
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
+              {t.rich('detail.revokeModal.body', { certNumber: cert.certificate_number, b: chunks => <strong>{chunks}</strong> })}
+            </p>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-strong)' }}>
                 {t('detail.revokeModal.reasonLabel')}

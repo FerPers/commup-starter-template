@@ -9,6 +9,7 @@ import {
   deleteWorkflowRule,
   type WorkflowActionType,
 } from '@/app/actions/workflows'
+import { reflexiveRuleError } from '@/lib/workflows/rules'
 
 // ── Types ─────────────────────────────────────────────────────
 type Rule = {
@@ -342,6 +343,8 @@ function RuleEditorModal({
 
   const handleSave = async () => {
     setErr(null)
+    const loop = reflexiveRuleError(triggerEvent, actionType)
+    if (loop) return setErr(loop)
 
     let conditionJsonlogic: Json
     if (advancedMode) {

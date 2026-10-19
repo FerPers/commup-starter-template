@@ -1,21 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import * as XLSX from 'xlsx'
 import { sanitizeRow } from '@/lib/excel/sanitize'
+import { getActiveMembership } from '@/lib/supabase/membership'
+import { fetchAllRows } from '@/lib/list/fetch-all'
 
 export async function GET(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
-
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) return NextResponse.json({ error: 'Sin membresía' }, { status: 403 })
+  // I-22 (S02): la org ACTIVA (cookie), no la primera membresía; y lectura completa por lotes.
+  const ctx = await getActiveMembership()
+  if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+  const supabase = ctx.supabase
+  const membership = { org_id: ctx.orgId, role: ctx.role }
   if (!['owner', 'admin'].includes(membership.role))
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
@@ -33,34 +27,33 @@ export async function GET(req: NextRequest) {
   if (!project || project.org_id !== membership.org_id)
     return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 })
 
-  // Fetch all data in parallel
-  const [
-    { data: tags },
-    { data: itrs },
-    { data: punches },
-    { data: preservation },
-    { data: certificates },
-  ] = await Promise.all([
-    supabase
+  // Fetch all data in parallel (por lotes: PostgREST corta en 1000 filas)
+  const [tags, itrs, punches, preservation, certificates] = await Promise.all([
+    fetchAllRows(() => supabase
       .from('tags')
       .select('tag_number, description, status, subsystems(code), disciplines(code), equipment_types(name)')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)
+      .order('id')),
+    fetchAllRows(() => supabase
       .from('itrs')
       .select('itr_number, status, progress_pct, scheduled_date, itr_templates(code, title), tags(tag_number)')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)
+      .order('id')),
+    fetchAllRows(() => supabase
       .from('punches')
       .select('punch_number, category, description, status, priority, created_at, closed_date, tags(tag_number)')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)
+      .order('id')),
+    fetchAllRows(() => supabase
       .from('preservation_plans')
       .select('tags(tag_number), preservation_procedures(title, frequency), status, next_due_date')
-      .eq('project_id', projectId),
-    supabase
+      .eq('project_id', projectId)
+      .order('id')),
+    fetchAllRows(() => supabase
       .from('certificates')
       .select('certificate_number, title, status, issued_date, subsystems(code)')
-      .eq('project_id', projectId),
+      .eq('project_id', projectId)
+      .order('id')),
   ])
 
   const wb = XLSX.utils.book_new()

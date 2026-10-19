@@ -163,7 +163,7 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
     setError(null)
     startTransition(async () => {
       const path = evidencePath(orgId, system.id, a.file!.name, crypto.randomUUID())
-      const { error: upErr } = await createClient().storage.from('gate-evidence').upload(path, a.file!, { contentType: a.file!.type })
+      const { error: upErr } = await createClient().storage.from('gate-evidence').upload(path, a.file!, { contentType: a.file!.type || 'application/octet-stream' })
       if (upErr) { setError(upErr.message); return }
       const res = await attestGateCriterion({ ...base, criterionId: key, comment: a.comment, filePath: path })
       if (res.error) { setError(res.error); return }

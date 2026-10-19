@@ -35,6 +35,13 @@ describe('list params', () => {
     expect(normalizeSearch('a'.repeat(500)).length).toBeLessThanOrEqual(100)
   })
 
+  it('normalizeSearch: no deja sintaxis de .or() de PostgREST (C-25/A-24)', () => {
+    expect(normalizeSearch('PT-101(A)')).toBe('PT-101_A_')
+    expect(normalizeSearch('x,id.not.is.null')).toBe('x_id.not.is.null')
+    expect(normalizeSearch('"a"*')).toBe('_a__')
+    for (const s of ['A,B', 'a)b(', 'q"', 'x*y']) expect(normalizeSearch(s)).not.toMatch(/[,()"*]/)
+  })
+
   it('totalPages: mínimo 1', () => {
     expect(totalPages(0)).toBe(1)
     expect(totalPages(50)).toBe(1)

@@ -28,10 +28,15 @@ export function rangeFor(page: number, size = LIST_PAGE_SIZE): [number, number] 
   return [from, from + size - 1]
 }
 
-/** Normaliza el texto de búsqueda para un ilike seguro (sin comodines del usuario) */
+/**
+ * Normaliza el texto de búsqueda para un ilike seguro (sin comodines del usuario).
+ * C-25/A-24 (S02): el texto se interpola en filtros `.or()` de PostgREST, donde `,` `(` `)` `"` y `*`
+ * son sintaxis: `A,B` rompía la consulta y `x,id.not.is.null` añadía condiciones. Esos caracteres pasan
+ * a `_` (comodín de UN carácter), así `PT-101(A)` sigue encontrando el tag sin tocar la sintaxis.
+ */
 export function normalizeSearch(raw: string | undefined): string {
   const q = (raw ?? '').trim().slice(0, LIST_MAX_SEARCH)
-  return q.replace(/[%_\\]/g, ' ').replace(/\s+/g, ' ').trim()
+  return q.replace(/[%_\\]/g, ' ').replace(/[,()"*]/g, '_').replace(/\s+/g, ' ').trim()
 }
 
 export function totalPages(total: number, size = LIST_PAGE_SIZE): number {
