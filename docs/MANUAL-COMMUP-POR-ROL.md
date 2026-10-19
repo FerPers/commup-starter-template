@@ -618,4 +618,4 @@ Están identificadas en la revisión integral del 2026-10-19 y en la hoja de rut
 
 ---
 
-*Manual elaborado a partir de la revisión integral del 2026-10-19 (`docs/REVISION-INTEGRAL-2026-10-19.md` y sus anexos). Se actualizará a medida que se corrijan las limitaciones de la §8.*
+*Manual elaborado a partir de la revisión integral del 2026-10-19 (`docs/REVISION-INTEGRAL-2026-10-19.md` y sus anexos). Se actualizará a medida que se corrijan las limitaciones de la §8 (orden de corrección: `docs/PLAN-EJECUCION-REVISION-2026-10-19.md`; los menús cambiarán según `docs/PROPUESTA-NAVEGACION-2026-10-19.md`).*

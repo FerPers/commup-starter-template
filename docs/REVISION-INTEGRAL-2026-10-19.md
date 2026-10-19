@@ -3,6 +3,7 @@
 **Alcance:** todo el producto en `main` (922b861 → fa6277e): 614 archivos fuente (113 mil líneas TypeScript), 53 migraciones (23 mil líneas SQL), 104 páginas, 61 módulos de acciones, 24 rutas de API, edge functions, crons, PWA y CI.
 **Método:** nueve revisiones independientes, línea por línea y de solo lectura, una por área (A seguridad · B datos y rendimiento · C completions · D readiness y gestión · E arranque y operación · F ingeniería, documentos y vendors · G frontend y calidad · H navegación · I roles e integraciones), más una revisión en vivo de menús y navegación en el navegador (escritorio y móvil). Los hallazgos críticos se **verificaron contra producción** (políticas, grants y funciones vigentes) antes de incluirlos aquí.
 **Anexos:** el detalle completo, con archivo:línea, evidencia, impacto, recomendación y esfuerzo por hallazgo, está en [`docs/revision-2026-10-19/`](revision-2026-10-19/) (A–I + Z). Este documento resume, prioriza y propone.
+**Documentos derivados:** propuesta concreta de menús y navegación en [`PROPUESTA-NAVEGACION-2026-10-19.md`](PROPUESTA-NAVEGACION-2026-10-19.md); hoja de ruta convertida en sesiones S1–S13 en [`PLAN-EJECUCION-REVISION-2026-10-19.md`](PLAN-EJECUCION-REVISION-2026-10-19.md).
 
 ---
 
@@ -127,7 +128,7 @@ Colas nuevas en Mi trabajo — gates por aprobar, por co-firmar, en regresión; 
 - **Lo que funciona bien:** las tareas de campo una vez dentro (ejecutar un ITR: 2 toques; punch dentro del ITR: 2), el drawer móvil, Mi trabajo como concepto.
 - **Lo que falla:** las firmas y decisiones de F1–F8 (aprobar un gate 3–5 clics, co-firmarlo 4–6) **sin ningún aviso**.
 
-### Propuesta (detalle en el anexo H §6)
+### Propuesta (resumen; la propuesta completa —menú por rol, Mi trabajo, Resumen por fases, glosario, fusiones y etapas N0–N3— está en [`PROPUESTA-NAVEGACION-2026-10-19.md`](PROPUESTA-NAVEGACION-2026-10-19.md))
 
 ```
 MI TRABAJO      Mi trabajo (todo lo que me toca: ejecutar · verificar · firmar · decidir) · Escanear
@@ -171,6 +172,8 @@ Además de corregir lo anterior, estas son las capacidades que deciden licitacio
 ---
 
 ## 7. Hoja de ruta propuesta
+
+> Desglosada en sesiones con alcance, archivos y criterio de cierre en [`PLAN-EJECUCION-REVISION-2026-10-19.md`](PLAN-EJECUCION-REVISION-2026-10-19.md).
 
 ### Semana 1 — Estabilizar (todo S, alto impacto)
 - CI: `needs:` en deploy, protección de rama, arreglar `tests/db/daily-report.test.ts` (G-01).
