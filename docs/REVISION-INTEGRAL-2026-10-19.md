@@ -3,7 +3,7 @@
 **Alcance:** todo el producto en `main` (922b861 → fa6277e): 614 archivos fuente (113 mil líneas TypeScript), 53 migraciones (23 mil líneas SQL), 104 páginas, 61 módulos de acciones, 24 rutas de API, edge functions, crons, PWA y CI.
 **Método:** nueve revisiones independientes, línea por línea y de solo lectura, una por área (A seguridad · B datos y rendimiento · C completions · D readiness y gestión · E arranque y operación · F ingeniería, documentos y vendors · G frontend y calidad · H navegación · I roles e integraciones), más una revisión en vivo de menús y navegación en el navegador (escritorio y móvil). Los hallazgos críticos se **verificaron contra producción** (políticas, grants y funciones vigentes) antes de incluirlos aquí.
 **Anexos:** el detalle completo, con archivo:línea, evidencia, impacto, recomendación y esfuerzo por hallazgo, está en [`docs/revision-2026-10-19/`](revision-2026-10-19/) (A–I + Z). Este documento resume, prioriza y propone.
-**Documentos derivados:** propuesta concreta de menús y navegación en [`PROPUESTA-NAVEGACION-2026-10-19.md`](PROPUESTA-NAVEGACION-2026-10-19.md); hoja de ruta convertida en sesiones S1–S13 en [`PLAN-EJECUCION-REVISION-2026-10-19.md`](PLAN-EJECUCION-REVISION-2026-10-19.md).
+**Documentos derivados:** propuesta concreta de menús y navegación en [`PROPUESTA-NAVEGACION-2026-10-19.md`](PROPUESTA-NAVEGACION-2026-10-19.md); plan de ejecución v2 (sesiones ordenadas por dependencia, decisiones pendientes y cobertura de los 293 hallazgos) en [`PLAN-EJECUCION-REVISION-2026-10-19.md`](PLAN-EJECUCION-REVISION-2026-10-19.md) y [`PLAN-EJECUCION-COBERTURA-2026-10-19.md`](PLAN-EJECUCION-COBERTURA-2026-10-19.md).
 
 ---
 
@@ -173,7 +173,7 @@ Además de corregir lo anterior, estas son las capacidades que deciden licitacio
 
 ## 7. Hoja de ruta propuesta
 
-> Desglosada en sesiones con alcance, archivos y criterio de cierre en [`PLAN-EJECUCION-REVISION-2026-10-19.md`](PLAN-EJECUCION-REVISION-2026-10-19.md).
+> Esta hoja de ruta quedó reemplazada por el plan de ejecución v2 (orden por dependencias; ver ahí por qué cambió): [`PLAN-EJECUCION-REVISION-2026-10-19.md`](PLAN-EJECUCION-REVISION-2026-10-19.md).
 
 ### Semana 1 — Estabilizar (todo S, alto impacto)
 - CI: `needs:` en deploy, protección de rama, arreglar `tests/db/daily-report.test.ts` (G-01).
