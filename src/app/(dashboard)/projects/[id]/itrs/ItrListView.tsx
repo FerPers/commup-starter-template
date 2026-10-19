@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { bulkUpdateItrStatus, bulkApproveItrs } from '@/app/actions/bulk'
 import { bulkAssignItrs } from '@/app/actions/itr-assign'
+import { normalizeRequired } from '@/lib/itr/signatures'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 import { Pagination } from '@/components/ui'
@@ -500,7 +501,7 @@ export default function ItrListView({
 
                 {/* Signatures */}
                 <div style={{ display: 'flex', gap: '2px' }}>
-                  {(['executor', 'supervisor', 'client'] as const).map(role => {
+                  {normalizeRequired(itr.required_signatures).map(role => {
                     const signed = itr.signatures.some(s => s.role === role)
                     return (
                       <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? '#ecfdf5' : 'var(--gray-50)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: signed ? '#10b981' : 'var(--gray-300)' }}>

@@ -22,6 +22,8 @@ export type ItrListRow = {
   phase_color: string | null
   assignments: Array<{ user_id: string; role: string; full_name: string | null }>
   signatures: Array<{ role: string; signed_at: string }>
+  /** S04 (D4): firmas que exige el ITR. */
+  required_signatures: string[]
 }
 
 export const ITR_SORT_KEYS = ['created_at', 'itr_number', 'tag_number', 'template_title', 'scheduled_date', 'progress_pct', 'status'] as const

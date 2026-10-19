@@ -1,5 +1,6 @@
 import type { PDFImage } from 'pdf-lib'
 import { COLOR, CONTENT_W, MARGIN, type Renderer, wrapText } from './renderer'
+import { normalizeRequired } from '@/lib/itr/signatures'
 
 export type ItrPdfSignature = {
   role: string
@@ -8,11 +9,16 @@ export type ItrPdfSignature = {
   signature_image?: string | null
 }
 
-/** Render the stored trace only; never substitute or reconstruct a person's signature. */
-export async function drawItrSignatures(r: Renderer, signatures: ItrPdfSignature[]): Promise<void> {
+/**
+ * Render the stored trace only; never substitute or reconstruct a person's signature.
+ * S04: one box per required role (plus any legacy signature of a role the ITR no longer requires).
+ */
+export async function drawItrSignatures(r: Renderer, signatures: ItrPdfSignature[], required?: ReadonlyArray<string> | null): Promise<void> {
+  const req = normalizeRequired(required ?? ['executor', 'supervisor', 'client'])
+  const roles = ['executor', 'supervisor', 'client'].filter(role => (req as string[]).includes(role) || signatures.some(s => s.role === role))
   const gap = 14
   const width = (CONTENT_W - gap * 2) / 3
-  const boxes = await Promise.all(['executor', 'supervisor', 'client'].map(async role => {
+  const boxes = await Promise.all(roles.map(async role => {
     const sig = signatures.find(s => s.role === role)
     let image: PDFImage | undefined
     let imageLabel = sig ? 'Sin trazo almacenado' : 'Pendiente de firma'

@@ -16,6 +16,8 @@ export type TagItr = {
   project_phases: { code: string; name: string; color: string } | null
   itr_assignments: Array<{ user_id: string; role: string; profiles: { full_name: string } | null }>
   itr_signatures: Array<{ id: string; role: string; signed_at: string }>
+  /** S04 (D4): firmas que exige el ITR. */
+  required_signatures: string[]
 }
 
 export type ItrTemplate = {
@@ -25,7 +27,9 @@ export type ItrTemplate = {
   code: string
   title: string
   phase_id: string
-  project_phases: { id: string; code: string; name: string; color: string } | null
+  /** S04 (D4): firmas que pide la plantilla; la fase puede sumar al cliente. */
+  required_signatures: string[]
+  project_phases: { id: string; code: string; name: string; color: string; itr_client_signature: boolean } | null
 }
 
 export type OrgMember = {

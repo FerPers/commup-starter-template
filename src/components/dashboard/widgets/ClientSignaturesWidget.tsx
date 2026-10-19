@@ -1,6 +1,7 @@
 import { FileSignature } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { isMyTurnToSign } from '@/lib/my-work/queues'
 import { Card } from '@/components/ui'
 
 export default async function ClientSignaturesWidget({ userId }: { userId: string }) {
@@ -9,14 +10,15 @@ export default async function ClientSignaturesWidget({ userId }: { userId: strin
 
   const { data: clientAssignments } = await supabase
     .from('itr_assignments')
-    .select(`id, itrs(id, itr_number, status, project_id, tags(id, tag_number, description), projects(id, name, code), project_phases(code, color, name), itr_signatures(role))`)
+    .select(`id, itrs(id, itr_number, status, project_id, tags(id, tag_number, description), projects(id, name, code), project_phases(code, color, name), itr_signatures(role, user_id), required_signatures)`)
     .eq('user_id', userId)
     .eq('role', 'client')
 
 
   const pendingSignature = (clientAssignments ?? []).filter(a => {
     const itr = a.itrs
-    return itr && itr.status === 'completed' && !itr.itr_signatures.some(s => s.role === 'client')
+    // S04: le toca al cliente cuando el ITR lo exige y están las firmas requeridas anteriores (misma regla que Mi trabajo).
+    return !!itr && isMyTurnToSign('client', itr.status, itr.itr_signatures.map(s => s.role), itr.required_signatures, itr.itr_signatures.some(s => s.user_id === userId))
   })
 
   if (pendingSignature.length === 0) return null

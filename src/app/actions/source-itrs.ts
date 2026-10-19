@@ -7,6 +7,7 @@ import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
 import type { TablesInsert } from '@/types/supabase.generated'
+import { assignmentDbError, assignmentError, requiredForTemplate, type SigningRole } from '@/lib/itr/signatures'
 
 // ITR generados desde un lazo (loop check) o desde una causa C&E (prueba por causa) — fase 4 · bloque D,
 // sesión 2 (decisiones §10.21–10.24). Las filas de la tabla las toma el trigger itr_source_rows_guard
@@ -19,7 +20,10 @@ type GenerateInput = {
   ids: string[]
   inspectorId: string
   supervisorId?: string | null
+  clientId?: string | null
 }
+
+type Signer = { role: SigningRole; userId: string }
 
 type GenerateResult = { created: number; errors: string[]; error?: string }
 
@@ -29,9 +33,9 @@ async function prepare(ctx: { supabase: SupabaseClient; orgId: string }, input: 
   if (!input.ids.length) return { error: 'Nada que generar' }
   if (input.ids.length > MAX_BATCH) return { error: `Máximo ${MAX_BATCH} por vez` }
   const [{ data: template }, { data: sourceItem }, { data: members }] = await Promise.all([
-    ctx.supabase.from('itr_templates').select('id, code, phase_id, is_active').eq('id', input.templateId).eq('org_id', ctx.orgId).maybeSingle(),
+    ctx.supabase.from('itr_templates').select('id, code, phase_id, is_active, required_signatures, project_phases(itr_client_signature)').eq('id', input.templateId).eq('org_id', ctx.orgId).maybeSingle(),
     ctx.supabase.from('itr_template_items').select('id').eq('template_id', input.templateId).eq('item_type', 'table').eq('options->rows->>source', source).limit(1).maybeSingle(),
-    ctx.supabase.from('org_members').select('user_id').eq('org_id', ctx.orgId).in('user_id', [input.inspectorId, input.supervisorId].filter((v): v is string => !!v)),
+    ctx.supabase.from('org_members').select('user_id').eq('org_id', ctx.orgId).in('user_id', [input.inspectorId, input.supervisorId, input.clientId].filter((v): v is string => !!v)),
   ])
   if (!template) return { error: 'Plantilla no encontrada' }
   if (!template.is_active) return { error: 'La plantilla es un borrador: actívala antes de generar ITRs' }
@@ -39,7 +43,15 @@ async function prepare(ctx: { supabase: SupabaseClient; orgId: string }, input: 
   const memberIds = new Set((members ?? []).map(m => m.user_id))
   if (!memberIds.has(input.inspectorId)) return { error: 'El inspector no es miembro de la organización' }
   if (input.supervisorId && !memberIds.has(input.supervisorId)) return { error: 'El supervisor no es miembro de la organización' }
-  return { template }
+  if (input.clientId && !memberIds.has(input.clientId)) return { error: 'El cliente no es miembro de la organización' }
+  // S04 (D4/D6): una persona distinta por cada firma que exige la plantilla (la BD congela el conjunto en el ITR).
+  // ctx.supabase sin tipar: la relación a uno llega tipada como arreglo.
+  const phase = template.project_phases as unknown as { itr_client_signature: boolean } | null
+  const required = requiredForTemplate(template.required_signatures, phase?.itr_client_signature)
+  const people: Record<SigningRole, string | null | undefined> = { executor: input.inspectorId, supervisor: input.supervisorId, client: input.clientId }
+  const invalid = assignmentError(required, people)
+  if (invalid) return { error: invalid }
+  return { template, signers: required.map(role => ({ role, userId: people[role]! })) }
 }
 
 async function insertItr(
@@ -47,6 +59,7 @@ async function insertItr(
   input: GenerateInput,
   template: { id: string; code: string; phase_id: string },
   row: { subsystem_id: string; tag_id: string; baseNumber: string; loop_id?: string; ce_cause_id?: string },
+  signers: Signer[],
 ): Promise<{ id: string; itr_number: string } | { error: string }> {
   const link = row.loop_id ? { column: 'loop_id', id: row.loop_id } : { column: 'ce_cause_id', id: row.ce_cause_id! }
   const { count } = await ctx.supabase.from('itrs').select('id', { count: 'exact', head: true }).eq(link.column, link.id).eq('template_id', template.id)
@@ -58,19 +71,17 @@ async function insertItr(
   }
   const { data: itr, error } = await ctx.supabase.from('itrs').insert(payload).select('id').single()
   if (error || !itr) return { error: error?.message ?? 'No se pudo crear el ITR' }
-  const assignments: TablesInsert<'itr_assignments'>[] = [{ itr_id: itr.id, user_id: input.inspectorId, role: 'executor' }]
-  if (input.supervisorId) assignments.push({ itr_id: itr.id, user_id: input.supervisorId, role: 'supervisor' })
+  const assignments: TablesInsert<'itr_assignments'>[] = signers.map(s => ({ itr_id: itr.id, user_id: s.userId, role: s.role }))
   const { error: assignErr } = await ctx.supabase.from('itr_assignments').insert(assignments)
-  if (assignErr) return { error: assignErr.message }
+  if (assignErr) return { error: assignmentDbError(assignErr.message) }
   return { id: itr.id, itr_number: itrNumber }
 }
 
-async function notify(ctx: { orgId: string; userId: string }, input: GenerateInput, made: Array<{ id: string; itr_number: string; tag_id: string }>) {
+async function notify(ctx: { orgId: string; userId: string }, input: GenerateInput, made: Array<{ id: string; itr_number: string; tag_id: string }>, signers: Signer[]) {
   if (!made.length) return
-  const changes: ItrAssignmentChange[] = made.flatMap(itr => [
-    { itrId: itr.id, itrNumber: itr.itr_number, projectId: input.projectId, tagId: itr.tag_id, role: 'executor' as const, recipientUserId: input.inspectorId, changeType: 'added' as const },
-    ...(input.supervisorId ? [{ itrId: itr.id, itrNumber: itr.itr_number, projectId: input.projectId, tagId: itr.tag_id, role: 'supervisor' as const, recipientUserId: input.supervisorId, changeType: 'added' as const }] : []),
-  ])
+  const changes: ItrAssignmentChange[] = made.flatMap(itr => signers.map(s => (
+    { itrId: itr.id, itrNumber: itr.itr_number, projectId: input.projectId, tagId: itr.tag_id, role: s.role, recipientUserId: s.userId, changeType: 'added' as const }
+  )))
   await notifyItrAssignmentChanged(createAdminClient(), ctx.orgId, ctx.userId, changes)
 }
 
@@ -94,11 +105,11 @@ export const generateLoopItrs = withAuth(
       const tagId = tags.find(t => t.role_in_loop === 'instrument')?.tag_id ?? tags[0]?.tag_id ?? signals[0]?.tag_id
       if (!signals.length) { errors.push(`${loop.loop_number}: el lazo no tiene señales activas`); continue }
       if (!tagId) { errors.push(`${loop.loop_number}: el lazo no tiene instrumento asociado`); continue }
-      const res = await insertItr(ctx, input, prep.template, { subsystem_id: loop.subsystem_id, tag_id: tagId, baseNumber: `${prep.template.code}/${loop.loop_number}`, loop_id: loop.id })
+      const res = await insertItr(ctx, input, prep.template, { subsystem_id: loop.subsystem_id, tag_id: tagId, baseNumber: `${prep.template.code}/${loop.loop_number}`, loop_id: loop.id }, prep.signers)
       if ('error' in res) errors.push(`${loop.loop_number}: ${res.error}`)
       else made.push({ ...res, tag_id: tagId })
     }
-    await notify(ctx, input, made)
+    await notify(ctx, input, made, prep.signers)
     revalidatePath(`/projects/${input.projectId}/loops`)
     revalidatePath(`/projects/${input.projectId}/itrs`)
     return { created: made.length, errors }
@@ -126,11 +137,11 @@ export const generateCauseItrs = withAuth(
       const tagId = cause.tag_id ?? firstEffect?.tag_id
       const subsystemId = cause.tags?.subsystem_id ?? firstEffect?.tags?.subsystem_id
       if (!tagId || !subsystemId) { errors.push(`${cause.code}: indica el tag iniciador de la causa (o el elemento final de un efecto)`); continue }
-      const res = await insertItr(ctx, input, prep.template, { subsystem_id: subsystemId, tag_id: tagId, baseNumber: `${prep.template.code}/${cause.ce_matrices?.code ?? 'C&E'}/${cause.code}`, ce_cause_id: cause.id })
+      const res = await insertItr(ctx, input, prep.template, { subsystem_id: subsystemId, tag_id: tagId, baseNumber: `${prep.template.code}/${cause.ce_matrices?.code ?? 'C&E'}/${cause.code}`, ce_cause_id: cause.id }, prep.signers)
       if ('error' in res) errors.push(`${cause.code}: ${res.error}`)
       else made.push({ ...res, tag_id: tagId })
     }
-    await notify(ctx, input, made)
+    await notify(ctx, input, made, prep.signers)
     const matrixIds = [...new Set((causes ?? []).map(c => c.matrix_id))]
     for (const id of matrixIds) revalidatePath(`/projects/${input.projectId}/ce-matrices/${id}`)
     revalidatePath(`/projects/${input.projectId}/ce-matrices`)

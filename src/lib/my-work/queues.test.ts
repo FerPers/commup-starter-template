@@ -7,6 +7,7 @@ import { homeForRole } from '@/lib/constants/navigation'
 
 const TODAY = '2026-09-04'
 const P = new Set(['p1'])
+const ALL = ['executor', 'supervisor', 'client']
 
 function asg(over: Partial<AssignmentRow['itrs'] & { role: AssignmentRow['role']; id: string }>): AssignmentRow {
   const { role = 'executor', id, ...itr } = over
@@ -117,8 +118,9 @@ describe('splitAssignments', () => {
       asg({ id: 's3', role: 'supervisor', status: 'completed', itr_signatures: [...exec, { role: 'supervisor' }] }),
       asg({ id: 's4', role: 'supervisor', status: 'completed' }), // sin firma del ejecutor: aún no le toca
       asg({ id: 's5', role: 'supervisor', status: 'in_progress' }),
-      asg({ id: 'c1', role: 'client', status: 'completed', itr_signatures: exec }), // falta el supervisor
-      asg({ id: 'c2', role: 'client', status: 'completed', completed_date: '2026-09-02', itr_signatures: [...exec, { role: 'supervisor' }] }),
+      asg({ id: 'c1', role: 'client', status: 'completed', itr_signatures: exec, required_signatures: ALL }), // falta el supervisor
+      asg({ id: 'c2', role: 'client', status: 'completed', completed_date: '2026-09-02', itr_signatures: [...exec, { role: 'supervisor' }], required_signatures: ALL }),
+      asg({ id: 'c3', role: 'client', status: 'completed', itr_signatures: [...exec, { role: 'supervisor' }] }), // S04: el ITR no pide cliente
     ]
     const q = splitAssignments(rows, P)
     expect(q.review.map(r => r.itrs!.id)).toEqual(['s2', 'c2', 's1'])
@@ -126,12 +128,22 @@ describe('splitAssignments', () => {
   })
 
   it('isMyTurnToSign sigue el orden de sign_itr_atomic', () => {
-    expect(isMyTurnToSign('executor', 'rejected', [])).toBe(true)
-    expect(isMyTurnToSign('executor', 'approved', [])).toBe(false)
-    expect(isMyTurnToSign('supervisor', 'completed', [])).toBe(false)
-    expect(isMyTurnToSign('supervisor', 'completed', ['executor'])).toBe(true)
-    expect(isMyTurnToSign('client', 'completed', ['executor'])).toBe(false)
-    expect(isMyTurnToSign('client', 'completed', ['executor', 'supervisor'])).toBe(true)
+    expect(isMyTurnToSign('executor', 'rejected', [], ALL)).toBe(true)
+    expect(isMyTurnToSign('executor', 'approved', [], ALL)).toBe(false)
+    expect(isMyTurnToSign('supervisor', 'completed', [], ALL)).toBe(false)
+    expect(isMyTurnToSign('supervisor', 'completed', ['executor'], ALL)).toBe(true)
+    expect(isMyTurnToSign('client', 'completed', ['executor'], ALL)).toBe(false)
+    expect(isMyTurnToSign('client', 'completed', ['executor', 'supervisor'], ALL)).toBe(true)
+  })
+
+  it('S04: solo roles requeridos, saltando los no pedidos, y nunca si ya firmé otro rol', () => {
+    expect(isMyTurnToSign('client', 'completed', ['executor', 'supervisor'], ['executor', 'supervisor'])).toBe(false)
+    expect(isMyTurnToSign('client', 'completed', ['executor'], ['executor', 'client'])).toBe(true)
+    expect(isMyTurnToSign('supervisor', 'completed', ['executor'], null)).toBe(true)
+    expect(isMyTurnToSign('supervisor', 'completed', ['executor'], ALL, true)).toBe(false)
+    const rows = [asg({ id: 'm', role: 'supervisor', status: 'completed', itr_signatures: [{ role: 'executor', user_id: 'me' }] })]
+    expect(splitAssignments(rows, P, 'me').review).toEqual([])
+    expect(splitAssignments(rows, P, 'other').review.map(r => r.itrs!.id)).toEqual(['m'])
   })
 
   it('ignora ITRs de proyectos fuera de la org activa y filas sin ITR', () => {

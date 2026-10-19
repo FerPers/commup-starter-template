@@ -973,7 +973,10 @@
       "cancel": "Cancelar",
       "edit": "Editar",
       "delete": "Eliminar",
-      "empty": "No hay fases. Agrega la primera."
+      "empty": "No hay fases. Agrega la primera.",
+      "clientSigns": "Los ITR de esta fase exigen la firma del cliente",
+      "clientSignsHint": "Se suma a las firmas de la plantilla al crear cada ITR; los ya creados no cambian.",
+      "clientSignsChip": "Firma cliente"
     },
     "disciplines": {
       "title": "Disciplinas",
@@ -1180,7 +1183,14 @@
       "btnActivateRevisionConfirm": "Activar v{version}",
       "revisionActivated": "Revisión v{version} activada · {deactivated} revisión(es) desactivada(s) · {matrix} fila(s) de matriz re-apuntadas.",
       "flagRequiresDocument": "Requiere documento (PDF)",
-      "itemTypeTable": "Tabla de registro"
+      "itemTypeTable": "Tabla de registro",
+      "signaturesLabel": "Firmas del ITR:",
+      "signatureRole": {
+        "executor": "Ejecutor",
+        "supervisor": "Supervisor",
+        "client": "Cliente"
+      },
+      "signaturesHint": "El ejecutor siempre firma. Una persona distinta por rol. La fase puede exigir además al cliente. Un cambio aquí solo afecta a los ITR que se creen después."
     }
   },
   "ItrExecution": {
@@ -1302,6 +1312,23 @@
       "pid": "P&ID",
       "junctionBox": "Caja de conexiones",
       "hint": "Datos de ingeniería del tag, solo lectura. Si no coinciden con el equipo instalado, regístralo en observaciones o en un punch."
+    },
+    "assign": {
+      "title": "Asignaciones de firma",
+      "hint": "Este ITR exige {roles}. Puedes completar o cambiar la persona de un rol mientras no haya firmado.",
+      "unassigned": "Sin asignar",
+      "choose": "Elegir persona…",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "signedLocked": "Firmado",
+      "sameTwice": "Esa persona ya tiene otro rol en este ITR"
+    },
+    "signErrors": {
+      "alreadySigned": "Ya firmaste otro rol de este ITR: una misma persona no firma dos roles.",
+      "previous": "Falta la firma anterior requerida.",
+      "notAssigned": "No estás asignado a ese rol de firma.",
+      "notRequired": "Este ITR no exige ese rol de firma.",
+      "incomplete": "El contenido está incompleto o tiene una falla crítica."
     }
   },
   "Tags": {

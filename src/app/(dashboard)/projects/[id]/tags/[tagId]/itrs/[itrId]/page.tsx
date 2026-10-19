@@ -22,7 +22,7 @@ export default async function ItrExecutionPage({
   const { data: itr } = await supabase
     .from('itrs')
     .select(`
-      id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id, loop_id, ce_cause_id, source_rows,
+      id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id, loop_id, ce_cause_id, source_rows, required_signatures,
       loops(id, loop_number), ce_causes(id, code, description, ce_matrices(id, code)),
       itr_templates(
         id, code, title, version, requires_test_equipment,
@@ -67,7 +67,9 @@ export default async function ItrExecutionPage({
 
   const canEdit = ['owner', 'admin', 'architect', 'leader', 'inspector'].includes(membership.role)
 
-  const { data: members } = await supabase.from('org_members').select('user_id').eq('org_id', ctx.orgId)
+  const { data: members } = await supabase.from('org_members').select('user_id, role, profiles(full_name)').eq('org_id', ctx.orgId)
+  // S04 (C-01): los editores completan o cambian asignaciones de roles sin firmar.
+  const canAssign = ['owner', 'admin', 'architect', 'leader'].includes(membership.role)
 
   // Fase 4-B: equipos de prueba usados (con su calibración al momento de uso) e inventario activo de la org.
   const [{ data: equipmentUsed }, { data: equipmentOptions }] = await Promise.all([
@@ -107,6 +109,10 @@ export default async function ItrExecutionPage({
         canEdit={canEdit}
         attachments={attachments}
         memberIds={(members ?? []).map(m => m.user_id)}
+        assignable={canAssign
+          ? (members ?? []).map(m => ({ user_id: m.user_id, role: m.role, full_name: (m.profiles as { full_name: string } | null)?.full_name ?? m.user_id }))
+            .sort((x, y) => x.full_name.localeCompare(y.full_name))
+          : undefined}
         testEquipment={{
           requires: (itr.itr_templates as { requires_test_equipment?: boolean } | null)?.requires_test_equipment ?? false,
           used: (equipmentUsed ?? []) as EquipmentUsed[],

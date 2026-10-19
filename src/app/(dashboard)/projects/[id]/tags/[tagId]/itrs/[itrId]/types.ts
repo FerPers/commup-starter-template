@@ -99,6 +99,8 @@ export type ItrData = {
   itr_assignments: Array<{ id: string; user_id: string; role: string; profiles: { full_name: string } | null }>
   itr_responses: Response[]
   itr_signatures: Signature[]
+  /** S04 (D4): firmas que exige este ITR, congeladas al crearlo (orden ejecutor → supervisor → cliente). */
+  required_signatures: string[]
   /** Fase 4-D: ITR generado desde un lazo o una causa C&E y su foto de filas (inmutable). */
   loop_id?: string | null
   ce_cause_id?: string | null
@@ -126,23 +128,5 @@ export function computeIsPassed(value: number, min: number | null, max: number |
   return true
 }
 
-export type SigningRole = 'executor' | 'supervisor' | 'client'
-
-/** UI gate only; the server independently verifies assignment, order and content. */
-export function availableSigningRoles(
-  assignments: readonly { role: string; user_id: string }[],
-  signatures: readonly { role: string; user_id: string }[],
-  userId: string,
-): SigningRole[] {
-  for (const role of ['executor', 'supervisor', 'client'] as const) {
-    const assigned = assignments.filter(a => a.role === role)
-    const signed = signatures.filter(s => s.role === role)
-    if (assigned.length !== 1 || signed.length > 1) return []
-    if (signed.length === 1) {
-      if (signed[0].user_id !== assigned[0].user_id) return []
-      continue
-    }
-    return assigned[0].user_id === userId ? [role] : []
-  }
-  return []
-}
+// S04: la lógica de firma vive en src/lib/itr/signatures.ts (espejo de sign_itr_atomic).
+export { availableSigningRoles, type SigningRole } from '@/lib/itr/signatures'

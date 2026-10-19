@@ -973,7 +973,10 @@
       "cancel": "Cancel",
       "edit": "Edit",
       "delete": "Delete",
-      "empty": "No phases. Add the first one."
+      "empty": "No phases. Add the first one.",
+      "clientSigns": "ITRs in this phase require the client's signature",
+      "clientSignsHint": "Added to the template's signatures when each ITR is created; existing ITRs do not change.",
+      "clientSignsChip": "Client signs"
     },
     "disciplines": {
       "title": "Disciplines",
@@ -1180,7 +1183,14 @@
       "btnActivateRevisionConfirm": "Activate v{version}",
       "revisionActivated": "Revision v{version} activated · {deactivated} revision(s) deactivated · {matrix} matrix row(s) re-pointed.",
       "flagRequiresDocument": "Requires document (PDF)",
-      "itemTypeTable": "Record table"
+      "itemTypeTable": "Record table",
+      "signaturesLabel": "ITR signatures:",
+      "signatureRole": {
+        "executor": "Executor",
+        "supervisor": "Supervisor",
+        "client": "Client"
+      },
+      "signaturesHint": "The executor always signs. A different person per role. The phase can also require the client. A change here only affects ITRs created afterwards."
     }
   },
   "ItrExecution": {
@@ -1302,6 +1312,23 @@
       "pid": "P&ID",
       "junctionBox": "Junction box",
       "hint": "Engineering data of the tag, read-only. If it does not match the installed equipment, record it in remarks or raise a punch."
+    },
+    "assign": {
+      "title": "Signing assignments",
+      "hint": "This ITR requires {roles}. You can fill in or change who holds a role until it has been signed.",
+      "unassigned": "Unassigned",
+      "choose": "Choose a person…",
+      "save": "Save",
+      "saving": "Saving…",
+      "signedLocked": "Signed",
+      "sameTwice": "That person already holds another role on this ITR"
+    },
+    "signErrors": {
+      "alreadySigned": "You already signed another role on this ITR: one person cannot sign two roles.",
+      "previous": "The previous required signature is missing.",
+      "notAssigned": "You are not assigned to that signing role.",
+      "notRequired": "This ITR does not require that signing role.",
+      "incomplete": "The content is incomplete or has a critical failure."
     }
   },
   "Tags": {

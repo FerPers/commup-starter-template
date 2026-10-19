@@ -35,7 +35,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S01 | Red de seguridad: CI, deploy único y base de pruebas | S1-v1 | D1, D2, D3 | ✅ **Hecha** 2026-10-19 (f5fb4f7, 1532c46 + migración 20261026120000 en prod; CI verde con deploy) — quedan D1 y D3 (Luis). Detalle en la cobertura |
 | S02 | Seguridad rápida | S01 | — | ✅ **Hecha** 2026-10-19 (649c2a5, 5999391; migración 20261027120000 en prod; edge `evaluate-workflow` desplegada) — A-02 adelantado (guarda), S01-N1 cerrado. Detalle en la cobertura |
 | S03 | SQL canónico | S01 | — | ✅ **Hecha** 2026-10-19 (6827c09; migración 20261028120000 en prod; 13 funciones en `supabase/functions-sql/`, test de deriva en CI) — B-28 cerrado. Detalle en la cobertura |
-| S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | Pendiente (C-02 y C-17 provisional en S1-v1) |
+| S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | ✅ **Hecha** 2026-10-19 (ver commit; migración 20261029120000 en prod, 17 escenarios con ROLLBACK) — D5 aprobó 0 ITR. Detalle en la cobertura |
 | S05 | ITR: contenido, estados y numeración | S04 | D7 | Pendiente |
 | S06 | Punch: permisos de campo y escritura por RPC | S03 | D8 | Pendiente (permisos de campo en S1-v1) |
 | S07 | Importaciones sin pérdida de datos | S03 | D9 | Pendiente |
@@ -93,9 +93,9 @@ Cada una trae mi recomendación. Se responden antes de la sesión que la necesit
 | D1 | Un solo camino de deploy | GitHub Actions con la CI como requisito (ya lo hace S1-v1). Tú desconectas Cloudflare Workers Builds en el panel de Cloudflare. | S01 | ✅ **Hecha** 2026-10-19: Luis desconectó Cloudflare Workers Builds; el único deploy es el job de `lint.yml` con `needs`. Web Analytics usa la configuración automática de Cloudflare (sin token: no crear `NEXT_PUBLIC_CF_BEACON_TOKEN`, contaría doble). |
 | D2 | Dónde corren los tests de BD | Hoy corren **contra producción**. Recomiendo un proyecto Supabase de pruebas separado (el plan gratuito permite 2), con las migraciones aplicadas y usuarios por rol creados por el propio test. | S01 | 2026-10-19: **seguir en prod por ahora**. La suite se escribe igual; mover a proyecto de pruebas queda pendiente. |
 | D3 | Protección de la rama `main` | Activarla con la CI como check obligatorio (la activas tú en GitHub). | S01 | ✅ **Hecha** 2026-10-19: ruleset `main` activo (restringe borrado, bloquea force push, exige TypeScript/ESLint/Vitest; bypass Repository admin para los push directos). |
-| D4 | Firmas requeridas del ITR por defecto | `{ejecutor, supervisor}`; cliente solo donde lo pida la plantilla o la fase. | S04 | |
-| D5 | ITR atascados en «completado» que ya cumplen las firmas nuevas | Listártelos primero y luego aprobarlos en la migración, con un evento de auditoría «aprobado por regla de firmas v2». | S04 | |
-| D6 | Independencia de firmas | Una persona no firma dos capacidades del mismo ITR o certificado. | S04, S17 | |
+| D4 | Firmas requeridas del ITR por defecto | `{ejecutor, supervisor}`; cliente solo donde lo pida la plantilla o la fase. | S04 | ✅ 2026-10-19: según recomendación (`itr_templates.required_signatures` + `project_phases.itr_client_signature`, congeladas en `itrs.required_signatures`). |
+| D5 | ITR atascados en «completado» que ya cumplen las firmas nuevas | Listártelos primero y luego aprobarlos en la migración, con un evento de auditoría «aprobado por regla de firmas v2». | S04 | ✅ 2026-10-19: según recomendación. Lista = 0 (los 14 ITR de prod son DEMO; los 9 con cliente lo conservan como requerido). |
+| D6 | Independencia de firmas | Una persona no firma dos capacidades del mismo ITR o certificado. | S04, S17 | ✅ 2026-10-19: según recomendación. ITR hecho en S04 (firma y asignación); certificado queda para S17. |
 | D7 | Cambio masivo de estado de ITR | Eliminarlo (el estado sale del contenido y las firmas) y dar a cambio reasignar, reprogramar y agregar a un plan. | S05 | |
 | D8 | ¿El inspector levanta punch? | Sí, y también comenta y adjunta. Recategorizar y cancelar: supervisor+, con motivo; cancelar lo hace otra persona. *(S1-v1 ya aplicó la primera parte.)* | S06 | |
 | D9 | Reimportación | Una columna que no viene en el archivo no se toca; mover de subsistema un tag con ITR o punch exige un flujo explícito. | S07 | |

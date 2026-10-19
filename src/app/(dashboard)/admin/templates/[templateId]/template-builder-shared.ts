@@ -43,6 +43,8 @@ export interface TemplateData {
   description: string | null
   version: number
   is_active: boolean
+  /** S04 (D4): firmas que pide el ITR de esta plantilla (el ejecutor siempre). */
+  required_signatures: string[]
   disciplines: { id: string; code: string; name: string; color: string } | null
   project_phases: { id: string; code: string; name: string; color: string } | null
   itr_template_sections: Array<{

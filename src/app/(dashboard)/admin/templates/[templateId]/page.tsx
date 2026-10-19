@@ -20,7 +20,7 @@ export default async function TemplateBuilderPage({
     supabase
       .from('itr_templates')
       .select(`
-        id, code, title, description, version, is_active, is_global,
+        id, code, title, description, version, is_active, is_global, required_signatures,
         disciplines(id, code, name, color),
         project_phases(id, code, name, color, order_index),
         itr_template_sections(

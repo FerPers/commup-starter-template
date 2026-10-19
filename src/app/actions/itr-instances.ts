@@ -7,6 +7,7 @@ import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { evaluateItrCompletion } from '@/lib/itr/completion'
+import { assignmentDbError, assignmentError, requiredForTemplate, type SigningRole } from '@/lib/itr/signatures'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
@@ -46,11 +47,17 @@ export const createItrAssignment = withAuth(
 
     const [{ data: tag }, { data: template }] = await Promise.all([
       ctx.supabase.from('tags').select('tag_number').eq('id', tagId).single(),
-      ctx.supabase.from('itr_templates').select('code, phase_id').eq('id', templateId).single(),
+      ctx.supabase.from('itr_templates').select('code, phase_id, required_signatures, project_phases(itr_client_signature)').eq('id', templateId).single(),
     ])
 
     if (!tag) return { error: 'Tag no encontrado' }
     if (!template) return { error: 'Template no encontrado' }
+
+    // S04 (D4/D6): la BD congela estas firmas en el ITR; aquí se exige una persona distinta por rol requerido.
+    const required = requiredForTemplate(template.required_signatures, template.project_phases?.itr_client_signature)
+    const people: Record<SigningRole, string | undefined> = { executor: inspectorId, supervisor: supervisorId, client: clientId }
+    const invalid = assignmentError(required, people)
+    if (invalid) return { error: invalid }
 
     const baseNumber = `${template.code}/${tag.tag_number}`
 
@@ -82,17 +89,13 @@ export const createItrAssignment = withAuth(
 
     if (itrErr) return { error: itrErr.message }
 
-    const assignments: TablesInsert<'itr_assignments'>[] = [
-      { itr_id: itr.id, user_id: inspectorId, role: 'executor' },
-    ]
-    if (supervisorId) assignments.push({ itr_id: itr.id, user_id: supervisorId, role: 'supervisor' })
-    if (clientId) assignments.push({ itr_id: itr.id, user_id: clientId, role: 'client' })
+    const assignments: TablesInsert<'itr_assignments'>[] = required.map(role => ({ itr_id: itr.id, user_id: people[role]!, role }))
 
     const { error: assignErr } = await ctx.supabase
       .from('itr_assignments')
       .insert(assignments)
 
-    if (assignErr) return { error: assignErr.message }
+    if (assignErr) return { error: assignmentDbError(assignErr.message) }
 
     const changes: ItrAssignmentChange[] = assignments.map(a => ({
       itrId: itr.id,

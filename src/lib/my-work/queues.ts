@@ -4,6 +4,7 @@
  * Tests en queues.test.ts. La página vive en src/app/(dashboard)/my-work.
  */
 import type { OrgMemberRole } from '@/types/database'
+import { normalizeRequired } from '@/lib/itr/signatures'
 
 export type MyWorkCounts = {
   itrs_execute: number
@@ -111,34 +112,43 @@ export type AssignmentRow = {
     tags: { id: string; tag_number: string; description: string } | null
     projects: { code: string } | null
     project_phases: { code: string; color: string } | null
-    itr_signatures: { role: string }[]
+    itr_signatures: { role: string; user_id?: string }[]
+    /** S04 (D4): firmas que exige el ITR; ausente = ejecutor + supervisor. */
+    required_signatures?: string[] | null
   } | null
 }
 
 export type ItrQueues<T extends AssignmentRow = AssignmentRow> = { execute: T[]; review: T[] }
 
-/** Orden de firma del ITR (igual que sign_itr_atomic: cada rol exige las firmas anteriores). */
-export const ITR_SIGNING_ORDER = ['executor', 'supervisor', 'client'] as const
+/** Orden de firma del ITR (igual que sign_itr_atomic: cada rol exige las firmas requeridas anteriores). */
+export { ITR_SIGNING_ORDER } from '@/lib/itr/signatures'
 
 /**
- * ¿Es mi turno de firmar con este rol? Colas por «siguiente firma pendiente» (C-17, revisión
- * 2026-10-19): el ejecutor mientras no firme (aunque el contenido ya esté completo, o el ITR esté
- * rechazado por una falla crítica que debe corregir); el supervisor cuando firmó el ejecutor; el
- * cliente cuando firmaron ejecutor y supervisor. Mismo criterio que my_work_counts en SQL.
+ * ¿Es mi turno de firmar con este rol? Colas por «siguiente firma pendiente» (C-17): el ejecutor
+ * mientras no firme (aunque el contenido ya esté completo, o el ITR esté rechazado por una falla
+ * crítica que debe corregir); los demás roles cuando firmaron los requeridos anteriores. S04: solo
+ * cuentan los roles que el ITR exige (D4) y nunca si ya firmé otro rol del mismo ITR (D6). Mismo
+ * criterio que my_work_counts en SQL.
  */
-export function isMyTurnToSign(role: AssignmentRow['role'], status: string, signedRoles: ReadonlyArray<string>): boolean {
-  if (status === 'approved' || signedRoles.includes(role)) return false
+export function isMyTurnToSign(
+  role: AssignmentRow['role'],
+  status: string,
+  signedRoles: ReadonlyArray<string>,
+  required: ReadonlyArray<string> | null | undefined,
+  signedByMe = false,
+): boolean {
+  const req = normalizeRequired(required)
+  if (status === 'approved' || signedByMe || !req.includes(role) || signedRoles.includes(role)) return false
   if (role === 'executor') return true
   if (status !== 'completed') return false
-  const previous = ITR_SIGNING_ORDER.slice(0, ITR_SIGNING_ORDER.indexOf(role))
-  return previous.every(r => signedRoles.includes(r))
+  return req.slice(0, req.indexOf(role)).every(r => signedRoles.includes(r))
 }
 
 /**
  * Separa mis asignaciones en «por ejecutar» (ejecutor sin su firma) y «por revisar» (supervisor o
  * cliente a quien le toca firmar, ver isMyTurnToSign). Deduplica por ITR dentro de cada cola.
  */
-export function splitAssignments<T extends AssignmentRow>(rows: T[], projectIds: ReadonlySet<string>): ItrQueues<T> {
+export function splitAssignments<T extends AssignmentRow>(rows: T[], projectIds: ReadonlySet<string>, userId?: string): ItrQueues<T> {
   const execute: T[] = []
   const review: T[] = []
   const seenExec = new Set<string>()
@@ -146,7 +156,8 @@ export function splitAssignments<T extends AssignmentRow>(rows: T[], projectIds:
   for (const row of rows) {
     const itr = row.itrs
     if (!itr || !projectIds.has(itr.project_id)) continue
-    if (!isMyTurnToSign(row.role, itr.status, itr.itr_signatures.map(s => s.role))) continue
+    const signedByMe = !!userId && itr.itr_signatures.some(s => s.user_id === userId)
+    if (!isMyTurnToSign(row.role, itr.status, itr.itr_signatures.map(s => s.role), itr.required_signatures, signedByMe)) continue
     const [queue, seen] = row.role === 'executor' ? [execute, seenExec] : [review, seenRev]
     if (seen.has(itr.id)) continue
     seen.add(itr.id)

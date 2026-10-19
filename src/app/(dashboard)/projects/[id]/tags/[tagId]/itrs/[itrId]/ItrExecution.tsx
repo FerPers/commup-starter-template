@@ -23,6 +23,8 @@ import RevokeModal from './RevokeModal'
 import CreatePunchModal from './CreatePunchModal'
 import TestEquipmentSection, { type EquipmentOption, type EquipmentUsed } from './TestEquipmentSection'
 import { availableSigningRoles, type Attachment, type ItrData, type Signature } from './types'
+import { allRequiredSigned, itrSignErrorKey, normalizeRequired } from '@/lib/itr/signatures'
+import AssignmentsPanel, { type AssignableMember } from './AssignmentsPanel'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
 export default function ItrExecution({
@@ -36,6 +38,7 @@ export default function ItrExecution({
   memberIds: memberIdList = [],
   testEquipment,
   documentsSlot,
+  assignable,
 }: {
   itr: ItrData
   projectId: string
@@ -50,6 +53,8 @@ export default function ItrExecution({
   testEquipment?: { requires: boolean; used: EquipmentUsed[]; options: EquipmentOption[] }
   /** Fase 8: documentos referenciados (bloquea la firma con una revisión superada). */
   documentsSlot?: React.ReactNode
+  /** S04 (C-01): miembros para completar o cambiar asignaciones de roles sin firmar (solo editores). */
+  assignable?: AssignableMember[]
 }) {
   const router = useRouter()
   const t = useTranslations('ItrExecution')
@@ -57,17 +62,18 @@ export default function ItrExecution({
   const executorName = itr.itr_assignments.find(a => a.user_id === currentUserId)?.profiles?.full_name ?? null
   const locale = useLocale()
   const [isModalPending, startModalTransition] = useTransition()
-  const [itemLang, setItemLang] = useState<'es' | 'en'>(() => {
-    if (typeof window === 'undefined') return locale.startsWith('es') ? 'es' : 'en'
-    const stored = window.localStorage.getItem('commup-itr-item-lang')
-    if (stored === 'es' || stored === 'en') return stored
-    return locale.startsWith('es') ? 'es' : 'en'
-  })
+  // C-36 (S04): el idioma guardado se lee en un efecto; leerlo al inicializar desajustaba la hidratación.
+  const [itemLang, setItemLangState] = useState<'es' | 'en'>(locale.startsWith('es') ? 'es' : 'en')
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('commup-itr-item-lang', itemLang)
-    }
-  }, [itemLang])
+    try {
+      const stored = window.localStorage.getItem('commup-itr-item-lang')
+      if (stored === 'es' || stored === 'en') setItemLangState(stored)
+    } catch { /* almacenamiento bloqueado: queda el idioma de la app */ }
+  }, [])
+  const setItemLang = (lang: 'es' | 'en') => {
+    setItemLangState(lang)
+    try { window.localStorage.setItem('commup-itr-item-lang', lang) } catch { /* sin almacenamiento */ }
+  }
   const [showSignModal, setShowSignModal] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
   const [showRevokeModal, setShowRevokeModal] = useState(false)
@@ -217,7 +223,8 @@ export default function ItrExecution({
   const localStatus = localEvaluation.status
   const effectiveProgress = itr.status === 'approved' ? itr.progress_pct : localEvaluation.pct
   const effectiveStatus = itr.status === 'approved' ? 'approved' : localStatus
-  const allowedSignRoles = availableSigningRoles(itr.itr_assignments, effectiveSignatures, currentUserId)
+  const requiredRoles = normalizeRequired(itr.required_signatures)
+  const allowedSignRoles = availableSigningRoles(requiredRoles, itr.itr_assignments, effectiveSignatures, currentUserId)
   const canCapture = canEdit && effectiveSignatures.length === 0 && itr.status !== 'approved'
   const signingReady = effectiveStatus === 'completed' && allowedSignRoles.length > 0 && !isPending && !saveError && !generalUploading
 
@@ -229,7 +236,7 @@ export default function ItrExecution({
     startModalTransition(async () => {
       // Sprint O: sin red la firma se encola; al sincronizar viaja después de las respuestas.
       const res = await signOrQueue({ itrId: itr.id, role, projectId, tagId, signatureImage })
-      if ('error' in res) { setSignError(res.error); return }
+      if ('error' in res) { const key = itrSignErrorKey(res.error); setSignError(key ? t(`signErrors.${key}`) : res.error); return }
       setShowSignModal(false)
       if (res.queued) setQueuedNotice('signature')
       else {
@@ -405,8 +412,9 @@ export default function ItrExecution({
 
         {/* Signatures status */}
         <div style={{ marginTop: '14px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {(['executor', 'supervisor', 'client'] as const).map(role => {
+          {requiredRoles.map(role => {
             const sig = effectiveSignatures.find(s => s.role === role)
+            const assignee = itr.itr_assignments.find(a => a.role === role)
             const signedDate = sig ? sig.signed_at.slice(0, 10).split('-').reverse().join('/') : null
             const signedTime = sig ? sig.signed_at.slice(11, 16) : null
             return (
@@ -425,6 +433,11 @@ export default function ItrExecution({
                         {sig.pending ? t('sync.pending') : `${signedDate} ${signedTime}`}
                       </div>
                     </>
+                  )}
+                  {!sig && (
+                    <div style={{ fontSize: '11px', color: assignee ? 'var(--text-muted)' : '#b45309', marginLeft: '17px', marginTop: '2px' }}>
+                      {assignee ? <PersonName name={assignee.profiles?.full_name} inactive={isInactiveMember(assignee.user_id, memberIds)} /> : t('assign.unassigned')}
+                    </div>
                   )}
                 </div>
                 {sig?.signature_image && (
@@ -465,6 +478,21 @@ export default function ItrExecution({
           </div>
         )}
       </div>
+
+      {/* ── Asignaciones de firma (S04, C-01): solo editores y con el ITR sin aprobar ─────────── */}
+      {assignable && itr.status !== 'approved' && (
+        <div style={{ margin: '12px 16px 0' }}>
+          <AssignmentsPanel
+            itrId={itr.id}
+            projectId={projectId}
+            tagId={itr.tag_id}
+            requiredRoles={requiredRoles}
+            assignments={itr.itr_assignments}
+            signedRoles={itr.itr_signatures.map(s => s.role)}
+            members={assignable}
+          />
+        </div>
+      )}
 
       {/* ── Sections + Items ─────────────────────────────────────────── */}
       <div style={{ padding: '0 20px' }}>
@@ -575,7 +603,7 @@ export default function ItrExecution({
             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
           </button>
           {(() => {
-            const allRolesPending = (['executor', 'supervisor', 'client'] as const).every(r => effectiveSignatures.some(s => s.role === r))
+            const allRolesPending = allRequiredSigned(requiredRoles, effectiveSignatures.map(s => s.role))
             const canSign = signingReady && !allRolesPending
             const signTooltip =
               effectiveStatus === 'approved' || allRolesPending ? t('footer.signTooltipApproved')
@@ -633,6 +661,7 @@ export default function ItrExecution({
         <SignModal
           itrNumber={itr.itr_number}
           itrSignatures={effectiveSignatures}
+          requiredRoles={requiredRoles}
           allowedRoles={allowedSignRoles}
           ready={signingReady}
           criticalBlocked={criticalBlocked}

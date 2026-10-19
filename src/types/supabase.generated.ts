@@ -2746,6 +2746,7 @@ export type Database = {
           is_global: boolean
           org_id: string
           phase_id: string
+          required_signatures: string[]
           requires_test_equipment: boolean
           source_org_id: string | null
           source_template_id: string | null
@@ -2766,6 +2767,7 @@ export type Database = {
           is_global?: boolean
           org_id: string
           phase_id: string
+          required_signatures?: string[]
           requires_test_equipment?: boolean
           source_org_id?: string | null
           source_template_id?: string | null
@@ -2786,6 +2788,7 @@ export type Database = {
           is_global?: boolean
           org_id?: string
           phase_id?: string
+          required_signatures?: string[]
           requires_test_equipment?: boolean
           source_org_id?: string | null
           source_template_id?: string | null
@@ -2925,6 +2928,7 @@ export type Database = {
           phase_id: string
           progress_pct: number
           project_id: string
+          required_signatures: string[]
           scheduled_date: string | null
           source_rows: Json | null
           status: Database["public"]["Enums"]["itr_status"]
@@ -2942,6 +2946,7 @@ export type Database = {
           phase_id: string
           progress_pct?: number
           project_id: string
+          required_signatures?: string[]
           scheduled_date?: string | null
           source_rows?: Json | null
           status?: Database["public"]["Enums"]["itr_status"]
@@ -2959,6 +2964,7 @@ export type Database = {
           phase_id?: string
           progress_pct?: number
           project_id?: string
+          required_signatures?: string[]
           scheduled_date?: string | null
           source_rows?: Json | null
           status?: Database["public"]["Enums"]["itr_status"]
@@ -6154,6 +6160,7 @@ export type Database = {
           code: string
           color: string
           id: string
+          itr_client_signature: boolean
           name: string
           order_index: number
           org_id: string
@@ -6163,6 +6170,7 @@ export type Database = {
           code: string
           color?: string
           id?: string
+          itr_client_signature?: boolean
           name: string
           order_index: number
           org_id: string
@@ -6172,6 +6180,7 @@ export type Database = {
           code?: string
           color?: string
           id?: string
+          itr_client_signature?: boolean
           name?: string
           order_index?: number
           org_id?: string
@@ -11987,6 +11996,7 @@ export type Database = {
         Args: { p_options: Json; p_outcomes: Json }
         Returns: boolean
       }
+      itr_signing_roles: { Args: { p_roles: string[] }; Returns: string[] }
       itr_status_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {

@@ -141,6 +141,16 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | C-38 | Bajo | rendimiento — `saveItrSnapshot` escribe el ITR completo (incluidas firmas en base64) en cada cambio de props, nunca se lee ni se purga (`useItrAutosave.ts:22-29`). Usarlo | [C-completions.md:283](revision-2026-10-19/C-completions.md) |
 | I-24 | Bajo | `bulkAssignItrs` borra y luego inserta sin transacción | [I-roles-integraciones.md:402](revision-2026-10-19/I-roles-integraciones.md) |
 
+**Estado S04 (2026-10-19; migración `20261029120000_itr_required_signatures_s04.sql` probada con ROLLBACK —17 escenarios— y **aplicada en prod** con autorización de Luis; D4–D6 según recomendación):** todos verificados vigentes antes de tocar. Primera sesión con el flujo canónico de S03: 7 funciones editadas en `supabase/functions-sql/` y emitidas completas.
+- C-01 / I-05 ✅ `itr_templates.required_signatures` (default ejecutor + supervisor; el ejecutor siempre) + `project_phases.itr_client_signature`; `guard_itr_row` congela el conjunto en `itrs.required_signatures` al crear (inmutable salvo dueño). `sign_itr_atomic` aprueba con todas las requeridas, en orden, saltando las no pedidas. `guard_itr_content` permite completar o cambiar la asignación de un rol sin firmar con el ITR en curso. Panel «Asignaciones de firma» en la ejecución del ITR (editores) + acción `setItrAssignment`. Creación (tag, lazos, C&E) pide solo los roles requeridos y obligatorios. Editor de firmas en la cabecera de la plantilla y casilla por fase en Configuración. Lógica pura en `src/lib/itr/signatures.ts` (+ test).
+- A-08 ✅ (D6) una persona no firma dos roles (`sign_itr_atomic`) ni queda asignada a dos (`guard_itr_content`); la UI no ofrece a quien ya tiene otro rol.
+- C-17 ✅ colas recalibradas: `isMyTurnToSign` y `my_work_counts` usan las firmas requeridas y excluyen a quien ya firmó otro rol; widgets de cliente con la misma regla. Verificado: badge = lista en Mi trabajo.
+- C-02 ✅ confirmado lo de S1-v1 (`localItrStatus` con `sourceRows`).
+- D5 ✅ backfill: los ITR con cliente asignado o firmado lo conservan; aprobación de «completado» con todas sus firmas → 0 ITR.
+- De paso: C-36 ✅ (idioma en efecto), C-38 ✅ (snapshot sin trazos de firma; se conserva para S18/C-09), I-24 ✅ (`bulkAssignItrs` con UPSERT atómico). PDF y listas muestran solo los recuadros/chips requeridos.
+- **Hallazgo nuevo S04-N1 ✅:** `create_itr_template_revision` y `clone_itr_template_from_catalog` perdían `requires_test_equipment` (y ahora también `required_signatures`): corregido.
+- **Sin verificar en navegador:** la firma completa con dos personas (solo hay sesión de una) y la firma sin red; cubiertas por los escenarios SQL 8–15 y los tests unitarios. `tests/db/readiness.test.ts` usa plantilla de solo ejecutor y prueba D4/D6 por REST.
+
 ## S05 — ITR: contenido, estados y numeración
 
 | ID | Sev. | Hallazgo | Anexo |

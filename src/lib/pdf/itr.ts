@@ -80,6 +80,8 @@ export type ItrPdfData = {
   projects: { code: string; name: string } | null
   itr_responses: ItrResponse[]
   itr_signatures: ItrSignature[]
+  /** S04 (D4): firmas que exige el ITR; el PDF solo muestra esos recuadros. */
+  required_signatures?: string[] | null
   itr_attachments?: ItrAttachmentRef[]
   /** Fase 4-B: equipos de prueba usados, con la calibración copiada al momento de uso. */
   itr_test_equipment?: ItrTestEquipmentRef[]
@@ -533,7 +535,7 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
   }
 
   r.moveY(12)
-  await drawItrSignatures(r, itr.itr_signatures)
+  await drawItrSignatures(r, itr.itr_signatures, itr.required_signatures)
 
   r.finalizePagePlaceholders()
   return await r.doc.save()

@@ -9,6 +9,7 @@ import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { assignmentError, normalizeRequired, requiredForTemplate } from '@/lib/itr/signatures'
 
 // ── Status config ────────────────────────────────────────────────────
 
@@ -96,8 +97,17 @@ export default function TagItrTab({
   const recommended = sortedTemplates.filter(t => t.recommended)
   const others       = sortedTemplates.filter(t => !t.recommended)
 
+  // S04 (D4/D6): la plantilla (y su fase) dicen qué firmas pide el ITR; una persona distinta por rol.
+  const selectedTpl = templates.find(t => t.id === selectedTemplate)
+  const requiredRoles = selectedTpl ? requiredForTemplate(selectedTpl.required_signatures, selectedTpl.project_phases?.itr_client_signature) : normalizeRequired(null)
+  const needsSupervisor = requiredRoles.includes('supervisor')
+  const needsClient = requiredRoles.includes('client')
+  const people = { executor: selectedInspector, supervisor: needsSupervisor ? selectedSupervisor : null, client: needsClient ? selectedClient : null }
+  const formError = selectedTemplate && selectedInspector ? assignmentError(requiredRoles, people) : null
+
   function handleAssign() {
     if (!selectedTemplate || !selectedInspector) return
+    if (formError) { setAssignError(formError); return }
     setAssignError(null)
     startTransition(async () => {
       const res = await createItrAssignment({
@@ -106,8 +116,8 @@ export default function TagItrTab({
         subsystemId,
         templateId: selectedTemplate,
         inspectorId: selectedInspector,
-        supervisorId: selectedSupervisor || undefined,
-        clientId: selectedClient || undefined,
+        supervisorId: (needsSupervisor && selectedSupervisor) || undefined,
+        clientId: (needsClient && selectedClient) || undefined,
         scheduledDate: scheduledDate || undefined,
       })
       if (res.error) { setAssignError(res.error); return }
@@ -251,7 +261,7 @@ export default function TagItrTab({
 
                 {/* Signatures */}
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  {(['executor', 'supervisor', 'client'] as const).map(role => {
+                  {normalizeRequired(itr.required_signatures).map(role => {
                     const signed = itr.itr_signatures.some(s => s.role === role)
                     return (
                       <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? '#ecfdf5' : 'var(--gray-50)', color: signed ? '#10b981' : 'var(--gray-300)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, fontWeight: 600 }}>
@@ -393,32 +403,32 @@ export default function TagItrTab({
                   </select>
                 </div>
 
-                {/* Supervisor selector */}
-                <div>
-                  <label style={labelStyle}>Supervisor <span style={{ fontWeight: 400, color: 'var(--gray-400)' }}>(opcional)</span></label>
+                {/* Supervisor selector — S04: solo si la plantilla lo pide, y entonces obligatorio */}
+                {needsSupervisor && <div>
+                  <label style={labelStyle}>Supervisor *</label>
                   <select
                     value={selectedSupervisor}
                     onChange={e => setSelectedSupervisor(e.target.value)}
                     style={selStyle}
                   >
-                    <option value="">Sin asignar</option>
-                    {orgMembers.map(m => (
+                    <option value="">Seleccionar supervisor...</option>
+                    {orgMembers.filter(m => m.user_id !== selectedInspector).map(m => (
                       <option key={m.user_id} value={m.user_id}>
                         {m.profiles?.full_name ?? m.user_id} ({m.role})
                       </option>
                     ))}
                   </select>
-                </div>
+                </div>}
 
-                {/* Client selector */}
-                <div>
-                  <label style={labelStyle}>Cliente <span style={{ fontWeight: 400, color: 'var(--gray-400)' }}>(opcional)</span></label>
+                {/* Client selector — S04: solo si la plantilla o la fase lo piden */}
+                {needsClient && <div>
+                  <label style={labelStyle}>Cliente *</label>
                   <select
                     value={selectedClient}
                     onChange={e => setSelectedClient(e.target.value)}
                     style={selStyle}
                   >
-                    <option value="">Sin asignar</option>
+                    <option value="">Seleccionar cliente...</option>
                     {orgMembers.filter(m => m.role === 'client').length > 0
                       ? orgMembers.filter(m => m.role === 'client').map(m => (
                           <option key={m.user_id} value={m.user_id}>
@@ -432,7 +442,7 @@ export default function TagItrTab({
                         ))
                     }
                   </select>
-                </div>
+                </div>}
 
                 {/* Scheduled date */}
                 <div>
@@ -444,6 +454,10 @@ export default function TagItrTab({
                     style={selStyle}
                   />
                 </div>
+
+                {formError && !assignError && (
+                  <p style={{ fontSize: '12px', color: '#b45309', margin: 0 }}>{formError}</p>
+                )}
 
                 {assignError && (
                   <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: 0 }}>
@@ -460,8 +474,8 @@ export default function TagItrTab({
                   </button>
                   <button
                     onClick={handleAssign}
-                    disabled={!selectedTemplate || !selectedInspector || isPending}
-                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || isPending ? '#93c5fd' : '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || isPending ? 'not-allowed' : 'pointer' }}
+                    disabled={!selectedTemplate || !selectedInspector || !!formError || isPending}
+                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || formError || isPending ? '#93c5fd' : '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || formError || isPending ? 'not-allowed' : 'pointer' }}
                   >
                     {isPending ? 'Asignando...' : 'Asignar →'}
                   </button>

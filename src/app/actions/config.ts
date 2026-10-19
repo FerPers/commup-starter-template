@@ -57,6 +57,8 @@ export const updatePhase = withAuth(
       name: string
       color: string
       certificateName?: string
+      /** S04 (D4): los ITR de la fase exigen además la firma del cliente. */
+      itrClientSignature?: boolean
     },
   ): Promise<{ error?: string }> => {
     const { error } = await ctx.supabase
@@ -66,6 +68,7 @@ export const updatePhase = withAuth(
         name: input.name.trim(),
         color: input.color,
         certificate_name: input.certificateName?.trim() ?? null,
+        ...(input.itrClientSignature !== undefined ? { itr_client_signature: input.itrClientSignature } : {}),
       })
       .eq('id', input.phaseId)
       .eq('org_id', ctx.orgId)

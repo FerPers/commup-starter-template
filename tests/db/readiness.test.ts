@@ -12,7 +12,8 @@ import { evaluateEligibility, resolveCatBLimit } from '@/lib/certificates/eligib
  *
  * Siembra una jerarquía temporal (área/sistema/subsistema/tag) y una plantilla mínima (1 ítem) en
  * TEST_PROJECT_A_ID y la borra al final. Desde la integridad atómica de ITR (migración 20260909180000)
- * un ITR solo llega a `approved` firmando (`sign_itr_atomic`: contenido completo + 3 roles asignados)
+ * un ITR solo llega a `approved` firmando (`sign_itr_atomic`: contenido completo + firmas requeridas). Desde S04
+ * (D6) una persona no firma dos roles: la plantilla del test pide solo al ejecutor (`required_signatures`)
  * y un ITR firmado solo se borra tras `reopen_itr_atomic`, que exige owner/admin/architect:
  * el usuario A debe tener uno de esos roles en la org del proyecto.
  * Usa las mismas variables que rls-smoke.test.ts; sin ellas se omite. Los inserts disparan
@@ -39,7 +40,7 @@ let a: SupabaseClient
 let userId: string
 let ids = { area: '', system: '', subsystem: '', tag: '', phase: '', discipline: '', template: '', item: '' }
 const itrIds: string[] = []
-const SIGNING_ROLES = ['executor', 'supervisor', 'client'] as const
+const SIGNING_ROLES = ['executor'] as const
 let catBLimit: number | null = 3
 
 async function readiness(): Promise<Readiness> {
@@ -65,7 +66,7 @@ async function tsEligibility() {
   return evaluateEligibility(itrs ?? [], punches ?? [], catBLimit)
 }
 
-/** Aprueba un ITR por el camino real: respuesta al único ítem, 3 roles asignados a A y 3 firmas en orden. */
+/** Aprueba un ITR por el camino real: respuesta al único ítem, A asignado como ejecutor y su firma (la plantilla solo pide esa). */
 async function approveItr(itrId: string) {
   await insertOrThrow('response', a.from('itr_responses').insert({ itr_id: itrId, item_id: ids.item, value_bool: true, is_passed: true, responded_by: userId }).select('id'))
   await insertOrThrow('assignments', a.from('itr_assignments').insert(SIGNING_ROLES.map(role => ({ itr_id: itrId, user_id: userId, role }))).select('id'))
@@ -103,6 +104,7 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
     // Plantilla propia e inactiva (no aparece en los selectores): la revisión debe ser de la misma fase que el ITR.
     const template = await insertOrThrow<{ id: string }>('template', a.from('itr_templates').insert({
       org_id: project.org_id, discipline_id: ids.discipline, phase_id: ids.phase, code: `${stamp}-TPL`, title: 'test', is_active: false,
+      required_signatures: ['executor'],
     }).select('id').single())
     ids.template = template.id
     const section = await insertOrThrow<{ id: string }>('section', a.from('itr_template_sections').insert({ template_id: template.id, title: 'test', order_index: 0 }).select('id').single())
@@ -164,6 +166,34 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
     expect(gate(r).level).toBe('red')
     expect(r.blockers.map(b => b.code)).toEqual(['itrs_incomplete'])
     expect(await tsEligibility()).toMatchObject({ eligible: 'red', totalItrs: 2, approvedItrs: 1 })
+  }, 30_000)
+
+  it('S04 (D4/D6): el ITR congela las firmas de la plantilla y nadie queda asignado a dos roles', async () => {
+    // La plantilla ya tiene ITRs: cambiar sus firmas requeridas se permite (no es contenido) y solo afecta a los ITR nuevos.
+    const { error: tplErr } = await a.from('itr_templates').update({ required_signatures: ['executor', 'supervisor'] }).eq('id', ids.template)
+    expect(tplErr).toBeNull()
+    const row = await insertOrThrow<{ id: string; required_signatures: string[] }>('itr E+S', a.from('itrs').insert({
+      project_id: pid, subsystem_id: ids.subsystem, tag_id: ids.tag, template_id: ids.template, phase_id: ids.phase,
+      itr_number: `${stamp}-ITR-ES`, status: 'not_started', required_signatures: ['executor'],
+    }).select('id, required_signatures').single())
+    itrIds.push(row.id)
+    expect(row.required_signatures).toEqual(['executor', 'supervisor'])
+    const { data: first } = await a.from('itrs').select('required_signatures').eq('id', itrIds[0]).single()
+    expect(first?.required_signatures).toEqual(['executor'])
+    const { error: dup } = await a.from('itr_assignments').insert([
+      { itr_id: row.id, user_id: userId, role: 'executor' }, { itr_id: row.id, user_id: userId, role: 'supervisor' },
+    ])
+    expect(dup?.message).toMatch(/two signing roles/)
+    const { error: notRequired } = await a.from('itr_assignments').insert({ itr_id: row.id, user_id: userId, role: 'client' })
+    expect(notRequired?.message).toMatch(/not required/)
+    const { error: fixed } = await a.from('itrs').update({ required_signatures: ['executor'] }).eq('id', row.id)
+    expect(fixed?.message).toMatch(/fixed when the ITR is created/)
+    // Sin firmas se puede borrar: no debe contar en el gate de los tests siguientes.
+    await a.from('itr_assignments').delete().eq('itr_id', row.id)
+    const { error: delErr } = await a.from('itrs').delete().eq('id', row.id)
+    expect(delErr).toBeNull()
+    itrIds.pop()
+    await a.from('itr_templates').update({ required_signatures: ['executor'] }).eq('id', ids.template)
   }, 30_000)
 
   it('numerador: inserciones paralelas reciben números P-#### únicos', async () => {

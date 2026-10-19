@@ -19,11 +19,13 @@ export function useItrAutosave(itr: ItrData) {
 
   const { isOffline, pendingCount, syncing, saveWithQueue } = useOfflineSync(itr.id, itr.template_id)
 
-  // Persist a full snapshot to IndexedDB so the ITR can be viewed offline
+  // Persist a snapshot to IndexedDB so the ITR can be viewed offline (lo leerá S18, C-09).
+  // C-38 (S04): sin los trazos de firma en base64 — pesan en cada cambio de props y no hacen falta offline.
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const lean = { ...itr, itr_signatures: itr.itr_signatures.map(s => ({ ...s, signature_image: null })) }
       void import('@/lib/offline-queue').then(({ saveItrSnapshot }) => {
-        saveItrSnapshot(itr.id, itr).catch(() => {})
+        saveItrSnapshot(itr.id, lean).catch(() => {})
       })
     }
   }, [itr])

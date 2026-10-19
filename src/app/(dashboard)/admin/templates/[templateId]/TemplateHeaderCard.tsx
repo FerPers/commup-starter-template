@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updateTemplateHeader } from '@/app/actions/itr-templates'
 import { fieldInput, fieldLabel, type TemplateData } from './template-builder-shared'
+import { normalizeRequired, type SigningRole } from '@/lib/itr/signatures'
 
 export default function TemplateHeaderCard({
   template,
@@ -46,6 +47,7 @@ export default function TemplateHeaderCard({
     title: template.title,
     description: template.description ?? '',
     is_active: template.is_active,
+    required_signatures: normalizeRequired(template.required_signatures) as SigningRole[],
   })
   const [error, setError] = useState<string | null>(null)
 
@@ -61,6 +63,7 @@ export default function TemplateHeaderCard({
         title: form.title.trim(),
         description: form.description.trim() || null,
         is_active: form.is_active,
+        required_signatures: form.required_signatures,
       })
       if (res.error) { setError(res.error); return }
       setEditing(false)
@@ -123,6 +126,10 @@ export default function TemplateHeaderCard({
             {template.description && (
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{template.description}</p>
             )}
+            <p style={{ fontSize: '12px', color: 'var(--gray-700)', margin: '8px 0 0' }}>
+              <strong>{t('signaturesLabel')}</strong>{' '}
+              {normalizeRequired(template.required_signatures).map(r => t(`signatureRole.${r}`)).join(' → ')}
+            </p>
             <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '8px 0 0' }}>
               {t('versionMeta', {
                 version: template.version,
@@ -255,6 +262,25 @@ export default function TemplateHeaderCard({
             />
             <span style={{ fontSize: '13px', color: 'var(--gray-700)' }}>{t('flagActiveLabel')}</span>
           </label>
+          {/* S04 (D4): firmas requeridas del ITR. El ejecutor siempre firma; la fase puede sumar al cliente. */}
+          <fieldset style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px', margin: '0 0 16px' }}>
+            <legend style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', padding: '0 4px' }}>{t('signaturesLabel')}</legend>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              {(['executor', 'supervisor', 'client'] as const).map(role => (
+                <label key={role} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--gray-700)', cursor: role === 'executor' ? 'default' : 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.required_signatures.includes(role)}
+                    disabled={role === 'executor'}
+                    onChange={e => setForm(f => ({ ...f, required_signatures: normalizeRequired(e.target.checked ? [...f.required_signatures, role] : f.required_signatures.filter(r => r !== role)) }))}
+                    style={{ accentColor: '#7c3aed', width: '14px', height: '14px' }}
+                  />
+                  {t(`signatureRole.${role}`)}
+                </label>
+              ))}
+            </div>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '6px 0 0' }}>{t('signaturesHint')}</p>
+          </fieldset>
           {error && (
             <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 12px', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px' }}>
               {error}

@@ -2,13 +2,15 @@
 
 // Generar ITRs desde lazos (loop check) o desde causas C&E (prueba por causa) — fase 4-D, sesión 2.
 // Se elige la plantilla (solo las activas con la tabla del origen correcto), el inspector y,
-// opcionalmente, el supervisor. Las filas de la tabla las toma la BD al crear cada ITR.
+// las personas de los demás roles de firma que exija la plantilla (S04, D4: una distinta por rol).
+// Las filas de la tabla las toma la BD al crear cada ITR.
 
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { generateCauseItrs, generateLoopItrs } from '@/app/actions/source-itrs'
+import { assignmentError } from '@/lib/itr/signatures'
 
-export type GenerationTemplate = { id: string; code: string; title: string; version: number }
+export type GenerationTemplate = { id: string; code: string; title: string; version: number; requiredSignatures: string[] }
 export type GenerationMember = { user_id: string; name: string; role: string }
 
 const field = { width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '13px', boxSizing: 'border-box' } as const
@@ -26,6 +28,9 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? '')
   const [inspectorId, setInspectorId] = useState('')
   const [supervisorId, setSupervisorId] = useState('')
+  const [clientId, setClientId] = useState('')
+  const required = templates.find(t => t.id === templateId)?.requiredSignatures ?? ['executor', 'supervisor']
+  const needs = (role: string) => required.includes(role)
   const [error, setError] = useState('')
   const [report, setReport] = useState<{ created: number; errors: string[] } | null>(null)
   const [pending, start] = useTransition()
@@ -35,8 +40,10 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
   function submit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    const invalid = assignmentError(required, { executor: inspectorId, supervisor: needs('supervisor') ? supervisorId : null, client: needs('client') ? clientId : null })
+    if (invalid) { setError(invalid); return }
     start(async () => {
-      const input = { projectId, templateId, ids: items.map(i => i.id), inspectorId, supervisorId: supervisorId || null }
+      const input = { projectId, templateId, ids: items.map(i => i.id), inspectorId, supervisorId: needs('supervisor') ? supervisorId : null, clientId: needs('client') ? clientId : null }
       const res = kind === 'loop' ? await generateLoopItrs(input) : await generateCauseItrs(input)
       if (res.error) { setError(res.error); return }
       setReport({ created: res.created ?? 0, errors: res.errors ?? [] })
@@ -84,12 +91,22 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
                 {members.map(m => <option key={m.user_id} value={m.user_id}>{m.name} ({m.role})</option>)}
               </select>
             </label>
-            <label style={{ fontSize: '12px' }}>Supervisor (opcional)
-              <select style={field} value={supervisorId} onChange={e => setSupervisorId(e.target.value)}>
-                <option value="">Sin asignar</option>
-                {members.map(m => <option key={m.user_id} value={m.user_id}>{m.name} ({m.role})</option>)}
-              </select>
-            </label>
+            {needs('supervisor') && (
+              <label style={{ fontSize: '12px' }}>Supervisor *
+                <select required style={field} value={supervisorId} onChange={e => setSupervisorId(e.target.value)}>
+                  <option value="">Seleccionar…</option>
+                  {members.filter(m => m.user_id !== inspectorId).map(m => <option key={m.user_id} value={m.user_id}>{m.name} ({m.role})</option>)}
+                </select>
+              </label>
+            )}
+            {needs('client') && (
+              <label style={{ fontSize: '12px' }}>Cliente *
+                <select required style={field} value={clientId} onChange={e => setClientId(e.target.value)}>
+                  <option value="">Seleccionar…</option>
+                  {members.filter(m => m.user_id !== inspectorId && m.user_id !== supervisorId).map(m => <option key={m.user_id} value={m.user_id}>{m.name} ({m.role})</option>)}
+                </select>
+              </label>
+            )}
             {error && <p role="alert" style={{ color: '#b91c1c', fontSize: '12px', margin: 0 }}>{error}</p>}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button type="submit" disabled={pending} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{pending ? 'Generando…' : `Generar ${items.length} ITR`}</button>

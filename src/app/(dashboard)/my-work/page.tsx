@@ -65,7 +65,7 @@ export default async function MyWorkPage() {
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
     supabase
       .from('itr_assignments')
-      .select('role, itrs(id, itr_number, status, progress_pct, scheduled_date, completed_date, project_id, tags(id, tag_number, description), projects(code), project_phases(code, color), itr_signatures(role))')
+      .select('role, itrs(id, itr_number, status, progress_pct, scheduled_date, completed_date, project_id, required_signatures, tags(id, tag_number, description), projects(code), project_phases(code, color), itr_signatures(role, user_id))')
       .eq('user_id', userId),
     projectIds.length === 0 ? none : supabase
       .from('punches')
@@ -205,7 +205,7 @@ export default async function MyWorkPage() {
   ])
 
   const counts = parseCounts(countsRaw)
-  const queues = splitAssignments((assignments ?? []) as unknown as AssignmentRow[], projectSet)
+  const queues = splitAssignments((assignments ?? []) as unknown as AssignmentRow[], projectSet, userId)
   const myPunches = sortPunches((punches ?? []) as unknown as PunchRow[])
   const plan = (planItems ?? []) as unknown as PlanItemRow[]
   const pendingCerts = ((certs ?? []) as unknown as CertRow[]).filter(c => !c.certificate_signatures.some(s => s.role === 'completion'))

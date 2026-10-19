@@ -34,8 +34,15 @@ AS $function$
         and not exists (
           select 1 from itr_signatures s where s.itr_id = i.id and s.role = a.role
         )
-        and exists (select 1 from itr_signatures s where s.itr_id = i.id and s.role = 'executor')
-        and (a.role = 'supervisor' or exists (select 1 from itr_signatures s where s.itr_id = i.id and s.role = 'supervisor'))
+        -- S04 (C-17, D4/D6): solo un rol que el ITR exige, con las firmas requeridas anteriores ya puestas,
+        -- y si no firmé ya otro rol del mismo ITR. Espejo de isMyTurnToSign (src/lib/my-work/queues.ts).
+        and a.role::text = any (i.required_signatures)
+        and not exists (
+          select 1 from unnest(i.required_signatures) r
+          where array_position(array['executor', 'supervisor', 'client'], r) < array_position(array['executor', 'supervisor', 'client'], a.role::text)
+            and not exists (select 1 from itr_signatures s where s.itr_id = i.id and s.role::text = r)
+        )
+        and not exists (select 1 from itr_signatures s where s.itr_id = i.id and s.user_id = auth.uid())
     ),
     'punches', (
       select count(*)

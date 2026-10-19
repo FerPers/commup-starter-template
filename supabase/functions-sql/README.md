@@ -12,6 +12,9 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 | `daily_report_data` / `take_mgmt_snapshot` | Reporte diario y KPIs de gestión |
 | `sign_itr_atomic` / `evaluate_itr_capture` | Firma de ITR y evaluación de su contenido |
 | `seed_default_gate_for_phase` | Gate sembrado al crear una fase |
+| `guard_itr_row` / `guard_itr_content` / `itr_signing_roles` | Integridad del ITR: firmas requeridas congeladas, asignaciones por rol sin firmar, una persona por rol (S04) |
+| `reopen_itr_atomic` | Reapertura auditada de un ITR firmado |
+| `guard_assigned_itr_template` / `create_itr_template_revision` / `clone_itr_template_from_catalog` | Plantillas: inmutables con ITR, revisiones y clones del catálogo |
 | `transition_procedure_revision` | Flujo de revisiones de procedimientos |
 | `add_mgmt_attachment` / `update_punch_ops_status` | Evidencias de gestión y estado operativo del punch |
 

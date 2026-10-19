@@ -9,6 +9,7 @@ import type { Item, Signature, SigningRole } from './types'
 export default function SignModal({
   itrNumber,
   itrSignatures,
+  requiredRoles,
   allowedRoles,
   ready,
   criticalBlocked,
@@ -19,6 +20,8 @@ export default function SignModal({
 }: {
   itrNumber: string
   itrSignatures: Signature[]
+  /** S04: solo los roles que exige este ITR. */
+  requiredRoles: SigningRole[]
   allowedRoles: SigningRole[]
   ready: boolean
   criticalBlocked: Item[]
@@ -106,7 +109,7 @@ export default function SignModal({
         <div style={{ marginBottom: '18px' }}>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('signModal.signAs')}</label>
           <div style={{ display: 'flex', gap: '8px' }}>
-            {(['executor', 'supervisor', 'client'] as const).map(role => {
+            {requiredRoles.map(role => {
               const alreadySigned = itrSignatures.some(s => s.role === role)
               return (
                 <button

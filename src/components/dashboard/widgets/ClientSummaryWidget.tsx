@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { isMyTurnToSign } from '@/lib/my-work/queues'
 import { SummaryPill } from './_shared'
 
 export default async function ClientSummaryWidget({ userId, orgId }: { userId: string; orgId: string }) {
@@ -14,14 +15,15 @@ export default async function ClientSummaryWidget({ userId, orgId }: { userId: s
       .eq('status', 'active'),
     supabase
       .from('itr_assignments')
-      .select(`itrs(id, status, itr_signatures(role))`)
+      .select(`itrs(id, status, required_signatures, itr_signatures(role, user_id))`)
       .eq('user_id', userId)
       .eq('role', 'client'),
   ])
 
   const pendingSignature = (clientAssignments ?? []).filter(a => {
     const itr = a.itrs
-    return itr && itr.status === 'completed' && !itr.itr_signatures.some(s => s.role === 'client')
+    // S04: le toca al cliente cuando el ITR lo exige y están las firmas requeridas anteriores (misma regla que Mi trabajo).
+    return !!itr && isMyTurnToSign('client', itr.status, itr.itr_signatures.map(s => s.role), itr.required_signatures, itr.itr_signatures.some(s => s.user_id === userId))
   }).length
 
   return (

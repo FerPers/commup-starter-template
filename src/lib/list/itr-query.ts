@@ -75,13 +75,15 @@ export async function fetchItrPage(
     .range(from, to)
   if (error) throw new Error(error.message)
 
-  const rows = (data ?? []) as unknown as Array<Omit<ItrListRow, 'assignments' | 'signatures'>>
+  const rows = (data ?? []) as unknown as Array<Omit<ItrListRow, 'assignments' | 'signatures' | 'required_signatures'>>
   const ids = rows.map(r => r.id)
-  const [assignRes, sigRes] = ids.length === 0
-    ? [{ data: [] }, { data: [] }]
+  const [assignRes, sigRes, reqRes] = ids.length === 0
+    ? [{ data: [] }, { data: [] }, { data: [] }]
     : await Promise.all([
         supabase.from('itr_assignments').select('itr_id, user_id, role, profiles(full_name)').in('itr_id', ids),
         supabase.from('itr_signatures').select('itr_id, role, signed_at').in('itr_id', ids),
+        // S04: firmas que exige cada ITR (la vista itr_list_v no las trae).
+        supabase.from('itrs').select('id, required_signatures').in('id', ids),
       ])
 
   const assignments = new Map<string, ItrListRow['assignments']>()
@@ -97,12 +99,15 @@ export async function fetchItrPage(
     signatures.set(s.itr_id, list)
   }
 
+  const required = new Map(((reqRes.data ?? []) as Array<{ id: string; required_signatures: string[] }>).map(r => [r.id, r.required_signatures]))
+
   return {
     rows: rows.map(r => ({
       ...r,
       progress_pct: Number(r.progress_pct ?? 0),
       assignments: assignments.get(r.id) ?? [],
       signatures: signatures.get(r.id) ?? [],
+      required_signatures: required.get(r.id) ?? ['executor', 'supervisor'],
     })),
     total: count ?? 0,
   }

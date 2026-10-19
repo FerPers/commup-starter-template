@@ -10,6 +10,7 @@ import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
 import { checkTableConfig, type TableConfig } from '@/lib/itr/table'
 import { conditionRemaps, itemInsertRow, localState, orderedSections, templateContentHash, type CloneSectionSource, type LocalState } from '@/lib/itr/clone'
 import { detectItrPhase } from '@/lib/utils'
+import { normalizeRequired } from '@/lib/itr/signatures'
 import type { Enums } from '@/types/supabase.generated'
 
 const TIPO_ESPECIAL = 'Especial / Matriz'
@@ -51,11 +52,13 @@ export const updateTemplateHeader = withAuthOnly(
   async (
     ctx,
     templateId: string,
-    data: { code?: string; title?: string; description?: string | null; is_active?: boolean },
+    data: { code?: string; title?: string; description?: string | null; is_active?: boolean; required_signatures?: string[] },
   ): Promise<{ error?: string }> => {
+    // S04 (D4): el ejecutor siempre; se guarda en orden. Cambiarlo en una plantilla ya usada solo afecta a los ITR nuevos.
+    const patch = 'required_signatures' in data ? { ...data, required_signatures: normalizeRequired(data.required_signatures) } : data
     const { error } = await ctx.supabase
       .from('itr_templates')
-      .update(data)
+      .update(patch)
       .eq('id', templateId)
       .eq('org_id', ctx.orgId)
 

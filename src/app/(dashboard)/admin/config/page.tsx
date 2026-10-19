@@ -20,7 +20,7 @@ export default async function AdminConfigPage() {
       .single(),
     supabase
       .from('project_phases')
-      .select('id, code, name, color, order_index, certificate_name')
+      .select('id, code, name, color, order_index, certificate_name, itr_client_signature')
       .eq('org_id', orgId)
       .order('order_index'),
     supabase

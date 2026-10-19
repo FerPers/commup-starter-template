@@ -12,7 +12,7 @@ import { DEFAULT_ITR_GLOSSARY } from '@/lib/constants/itr-glossary'
 import { EQUIPMENT_CATEGORIES } from '@/lib/equipment-types'
 
 type Org = { id: string; name: string; logo_url: string | null }
-type Phase = { id: string; code: string; name: string; color: string; order_index: number; certificate_name: string | null }
+type Phase = { id: string; code: string; name: string; color: string; order_index: number; certificate_name: string | null; itr_client_signature: boolean }
 type Discipline = { id: string; code: string; name: string; color: string }
 type EquipmentType = { id: string; code: string; name: string; category: string | null }
 type Project = { id: string; name: string }
@@ -53,7 +53,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
 
 function PhaseRow({ phase, onSave, onDelete, isPending }: {
   phase: Phase
-  onSave: (data: { code: string; name: string; color: string; certificateName: string }) => void
+  onSave: (data: { code: string; name: string; color: string; certificateName: string; itrClientSignature: boolean }) => void
   onDelete: () => void
   isPending: boolean
 }) {
@@ -63,6 +63,7 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
   const [name, setName] = useState(phase.name)
   const [color, setColor] = useState(phase.color)
   const [certName, setCertName] = useState(phase.certificate_name ?? '')
+  const [clientSigns, setClientSigns] = useState(phase.itr_client_signature)
 
   if (!editing) {
     return (
@@ -71,6 +72,7 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
         <span style={{ fontSize: '13px', fontWeight: 700, color: phase.color, minWidth: '32px' }}>{phase.code}</span>
         <span style={{ fontSize: '14px', color: 'var(--text-strong)', flex: 1 }}>{phase.name}</span>
         <span style={{ fontSize: '12px', color: '#94a3b8' }}>{phase.certificate_name ?? '—'}</span>
+        {phase.itr_client_signature && <span title={t('phases.clientSignsHint')} style={{ fontSize: '11px', fontWeight: 600, color: '#7c3aed', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '999px', padding: '1px 8px' }}>{t('phases.clientSignsChip')}</span>}
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={() => setEditing(true)} disabled={isPending} style={btnOutline}>{t('phases.edit')}</button>
           <button onClick={onDelete} disabled={isPending} style={btnDanger}>{t('phases.delete')}</button>
@@ -90,9 +92,15 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
           style={{ ...inputStyle, flex: '1 1 180px' }} />
       </div>
       <ColorPicker value={color} onChange={setColor} />
+      {/* S04 (D4): los ITR de esta fase exigen además la firma del cliente (se congela al crear cada ITR). */}
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', fontSize: '13px', color: 'var(--gray-700)', cursor: 'pointer' }}>
+        <input type="checkbox" checked={clientSigns} onChange={e => setClientSigns(e.target.checked)} style={{ accentColor: '#7c3aed' }} />
+        {t('phases.clientSigns')}
+      </label>
+      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 22px' }}>{t('phases.clientSignsHint')}</p>
       <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
         <button
-          onClick={() => { onSave({ code, name, color, certificateName: certName }); setEditing(false) }}
+          onClick={() => { onSave({ code, name, color, certificateName: certName, itrClientSignature: clientSigns }); setEditing(false) }}
           disabled={isPending || !code.trim() || !name.trim()}
           style={btnPrimary}
         >
