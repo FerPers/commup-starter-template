@@ -66,13 +66,13 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 **Estado S01 (2026-10-19):**
 - G-01 ✅ (S1-v1: deploy con `needs`; `deploy.yml` ya no existe). Faltan D1 (desconectar Workers Builds) y D3 (protección de `main`), que hace Luis.
 - G-16 ✅ código: el deploy valida las `NEXT_PUBLIC_*` (`scripts/ci/check-public-env.mjs`) y pasa VAPID/SITE_URL/beacon (por `vars` con respaldo). Se cierra del todo con D1.
-- G-25 ✅ `scripts/ci/worker-size.mjs` en el deploy (2.83 MB gzip hoy; aviso 5, falla 6).
+- G-25 ✅ `scripts/ci/worker-size.mjs` en el deploy (3.90 MB gzip en el primer deploy por CI, 1532c46; aviso 5, falla 6).
 - G-24 ✅ SDK de Anthropic a `dependencies`; fuera `class-variance-authority`, `date-fns`, `@eslint/eslintrc`; `next` y `next-intl` fijados; test de paridad de `pdf.worker.min.mjs`. `html5-qrcode` sigue (reemplazo → Q).
 - G-26 ◐ CLAUDE.md actualizado. Idioma del perfil **aplazado**: `profiles.locale` tiene default `'es'` y no distingue «eligió» de «nunca eligió»; usarlo forzaría español a quien navega en inglés. Requiere default NULL → S15.
 - D-37 ✅ verificado: los 13 archivos de `tests/db` corren en CI (run 39280520991: 64/64 sin omitir).
 - E-35 ✅ el seed de arranque borra solo su lote (`source_system`); simulador 1 Hz por la API real en `scripts/demo-data/simulate-signals.mjs` (falta una API key DEMO para correrlo).
 - A-17 ✅ esqueleto `tests/db/authz-matrix.test.ts`: 13 casos × 6 roles + outsider, sondas que nunca escriben (D2 = prod). Huecos abiertos con `it.fails` (A-02 → S02, A-04 → S16, A-05 → S17, A-06 → S06); A-01 ya estaba cerrado por el hotfix 7eb0a7c y la suite lo confirma (nadie inserta en `api_keys` directo). Hoy corren solo admin (TEST_USER_A) y outsider (TEST_USER_B); las demás columnas esperan usuarios `TEST_ROLE_<ROL>_*`.
-- A-14 ◐ migración `20261026120000_privileges_storage_snapshot.sql` (9 buckets, 4 políticas no versionadas, EXECUTE de 260 funciones, desviaciones de tablas) + generador `scripts/db/dump-privileges.sql`. **Pendiente:** prueba con ROLLBACK y aplicar en prod (autorización de Luis).
+- A-14 ✅ migración `20261026120000_privileges_storage_snapshot.sql` (9 buckets, 4 políticas no versionadas, EXECUTE de 260 funciones, desviaciones de tablas) + generador `scripts/db/dump-privileges.sql`. ✅ Probada con ROLLBACK y **aplicada en prod** 2026-10-19 (autorizada por Luis): privilegios, buckets y políticas idénticos antes y después.
 - **Hallazgo nuevo (S01-N1):** el bucket `org-assets` que usa `uploadOrgLogo` no existe en prod → subir el logo de la org falla. Va a S02.
 
 ## S02 — Seguridad rápida
