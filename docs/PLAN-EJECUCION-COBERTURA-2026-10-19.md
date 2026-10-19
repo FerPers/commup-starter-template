@@ -1,4 +1,4 @@
-# Cobertura del plan de ejecución v2 — 2026-10-19
+# Cobertura del plan de ejecución definitivo — 2026-10-19
 
 Cada uno de los 293 hallazgos de la revisión integral (anexos A–I) tiene una sesión asignada en `docs/PLAN-EJECUCION-REVISION-2026-10-19.md`. Se generó cruzando los encabezados de los anexos; la columna «Anexo» lleva al detalle (ubicación, evidencia, recomendación).
 
