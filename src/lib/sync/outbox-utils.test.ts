@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { TABLE_PRESETS, reshapeTable, type SourceRow } from '../itr/table'
 import { isNetworkFailure, localAttachmentId, localItrStatus, outboxPolicy, parseLocalAttachmentId, storagePathFor } from './outbox-utils'
 
 describe('local attachment ids', () => {
@@ -73,5 +74,18 @@ describe('localItrStatus (validación de contenido)', () => {
     const responses = Object.fromEntries(many.slice(0, 199).map(item => [item.id, { value_text: 'dato' }]))
     expect(localItrStatus(many, responses).pct).toBeLessThan(100)
     expect(localItrStatus(many, responses).status).toBe('in_progress')
+  })
+  it('loop check (tabla con filas de origen) se completa con la foto del ITR (C-02)', () => {
+    const config = structuredClone(TABLE_PRESETS.find(p => p.id === 'loop_check')!.config)
+    const rows: SourceRow[] = [
+      { key: 's1', label: 'FT-101 AI', refs: { signal_type: 'AI' } },
+      { key: 's2', label: 'FT-101 DO', refs: { signal_type: 'DO' } },
+    ]
+    const base = reshapeTable(config, null, rows.length, rows)
+    const value = JSON.stringify({ ...base, rows: base.rows.map(row => ({ ...row, cells: { ...row.cells, wiring: 'pass', hmi_ok: 'pass', result: 'pass' } })) })
+    const table = [{ ...items[0], id: 't', item_type: 'table' as const, is_critical: false, options: config }]
+    expect(localItrStatus(table, { t: { value_text: value } }, [], rows)).toEqual({ pct: 100, status: 'completed' })
+    // Sin la foto no hay forma de validar las filas: así quedaba bloqueada la firma.
+    expect(localItrStatus(table, { t: { value_text: value } }).status).not.toBe('completed')
   })
 })

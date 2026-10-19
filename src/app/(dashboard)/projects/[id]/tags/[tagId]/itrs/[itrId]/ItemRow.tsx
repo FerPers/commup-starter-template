@@ -9,6 +9,7 @@ import { evaluateTable, type SourceRow } from '@/lib/itr/table'
 import { evaluateContinuity } from '@/lib/itr/continuity'
 import MicAppend from './MicAppend'
 import PhotoUpload from './PhotoUpload'
+import { itemDescription } from '@/lib/itr/item-text'
 import { computeIsPassed, type Attachment, type Item, type Response, type SaveData } from './types'
 
 export default function ItemRow({
@@ -17,6 +18,7 @@ export default function ItemRow({
   canEdit,
   onSave,
   onAddPunch,
+  canPunch = true,
   itrId,
   projectId,
   tagId,
@@ -31,6 +33,8 @@ export default function ItemRow({
   canEdit: boolean
   onSave: (itemId: string, data: SaveData) => void
   onAddPunch: (itemDesc: string, itemId: string) => void
+  /** C-03: el cliente no levanta punch. */
+  canPunch?: boolean
   itrId: string
   projectId: string
   tagId: string
@@ -48,9 +52,7 @@ export default function ItemRow({
 
   // `description` is the primary text (typically EN). `description_es` is the
   // Spanish translation. Pick the chosen lang; if empty, fall back to primary.
-  const visibleDesc = lang === 'es'
-    ? (item.description_es?.trim() ?? item.description)
-    : item.description
+  const visibleDesc = itemDescription(item, lang)
 
   return (
     <div style={{ background: 'var(--card-bg)', border: `1px solid ${isPassed === false ? '#fecaca' : 'var(--border)'}`, borderRadius: '10px', padding: '14px 16px' }}>
@@ -73,13 +75,13 @@ export default function ItemRow({
         </div>
 
         {/* Add punch button */}
-        <button
+        {canPunch && <button
           onClick={() => onAddPunch(visibleDesc, item.id)}
           title={t('item.punchTooltip')}
           style={{ flexShrink: 0, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, color: '#c2410c', background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer', marginTop: '2px' }}
         >
           ⚑
-        </button>
+        </button>}
 
         {/* Inline input for checkbox / yes_no */}
         {item.item_type === 'checkbox' && (

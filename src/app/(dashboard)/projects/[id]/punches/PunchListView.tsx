@@ -18,6 +18,8 @@ import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import { searchProjectTags, type TagSearchHit } from '@/app/actions/tag-search'
 import type { PunchSummary } from '@/lib/list/punch-query'
+import { canRaisePunch } from '@/lib/constants/punch-roles'
+import PunchPhotosSection from '../tags/[tagId]/PunchPhotosSection'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
@@ -159,7 +161,7 @@ export default function PunchListView({
   }
 
   const canDelete = EDITOR_ROLES.includes(currentUserRole)
-  const canCreate = EDITOR_ROLES.includes(currentUserRole)
+  const canCreate = canRaisePunch(currentUserRole)
 
   function handleBulkDelete() {
     if (!selected.size) return
@@ -588,6 +590,9 @@ function PunchDetailModal({
           {punch.closed_date && <span><strong>{t('detail.closedDate')}</strong> {punch.closed_date}</span>}
         </div>
 
+        {/* Fotos (C-03: también desde la lista, no solo desde la ficha del tag) */}
+        <PunchPhotosSection punchId={punch.id} projectId={projectId} tagId={punch.tags?.id ?? null} canUpload={canRaisePunch(role)} />
+
         {/* Resolver → verificar en campo (fase 4) */}
         {!isClosed && (
           <PunchVerification punch={punch} projectId={projectId} tagId={punch.tags?.id ?? null} userId={userId} role={role} onUpdated={onUpdated} />
@@ -650,7 +655,7 @@ function PunchDetailModal({
         )}
 
         {/* Comment */}
-        {!isClosed && (
+        {!isClosed && canRaisePunch(role) && (
           <div>
             <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
               {t('detail.labelComment')}

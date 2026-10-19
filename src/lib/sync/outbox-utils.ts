@@ -1,4 +1,5 @@
 import { evaluateItrCompletion, type CompletionItem, type CompletionResponse, type CompletionAttachment } from '../itr/completion'
+import type { SourceRow } from '../itr/table'
 
 /**
  * Utilidades puras de la bandeja de salida (Sprint O). Sin imports de Next ni
@@ -54,17 +55,22 @@ export function outboxPolicy(kind: OutboxKind, attemptsSoFar: number): 'retry' |
 
 export type LocalItrStatus = 'not_started' | 'in_progress' | 'completed' | 'rejected'
 
-/** Shared capture validation; technical acceptance remains a separate gate. */
+/**
+ * Shared capture validation; technical acceptance remains a separate gate.
+ * `sourceRows` = foto de filas del ITR (itrs.source_rows): sin ella una tabla `mode:'source'`
+ * (loop check, prueba C&E) nunca queda completa y el botón Firmar no se habilita (C-02).
+ */
 export function localItrStatus(
   items: ReadonlyArray<CompletionItem & { is_critical: boolean }>,
   responses: Readonly<Record<string, Partial<CompletionResponse> & { is_passed?: boolean | null } | undefined>>,
   attachments: readonly CompletionAttachment[] = [],
+  sourceRows: SourceRow[] | null = null,
 ): { pct: number; status: LocalItrStatus } {
   const answers = Object.entries(responses).flatMap(([item_id, response]) => response ? [{
     item_id, value_text: response.value_text ?? null, value_numeric: response.value_numeric ?? null,
     value_bool: response.value_bool ?? null, value_option: response.value_option ?? null, remarks: response.remarks ?? null,
   }] : [])
-  const result = evaluateItrCompletion(items, answers, attachments)
+  const result = evaluateItrCompletion(items, answers, attachments, sourceRows)
   const applicable = new Set(result.applicableItemIds)
   const rejected = result.rejectedItemIds.length > 0 || items.some(item => applicable.has(item.id) && item.is_critical && responses[item.id]?.is_passed === false)
   const status: LocalItrStatus = rejected ? 'rejected' : result.isComplete ? 'completed' : result.completedCount > 0 ? 'in_progress' : 'not_started'

@@ -117,9 +117,26 @@ export type AssignmentRow = {
 
 export type ItrQueues<T extends AssignmentRow = AssignmentRow> = { execute: T[]; review: T[] }
 
+/** Orden de firma del ITR (igual que sign_itr_atomic: cada rol exige las firmas anteriores). */
+export const ITR_SIGNING_ORDER = ['executor', 'supervisor', 'client'] as const
+
 /**
- * Separa mis asignaciones en «por ejecutar» (ejecutor, no aprobado) y «por revisar»
- * (supervisor/cliente, ITR completado sin mi firma). Deduplica por ITR dentro de cada cola.
+ * ¿Es mi turno de firmar con este rol? Colas por «siguiente firma pendiente» (C-17, revisión
+ * 2026-10-19): el ejecutor mientras no firme (aunque el contenido ya esté completo, o el ITR esté
+ * rechazado por una falla crítica que debe corregir); el supervisor cuando firmó el ejecutor; el
+ * cliente cuando firmaron ejecutor y supervisor. Mismo criterio que my_work_counts en SQL.
+ */
+export function isMyTurnToSign(role: AssignmentRow['role'], status: string, signedRoles: ReadonlyArray<string>): boolean {
+  if (status === 'approved' || signedRoles.includes(role)) return false
+  if (role === 'executor') return true
+  if (status !== 'completed') return false
+  const previous = ITR_SIGNING_ORDER.slice(0, ITR_SIGNING_ORDER.indexOf(role))
+  return previous.every(r => signedRoles.includes(r))
+}
+
+/**
+ * Separa mis asignaciones en «por ejecutar» (ejecutor sin su firma) y «por revisar» (supervisor o
+ * cliente a quien le toca firmar, ver isMyTurnToSign). Deduplica por ITR dentro de cada cola.
  */
 export function splitAssignments<T extends AssignmentRow>(rows: T[], projectIds: ReadonlySet<string>): ItrQueues<T> {
   const execute: T[] = []
@@ -129,18 +146,11 @@ export function splitAssignments<T extends AssignmentRow>(rows: T[], projectIds:
   for (const row of rows) {
     const itr = row.itrs
     if (!itr || !projectIds.has(itr.project_id)) continue
-    if (row.role === 'executor') {
-      if (itr.status !== 'not_started' && itr.status !== 'in_progress') continue
-      if (seenExec.has(itr.id)) continue
-      seenExec.add(itr.id)
-      execute.push(row)
-    } else {
-      if (itr.status !== 'completed') continue
-      if (itr.itr_signatures.some(s => s.role === row.role)) continue
-      if (seenRev.has(itr.id)) continue
-      seenRev.add(itr.id)
-      review.push(row)
-    }
+    if (!isMyTurnToSign(row.role, itr.status, itr.itr_signatures.map(s => s.role))) continue
+    const [queue, seen] = row.role === 'executor' ? [execute, seenExec] : [review, seenRev]
+    if (seen.has(itr.id)) continue
+    seen.add(itr.id)
+    queue.push(row)
   }
   const byDate = (get: (r: T) => string | null | undefined) => (a: T, b: T) =>
     (get(a) ?? '9999-12-31').localeCompare(get(b) ?? '9999-12-31') || (a.itrs!.itr_number).localeCompare(b.itrs!.itr_number)

@@ -2314,6 +2314,8 @@
       "inProgress": "in progress {pct}%",
       "readyToApprove": "ready to approve",
       "sign": "sign",
+      "signPending": "your signature pending",
+      "rejected": "rejected · fix",
       "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}",
       "verify": "Verify",
       "escalate": "{days, plural, one {overdue # day} other {overdue # days}} · escalate",

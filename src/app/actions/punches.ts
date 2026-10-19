@@ -1,6 +1,7 @@
 'use server'
 
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
+import { PUNCH_RAISE_ROLES } from '@/lib/constants/punch-roles'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -12,7 +13,7 @@ import { PUNCH_IMPACTS, STARTUP_DISPOSITIONS, type PunchImpact, type StartupDisp
 
 export const createPunch = withAuth(
   {
-    role: EDITOR_ROLES,
+    role: PUNCH_RAISE_ROLES,
     guards: [
       { resource: 'project', field: 'projectId' },
       { resource: 'tag', field: 'tagId', scopeField: 'projectId', optional: true },
@@ -321,7 +322,7 @@ export const updatePunchClassification = withAuth(
 
 export const addPunchComment = withAuth(
   {
-    role: EDITOR_ROLES,
+    role: PUNCH_RAISE_ROLES,
     guards: [{ resource: 'project', field: 'projectId' }],
   },
   async (
@@ -436,7 +437,7 @@ export const listPunchAttachments = withAuth(
 
 export const addPunchAttachment = withAuth(
   {
-    role: EDITOR_ROLES,
+    role: PUNCH_RAISE_ROLES,
     guards: [{ resource: 'project', field: 'projectId' }],
   },
   async (
@@ -471,7 +472,7 @@ export const addPunchAttachment = withAuth(
 
 export const deletePunchAttachment = withAuth(
   {
-    role: EDITOR_ROLES,
+    role: PUNCH_RAISE_ROLES, // la RLS limita a la propia foto salvo editores (migración 20261025120000)
     guards: [{ resource: 'project', field: 'projectId' }],
   },
   async (

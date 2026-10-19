@@ -322,8 +322,9 @@ export default async function MyWorkPage() {
                 phase={itr.project_phases}
                 what={itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : itr.itr_number}
                 project={itr.projects?.code}
-                right={itr.status === 'in_progress'
-                  ? <Pill tone="info">{t('due.inProgress', { pct: Math.round(itr.progress_pct) })}</Pill>
+                right={itr.status === 'completed' ? <Pill tone="success">{t('due.signPending')}</Pill>
+                  : itr.status === 'rejected' ? <Pill tone="danger">{t('due.rejected')}</Pill>
+                  : itr.status === 'in_progress' ? <Pill tone="info">{t('due.inProgress', { pct: Math.round(itr.progress_pct) })}</Pill>
                   : duePill(itr.scheduled_date)}
               />
             )

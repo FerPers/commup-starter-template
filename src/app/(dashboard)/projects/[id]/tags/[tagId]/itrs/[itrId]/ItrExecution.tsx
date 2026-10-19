@@ -14,6 +14,7 @@ import { uploadOrQueuePhoto, pendingAttachment, pendingSignature, signOrQueue } 
 import { evaluateItrCompletion } from '@/lib/itr/completion'
 import { parseSourceRows } from '@/lib/itr/table'
 import { localItrStatus } from '@/lib/sync/outbox-utils'
+import { itemDescription } from '@/lib/itr/item-text'
 import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
 import { useItrAutosave } from './useItrAutosave'
 import ItemRow from './ItemRow'
@@ -212,7 +213,7 @@ export default function ItrExecution({
   const memberIds = useMemo(() => new Set(memberIdList), [memberIdList])
   // Sprint O: estado calculado en local (espejo del servidor) para poder firmar sin red
   // antes de que las respuestas encoladas lleguen al servidor.
-  const localEvaluation = localItrStatus(allItems, responses, [...Object.values(serverAttachments).flat(), ...pendingPhotos])
+  const localEvaluation = localItrStatus(allItems, responses, [...Object.values(serverAttachments).flat(), ...pendingPhotos], sourceRows)
   const localStatus = localEvaluation.status
   const effectiveProgress = itr.status === 'approved' ? itr.progress_pct : localEvaluation.pct
   const effectiveStatus = itr.status === 'approved' ? 'approved' : localStatus
@@ -274,9 +275,10 @@ export default function ItrExecution({
       </div>
 
       {/* Header card */}
-      <div style={{ margin: '16px 20px 0', background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', padding: '20px 22px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
-          <div>
+      <div style={{ margin: '12px 16px 0', background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', padding: '16px 18px' }}>
+        {/* flexWrap: en el teléfono idioma y estado bajan a su propia línea en vez de apretar el título (S1). */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px 12px', marginBottom: '14px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 240px', minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
               {phase && (
                 <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: `${phase.color}18`, color: phase.color }}>
@@ -453,7 +455,7 @@ export default function ItrExecution({
               {t('criticalBlocked', { count: criticalBlocked.length })}
             </p>
             {criticalBlocked.map(item => {
-              const desc = itemLang === 'es' ? (item.description_es?.trim() ?? item.description) : item.description
+              const desc = itemDescription(item, itemLang)
               return (
                 <p key={item.id} style={{ fontSize: '11px', color: '#7f1d1d', margin: '2px 0' }}>
                   • {item.item_number ? `${item.item_number} ` : ''}{desc}
@@ -463,24 +465,6 @@ export default function ItrExecution({
           </div>
         )}
       </div>
-
-      {/* ── Documentos referenciados (fase 8) ────────────────────────── */}
-      {documentsSlot && <div style={{ padding: '0 32px 16px' }}>{documentsSlot}</div>}
-
-      {/* ── Equipos de prueba (fase 4-B) ─────────────────────────────── */}
-      {testEquipment && (
-        <div style={{ padding: '0 32px' }}>
-          <TestEquipmentSection
-            itrId={itr.id}
-            projectId={projectId}
-            requires={testEquipment.requires}
-            used={testEquipment.used}
-            options={testEquipment.options}
-            editable={canCapture && currentUserRole !== 'client'}
-            canManageInventory={['owner', 'admin', 'architect', 'leader'].includes(currentUserRole)}
-          />
-        </div>
-      )}
 
       {/* ── Sections + Items ─────────────────────────────────────────── */}
       <div style={{ padding: '0 20px' }}>
@@ -502,6 +486,7 @@ export default function ItrExecution({
                   onSave={saveResponse}
                   sourceRows={sourceRows}
                   onAddPunch={openPunchModal}
+                  canPunch={canEdit}
                   itrId={itr.id}
                   projectId={projectId}
                   tagId={tagId}
@@ -515,6 +500,24 @@ export default function ItrExecution({
           </div>
         ))}
       </div>
+
+      {/* ── Equipos de prueba (fase 4-B) — debajo de los ítems, junto a la firma que habilitan (S1) */}
+      {testEquipment && (
+        <div style={{ padding: '20px 20px 0' }}>
+          <TestEquipmentSection
+            itrId={itr.id}
+            projectId={projectId}
+            requires={testEquipment.requires}
+            used={testEquipment.used}
+            options={testEquipment.options}
+            editable={canCapture && currentUserRole !== 'client'}
+            canManageInventory={['owner', 'admin', 'architect', 'leader'].includes(currentUserRole)}
+          />
+        </div>
+      )}
+
+      {/* ── Documentos referenciados (fase 8) — debajo de los ítems: en el teléfono no empujan el checklist (S1) */}
+      {documentsSlot && <div style={{ padding: '20px 20px 0' }}>{documentsSlot}</div>}
 
       {/* ── Sticky footer ──────────────────────────────────────────── */}
       {/* Hidden file input for general (non-item) photos */}
@@ -557,12 +560,12 @@ export default function ItrExecution({
             : t('footer.autoSave')}
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button
+          {canEdit && <button
             onClick={() => openPunchModal('')}
             style={{ padding: '9px 16px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', fontSize: '13px', color: '#c2410c', cursor: 'pointer', fontWeight: 600 }}
           >
             {t('footer.btnPunch')}
-          </button>
+          </button>}
           <button
             onClick={() => generalPhotoInputRef.current?.click()}
             disabled={!canCapture || generalUploading}

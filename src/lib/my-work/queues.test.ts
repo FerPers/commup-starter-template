@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   badgeTotal, canSignCertificates, daysOverdue, dueState, parseCounts, seesPreservation,
-  sortPunches, splitAssignments, EMPTY_COUNTS, type AssignmentRow,
+  isMyTurnToSign, sortPunches, splitAssignments, EMPTY_COUNTS, type AssignmentRow,
 } from './queues'
 import { homeForRole } from '@/lib/constants/navigation'
 
@@ -93,30 +93,45 @@ describe('dueState / daysOverdue', () => {
 })
 
 describe('splitAssignments', () => {
-  it('ejecutor: solo not_started/in_progress, ordenado por fecha programada (sin fecha al final) y deduplicado', () => {
+  it('ejecutor: hasta que firma (incluye completado sin su firma y rechazado), por fecha programada y deduplicado', () => {
     const rows = [
       asg({ id: 'a', scheduled_date: '2026-09-10' }),
       asg({ id: 'b', scheduled_date: '2026-09-02', status: 'in_progress' }),
       asg({ id: 'c', status: 'approved' }),
       asg({ id: 'd' }),
       asg({ id: 'b', scheduled_date: '2026-09-02', status: 'in_progress' }),
+      asg({ id: 'e', scheduled_date: '2026-09-05', status: 'completed' }),
+      asg({ id: 'f', scheduled_date: '2026-09-06', status: 'rejected' }),
+      asg({ id: 'g', status: 'completed', itr_signatures: [{ role: 'executor' }] }),
     ]
     const q = splitAssignments(rows, P)
-    expect(q.execute.map(r => r.itrs!.id)).toEqual(['b', 'a', 'd'])
+    expect(q.execute.map(r => r.itrs!.id)).toEqual(['b', 'e', 'f', 'a', 'd'])
     expect(q.review).toEqual([])
   })
 
-  it('supervisor/cliente: solo completados sin mi firma de ese rol; ordena por completado más antiguo', () => {
+  it('supervisor: solo cuando firmó el ejecutor; cliente: cuando firmaron ejecutor y supervisor', () => {
+    const exec = [{ role: 'executor' }]
     const rows = [
-      asg({ id: 's1', role: 'supervisor', status: 'completed', completed_date: '2026-09-03' }),
-      asg({ id: 's2', role: 'supervisor', status: 'completed', completed_date: '2026-09-01' }),
-      asg({ id: 's3', role: 'supervisor', status: 'completed', itr_signatures: [{ role: 'supervisor' }] }),
-      asg({ id: 's4', role: 'client', status: 'completed', itr_signatures: [{ role: 'executor' }] }),
+      asg({ id: 's1', role: 'supervisor', status: 'completed', completed_date: '2026-09-03', itr_signatures: exec }),
+      asg({ id: 's2', role: 'supervisor', status: 'completed', completed_date: '2026-09-01', itr_signatures: exec }),
+      asg({ id: 's3', role: 'supervisor', status: 'completed', itr_signatures: [...exec, { role: 'supervisor' }] }),
+      asg({ id: 's4', role: 'supervisor', status: 'completed' }), // sin firma del ejecutor: aún no le toca
       asg({ id: 's5', role: 'supervisor', status: 'in_progress' }),
+      asg({ id: 'c1', role: 'client', status: 'completed', itr_signatures: exec }), // falta el supervisor
+      asg({ id: 'c2', role: 'client', status: 'completed', completed_date: '2026-09-02', itr_signatures: [...exec, { role: 'supervisor' }] }),
     ]
     const q = splitAssignments(rows, P)
-    expect(q.review.map(r => r.itrs!.id)).toEqual(['s2', 's1', 's4'])
+    expect(q.review.map(r => r.itrs!.id)).toEqual(['s2', 'c2', 's1'])
     expect(q.execute).toEqual([])
+  })
+
+  it('isMyTurnToSign sigue el orden de sign_itr_atomic', () => {
+    expect(isMyTurnToSign('executor', 'rejected', [])).toBe(true)
+    expect(isMyTurnToSign('executor', 'approved', [])).toBe(false)
+    expect(isMyTurnToSign('supervisor', 'completed', [])).toBe(false)
+    expect(isMyTurnToSign('supervisor', 'completed', ['executor'])).toBe(true)
+    expect(isMyTurnToSign('client', 'completed', ['executor'])).toBe(false)
+    expect(isMyTurnToSign('client', 'completed', ['executor', 'supervisor'])).toBe(true)
   })
 
   it('ignora ITRs de proyectos fuera de la org activa y filas sin ITR', () => {

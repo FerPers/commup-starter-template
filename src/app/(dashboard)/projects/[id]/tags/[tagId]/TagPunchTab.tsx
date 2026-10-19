@@ -10,6 +10,7 @@ import { PunchClassification } from '@/components/punch/PunchClassification'
 import type { PunchImpact } from '@/lib/punches/category-guide'
 import { punchDisplayStatus } from '@/lib/punches/verification'
 import PunchPhotosSection from './PunchPhotosSection'
+import { canRaisePunch } from '@/lib/constants/punch-roles'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
@@ -67,6 +68,7 @@ export default function TagPunchTab({
   const tGuide = useTranslations('PunchGuide')
   const router = useRouter()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const canRaise = canRaisePunch(currentUserRole)
   const [selectedPunch, setSelectedPunch] = useState<TagPunch | null>(null)
   const [filterCat, setFilterCat] = useState<'A' | 'B' | 'C' | ''>('')
 
@@ -80,12 +82,12 @@ export default function TagPunchTab({
         <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚑</div>
         <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--gray-700)', margin: '0 0 6px' }}>{t('punches.emptyTitle')}</p>
         <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: '0 0 20px' }}>{t('punches.emptyMsg')}</p>
-        <button
+        {canRaise && <button
           onClick={() => setShowCreateModal(true)}
           style={{ padding: '9px 18px', background: '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
         >
           {t('punches.newPunch')}
-        </button>
+        </button>}
         {showCreateModal && (
           <CreatePunchModal
             projectId={projectId}
@@ -126,12 +128,12 @@ export default function TagPunchTab({
           )
         })}
         <div style={{ marginLeft: 'auto' }}>
-          <button
+          {canRaise && <button
             onClick={() => setShowCreateModal(true)}
             style={{ padding: '6px 14px', background: '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
           >
             {t('punches.newPunch')}
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -443,6 +445,7 @@ function PunchDetailModal({
           projectId={projectId}
           tagId={tagId}
           onCountChange={setPhotoCount}
+          canUpload={canRaisePunch(role)}
         />
 
         {/* Resolver → verificar en campo (fase 4); resolver sin fotos pide confirmación */}
@@ -510,7 +513,7 @@ function PunchDetailModal({
         )}
 
         {/* Comment */}
-        {!isClosed && (
+        {!isClosed && canRaisePunch(role) && (
           <div>
             <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
               {t('punches.detail.labelComment')}

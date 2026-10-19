@@ -33,7 +33,8 @@ describe.skipIf(!enabled)('reporte diario y relevo — borradores', () => {
     const { data, error } = await a.rpc('daily_report_data', { p_project_id: pid, p_date: date })
     expect(error).toBeNull()
     expect(Object.keys(data as object).sort()).toEqual(
-      ['actions', 'area', 'constraints', 'date', 'gates', 'itrs', 'lookahead_7d', 'progress', 'project', 'punches', 'registers_in_field', 'tqs'])
+      ['actions', 'area', 'constraints', 'date', 'gates', 'itrs', 'lookahead_7d', 'performance_today', 'progress', 'project',
+        'punches', 'registers_in_field', 'startup_events_today', 'tqs'])
   })
 
   it('el borrador es único por fecha y la IA no pisa lo editado', async () => {

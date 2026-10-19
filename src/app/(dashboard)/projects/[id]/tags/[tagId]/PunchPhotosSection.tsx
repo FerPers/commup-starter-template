@@ -14,8 +14,10 @@ import {
 interface Props {
   punchId: string
   projectId: string
-  tagId: string
+  tagId: string | null
   onCountChange?: (count: number) => void
+  /** C-03: subir fotos = PUNCH_RAISE_ROLES (el cliente solo las ve). */
+  canUpload?: boolean
 }
 
 const NON_PREVIEWABLE_EXT = ['heic', 'heif']
@@ -30,6 +32,7 @@ export default function PunchPhotosSection({
   projectId,
   tagId,
   onCountChange,
+  canUpload = true,
 }: Props) {
   const t = useTranslations('Tags.punches.photos')
   const [attachments, setAttachments] = useState<PunchAttachmentRow[]>([])
@@ -100,6 +103,7 @@ export default function PunchPhotosSection({
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
           {t('label', { count: attachments.length })}
         </label>
+        {canUpload && <>
         <label
           htmlFor={`punch-photo-${punchId}`}
           style={{
@@ -128,6 +132,7 @@ export default function PunchPhotosSection({
           }}
           style={{ display: 'none' }}
         />
+        </>}
       </div>
 
       {loading ? (

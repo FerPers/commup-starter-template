@@ -107,8 +107,9 @@ export default function UserMenu({
     router.push('/login')
   }
 
+  // Se encoge en el teléfono (S1): con flexShrink 0 y 360 px forzaba un layout de 504 px a 375 px.
   return (
-    <div ref={wrapperRef} style={{ position: 'relative', flexShrink: 0 }}>
+    <div ref={wrapperRef} style={{ position: 'relative', flexShrink: 1, minWidth: 0, maxWidth: 360 }}>
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -130,7 +131,7 @@ export default function UserMenu({
           cursor: 'pointer',
           opacity: isPending ? 0.6 : 1,
           whiteSpace: 'nowrap',
-          maxWidth: 360,
+          maxWidth: '100%',
         }}
       >
         <span aria-hidden="true" style={{
@@ -145,7 +146,7 @@ export default function UserMenu({
         {activeOrgName && (
           <>
             <span aria-hidden="true" style={{ opacity: 0.5, fontWeight: 400 }}>@</span>
-            <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeOrgName}</span>
+            <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{activeOrgName}</span>
           </>
         )}
         <ChevronDown size={14} style={{ opacity: 0.7, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />

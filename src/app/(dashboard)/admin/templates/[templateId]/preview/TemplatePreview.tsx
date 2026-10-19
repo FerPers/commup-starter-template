@@ -1,6 +1,7 @@
 'use client'
 
 import { SOURCE_REFS, TABLE_SOURCE_LABELS, parseTableConfig } from '@/lib/itr/table'
+import { itemDescription } from '@/lib/itr/item-text'
 
 import type { Json } from '@/types/supabase.generated'
 import { useState } from 'react'
@@ -466,9 +467,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                 // Schema convention: `description` is the primary text (English),
                 // `description_es` is the Spanish translation. Fall back to the
                 // primary when a translation isn't filled in yet.
-                const visibleDesc = lang === 'es'
-                  ? (item.description_es?.trim() ?? item.description)
-                  : item.description
+                const visibleDesc = itemDescription(item, lang)
 
                 return (
                   <div
