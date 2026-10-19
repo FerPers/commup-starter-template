@@ -407,7 +407,7 @@ Hoy quedaron en prod las **fases 5 y 6 completas** (6 sesiones + offline): c8646
 ### 13.2 Pendientes menores del propio plan
 
 - **F1:** notificaciones de gate (listo para aprobar / pendiente de firma).
-- **F5:** KPIs que dependen de F8 (completitud documental, readiness de vendors), §11.13. Primer arranque y falla repetida ✅ en F7-S3.
+- **F5:** ✅ todos los KPIs de §11.13 activos (primer arranque y falla repetida en F7-S3; completitud documental y readiness de vendors en F8-S3).
 - **F6-S3:** en local no se puede generar el paquete de handover porque `HANDOVER_SIGNING_SECRET` solo existe en Cloudflare. Opcional: agregar un valor de prueba a `.env.local`.
 - **Fechas en pantalla:** algunos detalles (traspaso, bitácora) mezclan el formato del servidor y del navegador (`toLocaleString` con `suppressHydrationWarning`). Cosmético: unificar con un componente de hora local.
 - **F4-D:** importación de señales con columnas de la cadena (JB → HMI) no probada de punta a punta en el navegador (subir xlsx).
@@ -511,4 +511,13 @@ Sigue **S2**: paquetes vendor (límites e interfaces, movilización, FAT/SAT →
 
 **Avance S2 (2026-10-19):** migración `20261022120000_vendor_packages` aplicada en prod (probada con rollback, 21 casos). `vendor_packages` (VND-0001; planned → mobilized → demobilized | cancelled) + sistemas y tags del paquete, `vendor_interfaces`, `vendor_checklist` (claves fijas `vendor_checklist_keys()`), `vendor_activities` (FAT/SAT) + `vendor_findings` (con tag → punch `created_via = 'vendor_package'`; sin tag → ACC con origen `vendor` vinculado al paquete), `vendor_reports` (diario/final único, inmutables), `vendor_recommendations` (aprobación líder+, MOC obligatorio para implementar si lo requiere). `vendor_mobilization_status` / `vendor_demobilization_status` calculan lo que falta; adjuntos de reportes y FAT/SAT en `mgmt-evidence`. UI: `/projects/[id]/vendors` (lista con KPIs) y `/vendors/[packageId]` (alcance y límites, interfaces, movilización, FAT/SAT con hallazgos y resultado, reportes, recomendaciones, desmovilización); chip del paquete en Control Tower; menú «Vendors». Verificado en navegador con DEMO: VND-0001 «Skid de instrumentación del C-103» (Instrumentos del Llano, A100-S02) movilizado por checklist, SAT con hallazgo en PT-101 → punch P-0546 Cat C, resultado «Aprobada con hallazgos». Reportes, recomendaciones y desmovilización cubiertos por el escenario SQL (no recorridos en el navegador).
 Sigue **S3**: KPIs completitud documental y readiness de vendors (§11.13), selector de empresa en personal de operaciones y equipos de prueba, DEMO.
+
+**Decisiones de la sesión 3 (Luis, 2026-10-19):**
+14. **Completitud documental** = documentos ligados a sistemas con revisión vigente As-Built o Final sobre los ligados; detalle: sin revisión emitida y registros firmados/aprobados que usan una revisión superada.
+15. **Readiness de vendors** = paquetes activos (movilizados o desmovilizados) sin bloqueos —sin FAT/SAT pendiente o fallida, sin hallazgos abiertos y sin recomendaciones por decidir— sobre los activos; detalle: planificados, desmovilizados y hallazgos abiertos.
+
+**Avance S3 (2026-10-19):** migración `20261023120000_documents_vendors_kpis` aplicada en prod (probada con rollback): claves `documents` y `vendors` en `take_mgmt_snapshot` + trigger `company_link_from_text` que enlaza `company_id` del personal de operaciones y `owner_company_id` de los equipos de prueba cuando el texto coincide con el nombre o nombre corto de una empresa (la UI sugiere el catálogo con un datalist; no cambian las RPC). Tarjetas «Completitud documental» y «Readiness de vendors» en `/kpis`. Seed `scripts/demo-data/seed_documents_vendors_demo.sql` (6 documentos con revisiones en A100-S02 / A200-S01 / U100-S01, empresa vendor CDC y paquete «Compresor C-103 (OEM)» planificado con gate MC, interfaces y FAT). DEMO: completitud 43 % (3 de 7), readiness de vendors 0 de 1 activos (un hallazgo abierto).
+
+### ✅ Plan readiness F0–F8 completo (2026-10-19)
+Todas las fases del plan están en producción. Lo que queda son las pruebas de Luis (§13.3), lo aplazado (§13.4) y los pendientes menores de §13.2.
 

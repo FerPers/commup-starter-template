@@ -6,7 +6,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 
 // KPIs de readiness y gestión diaria (fase 5, sesión 2; libro 7.23/7.26): curva S del avance físico
 // ponderado por gate (snapshots diarios) y los KPIs calculables hoy. Primer arranque y falla repetida
-// (bitácora F6 + pruebas de desempeño F7) desde la fase 7; completitud documental y vendors llegan con la fase 8.
+// (bitácora F6 + pruebas de desempeño F7) desde la fase 7; completitud documental y readiness de vendors (fase 8).
 
 export type MgmtSnapshot = {
   snapshot_date: string
@@ -21,6 +21,8 @@ export type MgmtSnapshot = {
     startup?: { started: number; successful: number; failed: number; pending: number }
     trips?: { events_30d: number; systems_30d: number; repeat_systems_30d: number }
     performance?: { tests: number; accepted: number; accepted_first: number; failed_runs: number }
+    documents?: { total: number; linked: number; as_built: number; no_revision: number; outdated_refs: number }
+    vendors?: { planned: number; mobilized: number; demobilized: number; active: number; clear: number; open_findings: number }
   }
 }
 
@@ -60,6 +62,12 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
     { title: t('performance'), value: rate(k.performance?.accepted_first ?? 0, k.performance?.accepted ?? 0),
       hint: t('performanceHint', { first: k.performance?.accepted_first ?? 0, accepted: k.performance?.accepted ?? 0,
         tests: k.performance?.tests ?? 0, failed: k.performance?.failed_runs ?? 0 }) },
+    { title: t('documents'), value: rate(k.documents?.as_built ?? 0, k.documents?.linked ?? 0),
+      hint: t('documentsHint', { asBuilt: k.documents?.as_built ?? 0, linked: k.documents?.linked ?? 0, noRev: k.documents?.no_revision ?? 0, outdated: k.documents?.outdated_refs ?? 0 }),
+      red: (k.documents?.outdated_refs ?? 0) > 0 },
+    { title: t('vendors'), value: rate(k.vendors?.clear ?? 0, k.vendors?.active ?? 0),
+      hint: t('vendorsHint', { clear: k.vendors?.clear ?? 0, active: k.vendors?.active ?? 0, planned: k.vendors?.planned ?? 0, demob: k.vendors?.demobilized ?? 0, findings: k.vendors?.open_findings ?? 0 }),
+      red: (k.vendors?.open_findings ?? 0) > 0 },
   ]
 
   return (

@@ -19,7 +19,7 @@ export default async function StartupOperationsPage({ params, searchParams }: {
   const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
 
-  const [{ data: systems }, { data: ownership }, { data: transfers }, { data: people }, { data: records }, { data: targets }, { data: spares }, { data: members }] = await Promise.all([
+  const [{ data: systems }, { data: ownership }, { data: transfers }, { data: people }, { data: records }, { data: targets }, { data: spares }, { data: members }, { data: companies }] = await Promise.all([
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('system_ownership').select('system_id, stage, since').eq('project_id', id),
     supabase.from('ownership_transfers').select('id, number, system_id, from_stage, to_stage, is_reversal, status, requested_at, completed_at')
@@ -30,6 +30,7 @@ export default async function StartupOperationsPage({ params, searchParams }: {
     supabase.from('critical_spares').select('id, system_id, kind, item, part_number, is_critical, qty_required, qty_available, status, eta, notes')
       .eq('project_id', id).order('item'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
+    supabase.from('companies').select('name').eq('org_id', ctx.orgId).eq('is_active', true).order('name'),
   ])
 
   const today = todayIso()
@@ -60,6 +61,7 @@ export default async function StartupOperationsPage({ params, searchParams }: {
       })}
       transfers={(transfers ?? []).map(x => ({ ...x, from_stage: x.from_stage as OwnershipStage, to_stage: x.to_stage as OwnershipStage }))}
       people={people ?? []}
+      companies={(companies ?? []).map(c => c.name)}
       levels={levels}
       spares={(spares ?? []).map(s => ({ ...s, kind: s.kind as 'spare' | 'special_tool', status: s.status as SpareStatus, qty_required: Number(s.qty_required), qty_available: Number(s.qty_available) }))}
       members={(members ?? []).map(m => ({ id: m.user_id, name: (m.profiles as unknown as { full_name: string | null } | null)?.full_name ?? '—' }))}

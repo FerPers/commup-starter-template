@@ -9,6 +9,7 @@ export default async function AdminTestEquipmentPage() {
   if (!ctx) redirect('/login')
   if (!EDITOR_ROLES.includes(ctx.role)) redirect('/dashboard')
 
+  const { data: companies } = await ctx.supabase.from('companies').select('name').eq('org_id', ctx.orgId).eq('is_active', true).order('name')
   const { data } = await ctx.supabase
     .from('test_equipment')
     .select('id, code, kind, make, model, serial_number, owner_company, certificate_number, calibrated_on, calibration_due, certificate_path, notes, is_active')
@@ -21,6 +22,7 @@ export default async function AdminTestEquipmentPage() {
       orgId={ctx.orgId}
       rows={(data ?? []) as EquipmentRow[]}
       canDelete={ADMIN_ROLES.includes(ctx.role)}
+      companies={(companies ?? []).map(c => c.name)}
     />
   )
 }

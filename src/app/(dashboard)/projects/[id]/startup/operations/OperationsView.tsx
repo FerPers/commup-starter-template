@@ -32,8 +32,10 @@ const SPARE_TONE: Record<SpareStatus, 'green' | 'amber' | 'red'> = { available: 
 const emptyPerson = { personId: '', fullName: '', company: '', position: '', shift: '', userId: '', active: true }
 const emptySpare = { spareId: '', systemId: '', item: '', kind: 'spare' as 'spare' | 'special_tool', partNumber: '', isCritical: true, qtyRequired: '1', qtyAvailable: '0', status: 'not_available' as SpareStatus, eta: '', notes: '' }
 
-export default function OperationsView({ project, initialView, systems, transfers, people, levels, spares, members, canEdit, canAssess }: {
+export default function OperationsView({ project, initialView, systems, transfers, people, levels, spares, members, canEdit, canAssess, companies = [] }: {
   project: { id: string; code: string; name: string }
+  /** Fase 8: empresas del catálogo (sugeridas; el texto que coincide se enlaza en la BD). */
+  companies?: string[]
   initialView: View
   systems: Sys[]
   transfers: Transfer[]
@@ -320,7 +322,10 @@ export default function OperationsView({ project, initialView, systems, transfer
             <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={grid}>
                 <Field text={t('ops.fullName')} required><input style={input} value={person.fullName} maxLength={200} onChange={e => setPerson({ ...person, fullName: e.target.value })} /></Field>
-                <Field text={t('ops.company')}><input style={input} value={person.company} onChange={e => setPerson({ ...person, company: e.target.value })} /></Field>
+                <Field text={t('ops.company')}>
+                  <input style={input} list="ops-companies" value={person.company} onChange={e => setPerson({ ...person, company: e.target.value })} />
+                  <datalist id="ops-companies">{companies.map(c => <option key={c} value={c} />)}</datalist>
+                </Field>
                 <Field text={t('ops.position')}><input style={input} value={person.position} onChange={e => setPerson({ ...person, position: e.target.value })} /></Field>
                 <Field text={t('ops.shift')}><input style={input} value={person.shift} maxLength={30} onChange={e => setPerson({ ...person, shift: e.target.value })} /></Field>
                 <Field text={t('ops.user')}><MemberSelect value={person.userId} onChange={v => setPerson({ ...person, userId: v })} members={members} allowEmpty={t('ops.noUser')} /></Field>

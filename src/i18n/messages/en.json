@@ -834,7 +834,7 @@
       "lookahead": "View look-ahead →",
       "asOf": "KPIs as of {date} (daily snapshot).",
       "noSnapshot": "No daily-management snapshot yet: taken nightly or with “Take snapshot”.",
-      "later": "Document completeness and vendor readiness come with phase 8.",
+      "later": "All readiness-plan KPIs are active.",
       "weighted": "Weighted physical progress",
       "weightedHint": "Live · approved ITRs per gate × weight",
       "readiness": "Readiness",
@@ -854,7 +854,11 @@
       "trips": "Repeat failures (start-up)",
       "tripsHint": "Systems with 2+ trips or shutdowns in 30 d · {events} events in {systems} systems",
       "performance": "Performance right first time",
-      "performanceHint": "{first} of {accepted} accepted without a repeat · {tests} tests · {failed} failed attempts"
+      "performanceHint": "{first} of {accepted} accepted without a repeat · {tests} tests · {failed} failed attempts",
+      "documents": "Document completeness",
+      "documentsHint": "As-Built/Final {asBuilt} of {linked} linked to systems · {noRev} without revision · {outdated} signed records on a superseded revision",
+      "vendors": "Vendor readiness",
+      "vendorsHint": "{clear} of {active} active without blockers · {planned} planned · {demob} demobilized · {findings} open findings"
     }
   },
   "Projects": {

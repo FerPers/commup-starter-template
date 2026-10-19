@@ -834,7 +834,7 @@
       "lookahead": "Ver look-ahead →",
       "asOf": "KPIs al {date} (snapshot diario).",
       "noSnapshot": "Aún no hay snapshot de gestión diaria: se toma cada noche o con «Tomar snapshot».",
-      "later": "Completitud documental y readiness de vendors llegan con la fase 8.",
+      "later": "Todos los KPIs del plan readiness están activos.",
       "weighted": "Avance físico ponderado",
       "weightedHint": "En vivo · ITR aprobados por gate × peso",
       "readiness": "Readiness",
@@ -854,7 +854,11 @@
       "trips": "Falla repetida (arranque)",
       "tripsHint": "Sistemas con 2+ trips o paradas en 30 d · {events} eventos en {systems} sistemas",
       "performance": "Desempeño al primer intento",
-      "performanceHint": "{first} de {accepted} aceptadas sin repetir · {tests} pruebas · {failed} intentos fallidos"
+      "performanceHint": "{first} de {accepted} aceptadas sin repetir · {tests} pruebas · {failed} intentos fallidos",
+      "documents": "Completitud documental",
+      "documentsHint": "As-Built/Final {asBuilt} de {linked} ligados a sistemas · {noRev} sin revisión · {outdated} registros firmados con revisión superada",
+      "vendors": "Readiness de vendors",
+      "vendorsHint": "{clear} de {active} activos sin bloqueos · {planned} planificados · {demob} desmovilizados · {findings} hallazgos abiertos"
     }
   },
   "Projects": {

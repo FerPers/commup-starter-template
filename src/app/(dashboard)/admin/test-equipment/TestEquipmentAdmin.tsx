@@ -57,7 +57,7 @@ type Form = {
 const EMPTY: Form = { code: '', kind: 'insulation_tester', make: '', model: '', serialNumber: '', ownerCompany: '', certificateNumber: '', calibratedOn: '', calibrationDue: '', notes: '' }
 
 
-export default function TestEquipmentAdmin({ orgId, rows, canDelete }: { orgId: string; rows: EquipmentRow[]; canDelete: boolean }) {
+export default function TestEquipmentAdmin({ orgId, rows, canDelete, companies = [] }: { orgId: string; rows: EquipmentRow[]; canDelete: boolean; companies?: string[] }) {
   const t = useTranslations('TestEquipment')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -151,7 +151,8 @@ export default function TestEquipmentAdmin({ orgId, rows, canDelete }: { orgId: 
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><span style={label}>{t('f.make')}</span><input style={input} value={f.make} onChange={set('make')} /></label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><span style={label}>{t('f.model')}</span><input style={input} value={f.model} onChange={set('model')} /></label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><span style={label}>{t('f.serial')} *</span><input style={input} value={f.serialNumber} onChange={set('serialNumber')} /></label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><span style={label}>{t('f.owner')}</span><input style={input} value={f.ownerCompany} onChange={set('ownerCompany')} /></label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><span style={label}>{t('f.owner')}</span><input style={input} list="te-companies" value={f.ownerCompany} onChange={set('ownerCompany')} />
+              <datalist id="te-companies">{companies.map(c => <option key={c} value={c} />)}</datalist></label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><span style={label}>{t('f.certificate')} *</span><input style={input} value={f.certificateNumber} onChange={set('certificateNumber')} /></label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><span style={label}>{t('f.calibratedOn')} *</span><input type="date" style={input} value={f.calibratedOn} onChange={set('calibratedOn')} /></label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><span style={label}>{t('f.due')} *</span><input type="date" style={input} value={f.calibrationDue} onChange={set('calibrationDue')} /></label>
