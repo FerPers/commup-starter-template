@@ -2704,72 +2704,6 @@ export type Database = {
           },
         ]
       }
-      itr_template_items_backup_pre_split: {
-        Row: {
-          acceptance_max: number | null
-          acceptance_min: number | null
-          acceptance_text: string | null
-          condition_item_id: string | null
-          condition_value: string | null
-          description: string | null
-          description_es: string | null
-          id: string | null
-          is_critical: boolean | null
-          is_required: boolean | null
-          item_number: string | null
-          item_type: Database["public"]["Enums"]["itr_item_type"] | null
-          options: Json | null
-          order_index: number | null
-          requires_measurement: boolean | null
-          requires_photo: boolean | null
-          section_id: string | null
-          template_id: string | null
-          unit: string | null
-        }
-        Insert: {
-          acceptance_max?: number | null
-          acceptance_min?: number | null
-          acceptance_text?: string | null
-          condition_item_id?: string | null
-          condition_value?: string | null
-          description?: string | null
-          description_es?: string | null
-          id?: string | null
-          is_critical?: boolean | null
-          is_required?: boolean | null
-          item_number?: string | null
-          item_type?: Database["public"]["Enums"]["itr_item_type"] | null
-          options?: Json | null
-          order_index?: number | null
-          requires_measurement?: boolean | null
-          requires_photo?: boolean | null
-          section_id?: string | null
-          template_id?: string | null
-          unit?: string | null
-        }
-        Update: {
-          acceptance_max?: number | null
-          acceptance_min?: number | null
-          acceptance_text?: string | null
-          condition_item_id?: string | null
-          condition_value?: string | null
-          description?: string | null
-          description_es?: string | null
-          id?: string | null
-          is_critical?: boolean | null
-          is_required?: boolean | null
-          item_number?: string | null
-          item_type?: Database["public"]["Enums"]["itr_item_type"] | null
-          options?: Json | null
-          order_index?: number | null
-          requires_measurement?: boolean | null
-          requires_photo?: boolean | null
-          section_id?: string | null
-          template_id?: string | null
-          unit?: string | null
-        }
-        Relationships: []
-      }
       itr_template_sections: {
         Row: {
           id: string
@@ -11974,6 +11908,13 @@ export type Database = {
       field_verify_procedure_revision: {
         Args: { p_note: string; p_revision_id: string }
         Returns: undefined
+      }
+      function_definition_md5: {
+        Args: { p_signatures: string[] }
+        Returns: {
+          md5: string
+          signature: string
+        }[]
       }
       gate_plan_context: {
         Args: { p_gate_id: string; p_system_id: string }

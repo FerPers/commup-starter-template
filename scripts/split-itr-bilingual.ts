@@ -7,8 +7,9 @@
  * writes back description (EN) + description_es (ES). Never touches items
  * already migrated.
  *
- * Snapshot: itr_template_items_backup_pre_split (created via Supabase MCP).
- * Rollback:
+ * Snapshot: itr_template_items_backup_pre_split (created via Supabase MCP). S03 (B-28, 2026-10-19):
+ * dropped from prod; the CSV lives in supabase/archive/itr_template_items_backup_pre_split.csv.gz.
+ * Rollback (after restoring that CSV into a table):
  *   UPDATE itr_template_items i SET description=b.description, description_es=b.description_es
  *     FROM itr_template_items_backup_pre_split b WHERE i.id=b.id;
  *
