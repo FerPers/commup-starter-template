@@ -123,6 +123,11 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | B-28 | Bajo | Esquema — Tabla de respaldo `itr_template_items_backup_pre_split` en producción | [B-datos-rendimiento.md:585](revision-2026-10-19/B-datos-rendimiento.md) |
 | F-35 | Bajo | Mantenibilidad · Confianza alta — las revisiones y el diagnóstico se hacen a ciegas. Un cambio de espacio en blanco rompe parches futuros. Hoy l | [F-ingenieria-docs-vendors.md:420](revision-2026-10-19/F-ingenieria-docs-vendors.md) |
 
+**Estado S03 (2026-10-19, 6827c09; migración `20261028120000_canonical_functions_s03.sql` probada con ROLLBACK —definición, ACL y dueño idénticos en las 13 funciones; md5 de archivo = BD— y **aplicada en prod** con autorización de Luis):** todos verificados vigentes antes de tocar.
+- D-09 / B-19 / E-26 / F-35 ✅ `supabase/functions-sql/*.sql` = volcado verbatim de prod de las 13 funciones que se habían parcheado por ancla (`compute_system_gates`, `compute_project_gates`, `my_work_counts`, `daily_report_data`, `take_mgmt_snapshot`, `sign_itr_atomic`, `seed_default_gate_for_phase`, `evaluate_itr_capture`, `transition_procedure_revision`, `add_mgmt_attachment`, `update_punch_ops_status`, `approve_system_gate`, `sign_system_gate`); la migración repite los cuerpos completos. `tests/db/function-drift.test.ts` (CI) compara contra la RPC `function_definition_md5` (solo md5; sin anon ni sesión). `src/lib/sql/no-anchor-patches.test.ts` prohíbe `pg_get_functiondef` en migraciones posteriores. Flujo en `supabase/functions-sql/README.md` y `scripts/sql/canonical-functions.mjs` (dump/emit).
+  - **No hecho, a propósito (sin cambio de comportamiento):** partir `compute_system_gates` en funciones por criterio (D-09) → S11; separar o cachear `my_work_counts` (E-26) → S09/S22. El comentario «Integration candidate» de `20260909180000` (B-19) queda como histórico: la función vigente ya está en su archivo.
+- B-28 ✅ `itr_template_items_backup_pre_split` (6960 filas) exportada a `supabase/archive/itr_template_items_backup_pre_split.csv.gz` y eliminada; nota de rollback actualizada en `scripts/split-itr-bilingual.ts`.
+
 ## S04 — ITR: firmas requeridas e independencia
 
 | ID | Sev. | Hallazgo | Anexo |
