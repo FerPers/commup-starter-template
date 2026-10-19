@@ -97,6 +97,22 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | D-32 | Bajo | Seguridad — `approve_system_gate` y `sign_system_gate` validan el rol en la org, no la pertenencia al proyecto, y la evaluación interna corre como definer, sin RLS (`2026 | [D-readiness-gestion.md:227](revision-2026-10-19/D-readiness-gestion.md) |
 | F-27 | Bajo | Seguridad (higiene) · Confianza alta — bajo, porque la RLS limita al editor de sus propios proyectos, pero puede dejar una fila apuntando a un archiv | [F-ingenieria-docs-vendors.md:354](revision-2026-10-19/F-ingenieria-docs-vendors.md) |
 
+**Estado S02 (2026-10-19, 649c2a5 + 5999391; migración `20261027120000_quick_security_s02.sql` probada con ROLLBACK —17 escenarios— y **aplicada en prod** con autorización de Luis; `evaluate-workflow` desplegada):** todos verificados vigentes antes de tocar.
+- G-05 ✅ `microphone=(self)` (verificado en el dev server) + aviso «Micrófono bloqueado» en `MicAppend`. Falta probarlo en Chrome Android / iOS PWA.
+- I-10 ✅ edge: ignora `.created` con `created_via='workflow'`, tope 30 ejecuciones/min por regla, `block_certificate` idempotente; action + UI rechazan «punch creado → crear punch» (`src/lib/workflows/rules.ts`).
+- I-11 ✅ `webhook_subscriptions.secret` sin SELECT de columna para nadie (solo RPC al crear y dispatcher); `webhook_subscriptions` y `workflow_rules` (lectura y escritura) solo owner/admin/architect (`is_org_privileged`). Los headers siguen en claro en `action_payload`, ahora visibles solo para privilegiados (cifrarlos en Vault queda como mejora, Q).
+- A-12 ✅ `t.rich` en los modales de reabrir/revocar. A-18 ✅ `safeNextPath`. C-25/A-24 ✅ `normalizeSearch` pasa `,()"*` a `_`; los `.or()` con `systemId` usan el id ya validado.
+- F-09/A-29 ✅ `toSafeCsv` en los CSV de punches e ITR, `sanitizeAoa` en la matriz ITR; el guard cubre espacios antes del signo.
+- I-22 ✅ export con `getActiveMembership` + `fetchAllRows` (sin tope de 1000). A-20 ✅ zod (`src/lib/setup/schema.ts`), filas campo a campo, una org por usuario.
+- A-19 ✅ las 23 funciones con EXECUTE para anon/PUBLIC quedan para authenticated/service_role; `bump_push_subscription_failure` e `itr_test_equipment_blocker` solo service_role. (El resto del hallazgo ya lo había cerrado el hotfix.) Nota: los default privileges de Supabase siguen dando EXECUTE a anon en funciones NUEVAS → cada migración debe revocar (regla ya en CLAUDE.md).
+- A-23 ✅ lista blanca de servicios push en subscribe y en el envío. A-26 ✅ logo solo PNG/JPG/WebP con extensión por MIME; `allowed_mime_types` en gate-evidence, mgmt-evidence y project-documents (sin HTML/SVG; el cliente manda `application/octet-stream` si el navegador no sabe el tipo).
+- A-27 ✅ secreto de cron en tiempo constante, HSTS `includeSubDomains`, sal `LEADS_IP_SALT` (con respaldo a CRON_SECRET hasta que Luis cree el secreto). **Sin `preload`** (es un compromiso con la lista de navegadores: decisión de Luis). `'unsafe-inline'` sigue como deuda documentada.
+- D-32 ✅ `approve_system_gate`/`sign_system_gate` exigen `is_project_member` (parche por ancla; hoy equivale a ser de la org, protege cuando exista membresía por proyecto).
+- F-27 ✅ `upsertHotspot` verifica que el documento sea del proyecto; `deletePidDocument` lee la ruta de la BD y filtra por proyecto; documentos = PRIVILEGED (como storage y UI), ubicar tags = EDITOR también en la UI.
+- **A-02 (de S15) adelantado ✅** trigger `org_members_owner_guard`: solo un owner asigna/cambia/quita owners y nunca 0 owners. S15 sigue con la gestión de miembros por RPC. En `authz-matrix` dejó de ser `gap`.
+- **S01-N1 ✅** bucket público `org-assets` (2 MB, PNG/JPG/WebP) con políticas owner/admin por `<org_id>/…`. Falta probar la subida en la UI con sesión.
+- Tests: unit (`safe-redirect`, `secret-compare`, `push/endpoint`, `setup/schema`, `workflows/rules`, `excel/sanitize`, `list/params`) + `authz-matrix` (workflow_rules, secreto de webhooks, EXECUTE de anon y de DEFINER internas).
+
 ## S03 — SQL canónico
 
 | ID | Sev. | Hallazgo | Anexo |

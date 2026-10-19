@@ -33,7 +33,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 |---|---|---|---|---|
 | S1-v1 | Sesión arrancada con el brief v1: CI + flujo de campo | — | (D8 aplicada según recomendación) | ✅ **Hecha** 2026-10-19 (5dbde43 + 350b17f; migración 20261025120000 en prod; CI verde) — ver §3 |
 | S01 | Red de seguridad: CI, deploy único y base de pruebas | S1-v1 | D1, D2, D3 | ✅ **Hecha** 2026-10-19 (f5fb4f7, 1532c46 + migración 20261026120000 en prod; CI verde con deploy) — quedan D1 y D3 (Luis). Detalle en la cobertura |
-| S02 | Seguridad rápida | S01 | — | Pendiente |
+| S02 | Seguridad rápida | S01 | — | ✅ **Hecha** 2026-10-19 (649c2a5, 5999391; migración 20261027120000 en prod; edge `evaluate-workflow` desplegada) — A-02 adelantado (guarda), S01-N1 cerrado. Detalle en la cobertura |
 | S03 | SQL canónico | S01 | — | Pendiente |
 | S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | Pendiente (C-02 y C-17 provisional en S1-v1) |
 | S05 | ITR: contenido, estados y numeración | S04 | D7 | Pendiente |
