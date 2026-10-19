@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { SystemGate } from '@/lib/readiness/gates'
 import type { OwnershipStage } from '@/lib/startup/catalog'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
-import SystemGatesView from './SystemGatesView'
+import SystemGatesView, { type SystemPerformance } from './SystemGatesView'
 import type { GatePlanEvent } from './GatePlanPanel'
 
 // Detalle de gates de un sistema (fase 1 plan readiness): criterios con su evidencia,
@@ -59,6 +59,16 @@ export default async function SystemGatesPage({
     supabase.from('system_ownership').select('stage').eq('system_id', systemId).maybeSingle(),
     supabase.from('ownership_transfers').select('id').eq('system_id', systemId).eq('status', 'pending_signatures').maybeSingle(),
   ])
+  // Prueba de desempeño (fase 7): pruebas de las que el sistema es principal, último intento y PTC vigente.
+  const { data: perfTests } = await supabase.from('performance_tests')
+    .select('id, number, title, performance_runs!performance_runs_test_id_fkey(attempt, status, result), performance_certificates!performance_certificates_test_id_fkey(number, status)')
+    .eq('primary_system_id', systemId).order('number')
+  const performance = (perfTests ?? []).map(pt => {
+    const runs = [...(pt.performance_runs ?? [])].sort((a, b) => b.attempt - a.attempt)
+    const cert = (pt.performance_certificates ?? []).find(c => c.status === 'pending_signatures' || c.status === 'accepted') ?? null
+    return { id: pt.id, number: pt.number, title: pt.title, lastRun: runs[0] ? { status: runs[0].status, result: runs[0].result } : null, certificate: cert }
+  }) as SystemPerformance[]
+
   type Ref = { id: string; code: string }
   const dependsOn = (deps ?? []).filter(d => d.system_id === systemId).map(d => d.provider as unknown as Ref).filter(Boolean)
   const enables = (deps ?? []).filter(d => d.depends_on_system_id === systemId).map(d => d.dependent as unknown as Ref).filter(Boolean)
@@ -92,6 +102,7 @@ export default async function SystemGatesPage({
         events: (planEvents ?? []) as unknown as (GatePlanEvent & { gate_id: string })[],
         canCommit: EDITOR_ROLES.includes(ctx.role),
       }}
+      performance={performance}
       ownership={{ stage: (ownership?.stage ?? 'commissioning') as OwnershipStage, pendingTransferId: pendingTransfer?.id ?? null }}
       milestones={(milestones ?? []).map(m => ({ id: m.id, milestone: m.milestone as string, occurredAt: m.occurred_at, status: m.status }))}
       daily={{

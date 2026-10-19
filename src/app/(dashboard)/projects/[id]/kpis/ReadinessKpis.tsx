@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 // KPIs de readiness y gestión diaria (fase 5, sesión 2; libro 7.23/7.26): curva S del avance físico
-// ponderado por gate (snapshots diarios) y los KPIs calculables hoy. Primer arranque, falla repetida,
-// completitud documental y readiness de vendors llegan con las fases 6–8.
+// ponderado por gate (snapshots diarios) y los KPIs calculables hoy. Primer arranque y falla repetida
+// (bitácora F6 + pruebas de desempeño F7) desde la fase 7; completitud documental y vendors llegan con la fase 8.
 
 export type MgmtSnapshot = {
   snapshot_date: string
@@ -18,6 +18,9 @@ export type MgmtSnapshot = {
     actions?: { open: number; overdue: number; to_verify: number; verified_30d: number; on_time_30d: number; with_due_30d: number }
     constraints?: { open: number; overdue: number; by_level: Record<string, number>; avg_age_days: number | null; closed_30d: number }
     commitments?: { approved_30d: number; on_time_30d: number }
+    startup?: { started: number; successful: number; failed: number; pending: number }
+    trips?: { events_30d: number; systems_30d: number; repeat_systems_30d: number }
+    performance?: { tests: number; accepted: number; accepted_first: number; failed_runs: number }
   }
 }
 
@@ -37,6 +40,8 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
   const k = last?.kpis ?? {}
   const data = snapshots.map(s => ({ date: s.snapshot_date.slice(5), pct: Number((s.weighted_pct * 100).toFixed(1)) }))
   const lv = k.constraints?.by_level ?? {}
+  const su = k.startup
+  const suDone = (su?.successful ?? 0) + (su?.failed ?? 0)
 
   const tiles = [
     { title: t('weighted'), value: `${(livePct * 100).toFixed(1)} %`, hint: t('weightedHint') },
@@ -48,6 +53,13 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
       hint: t('actionsHint', { open: k.actions?.open ?? 0, overdue: k.actions?.overdue ?? 0, verify: k.actions?.to_verify ?? 0 }), red: (k.actions?.overdue ?? 0) > 0 },
     { title: t('constraints'), value: String(k.constraints?.open ?? 0),
       hint: t('constraintsHint', { l1: lv['1'] ?? 0, l2: lv['2'] ?? 0, l3: lv['3'] ?? 0, l4: lv['4'] ?? 0, age: k.constraints?.avg_age_days ?? '—' }), red: (lv['4'] ?? 0) > 0 },
+    { title: t('startup'), value: rate(su?.successful ?? 0, suDone),
+      hint: t('startupHint', { ok: su?.successful ?? 0, done: suDone, pending: su?.pending ?? 0 }), red: (su?.failed ?? 0) > 0 },
+    { title: t('trips'), value: String(k.trips?.repeat_systems_30d ?? 0),
+      hint: t('tripsHint', { events: k.trips?.events_30d ?? 0, systems: k.trips?.systems_30d ?? 0 }), red: (k.trips?.repeat_systems_30d ?? 0) > 0 },
+    { title: t('performance'), value: rate(k.performance?.accepted_first ?? 0, k.performance?.accepted ?? 0),
+      hint: t('performanceHint', { first: k.performance?.accepted_first ?? 0, accepted: k.performance?.accepted ?? 0,
+        tests: k.performance?.tests ?? 0, failed: k.performance?.failed_runs ?? 0 }) },
   ]
 
   return (

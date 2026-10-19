@@ -831,7 +831,7 @@
       "lookahead": "View look-ahead →",
       "asOf": "KPIs as of {date} (daily snapshot).",
       "noSnapshot": "No daily-management snapshot yet: taken nightly or with “Take snapshot”.",
-      "later": "First start-up success, repeat failures, document completeness and vendor readiness come with phases 6–8.",
+      "later": "Document completeness and vendor readiness come with phase 8.",
       "weighted": "Weighted physical progress",
       "weightedHint": "Live · approved ITRs per gate × weight",
       "readiness": "Readiness",
@@ -845,7 +845,13 @@
       "constraints": "Open constraints",
       "constraintsHint": "L1 {l1} · L2 {l2} · L3 {l3} · L4 {l4} · average age {age} d",
       "curve": "S-curve — weighted physical progress",
-      "curveEmpty": "The curve appears from the second daily snapshot."
+      "curveEmpty": "The curve appears from the second daily snapshot.",
+      "startup": "First start-up success",
+      "startupHint": "No trip or shutdown until stable operation · {ok} of {done} · {pending} pending",
+      "trips": "Repeat failures (start-up)",
+      "tripsHint": "Systems with 2+ trips or shutdowns in 30 d · {events} events in {systems} systems",
+      "performance": "Performance right first time",
+      "performanceHint": "{first} of {accepted} accepted without a repeat · {tests} tests · {failed} failed attempts"
     }
   },
   "Projects": {
@@ -2494,6 +2500,9 @@
     "ownership": {
       "link": "View operations readiness",
       "pending": "Transfer pending signatures"
+    },
+    "performance": {
+      "noRun": "No attempts"
     }
   },
   "GatesAdmin": {

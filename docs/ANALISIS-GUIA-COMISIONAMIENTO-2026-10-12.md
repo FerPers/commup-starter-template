@@ -407,7 +407,7 @@ Hoy quedaron en prod las **fases 5 y 6 completas** (6 sesiones + offline): c8646
 ### 13.2 Pendientes menores del propio plan
 
 - **F1:** notificaciones de gate (listo para aprobar / pendiente de firma).
-- **F5:** KPIs que dependen de F6–F8 (primer arranque, falla repetida, completitud documental, readiness de vendors), §11.13. Los de F6 ya tienen datos (bitácora y traspasos); falta sumarlos al snapshot.
+- **F5:** KPIs que dependen de F8 (completitud documental, readiness de vendors), §11.13. Primer arranque y falla repetida ✅ en F7-S3.
 - **F6-S3:** en local no se puede generar el paquete de handover porque `HANDOVER_SIGNING_SECRET` solo existe en Cloudflare. Opcional: agregar un valor de prueba a `.env.local`.
 - **Fechas en pantalla:** algunos detalles (traspaso, bitácora) mezclan el formato del servidor y del navegador (`toLocaleString` con `suppressHydrationWarning`). Cosmético: unificar con un componente de hora local.
 - **F4-D:** importación de señales con columnas de la cadena (JB → HMI) no probada de punta a punta en el navegador (subir xlsx).
@@ -480,3 +480,11 @@ Sigue **S2b**: UI del certificado PTC (emitir, firmas, revocar), PDF de 14 secci
 
 **Avance S2b (2026-10-17; c57a1ab):** UI del certificado PTC en la consola del intento (emitir = firma Comisionamiento; Operaciones y Cliente con «otra persona»; revocar con motivo) y chip del PTC vigente en la ficha; reporte PDF de 14 secciones en `/projects/[id]/startup/performance/runs/[runId]/pdf` (`src/lib/pdf/performance-report.ts`, regenerado desde la evaluación y los datos congelados, gráfico por variable y huellas sha256); colas «por decidir» y «PTC por firmar» en `/my-work`; pruebas de desempeño del día en el reporte diario (hechos de la IA, PDF y panel del editor). Verificado en navegador: tarjeta del PTC sobre R1 (no certificable), PDF 200 y Mi trabajo; PDF revisado visualmente con datos de ejemplo. **No verificado en navegador:** emitir/firmar un PTC real (DEMO no tiene intento aceptado ni usuario `client`; cubierto por el escenario SQL de la S2).
 Sigue **S3**: DEMO con el simulador (prueba aceptada de punta a punta, 1 h + 6 h, perturbación y par), invitar o asignar un usuario `client` en DEMO, activar `requires_performance` en el gate que corresponda, KPIs F5 pendientes de F7 y chip en Control Tower.
+
+**Sesión 3 — DEMO, KPIs y chip (Luis, 2026-10-19):**
+22. **Gate nuevo PA «Aceptación de desempeño»** (fase PA, orden 50) en DEMO con `requires_performance`; la prueba se hace con la planta arrancada, así que no se exige en RFSU. El gate heredó «ITRs de la fase aprobados» (sin ITR de PA queda rojo): Luis decide si lo quita en `/admin/gates`.
+23. **Éxito de primer arranque** = sistema con «primer arranque» atestiguado que llega a «operación estable» atestiguada sin trip/parada entre ambos; falla si hubo trip/parada desde el arranque (antes de la operación estable); pendiente si no hay ninguno.
+24. **Falla repetida = dos KPI:** sistemas con 2+ trips/paradas en 30 días (F6) y % de pruebas de desempeño aceptadas al primer intento evaluado (F7; los abortados no cuentan).
+
+**Avance S3 (2026-10-19):** migración `20261020120000_startup_performance_kpis` aplicada en prod (parche de `take_mgmt_snapshot` con ancla única: claves `startup`, `trips`, `performance`; probada con rollback y eventos sintéticos). Tres tarjetas nuevas en `/projects/[id]/kpis`. Chips en el detalle del sistema de Control Tower (prueba de la que es principal: último resultado + PTC vigente). Seed `scripts/demo-data/seed_performance_demo.sql` (re-ejecutable; 7 h simuladas, trip excluido, par F1↔F2 1,5 %, KW manual) → PTT-0001/R2 evaluado «Aceptada» en el navegador y **PTC-0001 emitido** (firma Comisionamiento). Pendiente: firmas de Operaciones (+smtp) y Cliente (+smtp2, a invitar como client en DEMO) → criterio `performance_accepted` en verde. Hallazgo menor: renombrar el certificado de una fase no actualiza el código de su gate (el código del gate PA se corrigió por SQL).
+Sigue **F8** (vendors y control documental).

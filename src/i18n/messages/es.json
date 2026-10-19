@@ -831,7 +831,7 @@
       "lookahead": "Ver look-ahead →",
       "asOf": "KPIs al {date} (snapshot diario).",
       "noSnapshot": "Aún no hay snapshot de gestión diaria: se toma cada noche o con «Tomar snapshot».",
-      "later": "Primer arranque, falla repetida, completitud documental y readiness de vendors llegan con las fases 6–8.",
+      "later": "Completitud documental y readiness de vendors llegan con la fase 8.",
       "weighted": "Avance físico ponderado",
       "weightedHint": "En vivo · ITR aprobados por gate × peso",
       "readiness": "Readiness",
@@ -845,7 +845,13 @@
       "constraints": "Restricciones abiertas",
       "constraintsHint": "N1 {l1} · N2 {l2} · N3 {l3} · N4 {l4} · edad promedio {age} d",
       "curve": "Curva S — avance físico ponderado",
-      "curveEmpty": "La curva aparece desde el segundo snapshot diario."
+      "curveEmpty": "La curva aparece desde el segundo snapshot diario.",
+      "startup": "Éxito de primer arranque",
+      "startupHint": "Sin trip ni parada hasta operación estable · {ok} de {done} · {pending} pendientes",
+      "trips": "Falla repetida (arranque)",
+      "tripsHint": "Sistemas con 2+ trips o paradas en 30 d · {events} eventos en {systems} sistemas",
+      "performance": "Desempeño al primer intento",
+      "performanceHint": "{first} de {accepted} aceptadas sin repetir · {tests} pruebas · {failed} intentos fallidos"
     }
   },
   "Projects": {
@@ -2494,6 +2500,9 @@
     "ownership": {
       "link": "Ver readiness de operaciones",
       "pending": "Traspaso pendiente de firmas"
+    },
+    "performance": {
+      "noRun": "Sin intentos"
     }
   },
   "GatesAdmin": {

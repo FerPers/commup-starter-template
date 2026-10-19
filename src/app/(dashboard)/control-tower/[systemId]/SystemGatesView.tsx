@@ -6,6 +6,8 @@ import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { MILESTONES, type OwnershipStage } from '@/lib/startup/catalog'
 import { StageChip } from '@/app/(dashboard)/projects/[id]/startup/operations/ownership-ui'
+import { Chip } from '@/app/(dashboard)/projects/[id]/daily/daily-ui'
+import { CERT_TONE, RESULT_TONE, type CertificateStatus, type PerfResult, type PerfRunStatus } from '@/lib/performance/catalog'
 import GatePlanPanel, { type GatePlan, type GatePlanEvent, type GateProgress } from './GatePlanPanel'
 import { createClient } from '@/lib/supabase/client'
 import type { DependencyCriterionDetail } from '@/lib/systems/dependencies'
@@ -28,6 +30,14 @@ import {
   type GateStatus,
   type SystemGate,
 } from '@/lib/readiness/gates'
+
+export type SystemPerformance = {
+  id: string
+  number: string
+  title: string
+  lastRun: { status: PerfRunStatus; result: PerfResult | null } | null
+  certificate: { number: string; status: CertificateStatus } | null
+}
 
 type Props = {
   orgId: string
@@ -53,6 +63,8 @@ type Props = {
   milestones: { id: string; milestone: string; occurredAt: string; status: string }[]
   /** Etapa de propiedad del sistema (fase 6, sesión 3). */
   ownership: { stage: OwnershipStage; pendingTransferId: string | null }
+  /** Pruebas de desempeño de las que el sistema es principal (fase 7). */
+  performance: SystemPerformance[]
   /** Gestión diaria del sistema (fase 5): restricciones no cerradas y acciones vivas. */
   daily: {
     constraints: { id: string; number: string; title: string; status: string; escalation_level: number; need_date: string; gate: string | null }[]
@@ -94,8 +106,9 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, ownership, daily }: Props) {
+export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, ownership, performance, daily }: Props) {
   const t = useTranslations('Gates')
+  const ts = useTranslations('Startup')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -380,6 +393,15 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
           <Link href={ownership.pendingTransferId ? `/projects/${project.id}/startup/transfers/${ownership.pendingTransferId}` : `/projects/${project.id}/startup/operations`} style={linkStyle}>
             {ownership.pendingTransferId ? t('ownership.pending') : t('ownership.link')}
           </Link>
+          {performance.map(pt => (
+            <Link key={pt.id} href={`/projects/${project.id}/startup/performance/${pt.id}`} title={pt.title}
+              style={{ display: 'inline-flex', gap: 4, alignItems: 'center', textDecoration: 'none' }}>
+              {pt.lastRun?.result
+                ? <Chip tone={RESULT_TONE[pt.lastRun.result]}>{pt.number} · {ts(`perf.result.${pt.lastRun.result}`)}</Chip>
+                : <Chip tone="muted">{pt.number} · {pt.lastRun ? ts(`perf.runStatus.${pt.lastRun.status}`) : t('performance.noRun')}</Chip>}
+              {pt.certificate && <Chip tone={CERT_TONE[pt.certificate.status]}>{pt.certificate.number} · {ts(`perf.certStatus.${pt.certificate.status}`)}</Chip>}
+            </Link>
+          ))}
         </div>
         <p style={{ ...small, margin: 0 }}>
           {project.code} · {project.name}{system.area ? ` · ${system.area}` : ''}
