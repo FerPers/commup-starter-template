@@ -9616,6 +9616,685 @@ export type Database = {
           },
         ]
       }
+      vendor_activities: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          location: string | null
+          notes: string | null
+          package_id: string
+          performed_on: string | null
+          planned_date: string | null
+          project_id: string
+          recorded_by: string | null
+          result: string
+          result_at: string | null
+          result_by: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          location?: string | null
+          notes?: string | null
+          package_id: string
+          performed_on?: string | null
+          planned_date?: string | null
+          project_id: string
+          recorded_by?: string | null
+          result?: string
+          result_at?: string | null
+          result_by?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          location?: string | null
+          notes?: string | null
+          package_id?: string
+          performed_on?: string | null
+          planned_date?: string | null
+          project_id?: string
+          recorded_by?: string | null
+          result?: string
+          result_at?: string | null
+          result_by?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_activities_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_activities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_checklist: {
+        Row: {
+          checked_at: string | null
+          checked_by: string | null
+          done: boolean
+          item_key: string
+          note: string | null
+          package_id: string
+          phase: string
+          project_id: string
+        }
+        Insert: {
+          checked_at?: string | null
+          checked_by?: string | null
+          done?: boolean
+          item_key: string
+          note?: string | null
+          package_id: string
+          phase: string
+          project_id: string
+        }
+        Update: {
+          checked_at?: string | null
+          checked_by?: string | null
+          done?: boolean
+          item_key?: string
+          note?: string | null
+          package_id?: string
+          phase?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_checklist_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_checklist_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_findings: {
+        Row: {
+          action_id: string | null
+          activity_id: string
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          package_id: string
+          project_id: string
+          punch_id: string | null
+          tag_id: string | null
+        }
+        Insert: {
+          action_id?: string | null
+          activity_id: string
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          package_id: string
+          project_id: string
+          punch_id?: string | null
+          tag_id?: string | null
+        }
+        Update: {
+          action_id?: string | null
+          activity_id?: string
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          package_id?: string
+          project_id?: string
+          punch_id?: string | null
+          tag_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_findings_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_punch_id_fkey"
+            columns: ["punch_id"]
+            isOneToOne: false
+            referencedRelation: "ops_dashboard"
+            referencedColumns: ["punch_id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_punch_id_fkey"
+            columns: ["punch_id"]
+            isOneToOne: false
+            referencedRelation: "punch_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_punch_id_fkey"
+            columns: ["punch_id"]
+            isOneToOne: false
+            referencedRelation: "punches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_findings_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_interfaces: {
+        Row: {
+          counterpart: string | null
+          counterpart_company_id: string | null
+          created_at: string
+          description: string
+          id: string
+          package_id: string
+          project_id: string
+          responsible: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          counterpart?: string | null
+          counterpart_company_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          package_id: string
+          project_id: string
+          responsible?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          counterpart?: string | null
+          counterpart_company_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          package_id?: string
+          project_id?: string
+          responsible?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_interfaces_counterpart_company_id_fkey"
+            columns: ["counterpart_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_interfaces_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_interfaces_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_package_systems: {
+        Row: {
+          package_id: string
+          project_id: string
+          system_id: string
+        }
+        Insert: {
+          package_id: string
+          project_id: string
+          system_id: string
+        }
+        Update: {
+          package_id?: string
+          project_id?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_package_systems_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_package_systems_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_package_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "vendor_package_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "vendor_package_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_package_systems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
+      vendor_package_tags: {
+        Row: {
+          package_id: string
+          project_id: string
+          tag_id: string
+        }
+        Insert: {
+          package_id: string
+          project_id: string
+          tag_id: string
+        }
+        Update: {
+          package_id?: string
+          project_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_package_tags_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_package_tags_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_package_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "vendor_package_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_package_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_packages: {
+        Row: {
+          boundaries: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          demobilization_note: string | null
+          demobilized_at: string | null
+          demobilized_by: string | null
+          id: string
+          mob_gate_id: string | null
+          mob_system_id: string | null
+          mobilization_note: string | null
+          mobilized_at: string | null
+          mobilized_by: string | null
+          number: string
+          org_id: string
+          planned_mobilization: string | null
+          project_id: string
+          scope: string | null
+          seq: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          boundaries?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          demobilization_note?: string | null
+          demobilized_at?: string | null
+          demobilized_by?: string | null
+          id?: string
+          mob_gate_id?: string | null
+          mob_system_id?: string | null
+          mobilization_note?: string | null
+          mobilized_at?: string | null
+          mobilized_by?: string | null
+          number: string
+          org_id: string
+          planned_mobilization?: string | null
+          project_id: string
+          scope?: string | null
+          seq: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          boundaries?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          demobilization_note?: string | null
+          demobilized_at?: string | null
+          demobilized_by?: string | null
+          id?: string
+          mob_gate_id?: string | null
+          mob_system_id?: string | null
+          mobilization_note?: string | null
+          mobilized_at?: string | null
+          mobilized_by?: string | null
+          number?: string
+          org_id?: string
+          planned_mobilization?: string | null
+          project_id?: string
+          scope?: string | null
+          seq?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_packages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_packages_mob_gate_id_fkey"
+            columns: ["mob_gate_id"]
+            isOneToOne: false
+            referencedRelation: "readiness_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_packages_mob_system_id_fkey"
+            columns: ["mob_system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "vendor_packages_mob_system_id_fkey"
+            columns: ["mob_system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "vendor_packages_mob_system_id_fkey"
+            columns: ["mob_system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_packages_mob_system_id_fkey"
+            columns: ["mob_system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "vendor_packages_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_packages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_recommendations: {
+        Row: {
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          description: string
+          id: string
+          implementation_note: string | null
+          implemented_at: string | null
+          implemented_by: string | null
+          moc_reference: string | null
+          package_id: string
+          project_id: string
+          proposed_at: string
+          proposed_by: string | null
+          rationale: string | null
+          requires_moc: boolean
+          seq: number
+          status: string
+        }
+        Insert: {
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          description: string
+          id?: string
+          implementation_note?: string | null
+          implemented_at?: string | null
+          implemented_by?: string | null
+          moc_reference?: string | null
+          package_id: string
+          project_id: string
+          proposed_at?: string
+          proposed_by?: string | null
+          rationale?: string | null
+          requires_moc?: boolean
+          seq: number
+          status?: string
+        }
+        Update: {
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          description?: string
+          id?: string
+          implementation_note?: string | null
+          implemented_at?: string | null
+          implemented_by?: string | null
+          moc_reference?: string | null
+          package_id?: string
+          project_id?: string
+          proposed_at?: string
+          proposed_by?: string | null
+          rationale?: string | null
+          requires_moc?: boolean
+          seq?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_recommendations_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_recommendations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_reports: {
+        Row: {
+          activities: string
+          headcount: number | null
+          hours: number | null
+          id: string
+          issued_at: string
+          issued_by: string | null
+          issues: string | null
+          kind: string
+          package_id: string
+          project_id: string
+          report_date: string
+        }
+        Insert: {
+          activities: string
+          headcount?: number | null
+          hours?: number | null
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          issues?: string | null
+          kind: string
+          package_id: string
+          project_id: string
+          report_date: string
+        }
+        Update: {
+          activities?: string
+          headcount?: number | null
+          hours?: number | null
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          issues?: string | null
+          kind?: string
+          package_id?: string
+          project_id?: string
+          report_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_reports_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_deliveries: {
         Row: {
           attempts: number
@@ -10823,6 +11502,29 @@ export type Database = {
         }
         Returns: undefined
       }
+      add_vendor_finding: {
+        Args: {
+          p_activity_id: string
+          p_category: string
+          p_description: string
+          p_due_date?: string
+          p_owner_id?: string
+          p_tag_id: string
+        }
+        Returns: string
+      }
+      add_vendor_report: {
+        Args: {
+          p_activities: string
+          p_headcount: number
+          p_hours: number
+          p_issues: string
+          p_kind: string
+          p_package_id: string
+          p_report_date: string
+        }
+        Returns: string
+      }
       advance_performance_run: {
         Args: {
           p_at?: string
@@ -10881,6 +11583,10 @@ export type Database = {
       }
       cancel_ownership_transfer: {
         Args: { p_reason: string; p_transfer_id: string }
+        Returns: undefined
+      }
+      cancel_vendor_package: {
+        Args: { p_package_id: string; p_reason: string }
         Returns: undefined
       }
       cleanup_signal_samples_retention: { Args: never; Returns: number }
@@ -11167,6 +11873,15 @@ export type Database = {
           severity: string
         }[]
       }
+      decide_vendor_recommendation: {
+        Args: {
+          p_decision: string
+          p_id: string
+          p_reason: string
+          p_requires_moc: boolean
+        }
+        Returns: undefined
+      }
       delete_critical_spare: {
         Args: { p_spare_id: string }
         Returns: undefined
@@ -11206,6 +11921,10 @@ export type Database = {
       }
       delete_webhook_subscription: {
         Args: { p_sub_id: string }
+        Returns: undefined
+      }
+      demobilize_vendor_package: {
+        Args: { p_note?: string; p_package_id: string }
         Returns: undefined
       }
       document_check_refs: {
@@ -11282,6 +12001,10 @@ export type Database = {
       }
       handover_snapshot: { Args: { p_project_id: string }; Returns: Json }
       hold_release_roles: { Args: { p_capacity: string }; Returns: string[] }
+      implement_vendor_recommendation: {
+        Args: { p_id: string; p_moc_reference: string; p_note: string }
+        Returns: undefined
+      }
       increment_webhook_failure_count: {
         Args: { sub_id: string }
         Returns: undefined
@@ -11411,6 +12134,10 @@ export type Database = {
         Args: { p_milestone: string }
         Returns: string
       }
+      mobilize_vendor_package: {
+        Args: { p_note?: string; p_package_id: string }
+        Returns: undefined
+      }
       my_work_counts: { Args: { p_org_id: string }; Returns: Json }
       new_performance_revision: {
         Args: { p_reason: string; p_test_id: string }
@@ -11504,6 +12231,15 @@ export type Database = {
           status: Database["public"]["Enums"]["punch_status"]
         }[]
       }
+      propose_vendor_recommendation: {
+        Args: {
+          p_description: string
+          p_package_id: string
+          p_rationale: string
+          p_requires_moc: boolean
+        }
+        Returns: string
+      }
       punch_caller_role: {
         Args: { p_punch: Database["public"]["Tables"]["punches"]["Row"] }
         Returns: string
@@ -11584,6 +12320,15 @@ export type Database = {
           p_title: string
         }
         Returns: string
+      }
+      record_vendor_activity_result: {
+        Args: {
+          p_activity_id: string
+          p_notes?: string
+          p_performed_on: string
+          p_result: string
+        }
+        Returns: undefined
       }
       refreeze_performance_run: { Args: { p_run_id: string }; Returns: number }
       refresh_daily_report_data: {
@@ -11696,6 +12441,46 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_vendor_activity: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_location: string
+          p_notes: string
+          p_package_id: string
+          p_planned_date: string
+          p_title: string
+        }
+        Returns: string
+      }
+      save_vendor_interface: {
+        Args: {
+          p_counterpart: string
+          p_counterpart_company_id: string
+          p_description: string
+          p_id: string
+          p_package_id: string
+          p_responsible: string
+          p_status: string
+        }
+        Returns: string
+      }
+      save_vendor_package: {
+        Args: {
+          p_boundaries: string
+          p_company_id: string
+          p_id: string
+          p_mob_gate_id: string
+          p_mob_system_id: string
+          p_planned_mobilization: string
+          p_project_id: string
+          p_scope: string
+          p_systems: string[]
+          p_tags: string[]
+          p_title: string
+        }
+        Returns: string
+      }
       seed_default_gate_for_phase: {
         Args: { p_phase_id: string }
         Returns: string
@@ -11751,6 +12536,16 @@ export type Database = {
           p_disturbance_id: string
           p_excluded: boolean
           p_reason: string
+        }
+        Returns: undefined
+      }
+      set_vendor_checklist_item: {
+        Args: {
+          p_done: boolean
+          p_key: string
+          p_note: string
+          p_package_id: string
+          p_phase: string
         }
         Returns: undefined
       }
@@ -12022,6 +12817,19 @@ export type Database = {
         Returns: string
       }
       user_in_project_org: { Args: { p_project_id: string }; Returns: boolean }
+      vendor_checklist_keys: { Args: { p_phase: string }; Returns: string[] }
+      vendor_demobilization_status: {
+        Args: { p_package_id: string }
+        Returns: Json
+      }
+      vendor_mobilization_status: {
+        Args: { p_package_id: string }
+        Returns: Json
+      }
+      vendor_package_for_write: {
+        Args: { p_lead: boolean; p_package_id: string }
+        Returns: Record<string, unknown>
+      }
       verify_lineup_item: { Args: { p_item_id: string }; Returns: undefined }
       verify_punch: {
         Args: { p_accept: boolean; p_comment?: string; p_punch_id: string }

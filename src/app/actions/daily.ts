@@ -9,10 +9,11 @@ import {
   DECISION_SOURCES,
   ESCALATION_LEVELS,
   IMPACT_KINDS,
-  MGMT_KINDS,
+  EVIDENCE_KINDS,
   TQ_ADDRESSEES,
   VERIFICATION_METHODS,
   type ActionPriority,
+  type EvidenceKind,
   type ActionSource,
   type ActionStatus,
   type ConstraintStatus,
@@ -403,9 +404,9 @@ export const addMgmtAttachment = withAuth(
   { guards: projectGuard },
   async (
     ctx,
-    input: { projectId: string; kind: MgmtKind; entityId: string; filePath: string; fileName: string; mimeType?: string; sizeBytes?: number },
+    input: { projectId: string; kind: EvidenceKind; entityId: string; filePath: string; fileName: string; mimeType?: string; sizeBytes?: number },
   ): Promise<{ id?: string; error?: string }> => {
-    if (!MGMT_KINDS.includes(input.kind)) return { error: 'Tipo no válido' }
+    if (!EVIDENCE_KINDS.includes(input.kind)) return { error: 'Tipo no válido' }
     if (!input.filePath.startsWith(`${input.projectId}/${input.kind}/${input.entityId}/`)) return { error: 'Ruta de evidencia no válida' }
     const { data, error } = await ctx.supabase.rpc('add_mgmt_attachment', {
       p_entity_kind: input.kind,
@@ -416,7 +417,8 @@ export const addMgmtAttachment = withAuth(
       p_size_bytes: input.sizeBytes ?? undefined,
     })
     if (error) return { error: error.message }
-    revalidate(input.projectId, input.kind, input.entityId)
+    if (input.kind === 'vendor_report' || input.kind === 'vendor_activity') revalidatePath(`/projects/${input.projectId}/vendors`, 'layout')
+    else revalidate(input.projectId, input.kind, input.entityId)
     return { id: data as string }
   },
 )

@@ -7,6 +7,9 @@
 
 export type MgmtKind = 'action' | 'constraint' | 'tq' | 'decision'
 export const MGMT_KINDS: MgmtKind[] = ['action', 'constraint', 'tq', 'decision']
+/** Entidades que admiten evidencia en mgmt-evidence (gestión diaria + reportes y FAT/SAT del vendor, fase 8). */
+export type EvidenceKind = MgmtKind | 'vendor_report' | 'vendor_activity'
+export const EVIDENCE_KINDS: EvidenceKind[] = [...MGMT_KINDS, 'vendor_report', 'vendor_activity']
 
 // ── Acciones ────────────────────────────────────────────────────────────
 export type ActionStatus = 'open' | 'in_progress' | 'done' | 'verified' | 'cancelled'
@@ -75,7 +78,7 @@ export function daysOverdue(date: string | null | undefined, today: string): num
 }
 
 /** Ruta de evidencia en el bucket mgmt-evidence (la política y la RPC exigen este prefijo). */
-export function evidencePath(projectId: string, kind: MgmtKind, entityId: string, fileName: string, stamp = Date.now()): string {
+export function evidencePath(projectId: string, kind: EvidenceKind, entityId: string, fileName: string, stamp = Date.now()): string {
   const safe = fileName.normalize('NFKD').replace(/[^\w.-]+/g, '_').replace(/_+/g, '_').slice(-120) || 'archivo'
   return `${projectId}/${kind}/${entityId}/${stamp}-${safe}`
 }

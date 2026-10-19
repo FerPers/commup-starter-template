@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import type { SystemGate } from '@/lib/readiness/gates'
 import type { OwnershipStage } from '@/lib/startup/catalog'
+import type { PackageStatus } from '@/lib/vendors/catalog'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import SystemGatesView, { type SystemPerformance } from './SystemGatesView'
 import type { GatePlanEvent } from './GatePlanPanel'
@@ -69,6 +70,15 @@ export default async function SystemGatesPage({
     return { id: pt.id, number: pt.number, title: pt.title, lastRun: runs[0] ? { status: runs[0].status, result: runs[0].result } : null, certificate: cert }
   }) as SystemPerformance[]
 
+  // Paquetes de vendor del sistema (fase 8): número, estado y empresa, como chip junto a la etapa.
+  const { data: vendorRows } = await supabase.from('vendor_package_systems')
+    .select('vendor_packages!inner(id, number, title, status, companies(name, short_name))')
+    .eq('system_id', systemId)
+  const vendors = (vendorRows ?? []).map(r => {
+    const v = r.vendor_packages as unknown as { id: string; number: string; title: string; status: string; companies: { name: string; short_name: string | null } | null }
+    return { id: v.id, number: v.number, title: v.title, status: v.status as PackageStatus, company: v.companies?.short_name?.trim() ? v.companies.short_name : v.companies?.name ?? '' }
+  }).filter(v => v.status !== 'cancelled').sort((a, b) => a.number.localeCompare(b.number))
+
   type Ref = { id: string; code: string }
   const dependsOn = (deps ?? []).filter(d => d.system_id === systemId).map(d => d.provider as unknown as Ref).filter(Boolean)
   const enables = (deps ?? []).filter(d => d.depends_on_system_id === systemId).map(d => d.dependent as unknown as Ref).filter(Boolean)
@@ -103,6 +113,7 @@ export default async function SystemGatesPage({
         canCommit: EDITOR_ROLES.includes(ctx.role),
       }}
       performance={performance}
+      vendors={vendors}
       ownership={{ stage: (ownership?.stage ?? 'commissioning') as OwnershipStage, pendingTransferId: pendingTransfer?.id ?? null }}
       milestones={(milestones ?? []).map(m => ({ id: m.id, milestone: m.milestone as string, occurredAt: m.occurred_at, status: m.status }))}
       daily={{

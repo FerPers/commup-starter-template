@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { addMgmtAttachment, getMgmtEvidenceUrl } from '@/app/actions/daily'
-import { evidencePath, type MgmtKind } from '@/lib/daily/catalog'
+import { evidencePath, type EvidenceKind, type MgmtKind } from '@/lib/daily/catalog'
 import { btn, card, input, label, small } from '../registers/register-ui'
 
 // Piezas compartidas de la gestión diaria (fase 5): chips de estado, prioridad y nivel, campo con
@@ -157,7 +157,7 @@ export type Attachment = { id: string; file_name: string; file_path: string; mim
 
 /** Evidencia inmutable: subir al bucket mgmt-evidence y registrar por RPC; abrir con URL firmada. */
 export function Evidence({ projectId, kind, entityId, attachments, names, canAdd, required }: {
-  projectId: string; kind: MgmtKind; entityId: string; attachments: Attachment[]; names: Record<string, string>; canAdd: boolean; required?: boolean
+  projectId: string; kind: EvidenceKind; entityId: string; attachments: Attachment[]; names: Record<string, string>; canAdd: boolean; required?: boolean
 }) {
   const t = useTranslations('Daily')
   const router = useRouter()
@@ -191,8 +191,8 @@ export function Evidence({ projectId, kind, entityId, attachments, names, canAdd
   }
 
   return (
-    <section style={card} aria-labelledby="daily-evidence">
-      <h2 id="daily-evidence" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('evidence.title')}</h2>
+    <section style={card} aria-labelledby={`evidence-${entityId}`}>
+      <h2 id={`evidence-${entityId}`} style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('evidence.title')}</h2>
       <p style={{ ...small, margin: '0 0 10px' }}>{required ? t('evidence.required') : t('evidence.help')}</p>
       {error && <div style={{ marginBottom: 10 }}><Alert kind="error">{error}</Alert></div>}
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>

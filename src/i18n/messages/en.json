@@ -108,7 +108,8 @@
       "registerTypes": "Controlled registers",
       "testEquipment": "Test equipment",
       "documents": "Documents",
-      "companies": "Companies"
+      "companies": "Companies",
+      "vendors": "Vendors"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -4559,6 +4560,218 @@
       "members": "Users",
       "personnel": "Operations staff",
       "equipment": "Test equipment"
+    }
+  },
+  "Vendors": {
+    "title": "Vendor packages",
+    "subtitle": "scope, interfaces, mobilization, FAT/SAT, reports and demobilization",
+    "new": "New package",
+    "create": "Create package",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "editPkg": "Edit package",
+    "open": "View",
+    "hide": "Hide",
+    "allStatus": "All statuses",
+    "noMatch": "No package matches the filter.",
+    "empty": "No vendor packages yet.",
+    "noCompanies": "Register the vendor company first.",
+    "goCompanies": "Go to Companies →",
+    "noSystems": "No systems",
+    "scopeTitle": "Package scope",
+    "plannedOn": "planned mobilization {date}",
+    "cancelled": "Cancelled: {reason}",
+    "kpi": {
+      "planned": "Planned",
+      "mobilized": "Mobilized",
+      "pendingTests": "Pending FAT/SAT",
+      "openFindings": "Open findings",
+      "toDecide": "Recommendations to decide"
+    },
+    "col": {
+      "number": "Package",
+      "pending": "Pending"
+    },
+    "chip": {
+      "tests": "{n} FAT/SAT pending",
+      "failed": "{n} failed",
+      "findings": "{n} finding(s)",
+      "recs": "{n} to decide"
+    },
+    "status": {
+      "planned": "Planned",
+      "mobilized": "Mobilized",
+      "demobilized": "Demobilized",
+      "cancelled": "Cancelled"
+    },
+    "gateStatus": {
+      "approved": "approved",
+      "approved_with_conditions": "approved with conditions",
+      "pending_signatures": "pending signatures",
+      "ready": "ready, not approved",
+      "ready_with_conditions": "ready with conditions, not approved",
+      "not_ready": "not ready",
+      "regressed": "regressed",
+      "none": "—"
+    },
+    "f": {
+      "title": "Title",
+      "company": "Vendor company",
+      "systems": "Systems",
+      "tags": "Package equipment (tags)",
+      "tagsHint": "Tags of the package systems.",
+      "status": "Status",
+      "scope": "Scope",
+      "boundaries": "Package boundaries",
+      "boundariesPh": "Where it starts and ends (flanges, terminals, panels…)",
+      "planned": "Planned mobilization",
+      "mobSystem": "Mobilization system",
+      "mobGate": "Mobilization gate",
+      "noMobGate": "No gate (checklist only)"
+    },
+    "ifz": {
+      "title": "Interfaces",
+      "new": "New interface",
+      "help": "What connects the package to others (electrical, instrumentation, civil, other vendors). All must be agreed before mobilizing.",
+      "company": "Counterpart company",
+      "counterpart": "Counterpart / discipline",
+      "counterpartPh": "e.g. EPC electrical",
+      "responsible": "Owner",
+      "description": "Description",
+      "empty": "No interfaces registered.",
+      "by": "owner {who}",
+      "status": {
+        "open": "Open",
+        "agreed": "Agreed",
+        "closed": "Closed"
+      }
+    },
+    "check": {
+      "scope_interfaces": "Scope and interfaces agreed",
+      "hse_induction": "HSE induction of staff",
+      "permits": "Work permits issued",
+      "calibrated_equipment": "Calibrated tools and equipment",
+      "documents_current": "Vendor documents current",
+      "as_built_delivered": "As-built delivered",
+      "tools_removed": "Tools and equipment removed",
+      "permits_closed": "Work permits closed",
+      "area_clean": "Area clean and handed back"
+    },
+    "mob": {
+      "title": "Mobilization",
+      "gate": "Gate {gate}: {status}",
+      "noGate": "No system gate: checklist only",
+      "interfaces": "{n, plural, =0 {Interfaces agreed} one {One open interface} other {# open interfaces}}",
+      "checklist": "{n, plural, =0 {Checklist complete} one {One checklist item missing} other {# checklist items missing}}",
+      "note": "Note (reason if cancelling)",
+      "authorize": "Authorize mobilization",
+      "cancel": "Cancel package",
+      "cancelHint": "Write the reason in the note",
+      "cancelConfirm": "Cancel the package? This cannot be undone.",
+      "done": "Mobilized by {who} · {when}"
+    },
+    "demob": {
+      "title": "Demobilization",
+      "finalOk": "Final report issued",
+      "finalMissing": "Vendor final report missing",
+      "catA": "{n, plural, =0 {No open Cat A punches} one {One open Cat A punch} other {# open Cat A punches}}",
+      "checklist": "{n, plural, =0 {Checklist complete} one {One checklist item missing} other {# checklist items missing}}",
+      "authorize": "Authorize demobilization",
+      "done": "Demobilized by {who} · {when}",
+      "notYet": "Available once the vendor is mobilized."
+    },
+    "tests": {
+      "title": "FAT / SAT",
+      "new": "New test",
+      "help": "Factory (FAT) or site (SAT) tests. A finding with a tag becomes a punch; without a tag, a daily-management action.",
+      "kind": "Type",
+      "kinds": {
+        "fat": "FAT",
+        "sat": "SAT"
+      },
+      "planned": "Planned date",
+      "location": "Location",
+      "notes": "Notes",
+      "empty": "No tests registered.",
+      "plannedOn": "planned {date}",
+      "findingsN": "{n, plural, =0 {no findings} one {# finding} other {# findings}}",
+      "results": {
+        "pending": "Pending",
+        "passed": "Passed",
+        "passed_with_findings": "Passed with findings",
+        "failed": "Failed"
+      },
+      "punchChip": "Punch Cat {cat}",
+      "actionChip": "Action",
+      "noFindings": "No findings.",
+      "finding": "Finding",
+      "tag": "Tag",
+      "noTag": "No tag (action)",
+      "category": "Category",
+      "cat": {
+        "A": "A — blocking",
+        "B": "B — transferable",
+        "C": "C — minor"
+      },
+      "owner": "Action owner",
+      "due": "Due date",
+      "becomesPunch": "A punch will be created with origin {pkg}.",
+      "becomesAction": "An ACC action will be created with vendor origin.",
+      "addFinding": "Add finding",
+      "result": "Result",
+      "performed": "Performed on",
+      "record": "Record result",
+      "needFindings": "Record at least one finding",
+      "resultConfirm": "Record the result? It cannot change afterwards and no more findings are accepted.",
+      "recordedBy": "Result recorded by {who} · {when}"
+    },
+    "reports": {
+      "title": "Vendor reports",
+      "new": "New report",
+      "help": "Daily ones and one final. They are immutable once recorded; the final one is required to demobilize.",
+      "notMobilized": "Reports are recorded while the vendor is mobilized.",
+      "kind": "Type",
+      "kinds": {
+        "daily": "Daily",
+        "final": "Final"
+      },
+      "date": "Date",
+      "headcount": "Staff on site",
+      "hours": "Man-hours",
+      "activities": "Activities performed",
+      "issues": "Issues / pending",
+      "finalWarn": "The final report is unique and immutable.",
+      "finalConfirm": "Issue the final report? It is unique and cannot be corrected.",
+      "save": "Record report",
+      "empty": "No reports.",
+      "summary": "{people} people · {hours} h"
+    },
+    "recs": {
+      "title": "Recommendations",
+      "new": "New recommendation",
+      "help": "None applies without a leader approval; if it changes design or process, the owner MOC number is required to implement it.",
+      "description": "Recommendation",
+      "rationale": "Rationale",
+      "requiresMoc": "Changes design or process (requires MOC)",
+      "propose": "Propose",
+      "empty": "No recommendations.",
+      "status": {
+        "proposed": "Proposed",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "implemented": "Implemented"
+      },
+      "mocChip": "Requires MOC",
+      "mocRef": "MOC {moc}",
+      "decidedBy": "Decided by {who}",
+      "implementedBy": "Implemented by {who}",
+      "reason": "Reason (required to reject)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "mocPh": "MOC no.",
+      "note": "Implementation note",
+      "implement": "Mark implemented"
     }
   }
 }

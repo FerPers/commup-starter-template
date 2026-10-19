@@ -108,7 +108,8 @@
       "registerTypes": "Registros controlados",
       "testEquipment": "Equipos de prueba",
       "documents": "Documentos",
-      "companies": "Empresas"
+      "companies": "Empresas",
+      "vendors": "Vendors"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -4559,6 +4560,218 @@
       "members": "Usuarios",
       "personnel": "Personal de operaciones",
       "equipment": "Equipos de prueba"
+    }
+  },
+  "Vendors": {
+    "title": "Paquetes de vendor",
+    "subtitle": "alcance, interfaces, movilización, FAT/SAT, reportes y desmovilización",
+    "new": "Nuevo paquete",
+    "create": "Crear paquete",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "editPkg": "Editar paquete",
+    "open": "Ver",
+    "hide": "Ocultar",
+    "allStatus": "Todos los estados",
+    "noMatch": "Ningún paquete coincide con el filtro.",
+    "empty": "Aún no hay paquetes de vendor.",
+    "noCompanies": "Primero registra la empresa del vendor.",
+    "goCompanies": "Ir a Empresas →",
+    "noSystems": "Sin sistemas",
+    "scopeTitle": "Alcance del paquete",
+    "plannedOn": "movilización prevista {date}",
+    "cancelled": "Cancelado: {reason}",
+    "kpi": {
+      "planned": "Planificados",
+      "mobilized": "Movilizados",
+      "pendingTests": "FAT/SAT pendientes",
+      "openFindings": "Hallazgos abiertos",
+      "toDecide": "Recomendaciones por decidir"
+    },
+    "col": {
+      "number": "Paquete",
+      "pending": "Pendientes"
+    },
+    "chip": {
+      "tests": "{n} FAT/SAT pend.",
+      "failed": "{n} fallida(s)",
+      "findings": "{n} hallazgo(s)",
+      "recs": "{n} por decidir"
+    },
+    "status": {
+      "planned": "Planificado",
+      "mobilized": "Movilizado",
+      "demobilized": "Desmovilizado",
+      "cancelled": "Cancelado"
+    },
+    "gateStatus": {
+      "approved": "aprobado",
+      "approved_with_conditions": "aprobado con condiciones",
+      "pending_signatures": "pendiente de firmas",
+      "ready": "listo, sin aprobar",
+      "ready_with_conditions": "listo con condiciones, sin aprobar",
+      "not_ready": "no listo",
+      "regressed": "en regresión",
+      "none": "—"
+    },
+    "f": {
+      "title": "Título",
+      "company": "Empresa del vendor",
+      "systems": "Sistemas",
+      "tags": "Equipos del paquete (tags)",
+      "tagsHint": "Tags de los sistemas del paquete.",
+      "status": "Estado",
+      "scope": "Alcance",
+      "boundaries": "Límites del paquete",
+      "boundariesPh": "Dónde empieza y termina (bridas, borneras, tableros…)",
+      "planned": "Movilización prevista",
+      "mobSystem": "Sistema de movilización",
+      "mobGate": "Gate de movilización",
+      "noMobGate": "Sin gate (solo checklist)"
+    },
+    "ifz": {
+      "title": "Interfaces",
+      "new": "Nueva interfaz",
+      "help": "Qué conecta el paquete con otros (eléctrico, instrumentación, civil, otros vendors). Todas deben quedar acordadas antes de movilizar.",
+      "company": "Empresa contraparte",
+      "counterpart": "Contraparte / disciplina",
+      "counterpartPh": "p. ej. Electricidad EPC",
+      "responsible": "Responsable",
+      "description": "Descripción",
+      "empty": "Sin interfaces registradas.",
+      "by": "resp. {who}",
+      "status": {
+        "open": "Abierta",
+        "agreed": "Acordada",
+        "closed": "Cerrada"
+      }
+    },
+    "check": {
+      "scope_interfaces": "Alcance e interfaces acordados",
+      "hse_induction": "Inducción HSE del personal",
+      "permits": "Permisos de trabajo emitidos",
+      "calibrated_equipment": "Equipos y herramientas calibrados",
+      "documents_current": "Documentos del vendor vigentes",
+      "as_built_delivered": "As-built entregados",
+      "tools_removed": "Herramientas y equipos retirados",
+      "permits_closed": "Permisos de trabajo cerrados",
+      "area_clean": "Área limpia y entregada"
+    },
+    "mob": {
+      "title": "Movilización",
+      "gate": "Gate {gate}: {status}",
+      "noGate": "Sin gate de sistema: solo checklist",
+      "interfaces": "{n, plural, =0 {Interfaces acordadas} one {Una interfaz abierta} other {# interfaces abiertas}}",
+      "checklist": "{n, plural, =0 {Checklist completo} one {Falta un ítem del checklist} other {Faltan # ítems del checklist}}",
+      "note": "Nota (motivo si cancelas)",
+      "authorize": "Autorizar movilización",
+      "cancel": "Cancelar paquete",
+      "cancelHint": "Escribe el motivo en la nota",
+      "cancelConfirm": "¿Cancelar el paquete? No se puede deshacer.",
+      "done": "Movilizado por {who} · {when}"
+    },
+    "demob": {
+      "title": "Desmovilización",
+      "finalOk": "Reporte final emitido",
+      "finalMissing": "Falta el reporte final del vendor",
+      "catA": "{n, plural, =0 {Sin punch Cat A abiertos} one {Un punch Cat A abierto} other {# punch Cat A abiertos}}",
+      "checklist": "{n, plural, =0 {Checklist completo} one {Falta un ítem del checklist} other {Faltan # ítems del checklist}}",
+      "authorize": "Autorizar desmovilización",
+      "done": "Desmovilizado por {who} · {when}",
+      "notYet": "Disponible con el vendor movilizado."
+    },
+    "tests": {
+      "title": "FAT / SAT",
+      "new": "Nueva prueba",
+      "help": "Pruebas en fábrica (FAT) o en sitio (SAT). Un hallazgo con tag se vuelve punch; sin tag, una acción de gestión diaria.",
+      "kind": "Tipo",
+      "kinds": {
+        "fat": "FAT",
+        "sat": "SAT"
+      },
+      "planned": "Fecha prevista",
+      "location": "Lugar",
+      "notes": "Notas",
+      "empty": "Sin pruebas registradas.",
+      "plannedOn": "prevista {date}",
+      "findingsN": "{n, plural, =0 {sin hallazgos} one {# hallazgo} other {# hallazgos}}",
+      "results": {
+        "pending": "Pendiente",
+        "passed": "Aprobada",
+        "passed_with_findings": "Aprobada con hallazgos",
+        "failed": "Fallida"
+      },
+      "punchChip": "Punch Cat {cat}",
+      "actionChip": "Acción",
+      "noFindings": "Sin hallazgos.",
+      "finding": "Hallazgo",
+      "tag": "Tag",
+      "noTag": "Sin tag (acción)",
+      "category": "Categoría",
+      "cat": {
+        "A": "A — bloquea",
+        "B": "B — transferible",
+        "C": "C — menor"
+      },
+      "owner": "Responsable de la acción",
+      "due": "Fecha límite",
+      "becomesPunch": "Se creará un punch con origen {pkg}.",
+      "becomesAction": "Se creará una acción ACC con origen vendor.",
+      "addFinding": "Agregar hallazgo",
+      "result": "Resultado",
+      "performed": "Fecha de ejecución",
+      "record": "Registrar resultado",
+      "needFindings": "Registra al menos un hallazgo",
+      "resultConfirm": "¿Registrar el resultado? Después no cambia y no admite más hallazgos.",
+      "recordedBy": "Resultado registrado por {who} · {when}"
+    },
+    "reports": {
+      "title": "Reportes del vendor",
+      "new": "Nuevo reporte",
+      "help": "Diarios y uno final. Quedan inmutables al registrarse; el final es requisito de la desmovilización.",
+      "notMobilized": "Los reportes se registran con el vendor movilizado.",
+      "kind": "Tipo",
+      "kinds": {
+        "daily": "Diario",
+        "final": "Final"
+      },
+      "date": "Fecha",
+      "headcount": "Personal en sitio",
+      "hours": "Horas-hombre",
+      "activities": "Actividades realizadas",
+      "issues": "Problemas / pendientes",
+      "finalWarn": "El reporte final es único e inmutable.",
+      "finalConfirm": "¿Emitir el reporte final? Es único y no se puede corregir.",
+      "save": "Registrar reporte",
+      "empty": "Sin reportes.",
+      "summary": "{people} personas · {hours} h"
+    },
+    "recs": {
+      "title": "Recomendaciones",
+      "new": "Nueva recomendación",
+      "help": "Ninguna se aplica sin aprobación de un líder; si cambia diseño o proceso, exige el número de MOC de la operadora para implementarse.",
+      "description": "Recomendación",
+      "rationale": "Justificación",
+      "requiresMoc": "Cambia diseño o proceso (requiere MOC)",
+      "propose": "Proponer",
+      "empty": "Sin recomendaciones.",
+      "status": {
+        "proposed": "Propuesta",
+        "approved": "Aprobada",
+        "rejected": "Rechazada",
+        "implemented": "Implementada"
+      },
+      "mocChip": "Requiere MOC",
+      "mocRef": "MOC {moc}",
+      "decidedBy": "Decidió {who}",
+      "implementedBy": "Implementó {who}",
+      "reason": "Motivo (obligatorio para rechazar)",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "mocPh": "N.º de MOC",
+      "note": "Nota de implementación",
+      "implement": "Marcar implementada"
     }
   }
 }

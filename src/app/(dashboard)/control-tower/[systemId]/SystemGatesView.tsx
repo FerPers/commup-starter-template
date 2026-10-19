@@ -8,6 +8,7 @@ import { MILESTONES, type OwnershipStage } from '@/lib/startup/catalog'
 import { StageChip } from '@/app/(dashboard)/projects/[id]/startup/operations/ownership-ui'
 import { Chip } from '@/app/(dashboard)/projects/[id]/daily/daily-ui'
 import { CERT_TONE, RESULT_TONE, type CertificateStatus, type PerfResult, type PerfRunStatus } from '@/lib/performance/catalog'
+import { PACKAGE_TONE, type PackageStatus } from '@/lib/vendors/catalog'
 import GatePlanPanel, { type GatePlan, type GatePlanEvent, type GateProgress } from './GatePlanPanel'
 import { createClient } from '@/lib/supabase/client'
 import type { DependencyCriterionDetail } from '@/lib/systems/dependencies'
@@ -65,6 +66,8 @@ type Props = {
   ownership: { stage: OwnershipStage; pendingTransferId: string | null }
   /** Pruebas de desempeño de las que el sistema es principal (fase 7). */
   performance: SystemPerformance[]
+  /** Paquetes de vendor que abarcan el sistema (fase 8; no afectan los gates, §15.13). */
+  vendors: { id: string; number: string; title: string; status: PackageStatus; company: string }[]
   /** Gestión diaria del sistema (fase 5): restricciones no cerradas y acciones vivas. */
   daily: {
     constraints: { id: string; number: string; title: string; status: string; escalation_level: number; need_date: string; gate: string | null }[]
@@ -106,9 +109,10 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, ownership, performance, daily }: Props) {
+export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, ownership, performance, vendors, daily }: Props) {
   const t = useTranslations('Gates')
   const ts = useTranslations('Startup')
+  const tv = useTranslations('Vendors')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -419,6 +423,11 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
                 ? <Chip tone={RESULT_TONE[pt.lastRun.result]}>{pt.number} · {ts(`perf.result.${pt.lastRun.result}`)}</Chip>
                 : <Chip tone="muted">{pt.number} · {pt.lastRun ? ts(`perf.runStatus.${pt.lastRun.status}`) : t('performance.noRun')}</Chip>}
               {pt.certificate && <Chip tone={CERT_TONE[pt.certificate.status]}>{pt.certificate.number} · {ts(`perf.certStatus.${pt.certificate.status}`)}</Chip>}
+            </Link>
+          ))}
+          {vendors.map(v => (
+            <Link key={v.id} href={`/projects/${project.id}/vendors/${v.id}`} title={v.title} style={{ textDecoration: 'none' }}>
+              <Chip tone={PACKAGE_TONE[v.status]}>{v.number} · {v.company} · {tv(`status.${v.status}`)}</Chip>
             </Link>
           ))}
         </div>
