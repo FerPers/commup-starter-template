@@ -12023,6 +12023,7 @@ export type Database = {
       is_catalog_org: { Args: { target_org_id: string }; Returns: boolean }
       is_org_admin: { Args: { p_org_id: string }; Returns: boolean }
       is_org_editor: { Args: { p_org_id: string }; Returns: boolean }
+      is_org_privileged: { Args: { p_org_id: string }; Returns: boolean }
       is_project_editor: { Args: { p_project_id: string }; Returns: boolean }
       is_project_field_member: {
         Args: { p_project_id: string }
