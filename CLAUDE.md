@@ -86,6 +86,7 @@ src/app/
 | `src/lib/constants/navigation.ts` + `src/lib/my-work/queues.ts` | `homeForRole()` and the pure queue logic behind `/my-work` (badge total via SQL `my_work_counts(p_org_id)`, SECURITY INVOKER) |
 | `supabase/migrations/00000000000000_baseline.sql` | Canonical Postgres schema (pg_dump of prod 2026-05-15). See `supabase/README.md` for migration workflow |
 | `public/sw.js` | **Hand-maintained** service worker (the real one — edit the .js directly) |
+| `.github/workflows/lint.yml` | CI (TypeScript, ESLint, Vitest incl. tests/db) + job `deploy` con `needs: [typecheck, lint, test]`: un push con CI roja no despliega por GH Actions (G-01). Cloudflare Workers Builds sigue desplegando aparte hasta desconectarlo (D1) |
 | `.github/workflows/cron.yml` | Cron triggers for /api/cron/* (OpenNext doesn't emit `scheduled()` — do NOT use wrangler.jsonc triggers) |
 | `wrangler.jsonc` | Cloudflare Workers config pointing to `.open-next/worker.js` |
 

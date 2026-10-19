@@ -183,7 +183,7 @@ Roles de la organización: **owner, admin, architect, leader, inspector, client*
 **Día típico**
 1. Antes de salir a campo, con red: abre **Mi trabajo** y entra a cada ITR que vas a ejecutar hoy (así quedan disponibles sin red).
 2. En campo: abre el ITR, registra el **equipo de prueba** si lo pide, completa los ítems, toma fotos. Se guarda solo.
-3. Si encuentras un defecto: botón ⚑ del ítem o «Punch». ⚠ Hoy el inspector no puede crear punch (ver §8): **anótalo en las observaciones del ítem y avisa a tu supervisor**, o pídele que lo levante.
+3. Si encuentras un defecto: botón ⚑ del ítem o «Punch» al pie del ITR. Después abre el punch (ficha del tag › Punch, o Punch list) para **agregar fotos y comentarios**.
 4. Al terminar el contenido: **Firmar** como ejecutor enseguida (⚠ el ITR desaparece de «por ejecutar» al completar el contenido aunque falte tu firma).
 5. Revisa en Mi trabajo: **punches asignados** (resolver con descripción y fotos), **punches por verificar** (de otros), **preservación vencida**, **holds** y **filas de line-up**.
 6. Al volver la red, comprueba que el pie no muestre «N pendientes». **No cierres sesión ni prestes la tablet con pendientes.**
@@ -311,9 +311,9 @@ Todo lo del admin, y además: borrar proyectos, elegir el catálogo de plantilla
 ### 5.3 Ejecutar y firmar un ITR (inspector y asignados)
 1. Entra desde **Mi trabajo**, la ficha del tag o escaneando su QR.
 2. Cabecera: número, plantilla y revisión, datos del tag (desplegable), avance, firmas. ES/EN cambia el idioma de los ítems.
-3. **Documentos de referencia** (si los hay): deben estar «vigentes»; si aparece un aviso rojo de revisión superada, pulsa «Actualizar a la vigente» antes de firmar.
-4. **Equipo de prueba:** regístralo si la plantilla lo exige; vencido en la fecha de uso bloquea la firma.
-5. Completa los ítems: se guardan al salir del campo (texto, número, fecha) o al tocar (casilla, sí/no, selección, tabla). Fotos con la cámara; documentos PDF hasta 10 MB (con red). El micrófono dicta observaciones (⚠ puede estar bloqueado).
+3. Completa los ítems: se guardan al salir del campo (texto, número, fecha) o al tocar (casilla, sí/no, selección, tabla). Fotos con la cámara; documentos PDF hasta 10 MB (con red). El micrófono dicta observaciones (⚠ puede estar bloqueado). En los ITR de loop check y C&E la tabla trae una fila por señal o por efecto, tomadas al generar el ITR.
+4. **Equipo de prueba** (debajo de los ítems): regístralo si la plantilla lo exige; vencido en la fecha de uso bloquea la firma.
+5. **Documentos de referencia** (debajo de los ítems, si los hay): deben estar «vigentes»; si aparece un aviso rojo de revisión superada, pulsa «Actualizar a la vigente» antes de firmar.
 6. Un **ítem crítico en falla** deja el ITR **rechazado**: corrige o levanta punch.
 7. **Firmar:** con el ITR completado → Firmar → rol habilitado → firma en el recuadro → Confirmar. Orden: ejecutor → supervisor → cliente. Con las tres → **aprobado** → PDF disponible.
 8. **Reabrir** (owner, admin, architect): «Revocar» con motivo; se anulan las firmas y queda la copia en la auditoría.
@@ -548,7 +548,7 @@ Todo queda en una **bandeja de salida** del dispositivo y se envía al volver la
 | Ejecutar ITR | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ |
 | Firmar ITR (rol asignado) | ◐ | ◐ | ◐ | ◐ | ◐ | ◐ |
 | Reabrir ITR aprobado | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ |
-| Levantar punch | ✓ | ✓ | ✓ | ✓ | ⚠ | ✗ |
+| Levantar punch | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ |
 | Resolver punch | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ |
 | Verificar punch (otra persona) | ◐ | ◐ | ◐ | ◐ | ◐ | ◐ |
 | Revisar categoría de punch | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ |
@@ -585,10 +585,7 @@ Están identificadas en la revisión integral del 2026-10-19 y en la hoja de rut
 | Situación | Qué hacer |
 |---|---|
 | Un ITR solo se aprueba con firma de ejecutor, supervisor **y** cliente, y no se pueden agregar después. | Asigna siempre los tres roles al crear el ITR. |
-| Los ITR de loop check y C&E no habilitan «Firmar». | Avisa al architect; se corrige en la primera semana. |
-| El inspector no puede levantar punch (el botón aparece pero falla; sin red se descarta). | Anota el defecto en las observaciones del ítem y pide al supervisor que lo levante. |
 | Preservación finalizada por un inspector no avanza la fecha ni queda registrada. | Que un líder finalice el registro. |
-| El ITR sale de «por ejecutar» al completar el contenido aunque falte tu firma. | Firma inmediatamente después de completar. |
 | Nadie recibe aviso de gates por aprobar o co-firmar, registros por autorizar o TQ respondidas. | Revisa Control Tower y las listas en la reunión diaria. |
 | El reporte diario corta el día en hora UTC y cuenta como máximo 30 ITR aprobados y 30 punch nuevos. | Revisa las cifras antes de emitir. |
 | En proyectos de más de 1.000 ITR o punch, algunos KPIs y la elegibilidad de certificados pueden quedar incompletos. | Confirma con la lista paginada antes de emitir un certificado. |

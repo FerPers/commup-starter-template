@@ -12024,6 +12024,10 @@ export type Database = {
       is_org_admin: { Args: { p_org_id: string }; Returns: boolean }
       is_org_editor: { Args: { p_org_id: string }; Returns: boolean }
       is_project_editor: { Args: { p_project_id: string }; Returns: boolean }
+      is_project_field_member: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       issue_daily_report: { Args: { p_report_id: string }; Returns: string }
       issue_document_revision: {
