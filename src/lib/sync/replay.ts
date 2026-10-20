@@ -2,8 +2,9 @@
  * CommUp — Replay queue helper (Stage 14.5)
  *
  * Llamado cuando el navegador recupera conexión (useOfflineSync), al «Forzar sincronización»
- * o al cerrar sesión con pendientes. Drena la cola IndexedDB aplicando
- * Last-Write-Wins automático y registra cada conflicto en el server.
+ * o al cerrar sesión con pendientes. Drena la cola IndexedDB.
+ *
+ * S18 sesión 2: las respuestas ya no usan LWW por reloj sino compare-and-set por versión (ver response-utils.ts).
  *
  * Sprint O (2026-09-07): después de las respuestas drena la bandeja de salida
  * (fotos → bucket + itr_attachments; punches → createPunch; firmas → signItr).
@@ -19,13 +20,14 @@
  */
 
 import {
-  getAllQueued, removeFromQueue, markResponseAttempt, getOutbox, removeFromOutbox, markOutboxAttempt,
+  getAllQueued, removeFromQueue, markResponseAttempt, patchResponseEntry, getOutbox, removeFromOutbox, markOutboxAttempt,
   notifyOutboxChanged, SYNC_DONE_EVENT, SYNC_DROPPED_EVENT, type OutboxEntry, type SyncDroppedDetail,
 } from '@/lib/offline-queue'
 import { uploadPhoto, isNetworkFailure, sendPunch } from '@/lib/sync/outbox'
 import { outboxPolicy, signatureWaits } from '@/lib/sync/outbox-utils'
 import { currentUserId } from '@/lib/sync/owner'
 import { sendableBy } from '@/lib/sync/ownership'
+import { expectedVersion, responseHeld, responseKey } from '@/lib/sync/response-utils'
 import { replayStartupOnce } from '@/lib/sync/startup-outbox'
 import { signItr } from '@/app/actions/itr-instances'
 import { createPunch } from '@/app/actions/punches'
@@ -36,6 +38,18 @@ import { upsertResponse } from '@/app/actions/itr-instances'
 let inFlight = false
 
 type ResponseItem = Awaited<ReturnType<typeof getAllQueued>>[number]
+
+/** Solo los campos que la captura trajo (parche parcial: lo ausente no se toca). */
+function pickResponseFields(item: ResponseItem) {
+  const out: { valueText?: string | null; valueNumeric?: number | null; valueBool?: boolean | null; valueOption?: string | null; remarks?: string | null; isPassed?: boolean | null } = {}
+  if ('valueText' in item) out.valueText = item.valueText
+  if ('valueNumeric' in item) out.valueNumeric = item.valueNumeric
+  if ('valueBool' in item) out.valueBool = item.valueBool
+  if ('valueOption' in item) out.valueOption = item.valueOption
+  if ('remarks' in item) out.remarks = item.remarks
+  if ('isPassed' in item) out.isPassed = item.isPassed
+  return out
+}
 
 function responseLocalPayload(item: ResponseItem): Json {
   return {
@@ -55,76 +69,32 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
     const userId = await currentUserId()
     const items = sendableBy(await getAllQueued(), userId)
 
-    for (const item of items) {
+    // S18 sesión 2 (C-35/B-16): sin comparar relojes. Cada respuesta lleva la versión de la casilla que vio el
+    // dispositivo; si otra persona la cambió, queda en «conflicto» y decide el usuario (bandeja del ITR).
+    const written = new Map<string, string>()
+    for (const item of [...items].sort((x, y) => (x.id ?? 0) - (y.id ?? 0))) {
+      if (item.id === undefined || responseHeld(item, items)) continue
       try {
-        let winner: 'local' | 'remote' = 'local'
-        let remotePayload: Json | null = null
-        let remoteTs: string | null = null
-
-        if (item.updatedAt) {
-          // itr_responses no tiene updated_at — responded_at es el timestamp de escritura
-          const { data: serverRow } = await supabase
-            .from('itr_responses')
-            .select('responded_at, value_text, value_numeric, value_bool, value_option, remarks, is_passed')
-            .eq('itr_id', item.itrId)
-            .eq('item_id', item.itemId)
-            .maybeSingle()
-
-          if (serverRow?.responded_at && serverRow.responded_at > item.updatedAt) {
-            winner = 'remote'
-            remotePayload = serverRow
-            remoteTs = serverRow.responded_at
-          }
-        }
-
-        if (winner === 'remote') {
-          conflicts++
-          await supabase.rpc('log_sync_conflict', {
-            p_entity_type: 'itr_response', // la respuesta en cola no guarda el proyecto: org activa del usuario
-            p_entity_id: `${item.itrId}:${item.itemId}`,
-            p_local_payload: responseLocalPayload(item),
-            p_remote_payload: remotePayload ?? {},
-            p_local_ts: item.updatedAt ?? item.queuedAt,
-            p_remote_ts: remoteTs ?? item.queuedAt,
-            p_winner: 'remote',
-            p_notes: 'Auto LWW: server tenía versión más reciente',
-          })
-          // Descartamos el cambio local — el remoto gana
-          if (item.id !== undefined) await removeFromQueue(item.id)
-          continue
-        }
-
-        // winner === 'local' (no conflict o local más reciente)
         const res = await upsertResponse({
           itrId: item.itrId,
           itemId: item.itemId,
           templateId: item.templateId,
-          valueText: item.valueText,
-          valueNumeric: item.valueNumeric,
-          valueBool: item.valueBool,
-          valueOption: item.valueOption,
-          remarks: item.remarks,
-          isPassed: item.isPassed,
+          ...pickResponseFields(item),
+          capturedAt: item.updatedAt ?? item.queuedAt,
+          expectedRespondedAt: expectedVersion(item, written),
         })
 
+        if (res.conflict) {
+          await patchResponseEntry(item.id, { state: 'conflict', remote: res.conflict, force: false })
+          item.state = 'conflict' // retiene en este mismo replay las ediciones posteriores de la casilla
+          conflicts++
+          continue
+        }
         if (!res.error) {
-          // Si había una versión remota distinta y la nuestra ganó, lo registramos
-          if (remotePayload) {
-            conflicts++
-            await supabase.rpc('log_sync_conflict', {
-              p_entity_type: 'itr_response', // la respuesta en cola no guarda el proyecto: org activa del usuario
-              p_entity_id: `${item.itrId}:${item.itemId}`,
-              p_local_payload: responseLocalPayload(item),
-              p_remote_payload: remotePayload ?? {},
-              p_local_ts: item.updatedAt ?? item.queuedAt,
-              p_remote_ts: remoteTs ?? item.queuedAt,
-              p_winner: 'local',
-              p_notes: 'Auto LWW: cliente tenía versión más reciente',
-            })
-          }
-          if (item.id !== undefined) await removeFromQueue(item.id)
+          if (res.respondedAt) written.set(responseKey(item), res.respondedAt)
+          await removeFromQueue(item.id)
           flushed++
-        } else if (item.id !== undefined) {
+        } else {
           // S18 (C-07): rechazo lógico (ITR firmado/aprobado, ítem que ya no aplica). Cuenta un intento y sigue
           // con las demás; al agotar la política se descarta con rastro en sync_conflicts y aviso a la UI.
           if (outboxPolicy('response', item.attempts ?? 0) === 'drop') {
@@ -150,11 +120,11 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
         }
       } catch (err) {
         if (isNetworkFailure(err)) break // sin red todavía: reintentar luego
-        if (item.id !== undefined) await markResponseAttempt(item.id, err instanceof Error ? err.message : String(err))
+        await markResponseAttempt(item.id, err instanceof Error ? err.message : String(err))
       }
     }
 
-    // Firmas de ITR que todavía tienen respuestas propias en cola: esperan (C-07).
+    // Firmas de ITR que todavía tienen respuestas propias en cola (pendientes o en conflicto): esperan (C-07).
     const waiting = new Set(sendableBy(await getAllQueued(), userId).map(r => r.itrId))
     const outbox = await replayOutboxOnce(supabase, userId, waiting)
     flushed += outbox.flushed

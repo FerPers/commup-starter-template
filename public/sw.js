@@ -1,7 +1,7 @@
 // CommUp Service Worker — v2.1 (S18)
 // Strategy:
 //   /_next/static/*  → cache-first (immutable assets)
-//   navigate (HTML)  → network-first, fallback to cache (commup-pages, últimas 40), fallback to /offline
+//   navigate (HTML)  → network-first, fallback to cache (commup-pages, últimas 40; commup-pages-prep, ITR preparados), fallback to /offline.html
 //   images           → cache-first (same-origin)
 //   API/Supabase     → NO se intercepta ni se cachea (S18, G-03): lo offline va por IndexedDB
 //   scripts/estilos  → network-first (S18, G-20)
@@ -12,12 +12,15 @@
 // (src/lib/sync/session.ts → purgeSessionCaches) las borre junto con las imágenes. Al activar esta versión se
 // borran las cachés viejas, incluida `commup-api-*` (respuestas REST/Auth de Supabase de versiones anteriores).
 
-const SW_VERSION = '2.1.0'
+const SW_VERSION = '2.2.1'
 const CACHE_STATIC = `commup-static-v${SW_VERSION}`
 const CACHE_PAGES  = `commup-pages-v${SW_VERSION}`
+// S18 sesión 2 (C-09): ITR descargados con «Preparar para trabajar sin red» (no se recortan; se reemplazan al preparar).
+const CACHE_PREP   = `commup-pages-prep-v${SW_VERSION}`
+const MAX_PREP     = 30
 const CACHE_IMAGES = `commup-images-v${SW_VERSION}`
-const KEEP_CACHES  = [CACHE_STATIC, CACHE_PAGES, CACHE_IMAGES]
-const OFFLINE_URL  = '/offline'
+const KEEP_CACHES  = [CACHE_STATIC, CACHE_PAGES, CACHE_PREP, CACHE_IMAGES]
+const OFFLINE_URL  = '/offline.html'
 const MAX_PAGES    = 40
 
 const PRECACHE = [
@@ -146,6 +149,7 @@ async function navigateFirst(request) {
   } catch {
     const cached = await caches.match(request)
     if (cached) return cached
+    // S18 (G-23): página estática bilingüe (no depende de JS ni de chunks que quizá no estén en caché).
     const offline = await caches.match(OFFLINE_URL)
     return offline ?? new Response('Offline', { status: 503 })
   }
@@ -159,6 +163,44 @@ async function staleWhileRevalidate(request, cacheName) {
     return resp
   }).catch(() => cached || new Response('Offline', { status: 503 }))
   return cached || fetchPromise
+}
+
+// ── Preparar para trabajar sin red (S18 sesión 2, C-09) ─────────────
+// La página manda { type: 'PRECACHE_PAGES', urls } por un MessageChannel; el SW descarga cada página (con las
+// cookies de la sesión), guarda el HTML en CACHE_PREP y los chunks /_next/static/ que referencia, y responde
+// { ok, failed }. Una redirección (p. ej. a /login) cuenta como fallo.
+self.addEventListener('message', event => {
+  const data = event.data || {}
+  if (data.type !== 'PRECACHE_PAGES' || !Array.isArray(data.urls)) return
+  const port = event.ports && event.ports[0]
+  event.waitUntil(precachePages(data.urls).then(result => { if (port) port.postMessage(result) }))
+})
+
+async function precachePages(urls) {
+  await caches.delete(CACHE_PREP)
+  const pages = await caches.open(CACHE_PREP)
+  const statics = await caches.open(CACHE_STATIC)
+  let ok = 0
+  let failed = 0
+  for (const raw of urls.slice(0, MAX_PREP)) {
+    try {
+      const url = new URL(raw, self.location.origin)
+      if (url.origin !== self.location.origin) { failed++; continue }
+      const resp = await fetch(url.href, { credentials: 'same-origin' })
+      if (!resp.ok || resp.redirected) { failed++; continue }
+      const html = await resp.clone().text()
+      await pages.put(url.href, resp)
+      const assets = new Set([...html.matchAll(/\/_next\/static\/[^"'\s)\\]+/g)].map(m => m[0]))
+      for (const a of assets) {
+        if (await statics.match(a)) continue
+        try { const r = await fetch(a); if (r.ok) await statics.put(a, r) } catch { /* sigue con las demás */ }
+      }
+      ok++
+    } catch {
+      failed++
+    }
+  }
+  return { ok, failed }
 }
 
 // ── Push Notifications ────────────────────────────────────────────────

@@ -2480,6 +2480,8 @@ export type Database = {
       }
       itr_responses: {
         Row: {
+          capture_clamped: boolean
+          captured_at: string | null
           id: string
           is_passed: boolean | null
           item_id: string
@@ -2493,6 +2495,8 @@ export type Database = {
           value_text: string | null
         }
         Insert: {
+          capture_clamped?: boolean
+          captured_at?: string | null
           id?: string
           is_passed?: boolean | null
           item_id: string
@@ -2506,6 +2510,8 @@ export type Database = {
           value_text?: string | null
         }
         Update: {
+          capture_clamped?: boolean
+          captured_at?: string | null
           id?: string
           is_passed?: boolean | null
           item_id?: string

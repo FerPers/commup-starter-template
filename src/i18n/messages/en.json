@@ -1338,7 +1338,16 @@
       "unsyncedTitle": "Not synced",
       "unsyncedPunch": "Punch “{desc}”: {error}",
       "discard": "Discard",
-      "discardConfirm": "Discard this punch without recording it? It will be lost."
+      "discardConfirm": "Discard this punch without recording it? It will be lost.",
+      "conflictTitle": "Someone else changed these items while you were offline",
+      "conflictMine": "Your value: {value}",
+      "conflictTheirs": "Current: {value} ({who}, {when})",
+      "someone": "someone else",
+      "applyMine": "Apply mine",
+      "keepTheirs": "Discard mine",
+      "discardNeedsNetwork": "Discarding needs a connection (a record is kept).",
+      "yes": "Yes",
+      "no": "No"
     },
     "tagData": {
       "title": "Tag data ({count})",
@@ -5060,6 +5069,12 @@
     "heldOther": "{n, plural, =1 {# offline capture from another person is held} other {# offline captures from another person are held}} on this device: only that person can send them after signing in.",
     "claim": "They are mine — send",
     "discard": "Discard",
-    "needsNetwork": "Discarding needs a connection (a record of what was discarded is kept)."
+    "needsNetwork": "Discarding needs a connection (a record of what was discarded is kept).",
+    "prepareHint": "{n, plural, =1 {Download your pending ITR} other {Download your # pending ITRs}} to open and fill them offline in the field.",
+    "prepare": "Prepare to work offline",
+    "preparing": "Downloading…",
+    "prepared": "{ok, plural, =1 {# ITR ready} other {# ITRs ready}} to work offline{failed, plural, =0 {} other { · # could not be downloaded}}.",
+    "ready": "Available offline",
+    "readyTitle": "Saved on this device: opens without a connection"
   }
 }

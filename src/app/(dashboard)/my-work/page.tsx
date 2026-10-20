@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import PrepareOffline, { OfflineReadyChip } from '@/components/offline/PrepareOffline'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { canReleaseHold, signableCapacities, type HoldCapacity } from '@/lib/startup/catalog'
@@ -331,6 +332,10 @@ export default async function MyWorkPage() {
         {counts.performance_to_sign > 0 && <Chip n={counts.performance_to_sign} label={t('chips.performanceSign')} tone="warning" />}
       </div>
 
+      {/* S18 (C-09): descargar mis ITR pendientes para trabajar sin red */}
+      <PrepareOffline urls={[...queues.execute, ...queues.review].map(a => a.itrs!).filter(i => i.tags?.id)
+        .map(i => `/projects/${i.project_id}/tags/${i.tags!.id}/itrs/${i.id}`)} />
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* ITRs por ejecutar */}
         <Queue title={t('queues.execute')} count={queues.execute.length} total={counts.itrs_execute} emptyText={t('empty.execute')} moreHref="/itrs" moreLabel={t('viewAll', { count: counts.itrs_execute })} limit={QUEUE_LIMIT}>
@@ -339,6 +344,7 @@ export default async function MyWorkPage() {
             const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
             return (
               <Row key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} stripe={style.color}
+                tag={<OfflineReadyChip url={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} />}
                 code={itr.itr_number}
                 phase={itr.project_phases}
                 what={itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : itr.itr_number}
@@ -358,6 +364,7 @@ export default async function MyWorkPage() {
             const itr = a.itrs!
             return (
               <Row key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} stripe={ITR_STYLE.completed.color}
+                tag={<OfflineReadyChip url={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} />}
                 code={itr.itr_number}
                 phase={itr.project_phases}
                 what={`${itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : ''}${itr.completed_date ? ` · ${t('completedOn', { date: fmt(itr.completed_date) })}` : ''}`}

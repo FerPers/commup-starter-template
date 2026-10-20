@@ -3,7 +3,7 @@
 //
 // Stores:
 //   itr_responses  — respuestas de ítems (Stage 14.5), replay con LWW.
-//   itr_snapshots  — copia completa del ITR para verlo sin red.
+//   itr_snapshots  — obsoleto (S18, C-38): ya no se escribe; se vacía al cerrar sesión.
 //   outbox         — Sprint O (2026-09-07): fotos (blob), punches y firmas capturados
 //                    sin red, en orden de captura. Se drenan en src/lib/sync/replay.ts.
 //   startup_outbox — fase 6 (2026-10-16): pasos de ejecución, «Detener» y posiciones de line-up
@@ -14,6 +14,7 @@
 
 import type { StartupEntry, StartupOp } from './sync/startup-outbox-utils'
 import { countByOwner, type OwnerCounts } from './sync/ownership'
+import type { ResponseConflict, ResponseQueueState } from './sync/response-utils'
 
 const DB_NAME = 'commup-offline'
 const DB_VERSION = 4
@@ -99,6 +100,13 @@ export type QueuedResponse = {
   /** S18 (C-07): rechazos lógicos del servidor; al agotar la política se descarta con rastro. */
   attempts?: number
   lastError?: string | null
+  /** S18 sesión 2 (B-16): `responded_at` de la casilla tal como lo vio el dispositivo (null = sin respuesta). */
+  expectedRespondedAt?: string | null
+  /** «conflicto» = otra persona cambió la casilla; queda hasta que el usuario decide. */
+  state?: ResponseQueueState
+  remote?: ResponseConflict | null
+  /** «Aplicar la mía»: enviar sin comprobar versión. */
+  force?: boolean
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -160,50 +168,34 @@ export async function markResponseAttempt(id: number, lastError: string): Promis
   })
 }
 
+export async function patchResponseEntry(id: number, patch: Partial<QueuedResponse>): Promise<void> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite')
+    const store = tx.objectStore(STORE)
+    const req = store.get(id)
+    req.onsuccess = () => {
+      const row = req.result as QueuedResponse | undefined
+      if (row) store.put({ ...row, ...patch, id })
+    }
+    tx.oncomplete = () => { db.close(); notifyOutboxChanged(); resolve() }
+    tx.onerror = () => { db.close(); reject(tx.error) }
+  })
+}
+
 export async function removeFromQueue(id: number): Promise<void> {
   const db = await openDB()
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite')
     tx.objectStore(STORE).delete(id)
-    tx.oncomplete = () => { db.close(); resolve() }
+    tx.oncomplete = () => { db.close(); notifyOutboxChanged(); resolve() }
     tx.onerror = () => { db.close(); reject(tx.error) }
   })
 }
 
-// ── ITR Snapshots — full ITR data for offline viewing ────────────────
-
-export async function saveItrSnapshot(itrId: string, data: unknown): Promise<void> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(SNAPSHOTS_STORE, 'readwrite')
-    tx.objectStore(SNAPSHOTS_STORE).put({ itrId, data, savedAt: new Date().toISOString() })
-    tx.oncomplete = () => { db.close(); resolve() }
-    tx.onerror = () => { db.close(); reject(tx.error) }
-  })
-}
-
-export async function getItrSnapshot(itrId: string): Promise<unknown | null> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(SNAPSHOTS_STORE, 'readonly')
-    const req = tx.objectStore(SNAPSHOTS_STORE).get(itrId)
-    req.onsuccess = () => {
-      db.close()
-      resolve(req.result ? (req.result as { data: unknown }).data : null)
-    }
-    req.onerror = () => { db.close(); reject(req.error) }
-  })
-}
-
-export async function removeItrSnapshot(itrId: string): Promise<void> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(SNAPSHOTS_STORE, 'readwrite')
-    tx.objectStore(SNAPSHOTS_STORE).delete(itrId)
-    tx.oncomplete = () => { db.close(); resolve() }
-    tx.onerror = () => { db.close(); reject(tx.error) }
-  })
-}
+// ── ITR Snapshots ───────────────────────────────────────────────────
+// S18 (C-38): ya no se escriben (nunca se leían); sin red la página sale de la caché del SW. El store queda para no
+// cambiar la versión de la base y clearOfflineData lo vacía al cerrar sesión.
 
 // ── Outbox — fotos y punches capturados sin red (Sprint O) ───────────
 

@@ -6,6 +6,8 @@ vi.mock('react', () => ({
   useTransition: () => [false, (fn: () => Promise<unknown>) => { harness.transitions.push(fn()) }],
 }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: harness.refresh }) }))
+vi.mock('@/lib/offline-queue', () => ({ getAllQueued: vi.fn(async () => []), OUTBOX_CHANGED_EVENT: 'x' }))
+vi.mock('@/lib/sync/owner', () => ({ currentUserId: vi.fn(async () => 'u') }))
 vi.mock('@/hooks/useOfflineSync', () => ({ useOfflineSync: () => ({ saveWithQueue: harness.save }) }))
 import { useItrAutosave } from './useItrAutosave'
 import type { ItrData } from './types'
@@ -20,7 +22,7 @@ it('persists the next field while a previous request is pending', async () => {
   expect(harness.save).toHaveBeenCalledTimes(1)
   release({ queued: false })
   await Promise.all(harness.transitions)
-  expect(harness.save.mock.calls).toEqual([['text', { valueText: 'test' }], ['date', { valueText: '2026-09-09' }]])
+  expect(harness.save.mock.calls).toEqual([['text', { valueText: 'test' }, null], ['date', { valueText: '2026-09-09' }, null]])
   expect(harness.refresh).toHaveBeenCalledTimes(1)
 })
 it('continues saving later fields after a request throws', async () => {

@@ -7,6 +7,10 @@
 import { useState, useEffect, useCallback, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
+import { getAllQueued, OUTBOX_CHANGED_EVENT } from '@/lib/offline-queue'
+import { currentUserId } from '@/lib/sync/owner'
+import { sendableBy } from '@/lib/sync/ownership'
+import { overlayQueued } from '@/lib/sync/response-utils'
 import type { ItrData, Response, SaveData } from './types'
 
 export function useItrAutosave(itr: ItrData) {
@@ -19,16 +23,16 @@ export function useItrAutosave(itr: ItrData) {
 
   const { isOffline, pendingCount, syncing, saveWithQueue } = useOfflineSync(itr.id, itr.template_id)
 
-  // Persist a snapshot to IndexedDB so the ITR can be viewed offline (lo leerá S18, C-09).
-  // C-38 (S04): sin los trazos de firma en base64 — pesan en cada cambio de props y no hacen falta offline.
+  // S18 (C-38): ya no se guarda una copia del ITR en IndexedDB en cada cambio (nunca se leía); sin red la
+  // pantalla sale de la caché de páginas del SW y lo encolado se superpone abajo (C-09).
+
+  // Versión (`responded_at`) de cada casilla tal como la ve la pantalla: viaja con lo encolado (compare-and-set).
+  const versionsRef = useRef<Record<string, string | null>>({})
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const lean = { ...itr, itr_signatures: itr.itr_signatures.map(s => ({ ...s, signature_image: null })) }
-      void import('@/lib/offline-queue').then(({ saveItrSnapshot }) => {
-        saveItrSnapshot(itr.id, lean).catch(() => {})
-      })
-    }
-  }, [itr])
+    const v: Record<string, string | null> = {}
+    for (const r of itr.itr_responses) v[r.item_id] = r.responded_at
+    versionsRef.current = v
+  }, [itr.itr_responses])
 
   // Build response lookup by item_id. Re-sync when server data changes after
   // router.refresh() so server-side computed fields (e.g. defensive is_passed)
@@ -44,6 +48,29 @@ export function useItrAutosave(itr: ItrData) {
     for (const r of itr.itr_responses) map[r.item_id] = r
     setResponses(map)
   }, [itr.itr_responses])
+
+  // S18 (C-09): al recargar (o al cambiar la bandeja) se superponen las respuestas propias aún encoladas de este
+  // ITR, para que quien trabaja sin red vea lo que ya capturó.
+  useEffect(() => {
+    let alive = true
+    const apply = async () => {
+      // Las que están en conflicto no: la casilla muestra el valor del servidor y la bandeja deja decidir.
+      const queued = sendableBy(await getAllQueued(), await currentUserId()).filter(q => q.itrId === itr.id && q.state !== 'conflict')
+      if (!alive || queued.length === 0) return
+      setResponses(prev => {
+        const next = { ...prev }
+        for (const itemId of new Set(queued.map(q => q.itemId))) {
+          const mine = queued.filter(q => q.itemId === itemId).sort((a, b) => (a.id ?? 0) - (b.id ?? 0))
+          next[itemId] = overlayQueued(prev[itemId] ?? { id: '', item_id: itemId, responded_at: null }, mine) as Response
+        }
+        return next
+      })
+    }
+    const onChange = () => { apply().catch(() => {}) }
+    onChange()
+    window.addEventListener(OUTBOX_CHANGED_EVENT, onChange)
+    return () => { alive = false; window.removeEventListener(OUTBOX_CHANGED_EVENT, onChange) }
+  }, [itr.id, itr.itr_responses])
 
   const saveResponse = useCallback((itemId: string, data: SaveData) => {
     setSaveError(null)
@@ -67,8 +94,9 @@ export function useItrAutosave(itr: ItrData) {
     const task = saveQueueRef.current.then(async () => {
       let savedOnline = false
       try {
-        const res = await saveWithQueue(itemId, data)
+        const res = await saveWithQueue(itemId, data, versionsRef.current[itemId] ?? null)
         if (res.error) { setSaveError(res.error); return }
+        if (res.respondedAt) versionsRef.current[itemId] = res.respondedAt
         if (!res.queued) { savedOnline = true; setLastSaved(new Date()) }
       } catch (error) {
         setSaveError(error instanceof Error ? error.message : 'No se pudo guardar la respuesta')

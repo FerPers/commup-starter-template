@@ -3,66 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CommUP — Sin conexión</title>
+  <title>CommUp — Sin conexión</title>
+  <!-- S18 (G-23): página estática precargada por el SW (public/sw.js). No depende de JS de Next ni de chunks:
+       se muestra cuando una página no está en caché y no hay red. Bilingüe por el idioma del navegador. -->
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0f172a; color: #f8fafc; font-family: -apple-system, sans-serif;
-      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px;
-    }
-    .icon { font-size: 64px; }
-    h1 { font-size: 24px; font-weight: 700; text-align: center; }
-    p { color: #94a3b8; text-align: center; max-width: 320px; line-height: 1.6; }
-    .badge {
-      background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-      padding: 12px 20px; font-size: 14px; color: #64748b; text-align: center;
-    }
-    button {
-      background: #0ea5e9; color: white; border: none; border-radius: 12px;
-      padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer;
-    }
-    button:active { opacity: 0.8; }
+    body { background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; padding: 24px; }
+    main { max-width: 420px; display: flex; flex-direction: column; gap: 18px; text-align: center; }
+    .icon { font-size: 56px; }
+    h1 { font-size: 22px; font-weight: 700; }
+    p { color: #94a3b8; line-height: 1.6; font-size: 15px; }
+    .box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px 18px; text-align: left; }
+    .box h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 8px; }
+    .box ul { padding-left: 18px; color: #cbd5e1; font-size: 14px; line-height: 1.9; }
+    .pending { font-size: 14px; color: #e2e8f0; }
+    button { background: #0ea5e9; color: #fff; border: none; border-radius: 10px; padding: 12px 28px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    #status { font-size: 13px; color: #64748b; min-height: 18px; }
   </style>
 </head>
 <body>
-  <div class="icon">📡</div>
-  <h1>Sin conexión</h1>
-  <p>CommUP no puede conectarse al servidor. Sus datos de campo están guardados localmente y se sincronizarán automáticamente cuando vuelva la conexión.</p>
-  <div class="badge">
-    🔄 Datos pendientes de sync: <span id="pending">calculando...</span>
-  </div>
-  <button id="retry" type="button" aria-label="Reintentar conexión" onclick="location.reload()">Reintentar conexión</button>
-  <p id="status" style="font-size:13px;color:#475569;min-height:18px"></p>
+  <main>
+    <div class="icon" aria-hidden="true">📡</div>
+    <h1 data-i18n="title">Sin conexión</h1>
+    <p data-i18n="body">Esta página no se guardó en el dispositivo y no hay red para traerla.</p>
+    <div class="box">
+      <h2 data-i18n="worksTitle">Funciona sin red</h2>
+      <ul>
+        <li data-i18n="w1">Los ITR descargados con «Preparar para trabajar sin red» en Mi trabajo, o abiertos antes en este dispositivo</li>
+        <li data-i18n="w2">Respuestas, fotos, punch y firmas dentro de esos ITR (se envían al volver la red)</li>
+        <li data-i18n="w3">Pasos de procedimiento y posiciones de line-up ya abiertos</li>
+      </ul>
+    </div>
+    <div class="pending" id="pending"></div>
+    <button id="retry" type="button" data-i18n="retry">Reintentar</button>
+    <p id="status"></p>
+  </main>
   <script>
-    // Leer pending de IndexedDB
-    const req = indexedDB.open('commup-sync-v2', 2);
-    req.onsuccess = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains('sync_queue')) { document.getElementById('pending').textContent = '0 items'; return; }
-      const tx = db.transaction('sync_queue', 'readonly');
-      const store = tx.objectStore('sync_queue');
-      const countReq = store.count();
-      countReq.onsuccess = () => {
-        const n = countReq.result;
-        document.getElementById('pending').textContent = n === 0 ? '0 items (todo sync)' : `${n} item${n > 1 ? 's' : ''} pendiente${n > 1 ? 's' : ''}`;
-      };
-    };
-
-    // Auto-recuperación: cuando el navegador detecta red, recarga.
-    window.addEventListener('online', () => location.reload());
-
-    // Sondeo activo: el evento 'online' no garantiza que el servidor responda
-    // (p.ej. WiFi sin internet). Verificamos el servidor cada 5s y recargamos
-    // en cuanto contesta. Backoff implícito: nos detenemos al recargar.
-    const statusEl = document.getElementById('status');
-    async function probe() {
-      try {
-        const res = await fetch('/manifest.json', { method: 'HEAD', cache: 'no-store' });
-        if (res && (res.ok || res.status === 304)) { statusEl.textContent = '✓ Conexión restablecida, recargando…'; location.reload(); return; }
-      } catch (_) { /* sigue offline */ }
+    var en = (navigator.language || 'es').toLowerCase().indexOf('en') === 0
+    var T = en ? {
+      title: 'You are offline', body: 'This page was not saved on this device and there is no network to fetch it.',
+      worksTitle: 'Works offline', w1: 'ITRs downloaded with “Prepare to work offline” in My work, or opened before on this device',
+      w2: 'Answers, photos, punches and signatures inside those ITRs (sent when the network is back)',
+      w3: 'Procedure steps and line-up positions already open', retry: 'Retry',
+      pending: function (n) { return n === 0 ? 'Nothing pending to sync on this device.' : n + (n === 1 ? ' record' : ' records') + ' waiting to sync on this device.' },
+      checking: 'Checking the server…', back: 'Connection is back. Reloading…'
+    } : {
+      pending: function (n) { return n === 0 ? 'No hay nada pendiente de sincronizar en este dispositivo.' : n + (n === 1 ? ' registro espera' : ' registros esperan') + ' sincronizarse en este dispositivo.' },
+      checking: 'Comprobando el servidor…', back: 'Volvió la conexión. Recargando…'
     }
-    setInterval(probe, 5000);
-    probe();
+    if (en) {
+      document.documentElement.lang = 'en'
+      document.title = 'CommUp — Offline'
+      document.querySelectorAll('[data-i18n]').forEach(function (el) { var k = el.getAttribute('data-i18n'); if (T[k]) el.textContent = T[k] })
+    }
+    // Pendientes en la base offline real (src/lib/offline-queue.ts: commup-offline).
+    try {
+      var req = indexedDB.open('commup-offline')
+      req.onsuccess = function () {
+        var db = req.result, stores = ['itr_responses', 'outbox', 'startup_outbox'].filter(function (s) { return db.objectStoreNames.contains(s) })
+        if (stores.length === 0) { document.getElementById('pending').textContent = T.pending(0); db.close(); return }
+        var tx = db.transaction(stores, 'readonly'), total = 0
+        stores.forEach(function (s) { var c = tx.objectStore(s).count(); c.onsuccess = function () { total += c.result } })
+        tx.oncomplete = function () { document.getElementById('pending').textContent = T.pending(total); db.close() }
+      }
+    } catch (e) { /* sin IndexedDB */ }
+    var statusEl = document.getElementById('status')
+    function reload() { statusEl.textContent = T.back; location.reload() }
+    document.getElementById('retry').addEventListener('click', function () { location.reload() })
+    window.addEventListener('online', reload)
+    // 'online' no garantiza que el servidor responda (Wi-Fi sin internet): sondeo cada 5 s.
+    setInterval(function () {
+      statusEl.textContent = T.checking
+      fetch('/manifest.json', { method: 'HEAD', cache: 'no-store' }).then(function (r) { if (r.ok) { reload() } else { statusEl.textContent = '' } })
+        .catch(function () { statusEl.textContent = '' })
+    }, 5000)
   </script>
 </body>
 </html>

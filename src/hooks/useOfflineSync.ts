@@ -70,25 +70,28 @@ export function useOfflineSync(itrId = '', templateId = '') {
   }, [sync])
 
   // Save a response: try server action, fall back to IndexedDB on network failure
+  // S18 sesión 2: `expectedRespondedAt` = versión de la casilla que ve la pantalla; viaja con lo encolado para el
+  // compare-and-set del replay (en línea se guarda sin comprobar, como siempre).
   const saveWithQueue = useCallback(async (
     itemId: string,
     data: ResponseData,
-  ): Promise<{ error?: string; queued?: boolean }> => {
+    expectedRespondedAt: string | null = null,
+  ): Promise<{ error?: string; queued?: boolean; respondedAt?: string }> => {
     const now = new Date().toISOString()
     // If already known offline, queue immediately
     if (!navigator.onLine) {
-      await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now }, await currentUserId())
+      await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now, expectedRespondedAt, state: 'pending' }, await currentUserId())
       setPendingCount(c => c + 1)
       return { queued: true }
     }
 
     try {
-      const res = await upsertResponse({ itrId, itemId, templateId, ...data })
+      const res = await upsertResponse({ itrId, itemId, templateId, ...data, capturedAt: now })
       setSaveFailed(false)
       return res
     } catch {
       // Network error (fetch failed) → queue offline
-      await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now }, await currentUserId())
+      await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now, expectedRespondedAt, state: 'pending' }, await currentUserId())
       setPendingCount(c => c + 1)
       setSaveFailed(true)
       return { queued: true }

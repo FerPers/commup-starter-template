@@ -41,6 +41,7 @@ export default function ItrExecution({
   memberIds: memberIdList = [],
   testEquipment,
   documentsSlot,
+  conflictsSlot,
   assignable,
   punchAssignees = [],
 }: {
@@ -57,6 +58,8 @@ export default function ItrExecution({
   testEquipment?: { requires: boolean; used: EquipmentUsed[]; options: EquipmentOption[] }
   /** Fase 8: documentos referenciados (bloquea la firma con una revisión superada). */
   documentsSlot?: React.ReactNode
+  /** S18: respuestas sin red en conflicto (ResponseConflicts, armado en la página). */
+  conflictsSlot?: React.ReactNode
   /** S04 (C-01): miembros para completar o cambiar asignaciones de roles sin firmar (solo editores). */
   assignable?: AssignableMember[]
   /** S06 (C-22): miembros a los que se puede asignar un punch desde el ITR. */
@@ -497,6 +500,8 @@ export default function ItrExecution({
             ))}
           </div>
         )}
+
+        {conflictsSlot}
 
         {/* Critical blockers warning */}
         {criticalBlocked.length > 0 && (

@@ -11,6 +11,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
 import type { TablesInsert, TablesUpdate } from '@/types/supabase.generated'
+import type { ResponseConflict } from '@/lib/sync/response-utils'
 import type { ActiveContext } from '@/lib/supabase/membership'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (upsertResponse,
@@ -170,8 +171,16 @@ export const upsertResponse = withAuth(
       valueOption?: string | null
       remarks?: string | null
       isPassed?: boolean | null
+      /** S18 (C-35): hora de captura en campo (ISO); la BD la acota a [creación del ITR, now()]. */
+      capturedAt?: string
+      /**
+       * S18 (B-16, decisión de Luis): versión de la fila (`responded_at`) que vio el dispositivo; null = no había
+       * respuesta. Si viene y la fila cambió, no se escribe y se devuelve `conflict` (decide el usuario).
+       * Ausente = sin comprobación (guardado en línea o «Aplicar la mía»).
+       */
+      expectedRespondedAt?: string | null
     },
-  ): Promise<{ error?: string }> => {
+  ): Promise<{ error?: string; conflict?: ResponseConflict; respondedAt?: string }> => {
     const { itrId, itemId } = input
 
     // Guard: ITR aprobado es inmutable. Sin este chequeo, upsertResponse recalcula
@@ -211,9 +220,10 @@ export const upsertResponse = withAuth(
     }
 
     // Build patch with only the fields explicitly provided.
+    // responded_at / responded_by los fija la BD (trigger itr_response_times, S18); captured_at se acota allí.
     const patch: TablesUpdate<'itr_responses'> = {
-      responded_at: new Date().toISOString(),
       responded_by: ctx.userId,
+      captured_at: input.capturedAt ?? new Date().toISOString(),
     }
     if ('valueText'    in input) patch.value_text    = input.valueText
     if ('valueNumeric' in input) patch.value_numeric = input.valueNumeric
@@ -237,7 +247,7 @@ export const upsertResponse = withAuth(
     // upsert with partial fields would null-out the missing columns.
     const { data: existing, error: existingReadError } = await ctx.supabase
       .from('itr_responses')
-      .select('id, value_option, value_text')
+      .select('id, value_option, value_text, value_numeric, value_bool, remarks, is_passed, responded_at, responded_by')
       .eq('itr_id', itrId)
       .eq('item_id', itemId)
       .maybeSingle()
@@ -262,17 +272,44 @@ export const upsertResponse = withAuth(
       patch.is_passed = evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, selected).isPassed
     }
 
+    const checkVersion = 'expectedRespondedAt' in input && input.expectedRespondedAt !== undefined
+    const conflictFrom = (row: NonNullable<typeof existing>): { conflict: ResponseConflict } => ({ conflict: {
+      respondedAt: row.responded_at, respondedBy: row.responded_by,
+      valueText: row.value_text, valueNumeric: row.value_numeric, valueBool: row.value_bool, valueOption: row.value_option,
+      remarks: row.remarks, isPassed: row.is_passed,
+    } })
+    const reread = async () => (await ctx.supabase.from('itr_responses')
+      .select('id, value_option, value_text, value_numeric, value_bool, remarks, is_passed, responded_at, responded_by')
+      .eq('itr_id', itrId).eq('item_id', itemId).maybeSingle()).data
+
+    let respondedAt: string | null = null
     if (existing) {
-      const { error } = await ctx.supabase
-        .from('itr_responses')
-        .update(patch)
-        .eq('id', existing.id)
+      if (checkVersion && input.expectedRespondedAt === null) return conflictFrom(existing) // alguien la creó después
+      let q = ctx.supabase.from('itr_responses').update(patch).eq('id', existing.id)
+      // Compare-and-set en el mismo UPDATE: si otra escritura cambió la fila, no toca nada.
+      if (checkVersion) q = q.eq('responded_at', input.expectedRespondedAt as string)
+      const { data: written, error } = await q.select('responded_at')
       if (error) return { error: error.message }
+      if (checkVersion && !written?.length) {
+        const now = await reread()
+        return now ? conflictFrom(now) : { error: 'La respuesta ya no existe' }
+      }
+      respondedAt = written?.[0]?.responded_at ?? null
     } else {
-      const { error } = await ctx.supabase
+      const { data: written, error } = await ctx.supabase
         .from('itr_responses')
         .insert({ itr_id: itrId, item_id: itemId, ...patch })
-      if (error) return { error: error.message }
+        .select('responded_at')
+        .single()
+      if (error) {
+        // Otra escritura creó la fila entre la lectura y el insert (UNIQUE itr_id, item_id).
+        if (error.code === '23505' && checkVersion) {
+          const now = await reread()
+          if (now) return conflictFrom(now)
+        }
+        return { error: error.message }
+      }
+      respondedAt = written?.responded_at ?? null
     }
 
     // S05 (C-34, D7): el estado y el avance los recalcula la BD desde el contenido (evaluate_itr_capture);
@@ -280,7 +317,7 @@ export const upsertResponse = withAuth(
     const { error: progressError } = await ctx.supabase.rpc('refresh_itr_status', { p_itr_id: itrId })
     if (progressError) return { error: 'La respuesta se guardó, pero no se pudo actualizar el avance del ITR' }
 
-    return {}
+    return respondedAt ? { respondedAt } : {}
   },
 )
 

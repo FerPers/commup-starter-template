@@ -162,3 +162,28 @@ it('rejects malformed continuity before writing a response', async () => {
  expect((await upsertResponse({ ...input, valueText: '{}' })).error).toBeTruthy()
  expect(writes).toEqual([])
 })
+
+describe('compare-and-set de respuestas sin red (S18 sesión 2)', () => {
+  const row = { id: 'r1', value_text: 'Oficina', value_option: null, value_numeric: null, value_bool: null, remarks: null, is_passed: null, responded_at: 'v2', responded_by: 'otra' }
+
+  it('si alguien creó la casilla después, devuelve el valor actual sin escribir', async () => {
+    existing = { data: row }
+    const res = await upsertResponse({ ...input, expectedRespondedAt: null })
+    expect(res.conflict).toMatchObject({ valueText: 'Oficina', respondedBy: 'otra', respondedAt: 'v2' })
+    expect(writes.filter(w => w.table === 'itr_responses')).toEqual([])
+  })
+
+  it('si la versión cambió, el UPDATE condicionado no toca filas y devuelve conflicto', async () => {
+    existing = { data: row }
+    const res = await upsertResponse({ ...input, expectedRespondedAt: 'v1', capturedAt: '2026-10-20T10:00:00Z' })
+    expect(res.conflict?.valueText).toBe('Oficina')
+    expect(rpcs.some(r => r.name === 'refresh_itr_status')).toBe(false)
+  })
+
+  it('sin versión (en línea / «Aplicar la mía») escribe y manda la hora de captura', async () => {
+    existing = { data: row }
+    const res = await upsertResponse({ ...input, capturedAt: '2026-10-20T10:00:00Z' })
+    expect(res.conflict).toBeUndefined()
+    expect(writes.find(w => w.table === 'itr_responses')?.value).toMatchObject({ value_text: 'Evidence', captured_at: '2026-10-20T10:00:00Z' })
+  })
+})

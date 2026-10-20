@@ -1338,7 +1338,16 @@
       "unsyncedTitle": "No sincronizado",
       "unsyncedPunch": "Punch «{desc}»: {error}",
       "discard": "Descartar",
-      "discardConfirm": "¿Descartar este punch sin registrarlo? Se perderá."
+      "discardConfirm": "¿Descartar este punch sin registrarlo? Se perderá.",
+      "conflictTitle": "Otra persona cambió estas casillas mientras trabajabas sin red",
+      "conflictMine": "Tu valor: {value}",
+      "conflictTheirs": "Actual: {value} ({who}, {when})",
+      "someone": "otra persona",
+      "applyMine": "Aplicar la mía",
+      "keepTheirs": "Descartar la mía",
+      "discardNeedsNetwork": "Para descartar hace falta conexión (queda constancia).",
+      "yes": "Sí",
+      "no": "No"
     },
     "tagData": {
       "title": "Datos del tag ({count})",
@@ -5060,6 +5069,12 @@
     "heldOther": "{n, plural, =1 {# captura sin red de otra persona está retenida} other {# capturas sin red de otra persona están retenidas}} en este dispositivo: solo esa persona puede enviarlas al iniciar sesión.",
     "claim": "Son mías — enviar",
     "discard": "Descartar",
-    "needsNetwork": "Para descartar hace falta conexión (queda constancia de lo descartado)."
+    "needsNetwork": "Para descartar hace falta conexión (queda constancia de lo descartado).",
+    "prepareHint": "{n, plural, =1 {Descarga tu ITR pendiente} other {Descarga tus # ITR pendientes}} para abrirlos y llenarlos sin red en campo.",
+    "prepare": "Preparar para trabajar sin red",
+    "preparing": "Descargando…",
+    "prepared": "{ok, plural, =1 {# ITR listo} other {# ITR listos}} para trabajar sin red{failed, plural, =0 {} other { · # no se pudieron descargar}}.",
+    "ready": "Disponible sin red",
+    "readyTitle": "Guardado en este dispositivo: se abre sin conexión"
   }
 }

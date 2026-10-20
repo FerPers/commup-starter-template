@@ -1,4 +1,8 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import ResponseConflicts from './ResponseConflicts'
+import { getProjectToday } from '@/lib/time/project-zones'
+import { itemDescription } from '@/lib/itr/item-text'
+import { getLocale } from 'next-intl/server'
 import { redirect, notFound } from 'next/navigation'
 import ItrExecution from './ItrExecution'
 import type { EquipmentOption, EquipmentUsed } from './TestEquipmentSection'
@@ -93,6 +97,7 @@ export default async function ItrExecutionPage({
     .order('suggested_at', { ascending: false })
 
   const docRefs = await loadDocumentRefs(supabase, projectId, 'itr', itrId)
+  const locale = await getLocale()
   const signed = ((itr.itr_signatures as unknown as unknown[] | null) ?? []).length > 0
 
   return (
@@ -122,6 +127,17 @@ export default async function ItrExecutionPage({
           used: (equipmentUsed ?? []) as EquipmentUsed[],
           options: (equipmentOptions ?? []) as EquipmentOption[],
         }}
+        conflictsSlot={
+          <ResponseConflicts
+            itrId={itr.id}
+            userId={ctx.userId}
+            timezone={(await getProjectToday(supabase, projectId)).timezone}
+            names={Object.fromEntries((members ?? []).map(m => [m.user_id, (m.profiles as { full_name: string } | null)?.full_name ?? '']))}
+            labels={Object.fromEntries(((itr.itr_templates as { itr_template_sections?: { itr_template_items: { id: string; item_number: string | null; description: string; description_es: string | null }[] }[] } | null)?.itr_template_sections ?? [])
+              .flatMap(sec => sec.itr_template_items)
+              .map(it => [it.id, `${it.item_number ? `${it.item_number} ` : ''}${itemDescription(it, locale === 'en' ? 'en' : 'es')}`]))}
+          />
+        }
         documentsSlot={(docRefs.refs.length > 0 || canEdit) && (
           <DocumentReferences projectId={projectId} kind="itr" targetId={itrId} refs={docRefs.refs} options={docRefs.options}
             locked={signed} canEdit={membership.role !== 'client'} canRevalidate={isDocumentController(membership.role)} />
