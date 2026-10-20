@@ -1743,6 +1743,26 @@
         "discipline": "Disciplina",
         "tags": "Tags"
       }
+    },
+    "chain": {
+      "title": "Cadena del loop check, rango y alarmas",
+      "edit": "Editar",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "hint": "Queda en la auditoría. Vacío = sin dato.",
+      "fields": {
+        "junction_box": "Caja de conexiones",
+        "marshalling": "Marshalling",
+        "io_card": "Tarjeta I/O",
+        "io_channel": "Canal I/O",
+        "dcs_tag": "Tag DCS",
+        "hmi_display": "Despliegue HMI",
+        "range_min": "Rango mín.",
+        "range_max": "Rango máx.",
+        "eng_unit": "Unidad",
+        "alarm_setpoints": "Alarmas / set point"
+      }
     }
   },
   "ControlTower": {

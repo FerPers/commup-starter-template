@@ -11530,6 +11530,10 @@ export type Database = {
         }
         Returns: string
       }
+      bootstrap_org: {
+        Args: { p_input: Json; p_user_id: string }
+        Returns: Json
+      }
       bump_push_subscription_failure: {
         Args: { p_sub_id: string }
         Returns: undefined
@@ -11700,6 +11704,10 @@ export type Database = {
           key_prefix: string
           token: string
         }[]
+      }
+      create_ce_matrix_from_review: {
+        Args: { p_causes: Json; p_effects: Json; p_links: Json; p_matrix: Json }
+        Returns: string
       }
       create_constraint: {
         Args: {

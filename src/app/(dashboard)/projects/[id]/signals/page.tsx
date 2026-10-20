@@ -26,7 +26,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ id: st
       eng_unit, range_min, range_max,
       service, alarm_setpoints, origin, destination,
       pid_drawing, loop_diagram, wiring_diagram, notes,
-      loop_id,
+      loop_id, junction_box, marshalling, io_card, io_channel, dcs_tag, hmi_display,
       tags!inner (
         id, tag_number,
         subsystems!inner (
@@ -54,6 +54,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ id: st
       projectName={project.name}
       signals={signals ?? []}
       subsystems={subsystems ?? []}
+      canEdit={['owner', 'admin', 'architect', 'leader'].includes(membership.role)}
     />
   )
 }

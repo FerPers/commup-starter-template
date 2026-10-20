@@ -34,92 +34,24 @@ export async function completeSetup(raw: SetupInput): Promise<{ error?: string; 
     return { error: 'El nombre no puede ser tu correo electrónico' }
   }
 
-  // Use admin client for all DB writes (bypasses RLS — safe because we verified auth above)
+  // S07 (C-28): todo en una transacción (RPC bootstrap_org, solo service role). Antes eran 8 inserciones
+  // sueltas: un fallo a mitad dejaba una org sin proyecto o sin fases y el usuario ya era miembro.
   const admin = createAdminClient()
-
-  const { error: profileError } = await admin.from('profiles').upsert({
-    id: user.id,
-    full_name: fullName,
+  const { data, error } = await admin.rpc('bootstrap_org', {
+    p_user_id: user.id,
+    p_input: {
+      userFullName: fullName,
+      org: input.org,
+      project: input.project,
+      phases: input.phases,
+      disciplines: input.disciplines,
+      equipmentTypes: EQUIPMENT_TYPE_DEFAULTS.map(t => ({ code: t.code, name: t.name, category: t.category })),
+      pssrItems: DEFAULT_PSSR_ITEMS,
+    },
   })
-  if (profileError) return { error: `Error creando perfil: ${profileError.message}` }
-
-  // 1. Create organization — make slug unique if it already exists
-  let slug = input.org.slug
-  const { data: existingSlug } = await admin.from('organizations').select('id').eq('slug', slug).maybeSingle()
-  if (existingSlug) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`
-
-  const { data: org, error: orgError } = await admin
-    .from('organizations')
-    .insert({ name: input.org.name, slug, plan: 'starter', settings: {} })
-    .select()
-    .single()
-
-  if (orgError) return { error: orgError.message }
-
-  // 2. Add user as owner
-  const { error: memberError } = await admin
-    .from('org_members')
-    .insert({ org_id: org.id, user_id: user.id, role: 'owner' })
-
-  if (memberError) return { error: memberError.message }
-
-  // 3. Create project
-  const { data: project, error: projectError } = await admin
-    .from('projects')
-    .insert({
-      org_id: org.id,
-      name: input.project.name,
-      code: input.project.code.toUpperCase(),
-      location: input.project.location || null,
-      client: input.project.client || null,
-      country: input.project.country || null,
-      region: input.project.region || null,
-      start_date: input.project.start_date || null,
-      end_date: input.project.end_date || null,
-      status: 'active',
-    })
-    .select()
-    .single()
-
-  if (projectError) return { error: projectError.message }
-
-  // 4. Create phases
-  const { error: phasesError } = await admin
-    .from('project_phases')
-    .insert(input.phases.map(p => ({
-      org_id: org.id, code: p.code, name: p.name, order_index: p.order_index,
-      color: p.color, certificate_name: p.certificate_name,
-    })))
-
-  if (phasesError) return { error: phasesError.message }
-
-  // 5. Create disciplines
-  const { error: disciplinesError } = await admin
-    .from('disciplines')
-    .insert(input.disciplines.map(d => ({ org_id: org.id, code: d.code, name: d.name, color: d.color })))
-
-  if (disciplinesError) return { error: disciplinesError.message }
-
-  // 5b. Seed catálogo estándar de tipos de equipo (editable en Admin → Config)
-  const { error: eqtError } = await admin
-    .from('equipment_types')
-    .insert(EQUIPMENT_TYPE_DEFAULTS.map(t => ({ org_id: org.id, code: t.code, name: t.name, category: t.category })))
-  if (eqtError) return { error: eqtError.message }
-
-  // 6. Seed default PSSR template
-  const { data: pssrTemplate } = await admin
-    .from('pssr_templates')
-    .insert({ org_id: org.id, name: 'PSSR Estándar O&G', description: 'Plantilla de Pre-Startup Safety Review con 22 ítems estándar de la industria', created_by: user.id, is_active: true })
-    .select('id')
-    .single()
-
-  if (pssrTemplate) {
-    await admin.from('pssr_template_items').insert(
-      DEFAULT_PSSR_ITEMS.map((item, i) => ({ template_id: pssrTemplate.id, item_order: i + 1, ...item }))
-    )
-  }
-
-  return { org_id: org.id, project_id: project.id }
+  if (error) return { error: error.message }
+  const ids = data as { org_id: string; project_id: string }
+  return { org_id: ids.org_id, project_id: ids.project_id }
 }
 
 // ── Create project within existing org (owner / admin / architect only) ──────

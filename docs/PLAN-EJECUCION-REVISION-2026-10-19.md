@@ -38,7 +38,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | ✅ **Hecha** 2026-10-19 (ed0e4c6; migración 20261029120000 en prod, 17 escenarios con ROLLBACK) — D5 aprobó 0 ITR. Detalle en la cobertura |
 | S05 | ITR: contenido, estados y numeración | S04 | D7 | Pendiente |
 | S06 | Punch: permisos de campo y escritura por RPC | S03 | D8 | ✅ **Hecha** 2026-10-19 (037a15a + 3204f08; migración 20261030120000 en prod, 22 escenarios con ROLLBACK). Detalle en la cobertura |
-| S07 | Importaciones sin pérdida de datos | S03 | D9 | Pendiente |
+| S07 | Importaciones sin pérdida de datos | S03 | D9 | ✅ **Hecha** 2026-10-19 (ver commit; migración 20261031120000 en prod, 7 escenarios con ROLLBACK). Detalle en la cobertura |
 | S08 | Preservación | S03 | D10 | Pendiente |
 | S09 | Índices y «cero filas para contar» | S03 | D11 | Pendiente |
 | S10 | Reporte diario y zona horaria | S03 | D12 | Pendiente |
@@ -98,7 +98,7 @@ Cada una trae mi recomendación. Se responden antes de la sesión que la necesit
 | D6 | Independencia de firmas | Una persona no firma dos capacidades del mismo ITR o certificado. | S04, S17 | ✅ 2026-10-19: según recomendación. ITR hecho en S04 (firma y asignación); certificado queda para S17. |
 | D7 | Cambio masivo de estado de ITR | Eliminarlo (el estado sale del contenido y las firmas) y dar a cambio reasignar, reprogramar y agregar a un plan. | S05 | |
 | D8 | ¿El inspector levanta punch? | Sí, y también comenta y adjunta. Recategorizar y cancelar: supervisor+, con motivo; cancelar lo hace otra persona. *(S1-v1 ya aplicó la primera parte.)* | S06 | ✅ 2026-10-19: según recomendación (`cancel_punch`; recategorizar ya era `review_punch_category`). |
-| D9 | Reimportación | Una columna que no viene en el archivo no se toca; mover de subsistema un tag con ITR o punch exige un flujo explícito. | S07 | |
+| D9 | Reimportación | Una columna que no viene en el archivo no se toca; mover de subsistema un tag con ITR o punch exige un flujo explícito. | S07 | ✅ 2026-10-19: según recomendación (la celda vacía tampoco borra; la importación no mueve un tag con ITR o punch y lo informa). |
 | D10 | Preservación: cuándo avanza la próxima fecha | Al **finalizar** el registro, con cualquier resultado; un NOK genera punch o acción. | S08 | |
 | D11 | Snapshots históricos calculados con datos truncados | Marcarlos «sospechosos» (no se pueden recalcular hacia atrás). | S09 | |
 | D12 | Zona horaria y reportes ya emitidos | `projects.timezone` (por defecto `America/Bogota`). Los reportes emitidos quedan inmutables con una nota; solo se corrigen si alguien emite una revisión. | S10 | |

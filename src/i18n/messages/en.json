@@ -1743,6 +1743,26 @@
         "discipline": "Discipline",
         "tags": "Tags"
       }
+    },
+    "chain": {
+      "title": "Loop-check chain, range and alarms",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "hint": "Recorded in the audit log. Empty = no value.",
+      "fields": {
+        "junction_box": "Junction box",
+        "marshalling": "Marshalling",
+        "io_card": "I/O card",
+        "io_channel": "I/O channel",
+        "dcs_tag": "DCS tag",
+        "hmi_display": "HMI display",
+        "range_min": "Range min",
+        "range_max": "Range max",
+        "eng_unit": "Unit",
+        "alarm_setpoints": "Alarms / set point"
+      }
     }
   },
   "ControlTower": {

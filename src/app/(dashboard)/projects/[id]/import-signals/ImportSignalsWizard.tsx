@@ -5,10 +5,17 @@ import * as XLSX from 'xlsx'
 import { importSignals, type SignalRow, type SignalImportResult } from '@/app/actions/import-signals'
 import { pickBestSheet, detectHeaderRow, cellText } from '@/lib/excel/detect-header'
 import { SIGNAL_COLS } from '@/lib/excel/signal-columns'
+import { dedupeLast, mergeCounts, runBatches } from '@/lib/import/batches'
 
 const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
 
 type Step = 'upload' | 'preview' | 'result'
+
+/** Columnas de la cadena del loop check (y el lazo) que se conservan si el archivo no las trae. */
+const PRESERVED_LABELS: Array<[string, string]> = [
+  ['loop_number', 'Lazo'], ['junction_box', 'Caja de conexiones'], ['marshalling', 'Marshalling'], ['io_card', 'Tarjeta I/O'],
+  ['io_channel', 'Canal I/O'], ['dcs_tag', 'Tag DCS'], ['hmi_display', 'Despliegue HMI'], ['alarms', 'Alarmas'],
+]
 
 export default function ImportSignalsWizard({
   projectId,
@@ -27,6 +34,9 @@ export default function ImportSignalsWizard({
   const [loading, setLoading]             = useState(false)
   const [result, setResult]               = useState<SignalImportResult | null>(null)
   const [importError, setImportError]     = useState<string | null>(null)
+  // S07 (D9): columnas que trae el archivo — lo que no viene no se toca al reimportar.
+  const [columns, setColumns]             = useState<string[]>([])
+  const [progress, setProgress]           = useState<{ done: number; total: number } | null>(null)
 
   const disciplineCodes = new Set(disciplines.map(d => d.code.toUpperCase()))
 
@@ -133,6 +143,7 @@ export default function ImportSignalsWizard({
         })
 
         setValidationErrors(errors)
+        setColumns(Object.keys(colIndex).filter(k => colIndex[k] !== undefined))
         setRows(parsed)
         setFileName(file.name)
         setStep('preview')
@@ -158,10 +169,16 @@ export default function ImportSignalsWizard({
   async function handleImport() {
     setLoading(true)
     setImportError(null)
-    const res = await importSignals(projectId, rows)
-    if (res.error) {
+    // S07 (F-23): lotes de 1000 filas con progreso en vez del índice entero en una sola action.
+    const unique = dedupeLast(rows, r => `${(r.instrument_tag || r.signal_tag).trim().toUpperCase()}|${r.signal_tag.trim().toUpperCase()}`)
+    setProgress({ done: 0, total: unique.length })
+    const res = await runBatches<SignalImportResult>(unique,
+      batch => importSignals(projectId, batch as SignalRow[], columns), mergeCounts, (done, total) => setProgress({ done, total }))
+    setProgress(null)
+    if (res.error && !res.result) {
       setImportError(res.error)
     } else {
+      if (res.error) setImportError(`Se detuvo a mitad: ${res.error}. Lo importado hasta ahí quedó guardado; vuelve a importar el archivo para completar.`)
       setResult(res.result!)
       setStep('result')
     }
@@ -357,6 +374,16 @@ export default function ImportSignalsWizard({
             </button>
           </div>
 
+          {/* S07 (F-06, D9): lo que este archivo no trae se conserva en las señales que ya existen */}
+          {(() => {
+            const kept = PRESERVED_LABELS.filter(([k]) => !columns.includes(k)).map(([, label]) => label)
+            return kept.length > 0 && (
+              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px', color: '#1e40af' }}>
+                Este archivo no trae: <strong>{kept.join(', ')}</strong>. En las señales que ya existen <strong>se conservan</strong> (y no se desvinculan de su lazo). Las celdas vacías tampoco borran datos.
+              </div>
+            )
+          })()}
+
           {validationErrors.length > 0 && (
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
               <p style={{ fontWeight: 600, color: '#dc2626', fontSize: '13px', marginBottom: '6px' }}>⚠ {validationErrors.length} advertencia(s)</p>
@@ -438,7 +465,7 @@ export default function ImportSignalsWizard({
                 background: loading || rows.length === 0 ? 'var(--border)' : '#10b981',
                 color: loading || rows.length === 0 ? 'var(--gray-400)' : 'var(--card-bg)',
               }}>
-              {loading ? 'Importando...' : `✓ Importar ${rows.length} señal${rows.length !== 1 ? 'es' : ''}`}
+              {loading ? (progress ? `Importando… ${progress.done} / ${progress.total}` : 'Importando...') : `✓ Importar ${rows.length} señal${rows.length !== 1 ? 'es' : ''}`}
             </button>
           </div>
         </div>
@@ -490,11 +517,17 @@ export default function ImportSignalsWizard({
           )}
           {result.errors.length > 0 && (
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px', marginBottom: '20px', textAlign: 'left' }}>
-              {result.errors.map((e, i) => (
+              {result.errors.slice(0, 20).map((e, i) => (
                 <div key={i} style={{ fontSize: '12px', color: '#dc2626', marginBottom: '4px' }}>
                   Fila {e.row} · <strong>{e.tag}</strong>: {e.reason}
                 </div>
               ))}
+              {result.errors.length > 20 && <div style={{ fontSize: '12px', color: '#dc2626' }}>… y {result.errors.length - 20} más.</div>}
+              <button onClick={() => {
+                const ws = XLSX.utils.json_to_sheet(result.errors.map(e => ({ Fila: e.row, Señal: e.tag, Motivo: e.reason })))
+                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Errores')
+                XLSX.writeFile(wb, `errores-${(fileName ?? 'senales').replace(/\.[^.]+$/, '')}.xlsx`)
+              }} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #fecaca', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>⬇ Descargar errores (Excel)</button>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>

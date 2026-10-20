@@ -9,7 +9,7 @@ import {
   generateMatrixWithAi, reviewMatrixRows, addMatrixRow, deleteMatrixRow,
   type MatrixRow, type GenerateResult,
 } from '@/app/actions/itr-matrix'
-import { sanitizeAoa, sanitizeCell } from '@/lib/excel/sanitize'
+import { sanitizeAoa, xlsxCell } from '@/lib/excel/sanitize'
 
 // ── Matriz "tipo de equipo × plantilla ITR" ─────────────────────────────────
 // La IA propone (con motivo y confianza), un editor acepta o rechaza, y la
@@ -140,7 +140,7 @@ export default function MatrixView({
     for (const t of equipmentTypes) {
       for (let i = 0; i < 6; i++) {
         matrix.push([
-          sanitizeCell(t.code),
+          xlsxCell(t.code),
           { f: `IF(A${r}="","",IFERROR(INDEX('Tipos de equipo'!$B$2:$B$${nEqt},MATCH(A${r},'Tipos de equipo'!$A$2:$A$${nEqt},0)),"¿tipo?"))` },
           '',
           { f: `IF(C${r}="","",IFERROR(INDEX('Catálogo ITR'!$B$2:$B$${nCat},MATCH(C${r},'Catálogo ITR'!$A$2:$A$${nCat},0)),"¿código?"))` },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { sanitizeAoa, sanitizeCell, toSafeCsv } from './sanitize'
+import { sanitizeAoa, sanitizeCell, sanitizeRow, toSafeCsv, xlsxCell } from './sanitize'
 
 describe('guard anti fórmulas (F-09 / A-29)', () => {
   it('neutraliza celdas que Excel evaluaría', () => {
@@ -16,7 +16,9 @@ describe('guard anti fórmulas (F-09 / A-29)', () => {
   it('toSafeCsv: entrecomilla, escapa comillas y aplica el guard', () => {
     expect(toSafeCsv([['a', '=HYPERLINK("x")', 3, null]])).toBe('"a","\'=HYPERLINK(""x"")","3",""')
   })
-  it('sanitizeAoa: cada celda', () => {
-    expect(sanitizeAoa([['=x', 'ok']])).toEqual([["'=x", 'ok']])
+  it('XLSX (F-32): el texto queda intacto — una cadena nunca se evalúa como fórmula en XLSX', () => {
+    expect(sanitizeAoa([['=x', '- Falta perno', 3]])).toEqual([['=x', '- Falta perno', 3]])
+    expect(sanitizeRow({ a: '\t=1', b: '+56 9 1234' })).toEqual({ a: '=1', b: '+56 9 1234' })
+    expect(xlsxCell(null)).toBe(null)
   })
 })

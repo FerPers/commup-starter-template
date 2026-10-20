@@ -11,7 +11,7 @@
  */
 
 import * as XLSX from 'xlsx'
-import { sanitizeCell } from './sanitize'
+import { xlsxCell } from './sanitize'
 
 export type PunchExportRow = {
   project: string        // project code (blank when single-project export)
@@ -85,7 +85,7 @@ export function buildPunchListWorkbook(
   // ─── Sheet 1: Punch List ──────────────────────────────────────────────────
   const data: (string | number)[][] = [cols.map(c => c.header)]
   for (const row of sorted) {
-    data.push(cols.map(c => sanitizeCell(row[c.key] ?? '')))
+    data.push(cols.map(c => xlsxCell(row[c.key] ?? '')))
   }
 
   const ws = XLSX.utils.aoa_to_sheet(data)
@@ -141,7 +141,7 @@ export function buildPunchListWorkbook(
   summaryAoa.push(['Area', 'Open', 'In Progress', 'Closed', 'Cancelled', 'Total'])
   const sortedAreas = [...byArea.entries()].sort((a, b) => b[1].total - a[1].total)
   for (const [area, c] of sortedAreas) {
-    summaryAoa.push([sanitizeCell(area), c.open, c.in_progress, c.closed, c.cancelled, c.total])
+    summaryAoa.push([xlsxCell(area), c.open, c.in_progress, c.closed, c.cancelled, c.total])
   }
 
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryAoa)

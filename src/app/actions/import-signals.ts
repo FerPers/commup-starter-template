@@ -5,7 +5,8 @@ import { withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
-import { normalizeCode, normalizePidRef, textOrNull, textOr } from '@/lib/excel/normalize'
+import { normalizeCode, normalizePidRef, textOr } from '@/lib/excel/normalize'
+import { planSignal, signalPayloadColumns } from '@/lib/import/signal-merge'
 import type { Enums, TablesInsert } from '@/types/supabase.generated'
 
 export interface SignalRow {
@@ -60,7 +61,10 @@ export const importSignals = withAuthOnly(
     ctx,
     projectId: string,
     rows: SignalRow[],
+    /** S07 (D9): columnas que trae el archivo; lo que no viene (o viene vacío) no se toca. */
+    columns: string[],
   ): Promise<{ error?: string; result?: SignalImportResult }> => {
+    const present = new Set(columns)
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
     if (!access.ok) return { error: access.error }
 
@@ -196,8 +200,20 @@ export const importSignals = withAuthOnly(
         }
       }
 
-      // 2. Señales
-      type SigPending = { payload: TablesInsert<'signals'>; index: number; tag: string }
+      // 2. Señales — S07 (F-06): claves uniformes; las existentes conservan lo que el archivo no trae.
+      const sigColumns = signalPayloadColumns(present)
+      const tagIds = [...new Set(chunk.map(c => tagIdMap.get(c.instrTag)).filter((v): v is string => !!v))]
+      const { data: existingSigs, error: exSigErr } = tagIds.length
+        ? await admin.from('signals')
+            .select(['tag_id', 'signal_tag', 'signal_type', ...sigColumns].join(', '))
+            .in('tag_id', tagIds)
+            .in('signal_tag', chunk.map(c => c.signalTag))
+        : { data: [], error: null }
+      if (exSigErr) return { error: exSigErr.message }
+      const existingByKey = new Map(((existingSigs ?? []) as unknown as Array<Record<string, unknown> & { tag_id: string; signal_tag: string }>)
+        .map(s => [`${s.tag_id}|${s.signal_tag}`, s]))
+
+      type SigPending = { payload: TablesInsert<'signals'>; index: number; tag: string; isNew: boolean }
       const sigs: SigPending[] = []
       for (const c of chunk) {
         const tagId = tagIdMap.get(c.instrTag)
@@ -209,47 +225,13 @@ export const importSignals = withAuthOnly(
           result.skipped++
           continue
         }
-        sigs.push({
-          index: c.index,
-          tag: c.signalTag,
-          payload: {
-            tag_id: tagId,
-            signal_tag: c.signalTag,
-            description: textOrNull(c.row.description),
-            signal_type: c.signalType,
-            service: textOrNull(c.row.service),
-            range_min: c.row.range_min,
-            range_max: c.row.range_max,
-            eng_unit: textOrNull(c.row.eng_unit),
-            alarm_setpoints: textOrNull(c.row.alarm_setpoints),
-            origin: textOrNull(c.row.origin),
-            destination: textOrNull(c.row.destination),
-            pid_drawing: normalizePidRef(c.row.pid_drawing),
-            loop_diagram: textOrNull(c.row.loop_diagram),
-            wiring_diagram: textOrNull(c.row.wiring_diagram),
-            notes: textOrNull(c.row.notes),
-            junction_box: textOrNull(c.row.junction_box),
-            marshalling: textOrNull(c.row.marshalling),
-            io_card: textOrNull(c.row.io_card),
-            io_channel: textOrNull(c.row.io_channel),
-            dcs_tag: textOrNull(c.row.dcs_tag),
-            hmi_display: textOrNull(c.row.hmi_display),
-            loop_id: loopIdMap.get(normalizeCode(c.row.loop_number ?? '', '')) ?? null,
-          },
-        })
+        const existing = existingByKey.get(`${tagId}|${c.signalTag}`) ?? null
+        const loopId = loopIdMap.get(normalizeCode(c.row.loop_number ?? '', '')) ?? null
+        const plan = planSignal(c.row as unknown as Record<string, unknown> & { signal_tag: string }, present, existing, { tagId, signalType: c.signalType, loopId })
+        sigs.push({ index: c.index, tag: c.signalTag, payload: plan.payload as TablesInsert<'signals'>, isNew: !existing })
       }
       if (sigs.length === 0) continue
-
-      const { data: existingSigs, error: exSigErr } = await admin
-        .from('signals')
-        .select('tag_id, signal_tag')
-        .in('tag_id', [...new Set(sigs.map(s => s.payload.tag_id))])
-        .in('signal_tag', sigs.map(s => s.payload.signal_tag))
-      if (exSigErr) return { error: exSigErr.message }
-      const existingKeys = new Set((existingSigs ?? []).map(s => `${s.tag_id}|${s.signal_tag}`))
-      const count = (p: TablesInsert<'signals'>) => {
-        if (existingKeys.has(`${p.tag_id}|${p.signal_tag}`)) result.updated++; else result.imported++
-      }
+      const count = (s: SigPending) => { if (s.isNew) result.imported++; else result.updated++ }
 
       // Instrumentos del lazo (loop_tags): idempotente por (loop_id, tag_id).
       const loopTags = [...new Map(sigs.filter(s => s.payload.loop_id).map(s => [`${s.payload.loop_id}|${s.payload.tag_id}`, { loop_id: s.payload.loop_id!, tag_id: s.payload.tag_id }])).values()]
@@ -262,7 +244,7 @@ export const importSignals = withAuthOnly(
         .from('signals')
         .upsert(sigs.map(s => s.payload), { onConflict: 'tag_id,signal_tag', ignoreDuplicates: false })
       if (!batchErr) {
-        sigs.forEach(s => count(s.payload))
+        sigs.forEach(count)
         continue
       }
       for (const s of sigs) {
@@ -273,7 +255,7 @@ export const importSignals = withAuthOnly(
           result.errors.push({ row: s.index + 2, tag: s.tag, reason: error.message })
           result.skipped++
         } else {
-          count(s.payload)
+          count(s)
         }
       }
     }

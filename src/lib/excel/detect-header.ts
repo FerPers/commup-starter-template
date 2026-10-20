@@ -82,12 +82,17 @@ export function detectHeaderRow(
   const used = new Set<number>()
   const colIndex: Record<string, number> = {}
 
-  for (const [field, keywords] of Object.entries(colKeywords)) {
-    const normKws = keywords.map(normalizeHeader)
-    let col = findColumn(width, used, c => normKws.some(kw => h1[c] === kw || h2[c] === kw))
-    if (col < 0) {
-      col = findColumn(width, used, c => normKws.some(kw => (h1[c] ?? '').includes(kw) || (h2[c] ?? '').includes(kw)))
-    }
+  // S07: dos pasadas GLOBALES. Antes era «exacta y luego parcial» campo por campo, en orden, y la parcial
+  // de un campo anterior se robaba la exacta de otro: «SUBSYSTEM_CODE» / «SUBSISTEMA» caían en el sistema
+  // (contienen «SYSTEM» / «SISTEMA») y un reimport movía tags de subsistema sin querer.
+  const fields = Object.entries(colKeywords).map(([field, keywords]) => [field, keywords.map(normalizeHeader)] as const)
+  for (const [field, normKws] of fields) {
+    const col = findColumn(width, used, c => normKws.some(kw => h1[c] === kw || h2[c] === kw))
+    if (col >= 0) { colIndex[field] = col; used.add(col) }
+  }
+  for (const [field, normKws] of fields) {
+    if (colIndex[field] !== undefined) continue
+    const col = findColumn(width, used, c => normKws.some(kw => (h1[c] ?? '').includes(kw) || (h2[c] ?? '').includes(kw)))
     if (col >= 0) { colIndex[field] = col; used.add(col) }
   }
   return { headerRowIdx: bestRow, colIndex, headers: h1 }

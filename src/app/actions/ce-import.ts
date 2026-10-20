@@ -130,46 +130,35 @@ export const createCeMatrixFromReview = withAuth(
     const tagId = (tag: string) => (tag.trim() ? tags.get(normalizeTag(tag)) ?? null : null)
     const notes = (parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' · ').slice(0, 1000) || null
 
-    const { data: matrix, error: mErr } = await ctx.supabase.from('ce_matrices').insert({
-      project_id: input.projectId, org_id: ctx.orgId, system_id: txt(input.systemId, 40), code, title, source: 'ai',
-      revision: txt(input.revision, 30), source_document: txt(input.sourceDocument, 200),
-      notes: `Importada con IA desde «${input.fileName.slice(0, 120)}» y revisada antes de guardar.`,
-    }).select('id').single()
-    if (mErr?.code === '23505') return { error: `Ya existe una matriz ${code} en el proyecto` }
-    if (mErr || !matrix) return { error: mErr?.message ?? 'No se pudo crear la matriz' }
-
-    const fail = async (message: string) => {
-      await ctx.supabase.from('ce_matrices').delete().eq('id', matrix.id)
-      return { error: message }
-    }
-    const { data: causeRows, error: cErr } = await ctx.supabase.from('ce_causes').insert(causes.map((c, i) => ({
-      matrix_id: matrix.id, project_id: input.projectId, seq: (i + 1) * 10, code: normalizeCeCode(c.code)!, description: c.description.trim().slice(0, 300),
-      tag_id: tagId(c.tag), condition: c.condition.trim().slice(0, 100) || null, setpoint: c.setpoint.trim().slice(0, 100) || null, voting: c.voting,
-      notes: notes([c.signal && `Señal: ${c.signal}`, c.tag.trim() && !tagId(c.tag) && `Tag leído «${c.tag}» (no existe en el proyecto)`, c.uncertain && 'Lectura dudosa', c.note]),
-    }))).select('id, code')
-    if (cErr || !causeRows) return fail(`Causas: ${cErr?.message ?? 'sin datos'}`)
-    const { data: effectRows, error: eErr } = await ctx.supabase.from('ce_effects').insert(effects.map((e, i) => ({
-      matrix_id: matrix.id, project_id: input.projectId, seq: (i + 1) * 10, code: normalizeCeCode(e.code)!, description: e.description.trim().slice(0, 300),
-      tag_id: tagId(e.tag), action: e.action,
-      notes: notes([e.tag.trim() && !tagId(e.tag) && `Tag leído «${e.tag}» (no existe en el proyecto)`, e.uncertain && 'Lectura dudosa', e.note]),
-    }))).select('id, code')
-    if (eErr || !effectRows) return fail(`Efectos: ${eErr?.message ?? 'sin datos'}`)
-
-    const causeId = new Map(causes.map(c => [c.key, causeRows.find(r => r.code === normalizeCeCode(c.code))?.id]))
-    const effectId = new Map(effects.map(e => [e.key, effectRows.find(r => r.code === normalizeCeCode(e.code))?.id]))
+    // S07 (F-36): matriz, causas, efectos y cruces en una sola transacción (RPC con la RLS del editor).
     const linkRows = []
     for (const l of links) {
-      const cause = causeId.get(l.cause), effect = effectId.get(l.effect)
+      const cause = causes.find(c => c.key === l.cause), effect = effects.find(e => e.key === l.effect)
       if (!cause || !effect) continue
       const delay = parseDelay(l.delay)
-      if ('error' in delay) return fail(delay.error)
-      linkRows.push({ cause_id: cause, effect_id: effect, project_id: input.projectId, ...delay, note: l.uncertain ? 'Lectura dudosa (IA)' : null })
+      if ('error' in delay) return { error: delay.error }
+      linkRows.push({ cause_code: normalizeCeCode(cause.code)!, effect_code: normalizeCeCode(effect.code)!, ...delay, note: l.uncertain ? 'Lectura dudosa (IA)' : null })
     }
-    if (linkRows.length) {
-      const { error: lErr } = await ctx.supabase.from('ce_links').insert(linkRows)
-      if (lErr) return fail(`Cruces: ${lErr.message}`)
-    }
+    const { data: matrixId, error: mErr } = await ctx.supabase.rpc('create_ce_matrix_from_review', {
+      p_matrix: {
+        project_id: input.projectId, org_id: ctx.orgId, system_id: txt(input.systemId, 40), code, title,
+        revision: txt(input.revision, 30), source_document: txt(input.sourceDocument, 200),
+        notes: `Importada con IA desde «${input.fileName.slice(0, 120)}» y revisada antes de guardar.`,
+      },
+      p_causes: causes.map((c, i) => ({
+        seq: (i + 1) * 10, code: normalizeCeCode(c.code)!, description: c.description.trim().slice(0, 300),
+        tag_id: tagId(c.tag), condition: c.condition.trim().slice(0, 100) || null, setpoint: c.setpoint.trim().slice(0, 100) || null, voting: c.voting,
+        notes: notes([c.signal && `Señal: ${c.signal}`, c.tag.trim() && !tagId(c.tag) && `Tag leído «${c.tag}» (no existe en el proyecto)`, c.uncertain && 'Lectura dudosa', c.note]),
+      })),
+      p_effects: effects.map((e, i) => ({
+        seq: (i + 1) * 10, code: normalizeCeCode(e.code)!, description: e.description.trim().slice(0, 300), tag_id: tagId(e.tag), action: e.action,
+        notes: notes([e.tag.trim() && !tagId(e.tag) && `Tag leído «${e.tag}» (no existe en el proyecto)`, e.uncertain && 'Lectura dudosa', e.note]),
+      })),
+      p_links: linkRows,
+    })
+    if (mErr?.code === '23505') return { error: `Ya existe una matriz ${code} en el proyecto` }
+    if (mErr || !matrixId) return { error: mErr?.message ?? 'No se pudo crear la matriz' }
     revalidatePath(`/projects/${input.projectId}/ce-matrices`)
-    return { id: matrix.id }
+    return { id: matrixId as string }
   },
 )

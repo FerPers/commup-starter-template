@@ -207,6 +207,17 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | F-32 | Bajo | Excel · Confianza media | [F-ingenieria-docs-vendors.md:398](revision-2026-10-19/F-ingenieria-docs-vendors.md) |
 | F-36 | Bajo | Atomicidad · Confianza alta | [F-ingenieria-docs-vendors.md:427](revision-2026-10-19/F-ingenieria-docs-vendors.md) |
 
+**Estado S07 (2026-10-19; migración `20261031120000_imports_s07.sql` probada con ROLLBACK —7 escenarios, con usuario temporal revertido— y **aplicada en prod** con autorización de Luis; D9 según recomendación):** todos verificados vigentes. Causa raíz común: el upsert por lotes de supabase-js rellena con NULL las claves que le faltan a una fila, así que el «spread condicional» no protegía nada.
+- C-16 ✅ `src/lib/import/tag-merge.ts` (+ test): columna ausente o celda vacía no se toca; claves uniformes por lote (los tags existentes se completan con su valor actual); el tipo de equipo solo cambia con su columna; el SIL sugiere «safety» solo en tags nuevos; sin columna de subsistema no se crea «GEN-SUB». Un tag con ITR o punch **no se mueve** de subsistema por importación (aviso con la lista). Vista previa del diff por campo (`previewTagImport`, por lotes, no escribe). Verificado en navegador contra prod: vista previa («Fabricante: cambia en 1 tag», BAT-101 bloqueado) y una importación real que dejó PT-101 intacto.
+- F-06 ✅ `src/lib/import/signal-merge.ts` (+ test): la cadena (JB → HMI), las alarmas y el lazo solo cambian si el archivo trae la columna con valor; aviso en la vista previa de lo que se conserva.
+- C-24 / F-23 ✅ el cliente manda lotes de 1000 filas con progreso (`src/lib/import/batches.ts` + test); filas de error corregidas por desplazamiento; informe de errores completo descargable en Excel (tags y señales).
+- F-16 ✅ edición de la cadena, rango y alarmas de una señal en el detalle (`SignalChainEditor`, `updateSignalChain`, leader+, patch parcial, `activity_log` con antes/después).
+- C-28 ✅ `bootstrap_org` (RPC, solo service role): el asistente entero en una transacción (la validación zod y «una org por usuario» ya venían de S02).
+- F-36 ✅ `create_ce_matrix_from_review` (RPC invoker): matriz, causas, efectos y cruces en una transacción; sin borrado compensatorio.
+- F-32 ✅ XLSX sin apóstrofo (`xlsxCell`; en XLSX una cadena no se evalúa); el guard con apóstrofo queda para CSV.
+- **Hallazgo nuevo S07-N1 ✅:** `detectHeaderRow` asignaba «exacta y luego parcial» campo por campo, y la parcial de un campo anterior se robaba la exacta de otro («SUBSISTEMA»/«SUBSYSTEM_CODE» caían en el sistema): dos pasadas globales + test. Afectaba a tags y señales.
+- **Queda (no bloquea D9):** el flujo explícito «mover tag de subsistema» con sus ITR y punch (hoy la importación lo impide y lo informa; mover ITR exige tocar `guard_itr_row`) → propuesto como sesión aparte. La vista previa por campo de señales no se hizo (solo el aviso de lo que se conserva).
+
 ## S08 — Preservación
 
 | ID | Sev. | Hallazgo | Anexo |

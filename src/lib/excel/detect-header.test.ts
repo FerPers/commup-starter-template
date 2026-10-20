@@ -80,4 +80,10 @@ describe('sheetToRows / cellText', () => {
     expect(cellText(rows[1], 1)).toBe('')
     expect(cellText(rows[1], undefined)).toBe('')
   })
+
+  it('S07: una coincidencia exacta gana sobre la parcial de un campo anterior', () => {
+    const kws = { system_code: ['SYSTEM_CODE', 'SISTEMA', 'SYSTEM'], subsystem_code: ['SUBSYSTEM_CODE', 'SUBSISTEMA', 'SUBSYSTEM'] }
+    expect(detectHeaderRow([['TAG', 'SUBSYSTEM_CODE']], kws).colIndex).toEqual({ subsystem_code: 1 })
+    expect(detectHeaderRow([['SUBSISTEMA', 'SISTEMA']], kws).colIndex).toEqual({ subsystem_code: 0, system_code: 1 })
+  })
 })

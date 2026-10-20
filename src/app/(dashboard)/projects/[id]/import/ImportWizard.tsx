@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import * as XLSX from 'xlsx'
-import { importTags, findExistingTags, type TagRow, type ImportResult } from '@/app/actions/import'
+import { importTags, findExistingTags, previewTagImport, type TagRow, type ImportResult, type TagImportPreview } from '@/app/actions/import'
+import { dedupeLast, mergeCounts, runBatches, IMPORT_BATCH } from '@/lib/import/batches'
 import { detectTagType } from '@/lib/tag-types'
 import { parseCriticality, parseSilLevel } from '@/lib/tags/criticality'
 import { detectEquipmentTypeCode } from '@/lib/equipment-types'
@@ -138,6 +139,10 @@ export default function ImportWizard({
   const [result, setResult]           = useState<ImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [manualDiscipline, setManualDiscipline] = useState<string>('')
+  // S07 (D9): columnas que trae el archivo — lo que no viene no se toca al reimportar.
+  const [columns, setColumns] = useState<string[]>([])
+  const [preview, setPreview] = useState<TagImportPreview | null>(null)
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   // Tags del archivo que ya existen en el proyecto (null = consultando)
   const [existingTags, setExistingTags] = useState<Set<string> | null>(null)
 
@@ -153,8 +158,21 @@ export default function ImportWizard({
     void findExistingTags(projectId, rows.map(r => r.tag_number))
       .then(res => { if (!cancelled) setExistingTags(new Set(res.existing ?? [])) })
       .catch(() => { if (!cancelled) setExistingTags(new Set()) })
+    // S07: diff por campo antes de aplicar (por lotes, sin escribir nada).
+    void (async () => {
+      const acc: TagImportPreview = { newTags: 0, updatedTags: 0, unchangedTags: 0, fieldChanges: {}, moves: [] }
+      const unique = dedupeLast(rows, r => r.tag_number.trim().toUpperCase())
+      for (let i = 0; i < unique.length; i += IMPORT_BATCH) {
+        const res = await previewTagImport(projectId, unique.slice(i, i + IMPORT_BATCH), columns)
+        if (cancelled || !res.preview) return
+        acc.newTags += res.preview.newTags; acc.updatedTags += res.preview.updatedTags; acc.unchangedTags += res.preview.unchangedTags
+        for (const [k, v] of Object.entries(res.preview.fieldChanges)) acc.fieldChanges[k] = (acc.fieldChanges[k] ?? 0) + v
+        acc.moves.push(...res.preview.moves)
+      }
+      if (!cancelled) setPreview(acc)
+    })()
     return () => { cancelled = true }
-  }, [step, rows, projectId])
+  }, [step, rows, projectId, columns])
 
   // ── File parsing ──────────────────────────────────────────────
 
@@ -193,6 +211,8 @@ export default function ImportWizard({
         setParseWarnings(warnings)
         setFileName(file.name)
         setExistingTags(null)
+        setPreview(null)
+        setColumns(Object.keys(colIndex).filter(k => colIndex[k] !== undefined))
         setRows(parsed)
         setStep('preview')
       } catch {
@@ -215,9 +235,14 @@ export default function ImportWizard({
 
   async function handleImport() {
     setLoading(true); setImportError(null)
-    const { error, result: res } = await importTags(projectId, rows)
-    setLoading(false)
-    if (error) { setImportError(error); return }
+    // S07 (C-24): lotes de 1000 filas con progreso; el servidor no recibe el archivo entero.
+    const unique = dedupeLast(rows, r => r.tag_number.trim().toUpperCase())
+    setProgress({ done: 0, total: unique.length })
+    const { error, result: res } = await runBatches<ImportResult>(unique,
+      batch => importTags(projectId, batch as TagRow[], columns), mergeCounts, (done, total) => setProgress({ done, total }))
+    setLoading(false); setProgress(null)
+    if (error && !res) { setImportError(error); return }
+    if (error) setImportError(`Se detuvo a mitad: ${error}. Lo importado hasta ahí quedó guardado; vuelve a importar el archivo para completar.`)
     setResult(res!); setStep('result')
   }
 
@@ -412,11 +437,33 @@ export default function ImportWizard({
             </div>
           )}
 
+          {/* S07 (D9): qué cambia, campo por campo, antes de aplicar */}
           {existingTags && existingTags.size > 0 && (
             <div style={{ padding: '12px 16px', background: '#eff6ff', borderRadius: '10px', marginBottom: '14px', border: '1px solid #bfdbfe' }}>
               <p style={{ fontSize: '13px', color: '#1e40af', margin: 0 }}>
-                <strong>{existingTags.size} de {rows.length}</strong> tags ya existen en el proyecto: se actualizarán sus datos (descripción, jerarquía, fabricante, P&amp;ID) y <strong>conservarán su estado de avance</strong>. Los otros {rows.length - existingTags.size} se crearán.
+                <strong>{existingTags.size} de {rows.length}</strong> tags ya existen: solo se actualizan las columnas que trae este archivo y con valor; <strong>lo que no viene no se toca</strong> y conservan su avance.
               </p>
+              {!preview ? (
+                <p style={{ fontSize: '12px', color: '#1e40af', margin: '6px 0 0' }}>Calculando cambios…</p>
+              ) : (
+                <>
+                  <p style={{ fontSize: '12px', color: '#1e40af', margin: '6px 0 0' }}>
+                    {preview.newTags} nuevos · {preview.updatedTags} con cambios · {preview.unchangedTags} sin cambios
+                  </p>
+                  {Object.keys(preview.fieldChanges).length > 0 && (
+                    <ul style={{ margin: '6px 0 0', paddingLeft: '18px', fontSize: '12px', color: '#1e3a8a' }}>
+                      {Object.entries(preview.fieldChanges).sort((a, b) => b[1] - a[1]).map(([field, n]) => (
+                        <li key={field}>{FIELD_LABELS[field] ?? field}: cambia en {n} tag{n === 1 ? '' : 's'}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {preview.moves.some(m => m.blocked) && (
+                    <p style={{ fontSize: '12px', color: '#b45309', margin: '6px 0 0' }}>
+                      ⚠ {preview.moves.filter(m => m.blocked).length} tag(s) cambiarían de subsistema pero tienen ITR o punch: <strong>se quedan donde están</strong> ({preview.moves.filter(m => m.blocked).slice(0, 5).map(m => m.tag).join(', ')}{preview.moves.filter(m => m.blocked).length > 5 ? '…' : ''}).
+                    </p>
+                  )}
+                </>
+              )}
             </div>
           )}
 
@@ -482,7 +529,7 @@ export default function ImportWizard({
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 20px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Cancelar</a>
             <button onClick={handleImport} disabled={loading || validRows.length === 0} style={{ padding: '10px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: loading ? 'wait' : 'pointer', opacity: validRows.length === 0 ? 0.5 : 1 }}>
-              {loading ? 'Importando…' : `✓ Importar ${validRows.length} tags`}
+              {loading ? (progress ? `Importando… ${progress.done} / ${progress.total}` : 'Importando…') : `✓ Importar ${validRows.length} tags`}
             </button>
           </div>
         </div>
@@ -521,6 +568,8 @@ export default function ImportWizard({
             <div style={{ textAlign: 'left', background: '#fef2f2', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid #fca5a5' }}>
               <p style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626', margin: '0 0 8px' }}>Errores:</p>
               {result.errors.slice(0, 10).map((e, i) => <p key={i} style={{ fontSize: '12px', color: '#991b1b', margin: '2px 0', fontFamily: 'monospace' }}>Fila {e.row} [{e.tag}]: {e.reason}</p>)}
+              {result.errors.length > 10 && <p style={{ fontSize: '12px', color: '#991b1b', margin: '6px 0 0' }}>… y {result.errors.length - 10} más.</p>}
+              <button onClick={() => downloadErrors(result.errors, fileName)} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #fca5a5', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>⬇ Descargar errores (Excel)</button>
             </div>
           )}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -532,6 +581,24 @@ export default function ImportWizard({
 
     </div>
   )
+}
+
+/** Nombres legibles de las columnas de BD en la vista previa. */
+const FIELD_LABELS: Record<string, string> = {
+  description: 'Descripción', manufacturer: 'Fabricante', model: 'Modelo', serial_number: 'Serie',
+  preservation_required: 'Requiere preservación', pid_drawing: 'P&ID', datasheet_number: 'Hoja de datos',
+  revision: 'Revisión de hoja de datos', range_min: 'Rango mínimo', range_max: 'Rango máximo', eng_unit: 'Unidad',
+  junction_box: 'Caja de conexiones', fluid_type: 'Fluido', mounting_typical: 'Típico de montaje',
+  criticality: 'Criticidad', sil_level: 'SIL', equipment_type_id: 'Tipo de equipo', subsystem_id: 'Subsistema',
+  discipline_id: 'Disciplina',
+}
+
+/** C-24: el informe de errores completo, no solo los 10 primeros. */
+function downloadErrors(errors: ImportResult['errors'], fileName: string | null) {
+  const ws = XLSX.utils.json_to_sheet(errors.map(e => ({ Fila: e.row, Tag: e.tag, Motivo: e.reason })))
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Errores')
+  XLSX.writeFile(wb, `errores-${(fileName ?? 'importacion').replace(/\.[^.]+$/, '')}.xlsx`)
 }
 
 function Th({ children }: { children: React.ReactNode }) {

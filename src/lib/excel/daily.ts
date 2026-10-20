@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { sanitizeCell } from './sanitize'
+import { xlsxCell } from './sanitize'
 
 // Export de la gestión diaria (fase 5): un libro con una hoja por registro (acciones, restricciones,
 // TQ, decisiones). Encabezados ya traducidos; cada celda pasa por el guard de fórmulas.
@@ -9,7 +9,7 @@ export type DailySheet = { name: string; headers: string[]; rows: (string | numb
 export function buildDailyWorkbook(sheets: DailySheet[]): Uint8Array {
   const wb = XLSX.utils.book_new()
   for (const sheet of sheets) {
-    const data = [sheet.headers, ...sheet.rows.map(r => r.map(c => sanitizeCell(c ?? '')))]
+    const data = [sheet.headers, ...sheet.rows.map(r => r.map(c => xlsxCell(c ?? '')))]
     const ws = XLSX.utils.aoa_to_sheet(data)
     ws['!cols'] = sheet.headers.map((h, i) => ({
       wch: Math.min(60, Math.max(h.length + 2, ...sheet.rows.map(r => String(r[i] ?? '').length + 2), 10)),

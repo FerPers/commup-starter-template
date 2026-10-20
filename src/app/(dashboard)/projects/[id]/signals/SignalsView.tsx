@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import SignalChainEditor from './SignalChainEditor'
 import { useTranslations } from 'next-intl'
 
 const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO'] as const
@@ -41,6 +42,12 @@ type SignalRow = {
   wiring_diagram: string | null
   notes: string | null
   loop_id: string | null
+  junction_box: string | null
+  marshalling: string | null
+  io_card: string | null
+  io_channel: string | null
+  dcs_tag: string | null
+  hmi_display: string | null
   tags: {
     id: string
     tag_number: string
@@ -70,11 +77,14 @@ export default function SignalsView({
   projectName,
   signals,
   subsystems,
+  canEdit = false,
 }: {
   projectId: string
   projectName: string
   signals: SignalRow[]
   subsystems: SubsystemOption[]
+  /** S07 (F-16): supervisor+ corrige la cadena del loop check. */
+  canEdit?: boolean
 }) {
   const t = useTranslations('Signals')
 
@@ -356,6 +366,11 @@ export default function SignalsView({
                   </div>
                 ))}
               </div>
+              <SignalChainEditor key={selected.id} projectId={projectId} signalId={selected.id} canEdit={canEdit} chain={{
+                junction_box: selected.junction_box, marshalling: selected.marshalling, io_card: selected.io_card, io_channel: selected.io_channel,
+                dcs_tag: selected.dcs_tag, hmi_display: selected.hmi_display, range_min: selected.range_min, range_max: selected.range_max,
+                eng_unit: selected.eng_unit, alarm_setpoints: selected.alarm_setpoints,
+              }} />
             </div>
           )}
 
