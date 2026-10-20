@@ -271,6 +271,23 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | B-27 | Bajo | Índices redundantes o de baja selectividad (amplificación de escrituras) | [B-datos-rendimiento.md:570](revision-2026-10-19/B-datos-rendimiento.md) |
 | F-29 | Bajo | KPIs inconsistentes · Confianza alta — dos cifras distintas para "completitud documental". | [F-ingenieria-docs-vendors.md:370](revision-2026-10-19/F-ingenieria-docs-vendors.md) |
 
+**Estado S09 (2026-10-19, fc36e63; migraciones `20261104120000_kpi_truth_s09.sql` —probada con ROLLBACK: conteos = `count(*)`, idempotente, ACL— y `20261104130000_indexes_s09.sql` —39 sentencias CONCURRENTLY una por una, 0 índices inválidos— **aplicadas en prod** con autorización de Luis; D11 según recomendación):**
+- B-01 / D-08 / B-25 ✅ `take_kpi_snapshot` (SQL, solo service_role) en el cron y en «Tomar snapshot»; clave única `NULLS NOT DISTINCT`, upsert, borrado de fases sin ITR; sin políticas de escritura en `kpi_snapshots`. `getProjectSnapshots` toma los 730 más recientes.
+- D11 ✅ `kpi_snapshots.suspect` (ver COMMENT); hoy 0 filas. Curva S con punto hueco ámbar + nota; columna «Dato dudoso» en el Excel.
+- B-02 ✅ matriz de certificados con `subsystem_phase_itr_counts` + `subsystem_rollup` (paginados) y `evaluateEligibilityCounts` (misma regla que `evaluateEligibility`); Cat B abiertos completos para el modal.
+- B-05 / B-09 ✅ 29 índices de B-05; `guard_itr_row` toma la plantilla con `FOR KEY SHARE` (la edición sigue con `FOR UPDATE` en `guard_assigned_itr_template`). `is_assigned` no se agregó: con `idx_itrs_template` el EXISTS ya es un index scan.
+- B-27 ✅ 10 índices redundantes o de 0 scans borrados (`idx_kpi_snapshots_*` también, cubiertos por la clave única).
+- B-24 ✅ `preservation_is_overdue` (activo y próxima fecha < hoy, sin la tolerancia de 3 días del sidebar) y `preservation_due_counts`: sidebar, Mi trabajo (`my_work_counts`, archivo canónico), dashboard y snapshot.
+- B-07 / B-08 ✅ `fetchAllRows` agrega siempre un orden único (`key`) y lanza `TruncatedError` (o `fetchAllRowsFlagged` → `truncated`) en vez de cortar; exportaciones de ITR/punch, admin, preservación y gestión diaria responden 413 o error claro. Mi trabajo y widgets filtran en el servidor (`itrs!inner`, sin aprobados); señales, lazos, explorer, gemelo, preservación, certificados, work plans, P&ID (estado solo de los tags con pin), tag (anterior/siguiente con dos consultas de 1 fila), crons de restricciones y PSSR vencidos, curva del evento, `loadSourceItrs` (lotes de 200).
+- F-04 ✅ reporte imprimible y Excel de KPIs con `project_itr_phase_counts` / `project_punch_counts`.
+- F-07 / F-08 / E-20 / D-24 ✅ documentos y referencias, panel de referencias (los documentos referenciados se cargan por id), tags del paquete de vendor, empresas, señales de bitácora y desempeño, competencias (nivel vigente sobre todo el historial), traspasos, gestión diaria y look-ahead completos; aviso `Common.listPartial` si se supera el tope. D-24 operaciones masivas (reasignar/verificar en lote) **no** se hicieron: quedan para S22/N2.
+- B-22 ✅ parcial: la fase se filtra por `phase_id`; búsqueda que llega al tope de 150 tags o 100 plantillas muestra `Common.searchPartial`. `count: 'exact'` y paginación keyset quedan como están (correctitud antes que costo; medir en S20).
+- KpiSummaryWidget ✅ todas las fases (antes `slice(0, 3)`), preservación por la definición única.
+- F-29 ✅ As-Built/Final del registro sobre documentos ligados a sistemas (`n / ligados`), igual que el KPI; «superadas» del registro rotulado «incl. ITR abiertos»; /kpis ya decía «snapshot diario».
+- Regla de CI ✅ `src/lib/list/unbounded-from.test.ts`: lecturas de proyecto/org/persona sin `.limit/.range/.single/head`, fuera de `fetchAllRows` y sin `// bounded:`, o con `.limit(N>1000)`; baseline por archivo×tabla (60 lecturas en 50 claves, desde 127) que solo puede bajar.
+- Tests: `fetch-all.test.ts` (encontró que una fila de más en la última página se colaba), `unbounded-from.test.ts`, `tests/db/kpi-truth.test.ts` (agregados = `count(*)` bajo RLS; snapshot y escritura directa denegados).
+- **Listo cuando** (LOADTEST 50k): el proyecto LOADTEST ya no existe en prod; la igualdad con `count(*)` se verificó en DEMO dentro de la transacción de prueba y queda como test de BD. Verificación en el navegador pendiente de sesión (el panel quedó en /login).
+
 ## S10 — Reporte diario y zona horaria
 
 | ID | Sev. | Hallazgo | Anexo |
