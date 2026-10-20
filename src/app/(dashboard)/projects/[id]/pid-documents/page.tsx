@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import { normalizePidRef } from '@/lib/excel/normalize'
 import PidDocumentsView, { type PidCoverage } from './PidDocumentsView'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // Fila mínima que necesitamos de tags para armar "sistemas por plano".
 type TagPidRow = {
@@ -19,7 +20,7 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
+  const canEdit = ROLE_TIERS.privileged.includes(membership.role)
 
   const [{ data: project }, { data: documents }] = await Promise.all([
     supabase

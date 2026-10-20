@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
@@ -42,6 +43,8 @@ export type SystemPerformance = {
 }
 
 type Props = {
+  /** S14 (D14): capacidades del usuario en el proyecto (firmantes designados o respaldo por rol). */
+  caps: MyCapacities
   orgId: string
   role: string
   userId: string
@@ -110,7 +113,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, ownership, performance, vendors, daily }: Props) {
+export default function SystemGatesView({ orgId, role, userId, caps, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, ownership, performance, vendors, daily }: Props) {
   const t = useTranslations('Gates')
   const ts = useTranslations('Startup')
   const tv = useTranslations('Vendors')
@@ -519,7 +522,8 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
       {gates.length === 0 && <div style={{ ...card, ...small, textAlign: 'center' }}>{t('noGates')}</div>}
 
       {gates.map(g => {
-        const approvable = canApprove(g, role)
+        // S14: con firmantes de Comisionamiento designados, aprueba solo uno de ellos.
+        const approvable = canApprove(g, role) && (!caps.commissioning.designated || caps.commissioning.allowed)
         const mustCondition = g.status === 'ready_with_conditions'
         return (
           <section key={g.gate_id} style={{ ...card, borderLeft: `4px solid ${GATE_STATUS_STYLE[g.status].border}` }} aria-label={g.gate_code}>
@@ -576,7 +580,7 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
                         </li>
                       ))}
                     </ul>
-                    {signableCapacities(g, role, userId).map(c => (
+                    {signableCapacities(g, role, userId, caps).map(c => (
                       <div key={c} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 4 }}>
                         <input style={{ ...input, maxWidth: 360 }} placeholder={t('signCommentPlaceholder')}
                           value={signComments[`${g.gate_id}:${c}`] ?? ''}
@@ -586,8 +590,10 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
                         </button>
                       </div>
                     ))}
-                    {g.status === 'pending_signatures' && signableCapacities(g, role, userId).length === 0 && (
-                      <span style={small}>{t('pendingSignaturesHint', { roles: g.cosign_roles.join(', ') })}</span>
+                    {g.status === 'pending_signatures' && signableCapacities(g, role, userId, caps).length === 0 && (
+                      <span style={small}>{missingSignatures(g).some(c => isCapacity(c) && caps[c].designated)
+                        ? t('pendingSignaturesDesignated')
+                        : t('pendingSignaturesHint', { roles: g.cosign_roles.join(', ') })}</span>
                     )}
                     {g.status === 'regressed' && <span style={{ ...small, color: 'var(--danger-700)' }}>{t('regressedHint')}</span>}
                     {g.approval.conditions.length > 0 && (

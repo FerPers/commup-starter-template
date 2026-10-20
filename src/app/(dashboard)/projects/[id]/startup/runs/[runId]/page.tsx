@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
+import { loadMyCapacities } from '@/lib/capacities/server'
 import type { HoldCapacity, RunStepStatus } from '@/lib/startup/catalog'
 import RunView from './RunView'
 
@@ -53,6 +54,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
       names={names}
       userId={ctx.userId}
       role={ctx.role}
+      caps={await loadMyCapacities(ctx.supabase, id)}
     />
   )
 }

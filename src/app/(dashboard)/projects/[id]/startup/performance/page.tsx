@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import type { PerfResult, PerfRunStatus, RevisionStatus } from '@/lib/performance/catalog'
 import PerformanceView from './PerformanceView'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // Pruebas de desempeño del proyecto (fase 7 plan readiness, sesión 1): lista con revisión vigente y último intento.
 export default async function PerformancePage({ params }: { params: Promise<{ id: string }> }) {
@@ -37,7 +38,7 @@ export default async function PerformancePage({ params }: { params: Promise<{ id
           lastRun: runs[0] ?? null,
         }
       })}
-      canLead={['owner', 'admin', 'architect', 'leader'].includes(ctx.role)}
+      canLead={ROLE_TIERS.editor.includes(ctx.role)}
     />
   )
 }

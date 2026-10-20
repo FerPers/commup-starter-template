@@ -35,7 +35,13 @@ BEGIN
   IF NOT (p_capacity = ANY (v_gate.required_signatures)) THEN
     RAISE EXCEPTION 'El gate % no requiere la firma %', v_gate.code, p_capacity USING ERRCODE = '22023';
   END IF;
-  IF NOT (v_role = ANY (v_gate.cosign_roles)) THEN
+  -- S14 (D14): con firmantes designados de esa capacidad en el proyecto, firma solo uno de ellos (cualquier rol);
+  -- sin designados rige la configuración del gate (cosign_roles).
+  IF public.capacity_designated(v_appr.project_id, p_capacity) THEN
+    IF NOT public.has_capacity(v_appr.project_id, p_capacity) THEN
+      RAISE EXCEPTION 'No estás designado para firmar como % en este proyecto', p_capacity USING ERRCODE = '42501';
+    END IF;
+  ELSIF NOT (v_role = ANY (v_gate.cosign_roles)) THEN
     RAISE EXCEPTION 'Tu rol (%) no puede co-firmar el gate %', v_role, v_gate.code USING ERRCODE = '42501';
   END IF;
   IF EXISTS (SELECT 1 FROM system_gate_signatures WHERE approval_id = p_approval_id AND capacity = p_capacity) THEN

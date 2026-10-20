@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import UsersView from './UsersView'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type ActivityRow = {
   entity_id: string | null
@@ -13,7 +14,7 @@ export default async function AdminUsersPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
-  if (!['owner', 'admin'].includes(ctx.role)) redirect('/dashboard')
+  if (!ROLE_TIERS.admin.includes(ctx.role)) redirect('/dashboard')
 
   const orgId = ctx.orgId
 

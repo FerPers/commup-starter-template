@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { MyCapacities } from '@/lib/constants/capacities'
 import { useState, useSyncExternalStore, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -51,7 +52,7 @@ const th: React.CSSProperties = { textAlign: 'left', padding: '6px 8px', fontSiz
 const td: React.CSSProperties = { padding: '6px 8px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const sectionTitle: React.CSSProperties = { fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }
 
-export default function RunConsole({ project, test, run, rev, variables, points, pointsTruncated = false, disturbances, names, userId, role, evaluation, evaluationError, action, certificate }: {
+export default function RunConsole({ project, test, run, rev, variables, points, pointsTruncated = false, disturbances, names, userId, role, caps, evaluation, evaluationError, action, certificate }: {
   project: { id: string; code: string; name: string }
   test: { id: string; number: string; title: string }
   run: Run
@@ -59,7 +60,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
   certificate: Certificate | null
   rev: { rev: number; stabilization_min: number; formal_min: number; sample_interval_s: number; outdated: boolean }
   variables: Variable[]; points: Point[]; pointsTruncated?: boolean; disturbances: Disturbance[]
-  names: Record<string, string>; userId: string; role: string
+  names: Record<string, string>; userId: string; role: string; caps: MyCapacities
 }) {
   const t = useTranslations('Startup')
   const router = useRouter()
@@ -185,7 +186,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
       {(run.status === 'closed' || run.status === 'evaluated') && (
         <EvaluationPanel projectId={project.id} run={run} evaluation={evaluation} evaluationError={evaluationError} action={action} names={names} canLead={lead} />
       )}
-      <CertificateCard projectId={project.id} run={run} certificate={certificate} names={names} userId={userId} role={role} />
+      <CertificateCard projectId={project.id} run={run} certificate={certificate} names={names} userId={userId} role={role} caps={caps} />
 
       {pointsTruncated && <Alert kind="warn">{t('perf.pointsTruncated')}</Alert>}
       {/* Gráficos */}

@@ -6,7 +6,7 @@
  *   ADMIN       → owner + admin (user/billing/org management)
  *   PRIVILEGED  → owner + admin + architect (config, templates, structure)
  *   EDITOR      → owner + admin + architect + leader (field execution edits)
- *   any member  → owner + admin + architect + leader + viewer + …
+ *   any member  → owner + admin + architect + leader + inspector + client
  *
  * Anything below EDITOR is read-only by convention.
  */
@@ -15,10 +15,9 @@ import { getActiveMembership, type ActiveContext } from '@/lib/supabase/membersh
 export { getActiveMembership } from '@/lib/supabase/membership'
 export type { ActiveContext, Membership } from '@/lib/supabase/membership'
 
-export const OWNER_ROLES: readonly string[] = ['owner']
-export const ADMIN_ROLES: readonly string[] = ['owner', 'admin']
-export const PRIVILEGED_ROLES: readonly string[] = ['owner', 'admin', 'architect']
-export const EDITOR_ROLES: readonly string[] = ['owner', 'admin', 'architect', 'leader']
+// S14 (I-15): los niveles viven en src/lib/constants/roles.ts (también los usa el cliente).
+import { ADMIN_ROLES, EDITOR_ROLES, OWNER_ROLES, PRIVILEGED_ROLES } from '@/lib/constants/roles'
+export { ADMIN_ROLES, EDITOR_ROLES, OWNER_ROLES, PRIVILEGED_ROLES }
 
 export function isOwner(role: string): boolean {
   return OWNER_ROLES.includes(role)

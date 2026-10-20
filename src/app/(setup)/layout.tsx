@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
-const PRIVILEGED_ROLES = ['owner', 'admin', 'architect']
+const PRIVILEGED_ROLES = ROLE_TIERS.privileged
 
 export default async function SetupLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()

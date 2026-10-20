@@ -5,6 +5,7 @@
  */
 import type { OrgMemberRole } from '@/types/database'
 import { normalizeRequired } from '@/lib/itr/signatures'
+import { tierRoles } from '@/lib/constants/roles'
 
 export type MyWorkCounts = {
   itrs_execute: number
@@ -45,8 +46,8 @@ export const EMPTY_COUNTS: MyWorkCounts = {
   performance_to_decide: 0, performance_to_sign: 0,
 }
 
-const SIGNER_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect']
-const OVERSIGHT_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader']
+const SIGNER_ROLES: readonly OrgMemberRole[] = tierRoles('privileged')
+const OVERSIGHT_ROLES: readonly OrgMemberRole[] = tierRoles('editor')
 
 export function parseCounts(raw: unknown): MyWorkCounts {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>

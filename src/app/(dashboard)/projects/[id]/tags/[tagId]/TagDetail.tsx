@@ -39,6 +39,7 @@ export default function TagDetail({
   tagItrs,
   templates,
   orgMembers,
+  clientRepIds = [],
   tagPunches,
   preservationPlans,
   preservationProcedures,
@@ -60,6 +61,8 @@ export default function TagDetail({
   templates: ItrTemplate[]
   matrixTemplateIds?: string[]
   orgMembers: OrgMember[]
+  /** S14 (I-25): representantes del cliente designados (vacío = sin designados). */
+  clientRepIds?: string[]
   tagPunches: TagPunch[]
   preservationPlans: PreservationPlanRow[]
   preservationProcedures: PreservationProcedureOption[]
@@ -350,6 +353,7 @@ export default function TagDetail({
                 tagItrs={tagItrs}
                 templates={templates}
                 orgMembers={orgMembers}
+                clientRepIds={clientRepIds}
                 canEdit={canEdit}
               />
             )}

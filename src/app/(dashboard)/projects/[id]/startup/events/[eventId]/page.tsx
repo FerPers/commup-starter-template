@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
+import { loadMyCapacities } from '@/lib/capacities/server'
 import { chartWindow, type EventCategory, type Milestone, type StartupEventStatus } from '@/lib/startup/catalog'
 import EventDetail from './EventDetail'
 
@@ -57,6 +58,7 @@ export default async function StartupEventPage({ params }: { params: Promise<{ i
       names={names}
       userId={ctx.userId}
       role={ctx.role}
+      caps={await loadMyCapacities(ctx.supabase, id)}
     />
   )
 }

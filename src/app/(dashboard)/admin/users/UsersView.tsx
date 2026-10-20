@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { inviteUser, updateMemberRole, removeMember, getMemberRemovalContext, type MemberRemovalContext } from '@/app/actions/users'
 import { setMemberCompany } from '@/app/actions/documents'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Member = {
   id: string
@@ -108,7 +109,7 @@ export default function UsersView({
   const [filterRole, setFilterRole] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'pending'>('all')
 
-  const isAdmin = ['owner', 'admin'].includes(currentRole)
+  const isAdmin = ROLE_TIERS.admin.includes(currentRole)
 
   const roleLabels: Record<string, string> = {
     owner:     t('roles.owner'),

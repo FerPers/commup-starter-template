@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
+import { loadMyCapacities } from '@/lib/capacities/server'
 import type { SystemGate } from '@/lib/readiness/gates'
 import type { OwnershipStage } from '@/lib/startup/catalog'
 import type { PackageStatus } from '@/lib/vendors/catalog'
@@ -97,6 +98,7 @@ export default async function SystemGatesPage({
       orgId={ctx.orgId}
       role={ctx.role}
       userId={ctx.userId}
+      caps={await loadMyCapacities(ctx.supabase, project.id)}
       canEdit={EDITOR_ROLES.includes(ctx.role)}
       project={{ id: project.id, code: project.code, name: project.name }}
       system={{ id: system.id, code: system.code, name: system.name, area: area ? `${area.code} — ${area.name}` : '' }}

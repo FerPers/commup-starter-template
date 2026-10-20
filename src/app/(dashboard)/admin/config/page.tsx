@@ -2,13 +2,14 @@ import { resolveCatBLimit } from '@/lib/certificates/eligibility'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import OrgConfigView from './OrgConfigView'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function AdminConfigPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
-  if (!['owner', 'admin'].includes(membership.role)) redirect('/dashboard')
+  if (!ROLE_TIERS.admin.includes(membership.role)) redirect('/dashboard')
 
   const orgId = membership.org_id
 

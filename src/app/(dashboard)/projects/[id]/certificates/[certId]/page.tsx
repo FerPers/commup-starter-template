@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import CertificateDetail from './CertificateDetail'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function CertificateDetailPage({
   params,
@@ -82,8 +83,8 @@ export default async function CertificateDetailPage({
         .order('itr_number')
     : { data: [] }
 
-  const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(membership.role)
-  const isAdmin = ['owner', 'admin'].includes(membership.role)
+  const canEdit = ROLE_TIERS.editor.includes(membership.role)
+  const isAdmin = ROLE_TIERS.admin.includes(membership.role)
 
   return (
     <CertificateDetail

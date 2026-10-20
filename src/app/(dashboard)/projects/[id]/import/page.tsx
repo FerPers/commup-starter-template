@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import ImportWizard from './ImportWizard'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function ImportPage({
   params,
@@ -16,7 +17,7 @@ export default async function ImportPage({
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
-  if (!['owner', 'admin', 'architect'].includes(membership.role)) redirect(`/projects/${id}`)
+  if (!ROLE_TIERS.privileged.includes(membership.role)) redirect(`/projects/${id}`)
 
   const [{ data: project }, { data: disciplines }] = await Promise.all([
     supabase

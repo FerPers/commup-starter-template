@@ -5,6 +5,8 @@
  * 20261012180000); aquí solo se tipan sus resultados y se decide cómo mostrarlos.
  */
 
+import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
+
 export type GateStatus =
   | 'pending_signatures'
   | 'approved'
@@ -166,15 +168,22 @@ export function missingSignatures(gate: Pick<SystemGate, 'approval' | 'required_
   return gate.required_signatures.filter(c => !signed.has(c as SignatureCapacity))
 }
 
-/** Firmas que este usuario puede registrar ahora (la RPC vuelve a validar todo). */
+/**
+ * Firmas que este usuario puede registrar ahora (la RPC vuelve a validar todo). S14 (D14): por capacidad con
+ * designados del proyecto → solo los designados; sin designados → rol en `cosign_roles` del gate.
+ */
 export function signableCapacities(
   gate: Pick<SystemGate, 'approval' | 'required_signatures' | 'cosign_roles' | 'status'>,
   role: string,
   userId: string,
+  caps?: MyCapacities,
 ): string[] {
-  if (gate.status !== 'pending_signatures' || !gate.cosign_roles.includes(role)) return []
+  if (gate.status !== 'pending_signatures') return []
   if (gate.approval?.signatures.some(s => s.user_id === userId)) return []
-  return missingSignatures(gate)
+  return missingSignatures(gate).filter(c => {
+    const st = caps && isCapacity(c) ? caps[c] : null
+    return st?.designated ? st.allowed : gate.cosign_roles.includes(role)
+  })
 }
 
 /** Condiciones escritas una por línea → lista limpia (máx. 20, 500 caracteres), igual que la RPC. */

@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
-import { HOLD_RELEASE_ROLES, signableCapacities, type HoldCapacity } from '@/lib/startup/catalog'
+import { canReleaseHold, signableCapacities, type HoldCapacity } from '@/lib/startup/catalog'
+import { loadMyCapacitiesByProject } from '@/lib/capacities/server'
+import { fallbackCapacities } from '@/lib/constants/capacities'
 import { canSignCertificate, isPerformanceLead, type CertSigners } from '@/lib/performance/catalog'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { CATEGORY_CFG, ITR_STYLE, PUNCH_STYLE } from '@/components/dashboard/widgets/_shared'
@@ -235,12 +237,18 @@ export default async function MyWorkPage() {
   const handoverRows = (handovers ?? []) as unknown as {
     id: string; number: string; shift_date: string; shift_label: string; handed_at: string; project_id: string; projects: { code: string } | null
   }[]
+  // S14 (D14): quién libera, atestigua o firma depende de la capacidad en cada proyecto (designado o respaldo).
+  const capsByProject = await loadMyCapacitiesByProject(supabase, [
+    ...((holds ?? []) as { project_id: string }[]), ...((pendingMilestones ?? []) as { project_id: string }[]),
+    ...((pendingTransfers ?? []) as { project_id: string }[]), ...((perfCerts ?? []) as { project_id: string }[]),
+  ].map(r => r.project_id))
+  const capsOf = (projectId: string) => capsByProject.get(projectId) ?? fallbackCapacities('')
   const holdRows = ((holds ?? []) as unknown as {
     run_id: string; ord: number; project_id: string; procedure_steps: { action: string; hold_capacity: string } | null
     procedure_runs: { number: string; status: string } | null; projects: { code: string } | null
   }[]).filter(h => {
     const cap = h.procedure_steps?.hold_capacity as HoldCapacity | undefined
-    return !!cap && HOLD_RELEASE_ROLES[cap].includes(role)
+    return !!cap && canReleaseHold(capsOf(h.project_id), cap, userId, null)
   })
   const lineupRows = ((lineupItems ?? []) as unknown as {
     id: string; label: string | null; sheet_id: string; project_id: string; tags: { tag_number: string } | null
@@ -248,17 +256,17 @@ export default async function MyWorkPage() {
   }[]).filter(i => i.lineup_sheets && ['issued', 'in_progress'].includes(i.lineup_sheets.status))
   const milestoneRows = ((pendingMilestones ?? []) as unknown as {
     id: string; number: string; title: string; witness_capacity: string; project_id: string; projects: { code: string } | null; systems: { code: string } | null
-  }[]).filter(m => HOLD_RELEASE_ROLES[m.witness_capacity as HoldCapacity]?.includes(role))
+  }[]).filter(m => canReleaseHold(capsOf(m.project_id), m.witness_capacity as HoldCapacity, userId, null))
   const transferRows = ((pendingTransfers ?? []) as unknown as {
     id: string; number: string; to_stage: string; is_reversal: boolean; commissioning_signed_by: string | null; operations_signed_by: string | null
     project_id: string; projects: { code: string } | null; systems: { code: string } | null
-  }[]).filter(x => signableCapacities(role, userId, x).length > 0)
+  }[]).filter(x => signableCapacities(capsOf(x.project_id), userId, x).length > 0)
   const perfDecideRows = (perfToDecide ?? []) as unknown as {
     id: string; number: string; early_close: boolean; project_id: string; projects: { code: string } | null; performance_tests: { title: string } | null
   }[]
   const perfSignRows = ((perfCerts ?? []) as unknown as (CertSigners & {
     id: string; number: string; run_id: string; project_id: string; projects: { code: string } | null; systems: { code: string } | null
-  })[]).filter(c => canSignCertificate(c, 'operations', role, userId) || canSignCertificate(c, 'client', role, userId))
+  })[]).filter(c => canSignCertificate(c, 'operations', capsOf(c.project_id), userId) || canSignCertificate(c, 'client', capsOf(c.project_id), userId))
   const dailyHref = (projectId: string | undefined, tab: string) => (projectId ? `/projects/${projectId}/daily?tab=${tab}` : '/projects')
 
   const projectsInvolved = new Set<string>([

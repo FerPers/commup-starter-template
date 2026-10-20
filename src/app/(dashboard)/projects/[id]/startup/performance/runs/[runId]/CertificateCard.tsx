@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { issuePerformanceCertificate, revokePerformanceCertificate, signPerformanceCertificate } from '@/app/actions/performance'
+import type { MyCapacities } from '@/lib/constants/capacities'
 import { CERT_TONE, canSignCertificate, isPerformanceLead, type CertCapacity, type CertificateStatus, type PerfResult } from '@/lib/performance/catalog'
 import { Alert, Chip, btn, card, label, small } from '../../../../daily/daily-ui'
 import { useLocalTime } from '@/lib/use-local-time'
@@ -22,13 +23,15 @@ export type Certificate = {
 
 const sectionTitle: React.CSSProperties = { fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }
 
-export default function CertificateCard({ projectId, run, certificate, names, userId, role }: {
+export default function CertificateCard({ projectId, run, certificate, names, userId, role, caps }: {
   projectId: string
   run: { id: string; status: string; result: PerfResult | null }
   certificate: Certificate | null
   names: Record<string, string>
   userId: string
   role: string
+  /** S14 (D14/I-25): capacidades del usuario en el proyecto. */
+  caps: MyCapacities
 }) {
   const t = useTranslations('Startup')
   const router = useRouter()
@@ -87,7 +90,7 @@ export default function CertificateCard({ projectId, run, certificate, names, us
                 <div style={label}>{t(`perf.cert.cap.${s.cap}`)}</div>
                 {s.by
                   ? <div style={{ ...small, marginTop: 4 }} suppressHydrationWarning>✓ {who(s.by)}{s.company ? ` · ${s.company}` : ''}<br />{when(s.at)}</div>
-                  : s.cap !== 'commissioning' && canSignCertificate(certificate, s.cap, role, userId)
+                  : s.cap !== 'commissioning' && canSignCertificate(certificate, s.cap, caps, userId)
                     ? <button type="button" style={{ ...btn('primary', isPending), marginTop: 6 }} disabled={isPending}
                         onClick={() => { if (window.confirm(t('perf.cert.signConfirm'))) act(() => signPerformanceCertificate({ projectId, certificateId: certificate.id, capacity: s.cap as 'operations' | 'client' })) }}>
                         {t('perf.cert.sign')}

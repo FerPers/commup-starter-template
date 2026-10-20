@@ -4,6 +4,7 @@ import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import WorkPlansGlobal from './WorkPlansGlobal'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 
 export default async function WorkPlansPage() {
@@ -13,7 +14,7 @@ export default async function WorkPlansPage() {
   const member = { org_id: ctx.orgId, role: ctx.role }
 
   const orgId = member.org_id
-  const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(member.role)
+  const canEdit = ROLE_TIERS.editor.includes(member.role)
 
   // Fetch all projects for this org
   const { data: projects } = await supabase

@@ -15,6 +15,7 @@ import {
   resolveCatBLimit,
   type Eligibility,
 } from '@/lib/certificates/eligibility'
+import { tierRoles } from '@/lib/constants/roles'
 
 // ── Eligibility (shared core) ──────────────────────────────────────────────
 // Reglas puras en src/lib/certificates/eligibility.ts (con tests); aquí solo se consultan los datos.
@@ -161,7 +162,7 @@ export const issueCertificate = withAuth(
       .from('org_members')
       .select('user_id')
       .eq('org_id', ctx.orgId)
-      .in('role', ['owner', 'admin', 'architect'])
+      .in('role', tierRoles('privileged'))
 
     const recipients = (signers ?? [])
       .map(s => s.user_id)
@@ -510,7 +511,7 @@ export const signCertificate = withAuth(
         .from('org_members')
         .select('user_id')
         .eq('org_id', ctx.orgId)
-        .in('role', ['owner', 'admin', 'architect'])
+        .in('role', tierRoles('privileged'))
 
       const recipientSet = new Set<string>()
       if (cert?.issued_by) recipientSet.add(cert.issued_by as string)

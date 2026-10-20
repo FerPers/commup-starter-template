@@ -109,7 +109,8 @@
       "testEquipment": "Equipos de prueba",
       "documents": "Documentos",
       "companies": "Empresas",
-      "vendors": "Vendors"
+      "vendors": "Vendors",
+      "signatories": "Firmantes"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -947,7 +948,7 @@
       "architect": "Templates, jerarquía, asignar ITRs",
       "leader": "Asignar ITRs, cerrar punches",
       "inspector": "Ejecutar ITRs, crear punches",
-      "client": "Solo lectura + firma cliente"
+      "client": "Consulta; firma por el Cliente, Operaciones o HSE según los firmantes designados del proyecto"
     },
     "legend": "Referencia de roles",
     "removeDialog": {
@@ -2609,7 +2610,8 @@
     },
     "performance": {
       "noRun": "Sin intentos"
-    }
+    },
+    "pendingSignaturesDesignated": "Firman solo las personas designadas del proyecto (Firmantes)."
   },
   "GatesAdmin": {
     "isStartupGate": "Gate de arranque (habilita primer arranque y primer HC)",
@@ -3969,7 +3971,8 @@
       "stopPrompt": "¿Qué criterio de parada se cumplió?",
       "abort": "Abortar ejecución",
       "abortPrompt": "Motivo para abortar:",
-      "releasedBy": "liberó {who} el {when}"
+      "releasedBy": "liberó {who} el {when}",
+      "holdDesignated": "Lo libera una persona designada como {who} en el proyecto."
     },
     "lineup": {
       "stale": "Posiblemente desactualizada",
@@ -4969,5 +4972,37 @@
     "chooseTitle": "El tag {tag} existe en varios proyectos",
     "chooseHelp": "{n} coincidencias. Elige el proyecto correcto antes de registrar nada en campo.",
     "lastProject": "último proyecto visitado"
+  },
+  "Signatories": {
+    "title": "Firmantes designados",
+    "subtitle": "quién firma por Comisionamiento, Operaciones, HSE y el Cliente",
+    "help": "Con personas designadas para una capacidad, firman solo ellas (con cualquier rol: un supervisor de la operadora con rol inspector puede liberar los hold points de Operaciones). Sin designados rige el rol de la persona y se avisa. Aplica a gates, hold points, testigos de hitos, traspasos, PTC y la firma Cliente del ITR.",
+    "cap": {
+      "commissioning": "Comisionamiento",
+      "operations": "Operaciones",
+      "hse": "HSE",
+      "client_rep": "Representante del cliente"
+    },
+    "capHelp": {
+      "commissioning": "Aprueba gates, emite el PTC, firma traspasos y libera hold points de Comisionamiento.",
+      "operations": "Co-firma gates, libera hold points, atestigua hitos y firma traspasos y PTC por Operaciones.",
+      "hse": "Co-firma gates y libera hold points de HSE.",
+      "client_rep": "Firma el PTC y los ITR por el Cliente."
+    },
+    "designatedN": "{n, plural, one {# designado} other {# designados}}",
+    "none": "Sin designado",
+    "fallback": "Sin designados: firma cualquier persona con rol {roles}.",
+    "assignedBy": "Designado por {who} · {when}",
+    "revoke": "Quitar",
+    "revokeReason": "Motivo",
+    "revokeConfirm": "Quitar designación",
+    "cancel": "Cancelar",
+    "add": "Designar para {cap}",
+    "pick": "Elige una persona…",
+    "noCandidates": "No hay más personas elegibles",
+    "designate": "Designar",
+    "clientRepRule": "Solo personas con rol cliente o de la empresa operadora (empresa de tipo «Owner» en Empresas).",
+    "history": "Historial ({n})",
+    "revokedBy": "quitada por {who} · {when}: {reason}"
   }
 }

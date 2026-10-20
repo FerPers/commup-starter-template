@@ -6,6 +6,9 @@
  * `performance_write_content` (clave, operandos existentes, sin ciclos). Tests en catalog.test.ts.
  */
 
+import { can, type MyCapacities } from '@/lib/constants/capacities'
+import { ROLE_TIERS } from '@/lib/constants/roles'
+
 /** Secciones de la definición (7.22, 18.6), en orden. */
 export const PERFORMANCE_SECTIONS = [
   'purpose', 'boundary', 'conditions', 'method', 'corrections', 'uncertainty', 'references', 'responsibilities',
@@ -73,7 +76,7 @@ export const needsResultReason = (result: PerfResult, suggested: string) => resu
 export const LIVE_RUN_STATUSES: readonly PerfRunStatus[] = ['planned', 'stabilizing', 'formal']
 
 /** Quien dirige la prueba (crear, aprobar, arrancar, cerrar, excluir perturbaciones) = `performance_is_lead()`. */
-export const PERFORMANCE_LEAD_ROLES: readonly string[] = ['owner', 'admin', 'architect', 'leader']
+export const PERFORMANCE_LEAD_ROLES: readonly string[] = ROLE_TIERS.editor
 export const isPerformanceLead = (role: string) => PERFORMANCE_LEAD_ROLES.includes(role)
 
 export const KEY_RE = /^[A-Z][A-Z0-9_]{0,9}$/
@@ -287,15 +290,14 @@ export type CertCapacity = 'commissioning' | 'operations' | 'client'
 export const CERT_TONE: Record<CertificateStatus, 'amber' | 'green' | 'red' | 'struck'> = {
   pending_signatures: 'amber', accepted: 'green', revoked: 'red', superseded: 'struck',
 }
-/** Roles que firman por Operaciones (= hold_release_roles('operations')); el Cliente firma solo con rol client. */
-const OPERATIONS_SIGNERS: readonly string[] = ['owner', 'admin', 'architect', 'leader', 'client']
 
 export type CertSigners = { status: CertificateStatus; commissioning_signed_by: string | null; operations_signed_by: string | null; client_signed_by: string | null }
 
 /** ¿Puede esta persona firmar el certificado en esa capacidad? (mismas reglas que sign_performance_certificate). */
-export function canSignCertificate(c: CertSigners, capacity: Exclude<CertCapacity, 'commissioning'>, role: string, userId: string): boolean {
+// S14 (D14/I-25): Operaciones = capacidad operations; Cliente = client_rep (empresa operadora o, sin designados, rol client).
+export function canSignCertificate(c: CertSigners, capacity: Exclude<CertCapacity, 'commissioning'>, caps: MyCapacities, userId: string): boolean {
   if (c.status !== 'pending_signatures') return false
   if ([c.commissioning_signed_by, c.operations_signed_by, c.client_signed_by].includes(userId)) return false
-  if (capacity === 'operations') return c.operations_signed_by === null && OPERATIONS_SIGNERS.includes(role)
-  return c.client_signed_by === null && role === 'client'
+  if (capacity === 'operations') return c.operations_signed_by === null && can(caps, 'operations')
+  return c.client_signed_by === null && can(caps, 'client_rep')
 }

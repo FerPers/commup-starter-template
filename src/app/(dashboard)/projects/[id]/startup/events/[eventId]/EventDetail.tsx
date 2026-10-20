@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { addStartupEventParam, voidStartupEvent, witnessStartupEvent } from '@/app/actions/startup-events'
+import type { MyCapacities } from '@/lib/constants/capacities'
 import { canWitness, type EventCategory, type Milestone, type StartupEventStatus } from '@/lib/startup/catalog'
 import { Alert, Chip, btn, card, input, label, small } from '../../../daily/daily-ui'
 import { EVENT_TONE } from '../EventsView'
 import { useLocalTime } from '@/lib/use-local-time'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Param = {
   id: string; signal_id: string | null; label: string; value: number | null; value_text: string | null; unit: string | null
@@ -21,13 +23,15 @@ type Event = {
   run: { id: string; number: string } | null; recordedBy: string | null; recordedAt: string; witnessCapacity: string | null
   witnessBy: string | null; witnessAt: string | null; voidedBy: string | null; voidedAt: string | null; voidReason: string | null; tags: string[]
 }
-const LEADERS = ['owner', 'admin', 'architect', 'leader']
+const LEADERS = ROLE_TIERS.editor
 const th: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', background: 'var(--gray-50)' }
 const td: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)' }
 
-export default function EventDetail({ project, event: e, params, series, names, userId, role }: {
+export default function EventDetail({ project, event: e, params, series, names, userId, role, caps }: {
   project: { id: string; code: string; name: string }; event: Event; params: Param[]
   series: { signalId: string; bucket: string; value: number | null }[]; names: Record<string, string>; userId: string; role: string
+  /** S14 (D14): capacidades del usuario en el proyecto. */
+  caps: MyCapacities
 }) {
   const t = useTranslations('Startup')
   const router = useRouter()
@@ -90,7 +94,7 @@ export default function EventDetail({ project, event: e, params, series, names, 
           e.witnessAt
             ? <span style={small} suppressHydrationWarning>{t('events.witnessedBy', { who: who(e.witnessBy), cap: t(`capacity.${e.witnessCapacity}`), when: when(e.witnessAt) })}</span>
             : e.status === 'pending_witness' && (
-              canWitness(role, e.milestone!, userId, e.recordedBy)
+              canWitness(caps, e.milestone!, userId, e.recordedBy)
                 ? <div><button type="button" style={btn('primary', isPending)} disabled={isPending} onClick={() => act(() => witnessStartupEvent(ids))}>✓ {t('events.witness', { cap: t(`capacity.${e.witnessCapacity}`) })}</button></div>
                 : <span style={{ ...small, color: '#b45309' }}>{e.recordedBy === userId ? t('events.witnessOther') : t('events.witnessRole', { cap: t(`capacity.${e.witnessCapacity}`) })}</span>
             )

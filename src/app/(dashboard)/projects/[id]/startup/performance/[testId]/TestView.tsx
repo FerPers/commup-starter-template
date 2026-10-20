@@ -16,10 +16,13 @@ import {
 import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, label, small } from '../../../daily/daily-ui'
 import { REV_TONE, RUN_TONE } from '../PerformanceView'
 import { useLocalTime } from '@/lib/use-local-time'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Rev = {
   id: string; rev: number; status: RevisionStatus; changeReason: string | null; returnedReason: string | null
   createdBy: string | null; submittedBy: string | null; submittedAt: string | null; approvedBy: string | null; approvedAt: string | null; hash: string | null
+  /** S14 (E-30): quienes editaron el borrador (no lo aprueban). */
+  editors: string[]
 }
 type Run = {
   id: string; number: string; attempt: number; status: PerfRunStatus; rev: number | null; created_at: string
@@ -175,7 +178,7 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
             )}
             {shown.status === 'in_review' && (
               <>
-                {userId !== shown.createdBy && userId !== shown.submittedBy
+                {userId !== shown.createdBy && userId !== shown.submittedBy && !shown.editors.includes(userId)
                   ? <button type="button" style={btn('primary', isPending)} disabled={isPending} onClick={() => act(() => transitionPerformanceRevision({ ...ids, revisionId: shown.id, to: 'approved' }))}>✓ {t('perf.approve')}</button>
                   : <span style={{ ...small, color: '#b45309', alignSelf: 'center' }}>{t('perf.approveOther')}</span>}
                 <button type="button" style={btn('outline', isPending)} disabled={isPending}
@@ -186,7 +189,7 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
               <button type="button" style={btn('outline', isPending)} disabled={isPending}
                 onClick={() => ask(t('perf.newRevPrompt'), r => act(() => newPerformanceRevision({ ...ids, reason: r }), () => router.push(`${root}/${test.id}`)))}>+ {t('perf.newRev')}</button>
             )}
-            {neverApproved && runs.length === 0 && (userId === test.createdBy || ['owner', 'admin'].includes(role)) && (
+            {neverApproved && runs.length === 0 && (userId === test.createdBy || ROLE_TIERS.admin.includes(role)) && (
               <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} disabled={isPending}
                 onClick={() => { if (window.confirm(t('perf.deleteConfirm'))) act(() => deletePerformanceTest(ids), () => router.push(root)) }}>{t('perf.delete')}</button>
             )}

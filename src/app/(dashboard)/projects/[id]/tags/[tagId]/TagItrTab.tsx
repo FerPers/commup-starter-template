@@ -39,6 +39,8 @@ interface Props {
   templates: ItrTemplate[]
   matrixTemplateIds?: string[]
   orgMembers: OrgMember[]
+  /** S14 (I-25): representantes del cliente designados en el proyecto (vacío = regla de antes). */
+  clientRepIds?: string[]
   canEdit: boolean
 }
 
@@ -54,6 +56,7 @@ export default function TagItrTab({
   templates,
   matrixTemplateIds,
   orgMembers,
+  clientRepIds = [],
   canEdit,
 }: Props) {
   const router = useRouter()
@@ -73,6 +76,10 @@ export default function TagItrTab({
 
   // Add to plan modal state
   const [planModalItr, setPlanModalItr] = useState<ModalItr | null>(null)
+  // S14 (I-25): designados > usuarios con rol cliente > todos (la BD vuelve a validarlo).
+  const clientCandidates = clientRepIds.length > 0
+    ? orgMembers.filter(m => clientRepIds.includes(m.user_id))
+    : orgMembers.filter(m => m.role === 'client')
   const planModalMembers = orgMembers.map(m => ({
     user_id: m.user_id,
     full_name: m.profiles?.full_name ?? m.user_id,
@@ -430,8 +437,8 @@ export default function TagItrTab({
                     style={selStyle}
                   >
                     <option value="">Seleccionar cliente...</option>
-                    {orgMembers.filter(m => m.role === 'client').length > 0
-                      ? orgMembers.filter(m => m.role === 'client').map(m => (
+                    {clientCandidates.length > 0
+                      ? clientCandidates.map(m => (
                           <option key={m.user_id} value={m.user_id}>
                             {m.profiles?.full_name ?? m.user_id}
                           </option>

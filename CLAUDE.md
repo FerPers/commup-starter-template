@@ -170,6 +170,12 @@ Rules for every new page/query/action:
 - S13 (migración `20261108120000`): vigente = fecha de emisión más reciente; revisiones anuladas (`void`); referencias automáticas al crear un ITR (trigger `itrs_auto_document_refs`) y masivas en la ficha del documento; `organizations.settings.document_policy.below_ifc` (`warn` | `block`) para IFR/IFA; FAT/SAT con re-prueba (`retest_of`); `tags.tag_key` (número normalizado) para C&E y QR; etiquetas QR por tag en `/projects/[id]/tags/labels` (QR con `/tag_360/<uuid>`).
 - Sesión 3 (migración `20261023120000`): KPIs `documents` (As-Built/Final sobre documentos ligados a sistemas) y `vendors` (paquetes activos sin bloqueos) en `take_mgmt_snapshot`; trigger `company_link_from_text` enlaza la empresa de `ops_personnel.company` / `test_equipment.owner_company` por nombre. Seed DEMO `scripts/demo-data/seed_documents_vendors_demo.sql`. **Con esto el plan readiness F0–F8 está completo.**
 
+## Firmantes designados (S14, D14)
+
+- `project_capacities` (persona × proyecto × `commissioning` | `operations` | `hse` | `client_rep`), solo owner/admin por `assign_project_capacity` / `revoke_project_capacity`; pantalla `/projects/[id]/signatories`. **Quién firma lo decide `has_capacity(proyecto, capacidad)`**, nunca un array de roles: con designados firman solo ellos (cualquier rol); sin designados, `capacity_fallback_roles` (= `CAPACITY_FALLBACK_ROLES` en `src/lib/constants/capacities.ts`). client_rep = empresa tipo `owner` o rol client; commissioning nunca rol client.
+- En la UI: `loadMyCapacities` / `loadMyCapacitiesByProject` (`src/lib/capacities/server.ts`, RPC `my_capacities`) y los helpers `canReleaseHold` / `canWitness` / `signableCapacities` / `canSignCertificate` reciben `MyCapacities`, no el rol.
+- Niveles de rol: una sola fuente `src/lib/constants/roles.ts` (`ROLE_TIERS`, `tierRoles()` si hace falta el enum); no repetir `['owner', 'admin', …]` en páginas.
+
 ## Zona horaria del proyecto (S10, D12)
 
 - `projects.timezone` (IANA, por defecto `America/Bogota`) define «hoy» y el corte del día. En SQL: `project_today(project_id)` / `tz_today(tz)` / `tz_day_start(date, tz)` — **nunca `CURRENT_DATE`** en funciones nuevas. En TS: `src/lib/time/zone.ts` (`todayIn`, `formatInZone`, `latestPossibleToday` para filtrar crons) y `src/lib/time/project-zones.ts`; el Worker corre en UTC, así que `new Date().toISOString().slice(0, 10)` es el día equivocado desde las 19:00 en Colombia.

@@ -45,7 +45,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S11 | Lógica de gates | S03 | D13 | ✅ **Hecha** 2026-10-20 (migración 20261106120000 en prod, 13 escenarios con ROLLBACK). Detalle en la cobertura |
 | S12 | IIoT confiable | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261107120000 en prod, 9 escenarios con ROLLBACK; `signal_samples` particionada). Detalle en la cobertura |
 | S13 | Correcciones de F8 (documentos y vendors) | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261108120000 en prod, 28 comprobaciones con ROLLBACK). Decisiones de Luis: referencias automáticas + masivas; IFR/IFA = aviso con bloqueo opcional por org; QR completo. Detalle en la cobertura |
-| S14 | Firmantes designados (capacidades) y roles | S03 | D14 | Pendiente |
+| S14 | Firmantes designados (capacidades) y roles | S03 | D14 | ✅ **Hecha** 2026-10-20 (migración 20261109120000 en prod, 17 comprobaciones con ROLLBACK incl. los dos «Listo cuando»). Detalle en la cobertura |
 | S15 | Miembros, auditoría y cuotas | S03 | — | Pendiente |
 | S16 | PSSR por RPC | S14 | — | Pendiente |
 | S17 | Certificados por RPC | S14 | D6, D15 | Pendiente |
@@ -103,7 +103,7 @@ Cada una trae mi recomendación. Se responden antes de la sesión que la necesit
 | D11 | Snapshots históricos calculados con datos truncados | Marcarlos «sospechosos» (no se pueden recalcular hacia atrás). | S09 | ✅ 2026-10-19: según recomendación. `kpi_snapshots.suspect` (contador ≥ 1000 o fecha ≥ el día en que el proyecto pasó 1000 ITR/punches/planes); hoy marca 0 filas (prod solo tiene DEMO, 14 ITR). La curva S los dibuja huecos y el Excel los rotula. |
 | D12 | Zona horaria y reportes ya emitidos | `projects.timezone` (por defecto `America/Bogota`). Los reportes emitidos quedan inmutables con una nota; solo se corrigen si alguien emite una revisión. | S10 | ✅ Recomendada (2026-10-20) |
 | D13 | Regresión de un gate | El gate anterior en regresión **bloquea** el siguiente; una dependencia entre sistemas en regresión es **condición** (amarillo). Configurable por org. | S11 | ✅ Recomendada (2026-10-20) |
-| D14 | Modelo de firmantes | Capacidades por persona y proyecto (`commissioning`, `operations`, `hse`, `client_rep`) asignadas por un líder, opcionalmente atadas a la empresa de F8; el rol queda como piso. La membresía por proyecto (que el cliente vea solo sus proyectos) va al trimestre, salvo que ya tengas un cliente con varios proyectos en la misma org. | S14 | |
+| D14 | Modelo de firmantes | Capacidades por persona y proyecto (`commissioning`, `operations`, `hse`, `client_rep`) asignadas por un líder, opcionalmente atadas a la empresa de F8; el rol queda como piso. La membresía por proyecto (que el cliente vea solo sus proyectos) va al trimestre, salvo que ya tengas un cliente con varios proyectos en la misma org. | S14 || ✅ Con ajustes (2026-10-20): sin designados rige el rol de antes con aviso; **designan solo owner/admin**; client_rep = empresa operadora o rol client |
 | D15 | Quién firma «Cliente» en el certificado | Quien tenga la capacidad `client_rep` (rol `client` o empresa owner). | S17 | |
 | D16 | Canales de aviso | En la app + push + resumen diario por correo; cada usuario elige temas. | S22 | |
 | D17 | Contenido del handover v2 | Todo F1–F8 con hashes, más los PDF de procedimientos y del PTC, en un ZIP. | S24 | |

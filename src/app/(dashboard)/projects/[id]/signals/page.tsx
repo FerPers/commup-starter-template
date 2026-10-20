@@ -4,6 +4,7 @@ import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import SignalsView from './SignalsView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function SignalsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -67,7 +68,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ id: st
       projectName={project.name}
       signals={signals}
       subsystems={subsystems}
-      canEdit={['owner', 'admin', 'architect', 'leader'].includes(membership.role)}
+      canEdit={ROLE_TIERS.editor.includes(membership.role)}
     />
     </>
   )

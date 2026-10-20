@@ -5,6 +5,7 @@ import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import LookaheadView, { type GateCell, type PlanSource } from './LookaheadView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // Look-ahead 90/30/7 (fase 5 plan readiness, sesión 2): gates por forecast y compromiso + acciones,
 // restricciones, TQ e ítems de work plan que vencen en la ventana, agrupados por sistema.
@@ -82,7 +83,7 @@ export default async function LookaheadPage({ params, searchParams }: {
       sources={sources.map(x => ({ ...x, systemCode: x.systemId ? codeOf.get(x.systemId) ?? null : null }))}
       progress={(progress ?? []).map(p => ({ systemId: p.system_id, systemCode: p.system_code, weightedPct: Number(p.weighted_pct), itrTotal: p.itr_total, gatesApproved: p.gates_approved, gatesTotal: p.gates_total }))}
       canEdit={ctx.role !== 'client'}
-      canCommit={['owner', 'admin', 'architect', 'leader'].includes(ctx.role)}
+      canCommit={ROLE_TIERS.editor.includes(ctx.role)}
     />
     </>
   )

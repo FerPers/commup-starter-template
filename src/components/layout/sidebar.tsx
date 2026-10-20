@@ -11,11 +11,12 @@ import {
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
   Bell, Database, History, Tag, Activity, Boxes, FolderTree,
   RotateCw, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
-  ChevronDown, ChevronRight, Milestone, Gauge, CalendarCheck, Power, FileText, Building2, Truck,
+  ChevronDown, ChevronRight, Milestone, Gauge, CalendarCheck, Power, FileText, Building2, Truck, UserCheck,
   type LucideIcon,
 } from 'lucide-react'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 import { NAV_STORAGE } from '@/lib/constants/navigation'
+import { tierRoles } from '@/lib/constants/roles'
 import type { OrgMemberRole } from '@/types/database'
 
 /**
@@ -26,9 +27,10 @@ import type { OrgMemberRole } from '@/types/database'
 
 // Copia client-safe de los tiers de src/lib/auth/permissions.ts (ese módulo
 // arrastra código de servidor).
-const ADMIN_ROLES: readonly OrgMemberRole[] = ['owner', 'admin']
-const PRIVILEGED_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect']
-const EDITOR_ROLES: readonly OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader']
+// S14 (I-15): niveles de la fuente única (src/lib/constants/roles.ts).
+const ADMIN_ROLES: readonly OrgMemberRole[] = tierRoles('admin')
+const PRIVILEGED_ROLES: readonly OrgMemberRole[] = tierRoles('privileged')
+const EDITOR_ROLES: readonly OrgMemberRole[] = tierRoles('editor')
 
 /**
  * Pie del sidebar: solo el estado de sincronización, y solo cuando importa
@@ -144,6 +146,7 @@ function projectSections(projectId: string): ProjectSection[] {
         { href: `${p}/startup`,       labelKey: 'startup',         icon: Power },
         { href: `${p}/documents`,     labelKey: 'documents',       icon: FileText },
         { href: `${p}/vendors`,       labelKey: 'vendors',         icon: Truck },
+        { href: `${p}/signatories`,   labelKey: 'signatories',     icon: UserCheck },
         { href: `${p}/certificates`,  labelKey: 'certificates',    icon: Award },
         { href: `${p}/kpis`,          labelKey: 'kpis',            icon: TrendingUp },
       ],
@@ -164,7 +167,8 @@ function projectSections(projectId: string): ProjectSection[] {
         { href: `${p}/twin`,          labelKey: 'twin',            icon: Boxes },
         { href: `${p}/work-plans`,    labelKey: 'workPlans',       icon: CalendarDays },
         { href: `${p}/pssr`,          labelKey: 'pssr',            icon: ShieldCheck },
-        { href: `${p}/import`,        labelKey: 'import',          icon: Upload, roles: EDITOR_ROLES },
+        // I-15: la página y la acción de importar exigen PRIVILEGED; el menú lo mostraba también a líderes.
+        { href: `${p}/import`,        labelKey: 'import',          icon: Upload, roles: PRIVILEGED_ROLES },
       ],
     },
   ]

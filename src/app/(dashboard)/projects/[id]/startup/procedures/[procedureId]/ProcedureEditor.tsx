@@ -15,15 +15,18 @@ import {
 import { TagPicker } from '../../../registers/RegisterFields'
 import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, label, linkStyle, small } from '../../../daily/daily-ui'
 import { useLocalTime } from '@/lib/use-local-time'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Revision = {
   id: string; rev: number; status: string; sections: Record<string, string>; changeReason: string | null; returnedReason: string | null
   createdBy: string | null; submittedBy: string | null; approvedBy: string | null; approvedAt: string | null
+  /** S14 (E-30): quienes editaron el borrador (no lo aprueban). */
+  editors: string[]
   fieldVerifiedBy: string | null; fieldVerifiedAt: string | null; walkdownNote: string | null; hash: string | null
 }
 const REV_TONE: Record<string, 'muted' | 'blue' | 'green' | 'struck'> = { draft: 'muted', in_review: 'blue', approved: 'green', superseded: 'struck' }
 const RUN_TONE: Record<string, 'amber' | 'red' | 'green' | 'struck' | 'blue'> = { in_progress: 'blue', at_hold: 'amber', stopped: 'red', completed: 'green', aborted: 'struck' }
-const LEADERS = ['owner', 'admin', 'architect', 'leader']
+const LEADERS = ROLE_TIERS.editor
 
 export default function ProcedureEditor({ project, procedure, revisions, revision, steps: initialSteps, runs, systems, names, userId, role, documentsSlot }: {
   project: { id: string; code: string; name: string }
@@ -148,8 +151,8 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
           {editable && <button type="button" style={btn('primary', isPending || steps.length === 0)} disabled={isPending || steps.length === 0} onClick={submit}>{t('editor.submit')}</button>}
           {revision.status === 'in_review' && !isClient && <button type="button" style={btn('outline', isPending)} disabled={isPending} onClick={giveBack}>{t('editor.return')}</button>}
           {revision.status === 'in_review' && LEADERS.includes(role) && (
-            <button type="button" style={btn('primary', isPending || userId === revision.createdBy || userId === revision.submittedBy)}
-              disabled={isPending || userId === revision.createdBy || userId === revision.submittedBy} onClick={approve}>{t('editor.approve')}</button>
+            <button type="button" style={btn('primary', isPending || userId === revision.createdBy || userId === revision.submittedBy || revision.editors.includes(userId))}
+              disabled={isPending || userId === revision.createdBy || userId === revision.submittedBy || revision.editors.includes(userId)} onClick={approve}>{t('editor.approve')}</button>
           )}
           {revision.status === 'approved' && !revision.fieldVerifiedAt && !isClient && (
             <button type="button" style={btn('outline', isPending || userId === revision.approvedBy)} disabled={isPending || userId === revision.approvedBy} onClick={fieldVerify}>{t('editor.fieldVerify')}</button>
@@ -158,7 +161,7 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
           <a href={`${root}/procedures/${procedure.id}/pdf?rev=${revision.id}`} target="_blank" rel="noopener" style={btn('outline')}>PDF</a>
           {editable && !procedure.currentRevisionId && runs.length === 0 && <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} disabled={isPending} onClick={remove}>{t('editor.delete')}</button>}
         </div>
-        {revision.status === 'in_review' && (userId === revision.createdBy || userId === revision.submittedBy) && <p style={{ ...small, margin: 0 }}>{t('editor.otherApproves')}</p>}
+        {revision.status === 'in_review' && (userId === revision.createdBy || userId === revision.submittedBy || revision.editors.includes(userId)) && <p style={{ ...small, margin: 0 }}>{t('editor.otherApproves')}</p>}
         {revision.status === 'approved' && userId === revision.approvedBy && !revision.fieldVerifiedAt && <p style={{ ...small, margin: 0 }}>{t('editor.otherVerifies')}</p>}
       </section>
 

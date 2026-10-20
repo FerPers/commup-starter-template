@@ -1,12 +1,13 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import BackupRestoreView from './BackupRestoreView'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function TemplatesBackupPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
 
-  const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(ctx.role)
+  const canEdit = ROLE_TIERS.editor.includes(ctx.role)
   if (!canEdit) redirect('/admin/templates')
 
   const { data: org } = await ctx.supabase

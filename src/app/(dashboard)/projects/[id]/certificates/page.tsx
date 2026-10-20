@@ -4,6 +4,7 @@ import { fetchAllRows } from '@/lib/list/fetch-all'
 import { fetchSubsystemPhaseItrCounts, fetchSubsystemRollup } from '@/lib/list/kpi-query'
 import { redirect, notFound } from 'next/navigation'
 import CertificatesView from './CertificatesView'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function CertificatesPage({
   params,
@@ -142,7 +143,7 @@ export default async function CertificatesPage({
     }
   })
 
-  const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(membership.role)
+  const canEdit = ROLE_TIERS.editor.includes(membership.role)
 
   return (
     <CertificatesView

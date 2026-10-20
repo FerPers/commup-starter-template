@@ -1,5 +1,6 @@
 import type { OrgMemberRole } from '@/types/database'
 import type { DashboardLayout, WidgetId, WidgetMeta } from '@/types/dashboard'
+import { tierRoles } from '@/lib/constants/roles'
 
 export const WIDGET_REGISTRY: Record<WidgetId, WidgetMeta> = {
   inspector_summary: {
@@ -48,19 +49,19 @@ export const WIDGET_REGISTRY: Record<WidgetId, WidgetMeta> = {
     id: 'kpi_summary',
     titleKey: 'widgets.kpiSummary.title',
     descKey: 'widgets.kpiSummary.desc',
-    allowedRoles: ['owner', 'admin', 'architect', 'leader'],
+    allowedRoles: tierRoles('editor'),
   },
   projects_active: {
     id: 'projects_active',
     titleKey: 'widgets.projectsActive.title',
     descKey: 'widgets.projectsActive.desc',
-    allowedRoles: ['owner', 'admin', 'architect', 'leader'],
+    allowedRoles: tierRoles('editor'),
   },
   disciplines: {
     id: 'disciplines',
     titleKey: 'widgets.disciplines.title',
     descKey: 'widgets.disciplines.desc',
-    allowedRoles: ['owner', 'admin', 'architect', 'leader'],
+    allowedRoles: tierRoles('editor'),
   },
 }
 

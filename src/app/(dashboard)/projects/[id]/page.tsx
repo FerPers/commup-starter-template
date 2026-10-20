@@ -4,6 +4,7 @@ import { fetchItrPhaseCounts, fetchPunchCounts, fetchCertCounts, sumItr, sumPunc
 import { Boxes, Award, TrendingUp } from 'lucide-react'
 import { Card } from '@/components/ui'
 import ProjectHeader from './ProjectHeader'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -13,7 +14,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
+  const canEdit = ROLE_TIERS.privileged.includes(membership.role)
   const canDelete = membership.role === 'owner'
 
   const [

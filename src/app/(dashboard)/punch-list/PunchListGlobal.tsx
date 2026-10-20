@@ -17,9 +17,10 @@ import { reassignPunch } from '@/app/actions/punches'
 import { punchDisplayStatus } from '@/lib/punches/verification'
 import { toSafeCsv } from '@/lib/excel/sanitize'
 import { browserToday } from '@/lib/time/zone'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
-const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
+const REASSIGN_ROLES = ROLE_TIERS.editor
+const EDITOR_ROLES = ROLE_TIERS.editor
 
 type Project    = { id: string; name: string; code: string }
 type Discipline = { id: string; code: string; name: string; color: string }

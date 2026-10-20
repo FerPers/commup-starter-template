@@ -88,7 +88,7 @@ export default async function PerformanceTestPage({ params, searchParams }: {
       test={{ id: test.id, number: test.number, title: test.title, primarySystemId: test.primary_system_id, currentRevisionId: test.current_revision_id, createdBy: test.created_by, status: test.status, withdrawReason: test.withdraw_reason }}
       revisions={revs.map(r => ({
         id: r.id, rev: r.rev, status: r.status as RevisionStatus, changeReason: r.change_reason, returnedReason: r.returned_reason,
-        createdBy: r.created_by, submittedBy: r.submitted_by, submittedAt: r.submitted_at, approvedBy: r.approved_by, approvedAt: r.approved_at, hash: r.content_hash,
+        createdBy: r.created_by, submittedBy: r.submitted_by, editors: r.editors ?? [], submittedAt: r.submitted_at, approvedBy: r.approved_by, approvedAt: r.approved_at, hash: r.content_hash,
       }))}
       shownId={shown.id}
       liveCertificate={liveCert ? { ...liveCert, status: liveCert.status as CertificateStatus } : null}

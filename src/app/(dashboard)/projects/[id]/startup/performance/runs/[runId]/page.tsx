@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
+import { loadMyCapacities } from '@/lib/capacities/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { DisturbanceKind, Evaluation, PerfResult, PerfRunStatus, VariableSource } from '@/lib/performance/catalog'
 import RunConsole from './RunConsole'
@@ -113,6 +114,7 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
       names={names}
       userId={ctx.userId}
       role={ctx.role}
+      caps={await loadMyCapacities(ctx.supabase, id)}
     />
   )
 }

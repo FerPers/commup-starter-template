@@ -1,5 +1,6 @@
 // Empresas y registro maestro de documentos (fase 8 plan readiness, sesión 1; doc §15, migración 20261021120000).
 // Catálogos fijos = CHECK de la BD. Lógica pura (sin Supabase) para la UI y las acciones.
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export const COMPANY_KINDS = ['owner', 'epc', 'vendor', 'subcontractor', 'other'] as const
 export type CompanyKind = (typeof COMPANY_KINDS)[number]
@@ -32,7 +33,7 @@ export const REFERENCE_KINDS = ['itr', 'procedure_revision'] as const
 export type ReferenceKind = (typeof REFERENCE_KINDS)[number]
 
 /** Control documental = líder o superior (SQL document_is_controller). */
-export const DOCUMENT_CONTROLLER_ROLES: readonly string[] = ['owner', 'admin', 'architect', 'leader']
+export const DOCUMENT_CONTROLLER_ROLES: readonly string[] = ROLE_TIERS.editor
 export const isDocumentController = (role: string) => DOCUMENT_CONTROLLER_ROLES.includes(role)
 
 /** Motivo mínimo para revalidar una referencia superada en un registro ya firmado (SQL: ≥ 10). */

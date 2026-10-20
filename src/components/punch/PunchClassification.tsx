@@ -12,6 +12,7 @@ import {
   type PunchImpact,
   type StartupDisposition,
 } from '@/lib/punches/category-guide'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // Clasificación del punch en el detalle (fase 4 · bloque A): impacto, disposición para el arranque
 // y revisión de la categoría por un supervisor distinto de quien lo levantó (marca + cola, §10.4).
@@ -26,7 +27,7 @@ export type ClassifiablePunch = {
   category_reviewed_at: string | null
 }
 
-const REVIEWERS = ['owner', 'admin', 'architect', 'leader']
+const REVIEWERS = ROLE_TIERS.editor
 const sel: React.CSSProperties = {
   padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px',
   background: 'var(--card-bg)', color: 'var(--text-strong)', fontFamily: 'inherit',

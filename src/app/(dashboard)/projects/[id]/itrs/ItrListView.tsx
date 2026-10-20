@@ -14,6 +14,7 @@ import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
 import type { SortDir } from '@/lib/list/params'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ type Discipline = { code: string; name: string; color: string }
 type OrgUser    = { user_id: string; full_name: string }
 
 const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', client: 'C' }
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
+const EDITOR_ROLES = ROLE_TIERS.editor
 const ITR_STATUS_KEYS = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
 
 // ── Component ─────────────────────────────────────────────────────────

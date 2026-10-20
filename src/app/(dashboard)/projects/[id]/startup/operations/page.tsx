@@ -6,6 +6,7 @@ import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import OperationsView from './OperationsView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // Readiness de operaciones (fase 6 plan readiness, sesión 3): etapa de propiedad por sistema y traspasos,
 // matriz de competencias, personal de operaciones y repuestos críticos.
@@ -82,7 +83,7 @@ export default async function StartupOperationsPage({ params, searchParams }: {
       spares={(spares ?? []).map(s => ({ ...s, kind: s.kind as 'spare' | 'special_tool', status: s.status as SpareStatus, qty_required: Number(s.qty_required), qty_available: Number(s.qty_available) }))}
       members={(members ?? []).map(m => ({ id: m.user_id, name: (m.profiles as unknown as { full_name: string | null } | null)?.full_name ?? '—' }))}
       canEdit={ctx.role !== 'client'}
-      canAssess={['owner', 'admin', 'architect', 'leader'].includes(ctx.role)}
+      canAssess={ROLE_TIERS.editor.includes(ctx.role)}
     />
     </>
   )

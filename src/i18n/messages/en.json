@@ -109,7 +109,8 @@
       "testEquipment": "Test equipment",
       "documents": "Documents",
       "companies": "Companies",
-      "vendors": "Vendors"
+      "vendors": "Vendors",
+      "signatories": "Signatories"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -947,7 +948,7 @@
       "architect": "Templates, hierarchy, assign ITRs",
       "leader": "Assign ITRs, close punches",
       "inspector": "Execute ITRs, create punches",
-      "client": "Read-only + client signature"
+      "client": "Read access; signs for the Client, Operations or HSE as designated in each project"
     },
     "legend": "Role reference",
     "removeDialog": {
@@ -2609,7 +2610,8 @@
     },
     "performance": {
       "noRun": "No attempts"
-    }
+    },
+    "pendingSignaturesDesignated": "Only the project's designated people can sign (Signatories)."
   },
   "GatesAdmin": {
     "isStartupGate": "Start-up gate (enables first start-up and first HC)",
@@ -3969,7 +3971,8 @@
       "stopPrompt": "Which stop criterion was met?",
       "abort": "Abort run",
       "abortPrompt": "Reason for aborting:",
-      "releasedBy": "released by {who} on {when}"
+      "releasedBy": "released by {who} on {when}",
+      "holdDesignated": "Released by a person designated as {who} in the project."
     },
     "lineup": {
       "stale": "Possibly out of date",
@@ -4969,5 +4972,37 @@
     "chooseTitle": "Tag {tag} exists in several projects",
     "chooseHelp": "{n} matches. Pick the right project before recording anything in the field.",
     "lastProject": "last visited project"
+  },
+  "Signatories": {
+    "title": "Designated signatories",
+    "subtitle": "who signs for Commissioning, Operations, HSE and the Client",
+    "help": "When people are designated for a capacity, only they sign (with any role: an operator supervisor with the inspector role can release Operations hold points). Without designations the person's role applies and a warning is shown. Applies to gates, hold points, milestone witnesses, transfers, PTCs and the ITR client signature.",
+    "cap": {
+      "commissioning": "Commissioning",
+      "operations": "Operations",
+      "hse": "HSE",
+      "client_rep": "Client representative"
+    },
+    "capHelp": {
+      "commissioning": "Approves gates, issues the PTC, signs transfers and releases Commissioning hold points.",
+      "operations": "Co-signs gates, releases hold points, witnesses milestones and signs transfers and PTCs for Operations.",
+      "hse": "Co-signs gates and releases HSE hold points.",
+      "client_rep": "Signs PTCs and ITRs for the Client."
+    },
+    "designatedN": "{n, plural, one {# designated} other {# designated}}",
+    "none": "No one designated",
+    "fallback": "No one designated: anyone with role {roles} can sign.",
+    "assignedBy": "Designated by {who} · {when}",
+    "revoke": "Remove",
+    "revokeReason": "Reason",
+    "revokeConfirm": "Remove designation",
+    "cancel": "Cancel",
+    "add": "Designate for {cap}",
+    "pick": "Pick a person…",
+    "noCandidates": "No other eligible people",
+    "designate": "Designate",
+    "clientRepRule": "Only people with the client role or from the operating company (company type «Owner» in Companies).",
+    "history": "History ({n})",
+    "revokedBy": "removed by {who} · {when}: {reason}"
   }
 }

@@ -13,8 +13,9 @@ import { punchDisplayStatus } from '@/lib/punches/verification'
 import PunchPhotosSection from './PunchPhotosSection'
 import { canRaisePunch } from '@/lib/constants/punch-roles'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
-const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
+const REASSIGN_ROLES = ROLE_TIERS.editor
 
 // ── Types ──────────────────────────────────────────────────────────────
 

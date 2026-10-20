@@ -4,6 +4,7 @@ import { fetchConsolidatedTagPhotos } from '@/lib/tag-photos'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import TagDetail from './TagDetail'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function TagDetailPage({
   params,
@@ -17,7 +18,7 @@ export default async function TagDetailPage({
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
+  const canEdit = ROLE_TIERS.privileged.includes(membership.role)
   // C-16 (D9): mover de subsistema es de líder+ (la RPC lo vuelve a verificar).
   const canMove = EDITOR_ROLES.includes(membership.role)
 
@@ -193,6 +194,11 @@ export default async function TagDetailPage({
     }
   }
 
+  // S14 (I-25): con representantes del cliente designados, la firma Cliente del ITR va solo a ellos.
+  const { data: clientReps } = await supabase.from('project_capacities').select('user_id')
+    .eq('project_id', projectId).eq('capacity', 'client_rep').is('revoked_at', null).limit(200)
+  const clientRepIds = (clientReps ?? []).map(r => r.user_id)
+
   return (
     <TagDetail
       tag={tag}
@@ -211,6 +217,7 @@ export default async function TagDetailPage({
       templates={templates ?? []}
       matrixTemplateIds={matrixTemplateIds}
       orgMembers={orgMembers ?? []}
+      clientRepIds={clientRepIds}
       tagPunches={tagPunches ?? []}
       preservationPlans={preservationPlans ?? []}
       preservationProcedures={preservationProcedures ?? []}

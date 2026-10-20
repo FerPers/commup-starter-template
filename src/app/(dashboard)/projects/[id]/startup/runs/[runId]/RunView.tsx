@@ -5,11 +5,13 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { completeRunStep, releaseHoldPoint, transitionProcedureRun } from '@/app/actions/startup'
+import type { MyCapacities } from '@/lib/constants/capacities'
 import { canReleaseHold, nextRunStep, runProgress, type HoldCapacity, type RunStepStatus } from '@/lib/startup/catalog'
 import { networkActionsAllowed, overlayRun, type StartupEntry } from '@/lib/sync/startup-outbox-utils'
 import { Alert, Chip, btn, card, input, small } from '../../../daily/daily-ui'
 import { SyncBanner, SyncTray, useStartupOutbox } from '../../OfflineSync'
 import { useLocalTime } from '@/lib/use-local-time'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Step = {
   stepId: string; ord: number; status: RunStepStatus; actual: string | null; comment: string | null
@@ -23,11 +25,13 @@ type Run = {
 }
 const STATUS_TONE: Record<string, 'blue' | 'amber' | 'red' | 'green' | 'struck'> = { in_progress: 'blue', at_hold: 'amber', stopped: 'red', completed: 'green', aborted: 'struck' }
 const STEP_TONE: Record<RunStepStatus, 'muted' | 'green' | 'amber' | 'violet'> = { pending: 'muted', done: 'green', at_hold: 'amber', released: 'green', na: 'violet' }
-const LEADERS = ['owner', 'admin', 'architect', 'leader']
+const LEADERS = ROLE_TIERS.editor
 const big = (primary: boolean, disabled = false): React.CSSProperties => ({ ...btn(primary ? 'primary' : 'outline', disabled), padding: '12px 18px', fontSize: 'var(--text-base)' })
 
-export default function RunView({ project, run: serverRun, steps: serverSteps, names, userId, role }: {
+export default function RunView({ project, run: serverRun, steps: serverSteps, names, userId, role, caps }: {
   project: { id: string; code: string; name: string }; run: Run; steps: Step[]; names: Record<string, string>; userId: string; role: string
+  /** S14 (D14): capacidades del usuario en el proyecto (designado o respaldo por rol). */
+  caps: MyCapacities
 }) {
   const t = useTranslations('Startup')
   const tOff = useTranslations('Startup.offline')
@@ -118,14 +122,14 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
         <section style={{ ...card, borderColor: '#fcd34d', background: '#fffbeb', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <strong style={{ color: '#b45309' }}>⏸ {t('run.holdTitle', { n: hold.ord, who: t(`capacity.${hold.capacity}`) })}</strong>
           <span style={small} suppressHydrationWarning>{t('run.holdDoneBy', { who: who(hold.doneBy), when: when(hold.doneAt) })}</span>
-          {hold.sync === 'pending' ? <span style={small}>{tOff('holdPending')}</span> : canReleaseHold(role, hold.capacity, userId, hold.doneBy) ? (
+          {hold.sync === 'pending' ? <span style={small}>{tOff('holdPending')}</span> : canReleaseHold(caps, hold.capacity, userId, hold.doneBy) ? (
             <>
               <input style={input} placeholder={t('run.releaseComment')} value={note} onChange={e => setNote(e.target.value)} />
               <button type="button" style={big(true, isPending || !netOk)} disabled={isPending || !netOk}
                 onClick={() => act(() => releaseHoldPoint({ ...ids, stepId: hold.stepId, comment: note }))}>{t('run.release')}</button>
               {!netOk && <span style={small}>{netHint}</span>}
             </>
-          ) : <span style={small}>{hold.doneBy === userId ? t('run.holdOther') : t('run.holdRole', { who: t(`capacity.${hold.capacity}`) })}</span>}
+          ) : <span style={small}>{hold.doneBy === userId ? t('run.holdOther') : t(caps[hold.capacity].designated ? 'run.holdDesignated' : 'run.holdRole', { who: t(`capacity.${hold.capacity}`) })}</span>}
         </section>
       )}
 

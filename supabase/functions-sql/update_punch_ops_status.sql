@@ -20,7 +20,8 @@ BEGIN
   IF NOT v_service THEN
     IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Access denied' USING ERRCODE = '42501'; END IF;
     v_role := public.punch_caller_role(v);
-    IF v_role IS NULL OR NOT (v_role IN ('owner', 'admin', 'architect', 'leader') OR v_role = ANY (public.hold_release_roles('operations'))) THEN
+    -- S14 (D14): líder+ o firmante designado de Operaciones del proyecto.
+    IF v_role IS NULL OR NOT (v_role IN ('owner', 'admin', 'architect', 'leader') OR public.has_capacity(v.project_id, 'operations')) THEN
       RAISE EXCEPTION 'Sin permiso para el seguimiento de Operaciones' USING ERRCODE = '42501';
     END IF;
   END IF;

@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import ProcedureItemEditor from './ProcedureItemEditor'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function ProcedureDetailPage({
   params,
@@ -14,7 +15,7 @@ export default async function ProcedureDetailPage({
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(membership.role)
+  const canEdit = ROLE_TIERS.editor.includes(membership.role)
 
   const [{ data: procedure }, { data: disciplines }] = await Promise.all([
     supabase

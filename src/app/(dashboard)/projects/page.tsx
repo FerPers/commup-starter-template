@@ -5,6 +5,7 @@ import { FolderKanban, Plus } from 'lucide-react'
 import { EmptyState, Button } from '@/components/ui'
 import { textOr } from '@/lib/excel/normalize'
 import ProjectCard, { type ProjectCardData, type PhaseData } from './ProjectCard'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // Agrupa por país cuando la org tiene proyectos en más de uno (jerarquía
 // corporativa País → Región → Campo). Con un solo país no se muestra el grupo.
@@ -36,7 +37,7 @@ export default async function ProjectsPage() {
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const canCreateProject = ['owner', 'admin', 'architect'].includes(membership.role)
+  const canCreateProject = ROLE_TIERS.privileged.includes(membership.role)
 
   const [{ data: projects }, { data: phases }, t] = await Promise.all([
     supabase

@@ -6,6 +6,7 @@ import SuggestionsBar, { type ItrSuggestion } from '@/components/itr/Suggestions
 import DocumentReferences from '@/components/documents/DocumentReferences'
 import { loadDocumentRefs } from '@/lib/documents/refs-server'
 import { isDocumentController } from '@/lib/documents/catalog'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function ItrExecutionPage({
   params,
@@ -68,7 +69,7 @@ export default async function ItrExecutionPage({
 
   const { data: members } = await supabase.from('org_members').select('user_id, role, profiles(full_name)').eq('org_id', ctx.orgId)
   // S04 (C-01): los editores completan o cambian asignaciones de roles sin firmar.
-  const canAssign = ['owner', 'admin', 'architect', 'leader'].includes(membership.role)
+  const canAssign = ROLE_TIERS.editor.includes(membership.role)
 
   // Fase 4-B: equipos de prueba usados (con su calibración al momento de uso) e inventario activo de la org.
   const [{ data: equipmentUsed }, { data: equipmentOptions }] = await Promise.all([

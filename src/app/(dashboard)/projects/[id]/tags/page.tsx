@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import TagsView from './TagsView'
 import { fetchTagPage, fetchTagDisciplineCounts, TAG_SORT_KEYS } from '@/lib/list/tag-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Search = { page?: string; sort?: string; dir?: string; disc?: string; q?: string; subsystem?: string; status?: string }
 
@@ -19,7 +20,7 @@ export default async function TagsPage({
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
-  const canEdit = ['owner', 'admin', 'architect'].includes(ctx.role)
+  const canEdit = ROLE_TIERS.privileged.includes(ctx.role)
 
   // Sprint E: página/filtros en la URL; el servidor devuelve 50 filas + conteos por disciplina.
   const page = parsePage(sp.page)

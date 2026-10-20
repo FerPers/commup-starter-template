@@ -4,6 +4,7 @@ import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import WorkPlansView from './WorkPlansView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function ProjectWorkPlansPage({
   params,
@@ -57,7 +58,7 @@ export default async function ProjectWorkPlansPage({
   ])
   const truncated = plansRes.truncated
 
-  const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
+  const EDITOR_ROLES = ROLE_TIERS.editor
 
   const tl = await getTranslations('Common')
   return (

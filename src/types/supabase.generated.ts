@@ -4779,6 +4779,7 @@ export type Database = {
           content_hash: string | null
           created_at: string
           created_by: string | null
+          editors: string[]
           exclude_out_of_range: boolean
           formal_min: number
           id: string
@@ -4806,6 +4807,7 @@ export type Database = {
           content_hash?: string | null
           created_at?: string
           created_by?: string | null
+          editors?: string[]
           exclude_out_of_range?: boolean
           formal_min?: number
           id?: string
@@ -4833,6 +4835,7 @@ export type Database = {
           content_hash?: string | null
           created_at?: string
           created_by?: string | null
+          editors?: string[]
           exclude_out_of_range?: boolean
           formal_min?: number
           id?: string
@@ -5593,6 +5596,7 @@ export type Database = {
           content_hash: string | null
           created_at: string
           created_by: string | null
+          editors: string[]
           field_verified_at: string | null
           field_verified_by: string | null
           id: string
@@ -5615,6 +5619,7 @@ export type Database = {
           content_hash?: string | null
           created_at?: string
           created_by?: string | null
+          editors?: string[]
           field_verified_at?: string | null
           field_verified_by?: string | null
           id?: string
@@ -5637,6 +5642,7 @@ export type Database = {
           content_hash?: string | null
           created_at?: string
           created_by?: string | null
+          editors?: string[]
           field_verified_at?: string | null
           field_verified_by?: string | null
           id?: string
@@ -6074,6 +6080,73 @@ export type Database = {
           locale?: string | null
         }
         Relationships: []
+      }
+      project_capacities: {
+        Row: {
+          assigned_at: string
+          assigned_by: string
+          capacity: string
+          company_id: string | null
+          id: string
+          note: string | null
+          org_id: string
+          project_id: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by: string
+          capacity: string
+          company_id?: string | null
+          id?: string
+          note?: string | null
+          org_id: string
+          project_id: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string
+          capacity?: string
+          company_id?: string | null
+          id?: string
+          note?: string | null
+          org_id?: string
+          project_id?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_capacities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_capacities_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_capacities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_constraints: {
         Row: {
@@ -11806,6 +11879,15 @@ export type Database = {
         }
         Returns: string
       }
+      assign_project_capacity: {
+        Args: {
+          p_capacity: string
+          p_note?: string
+          p_project_id: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       attest_gate_criterion: {
         Args: {
           p_comment: string
@@ -11834,6 +11916,18 @@ export type Database = {
       cancel_vendor_package: {
         Args: { p_package_id: string; p_reason: string }
         Returns: undefined
+      }
+      capacity_designated: {
+        Args: { p_capacity: string; p_project_id: string }
+        Returns: boolean
+      }
+      capacity_eligible: {
+        Args: { p_capacity: string; p_org_id: string; p_user_id: string }
+        Returns: string
+      }
+      capacity_fallback_roles: {
+        Args: { p_capacity: string }
+        Returns: string[]
       }
       cleanup_signal_samples_retention: { Args: never; Returns: number }
       clone_itr_template_from_catalog: {
@@ -12297,6 +12391,10 @@ export type Database = {
         Returns: string
       }
       handover_snapshot: { Args: { p_project_id: string }; Returns: Json }
+      has_capacity: {
+        Args: { p_capacity: string; p_project_id: string; p_user_id?: string }
+        Returns: boolean
+      }
       hold_release_roles: { Args: { p_capacity: string }; Returns: string[] }
       implement_vendor_recommendation: {
         Args: { p_id: string; p_moc_reference: string; p_note: string }
@@ -12446,6 +12544,14 @@ export type Database = {
       move_tag_subsystem: {
         Args: { p_reason: string; p_subsystem_id: string; p_tag_id: string }
         Returns: Json
+      }
+      my_capacities: {
+        Args: { p_project_id: string }
+        Returns: {
+          allowed: boolean
+          capacity: string
+          designated: boolean
+        }[]
       }
       my_work_counts: { Args: { p_org_id: string }; Returns: Json }
       new_performance_revision: {
@@ -12735,6 +12841,10 @@ export type Database = {
       }
       revoke_performance_certificate: {
         Args: { p_certificate_id: string; p_reason: string }
+        Returns: undefined
+      }
+      revoke_project_capacity: {
+        Args: { p_id: string; p_reason: string }
         Returns: undefined
       }
       revoke_system_gate_approval: {

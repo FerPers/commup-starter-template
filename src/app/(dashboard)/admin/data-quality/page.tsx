@@ -7,6 +7,7 @@ import {
   type DQSeverity,
 } from '@/app/actions/data-quality'
 import DataQualityView from './DataQualityView'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function DataQualityPage({
   searchParams,
@@ -17,7 +18,7 @@ export default async function DataQualityPage({
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
-  if (!['owner', 'admin', 'architect'].includes(membership.role)) redirect('/dashboard')
+  if (!ROLE_TIERS.privileged.includes(membership.role)) redirect('/dashboard')
 
   const params = await searchParams
   const severity = (params.severity as DQSeverity | undefined) ?? undefined

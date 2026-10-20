@@ -27,6 +27,7 @@ import { allRequiredSigned, itrSignErrorKey, normalizeRequired, type SigningRole
 import ReturnToExecutor from './ReturnToExecutor'
 import AssignmentsPanel, { type AssignableMember } from './AssignmentsPanel'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default function ItrExecution({
   itr,
@@ -268,7 +269,7 @@ export default function ItrExecution({
     })
   }
 
-  const canRevoke = ['owner', 'admin', 'architect'].includes(currentUserRole) && (itr.status === 'approved' || itr.itr_signatures.length > 0)
+  const canRevoke = ROLE_TIERS.privileged.includes(currentUserRole) && (itr.status === 'approved' || itr.itr_signatures.length > 0)
 
   // ── Punch ────────────────────────────────────────────────────────────
 
@@ -573,7 +574,7 @@ export default function ItrExecution({
             used={testEquipment.used}
             options={testEquipment.options}
             editable={canCapture && currentUserRole !== 'client'}
-            canManageInventory={['owner', 'admin', 'architect', 'leader'].includes(currentUserRole)}
+            canManageInventory={ROLE_TIERS.editor.includes(currentUserRole)}
           />
         </div>
       )}

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type PssrReviewMeta = {
   reviewId: string
@@ -8,7 +9,7 @@ type PssrReviewMeta = {
   systemName?: string | null
 }
 
-const ADMIN_ROLES = ['owner', 'admin', 'architect', 'leader']
+const ADMIN_ROLES = ROLE_TIERS.editor
 
 function reviewLink(meta: PssrReviewMeta) {
   return `/projects/${meta.projectId}/pssr/${meta.reviewId}`

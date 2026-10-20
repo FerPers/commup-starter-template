@@ -30,6 +30,8 @@ BEGIN
   ELSIF r.status = 'in_review' AND p_to = 'approved' THEN
     IF v_role NOT IN ('owner', 'admin', 'architect', 'leader') THEN RAISE EXCEPTION 'Solo líderes o superiores aprueban procedimientos' USING ERRCODE = '42501'; END IF;
     IF v_uid = r.created_by OR v_uid = r.submitted_by THEN RAISE EXCEPTION 'Aprueba una persona distinta de quien redactó el procedimiento' USING ERRCODE = '42501'; END IF;
+    -- S14 (E-30): tampoco quien editó el borrador.
+    IF v_uid = ANY (r.editors) THEN RAISE EXCEPTION 'Aprueba una persona distinta de quien editó el borrador' USING ERRCODE = '42501'; END IF;
     -- Fase 8: no se envía ni aprueba contra una revisión de documento superada.
     v_doc := public.document_references_blocker('procedure_revision', r.id);
     IF v_doc IS NOT NULL THEN RAISE EXCEPTION '%', v_doc USING ERRCODE = 'P0001'; END IF;

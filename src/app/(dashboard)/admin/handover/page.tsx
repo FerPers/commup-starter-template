@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import HandoverView from './HandoverView'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Pkg = {
   id: string
@@ -22,7 +23,7 @@ export default async function AdminHandoverPage() {
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
-  if (!['owner', 'admin', 'architect'].includes(membership.role)) redirect('/dashboard')
+  if (!ROLE_TIERS.privileged.includes(membership.role)) redirect('/dashboard')
 
   const [{ data: projects }, { data: packages }, { data: systems }] = await Promise.all([
     supabase

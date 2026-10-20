@@ -139,7 +139,7 @@ AS $function$
       where rs.status = 'at_hold'
         and r.status in ('at_hold', 'stopped')
         and rs.done_by is distinct from auth.uid()
-        and (select role from me) = any (public.hold_release_roles(st.hold_capacity))
+        and public.has_capacity(r.project_id, st.hold_capacity)
         and rs.project_id in (select id from proj)
     ),
     'lineup_to_verify', (
@@ -157,7 +157,7 @@ AS $function$
       from startup_events ev
       where ev.status = 'pending_witness'
         and ev.recorded_by is distinct from auth.uid()
-        and (select role from me) = any (public.hold_release_roles(ev.witness_capacity))
+        and public.has_capacity(ev.project_id, ev.witness_capacity)
         and ev.project_id in (select id from proj)
     ),
     'transfers_to_sign', (
@@ -167,8 +167,8 @@ AS $function$
         and tr.project_id in (select id from proj)
         and auth.uid() is distinct from tr.commissioning_signed_by
         and auth.uid() is distinct from tr.operations_signed_by
-        and ((tr.commissioning_signed_by is null and (select role from me) in ('owner', 'admin', 'architect', 'leader'))
-          or (tr.operations_signed_by is null and (select role from me) = any (public.hold_release_roles('operations'))))
+        and ((tr.commissioning_signed_by is null and public.has_capacity(tr.project_id, 'commissioning'))
+          or (tr.operations_signed_by is null and public.has_capacity(tr.project_id, 'operations')))
     ),
     'performance_to_decide', (
       select count(*)
@@ -185,8 +185,8 @@ AS $function$
         and auth.uid() is distinct from pc.commissioning_signed_by
         and auth.uid() is distinct from pc.operations_signed_by
         and auth.uid() is distinct from pc.client_signed_by
-        and ((pc.operations_signed_by is null and (select role from me) = any (public.hold_release_roles('operations')))
-          or (pc.client_signed_by is null and (select role from me) = 'client'))
+        and ((pc.operations_signed_by is null and public.has_capacity(pc.project_id, 'operations'))
+          or (pc.client_signed_by is null and public.has_capacity(pc.project_id, 'client_rep')))
     )
   );
 $function$;

@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import type { Tables } from '@/types/supabase.generated'
 import { Alert, StatusChip, btn, card, small, type Attachment, type Member, type MgmtEvent, type SystemOpt } from '../../daily-ui'
 import type { Options } from '../../forms'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // Piezas comunes de los detalles: props compartidas, cabecera, acciones/decisiones vinculadas y el
 // runner de server actions (error + refresh).
@@ -29,7 +30,7 @@ export type TqItem = Tables<'technical_queries'>
 export type DecisionItem = Tables<'decisions'>
 export type { Member, SystemOpt }
 
-export const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
+export const EDITOR_ROLES = ROLE_TIERS.editor
 
 export function useRunner() {
   const router = useRouter()

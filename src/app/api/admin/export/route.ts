@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx'
 import { sanitizeRow } from '@/lib/excel/sanitize'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { fetchAllRows, TruncatedError } from '@/lib/list/fetch-all'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export async function GET(req: NextRequest) {
   // I-22 (S02): la org ACTIVA (cookie), no la primera membresía; y lectura completa por lotes.
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
   if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
-  if (!['owner', 'admin'].includes(membership.role))
+  if (!ROLE_TIERS.admin.includes(membership.role))
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
   const { searchParams } = new URL(req.url)

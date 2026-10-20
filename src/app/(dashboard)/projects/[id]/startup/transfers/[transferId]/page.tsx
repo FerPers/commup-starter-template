@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
+import { loadMyCapacities } from '@/lib/capacities/server'
 import { signableCapacities, type OwnershipStage } from '@/lib/startup/catalog'
 import TransferView from './TransferView'
 
@@ -41,7 +42,7 @@ export default async function OwnershipTransferPage({ params }: { params: Promis
       }}
       pkg={pkg}
       names={names}
-      canSign={tr.status === 'pending_signatures' ? signableCapacities(ctx.role, ctx.userId, tr) : []}
+      canSign={tr.status === 'pending_signatures' ? signableCapacities(await loadMyCapacities(ctx.supabase, id), ctx.userId, tr) : []}
       canEdit={ctx.role !== 'client'}
     />
   )

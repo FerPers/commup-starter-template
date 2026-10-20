@@ -1,5 +1,6 @@
 // Paquetes de vendor (fase 8 plan readiness, sesión 2; doc §15.5–15.13, migración 20261022120000).
 // Catálogos fijos = CHECK / vendor_checklist_keys() de la BD. Lógica pura para la UI y las acciones.
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export const PACKAGE_STATUSES = ['planned', 'mobilized', 'demobilized', 'cancelled'] as const
 export type PackageStatus = (typeof PACKAGE_STATUSES)[number]
@@ -37,7 +38,7 @@ export const RESULT_TONE: Record<ActivityResult, Tone> = { pending: 'muted', pas
 export const RECOMMENDATION_TONE: Record<RecommendationStatus, Tone> = { proposed: 'blue', approved: 'violet', rejected: 'struck', implemented: 'green' }
 
 /** Gestión del paquete, resultado de FAT/SAT, decidir recomendaciones y (des)movilizar = líder+. */
-export const VENDOR_LEAD_ROLES: readonly string[] = ['owner', 'admin', 'architect', 'leader']
+export const VENDOR_LEAD_ROLES: readonly string[] = ROLE_TIERS.editor
 export const isVendorLead = (role: string) => VENDOR_LEAD_ROLES.includes(role)
 
 /** Un resultado distinto de «aprobada» necesita al menos un hallazgo registrado (la RPC lo exige). */

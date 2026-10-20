@@ -53,7 +53,7 @@ export default async function ProcedurePage({ params, searchParams }: {
       revision={{
         id: selected.id, rev: selected.rev, status: selected.status, sections: (selected.sections ?? {}) as Record<string, string>,
         changeReason: selected.change_reason, returnedReason: selected.returned_reason, createdBy: selected.created_by,
-        submittedBy: selected.submitted_by, approvedBy: selected.approved_by, approvedAt: selected.approved_at,
+        submittedBy: selected.submitted_by, editors: selected.editors ?? [], approvedBy: selected.approved_by, approvedAt: selected.approved_at,
         fieldVerifiedBy: selected.field_verified_by, fieldVerifiedAt: selected.field_verified_at, walkdownNote: selected.walkdown_note, hash: selected.content_hash,
       }}
       steps={(steps ?? []).map(s => ({

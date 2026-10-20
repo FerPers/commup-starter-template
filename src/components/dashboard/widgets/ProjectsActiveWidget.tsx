@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, EmptyState } from '@/components/ui'
 import type { OrgMemberRole } from '@/types/database'
 import { ProjectRow } from './_shared'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function ProjectsActiveWidget({ orgId, role }: { orgId: string; role: OrgMemberRole }) {
   const supabase = await createClient()
@@ -23,7 +24,7 @@ export default async function ProjectsActiveWidget({ orgId, role }: { orgId: str
   ])
 
   const activeProjects = (projects ?? []).filter(p => p.status === 'active')
-  const canCreateProject = ['owner', 'admin', 'architect'].includes(role)
+  const canCreateProject = ROLE_TIERS.privileged.includes(role)
 
   return (
     <Card padding="md">

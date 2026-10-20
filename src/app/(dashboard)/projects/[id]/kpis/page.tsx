@@ -8,6 +8,7 @@ import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
 import { getProjectAlerts } from '@/app/actions/alerts'
 import { fetchItrPhaseCounts, sumItr } from '@/lib/list/kpi-query'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function KpiPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: projectId } = await params
@@ -44,7 +45,7 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
 
   if (!project) notFound()
 
-  const canEdit = ['owner', 'admin', 'architect', 'leader'].includes(membership.role)
+  const canEdit = ROLE_TIERS.editor.includes(membership.role)
 
   const phaseKpis = (phases ?? []).map(phase => {
     const total = sumItr(itrCounts, i => i.phase_id === phase.id)

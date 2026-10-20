@@ -15,6 +15,7 @@ import {
 } from '@/lib/registers/catalog'
 import { RegisterFields, TagPicker, type TagValue } from '../RegisterFields'
 import { STATUS_STYLE, StatusChip, btn, card, input, label, linkStyle, small, useStatusLabel } from '../register-ui'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Step = { by: string | null; at: string | null }
 
@@ -66,7 +67,7 @@ type Props = {
 }
 
 const LIFECYCLE: RegisterStatus[] = ['proposed', 'authorized', 'active', 'removed', 'verified']
-const AUTHORIZERS = ['owner', 'admin', 'architect', 'leader']
+const AUTHORIZERS = ROLE_TIERS.editor
 
 export default function RegisterDetailView({ project, item, tags: initialTags, events, linked, blindCandidates, systems, names, userId, role }: Props) {
   const t = useTranslations('Registers')

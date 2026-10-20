@@ -20,9 +20,10 @@ import { searchProjectTags, type TagSearchHit } from '@/app/actions/tag-search'
 import type { PunchSummary } from '@/lib/list/punch-query'
 import { canRaisePunch } from '@/lib/constants/punch-roles'
 import PunchPhotosSection from '../tags/[tagId]/PunchPhotosSection'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
-const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
-const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
+const REASSIGN_ROLES = ROLE_TIERS.editor
+const EDITOR_ROLES = ROLE_TIERS.editor
 
 type OrgMember = { user_id: string; profiles: { full_name: string } | null }
 type TagOption = TagSearchHit

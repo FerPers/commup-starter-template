@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { isAiConfigured } from '@/lib/ai/claude'
 import type { ReportData } from '@/lib/daily/report'
 import ReportEditor from './ReportEditor'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // Editor de un reporte diario (fase 5, sesión 3): 5 secciones editables a la izquierda, datos congelados
 // del día a la derecha; emitir lo congela con hash y el PDF se regenera desde estos datos.
@@ -38,8 +39,8 @@ export default async function DailyReportPage({ params }: { params: Promise<{ id
         laterRevision: later?.[0] ?? null,
       }}
       canEdit={ctx.role !== 'client'}
-      canIssue={['owner', 'admin', 'architect', 'leader'].includes(ctx.role)}
-      canDelete={r.created_by === ctx.userId || ['owner', 'admin'].includes(ctx.role)}
+      canIssue={ROLE_TIERS.editor.includes(ctx.role)}
+      canDelete={r.created_by === ctx.userId || ROLE_TIERS.admin.includes(ctx.role)}
       aiConfigured={isAiConfigured()}
     />
   )

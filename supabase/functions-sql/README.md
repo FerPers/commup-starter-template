@@ -12,6 +12,9 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 | `my_work_counts` | Badge y colas de «Mi trabajo» |
 | `daily_report_data` / `take_mgmt_snapshot` | Reporte diario y KPIs de gestión (vendors: la FAT/SAT con re-prueba no cuenta, S13) |
 | `document_refresh_current` / `add_document_reference` / `update_document_reference` / `document_references_blocker` / `new_procedure_revision` | Control documental (S13): vigente por fecha de emisión, anuladas fuera, política IFR/IFA de la org, R2 de procedimiento hereda referencias |
+| `capacity_fallback_roles` / `has_capacity` / `hold_release_roles` | Firmantes designados (S14, D14): con designados en `project_capacities` firman solo ellos; sin designados, el rol de respaldo (= `CAPACITY_FALLBACK_ROLES` en TS, test de paridad) |
+| `release_hold_point` / `witness_startup_event` / `sign_ownership_transfer` / `issue_performance_certificate` / `sign_performance_certificate` / `set_gate_weights` | Firmas de arranque, traspaso y PTC por capacidad (S14); pesos de gates solo owner/admin |
+| `save_procedure_revision` / `save_performance_revision` / `transition_performance_revision` | Borradores: `editors[]`, quien editó no aprueba (S14, E-30) |
 | `cancel_vendor_package` / `decide_vendor_recommendation` | Vendors (S13): terminación anticipada de un movilizado; quien propone no decide |
 | `sign_itr_atomic` / `evaluate_itr_capture` | Firma de ITR y evaluación de su contenido |
 | `seed_default_gate_for_phase` | Gate sembrado al crear una fase |

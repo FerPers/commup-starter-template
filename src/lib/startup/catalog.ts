@@ -2,9 +2,11 @@
  * Arranque (fase 6 del plan readiness, sesión 1 — 2026-10-16): procedimientos con hold points y line-ups.
  *
  * Catálogo fijo y lógica pura. La BD (migración 20261017210000) aplica las mismas reglas en las RPC:
- * mantener en sincronía `PROCEDURE_SECTIONS` con `procedure_section_keys()` y `HOLD_RELEASE_ROLES` con
- * `hold_release_roles()`. Tests en catalog.test.ts.
+ * mantener en sincronía `PROCEDURE_SECTIONS` con `procedure_section_keys()`. Quién libera / atestigua / firma lo
+ * decide la capacidad del proyecto (S14, `src/lib/constants/capacities.ts` = SQL `has_capacity`). Tests en catalog.test.ts.
  */
+
+import { CAPACITY_FALLBACK_ROLES, can, type MyCapacities } from '@/lib/constants/capacities'
 
 /** Las 15 secciones del procedimiento (6.13 / 17.4.2), en orden. `sequence` se completa con la tabla de pasos. */
 export const PROCEDURE_SECTIONS = [
@@ -23,15 +25,16 @@ export type RunStepStatus = 'pending' | 'done' | 'at_hold' | 'released' | 'na'
 export const HOLD_CAPACITIES = ['commissioning', 'operations', 'hse'] as const
 export type HoldCapacity = (typeof HOLD_CAPACITIES)[number]
 
-/** Roles que liberan un hold point por capacidad (Operaciones/HSE incluyen al cliente = operadora). */
+/** Roles de respaldo por capacidad cuando el proyecto no tiene designados (= SQL hold_release_roles / capacity_fallback_roles). */
 export const HOLD_RELEASE_ROLES: Record<HoldCapacity, readonly string[]> = {
-  commissioning: ['owner', 'admin', 'architect', 'leader'],
-  operations: ['owner', 'admin', 'architect', 'leader', 'client'],
-  hse: ['owner', 'admin', 'architect', 'leader', 'client'],
+  commissioning: CAPACITY_FALLBACK_ROLES.commissioning,
+  operations: CAPACITY_FALLBACK_ROLES.operations,
+  hse: CAPACITY_FALLBACK_ROLES.hse,
 }
 
-export function canReleaseHold(role: string, capacity: HoldCapacity, userId: string, doneBy: string | null): boolean {
-  return HOLD_RELEASE_ROLES[capacity].includes(role) && userId !== doneBy
+/** S14 (D14): libera quien tiene la capacidad en el proyecto (designado o respaldo) y no ejecutó el paso. */
+export function canReleaseHold(caps: MyCapacities, capacity: HoldCapacity, userId: string, doneBy: string | null): boolean {
+  return can(caps, capacity) && userId !== doneBy
 }
 
 export type StepDraft = {
@@ -118,8 +121,8 @@ export function milestoneCapacity(m: Milestone): HoldCapacity {
   return m === 'first_energization' || m === 'first_rotation' ? 'commissioning' : 'operations'
 }
 
-export function canWitness(role: string, m: Milestone, userId: string, recordedBy: string | null): boolean {
-  return canReleaseHold(role, milestoneCapacity(m), userId, recordedBy)
+export function canWitness(caps: MyCapacities, m: Milestone, userId: string, recordedBy: string | null): boolean {
+  return canReleaseHold(caps, milestoneCapacity(m), userId, recordedBy)
 }
 
 /** Ventana del gráfico alrededor del evento: −30/+30 min. */
@@ -155,11 +158,11 @@ export function currentLevel(records: { level: number; assessed_at: string; crea
 export type ChecklistItem = { key: string; ok: boolean; detail: Record<string, unknown> }
 /** Las firmas que el usuario puede aportar a un traspaso pendiente (= reglas de sign_ownership_transfer). */
 export function signableCapacities(
-  role: string, userId: string, t: { commissioning_signed_by: string | null; operations_signed_by: string | null },
+  caps: MyCapacities, userId: string, t: { commissioning_signed_by: string | null; operations_signed_by: string | null },
 ): ('commissioning' | 'operations')[] {
   if (userId === t.commissioning_signed_by || userId === t.operations_signed_by) return []
   const out: ('commissioning' | 'operations')[] = []
-  if (!t.commissioning_signed_by && HOLD_RELEASE_ROLES.commissioning.includes(role)) out.push('commissioning')
-  if (!t.operations_signed_by && HOLD_RELEASE_ROLES.operations.includes(role)) out.push('operations')
+  if (!t.commissioning_signed_by && can(caps, 'commissioning')) out.push('commissioning')
+  if (!t.operations_signed_by && can(caps, 'operations')) out.push('operations')
   return out
 }

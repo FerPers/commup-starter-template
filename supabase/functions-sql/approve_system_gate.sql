@@ -42,6 +42,10 @@ BEGIN
   IF NOT (v_role = ANY (v_gate.approval_roles)) THEN
     RAISE EXCEPTION 'Tu rol (%) no puede aprobar el gate %', v_role, v_gate.code USING ERRCODE = '42501';
   END IF;
+  -- S14 (D14): la aprobación es la firma de Comisionamiento; con designados, además debe ser uno de ellos.
+  IF public.capacity_designated(v_project, 'commissioning') AND NOT public.has_capacity(v_project, 'commissioning') THEN
+    RAISE EXCEPTION 'No estás designado para firmar como Comisionamiento en este proyecto' USING ERRCODE = '42501';
+  END IF;
 
   IF EXISTS (SELECT 1 FROM system_gate_approvals
              WHERE system_id = p_system_id AND gate_id = p_gate_id AND revoked_at IS NULL) THEN
