@@ -37,7 +37,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S03 | SQL canónico | S01 | — | ✅ **Hecha** 2026-10-19 (6827c09; migración 20261028120000 en prod; 13 funciones en `supabase/functions-sql/`, test de deriva en CI) — B-28 cerrado. Detalle en la cobertura |
 | S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | ✅ **Hecha** 2026-10-19 (ed0e4c6; migración 20261029120000 en prod, 17 escenarios con ROLLBACK) — D5 aprobó 0 ITR. Detalle en la cobertura |
 | S05 | ITR: contenido, estados y numeración | S04 | D7 | Pendiente |
-| S06 | Punch: permisos de campo y escritura por RPC | S03 | D8 | ✅ **Hecha** 2026-10-19 (ver commit; migración 20261030120000 en prod, 22 escenarios con ROLLBACK). Detalle en la cobertura |
+| S06 | Punch: permisos de campo y escritura por RPC | S03 | D8 | ✅ **Hecha** 2026-10-19 (037a15a + 3204f08; migración 20261030120000 en prod, 22 escenarios con ROLLBACK). Detalle en la cobertura |
 | S07 | Importaciones sin pérdida de datos | S03 | D9 | Pendiente |
 | S08 | Preservación | S03 | D10 | Pendiente |
 | S09 | Índices y «cero filas para contar» | S03 | D11 | Pendiente |
