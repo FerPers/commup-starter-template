@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PDFDocument } from 'pdf-lib'
 import type { Evaluation } from '@/lib/performance/catalog'
-import { renderPerformancePdf, thinSeries, type PerformancePdfInput } from './performance-report'
+import { renderPerformancePdf, type PerformancePdfInput } from './performance-report'
 
 const evaluation: Evaluation = {
   run: 'PTT-0001/R2', revision: 0, revision_hash: 'a'.repeat(64), computed_at: '2026-10-17T12:00:00Z',
@@ -54,10 +54,5 @@ describe('reporte de prueba de desempeño', () => {
     const bytes = await renderPerformancePdf({ ...base, lang: 'en', certificate: null, action: null, series: [],
       run: { ...base.run, evaluationHash: null, resultBy: null }, evaluation: { ...evaluation, result: undefined, reasons: ['coverage'], suggested: 'inconclusive' } })
     expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThanOrEqual(1)
-  })
-
-  it('reduce series largas', () => {
-    expect(thinSeries(Array.from({ length: 900 }, (_, i) => i), 300).length).toBe(300)
-    expect(thinSeries([1, 2, 3], 300)).toEqual([1, 2, 3])
   })
 })

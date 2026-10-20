@@ -4767,8 +4767,11 @@ export type Database = {
           content_hash: string | null
           created_at: string
           created_by: string | null
+          exclude_out_of_range: boolean
           formal_min: number
           id: string
+          max_bad_pct: number
+          max_spikes: number | null
           min_coverage_pct: number
           org_id: string
           procedure_id: string | null
@@ -4791,8 +4794,11 @@ export type Database = {
           content_hash?: string | null
           created_at?: string
           created_by?: string | null
+          exclude_out_of_range?: boolean
           formal_min?: number
           id?: string
+          max_bad_pct?: number
+          max_spikes?: number | null
           min_coverage_pct?: number
           org_id: string
           procedure_id?: string | null
@@ -4815,8 +4821,11 @@ export type Database = {
           content_hash?: string | null
           created_at?: string
           created_by?: string | null
+          exclude_out_of_range?: boolean
           formal_min?: number
           id?: string
+          max_bad_pct?: number
+          max_spikes?: number | null
           min_coverage_pct?: number
           org_id?: string
           procedure_id?: string | null
@@ -7755,6 +7764,195 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      signal_samples_202607: {
+        Row: {
+          ingested_at: string
+          quality: number
+          sampled_at: string
+          signal_id: string
+          source_batch: string | null
+          value: number | null
+        }
+        Insert: {
+          ingested_at?: string
+          quality?: number
+          sampled_at: string
+          signal_id: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Update: {
+          ingested_at?: string
+          quality?: number
+          sampled_at?: string
+          signal_id?: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      signal_samples_202608: {
+        Row: {
+          ingested_at: string
+          quality: number
+          sampled_at: string
+          signal_id: string
+          source_batch: string | null
+          value: number | null
+        }
+        Insert: {
+          ingested_at?: string
+          quality?: number
+          sampled_at: string
+          signal_id: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Update: {
+          ingested_at?: string
+          quality?: number
+          sampled_at?: string
+          signal_id?: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      signal_samples_202609: {
+        Row: {
+          ingested_at: string
+          quality: number
+          sampled_at: string
+          signal_id: string
+          source_batch: string | null
+          value: number | null
+        }
+        Insert: {
+          ingested_at?: string
+          quality?: number
+          sampled_at: string
+          signal_id: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Update: {
+          ingested_at?: string
+          quality?: number
+          sampled_at?: string
+          signal_id?: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      signal_samples_202610: {
+        Row: {
+          ingested_at: string
+          quality: number
+          sampled_at: string
+          signal_id: string
+          source_batch: string | null
+          value: number | null
+        }
+        Insert: {
+          ingested_at?: string
+          quality?: number
+          sampled_at: string
+          signal_id: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Update: {
+          ingested_at?: string
+          quality?: number
+          sampled_at?: string
+          signal_id?: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      signal_samples_202611: {
+        Row: {
+          ingested_at: string
+          quality: number
+          sampled_at: string
+          signal_id: string
+          source_batch: string | null
+          value: number | null
+        }
+        Insert: {
+          ingested_at?: string
+          quality?: number
+          sampled_at: string
+          signal_id: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Update: {
+          ingested_at?: string
+          quality?: number
+          sampled_at?: string
+          signal_id?: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      signal_samples_202612: {
+        Row: {
+          ingested_at: string
+          quality: number
+          sampled_at: string
+          signal_id: string
+          source_batch: string | null
+          value: number | null
+        }
+        Insert: {
+          ingested_at?: string
+          quality?: number
+          sampled_at: string
+          signal_id: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Update: {
+          ingested_at?: string
+          quality?: number
+          sampled_at?: string
+          signal_id?: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      signal_samples_202701: {
+        Row: {
+          ingested_at: string
+          quality: number
+          sampled_at: string
+          signal_id: string
+          source_batch: string | null
+          value: number | null
+        }
+        Insert: {
+          ingested_at?: string
+          quality?: number
+          sampled_at: string
+          signal_id: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Update: {
+          ingested_at?: string
+          quality?: number
+          sampled_at?: string
+          signal_id?: string
+          source_batch?: string | null
+          value?: number | null
+        }
+        Relationships: []
       }
       signals: {
         Row: {
@@ -11999,6 +12197,10 @@ export type Database = {
         Returns: undefined
       }
       ensure_register_types: { Args: { p_org_id: string }; Returns: undefined }
+      ensure_signal_sample_partitions: {
+        Args: { p_months_ahead?: number }
+        Returns: number
+      }
       escalate_constraint: {
         Args: { p_constraint_id: string; p_level: number; p_reason: string }
         Returns: undefined
@@ -12075,9 +12277,11 @@ export type Database = {
           p_api_key_id: string
           p_idempotency_key: string
           p_org_id: string
+          p_project_id?: string
           p_samples: Json
           p_source: string
           p_source_system: string
+          p_upsert?: boolean
         }
         Returns: Json
       }
@@ -12682,6 +12886,23 @@ export type Database = {
         Args: { p_approval_id: string; p_capacity: string; p_comments?: string }
         Returns: string
       }
+      signal_series: {
+        Args: {
+          p_bucket_s?: number
+          p_from: string
+          p_max_points?: number
+          p_signal_ids: string[]
+          p_to: string
+        }
+        Returns: {
+          avg_val: number
+          bucket: string
+          max_val: number
+          min_val: number
+          sample_count: number
+          signal_id: string
+        }[]
+      }
       start_performance_run: { Args: { p_test_id: string }; Returns: string }
       start_preservation_record: {
         Args: { p_plan_id: string }
@@ -12816,6 +13037,8 @@ export type Database = {
         Args: { p_comment?: string; p_to: string; p_tq_id: string }
         Returns: string
       }
+      try_finite_double: { Args: { p: string }; Returns: number }
+      try_timestamptz: { Args: { p: string }; Returns: string }
       tz_day_start: { Args: { p_date: string; p_tz: string }; Returns: string }
       tz_today: { Args: { p_tz: string }; Returns: string }
       update_action: {

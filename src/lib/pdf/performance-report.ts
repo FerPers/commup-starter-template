@@ -7,6 +7,7 @@
 import { criterionText, type Evaluation } from '@/lib/performance/catalog'
 import { A4_W, COLOR, CONTENT_W, FOOTER_H, MARGIN, Renderer, sanitize, wrapText, type Color } from './renderer'
 import { dateTimeIn, timeIn, zoneLabel } from '@/lib/time/zone'
+import { minMaxDownsample } from '@/lib/performance/series'
 
 type Lang = 'es' | 'en'
 
@@ -84,12 +85,6 @@ const RESULT_COLOR: Record<string, [Color, Color]> = {
   repeat: [COLOR.purple, COLOR.purpleBg], inconclusive: [COLOR.muted, COLOR.borderXlight],
 }
 
-/** Reduce una serie a ≤ n puntos (paso fijo) para dibujarla. */
-export function thinSeries<P>(points: P[], n = 300): P[] {
-  if (points.length <= n) return points
-  const step = Math.ceil(points.length / n)
-  return points.filter((_, i) => i % step === 0)
-}
 
 export async function renderPerformancePdf(x: PerformancePdfInput): Promise<Uint8Array> {
   const tz = x.timezone ?? 'UTC'
@@ -248,7 +243,7 @@ export async function renderPerformancePdf(x: PerformancePdfInput): Promise<Uint
 
 /** Gráfico simple (polilínea) de una variable; línea vertical en el inicio del periodo formal. */
 function chart(r: Renderer, s: { key: string; unit: string | null; points: { t: number; v: number }[] }, formalAt: number | null) {
-  const pts = thinSeries(s.points)
+  const pts = minMaxDownsample(s.points, 300)  // S12 (E-33): conserva picos
   if (pts.length < 2) return
   const h = 70
   r.ensureSpace(h + 22)

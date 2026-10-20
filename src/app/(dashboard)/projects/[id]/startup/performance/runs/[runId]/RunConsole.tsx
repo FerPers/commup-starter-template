@@ -18,6 +18,7 @@ import CertificateCard, { type Certificate } from './CertificateCard'
 import { Alert, Chip, Field, btn, card, grid, input, label, small } from '../../../../daily/daily-ui'
 import { RUN_TONE } from '../../PerformanceView'
 import { useLocalTime } from '@/lib/use-local-time'
+import { minMaxDownsample } from '@/lib/performance/series'
 
 type Run = {
   id: string; number: string; status: PerfRunStatus; created_at: string
@@ -41,11 +42,8 @@ const snapshot = () => Math.floor(Date.now() / TICK) * TICK
 const serverSnapshot = () => 0
 
 const MAX_POINTS = 720
-function downsample<T>(arr: T[]): T[] {
-  if (arr.length <= MAX_POINTS) return arr
-  const step = Math.ceil(arr.length / MAX_POINTS)
-  return arr.filter((_, i) => i % step === 0)
-}
+// S12 (E-33): mín/máx por tramo (tomar 1 de cada N escondía picos cortos como un trip de 2 min).
+const downsample = <P extends { t: number; v: number | null }>(arr: P[]) => minMaxDownsample(arr, MAX_POINTS)
 /** <input type="datetime-local"> (hora local) → ISO; vacío = ahora (null). */
 const localToIso = (v: string) => (v ? new Date(v).toISOString() : null)
 

@@ -4454,6 +4454,7 @@
         "not_evaluable": "No evaluable"
       },
       "reason": {
+        "data_quality": "calidad de datos fuera de umbral (muestras malas o picos)",
         "coverage": "cobertura de datos insuficiente",
         "unit": "unidad de una señal distinta a la definida",
         "pair": "medidores sin reconciliar",
@@ -4462,6 +4463,7 @@
         "not_evaluable": "criterio no evaluable"
       },
       "eval": {
+        "extrapolated": "Extrapolado al periodo formal: {value}",
         "title": "Evaluación",
         "suggested": "Sugerido:",
         "suggestedShort": "sugerido",

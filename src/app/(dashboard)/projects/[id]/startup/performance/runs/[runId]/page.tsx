@@ -6,8 +6,8 @@ import RunConsole from './RunConsole'
 import type { Certificate } from './CertificateCard'
 
 // Consola de un intento de prueba de desempeño (fase 7, sesión 1): periodos, reloj, gráfico por variable
-// (en vivo desde signal_samples_1min; congelado desde performance_run_data al cerrar), perturbaciones y
-// lecturas manuales.
+// (en vivo con signal_series mientras corre; congelado desde performance_run_data al cerrar o evaluar),
+// perturbaciones y lecturas manuales.
 
 const PAGE = 1000
 const CAP = 30000
@@ -48,7 +48,8 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
   if (!test || !rev) notFound()
 
   const variables = vars ?? []
-  const frozen = run.status === 'closed'
+  // S12 (E-06): un intento evaluado también está congelado (antes se mezclaban puntos congelados y en vivo).
+  const frozen = run.status === 'closed' || run.status === 'evaluated'
   type Point = { variableId: string; bucket: string; value: number | null; source: 'iiot' | 'manual'; enteredBy: string | null }
   let points: Point[] = []
   let truncated = false
@@ -61,12 +62,14 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
     // En curso: las señales se leen en vivo desde la vista de 1 minuto.
     const live = variables.filter(v => v.source === 'signal' && v.signal_id)
     if (!frozen && live.length) {
+      // S12 (E-03): serie reducida en la BD (filtro sargable por rango, hasta 35 días) en vez de paginar la vista
+      // de 1 minuto, que re-agregaba toda la historia en cada página.
       const bySignal = new Map(live.map(v => [v.signal_id as string, v.id]))
-      const { rows, truncated: t2 } = await fetchAll<{ signal_id: string; bucket: string; avg_val: number | null }>((a, b) =>
-        supabase.from('signal_samples_1min').select('signal_id, bucket, avg_val').in('signal_id', [...bySignal.keys()])
-          .gte('bucket', run.stabilization_started_at!).order('bucket').range(a, b))
-      truncated ||= t2
-      points.push(...rows.map(r => ({ variableId: bySignal.get(r.signal_id)!, bucket: r.bucket, value: r.avg_val, source: 'iiot' as const, enteredBy: null })))
+      const { data: rows, error: seriesErr } = await supabase.rpc('signal_series', {
+        p_signal_ids: [...bySignal.keys()].slice(0, 50), p_from: run.stabilization_started_at!, p_to: new Date().toISOString(), p_bucket_s: 60,
+      })
+      if (seriesErr) throw new Error(seriesErr.message)
+      points.push(...((rows ?? []) as { signal_id: string; bucket: string; avg_val: number | null }[]).map(r => ({ variableId: bySignal.get(r.signal_id)!, bucket: r.bucket, value: r.avg_val, source: 'iiot' as const, enteredBy: null })))
     }
   }
 

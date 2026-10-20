@@ -88,7 +88,11 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
                   }, unitOf(c.variable_key))}
                   {c.label && <div style={{ ...small, fontFamily: 'inherit' }}>{c.label}</div>}
                 </td>
-                <td style={{ ...td, fontWeight: 600 }}>{fmt(c.value)}{c.value === null ? '' : c.statistic === 'pct_in_band' ? ' %' : unitOf(c.variable_key) ? ` ${unitOf(c.variable_key)}` : ''}</td>
+                <td style={{ ...td, fontWeight: 600 }}>{fmt(c.value)}{c.value === null ? '' : c.statistic === 'pct_in_band' ? ' %' : unitOf(c.variable_key) ? ` ${unitOf(c.variable_key)}` : ''}
+                  {c.statistic === 'total' && c.value_extrapolated != null && (
+                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 400, color: 'var(--text-muted)' }}>{t('perf.eval.extrapolated', { value: fmt(c.value_extrapolated) })}</div>
+                  )}
+                </td>
                 <td style={td}><Chip tone={OUTCOME_TONE[c.outcome]}>{t(`perf.outcome.${c.outcome}`)}</Chip></td>
               </tr>
             ))}

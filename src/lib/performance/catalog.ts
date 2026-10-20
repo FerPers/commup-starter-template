@@ -36,7 +36,8 @@ export type PerfRunStatus = 'planned' | 'stabilizing' | 'formal' | 'closed' | 'e
 export const PERF_RESULTS = ['accepted', 'accepted_with_deviation', 'repeat', 'failed', 'inconclusive'] as const
 export type PerfResult = (typeof PERF_RESULTS)[number]
 export type CriterionOutcome = 'pass' | 'within_uncertainty' | 'fail' | 'not_evaluable'
-export type InconclusiveReason = 'coverage' | 'unit' | 'pair' | 'early_close' | 'no_valid_data' | 'not_evaluable'
+/** S12 (E-18): data_quality = calidad mala o picos por encima del umbral de la revisión. */
+export type InconclusiveReason = 'coverage' | 'unit' | 'pair' | 'early_close' | 'no_valid_data' | 'not_evaluable' | 'data_quality'
 
 /** Salida de `evaluate_performance_run` (congelada en el intento al registrar el resultado). */
 export type Evaluation = {
@@ -46,11 +47,14 @@ export type Evaluation = {
     key: string; label: string; unit: string | null; source: VariableSource; signal?: string | null; formula?: string
     expected?: number; present: number; coverage_pct: number; coverage_ok?: boolean; bad_pct?: number; spikes?: number; out_of_range?: number
     unit_ok?: boolean; evaluable: boolean
+    /** S12 (E-18) */ quality_ok?: boolean; out_of_range_excluded?: boolean
   }[]
   criteria: {
     ord: number; variable_key: string; label: string | null; statistic: Statistic; band_lo: number | null; band_hi: number | null
     total_basis: TotalBasis | null; operator: Operator; target: number; target_hi: number | null; uncertainty: number
     uncertainty_mode: UncertaintyMode; value: number | null; outcome: CriterionOutcome
+    /** S12 (E-28): solo «total»: promedio × minutos del periodo formal (el valor suma solo minutos con dato). */
+    value_extrapolated?: number | null
   }[]
   pairs: { variable_a: string; variable_b: string; max_diff_pct: number; diff_pct: number | null; minutes: number; ok: boolean }[]
   reasons: InconclusiveReason[]

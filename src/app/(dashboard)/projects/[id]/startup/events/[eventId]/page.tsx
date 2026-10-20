@@ -2,7 +2,6 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { chartWindow, type EventCategory, type Milestone, type StartupEventStatus } from '@/lib/startup/catalog'
 import EventDetail from './EventDetail'
-import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 // Ficha de un evento de arranque (fase 6, sesión 2): parámetros congelados (IIoT o manuales), gráfico
 // −30/+30 min por señal desde signal_samples_1min, testigo y anulación.
@@ -26,11 +25,13 @@ export default async function StartupEventPage({ params }: { params: Promise<{ i
   ])
   const signalIds = [...new Set((paramsRows ?? []).map(p => p.signal_id).filter((x): x is string => !!x))]
   const win = chartWindow(ev.occurred_at)
-  // S09 (B-07): paginado por (bucket, signal_id); .limit(5000) devolvía igual 1000 minutos-señal
-  const { rows: series } = signalIds.length
-    ? await fetchAllRowsFlagged(() => supabase.from('signal_samples_1min').select('signal_id, bucket, avg_val')
-        .in('signal_id', signalIds).gte('bucket', win.from).lte('bucket', win.to).order('bucket'), { key: 'signal_id' })
-    : { rows: [] }
+  // S12 (E-03): serie reducida en la BD con filtro sargable por rango (antes la vista de 1 minuto agregaba toda
+  // la historia de cada señal). Hasta 50 señales; ±30 min a 1 minuto = ~60 puntos por señal.
+  const { data: seriesRows, error: seriesErr } = signalIds.length
+    ? await supabase.rpc('signal_series', { p_signal_ids: signalIds.slice(0, 50), p_from: win.from, p_to: win.to, p_bucket_s: 60 })
+    : { data: [], error: null }
+  if (seriesErr) console.error('[startup/events] signal_series', seriesErr)
+  const series = seriesRows ?? []
 
   const names: Record<string, string> = {}
   for (const m of members ?? []) {

@@ -156,7 +156,8 @@ Rules for every new page/query/action:
 
 - Migraciones `20261019120000` (S1) + `20261019150000` (S2) + `20261020120000` (S3, KPIs); decisiones doc §14. Hub `/projects/[id]/startup/performance` → prueba `[testId]` → intento `runs/[runId]` (consola, evaluación, PTC, PDF en `/pdf`). Catálogo puro en `src/lib/performance/catalog.ts`.
 - `performance_tests` (PTT-0001) → revisiones con frontera, variables (señal/manual/derivada), criterios y pares de medidores; `performance_runs` (R1…: estabilización → formal → cierre, datos congelados en `performance_run_data`). `evaluate_performance_run` es la única fuente de verdad; resultado en 5 categorías lo registra un líder+ (inmutable). Certificado `performance_certificates` (PTC) con 3 firmas distintas (Comisionamiento, Operaciones, Cliente estricto). Gate: `readiness_gates.requires_performance` + criterio implícito `performance_accepted`. Escritura solo por RPC.
-- KPIs en `take_mgmt_snapshot`: `startup` (éxito de primer arranque), `trips` (falla repetida F6), `performance` (aceptadas al primer intento). Seed DEMO: `scripts/demo-data/seed_performance_demo.sql`.
+- KPIs en `take_mgmt_snapshot`: `startup` (éxito de primer arranque), `trips` (falla repetida F6), `performance` (aceptadas al primer intento).
+- IIoT (S12): `signal_samples` está particionada por mes (retención 90 días por `pg_cron` + `cleanup_signal_samples_retention`, que también crea particiones). Para leer series usar la RPC `signal_series` (rango sargable, mín/máx, tope de puntos), no la vista `signal_samples_1min`. La ingesta (`/api/v1/signals/samples`) valida cada muestra y acepta `project_code`/`signal_id`; un nombre repetido entre proyectos es `ambiguous_signal`. Seed DEMO: `scripts/demo-data/seed_performance_demo.sql`.
 - Las acciones de resultado/PTC usan `window.confirm`: en el navegador integrado se cancela solo (para probar, sobrescribir `window.confirm`).
 
 ## Vendors y control documental — fase 8 del plan readiness

@@ -4454,6 +4454,7 @@
         "not_evaluable": "Not evaluable"
       },
       "reason": {
+        "data_quality": "data quality beyond threshold (bad samples or spikes)",
         "coverage": "insufficient data coverage",
         "unit": "signal unit differs from the definition",
         "pair": "meters not reconciled",
@@ -4462,6 +4463,7 @@
         "not_evaluable": "criterion not evaluable"
       },
       "eval": {
+        "extrapolated": "Extrapolated to the formal period: {value}",
         "title": "Evaluation",
         "suggested": "Suggested:",
         "suggestedShort": "suggested",
