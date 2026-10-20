@@ -320,7 +320,9 @@
       "approveSelected": "✓ Approve selected",
       "approveConfirmTitle": "Approve ITRs",
       "approveConfirmDesc": "Approve {count} completed ITR(s)? This action cannot be undone.",
-      "approveNoneCompleted": "No selected ITRs are in 'Completed' status."
+      "approveNoneCompleted": "No selected ITRs are in 'Completed' status.",
+      "reschedule": "Reschedule",
+      "reschedulePlaceholder": "New scheduled date"
     },
     "table": {
       "colProject": "Project",
@@ -1291,7 +1293,9 @@
       "yesBtn": "YES",
       "noBtn": "NO",
       "punchTooltip": "Register punch for this item",
-      "titleDocument": "Requires document (PDF)"
+      "titleDocument": "Requires document (PDF)",
+      "noNeedsRemarks": "A “No” needs an observation to count as answered.",
+      "noSuggestPunch": "If it is a defect, raise a punch with ⚑."
     },
     "upload": {
       "uploading": "⏳ Uploading...",
@@ -1341,6 +1345,15 @@
       "notAssigned": "You are not assigned to that signing role.",
       "notRequired": "This ITR does not require that signing role.",
       "incomplete": "The content is incomplete or has a critical failure."
+    },
+    "returnToExecutor": {
+      "button": "Return to executor",
+      "reasonLabel": "What needs fixing?",
+      "reasonPlaceholder": "E.g.: item 3 is missing the nameplate photo; the insulation reading is out of range…",
+      "hint": "At least 10 characters. Signatures are withdrawn, the executor is notified and it is kept in the audit log.",
+      "confirm": "Return",
+      "sending": "Returning…",
+      "back": "Back"
     }
   },
   "Tags": {

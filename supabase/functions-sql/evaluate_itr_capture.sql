@@ -77,8 +77,9 @@ evaluated AS (
         WHEN 'text' THEN i.value_text ~ '[^[:space:]]'
         WHEN 'number' THEN i.finite_number
         WHEN 'measurement' THEN i.finite_number
-        WHEN 'checkbox' THEN i.value_bool IS NOT NULL
-        WHEN 'yes_no' THEN i.value_bool IS NOT NULL
+        -- S05 (C-20): una casilla cuenta solo marcada (desmarcarla no la deja «respondida»); un «No» pide observación.
+        WHEN 'checkbox' THEN i.value_bool IS TRUE
+        WHEN 'yes_no' THEN i.value_bool IS TRUE OR (i.value_bool IS FALSE AND i.remarks ~ '[^[:space:]]')
         WHEN 'select' THEN i.value_option ~ '[^[:space:]]'
           AND pg_catalog.jsonb_typeof(i.options) = 'array'
           AND i.options @> pg_catalog.jsonb_build_array(i.value_option)

@@ -64,8 +64,9 @@ export function evaluateItrCompletion(
       case 'text': return hasText(answer?.value_text)
       case 'number':
       case 'measurement': return hasNumber(answer?.value_numeric)
-      case 'checkbox':
-      case 'yes_no': return typeof answer?.value_bool === 'boolean'
+      // S05 (C-20), espejo de evaluate_itr_capture: la casilla cuenta solo marcada; un «No» pide observación.
+      case 'checkbox': return answer?.value_bool === true
+      case 'yes_no': return answer?.value_bool === true || (answer?.value_bool === false && hasText(answer.remarks))
       case 'select': return hasText(answer?.value_option) && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answer.value_option, answer.remarks).valid
       case 'date': {
         const value = answer?.value_text

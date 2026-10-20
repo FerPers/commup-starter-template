@@ -7,19 +7,18 @@ import { punchDeleteBlocker } from '@/lib/punches/deletable'
 import { revalidatePath } from 'next/cache'
 import type { Enums } from '@/types/supabase.generated'
 
-export const bulkUpdateItrStatus = withAuthOnly(
+// D7 (S05): ya no hay cambio masivo de estado de ITR ni «aprobar seleccionados» (C-10/A-28): el estado sale
+// del contenido y de las firmas. En su lugar: reasignar (itr-assign.ts), agregar a un plan (work-plans.ts) y
+// reprogramar.
+export const bulkRescheduleItrs = withAuthOnly(
   { role: EDITOR_ROLES },
-  async (ctx, ids: string[], status: Enums<'itr_status'>): Promise<{ error?: string }> => {
-    if (!ids.length) return {}
-
-    const { error } = await ctx.supabase
-      .from('itrs')
-      .update({ status })
-      .in('id', ids)
-
+  async (ctx, ids: string[], scheduledDate: string | null): Promise<{ updated?: number; error?: string }> => {
+    if (!ids.length) return { updated: 0 }
+    if (scheduledDate !== null && !/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate)) return { error: 'Fecha no válida' }
+    const { data, error } = await ctx.supabase.from('itrs').update({ scheduled_date: scheduledDate }).in('id', ids).select('id')
     if (error) return { error: error.message }
     revalidatePath('/itrs')
-    return {}
+    return { updated: data?.length ?? 0 }
   },
 )
 
@@ -56,32 +55,6 @@ export const bulkUpdateTagStatus = withAuthOnly(
     if (error) return { error: error.message }
     revalidatePath('/tags')
     return {}
-  },
-)
-
-export const bulkApproveItrs = withAuthOnly(
-  { role: EDITOR_ROLES },
-  async (
-    ctx,
-    ids: string[],
-    projectId: string,
-  ): Promise<{ approved?: number; error?: string }> => {
-    if (!ids.length) return { approved: 0 }
-
-    // Only approve ITRs that are 'completed' and belong to this project
-    const { data, error } = await ctx.supabase
-      .from('itrs')
-      .update({ status: 'approved' })
-      .in('id', ids)
-      .eq('project_id', projectId)
-      .eq('status', 'completed')
-      .select('id')
-
-    if (error) return { approved: 0, error: error.message }
-
-    const approved = data?.length ?? 0
-    if (approved > 0) revalidatePath(`/projects/${projectId}/itrs`)
-    return { approved }
   },
 )
 

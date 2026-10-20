@@ -9,12 +9,19 @@ describe('evaluateItrCompletion', () => {
     expect(evaluateItrCompletion(items, responses)).toMatchObject({ isComplete: false, progressPct: 99, missingRequiredItemIds: ['199'] })
   })
   it('accepts numeric zero and explicit false, but not nonfinite numbers', () => {
-    expect(evaluateItrCompletion([item('a', { item_type: 'measurement' }), item('b', { item_type: 'yes_no' })], [response('a', { value_numeric: 0 }), response('b', { value_bool: false })]).isComplete).toBe(true)
+    expect(evaluateItrCompletion([item('a', { item_type: 'measurement' }), item('b', { item_type: 'yes_no' })], [response('a', { value_numeric: 0 }), response('b', { value_bool: false, remarks: 'sin tensión' })]).isComplete).toBe(true)
     expect(evaluateItrCompletion([item('a', { item_type: 'number' })], [response('a', { value_numeric: NaN })]).isComplete).toBe(false)
   })
   it('excludes hidden descendants even when their stale parent answer matches', () => {
     const items = [item('a', { item_type: 'yes_no' }), item('b', { condition_item_id: 'a', condition_value: 'true' }), item('c', { condition_item_id: 'b', condition_value: 'yes' })]
-    expect(evaluateItrCompletion(items, [response('a', { value_bool: false }), response('b', { value_text: 'yes' })])).toMatchObject({ isComplete: true, applicableCount: 1, applicableItemIds: ['a'], progressPct: 100 })
+    expect(evaluateItrCompletion(items, [response('a', { value_bool: false, remarks: 'no aplica en este equipo' }), response('b', { value_text: 'yes' })])).toMatchObject({ isComplete: true, applicableCount: 1, applicableItemIds: ['a'], progressPct: 100 })
+  })
+  it('S05 (C-20): casilla desmarcada no cuenta; un «No» cuenta solo con observación', () => {
+    expect(evaluateItrCompletion([item('a', { item_type: 'checkbox' })], [response('a', { value_bool: false })]).isComplete).toBe(false)
+    expect(evaluateItrCompletion([item('a', { item_type: 'checkbox' })], [response('a', { value_bool: true })]).isComplete).toBe(true)
+    expect(evaluateItrCompletion([item('a', { item_type: 'yes_no' })], [response('a', { value_bool: false })]).isComplete).toBe(false)
+    expect(evaluateItrCompletion([item('a', { item_type: 'yes_no' })], [response('a', { value_bool: false, remarks: '  ' })]).isComplete).toBe(false)
+    expect(evaluateItrCompletion([item('a', { item_type: 'yes_no' })], [response('a', { value_bool: false, remarks: 'falta perno' })]).isComplete).toBe(true)
   })
   it('fails closed on malformed conditions and cycles', () => {
     for (const items of [[item('a', { condition_item_id: 'missing', condition_value: 'yes' })], [item('a', { condition_item_id: 'b', condition_value: 'yes' }), item('b', { condition_item_id: 'a', condition_value: 'yes' })]]) {

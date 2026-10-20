@@ -15,10 +15,12 @@ import { upsertResponse } from './itr-instances'
 
 type Result = { data?: unknown; error?: { message: string } | null; count?: number }
 let itr: Result, item: Result, project: Result, existing: Result
-let items: Result, responses: Result, attachments: Result, signatures: Result, auditError: boolean
+let items: Result, responses: Result, attachments: Result, signatures: Result, auditError: boolean, assignment: Result
 let writes: Array<{ table: string; value: unknown }>
+let rpcs: Array<{ name: string; args: unknown }>
+let rpcError: { message: string } | null
 function database() {
-  return { from(table: string) {
+  return { rpc: async (name: string, args: unknown) => { rpcs.push({ name, args }); return { error: rpcError } }, from(table: string) {
     let mutation = false
     const query = {
       select: () => query, eq: () => query, limit: () => query,
@@ -36,6 +38,7 @@ function database() {
       if (table === 'itr_responses') return single ? existing : responses
       if (table === 'itr_attachments') return attachments
       if (table === 'itr_signatures') return signatures
+      if (table === 'itr_assignments') return assignment
       throw new Error(`Unexpected table ${table}`)
     }
     return query
@@ -52,6 +55,9 @@ beforeEach(() => {
   attachments = { data: [] }
   signatures = { data: [] }
   auditError = false
+  assignment = { data: { id: 'a' } }
+  rpcs = []
+  rpcError = null
   writes = []
   harness.context = { supabase: database(), orgId: 'org', userId: 'user' }
 })
@@ -100,47 +106,22 @@ function field(id: string, extra = {}) {
 function answer(id: string, text: string | null, extra = {}) {
   return { item_id: id, value_text: text, value_numeric: null, value_bool: null, value_option: null, is_passed: null, ...extra }
 }
-function statusWrite() { return writes.find(write => write.table === 'itrs')?.value }
-describe('upsertResponse evaluates actual applicable content', () => {
-  it('does not complete an empty response row', async () => {
-    responses = { data: [answer('item', '  ')], count: 1 }
-    await upsertResponse(input)
-    expect(statusWrite()).toMatchObject({ status: 'not_started', progress_pct: 0, completed_date: null })
+// S05 (C-34, D7): el estado y el avance los recalcula la BD (refresh_itr_status → evaluate_itr_capture). La
+// evaluación del contenido se prueba en src/lib/itr/completion.test.ts y en la BD (tests/db).
+describe('upsertResponse delega el estado en la BD', () => {
+  it('no escribe itrs: llama refresh_itr_status después de guardar la respuesta', async () => {
+    expect(await upsertResponse(input)).toEqual({})
+    expect(writes.find(w => w.table === 'itrs')).toBeUndefined()
+    expect(rpcs).toEqual([{ name: 'refresh_itr_status', args: { p_itr_id: 'itr' } }])
   })
-  it('does not round 199 of 200 required answers into completion', async () => {
-    items = { data: Array.from({ length: 200 }, (_, i) => field(String(i))), count: 200 }
-    responses = { data: Array.from({ length: 199 }, (_, i) => answer(String(i), 'ok')), count: 199 }
-    await upsertResponse(input)
-    expect(statusWrite()).toMatchObject({ status: 'in_progress', progress_pct: 99, completed_date: null })
+  it('informa si no se pudo recalcular el avance', async () => {
+    rpcError = { message: 'boom' }
+    expect((await upsertResponse(input)).error).toMatch(/avance/)
   })
-  it('excludes hidden required items and their stale critical failure', async () => {
-    items = { data: [field('item', { item_type: 'yes_no' }), field('hidden', { condition_item_id: 'item', condition_value: 'true', is_critical: true })], count: 2 }
-    responses = { data: [answer('item', null, { value_bool: false }), answer('hidden', null, { is_passed: false })], count: 2 }
-    await upsertResponse(input)
-    expect(statusWrite()).toMatchObject({ status: 'completed', progress_pct: 100 })
-  })
-  it('requires a linked photo and completes when its evidence exists', async () => {
-    items = { data: [field('item', { requires_photo: true })], count: 1 }
-    await upsertResponse(input)
-    expect(statusWrite()).toMatchObject({ progress_pct: 0, completed_date: null })
-    writes = []
-    attachments = { data: [{ item_id: 'item', file_url: 'proof.jpg', file_type: 'image/jpeg' }] }
-    await upsertResponse(input)
-    expect(statusWrite()).toMatchObject({ status: 'completed', progress_pct: 100 })
-  })
-  it('rejects applicable critical failure even when other items remain empty', async () => {
-    items = { data: [field('item', { is_critical: true }), field('other')], count: 2 }
-    responses = { data: [answer('item', 'bad', { is_passed: false })], count: 1 }
-    await upsertResponse(input)
-    expect(statusWrite()).toMatchObject({ status: 'rejected', completed_date: null })
-  })
-  it.each(['items', 'responses', 'attachments'])('does not update state when %s reading fails', async table => {
-    const failure = { data: null, error: { message: 'Read failed' } }
-    if (table === 'items') items = failure
-    if (table === 'responses') responses = failure
-    if (table === 'attachments') attachments = failure
-    expect((await upsertResponse(input)).error).toBeTruthy()
-    expect(statusWrite()).toBeUndefined()
+  it('C-26: solo el ejecutor asignado (o un supervisor) captura', async () => {
+    assignment = { data: null }
+    expect((await upsertResponse(input)).error).toMatch(/ejecutor asignado/)
+    expect(writes).toEqual([])
   })
 })
 

@@ -2368,6 +2368,32 @@ export type Database = {
           },
         ]
       }
+      itr_number_counters: {
+        Row: {
+          base: string
+          last_seq: number
+          project_id: string
+        }
+        Insert: {
+          base: string
+          last_seq: number
+          project_id: string
+        }
+        Update: {
+          base?: string
+          last_seq?: number
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itr_number_counters_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       itr_responses: {
         Row: {
           id: string
@@ -12326,6 +12352,7 @@ export type Database = {
         Args: { p_report_id: string }
         Returns: undefined
       }
+      refresh_itr_status: { Args: { p_itr_id: string }; Returns: Json }
       register_caller_role: { Args: { p_project_id: string }; Returns: string }
       register_set_tags: {
         Args: { p_item_id: string; p_project_id: string; p_tags: Json }
@@ -12359,6 +12386,10 @@ export type Database = {
       resolve_punch: {
         Args: { p_comment: string; p_punch_id: string }
         Returns: undefined
+      }
+      return_itr_to_executor: {
+        Args: { p_itr_id: string; p_reason: string }
+        Returns: Json
       }
       review_punch_category: {
         Args: {

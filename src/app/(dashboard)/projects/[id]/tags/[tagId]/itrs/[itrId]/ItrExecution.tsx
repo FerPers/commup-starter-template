@@ -23,7 +23,8 @@ import RevokeModal from './RevokeModal'
 import CreatePunchModal from './CreatePunchModal'
 import TestEquipmentSection, { type EquipmentOption, type EquipmentUsed } from './TestEquipmentSection'
 import { availableSigningRoles, type Attachment, type ItrData, type Signature } from './types'
-import { allRequiredSigned, itrSignErrorKey, normalizeRequired } from '@/lib/itr/signatures'
+import { allRequiredSigned, itrSignErrorKey, normalizeRequired, type SigningRole } from '@/lib/itr/signatures'
+import ReturnToExecutor from './ReturnToExecutor'
 import AssignmentsPanel, { type AssignableMember } from './AssignmentsPanel'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 
@@ -458,6 +459,15 @@ export default function ItrExecution({
             )
           })}
         </div>
+
+        {/* S05 (C-23): quien firma después del ejecutor puede devolverle el ITR con observaciones */}
+        {itr.status !== 'approved' && itr.itr_signatures.some(s => s.role === 'executor')
+          && itr.itr_assignments.some(a => a.user_id === currentUserId && a.role !== 'executor' && requiredRoles.includes(a.role as SigningRole))
+          && !itr.itr_signatures.some(s => s.user_id === currentUserId) && (
+          <div style={{ marginTop: '12px' }}>
+            <ReturnToExecutor itrId={itr.id} projectId={projectId} tagId={itr.tag_id} />
+          </div>
+        )}
 
         {/* Sprint O: punch o firma guardados sin red */}
         {queuedNotice && (

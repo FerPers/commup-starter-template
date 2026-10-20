@@ -61,20 +61,18 @@ async function insertItr(
   row: { subsystem_id: string; tag_id: string; baseNumber: string; loop_id?: string; ce_cause_id?: string },
   signers: Signer[],
 ): Promise<{ id: string; itr_number: string } | { error: string }> {
-  const link = row.loop_id ? { column: 'loop_id', id: row.loop_id } : { column: 'ce_cause_id', id: row.ce_cause_id! }
-  const { count } = await ctx.supabase.from('itrs').select('id', { count: 'exact', head: true }).eq(link.column, link.id).eq('template_id', template.id)
-  const itrNumber = (count ?? 0) === 0 ? row.baseNumber : `${row.baseNumber} R${(count ?? 0) + 1}`
+  // S05 (C-15): la BD agrega « Rn» de forma atómica si la base ya existe (assign_itr_number).
   const payload: TablesInsert<'itrs'> = {
     template_id: template.id, tag_id: row.tag_id, subsystem_id: row.subsystem_id, project_id: input.projectId,
-    phase_id: template.phase_id, itr_number: itrNumber, status: 'not_started', progress_pct: 0,
+    phase_id: template.phase_id, itr_number: row.baseNumber, status: 'not_started', progress_pct: 0,
     loop_id: row.loop_id ?? null, ce_cause_id: row.ce_cause_id ?? null,
   }
-  const { data: itr, error } = await ctx.supabase.from('itrs').insert(payload).select('id').single()
+  const { data: itr, error } = await ctx.supabase.from('itrs').insert(payload).select('id, itr_number').single()
   if (error || !itr) return { error: error?.message ?? 'No se pudo crear el ITR' }
   const assignments: TablesInsert<'itr_assignments'>[] = signers.map(s => ({ itr_id: itr.id, user_id: s.userId, role: s.role }))
   const { error: assignErr } = await ctx.supabase.from('itr_assignments').insert(assignments)
   if (assignErr) return { error: assignmentDbError(assignErr.message) }
-  return { id: itr.id, itr_number: itrNumber }
+  return { id: itr.id, itr_number: itr.itr_number }
 }
 
 async function notify(ctx: { orgId: string; userId: string }, input: GenerateInput, made: Array<{ id: string; itr_number: string; tag_id: string }>, signers: Signer[]) {

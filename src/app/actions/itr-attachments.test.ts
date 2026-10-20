@@ -10,8 +10,9 @@ type Row = Record<string, unknown>
 let tables: Record<string, Row[]>
 let removed: string[][]
 let failSignatures: boolean
+let rpcs: string[]
 function database() {
-  return { storage: { from: () => ({remove: async (paths: string[]) => { removed.push(paths); return {error:null} }}) }, from(table: string) {
+  return { rpc: async (name: string) => { rpcs.push(name); return { error: null } }, storage: { from: () => ({remove: async (paths: string[]) => { removed.push(paths); return {error:null} }}) }, from(table: string) {
     const filters: [string, unknown][] = []; let operation = 'select'; let payload: Row = {}
     const query = {
       select() { return query }, eq(k: string, v: unknown) { filters.push([k,v]); return query },
@@ -33,7 +34,7 @@ function database() {
   } }
 }
 beforeEach(() => {
-  removed=[]; failSignatures=false
+  removed=[]; failSignatures=false; rpcs=[]
   tables = {
     projects: [{id:'p',org_id:'org'}], itrs:[{id:'i',template_id:'tpl',project_id:'p',tag_id:'t',status:'completed',progress_pct:100}],
     itr_assignments: [{role:'executor',user_id:'u',itr_id:'i'},{role:'supervisor',user_id:'s',itr_id:'i'},{role:'client',user_id:'c',itr_id:'i'}],
@@ -51,9 +52,11 @@ describe('ITR evidence integrity', () => {
   it('fails closed on signature lookup error', async () => { failSignatures=true; expect((await saveItrAttachment(upload)).error).toBeTruthy() })
   it('rejects foreign item', async () => { expect((await saveItrAttachment({...upload,itemId:'other'})).error).toBeTruthy() })
   it('rejects mismatched route', async () => { expect((await saveItrAttachment({...upload,tagId:'other'})).error).toBeTruthy() })
-  it('recalculates completion after last photo', async () => { tables.itr_template_items[0].requires_photo=true; tables.itrs[0].status='in_progress'; tables.itrs[0].progress_pct=0; expect((await saveItrAttachment(upload)).error).toBeUndefined(); expect(tables.itrs[0].status).toBe('completed'); expect(tables.itrs[0].progress_pct).toBe(100) })
+  // S05 (C-34): el avance lo recalcula la BD (refresh_itr_status), no la action.
+  it('recalculates completion after last photo', async () => { tables.itr_template_items[0].requires_photo=true; tables.itrs[0].status='in_progress'; expect((await saveItrAttachment(upload)).error).toBeUndefined(); expect(rpcs).toEqual(['refresh_itr_status']) })
+  it('C-26: rejects capture by someone not assigned as executor', async () => { state.ctx = { ...state.ctx, userId: 'x' }; tables.itrs[0].status='in_progress'; expect((await saveItrAttachment(upload)).error).toMatch(/ejecutor asignado/); expect(tables.itr_attachments).toHaveLength(0) })
   it('blocks deletion after approval', async () => { tables.itrs[0].status='approved'; tables.itr_attachments.push({id:'a',itr_id:'i',file_url:'actual.png'}); expect((await deleteItrAttachment(deletion)).error).toBeTruthy(); expect(removed).toHaveLength(0) })
   it('rejects deletion belonging to another ITR', async () => { tables.itr_attachments.push({id:'a',itr_id:'other',file_url:'actual.png'}); expect((await deleteItrAttachment(deletion)).error).toBeTruthy(); expect(removed).toHaveLength(0) })
-  it('unlinks metadata, preserves immutable binary and recalculates missing evidence', async () => { tables.itr_template_items[0].requires_photo=true; tables.itr_attachments.push({id:'a',itr_id:'i',item_id:'q',file_url:'actual.png',file_type:'image/png'}); expect(await deleteItrAttachment(deletion)).toEqual({}); expect(removed).toHaveLength(0); expect(tables.itr_attachments).toHaveLength(0); expect(tables.itrs[0].status).toBe('in_progress'); expect(tables.itrs[0].progress_pct).toBe(0) })
+  it('unlinks metadata, preserves immutable binary and recalculates missing evidence', async () => { tables.itr_template_items[0].requires_photo=true; tables.itr_attachments.push({id:'a',itr_id:'i',item_id:'q',file_url:'actual.png',file_type:'image/png'}); expect(await deleteItrAttachment(deletion)).toEqual({}); expect(removed).toHaveLength(0); expect(tables.itr_attachments).toHaveLength(0); expect(rpcs).toEqual(['refresh_itr_status']) })
   it('preserves metadata and binary after a partial signature', async () => { tables.itr_signatures.push({itr_id:'i',role:'executor'}); tables.itr_attachments.push({id:'a',itr_id:'i',file_url:'actual.png'}); expect((await deleteItrAttachment(deletion)).error).toBeTruthy(); expect(tables.itr_attachments).toHaveLength(1); expect(removed).toHaveLength(0) })
 })

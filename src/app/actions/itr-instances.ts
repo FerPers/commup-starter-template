@@ -6,17 +6,27 @@ import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
-import { evaluateItrCompletion } from '@/lib/itr/completion'
 import { assignmentDbError, assignmentError, requiredForTemplate, type SigningRole } from '@/lib/itr/signatures'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
 import type { TablesInsert, TablesUpdate } from '@/types/supabase.generated'
+import type { ActiveContext } from '@/lib/supabase/membership'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (upsertResponse,
 // saveItrAttachment, deleteItrAttachment, signItr) son auth-only a propósito —
 // los inspectores ('inspector') ejecutan ITRs y NO están en EDITOR_ROLES.
 // RLS (is_project_member) gobierna el acceso a itr_responses/attachments/signatures.
+
+/**
+ * C-26 (S05): captura el ejecutor asignado o un supervisor (leader+); antes cualquier inspector o líder del
+ * proyecto llenaba cualquier ITR y solo la firma exigía la asignación.
+ */
+async function captureBlocker(ctx: { supabase: ActiveContext['supabase']; userId: string; role: string }, itrId: string): Promise<string | null> {
+  if (EDITOR_ROLES.includes(ctx.role)) return null
+  const { data } = await ctx.supabase.from('itr_assignments').select('id').eq('itr_id', itrId).eq('role', 'executor').eq('user_id', ctx.userId).maybeSingle()
+  return data ? null : 'Solo el ejecutor asignado (o un supervisor) captura este ITR'
+}
 
 // ── Create ITR Assignment ────────────────────────────────────────────
 
@@ -46,12 +56,18 @@ export const createItrAssignment = withAuth(
     const { projectId, tagId, templateId, subsystemId, scheduledDate, inspectorId, supervisorId, clientId } = input
 
     const [{ data: tag }, { data: template }] = await Promise.all([
-      ctx.supabase.from('tags').select('tag_number').eq('id', tagId).single(),
-      ctx.supabase.from('itr_templates').select('code, phase_id, required_signatures, project_phases(itr_client_signature)').eq('id', templateId).single(),
+      ctx.supabase.from('tags').select('tag_number, subsystem_id').eq('id', tagId).single(),
+      ctx.supabase.from('itr_templates').select('code, phase_id, is_active, required_signatures, project_phases(itr_client_signature)').eq('id', templateId).single(),
     ])
 
     if (!tag) return { error: 'Tag no encontrado' }
     if (!template) return { error: 'Template no encontrado' }
+    // C-40 (S05): plantilla activa, subsistema del tag y un ejecutor que no sea el cliente.
+    if (!template.is_active) return { error: 'La plantilla es un borrador: actívala antes de asignar ITR' }
+    if (tag.subsystem_id !== subsystemId) return { error: 'El subsistema no corresponde al del tag' }
+    const { data: executorMember } = await ctx.supabase.from('org_members').select('role').eq('org_id', ctx.orgId).eq('user_id', inspectorId).maybeSingle()
+    if (!executorMember) return { error: 'El ejecutor no es miembro de la organización' }
+    if (executorMember.role === 'client') return { error: 'El cliente no puede ser el ejecutor del ITR' }
 
     // S04 (D4/D6): la BD congela estas firmas en el ITR; aquí se exige una persona distinta por rol requerido.
     const required = requiredForTemplate(template.required_signatures, template.project_phases?.itr_client_signature)
@@ -61,15 +77,7 @@ export const createItrAssignment = withAuth(
 
     const baseNumber = `${template.code}/${tag.tag_number}`
 
-    const { count } = await ctx.supabase
-      .from('itrs')
-      .select('*', { count: 'exact', head: true })
-      .eq('tag_id', tagId)
-      .eq('template_id', templateId)
-
-    const itrNumber = (count ?? 0) === 0
-      ? baseNumber
-      : `${baseNumber} R${(count ?? 0) + 1}`
+    // S05 (C-15): se manda la base; si ya existe, la BD agrega « Rn» de forma atómica (assign_itr_number).
 
     const { data: itr, error: itrErr } = await ctx.supabase
       .from('itrs')
@@ -79,15 +87,16 @@ export const createItrAssignment = withAuth(
         subsystem_id: subsystemId,
         project_id: projectId,
         phase_id: template.phase_id,
-        itr_number: itrNumber,
+        itr_number: baseNumber,
         status: 'not_started',
         scheduled_date: scheduledDate ?? null,
         progress_pct: 0,
       })
-      .select('id')
+      .select('id, itr_number')
       .single()
 
     if (itrErr) return { error: itrErr.message }
+    const itrNumber = itr.itr_number
 
     const assignments: TablesInsert<'itr_assignments'>[] = required.map(role => ({ itr_id: itr.id, user_id: people[role]!, role }))
 
@@ -183,6 +192,8 @@ export const upsertResponse = withAuth(
     if (itrRow.status === 'approved') {
       return { error: 'Este ITR ya está aprobado y no puede modificarse' }
     }
+    const captureError = await captureBlocker(ctx, itrId)
+    if (captureError) return { error: captureError }
 
     const { data: signedRows, error: signatureReadError } = await ctx.supabase
       .from('itr_signatures').select('id').eq('itr_id', itrId).limit(1)
@@ -264,32 +275,9 @@ export const upsertResponse = withAuth(
       if (error) return { error: error.message }
     }
 
-    // Evaluate the assigned revision's applicable content, not response-row counts.
-    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
-      ctx.supabase.from('itr_template_items').select('*').eq('template_id', templateId),
-      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
-      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
-    ])
-    if (itemsResult.error || responsesResult.error || attachmentsResult.error
-      || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
-      return { error: 'La respuesta se guardó, pero no se pudo comprobar el avance del ITR' }
-    }
-    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data, sourceRows)
-    const applicableIds = new Set(completion.applicableItemIds)
-    const criticalIds = new Set(itemsResult.data.filter(item => item.is_critical && applicableIds.has(item.id)).map(item => item.id))
-    const hasCriticalFail = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => criticalIds.has(response.item_id) && response.is_passed === false)
-    const newStatus = hasCriticalFail ? 'rejected'
-      : completion.isComplete ? 'completed'
-        : completion.completedCount > 0 ? 'in_progress' : 'not_started'
-
-    const { error: progressError } = await ctx.supabase
-      .from('itrs')
-      .update({
-        progress_pct: completion.progressPct,
-        status: newStatus,
-        completed_date: completion.isComplete && !hasCriticalFail ? new Date().toISOString() : null,
-      })
-      .eq('id', itrId)
+    // S05 (C-34, D7): el estado y el avance los recalcula la BD desde el contenido (evaluate_itr_capture);
+    // la RLS y guard_itr_derived ya no dejan escribirlos desde aquí.
+    const { error: progressError } = await ctx.supabase.rpc('refresh_itr_status', { p_itr_id: itrId })
     if (progressError) return { error: 'La respuesta se guardó, pero no se pudo actualizar el avance del ITR' }
 
     return {}
@@ -322,6 +310,8 @@ export const saveItrAttachment = withAuth(
     if (!access.ok) return { error: access.error }
     if (itr.project_id !== projectId || itr.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
     if (itr.status === 'approved') return { error: 'El ITR aprobado no puede modificarse' }
+    const captureError = await captureBlocker(ctx, itrId)
+    if (captureError) return { error: captureError }
     const { data: signatures, error: signatureError } = await ctx.supabase.from('itr_signatures').select('id').eq('itr_id', itrId)
     if (signatureError || !signatures) return { error: 'No se pudieron verificar las firmas' }
     if (signatures.length > 0) return { error: 'El ITR tiene firmas; requiere reapertura antes de modificar evidencias' }
@@ -352,22 +342,8 @@ export const saveItrAttachment = withAuth(
 
     if (error) return { error: error.message }
 
-    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
-      ctx.supabase.from('itr_template_items').select('*').eq('template_id', itr.template_id),
-      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
-      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
-    ])
-    if (itemsResult.error || responsesResult.error || attachmentsResult.error || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
-      return { error: 'La evidencia cambió, pero no se pudo recalcular el avance; vuelve a intentarlo' }
-    }
-    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data, parseSourceRows(itr.source_rows))
-    const applicable = new Set(completion.applicableItemIds)
-    const critical = new Set(itemsResult.data.filter(item => item.is_critical && applicable.has(item.id)).map(item => item.id))
-    const rejected = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => critical.has(response.item_id) && response.is_passed === false)
-    const { error: progressError } = await ctx.supabase.from('itrs').update({
-      progress_pct: completion.progressPct,
-      status: rejected ? 'rejected' : completion.isComplete ? 'completed' : 'in_progress',
-    }).eq('id', itrId)
+    // S05 (C-34): la BD recalcula estado y avance desde el contenido.
+    const { error: progressError } = await ctx.supabase.rpc('refresh_itr_status', { p_itr_id: itrId })
     if (progressError) return { error: 'La evidencia cambió, pero no se pudo guardar el avance actualizado' }
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
@@ -398,6 +374,8 @@ export const deleteItrAttachment = withAuth(
     if (!access.ok) return { error: access.error }
     if (itr.project_id !== projectId || itr.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
     if (itr.status === 'approved') return { error: 'El ITR aprobado no puede modificarse' }
+    const captureError = await captureBlocker(ctx, itrId)
+    if (captureError) return { error: captureError }
     const { data: signatures, error: signatureError } = await ctx.supabase.from('itr_signatures').select('id').eq('itr_id', itrId)
     if (signatureError || !signatures) return { error: 'No se pudieron verificar las firmas' }
     if (signatures.length > 0) return { error: 'El ITR tiene firmas; requiere reapertura antes de modificar evidencias' }
@@ -417,22 +395,8 @@ export const deleteItrAttachment = withAuth(
       .eq('itr_id', itrId)
     if (error) return { error: error.message }
 
-    const [itemsResult, responsesResult, attachmentsResult] = await Promise.all([
-      ctx.supabase.from('itr_template_items').select('*').eq('template_id', itr.template_id),
-      ctx.supabase.from('itr_responses').select('*').eq('itr_id', itrId),
-      ctx.supabase.from('itr_attachments').select('item_id, file_url, file_type').eq('itr_id', itrId),
-    ])
-    if (itemsResult.error || responsesResult.error || attachmentsResult.error || !itemsResult.data || !responsesResult.data || !attachmentsResult.data) {
-      return { error: 'La evidencia cambió, pero no se pudo recalcular el avance; vuelve a intentarlo' }
-    }
-    const completion = evaluateItrCompletion(itemsResult.data, responsesResult.data, attachmentsResult.data, parseSourceRows(itr.source_rows))
-    const applicable = new Set(completion.applicableItemIds)
-    const critical = new Set(itemsResult.data.filter(item => item.is_critical && applicable.has(item.id)).map(item => item.id))
-    const rejected = completion.rejectedItemIds.length > 0 || responsesResult.data.some(response => critical.has(response.item_id) && response.is_passed === false)
-    const { error: progressError } = await ctx.supabase.from('itrs').update({
-      progress_pct: completion.progressPct,
-      status: rejected ? 'rejected' : completion.isComplete ? 'completed' : 'in_progress',
-    }).eq('id', itrId)
+    // S05 (C-34): la BD recalcula estado y avance desde el contenido.
+    const { error: progressError } = await ctx.supabase.rpc('refresh_itr_status', { p_itr_id: itrId })
     if (progressError) return { error: 'La evidencia cambió, pero no se pudo guardar el avance actualizado' }
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
@@ -459,6 +423,10 @@ export const signItr = withAuthOnly(
     if (!access.ok) return { error: access.error }
     if (itrRow.project_id !== projectId || itrRow.tag_id !== tagId) return { error: 'El ITR no corresponde al proyecto y tag indicados' }
     if (!(['executor', 'supervisor', 'client'] as const).includes(role)) return { error: 'Rol de firma no válido' }
+    // C-26 (S05): el trazo es un PNG base64 de hasta ~256 KB (la RPC también lo valida).
+    if (signatureImage && (!signatureImage.startsWith('data:image/png;base64,') || signatureImage.length > 350_000)) {
+      return { error: 'La firma no es válida o es demasiado grande' }
+    }
 
     // Database transaction owns content validation, assignment order, audit and approval.
     const { error } = await ctx.supabase.rpc('sign_itr_atomic', {
@@ -548,5 +516,26 @@ export const revokeItrApproval = withAuth(
     revalidatePath(`/projects/${projectId}/tags/${tagId}`)
     revalidatePath(`/projects/${projectId}/itrs`)
     return { revokedCount }
+  },
+)
+
+// ── Devolver al ejecutor (S05, C-23) ─────────────────────────────────────────
+// El supervisor o el cliente asignado devuelve el ITR con observaciones: se retiran las firmas, el ejecutor
+// corrige y vuelve a firmar. La RPC exige la asignación, el motivo (≥ 10), audita y avisa al ejecutor.
+export const returnItrToExecutor = withAuthOnly(
+  {},
+  async (ctx, input: { itrId: string; projectId: string; tagId: string | null; reason: string }): Promise<{ error?: string }> => {
+    const reason = (input.reason ?? '').trim()
+    if (reason.length < 10) return { error: 'Explica qué hay que corregir (mínimo 10 caracteres)' }
+    const { data: itrRow } = await ctx.supabase.from('itrs').select('project_id').eq('id', input.itrId).maybeSingle()
+    if (!itrRow || itrRow.project_id !== input.projectId) return { error: 'ITR no encontrado' }
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
+    if (!access.ok) return { error: access.error }
+    const { error } = await ctx.supabase.rpc('return_itr_to_executor', { p_itr_id: input.itrId, p_reason: reason })
+    if (error) return { error: error.message }
+    if (input.tagId) revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}/itrs/${input.itrId}`)
+    revalidatePath(`/projects/${input.projectId}/itrs`)
+    revalidatePath('/my-work')
+    return {}
   },
 )

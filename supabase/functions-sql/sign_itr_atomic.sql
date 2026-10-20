@@ -15,6 +15,8 @@ roles:=public.itr_signing_roles(v.required_signatures);
 SELECT org_id INTO org FROM public.projects WHERE id=v.project_id;
 IF NOT EXISTS(SELECT 1 FROM public.org_members WHERE org_id=org AND user_id=uid) THEN RAISE EXCEPTION 'Membership required'; END IF;
 IF p_role IS NULL OR NOT p_role=ANY(roles) THEN RAISE EXCEPTION 'Invalid signing role'; END IF;
+-- S05 (C-26): el trazo es un PNG en base64 de hasta ~256 KB (igual que el certificado).
+IF p_signature_image IS NOT NULL AND (p_signature_image NOT LIKE 'data:image/png;base64,%' OR length(p_signature_image) > 350000) THEN RAISE EXCEPTION 'Invalid signature image'; END IF;
 IF v.status='approved' THEN RAISE EXCEPTION 'Already approved'; END IF;
 IF NOT EXISTS(SELECT 1 FROM public.itr_assignments WHERE itr_id=p_itr_id AND role::text=p_role AND user_id=uid) THEN RAISE EXCEPTION 'User not assigned to signing role'; END IF;
 -- S04 (A-08, D6): una persona no firma dos roles del mismo ITR.

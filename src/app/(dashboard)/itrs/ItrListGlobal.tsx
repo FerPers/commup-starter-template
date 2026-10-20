@@ -2,13 +2,12 @@
 
 import { PersonName } from '@/components/ui'
 import { isInactiveMember } from '@/lib/people/inactive'
-import type { Enums } from '@/types/supabase.generated'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X, Download } from 'lucide-react'
 import { Button, Input, Select, EmptyState, DataTable, Pagination, type DataTableColumn } from '@/components/ui'
-import { bulkUpdateItrStatus } from '@/app/actions/bulk'
+import { bulkRescheduleItrs } from '@/app/actions/bulk'
 import { exportItrList } from '@/app/actions/itr-list'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
@@ -82,7 +81,7 @@ export default function ItrListGlobal({
 
   // Bulk selection (página visible)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [bulkStatus, setBulkStatus] = useState<Enums<'itr_status'> | ''>('')
+  const [bulkDate, setBulkDate] = useState('')
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkError, setBulkError] = useState('')
   const [isExporting, startExport] = useTransition()
@@ -106,15 +105,16 @@ export default function ItrListGlobal({
     })
   }
 
+  // D7 (S05): reprogramar en lugar de cambiar el estado a mano (el estado sale del contenido y las firmas).
   async function handleBulkApply() {
-    if (!bulkStatus || selectedRows.length === 0) return
+    if (!bulkDate || selectedRows.length === 0) return
     setBulkLoading(true)
     setBulkError('')
-    const { error } = await bulkUpdateItrStatus(selectedRows.map(r => r.id), bulkStatus)
+    const { error } = await bulkRescheduleItrs(selectedRows.map(r => r.id), bulkDate)
     setBulkLoading(false)
     if (error) { setBulkError(error); return }
     setSelectedIds(new Set())
-    setBulkStatus('')
+    setBulkDate('')
     router.refresh()
   }
 
@@ -251,11 +251,9 @@ export default function ItrListGlobal({
           <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-700)' }}>
             {t('bulk.selected', { count: selectedRows.length })}
           </span>
-          <Select selectSize="sm" fullWidth={false} value={bulkStatus} onChange={e => setBulkStatus(e.target.value as Enums<'itr_status'> | '')} style={{ minWidth: 170 }}>
-            <option value="">{t('bulk.statusPlaceholder')}</option>
-            {ITR_STATUS_KEYS.map(k => <option key={k} value={k}>{itrStatusLabels[k]}</option>)}
-          </Select>
-          <Button size="sm" onClick={handleBulkApply} disabled={!bulkStatus} loading={bulkLoading}>{t('bulk.apply')}</Button>
+          <input type="date" value={bulkDate} onChange={e => setBulkDate(e.target.value)} aria-label={t('bulk.reschedulePlaceholder')}
+            style={{ padding: '5px 9px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', background: 'var(--card-bg)', color: 'var(--text-strong)' }} />
+          <Button size="sm" onClick={handleBulkApply} disabled={!bulkDate} loading={bulkLoading}>{t('bulk.reschedule')}</Button>
           <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>{tc('deselectAll')}</Button>
           {bulkError && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--danger-500)' }}>{bulkError}</span>}
         </div>

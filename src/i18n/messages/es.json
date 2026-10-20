@@ -320,7 +320,9 @@
       "approveSelected": "✓ Aprobar seleccionados",
       "approveConfirmTitle": "Aprobar ITRs",
       "approveConfirmDesc": "¿Aprobar {count} ITR(s) completado(s)? Esta acción no se puede deshacer.",
-      "approveNoneCompleted": "Ningún ITR seleccionado está en estado 'Completado'."
+      "approveNoneCompleted": "Ningún ITR seleccionado está en estado 'Completado'.",
+      "reschedule": "Reprogramar",
+      "reschedulePlaceholder": "Nueva fecha programada"
     },
     "table": {
       "colProject": "Proyecto",
@@ -1291,7 +1293,9 @@
       "yesBtn": "SÍ",
       "noBtn": "NO",
       "punchTooltip": "Registrar punch en este ítem",
-      "titleDocument": "Requiere documento (PDF)"
+      "titleDocument": "Requiere documento (PDF)",
+      "noNeedsRemarks": "Un «No» necesita una observación para contar como respondido.",
+      "noSuggestPunch": "Si es un defecto, levanta un punch con ⚑."
     },
     "upload": {
       "uploading": "⏳ Subiendo...",
@@ -1341,6 +1345,15 @@
       "notAssigned": "No estás asignado a ese rol de firma.",
       "notRequired": "Este ITR no exige ese rol de firma.",
       "incomplete": "El contenido está incompleto o tiene una falla crítica."
+    },
+    "returnToExecutor": {
+      "button": "Devolver al ejecutor",
+      "reasonLabel": "¿Qué hay que corregir?",
+      "reasonPlaceholder": "Ej.: falta la foto de la placa en el ítem 3; la medición de aislamiento está fuera de rango…",
+      "hint": "Mínimo 10 caracteres. Se retiran las firmas, el ejecutor recibe el aviso y queda en la auditoría.",
+      "confirm": "Devolver",
+      "sending": "Devolviendo…",
+      "back": "Volver"
     }
   },
   "Tags": {

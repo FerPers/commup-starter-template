@@ -2,11 +2,10 @@
 
 import { PersonName } from '@/components/ui'
 import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
-import type { Enums } from '@/types/supabase.generated'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { bulkUpdateItrStatus, bulkApproveItrs } from '@/app/actions/bulk'
+import { bulkRescheduleItrs } from '@/app/actions/bulk'
 import { bulkAssignItrs } from '@/app/actions/itr-assign'
 import { normalizeRequired } from '@/lib/itr/signatures'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
@@ -77,11 +76,10 @@ export default function ItrListView({
 
   // ── Bulk selection (acotada a la página visible) ─────────────────────
   const [selected, setSelected]       = useState<Set<string>>(new Set())
-  const [bulkStatus, setBulkStatus]   = useState<Enums<'itr_status'> | ''>('')
+  const [bulkDate, setBulkDate]       = useState('')
   const [bulkUserId, setBulkUserId]   = useState('')
   const [isPending, startTransition]  = useTransition()
   const [bulkError, setBulkError]     = useState<string | null>(null)
-  const [showApproveConfirm, setShowApproveConfirm] = useState(false)
   const [showPlanModal, setShowPlanModal] = useState(false)
 
   const planModalMembers = useMemo(
@@ -93,7 +91,6 @@ export default function ItrListView({
   const selectedRows = useMemo(() => rows.filter(r => selected.has(r.id)), [rows, selected])
   const selectedCount = selectedRows.length
   const allPageSelected = rows.length > 0 && selectedCount === rows.length
-  const allSelectedCompleted = selectedCount > 0 && selectedRows.every(r => r.status === 'completed')
 
   const totalAll = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts])
   const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.q)
@@ -117,16 +114,17 @@ export default function ItrListView({
 
   function clearSelection() {
     setSelected(new Set())
-    setBulkStatus('')
+    setBulkDate('')
     setBulkUserId('')
     setBulkError(null)
   }
 
-  function applyBulkStatus() {
-    if (!bulkStatus || !selectedCount) return
+  // D7 (S05): reprogramar en lugar de cambiar el estado a mano (el estado sale del contenido y las firmas).
+  function applyBulkReschedule() {
+    if (!bulkDate || !selectedCount) return
     setBulkError(null)
     startTransition(async () => {
-      const res = await bulkUpdateItrStatus(selectedRows.map(r => r.id), bulkStatus)
+      const res = await bulkRescheduleItrs(selectedRows.map(r => r.id), bulkDate)
       if (res.error) { setBulkError(res.error); return }
       clearSelection()
       router.refresh()
@@ -139,19 +137,6 @@ export default function ItrListView({
     startTransition(async () => {
       const res = await bulkAssignItrs(selectedRows.map(r => r.id), bulkUserId, 'executor')
       if (res.error) { setBulkError(res.error); return }
-      clearSelection()
-      router.refresh()
-    })
-  }
-
-  function applyBulkApprove() {
-    if (!selectedCount) return
-    setBulkError(null)
-    startTransition(async () => {
-      const res = await bulkApproveItrs(selectedRows.map(r => r.id), projectId)
-      if (res.error) { setBulkError(res.error); return }
-      if (res.approved === 0) { setBulkError(t('bulk.approveNoneCompleted')); return }
-      setShowApproveConfirm(false)
       clearSelection()
       router.refresh()
     })
@@ -218,29 +203,30 @@ export default function ItrListView({
             {t('bulk.selected', { count: selectedCount })}
           </span>
 
-          <select
-            value={bulkStatus}
-            onChange={e => setBulkStatus(e.target.value as Enums<'itr_status'> | '')}
-            disabled={isPending}
-            style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'var(--card-bg)' }}
-          >
-            <option value="">{t('bulk.statusPlaceholder')}</option>
-            {ITR_STATUS_KEYS.map(k => (
-              <option key={k} value={k}>{t(`itrStatus.${k}`)}</option>
-            ))}
-          </select>
-          <button
-            onClick={applyBulkStatus}
-            disabled={!bulkStatus || isPending}
-            style={{
-              padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
-              background: bulkStatus && !isPending ? '#0369a1' : 'var(--border)',
-              color: bulkStatus && !isPending ? 'var(--card-bg)' : 'var(--gray-400)',
-              cursor: bulkStatus && !isPending ? 'pointer' : 'default',
-            }}
-          >
-            {t('bulk.changeStatus')}
-          </button>
+          {canEdit && (
+            <>
+              <input
+                type="date"
+                value={bulkDate}
+                onChange={e => setBulkDate(e.target.value)}
+                disabled={isPending}
+                aria-label={t('bulk.reschedulePlaceholder')}
+                style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit', background: 'var(--card-bg)' }}
+              />
+              <button
+                onClick={applyBulkReschedule}
+                disabled={!bulkDate || isPending}
+                style={{
+                  padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
+                  background: bulkDate && !isPending ? '#0369a1' : 'var(--border)',
+                  color: bulkDate && !isPending ? 'var(--card-bg)' : 'var(--gray-400)',
+                  cursor: bulkDate && !isPending ? 'pointer' : 'default',
+                }}
+              >
+                {t('bulk.reschedule')}
+              </button>
+            </>
+          )}
 
           {canEdit && users.length > 0 && (
             <>
@@ -288,23 +274,6 @@ export default function ItrListView({
             </>
           )}
 
-          {canEdit && allSelectedCompleted && (
-            <>
-              <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
-              <button
-                onClick={() => setShowApproveConfirm(true)}
-                disabled={isPending}
-                style={{
-                  padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                  background: '#7c3aed', color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer',
-                  border: 'none', opacity: isPending ? 0.7 : 1,
-                }}
-              >
-                {t('bulk.approveSelected')}
-              </button>
-            </>
-          )}
-
           <button
             onClick={clearSelection}
             style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', background: 'var(--card-bg)', border: '1px solid var(--border)', cursor: 'pointer' }}
@@ -347,38 +316,6 @@ export default function ItrListView({
           {t('filters.count', { filtered: total, total: totalAll })}
         </span>
       </div>
-
-      {/* Approve confirm modal */}
-      {showApproveConfirm && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
-          onClick={e => { if (e.target === e.currentTarget) setShowApproveConfirm(false) }}
-        >
-          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
-            <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
-              {t('bulk.approveConfirmTitle')}
-            </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 22px' }}>
-              {t('bulk.approveConfirmDesc', { count: selectedCount })}
-            </p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowApproveConfirm(false)}
-                style={{ padding: '8px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                {t('bulk.deselect')}
-              </button>
-              <button
-                onClick={applyBulkApprove}
-                disabled={isPending}
-                style={{ padding: '8px 20px', background: '#7c3aed', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
-              >
-                {isPending ? '...' : t('bulk.approveSelected')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add to plan modal */}
       {showPlanModal && (

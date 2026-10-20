@@ -49,6 +49,8 @@ export default function ItemRow({
   const isPassed = response?.is_passed
   const textRef = useRef<HTMLTextAreaElement | null>(null)
   const remarksRef = useRef<HTMLTextAreaElement | null>(null)
+  // S05 (C-20): un «No» cuenta como respondido solo con observación (evaluate_itr_capture / completion.ts).
+  const answeredNo = item.item_type === 'yes_no' && response?.value_bool === false
 
   // `description` is the primary text (typically EN). `description_es` is the
   // Spanish translation. Pick the chosen lang; if empty, fall back to primary.
@@ -246,9 +248,14 @@ export default function ItemRow({
         onSave(item.id, { valueText: value, isPassed: result.hasFail ? false : result.isComplete ? true : null })
       }} />}
 
-      {/* Remarks (for measurement + critical items) */}
-      {(item.is_critical || item.item_type === 'measurement' || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, response?.value_option).requiresJustification)) && (
+      {/* Remarks (for measurement + critical items; S05 C-20: también un «No», donde es obligatoria) */}
+      {(item.is_critical || item.item_type === 'measurement' || answeredNo || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, response?.value_option).requiresJustification)) && (
         <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {answeredNo && !response?.remarks?.trim() && (
+            <span role="note" style={{ fontSize: '11px', color: '#b45309', fontWeight: 600 }}>
+              {t('item.noNeedsRemarks')}{canPunch ? ` ${t('item.noSuggestPunch')}` : ''}
+            </span>
+          )}
           <textarea
             ref={remarksRef}
             aria-label={item.item_type === 'select' ? 'Justificación de no aplica' : undefined}
@@ -257,7 +264,7 @@ export default function ItemRow({
             disabled={!canEdit}
             placeholder={t('item.remarksPlaceholder')}
             onBlur={e => onSave(item.id, { remarks: e.target.value || null })}
-            style={{ width: '100%', padding: '6px 10px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
+            style={{ width: '100%', padding: '6px 10px', border: `1px solid ${answeredNo && !response?.remarks?.trim() ? '#fcd34d' : '#f1f5f9'}`, borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
           />
           <div style={{ alignSelf: 'flex-end' }}>
             <MicAppend

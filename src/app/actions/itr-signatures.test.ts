@@ -44,9 +44,14 @@ beforeEach(() => {
 })
 describe('atomic ITR actions', () => {
   it('delegates signing to the transactional RPC without direct signature writes', async () => {
-    expect(await signItr('i','executor','p','t','image')).toEqual({})
-    expect(rpc).toHaveBeenCalledWith('sign_itr_atomic', { p_itr_id:'i', p_role:'executor', p_signature_image:'image' })
+    expect(await signItr('i','executor','p','t','data:image/png;base64,AAAA')).toEqual({})
+    expect(rpc).toHaveBeenCalledWith('sign_itr_atomic', { p_itr_id:'i', p_role:'executor', p_signature_image:'data:image/png;base64,AAAA' })
     expect(tables.itr_signatures).toEqual([])
+  })
+  it('C-26 (S05): rejects a signature that is not a PNG data URL or is too large', async () => {
+    expect((await signItr('i','executor','p','t','image')).error).toBeTruthy()
+    expect((await signItr('i','executor','p','t',`data:image/png;base64,${'A'.repeat(360_000)}`)).error).toBeTruthy()
+    expect(rpc).not.toHaveBeenCalled()
   })
   it('surfaces a rejected transaction', async () => {
     rpcResult = { data:null, error:{message:'Applicable content incomplete or rejected'} }
