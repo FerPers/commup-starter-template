@@ -41,7 +41,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S07 | Importaciones sin pérdida de datos | S03 | D9 | ✅ **Hecha** 2026-10-19 (6d3c75f; migración 20261031120000 en prod, 7 escenarios con ROLLBACK). Detalle en la cobertura |
 | S08 | Preservación | S03 | D10 | ✅ **Hecha** 2026-10-19 (68498e6; migración 20261102120000 en prod, 10+1 escenarios con ROLLBACK). Detalle en la cobertura |
 | S09 | Índices y «cero filas para contar» | S03 | D11 | ✅ Hecha (fc36e63) |
-| S10 | Reporte diario y zona horaria | S03 | D12 | Pendiente |
+| S10 | Reporte diario y zona horaria | S03 | D12 | ✅ **Hecha** 2026-10-20 (migración 20261105120000 en prod, 8 escenarios con ROLLBACK; 24 funciones con «hoy» del proyecto). Detalle en la cobertura |
 | S11 | Lógica de gates | S03 | D13 | Pendiente |
 | S12 | IIoT confiable | S03 | — | Pendiente |
 | S13 | Correcciones de F8 (documentos y vendors) | S03 | — | Pendiente |
@@ -101,7 +101,7 @@ Cada una trae mi recomendación. Se responden antes de la sesión que la necesit
 | D9 | Reimportación | Una columna que no viene en el archivo no se toca; mover de subsistema un tag con ITR o punch exige un flujo explícito. | S07 | ✅ 2026-10-19: según recomendación (la celda vacía tampoco borra; la importación no mueve un tag con ITR o punch y lo informa). |
 | D10 | Preservación: cuándo avanza la próxima fecha | Al **finalizar** el registro, con cualquier resultado; un NOK genera punch o acción. | S08 | ✅ 2026-10-19: según recomendación; el NOK genera **punch** obligatorio (la variante «acción» queda para cuando se pida). |
 | D11 | Snapshots históricos calculados con datos truncados | Marcarlos «sospechosos» (no se pueden recalcular hacia atrás). | S09 | ✅ 2026-10-19: según recomendación. `kpi_snapshots.suspect` (contador ≥ 1000 o fecha ≥ el día en que el proyecto pasó 1000 ITR/punches/planes); hoy marca 0 filas (prod solo tiene DEMO, 14 ITR). La curva S los dibuja huecos y el Excel los rotula. |
-| D12 | Zona horaria y reportes ya emitidos | `projects.timezone` (por defecto `America/Bogota`). Los reportes emitidos quedan inmutables con una nota; solo se corrigen si alguien emite una revisión. | S10 | |
+| D12 | Zona horaria y reportes ya emitidos | `projects.timezone` (por defecto `America/Bogota`). Los reportes emitidos quedan inmutables con una nota; solo se corrigen si alguien emite una revisión. | S10 | ✅ Recomendada (2026-10-20) |
 | D13 | Regresión de un gate | El gate anterior en regresión **bloquea** el siguiente; una dependencia entre sistemas en regresión es **condición** (amarillo). Configurable por org. | S11 | |
 | D14 | Modelo de firmantes | Capacidades por persona y proyecto (`commissioning`, `operations`, `hse`, `client_rep`) asignadas por un líder, opcionalmente atadas a la empresa de F8; el rol queda como piso. La membresía por proyecto (que el cliente vea solo sus proyectos) va al trimestre, salvo que ya tengas un cliente con varios proyectos en la misma org. | S14 | |
 | D15 | Quién firma «Cliente» en el certificado | Quien tenga la capacidad `client_rep` (rol `client` o empresa owner). | S17 | |
