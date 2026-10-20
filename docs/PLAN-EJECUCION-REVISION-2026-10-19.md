@@ -43,7 +43,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S09 | Índices y «cero filas para contar» | S03 | D11 | ✅ Hecha (fc36e63) |
 | S10 | Reporte diario y zona horaria | S03 | D12 | ✅ **Hecha** 2026-10-20 (migración 20261105120000 en prod, 8 escenarios con ROLLBACK; 24 funciones con «hoy» del proyecto). Detalle en la cobertura |
 | S11 | Lógica de gates | S03 | D13 | ✅ **Hecha** 2026-10-20 (migración 20261106120000 en prod, 13 escenarios con ROLLBACK). Detalle en la cobertura |
-| S12 | IIoT confiable | S03 | — | Pendiente |
+| S12 | IIoT confiable | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261107120000 en prod, 9 escenarios con ROLLBACK; `signal_samples` particionada). Detalle en la cobertura |
 | S13 | Correcciones de F8 (documentos y vendors) | S03 | — | Pendiente |
 | S14 | Firmantes designados (capacidades) y roles | S03 | D14 | Pendiente |
 | S15 | Miembros, auditoría y cuotas | S03 | — | Pendiente |
