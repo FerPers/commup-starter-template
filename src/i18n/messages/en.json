@@ -963,7 +963,18 @@
       "confirm": "Remove from organization",
       "cancel": "Cancel"
     },
-    "confirmRemove": "Remove {name} from the organization?"
+    "confirmRemove": "Remove {name} from the organization?",
+    "access": {
+      "invited": "Invitation pending acceptance",
+      "suspended": "Suspended: {reason}",
+      "expired": "Access expired",
+      "until": "Access until {date}",
+      "expiresLabel": "Access until (optional)",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "suspendPrompt": "Reason to suspend {name} (they stop seeing the organization; their history and signatures are kept):",
+      "saved": "Access updated"
+    }
   },
   "Config": {
     "title": "Organization Configuration",
@@ -5004,5 +5015,18 @@
     "clientRepRule": "Only people with the client role or from the operating company (company type «Owner» in Companies).",
     "history": "History ({n})",
     "revokedBy": "removed by {who} · {when}: {reason}"
+  },
+  "Access": {
+    "title": "Your CommUp access",
+    "banner": "{n, plural, one {You have a pending invitation from {org}.} other {You have # pending invitations.}}",
+    "review": "Review",
+    "none": "You have no pending invitations or suspended access.",
+    "invited": "You were invited as {role}. You won't see anything from this organization until you accept.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "suspended": "Your access is suspended: {reason}. Contact an administrator of the organization.",
+    "expired": "Your access expired. Contact an administrator of the organization to renew it.",
+    "back": "← Back to CommUp",
+    "logout": "Log out"
   }
 }

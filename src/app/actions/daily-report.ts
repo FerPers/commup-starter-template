@@ -1,6 +1,5 @@
 'use server'
 
-import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { getLocale } from 'next-intl/server'
@@ -8,7 +7,9 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
-import { AI_NOT_CONFIGURED, CLAUDE_MODEL, createClaudeClient, isAiConfigured } from '@/lib/ai/claude'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
+import { AI_NOT_CONFIGURED, isAiConfigured } from '@/lib/ai/claude'
+import { runAi } from '@/lib/ai/run'
 import { REPORT_SECTIONS, reportFacts, type ReportData, type ReportSections } from '@/lib/daily/report'
 
 // Reporte diario y relevo de turno (fase 5 plan readiness, sesión 3). Toda escritura pasa por RPC
@@ -83,7 +84,8 @@ export const refreshDailyReportData = withAuth(
  * ai_draft y solo llena secciones vacías; con `replace` (confirmado en la UI) las reemplaza todas.
  */
 export const generateDailyReportAi = withAuth(
-  { guards: projectGuard },
+  // S15 (A-13/I-19): IA solo para líder+ (antes un client llegaba a pagar la llamada antes de que la RPC lo rechazara).
+  { role: EDITOR_ROLES, guards: projectGuard },
   async (ctx, input: { projectId: string; reportId: string; replace?: boolean }): Promise<{ error?: string }> => {
     if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED }
     const { data: report } = await ctx.supabase.from('daily_reports').select('id, status, data')
@@ -92,24 +94,16 @@ export const generateDailyReportAi = withAuth(
     if (report.status !== 'draft') return { error: 'El reporte ya fue emitido' }
 
     const locale = await getLocale()
-    let response
-    try {
-      response = await createClaudeClient().messages.parse({
-        model: CLAUDE_MODEL,
+    const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, projectId: input.projectId, feature: 'daily_report' }, (client, model) =>
+      client.messages.parse({
+        model,
         max_tokens: 6000,
         output_config: { effort: 'medium', format: zodOutputFormat(ReportOutput) },
         system: REPORT_RULES(locale === 'en' ? 'English' : 'español'),
         messages: [{ role: 'user', content: `DATOS:\n\n${reportFacts(report.data as unknown as ReportData)}\n\nRedacta las 5 secciones del reporte diario.` }],
-      })
-    } catch (err) {
-      console.error('[daily-report] Claude error:', err)
-      if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
-        return { error: 'La clave de la IA (ANTHROPIC_API_KEY) no es válida en este entorno. Pídele al administrador de la plataforma que la renueve.' }
-      }
-      if (err instanceof Anthropic.RateLimitError) return { error: 'La IA está saturada en este momento. Intenta de nuevo en unos minutos.' }
-      return { error: 'No se pudo consultar la IA. Intenta de nuevo en unos minutos.' }
-    }
-    if (response.stop_reason === 'refusal') return { error: 'El modelo declinó la solicitud.' }
+      }))
+    if (!run.response) return { error: run.error }
+    const response = run.response
     const parsed = response.parsed_output
     if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
 

@@ -8,7 +8,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { authenticateApiKey, parsePagination, apiHeaders } from '@/lib/api/auth'
+import { authenticateApiKey, parsePagination, apiHeaders, apiDbError } from '@/lib/api/auth'
 import type { Enums } from '@/types/supabase.generated'
 
 const TAG_STATUSES: Enums<'tag_status'>[] = ['not_started', 'in_progress', 'completed', 'on_hold']
@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Project not found or not accessible' }, { status: 404, headers: apiHeaders() })
   }
 
+  // S15 (A-25): count real para meta.total (antes era el tamaño de la página).
   let query = admin
     .from('tag_360')
     .select(`
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
       open_punches_a, open_punches_b, open_punches_c,
       certs_issued, preservation_active_plans,
       pid_hotspot_count, semaforo_global
-    `)
+    `, { count: 'exact' })
     .eq('project_id', projectId)
     .eq('org_id', auth.orgId)
     .order('tag_number')
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500, headers: apiHeaders() })
+    return apiDbError(500, error)
   }
 
   // Rename tag_id → id for cleaner API surface
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest) {
   }))
 
   return NextResponse.json(
-    { data: items, meta: { limit, offset, total: count ?? items.length } },
+    { data: items, meta: { limit, offset, total: count ?? null } },
     { headers: apiHeaders() },
   )
 }
@@ -148,7 +149,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400, headers: apiHeaders() })
+    return apiDbError(400, error)
   }
 
   // Publish domain event

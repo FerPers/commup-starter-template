@@ -6,7 +6,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { authenticateApiKey, parsePagination, apiHeaders } from '@/lib/api/auth'
+import { authenticateApiKey, parsePagination, apiHeaders, apiDbError } from '@/lib/api/auth'
 import type { Enums } from '@/types/supabase.generated'
 
 const CERT_STATUSES: Enums<'certificate_status'>[] = ['pending', 'in_review', 'issued', 'rejected']
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: apiHeaders() })
+  if (error) return apiDbError(500, error)
 
   return NextResponse.json(
     { data: data ?? [], meta: { limit, offset } },

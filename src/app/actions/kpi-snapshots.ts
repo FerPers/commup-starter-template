@@ -47,6 +47,8 @@ const SNAPSHOT_HISTORY_DAYS = 730
 export async function getSubsystemKpis(projectId: string): Promise<SubsystemKpi[]> {
   const ctx = await getCtx()
   if (!ctx) return []
+  // S15 (A-22): el proyecto debe ser de la org activa (antes bastaba con la RLS de cualquier org del usuario).
+  if (!(await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)).ok) return []
 
   const { supabase } = ctx
 
@@ -87,6 +89,8 @@ export async function getSubsystemKpis(projectId: string): Promise<SubsystemKpi[
 export async function getProjectSnapshots(projectId: string): Promise<SnapshotRow[]> {
   const ctx = await getCtx()
   if (!ctx) return []
+  // S15 (A-22): el proyecto debe ser de la org activa (antes bastaba con la RLS de cualquier org del usuario).
+  if (!(await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)).ok) return []
 
   const { data } = await ctx.supabase
     .from('kpi_snapshots')

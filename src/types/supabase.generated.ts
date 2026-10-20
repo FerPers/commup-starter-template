@@ -214,6 +214,72 @@ export type Database = {
           },
         ]
       }
+      ai_usage: {
+        Row: {
+          cache_read_tokens: number
+          cache_write_tokens: number
+          cost_usd: number
+          created_at: string
+          feature: string
+          id: string
+          input_tokens: number
+          model: string
+          ok: boolean
+          org_id: string
+          output_tokens: number
+          project_id: string | null
+          stop_reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
+          cost_usd?: number
+          created_at?: string
+          feature: string
+          id?: string
+          input_tokens?: number
+          model: string
+          ok?: boolean
+          org_id: string
+          output_tokens?: number
+          project_id?: string | null
+          stop_reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
+          cost_usd?: number
+          created_at?: string
+          feature?: string
+          id?: string
+          input_tokens?: number
+          model?: string
+          ok?: boolean
+          org_id?: string
+          output_tokens?: number
+          project_id?: string | null
+          stop_reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           created_at: string
@@ -3957,27 +4023,48 @@ export type Database = {
       }
       org_members: {
         Row: {
+          access_expires_at: string | null
           company_id: string | null
           id: string
+          invited_at: string | null
+          invited_by: string | null
           joined_at: string
           org_id: string
           role: Database["public"]["Enums"]["org_member_role"]
+          status: string
+          suspend_reason: string | null
+          suspended_at: string | null
+          suspended_by: string | null
           user_id: string
         }
         Insert: {
+          access_expires_at?: string | null
           company_id?: string | null
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           joined_at?: string
           org_id: string
           role?: Database["public"]["Enums"]["org_member_role"]
+          status?: string
+          suspend_reason?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
           user_id: string
         }
         Update: {
+          access_expires_at?: string | null
           company_id?: string | null
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           joined_at?: string
           org_id?: string
           role?: Database["public"]["Enums"]["org_member_role"]
+          status?: string
+          suspend_reason?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
           user_id?: string
         }
         Relationships: [
@@ -11795,6 +11882,16 @@ export type Database = {
         }
         Returns: string
       }
+      add_org_member: {
+        Args: {
+          p_expires_at?: string
+          p_org_id: string
+          p_role: string
+          p_status?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       add_performance_manual_reading: {
         Args: {
           p_at: string
@@ -11844,6 +11941,13 @@ export type Database = {
           p_to: string
         }
         Returns: string
+      }
+      ai_quota_status: {
+        Args: { p_org_id: string }
+        Returns: {
+          budget_usd: number
+          used_usd: number
+        }[]
       }
       analytics_project_forecast: {
         Args: { p_project_id: string }
@@ -11897,6 +12001,7 @@ export type Database = {
         }
         Returns: string
       }
+      auth_user_id_by_email: { Args: { p_email: string }; Returns: string }
       bootstrap_org: {
         Args: { p_input: Json; p_user_id: string }
         Returns: Json
@@ -12489,13 +12594,15 @@ export type Database = {
           p_entity_type: string
           p_local_payload: Json
           p_local_ts: string
-          p_notes?: string
+          p_notes: string
+          p_project_id?: string
           p_remote_payload: Json
           p_remote_ts: string
           p_winner: string
         }
         Returns: string
       }
+      member_caller_role: { Args: { p_org_id: string }; Returns: string }
       member_company_name: {
         Args: { p_org_id: string; p_user_id: string }
         Returns: string
@@ -12574,10 +12681,12 @@ export type Database = {
         }
         Returns: string
       }
+      org_ai_budget: { Args: { p_org_id: string }; Returns: number }
       org_caller_role: { Args: { p_org_id: string }; Returns: string }
       org_cat_b_limit: { Args: { p_org_id: string }; Returns: number }
       org_document_policy: { Args: { p_org_id: string }; Returns: string }
       org_gate_policy: { Args: { p_org_id: string }; Returns: Json }
+      org_last_active_owner: { Args: { p_member_id: string }; Returns: boolean }
       ownership_checklist: {
         Args: { p_system_id: string; p_to_stage: string }
         Returns: Json
@@ -12793,6 +12902,7 @@ export type Database = {
         Args: { p_reference_id: string }
         Returns: undefined
       }
+      remove_org_member: { Args: { p_member_id: string }; Returns: undefined }
       reopen_itr_atomic: {
         Args: { p_itr_id: string; p_reason: string }
         Returns: Json
@@ -12812,6 +12922,10 @@ export type Database = {
       }
       resolve_punch: {
         Args: { p_comment: string; p_punch_id: string }
+        Returns: undefined
+      }
+      respond_org_invitation: {
+        Args: { p_accept: boolean; p_org_id: string }
         Returns: undefined
       }
       return_itr_to_executor: {
@@ -12995,8 +13109,21 @@ export type Database = {
         }
         Returns: string
       }
+      set_member_access: {
+        Args: {
+          p_expires_at?: string
+          p_member_id: string
+          p_reason?: string
+          p_status: string
+        }
+        Returns: undefined
+      }
       set_member_company: {
         Args: { p_company_id: string; p_org_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      set_member_role: {
+        Args: { p_member_id: string; p_role: string }
         Returns: undefined
       }
       set_performance_disturbance_exclusion: {
@@ -13328,8 +13455,9 @@ export type Database = {
       upsert_push_subscription: {
         Args: {
           p_auth_secret: string
-          p_device_info?: Json
+          p_device_info: Json
           p_endpoint: string
+          p_org_id?: string
           p_p256dh: string
           p_topics: string[]
         }

@@ -7,7 +7,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { authenticateApiKey, apiHeaders } from '@/lib/api/auth'
+import { authenticateApiKey, apiHeaders, apiDbError } from '@/lib/api/auth'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400, headers: apiHeaders() })
+    return apiDbError(400, error)
   }
 
   await admin.from('domain_events').insert({

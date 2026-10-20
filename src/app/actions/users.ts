@@ -5,7 +5,6 @@ import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { logActivity } from '@/lib/log-activity'
 
 // ── inviteUser ─────────────────────────────────────────────────────────────
 
@@ -13,89 +12,66 @@ const INVITABLE_ROLES: OrgMemberRole[] = ['owner', 'admin', 'architect', 'leader
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://commup.app'
 
+/** Mensaje único: no revela si el correo ya tenía cuenta en CommUp (A-21). */
+const INVITE_SENT = 'Invitación enviada'
+
+/**
+ * S15 (A-21/I-21): cuenta existente → invitación pendiente que la persona acepta (status 'invited'); cuenta nueva →
+ * correo de Supabase y membresía activa (aceptar = fijar su contraseña). Email sin mayúsculas; la búsqueda es una RPC
+ * sobre auth.users (antes se listaban 1000 usuarios). Vencimiento opcional del acceso (contratistas, vendors).
+ */
 export const inviteUser = withAuth(
   { role: ADMIN_ROLES },
   async (
     ctx,
-    input: { email: string; role: string },
-  ): Promise<{ error?: string }> => {
-  const { email } = input
+    input: { email: string; role: string; expiresAt?: string | null },
+  ): Promise<{ error?: string; message?: string }> => {
+  const email = (input.email ?? '').trim().toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Correo no válido' }
   const role = input.role as OrgMemberRole
   if (!INVITABLE_ROLES.includes(role)) return { error: 'Rol inválido' }
   if (role === 'owner' && ctx.role !== 'owner') {
     return { error: 'Solo un owner puede invitar a otro owner' }
   }
+  const expiresAt = input.expiresAt ? new Date(input.expiresAt).toISOString() : null
   const admin = createAdminClient()
 
-  // Check if user already exists in auth (default page size is 50 — insufficient)
-  const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-  const existingUser = existingList?.users.find(u => u.email === email)
+  const { data: existingId, error: lookupErr } = await admin.rpc('auth_user_id_by_email', { p_email: email })
+  if (lookupErr) return { error: 'No se pudo enviar la invitación. Intenta de nuevo.' }
 
-  if (existingUser) {
-    const { data: existingMember } = await ctx.supabase
-      .from('org_members')
-      .select('id')
-      .eq('org_id', ctx.orgId)
-      .eq('user_id', existingUser.id)
-      .maybeSingle()
-
-    if (existingMember) return { error: 'Este usuario ya es miembro de la organización' }
-
-    const { error } = await ctx.supabase
-      .from('org_members')
-      .insert({ org_id: ctx.orgId, user_id: existingUser.id, role })
-
-    if (error) return { error: error.message }
-
-    await logActivity(ctx.supabase, {
-      orgId: ctx.orgId, userId: ctx.userId,
-      entityType: 'user', entityId: existingUser.id,
-      action: 'invited', payload: { email, role },
+  if (existingId) {
+    const { error } = await ctx.supabase.rpc('add_org_member', {
+      p_org_id: ctx.orgId, p_user_id: existingId as string, p_role: role, p_status: 'invited',
+      ...(expiresAt ? { p_expires_at: expiresAt } : {}),
     })
-
+    // Ya miembro o invitación pendiente: se informa igual que un envío para no revelar cuentas.
+    if (error && error.code !== '23505') return { error: error.message }
     revalidatePath('/admin/users')
-    return {}
+    return { message: INVITE_SENT }
   }
 
-  // New user — try email invitation first
+  // Cuenta nueva: invitación por correo (el enlace fija la contraseña).
   const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { org_id: ctx.orgId, invited_role: role },
-    // El enlace del correo autentica al invitado y aterriza aquí para fijar su contraseña
     redirectTo: `${SITE_URL}/auth/set-password`,
   })
-
-  if (!inviteErr && invited?.user) {
-    const { error: profileErr } = await admin.from('profiles').upsert(
-      { id: invited.user.id, full_name: email.split('@')[0] },
-      { onConflict: 'id' }
-    )
-    if (profileErr) {
-      return { error: `Usuario invitado pero perfil no se pudo crear: ${profileErr.message}` }
-    }
-
-    // Surfacing this error matters: prior versions silently dropped it, leaving
-    // auth users without a membership row (orphans visible in admin/users only
-    // by the "pending confirmation" badge).
-    const { error: memberErr } = await admin
-      .from('org_members')
-      .insert({ org_id: ctx.orgId, user_id: invited.user.id, role })
-    if (memberErr) {
-      return { error: `Usuario invitado pero no se pudo agregar a la organización: ${memberErr.message}` }
-    }
-
-    await logActivity(ctx.supabase, {
-      orgId: ctx.orgId, userId: ctx.userId,
-      entityType: 'user', entityId: invited.user.id,
-      action: 'invited', payload: { email, role },
-    })
-
-    revalidatePath('/admin/users')
-    return {}
+  if (inviteErr || !invited?.user) {
+    // Sin fallback de contraseña temporal (Sprint S): el SMTP está configurado
+    // y una clave generada en servidor y mostrada en pantalla es un riesgo.
+    return { error: `No se pudo enviar la invitación por correo: ${inviteErr?.message ?? 'error desconocido'}. Revisa la configuración SMTP en Supabase Auth.` }
   }
-
-  // Sin fallback de contraseña temporal (Sprint S): el SMTP está configurado
-  // y una clave generada en servidor y mostrada en pantalla es un riesgo.
-  return { error: `No se pudo enviar la invitación por correo: ${inviteErr?.message ?? 'error desconocido'}. Revisa la configuración SMTP en Supabase Auth.` }
+  const { error: profileErr } = await admin.from('profiles').upsert(
+    { id: invited.user.id, full_name: email.split('@')[0] },
+    { onConflict: 'id' }
+  )
+  if (profileErr) return { error: `Usuario invitado pero perfil no se pudo crear: ${profileErr.message}` }
+  const { error: memberErr } = await ctx.supabase.rpc('add_org_member', {
+    p_org_id: ctx.orgId, p_user_id: invited.user.id, p_role: role, p_status: 'active',
+    ...(expiresAt ? { p_expires_at: expiresAt } : {}),
+  })
+  if (memberErr) return { error: `Usuario invitado pero no se pudo agregar a la organización: ${memberErr.message}` }
+  revalidatePath('/admin/users')
+  return { message: INVITE_SENT }
   },
 )
 
@@ -107,53 +83,33 @@ export const updateMemberRole = withAuth(
     ctx,
     input: { memberId: string; role: OrgMemberRole },
   ): Promise<{ error?: string }> => {
-  const { data: member } = await ctx.supabase
-    .from('org_members')
-    .select('user_id, role')
-    .eq('id', input.memberId)
-    .eq('org_id', ctx.orgId)
-    .single()
-
+  // S15 (A-02/I-12): las reglas de owner y de último owner viven en la RPC set_member_role.
+  const { data: member } = await ctx.supabase.from('org_members').select('id').eq('id', input.memberId).eq('org_id', ctx.orgId).maybeSingle()
   if (!member) return { error: 'Miembro no encontrado' }
-
-  // Only owners can mutate owner rows (admins cannot demote/promote owners).
-  if (member.role === 'owner' && ctx.role !== 'owner') {
-    return { error: 'Solo un owner puede cambiar el rol de otro owner' }
-  }
-  if (input.role === 'owner' && ctx.role !== 'owner') {
-    return { error: 'Solo un owner puede asignar el rol de owner' }
-  }
-
-  if (member.user_id === ctx.userId && member.role === 'owner' && input.role !== 'owner') {
-    return { error: 'No puedes cambiar tu propio rol de owner' }
-  }
-
-  // Last-owner protection: never let the org end up with zero owners.
-  if (member.role === 'owner' && input.role !== 'owner') {
-    const { count } = await ctx.supabase
-      .from('org_members')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', ctx.orgId)
-      .eq('role', 'owner')
-    if ((count ?? 0) <= 1) {
-      return { error: 'No puedes degradar al último owner de la organización' }
-    }
-  }
-
-  const { error } = await ctx.supabase
-    .from('org_members')
-    .update({ role: input.role })
-    .eq('id', input.memberId)
-    .eq('org_id', ctx.orgId)
-
+  const { error } = await ctx.supabase.rpc('set_member_role', { p_member_id: input.memberId, p_role: input.role })
   if (error) return { error: error.message }
+  revalidatePath('/admin/users')
+  return {}
+  },
+)
 
-  await logActivity(ctx.supabase, {
-    orgId: ctx.orgId, userId: ctx.userId,
-    entityType: 'user', entityId: member.user_id,
-    action: 'role_updated', payload: { memberId: input.memberId, newRole: input.role },
+/** S15 (I-21): suspender / reactivar y fijar o quitar el vencimiento del acceso. */
+export const setMemberAccess = withAuth(
+  { role: ADMIN_ROLES },
+  async (
+    ctx,
+    input: { memberId: string; status: 'active' | 'suspended'; expiresAt?: string | null; reason?: string },
+  ): Promise<{ error?: string }> => {
+  if (input.status !== 'active' && input.status !== 'suspended') return { error: 'Estado inválido' }
+  const { data: member } = await ctx.supabase.from('org_members').select('id').eq('id', input.memberId).eq('org_id', ctx.orgId).maybeSingle()
+  if (!member) return { error: 'Miembro no encontrado' }
+  const reason = (input.reason ?? '').trim().slice(0, 500)
+  const { error } = await ctx.supabase.rpc('set_member_access', {
+    p_member_id: input.memberId, p_status: input.status,
+    ...(input.expiresAt ? { p_expires_at: new Date(input.expiresAt).toISOString() } : {}),
+    ...(reason ? { p_reason: reason } : {}),
   })
-
+  if (error) return { error: error.message }
   revalidatePath('/admin/users')
   return {}
   },
@@ -231,42 +187,11 @@ export const removeMember = withAuth(
     ctx,
     input: { memberId: string },
   ): Promise<{ error?: string }> => {
-  const { data: member } = await ctx.supabase
-    .from('org_members')
-    .select('user_id, role')
-    .eq('id', input.memberId)
-    .eq('org_id', ctx.orgId)
-    .single()
-
+  // S15 (A-02/I-12): reglas (no a sí mismo, solo owner quita owner, nunca sin owner activo) en la RPC.
+  const { data: member } = await ctx.supabase.from('org_members').select('id').eq('id', input.memberId).eq('org_id', ctx.orgId).maybeSingle()
   if (!member) return { error: 'Miembro no encontrado' }
-  if (member.user_id === ctx.userId) return { error: 'No puedes removerte a ti mismo' }
-
-  if (member.role === 'owner') {
-    if (ctx.role !== 'owner') return { error: 'Solo un owner puede remover a otro owner' }
-    const { count } = await ctx.supabase
-      .from('org_members')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', ctx.orgId)
-      .eq('role', 'owner')
-    if ((count ?? 0) <= 1) {
-      return { error: 'No puedes remover al último owner de la organización' }
-    }
-  }
-
-  const { error } = await ctx.supabase
-    .from('org_members')
-    .delete()
-    .eq('id', input.memberId)
-    .eq('org_id', ctx.orgId)
-
+  const { error } = await ctx.supabase.rpc('remove_org_member', { p_member_id: input.memberId })
   if (error) return { error: error.message }
-
-  await logActivity(ctx.supabase, {
-    orgId: ctx.orgId, userId: ctx.userId,
-    entityType: 'user', entityId: member.user_id,
-    action: 'removed', payload: { memberId: input.memberId },
-  })
-
   revalidatePath('/admin/users')
   return {}
   },

@@ -3,7 +3,7 @@
 import type { OrgMemberRole } from '@/types/database'
 import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
-import { inviteUser, updateMemberRole, removeMember, getMemberRemovalContext, type MemberRemovalContext } from '@/app/actions/users'
+import { inviteUser, updateMemberRole, removeMember, setMemberAccess, getMemberRemovalContext, type MemberRemovalContext } from '@/app/actions/users'
 import { setMemberCompany } from '@/app/actions/documents'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
@@ -17,6 +17,10 @@ type Member = {
   email: string
   lastActive: string | null
   companyId: string | null
+  /** S15 (I-21): invited · active · suspended, y vencimiento del acceso. */
+  status: string
+  accessExpiresAt: string | null
+  suspendReason: string | null
 }
 
 type PendingInvite = {
@@ -102,6 +106,7 @@ export default function UsersView({
   const [isPending, startTransition] = useTransition()
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('inspector')
+  const [inviteExpires, setInviteExpires] = useState('')
   const [showInvite, setShowInvite] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -149,9 +154,10 @@ export default function UsersView({
     setError(null)
     startTransition(async () => {
       const email = inviteEmail.trim()
-      const res = await inviteUser({ email, role: inviteRole })
+      const res = await inviteUser({ email, role: inviteRole, expiresAt: inviteExpires ? `${inviteExpires}T23:59:59` : null })
       if (res.error) { setError(res.error); return }
       setInviteEmail('')
+      setInviteExpires('')
       setShowInvite(false)
       notify(t('invite.successEmail'))
     })
@@ -162,6 +168,21 @@ export default function UsersView({
     startTransition(async () => {
       const res = await setMemberCompany({ userId, companyId: companyId || null })
       if (res.error) setError(res.error)
+    })
+  }
+
+  // S15 (I-21): suspender (con motivo), reactivar y fijar o quitar el vencimiento del acceso.
+  function handleAccess(m: Member, next: { status: 'active' | 'suspended'; expiresAt?: string | null }) {
+    let reason: string | undefined
+    if (next.status === 'suspended') {
+      reason = window.prompt(t('access.suspendPrompt', { name: m.fullName })) ?? undefined
+      if (!reason || reason.trim().length < 3) return
+    }
+    setError(null)
+    startTransition(async () => {
+      const res = await setMemberAccess({ memberId: m.id, status: next.status, expiresAt: next.expiresAt ?? null, reason })
+      if (res.error) { setError(res.error); return }
+      notify(t('access.saved'))
     })
   }
 
@@ -292,6 +313,11 @@ export default function UsersView({
                     <option key={r} value={r}>{roleLabels[r] ?? r}</option>
                   ))}
               </select>
+            </div>
+            <div>
+              <label style={labelStyle}>{t('access.expiresLabel')}</label>
+              <input type="date" value={inviteExpires} onChange={e => setInviteExpires(e.target.value)} aria-label={t('access.expiresLabel')}
+                style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '14px', background: 'var(--card-bg)', color: 'var(--text-strong)' }} />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
@@ -435,6 +461,16 @@ export default function UsersView({
                                 </span>
                               )}
                             </div>
+                            {(() => {
+                              const expired = !!m.accessExpiresAt && new Date(m.accessExpiresAt) <= new Date()
+                              const label = m.status === 'invited' ? t('access.invited')
+                                : m.status === 'suspended' ? t('access.suspended', { reason: m.suspendReason ?? '' })
+                                  : expired ? t('access.expired')
+                                    : m.accessExpiresAt ? t('access.until', { date: m.accessExpiresAt.slice(0, 10) }) : null
+                              if (!label) return null
+                              const bad = m.status === 'suspended' || expired
+                              return <div suppressHydrationWarning style={{ fontSize: '11px', marginTop: 2, color: bad ? '#b91c1c' : m.status === 'invited' ? '#1d4ed8' : 'var(--gray-400)' }}>{label}</div>
+                            })()}
                           </div>
                         </div>
                       </td>
@@ -486,6 +522,19 @@ export default function UsersView({
                         {formatLastActive(m.lastActive, t)}
                       </td>
                       <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                        {isAdmin && !isSelf && (!isOwner || currentRole === 'owner') && m.status !== 'invited' && (
+                          <span style={{ display: 'inline-flex', gap: 6, marginRight: 6, alignItems: 'center' }}>
+                            <input type="date" aria-label={t('access.expiresLabel')} disabled={isPending} defaultValue={m.accessExpiresAt?.slice(0, 10) ?? ''}
+                              title={t('access.expiresLabel')}
+                              onChange={e => handleAccess(m, { status: m.status === 'suspended' ? 'suspended' : 'active', expiresAt: e.target.value ? `${e.target.value}T23:59:59` : null })}
+                              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', background: 'var(--card-bg)', color: 'var(--text-strong)' }} />
+                            <button type="button" disabled={isPending}
+                              onClick={() => handleAccess(m, { status: m.status === 'suspended' ? 'active' : 'suspended', expiresAt: m.accessExpiresAt })}
+                              style={{ padding: '6px 10px', background: 'transparent', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-strong)', cursor: 'pointer' }}>
+                              {m.status === 'suspended' ? t('access.reactivate') : t('access.suspend')}
+                            </button>
+                          </span>
+                        )}
                         {isAdmin && !isSelf && (!isOwner || currentRole === 'owner') && (
                           <button
                             onClick={() => openRemove(m.id, m.fullName)}

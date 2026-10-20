@@ -15,6 +15,11 @@
 	"observability": {
 		"enabled": true
 	},
+	// S15 (A-13): límite de peticiones de la API v1 por API key (y por IP para claves inválidas).
+	// 600 por minuto por clave; ver src/lib/api/rate-limit.ts.
+	"ratelimits": [
+		{ "name": "API_RATE_LIMITER", "namespace_id": "1501", "simple": { "limit": 600, "period": 60 } }
+	],
 	"upload_source_maps": true
 	// Cron schedules live in .github/workflows/cron.yml (GitHub Actions hits
 	// /api/cron/* via HTTPS). OpenNext does not emit a `scheduled` handler

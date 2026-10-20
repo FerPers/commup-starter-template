@@ -3,7 +3,8 @@
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { AI_NOT_CONFIGURED, CLAUDE_MODEL, createClaudeClient, isAiConfigured } from '@/lib/ai/claude'
+import { AI_NOT_CONFIGURED, isAiConfigured, type createClaudeClient } from '@/lib/ai/claude'
+import { runAi } from '@/lib/ai/run'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
@@ -86,21 +87,16 @@ export const extractCeMatrixWithAi = withAuthOnly(
       ]
     } else return { error: 'Adjunta una hoja de Excel o un PDF' }
 
-    let parsed: AiCeOutput | null
-    try {
-      const response = await createClaudeClient().messages.parse({
-        model: CLAUDE_MODEL,
-        max_tokens: 16000,
-        output_config: { effort: 'medium', format: zodOutputFormat(AiCeOutput) },
-        system: SYSTEM_RULES,
-        messages: [{ role: 'user', content }],
-      })
-      if (response.stop_reason === 'refusal') return { error: 'El modelo declinó la solicitud.' }
-      if (response.stop_reason === 'max_tokens') return { error: 'La matriz es demasiado grande para una sola lectura: divide el documento.' }
-      parsed = response.parsed_output
-    } catch (e) {
-      return { error: `No se pudo leer el documento con IA: ${e instanceof Error ? e.message : 'error desconocido'}` }
-    }
+    const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, projectId, feature: 'ce_import' }, (client, model) => client.messages.parse({
+      model,
+      max_tokens: 16000,
+      output_config: { effort: 'medium', format: zodOutputFormat(AiCeOutput) },
+      system: SYSTEM_RULES,
+      messages: [{ role: 'user', content }],
+    }))
+    if (!run.response) return { error: run.error }
+    if (run.response.stop_reason === 'max_tokens') return { error: 'La matriz es demasiado grande para una sola lectura: divide el documento.' }
+    const parsed: AiCeOutput | null = run.response.parsed_output
     if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
     if (!parsed.causes.length || !parsed.effects.length) return { error: `No se encontró una matriz causa-efecto en el documento.${parsed.warnings.length ? ` ${parsed.warnings.join(' · ')}` : ''}` }
 

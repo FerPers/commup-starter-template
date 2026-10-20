@@ -6,7 +6,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { authenticateApiKey, apiHeaders } from '@/lib/api/auth'
+import { authenticateApiKey, apiHeaders, apiDbError } from '@/lib/api/auth'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     .eq('org_id', auth.orgId)
     .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: apiHeaders() })
+  if (error) return apiDbError(500, error)
   if (!pkg)  return NextResponse.json({ error: 'Package not found' }, { status: 404, headers: apiHeaders() })
 
   const [jsonSigned, pdfSigned] = await Promise.all([

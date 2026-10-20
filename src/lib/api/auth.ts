@@ -10,6 +10,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isRateLimited } from './rate-limit'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,6 +100,9 @@ export async function authenticateApiKey(
     .maybeSingle()
 
   if (error || !key) {
+    // S15 (A-13): frena la fuerza bruta de claves por IP.
+    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+    if (await isRateLimited(`ip:${ip}`)) return fail(429, 'Too many requests')
     return fail(401, 'Invalid API key')
   }
 
@@ -108,6 +112,13 @@ export async function authenticateApiKey(
   }
   if (key.expires_at && new Date(key.expires_at) < new Date()) {
     return fail(401, 'API key has expired')
+  }
+
+  // S15 (A-13): 600 peticiones por minuto por API key.
+  if (await isRateLimited(`key:${key.id}`)) {
+    const res = fail(429, 'Rate limit exceeded: 600 requests per minute per API key')
+    res.response.headers.set('Retry-After', '60')
+    return res
   }
 
   // 5. Check required scopes
@@ -157,11 +168,34 @@ function fail(status: number, message: string): AuthFail {
 
 // ── Pagination helper ────────────────────────────────────────────────────────
 
+/** S15 (A-25): limit ∈ [1, 500] (antes un negativo pasaba), offset ≥ 0; valores no numéricos → por defecto. */
 export function parsePagination(req: NextRequest): { limit: number; offset: number } {
   const { searchParams } = new URL(req.url)
-  const limit  = Math.min(parseInt(searchParams.get('limit')  ?? '100'), 500)
-  const offset = Math.max(parseInt(searchParams.get('offset') ?? '0'),   0)
-  return { limit: isNaN(limit) ? 100 : limit, offset: isNaN(offset) ? 0 : offset }
+  const rawLimit = parseInt(searchParams.get('limit') ?? '100', 10)
+  const rawOffset = parseInt(searchParams.get('offset') ?? '0', 10)
+  return {
+    limit: Number.isNaN(rawLimit) ? 100 : Math.min(Math.max(rawLimit, 1), 500),
+    offset: Number.isNaN(rawOffset) ? 0 : Math.max(rawOffset, 0),
+  }
+}
+
+/**
+ * S15 (A-25): error genérico con id de correlación; el detalle de Postgres va al log, no al integrador.
+ */
+export function apiDbError(status: number, error: { message: string; code?: string }): NextResponse {
+  // Reglas de negocio de las RPC (P0001, 22xxx validación, 23xxx unicidad/FK, 42501 permiso) se informan tal cual;
+  // el resto (esquema, SQL) se oculta tras un id de correlación.
+  const code = error.code ?? ''
+  if (/^(P0|22|23|42501)/.test(code)) {
+    return NextResponse.json({ error: error.message, code }, { status: code === '42501' ? 403 : status === 500 ? 400 : status, headers: apiHeaders() })
+  }
+  return apiError(status === 400 ? 400 : 500, status === 400 ? 'Invalid request' : 'Internal error', error)
+}
+
+export function apiError(status: number, publicMessage: string, detail?: unknown): NextResponse {
+  const id = crypto.randomUUID()
+  if (detail) console.error(`[api v1] ${id}`, detail)
+  return NextResponse.json({ error: publicMessage, request_id: id }, { status, headers: apiHeaders() })
 }
 
 // ── Standard API response headers ────────────────────────────────────────────

@@ -6,7 +6,9 @@ import MobileMenuButton from '@/components/layout/MobileMenuButton'
 import MobileTabBar from '@/components/layout/MobileTabBar'
 import { FIELD_ROLES } from '@/lib/constants/navigation'
 import { ToastProvider } from '@/components/ui'
-import { getActiveMembership, listMemberships } from '@/lib/supabase/membership'
+import { getActiveMembership, listInactiveMemberships, listMemberships } from '@/lib/supabase/membership'
+import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import type { OrgMemberRole } from '@/types/database'
 import { badgeTotal, parseCounts } from '@/lib/my-work/queues'
 import { fetchPreservationDueCounts } from '@/lib/list/kpi-query'
@@ -14,6 +16,8 @@ import { fetchPreservationDueCounts } from '@/lib/list/kpi-query'
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getActiveMembership()
   if (!ctx) {
+    // S15 (I-21): con invitaciones por aceptar o acceso suspendido/vencido, la página /access lo explica.
+    if ((await listInactiveMemberships()).length > 0) redirect('/access')
     // Could be unauthenticated OR authenticated-without-membership.
     // Try one more lookup to disambiguate, then redirect.
     const memberships = await listMemberships()
@@ -78,6 +82,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     supabase.rpc('my_work_counts', { p_org_id: ctx.orgId }),
     supabase.from('profiles').select('full_name').eq('id', ctx.userId).maybeSingle(),
   ])
+  const pendingInvitations = (await listInactiveMemberships()).filter(m => m.state === 'invited')
+  const tAccess = await getTranslations('Access')
 
   const role = ctx.role as OrgMemberRole
   const notifCounts = {
@@ -111,6 +117,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Topbar>
         }
       >
+        {pendingInvitations.length > 0 && (
+          <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontSize: 13 }}>
+            {tAccess('banner', { n: pendingInvitations.length, org: pendingInvitations[0].orgName })}{' '}
+            <Link href="/access" style={{ fontWeight: 600, color: '#1d4ed8' }}>{tAccess('review')}</Link>
+          </div>
+        )}
         {children}
       </DashboardShell>
     </ToastProvider>

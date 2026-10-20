@@ -27,7 +27,7 @@ export default async function AdminUsersPage() {
   ] = await Promise.all([
     supabase
       .from('org_members')
-      .select('id, user_id, role, joined_at, company_id, profiles(full_name, avatar_url)')
+      .select('id, user_id, role, joined_at, company_id, status, access_expires_at, suspend_reason, profiles(full_name, avatar_url)')
       .eq('org_id', orgId)
       .order('joined_at'),
     supabase.rpc('get_org_member_emails', { p_org_id: orgId }),
@@ -69,6 +69,9 @@ export default async function AdminUsersPage() {
     email: emailMap.get(m.user_id) ?? '—',
     lastActive: lastActiveMap.get(m.user_id) ?? null,
     companyId: m.company_id,
+    status: m.status,
+    accessExpiresAt: m.access_expires_at,
+    suspendReason: m.suspend_reason,
   }))
 
   // Pending invites: user_ids in activity_log(action='invited') that don't show up

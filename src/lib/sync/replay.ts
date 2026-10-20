@@ -64,7 +64,7 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
         if (winner === 'remote') {
           conflicts++
           await supabase.rpc('log_sync_conflict', {
-            p_entity_type: 'itr_response',
+            p_entity_type: 'itr_response', // la respuesta en cola no guarda el proyecto: org activa del usuario
             p_entity_id: `${item.itrId}:${item.itemId}`,
             p_local_payload: {
               valueText: item.valueText,
@@ -103,7 +103,7 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
           if (remotePayload) {
             conflicts++
             await supabase.rpc('log_sync_conflict', {
-              p_entity_type: 'itr_response',
+              p_entity_type: 'itr_response', // la respuesta en cola no guarda el proyecto: org activa del usuario
               p_entity_id: `${item.itrId}:${item.itemId}`,
               p_local_payload: {
                 valueText: item.valueText,
@@ -167,6 +167,7 @@ async function replayOutboxOnce(
         const attempts = (entry.attempts ?? 0) + 1
         if (outboxPolicy(entry.kind, entry.attempts ?? 0) === 'drop') {
           await supabase.rpc('log_sync_conflict', {
+            p_project_id: entry.projectId,
             p_entity_type: entry.kind === 'photo' ? 'itr_attachment' : entry.kind === 'punch' ? 'punch' : 'itr_signature',
             p_entity_id: `${entry.itrId}:${entry.kind}:${entry.id}`,
             p_local_payload: outboxPayload(entry),

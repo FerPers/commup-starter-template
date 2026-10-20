@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 import { useTranslations } from 'next-intl'
 import { Alert, Evidence, StatusChip, Timeline, btn, card, label, small } from '../../daily-ui'
 import { Header, when, type CommonProps, type DecisionItem, type LinkedDecision } from './linked'
@@ -49,7 +50,7 @@ export default function DecisionDetail({ project, opts, names, role, events, att
         {replaces && (
           <p style={{ ...small, margin: 0 }}>{t('decision.replaces')} {linkTo(replaces)} — {replaces.title} <StatusChip kind="decision" status={replaces.status} /></p>
         )}
-        {item.status === 'active' && role !== 'client' && (
+        {item.status === 'active' && ROLE_TIERS.editor.includes(role) && (
           <div>
             <Link href={`/projects/${project.id}/daily/new?kind=decision&supersedes=${item.id}`} style={btn('outline')}>{t('decision.supersede')}</Link>
           </div>

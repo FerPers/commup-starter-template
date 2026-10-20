@@ -6,7 +6,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { authenticateApiKey, apiHeaders, parsePagination } from '@/lib/api/auth'
+import { authenticateApiKey, apiHeaders, parsePagination, apiDbError } from '@/lib/api/auth'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   if (status) q = q.eq('post_handover_status', status)
 
   const { data, error } = await q
-  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: apiHeaders() })
+  if (error) return apiDbError(500, error)
 
   return NextResponse.json({ data: data ?? [], meta: { limit, offset } }, { headers: apiHeaders() })
 }

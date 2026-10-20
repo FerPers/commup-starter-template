@@ -5,7 +5,8 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
-import { createClaudeClient, isAiConfigured, AI_NOT_CONFIGURED, CLAUDE_MODEL } from '@/lib/ai/claude'
+import { isAiConfigured, AI_NOT_CONFIGURED } from '@/lib/ai/claude'
+import { runAi } from '@/lib/ai/run'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
 import { textOr, textOrNull } from '@/lib/excel/normalize'
@@ -172,12 +173,12 @@ export const generateMatrixWithAi = withAuthOnly(
     if (!types?.length) return { error: 'Tipos de equipo no encontrados en la organización' }
     if (templates.length === 0) return { error: 'La organización no tiene plantillas ITR activas. Importa el catálogo primero.' }
 
-    const client = createClaudeClient()
     const phasesText = (phases ?? []).map(p => `${p.code} = ${p.name}`).join('; ')
     const typesText = types.map(t => `${t.code} | ${t.name}${t.category ? ` | categoría ${t.category}` : ''}`).join('\n')
 
-    const response = await client.messages.parse({
-      model: CLAUDE_MODEL,
+    // S15 (I-19/C-43): cuota diaria por org, registro de tokens y errores del SDK atrapados (antes sin try/catch).
+    const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, feature: 'itr_matrix' }, (client, model) => client.messages.parse({
+      model,
       max_tokens: 16000,
       output_config: { effort: 'medium', format: zodOutputFormat(MatrixOutput) },
       system: [
@@ -189,9 +190,10 @@ export const generateMatrixWithAi = withAuthOnly(
         role: 'user',
         content: `Fases de la organización: ${phasesText}\n\nTIPOS DE EQUIPO a resolver (código | nombre | categoría):\n${typesText}\n\nDevuelve las plantillas que aplican a cada tipo de equipo, por fase, con confianza y motivo.`,
       }],
-    })
-
-    if (response.stop_reason === 'refusal') return { error: 'El modelo declinó la solicitud.' }
+    }))
+    if (!run.response) return { error: run.error }
+    const response = run.response
+    if (response.stop_reason === 'max_tokens') return { error: 'La respuesta quedó incompleta: procesa menos tipos de equipo por vez.' }
     const parsed = response.parsed_output
     if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
 
@@ -431,9 +433,8 @@ export const suggestItrsForTag = withAuthOnly(
       t.signals?.length ? `Señales asociadas: ${t.signals.slice(0, 12).map(s => `${s.signal_tag} (${s.signal_type}${s.service ? `, ${s.service}` : ''})`).join('; ')}` : null,
     ].filter(Boolean).join('\n')
 
-    const client = createClaudeClient()
-    const response = await client.messages.parse({
-      model: CLAUDE_MODEL,
+    const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, feature: 'itr_matrix' }, (client, model) => client.messages.parse({
+      model,
       max_tokens: 8000,
       output_config: { effort: 'medium', format: zodOutputFormat(TagOutput) },
       system: [
@@ -444,9 +445,9 @@ export const suggestItrsForTag = withAuthOnly(
         role: 'user',
         content: `Fases de la organización: ${(phases ?? []).map(p => `${p.code} = ${p.name}`).join('; ')}\n\nAnaliza este tag concreto y propone las plantillas ITR que le aplican, por fase (máximo 8):\n${facts}`,
       }],
-    })
-    if (response.stop_reason === 'refusal') return { error: 'El modelo declinó la solicitud.' }
-    const parsed = response.parsed_output
+    }))
+    if (!run.response) return { error: run.error }
+    const parsed = run.response.parsed_output
     if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
 
     const byCode = new Map(templates.map(tpl => [tpl.code.toUpperCase(), tpl]))

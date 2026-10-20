@@ -170,6 +170,11 @@ Rules for every new page/query/action:
 - S13 (migración `20261108120000`): vigente = fecha de emisión más reciente; revisiones anuladas (`void`); referencias automáticas al crear un ITR (trigger `itrs_auto_document_refs`) y masivas en la ficha del documento; `organizations.settings.document_policy.below_ifc` (`warn` | `block`) para IFR/IFA; FAT/SAT con re-prueba (`retest_of`); `tags.tag_key` (número normalizado) para C&E y QR; etiquetas QR por tag en `/projects/[id]/tags/labels` (QR con `/tag_360/<uuid>`).
 - Sesión 3 (migración `20261023120000`): KPIs `documents` (As-Built/Final sobre documentos ligados a sistemas) y `vendors` (paquetes activos sin bloqueos) en `take_mgmt_snapshot`; trigger `company_link_from_text` enlaza la empresa de `ops_personnel.company` / `test_equipment.owner_company` por nombre. Seed DEMO `scripts/demo-data/seed_documents_vendors_demo.sql`. **Con esto el plan readiness F0–F8 está completo.**
 
+## Miembros y acceso (S15)
+
+- `org_members` **no se escribe por REST**: solo RPC `add_org_member` / `set_member_role` / `remove_org_member` / `set_member_access` / `respond_org_invitation`. Estados `invited` · `active` · `suspended` + `access_expires_at`; todos los helpers de RLS exigen membresía activa y no vencida (`isActiveMembership` en `src/lib/members/catalog.ts`). Invitado o suspendido sin otra org activa → `/access`.
+- `activity_log` solo a nombre propio; `notifications` solo service role/DEFINER y `link_url` relativo. API v1 limitada por el binding `API_RATE_LIMITER` (wrangler.jsonc) y errores de BD con `apiDbError`.
+
 ## Firmantes designados (S14, D14)
 
 - `project_capacities` (persona × proyecto × `commissioning` | `operations` | `hse` | `client_rep`), solo owner/admin por `assign_project_capacity` / `revoke_project_capacity`; pantalla `/projects/[id]/signatories`. **Quién firma lo decide `has_capacity(proyecto, capacidad)`**, nunca un array de roles: con designados firman solo ellos (cualquier rol); sin designados, `capacity_fallback_roles` (= `CAPACITY_FALLBACK_ROLES` en `src/lib/constants/capacities.ts`). client_rep = empresa tipo `owner` o rol client; commissioning nunca rol client.
@@ -183,7 +188,7 @@ Rules for every new page/query/action:
 
 ## AI (Claude) — matriz ITR híbrida
 
-- `src/lib/ai/claude.ts` crea el cliente (`@anthropic-ai/sdk`, modelo `claude-opus-5-5`). Requiere el secreto `ANTHROPIC_API_KEY` (Wrangler secret en Cloudflare; `.env.local` en dev). Sin clave, las acciones de IA devuelven un error claro y la UI lo muestra.
+- `src/lib/ai/claude.ts` crea el cliente (`@anthropic-ai/sdk`). **Toda llamada pasa por `runAi` (`src/lib/ai/run.ts`)**: cuota diaria por org (`organizations.settings.ai.daily_budget_usd`, defecto 20 USD), modelo por tarea (`AI_MODELS` en `src/lib/ai/pricing.ts`: Opus 5.5 matriz ITR e importación C&E, Sonnet 5.5 el resto) y registro en `ai_usage`. Requiere el secreto `ANTHROPIC_API_KEY` (Wrangler secret en Cloudflare; `.env.local` en dev). Sin clave, las acciones de IA devuelven un error claro y la UI lo muestra.
 - `src/app/actions/itr-matrix.ts`: la IA **propone** filas en `equipment_type_templates` (tipo de equipo × plantilla ITR) con motivo y confianza; un editor acepta/rechaza en `/admin/templates/matrix`. Regenerar nunca pisa decisiones humanas. Respaldo por tag: `suggestItrsForTag` (no persiste). Reglas: la IA nunca asigna; sugiere por fase; puede cruzar disciplinas si lo justifica.
 
 ## Styling Convention

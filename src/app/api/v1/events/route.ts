@@ -14,7 +14,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { authenticateApiKey, apiHeaders } from '@/lib/api/auth'
+import { authenticateApiKey, apiHeaders, apiDbError } from '@/lib/api/auth'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -29,7 +29,9 @@ export async function GET(req: NextRequest) {
   const since         = searchParams.get('since') ?? new Date(Date.now() - 86_400_000).toISOString()
   const aggregateType = searchParams.get('aggregate_type')
   const eventType     = searchParams.get('event_type')
-  const limit         = Math.min(parseInt(searchParams.get('limit') ?? '200'), 200)
+  // S15 (A-25): NaN o negativo → valores válidos.
+  const rawLimit      = parseInt(searchParams.get('limit') ?? '200', 10)
+  const limit         = Number.isNaN(rawLimit) ? 200 : Math.min(Math.max(rawLimit, 1), 200)
 
   if (!projectId) {
     return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
@@ -54,7 +56,7 @@ export async function GET(req: NextRequest) {
   if (eventType)     query = query.eq('event_type', eventType)
 
   const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: apiHeaders() })
+  if (error) return apiDbError(500, error)
 
   return NextResponse.json(
     {

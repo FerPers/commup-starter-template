@@ -1,13 +1,13 @@
 'use server'
 
-import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
-import { AI_NOT_CONFIGURED, CLAUDE_MODEL, createClaudeClient, isAiConfigured } from '@/lib/ai/claude'
+import { AI_NOT_CONFIGURED, isAiConfigured } from '@/lib/ai/claude'
+import { runAi } from '@/lib/ai/run'
 import { reconcileSuggestions, type ReconciledSuggestions } from '@/lib/systems/ai'
 import { DEPENDENCY_KINDS, SYSTEM_TYPES, defaultDependencyGates, type DependencyKind, type SystemType } from '@/lib/systems/dependencies'
 
@@ -94,11 +94,9 @@ export const suggestSystemization = withAuth(
     ].filter(Boolean).join('\n')).join('\n\n')
     const depsText = (deps ?? []).map(d => `${codeOf.get(d.system_id)} depende de ${codeOf.get(d.depends_on_system_id)}`).join('\n')
 
-    const client = createClaudeClient()
-    let response
-    try {
-      response = await client.messages.parse({
-        model: CLAUDE_MODEL,
+    const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, projectId: input.projectId, feature: 'systems' }, (client, model) =>
+      client.messages.parse({
+        model,
         max_tokens: 16000,
         output_config: { effort: 'medium', format: zodOutputFormat(SystemizationOutput) },
         system: SYSTEM_RULES,
@@ -106,16 +104,9 @@ export const suggestSystemization = withAuth(
           role: 'user',
           content: `SISTEMAS DEL PROYECTO:\n\n${systemsText}\n\nDEPENDENCIAS YA REGISTRADAS (no las repitas):\n${depsText || '—'}\n\nDevuelve tipo, prioridad y nombre para cada sistema, y las dependencias que faltan.`,
         }],
-      })
-    } catch (err) {
-      console.error('[systems-ai] Claude error:', err)
-      if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
-        return { error: 'La clave de la IA (ANTHROPIC_API_KEY) no es válida en este entorno. Pídele al administrador de la plataforma que la renueve.' }
-      }
-      if (err instanceof Anthropic.RateLimitError) return { error: 'La IA está saturada en este momento. Intenta de nuevo en unos minutos.' }
-      return { error: 'No se pudo consultar la IA. Intenta de nuevo en unos minutos.' }
-    }
-    if (response.stop_reason === 'refusal') return { error: 'El modelo declinó la solicitud.' }
+      }))
+    if (!run.response) return { error: run.error }
+    const response = run.response
     const parsed = response.parsed_output
     if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
 

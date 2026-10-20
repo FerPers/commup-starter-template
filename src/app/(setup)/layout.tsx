@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import { isActiveMembership } from '@/lib/members/catalog'
 
 const PRIVILEGED_ROLES = ROLE_TIERS.privileged
 
@@ -10,15 +11,15 @@ export default async function SetupLayout({ children }: { children: React.ReactN
   if (!user) redirect('/login')
 
   // Check org membership and role
-  const { data: membership } = await supabase
+  const { data: memberships } = await supabase
     .from('org_members')
-    .select('role')
+    .select('role, status, access_expires_at')
     .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
 
-  // User has an org but lacks a privileged role → no access to wizard
-  if (membership && !PRIVILEGED_ROLES.includes(membership.role)) {
+  // User has an org but lacks an active privileged role → no access to wizard.
+  // S15 (I-21): invitaciones, suspendidas o vencidas cuentan como «tiene org» (van a /access desde /home).
+  const rows = memberships ?? []
+  if (rows.length > 0 && !rows.some(m => isActiveMembership(m) && PRIVILEGED_ROLES.includes(m.role))) {
     redirect('/home')
   }
 

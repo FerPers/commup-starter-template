@@ -138,7 +138,7 @@
    Estrategia: invertir solo los grises claros (50/100/200) que las páginas
    usan como fondos/borders sutiles. Los grises medios+oscuros (300-900) se
    mantienen para componentes "siempre oscuros" (PushNotificationManager,
-   AIAssistantChat, etc.) y para texto dim que ya se ve bien en ambos modos.
+   etc.) y para texto dim que ya se ve bien en ambos modos.
    Los aliases semánticos cambian completamente.
    ========================================================================== */
 :root[data-theme="dark"] {

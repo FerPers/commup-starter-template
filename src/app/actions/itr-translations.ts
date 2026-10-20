@@ -5,7 +5,8 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
-import { createClaudeClient, isAiConfigured, AI_NOT_CONFIGURED, CLAUDE_MODEL } from '@/lib/ai/claude'
+import { isAiConfigured, AI_NOT_CONFIGURED } from '@/lib/ai/claude'
+import { runAi } from '@/lib/ai/run'
 import { DEFAULT_ITR_GLOSSARY, parseGlossary } from '@/lib/constants/itr-glossary'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
@@ -17,7 +18,7 @@ import { textOrNull } from '@/lib/excel/normalize'
 // propone; lo que guarda una persona queda como source = 'human', lo que se
 // aplica sin revisar queda como 'ai' y se marca en la pantalla de revisión.
 
-type Ctx = { supabase: SupabaseClient<Database>; orgId: string }
+type Ctx = { supabase: SupabaseClient<Database>; orgId: string; userId: string }
 
 export type TranslationFlag = 'empty' | 'identical' | 'anglicism' | 'en_is_spanish' | 'not_translatable'
 
@@ -123,7 +124,6 @@ async function translateWithAi(
   itemsToTranslate: TranslationItem[],
   translateTitle: boolean,
 ): Promise<{ title_es: string | null; items: Map<string, string> }> {
-  const client = createClaudeClient()
   const glossary = await loadGlossary(ctx)
   const result = { title_es: null as string | null, items: new Map<string, string>() }
 
@@ -132,8 +132,8 @@ async function translateWithAi(
     const wantTitle = translateTitle && i === 0
     if (chunk.length === 0 && !wantTitle) break
     const lines = chunk.map(it => `${it.id} | [${it.section_title}] ${it.item_number ? `${it.item_number}. ` : ''}${it.description.replace(/\s+/g, ' ')}`).join('\n')
-    const response = await client.messages.parse({
-      model: CLAUDE_MODEL,
+    const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, feature: 'itr_translations' }, (client, model) => client.messages.parse({
+      model,
       max_tokens: 16000,
       output_config: { effort: 'low', format: zodOutputFormat(Output) },
       system: [
@@ -144,9 +144,9 @@ async function translateWithAi(
         role: 'user',
         content: `Plantilla ${review.template.code}: "${review.template.title}".\n${wantTitle ? 'Traduce el título de la plantilla (campo title_es).' : 'Devuelve title_es = null.'}\n\nTraduce cada ítem (id | [sección] texto). Devuelve el mismo id con su description_es:\n${lines || '(sin ítems)'}`,
       }],
-    })
-    if (response.stop_reason === 'refusal') throw new Error('El modelo declinó la solicitud.')
-    const parsed = response.parsed_output
+    }))
+    if (!run.response) throw new Error(run.error)
+    const parsed = run.response.parsed_output
     if (!parsed) throw new Error('La respuesta de la IA no pudo interpretarse. Intenta de nuevo.')
     if (wantTitle && parsed.title_es?.trim()) result.title_es = parsed.title_es.trim()
     const valid = new Set(chunk.map(c => c.id))

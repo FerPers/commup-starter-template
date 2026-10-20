@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import DailyView, { type ActionRow, type ConstraintRow, type DecisionRow, type DailyTab, type TqRow } from './DailyView'
 import { getTranslations } from 'next-intl/server'
@@ -69,6 +70,7 @@ export default async function DailyPage({ params, searchParams }: {
       names={names}
       userId={ctx.userId}
       canCreate={ctx.role !== 'client'}
+      canDecide={ROLE_TIERS.editor.includes(ctx.role)}
     />
     </>
   )

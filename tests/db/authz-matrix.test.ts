@@ -70,12 +70,12 @@ const CASES: Case[] = [
   {
     name: 'org_members: invitar un miembro', op: 'insert', table: 'org_members',
     payload: fx => ({ org_id: fx.orgId, role: 'inspector' }), // falta user_id
-    allow: ['owner', 'admin'],
+    allow: [], // S15 (A-02/I-12): por REST nadie; se invita con la RPC add_org_member (owner/admin)
   },
   {
     name: 'org_members: cambiar la fila de un owner', op: 'update', table: 'org_members', column: 'role',
     rowId: fx => fx.ownerMemberId,
-    allow: ['owner'], // A-02 cerrado en S02: trigger org_members_owner_guard
+    allow: [], // A-02: trigger en S02; desde S15 sin escritura directa (RPC set_member_role, solo owner toca owners)
   },
   {
     name: 'projects: editar el proyecto', op: 'update', table: 'projects', column: 'name',

@@ -46,7 +46,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S12 | IIoT confiable | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261107120000 en prod, 9 escenarios con ROLLBACK; `signal_samples` particionada). Detalle en la cobertura |
 | S13 | Correcciones de F8 (documentos y vendors) | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261108120000 en prod, 28 comprobaciones con ROLLBACK). Decisiones de Luis: referencias automáticas + masivas; IFR/IFA = aviso con bloqueo opcional por org; QR completo. Detalle en la cobertura |
 | S14 | Firmantes designados (capacidades) y roles | S03 | D14 | ✅ **Hecha** 2026-10-20 (migración 20261109120000 en prod, 17 comprobaciones con ROLLBACK incl. los dos «Listo cuando»). Detalle en la cobertura |
-| S15 | Miembros, auditoría y cuotas | S03 | — | Pendiente |
+| S15 | Miembros, auditoría y cuotas | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261110120000 en prod, 14 comprobaciones con ROLLBACK). Decisiones de Luis: invitación pendiente para cuentas existentes; suspensión y vencimiento de acceso; cuota de IA con modelo por tarea. Detalle en la cobertura |
 | S16 | PSSR por RPC | S14 | — | Pendiente |
 | S17 | Certificados por RPC | S14 | D6, D15 | Pendiente |
 | S18 | Offline por usuario (2 sesiones) | S06 | — | Pendiente |

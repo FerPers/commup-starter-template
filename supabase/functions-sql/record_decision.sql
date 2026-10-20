@@ -10,6 +10,9 @@ DECLARE v_role text; v_org uuid; v_seq integer; v_id uuid; v_old decisions%ROWTY
 BEGIN
   v_role := public.register_caller_role(p_project_id);
   IF v_role IS NULL OR v_role = 'client' THEN RAISE EXCEPTION 'Access denied' USING ERRCODE = '42501'; END IF;
+  -- S15 (D-16 / I-27): las decisiones formales (y su reemplazo) las registra un líder o superior; recorded_by
+  -- guarda quién la registró, aparte de decided_by (a nombre de quién).
+  IF NOT public.document_is_controller(v_role) THEN RAISE EXCEPTION 'Solo líderes o superiores registran decisiones' USING ERRCODE = '42501'; END IF;
   SELECT org_id INTO v_org FROM projects WHERE id = p_project_id;
   IF public.mgmt_text(p_title, 200) IS NULL OR public.mgmt_text(p_decision, 8000) IS NULL THEN
     RAISE EXCEPTION 'Título y decisión son obligatorios' USING ERRCODE = '22023';

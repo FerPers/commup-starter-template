@@ -66,7 +66,8 @@ export default function InboxList({
         await markNotificationRead(n.id)
         setItems(prev => prev.map(it => it.id === n.id ? { ...it, read_at: new Date().toISOString() } : it))
       }
-      if (n.link_url) router.push(n.link_url)
+      // S15 (A-11): solo enlaces internos (la BD ya lo exige con un CHECK; aquí por defensa en profundidad).
+      if (n.link_url && /^\/[^/\\]/.test(n.link_url)) router.push(n.link_url)
     })
   }
 

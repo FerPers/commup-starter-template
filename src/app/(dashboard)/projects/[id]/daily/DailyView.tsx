@@ -51,6 +51,8 @@ type Props = {
   names: Record<string, string>
   userId: string
   canCreate: boolean
+  /** S15 (D-16/I-27): decisiones solo líder+. */
+  canDecide: boolean
 }
 
 const TAB_KIND: Record<DailyTab, MgmtKind> = { actions: 'action', constraints: 'constraint', tqs: 'tq', decisions: 'decision' }
@@ -63,7 +65,7 @@ const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid
 const mono: React.CSSProperties = { fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }
 const dash = <span style={{ color: 'var(--gray-400)' }}>—</span>
 
-export default function DailyView({ project, initialTab, actions, constraints, tqs, decisions, names, userId, canCreate }: Props) {
+export default function DailyView({ project, initialTab, actions, constraints, tqs, decisions, names, userId, canCreate, canDecide }: Props) {
   const t = useTranslations('Daily')
   const [tab, setTab] = useState<DailyTab>(initialTab)
   const [q, setQ] = useState('')
@@ -150,7 +152,7 @@ export default function DailyView({ project, initialTab, actions, constraints, t
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <a href={`/projects/${project.id}/daily/export`} style={btn('outline')}>{t('export')}</a>
-            {canCreate && (
+            {canCreate && (TAB_KIND[tab] !== 'decision' || canDecide) && (
               <Link href={`/projects/${project.id}/daily/new?kind=${TAB_KIND[tab]}`} style={btn('primary')}>+ {t(`new.${TAB_KIND[tab]}`)}</Link>
             )}
           </div>

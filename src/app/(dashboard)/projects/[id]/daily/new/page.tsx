@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 import { MGMT_KINDS, type MgmtKind } from '@/lib/daily/catalog'
 import { loadOptions } from '../options'
 import NewDailyForm, { type SourceRef } from './NewDailyForm'
@@ -20,6 +21,8 @@ export default async function NewDailyPage({ params, searchParams }: {
   const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
   const kind: MgmtKind = MGMT_KINDS.includes(sp.kind as MgmtKind) ? (sp.kind as MgmtKind) : 'action'
+  // S15 (D-16/I-27): las decisiones formales las registra un líder o superior (la RPC lo exige).
+  if (kind === 'decision' && !ROLE_TIERS.editor.includes(ctx.role)) redirect(`/projects/${id}/daily?tab=decisions`)
 
   // Origen (restricción o TQ del mismo proyecto): número para mostrar y sistema para precargar.
   let source: SourceRef | null = null

@@ -963,7 +963,18 @@
       "confirm": "Remover de la organización",
       "cancel": "Cancelar"
     },
-    "confirmRemove": "¿Remover a {name} de la organización?"
+    "confirmRemove": "¿Remover a {name} de la organización?",
+    "access": {
+      "invited": "Invitación pendiente de aceptar",
+      "suspended": "Suspendido: {reason}",
+      "expired": "Acceso vencido",
+      "until": "Acceso hasta {date}",
+      "expiresLabel": "Acceso hasta (opcional)",
+      "suspend": "Suspender",
+      "reactivate": "Reactivar",
+      "suspendPrompt": "Motivo para suspender a {name} (deja de ver la organización; su historial y firmas se conservan):",
+      "saved": "Acceso actualizado"
+    }
   },
   "Config": {
     "title": "Configuración de Organización",
@@ -5004,5 +5015,18 @@
     "clientRepRule": "Solo personas con rol cliente o de la empresa operadora (empresa de tipo «Owner» en Empresas).",
     "history": "Historial ({n})",
     "revokedBy": "quitada por {who} · {when}: {reason}"
+  },
+  "Access": {
+    "title": "Tu acceso a CommUp",
+    "banner": "{n, plural, one {Tienes una invitación pendiente de {org}.} other {Tienes # invitaciones pendientes.}}",
+    "review": "Revisar",
+    "none": "No tienes invitaciones pendientes ni accesos suspendidos.",
+    "invited": "Te invitaron como {role}. Hasta que aceptes no ves nada de esta organización.",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "suspended": "Tu acceso está suspendido: {reason}. Habla con un administrador de la organización.",
+    "expired": "Tu acceso venció. Habla con un administrador de la organización para renovarlo.",
+    "back": "← Volver a CommUp",
+    "logout": "Cerrar sesión"
   }
 }

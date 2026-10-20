@@ -107,6 +107,7 @@ export async function discardStartupEntry(e: StartupEntry): Promise<{ error?: st
   const entityType = e.kind === 'run_step' ? 'procedure_run_step' : e.kind === 'run_stop' ? 'procedure_run' : 'lineup_item'
   const entityId = e.kind === 'run_step' ? `${e.runId}:${e.stepId}` : e.kind === 'run_stop' ? e.runId : e.itemId
   const { error } = await supabase.rpc('log_sync_conflict', {
+    p_project_id: e.projectId, // S15 (E-37)
     p_entity_type: entityType,
     p_entity_id: entityId,
     p_local_payload: payload(e),
