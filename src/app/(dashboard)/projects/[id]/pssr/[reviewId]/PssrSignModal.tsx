@@ -5,21 +5,23 @@
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { addPssrSignature } from '@/app/actions/pssr'
-import { PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
+import { PSSR_ALREADY_SIGNED, type PssrCapacity } from '@/lib/constants/pssr'
 import type { Signature } from './pssr-review-shared'
 
 export default function PssrSignModal({
-  reviewId, projectId, currentUserName, onSigned, onClose,
+  reviewId, projectId, currentUserName, capacities, onSigned, onClose,
 }: {
   reviewId: string
   projectId: string
   currentUserName: string
+  /** S16 (C-32): capacidades requeridas que este usuario puede firmar. */
+  capacities: PssrCapacity[]
   onSigned: (sig: Signature) => void
   onClose: () => void
 }) {
   const t = useTranslations('PSSR')
   const [isPending, startTransition] = useTransition()
-  const [discipline, setDiscipline] = useState('')
+  const [capacity, setCapacity] = useState<PssrCapacity | ''>(capacities.length === 1 ? capacities[0] : '')
   const [isDrawing, setIsDrawing] = useState(false)
   const [hasDrawn, setHasDrawn] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
@@ -70,14 +72,15 @@ export default function PssrSignModal({
     setSignError(null)
     const signatureData = canvasRef.current!.toDataURL('image/png')
     startTransition(async () => {
-      const res = await addPssrSignature({ reviewId, projectId, discipline, signatureData })
+      if (!capacity) return
+      const res = await addPssrSignature({ reviewId, projectId, capacity, signatureData })
       if (res.error) {
         setSignError(res.error === PSSR_ALREADY_SIGNED ? t('review.errorAlreadySigned') : res.error)
         return
       }
       onSigned({
         id: crypto.randomUUID(),
-        user_id: '', discipline, signature_data: signatureData,
+        user_id: '', discipline: capacity, capacity, signature_data: signatureData,
         signed_at: new Date().toISOString(),
         profiles: { full_name: currentUserName, id: '' },
       })
@@ -101,22 +104,19 @@ export default function PssrSignModal({
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
             {t('signModal.disciplineLabel')}
           </label>
-          <input
-            value={discipline}
-            onChange={e => setDiscipline(e.target.value)}
-            placeholder={t('signModal.disciplinePlaceholder')}
-            list="pssr-disciplines"
+          <select
+            value={capacity}
+            onChange={e => setCapacity(e.target.value as PssrCapacity)}
+            aria-label={t('signModal.disciplineLabel')}
             style={{
               width: '100%', padding: '9px 12px', borderRadius: '8px',
               border: '1.5px solid #d1d5db', fontSize: '13px', outline: 'none',
-              boxSizing: 'border-box', fontFamily: 'inherit',
+              boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--card-bg)',
             }}
-          />
-          <datalist id="pssr-disciplines">
-            {['Process Engineer','HSE Lead','Operations Manager','Maintenance Lead',
-              'Commissioning Lead','Electrical Engineer','Instrument Engineer',
-              'Mechanical Engineer','Project Manager','QAQC Lead'].map(d => <option key={d} value={d} />)}
-          </datalist>
+          >
+            {capacities.length !== 1 && <option value="">{t('signModal.disciplinePlaceholder')}</option>}
+            {capacities.map(c => <option key={c} value={c}>{t(`capacity.${c}`)}</option>)}
+          </select>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -157,7 +157,7 @@ export default function PssrSignModal({
           </button>
           <button
             onClick={handleSign}
-            disabled={isPending || !hasDrawn}
+            disabled={isPending || !hasDrawn || !capacity}
             style={{
               padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
               background: isPending || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none',

@@ -6566,10 +6566,16 @@ export type Database = {
           notes: string | null
           org_id: string
           project_id: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejected_reason: string | null
+          required_signatures: string[]
           review_due_date: string | null
           review_number: string
           rfsu_certificate_id: string | null
           status: string
+          submitted_at: string | null
+          submitted_by: string | null
           system_id: string
           template_id: string | null
           title: string
@@ -6585,10 +6591,16 @@ export type Database = {
           notes?: string | null
           org_id: string
           project_id: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejected_reason?: string | null
+          required_signatures?: string[]
           review_due_date?: string | null
           review_number: string
           rfsu_certificate_id?: string | null
           status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
           system_id: string
           template_id?: string | null
           title?: string
@@ -6604,10 +6616,16 @@ export type Database = {
           notes?: string | null
           org_id?: string
           project_id?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejected_reason?: string | null
+          required_signatures?: string[]
           review_due_date?: string | null
           review_number?: string
           rfsu_certificate_id?: string | null
           status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
           system_id?: string
           template_id?: string | null
           title?: string
@@ -6688,6 +6706,7 @@ export type Database = {
       }
       pssr_signatures: {
         Row: {
+          capacity: string | null
           discipline: string | null
           id: string
           review_id: string
@@ -6696,6 +6715,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          capacity?: string | null
           discipline?: string | null
           id?: string
           review_id: string
@@ -6704,6 +6724,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          capacity?: string | null
           discipline?: string | null
           id?: string
           review_id?: string
@@ -6781,6 +6802,7 @@ export type Database = {
           is_active: boolean
           name: string
           org_id: string
+          required_signatures: string[]
           updated_at: string
         }
         Insert: {
@@ -6791,6 +6813,7 @@ export type Database = {
           is_active?: boolean
           name: string
           org_id: string
+          required_signatures?: string[]
           updated_at?: string
         }
         Update: {
@@ -6801,6 +6824,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           org_id?: string
+          required_signatures?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -11974,6 +11998,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      approve_pssr: { Args: { p_review_id: string }; Returns: string }
       approve_system_gate: {
         Args: {
           p_conditions?: Json
@@ -12785,6 +12810,8 @@ export type Database = {
         }
         Returns: string
       }
+      pssr_items_pending: { Args: { p_review_id: string }; Returns: number }
+      pssr_punch_blocker: { Args: { p_review_id: string }; Returns: string }
       punch_caller_role: {
         Args: { p_punch: Database["public"]["Tables"]["punches"]["Row"] }
         Returns: string
@@ -12893,6 +12920,10 @@ export type Database = {
       reject_itr_suggestion: {
         Args: { p_note?: string; p_suggestion_id: string }
         Returns: string
+      }
+      reject_pssr: {
+        Args: { p_reason: string; p_review_id: string }
+        Returns: undefined
       }
       release_hold_point: {
         Args: { p_comment?: string; p_run_id: string; p_step_id: string }
@@ -13162,6 +13193,14 @@ export type Database = {
         Args: { p_capacity: string; p_certificate_id: string }
         Returns: string
       }
+      sign_pssr: {
+        Args: {
+          p_capacity: string
+          p_review_id: string
+          p_signature_data: string
+        }
+        Returns: string
+      }
       sign_system_gate: {
         Args: { p_approval_id: string; p_capacity: string; p_comments?: string }
         Returns: string
@@ -13211,6 +13250,7 @@ export type Database = {
         Args: { p_bucket: string; p_name: string }
         Returns: boolean
       }
+      submit_pssr: { Args: { p_review_id: string }; Returns: undefined }
       subsystem_phase_itr_counts: {
         Args: { p_project_id: string }
         Returns: {
@@ -13322,6 +13362,7 @@ export type Database = {
       try_timestamptz: { Args: { p: string }; Returns: string }
       tz_day_start: { Args: { p_date: string; p_tz: string }; Returns: string }
       tz_today: { Args: { p_tz: string }; Returns: string }
+      unsign_pssr: { Args: { p_signature_id: string }; Returns: undefined }
       update_action: {
         Args: {
           p_action_id: string
@@ -13375,6 +13416,16 @@ export type Database = {
           p_procedure_id: string
           p_system_id: string
           p_title: string
+        }
+        Returns: undefined
+      }
+      update_pssr_meta: {
+        Args: {
+          p_due: string
+          p_notes: string
+          p_review_id: string
+          p_set_due: boolean
+          p_set_notes: boolean
         }
         Returns: undefined
       }

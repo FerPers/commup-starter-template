@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
+import { PSSR_CAPACITIES, type PssrCapacity } from '@/lib/constants/pssr'
 import { useRouter } from 'next/navigation'
-import { upsertPssrTemplateItem, deletePssrTemplateItem } from '@/app/actions/pssr'
+import { upsertPssrTemplateItem, deletePssrTemplateItem, setPssrTemplateSignatures } from '@/app/actions/pssr'
 import { exportPssrTemplate } from '@/app/actions/templates-backup'
 import type { TemplatesBackup } from '@/lib/constants/templates-backup'
 import BackupDocumentView from '@/components/templates/BackupDocumentView'
@@ -40,7 +42,7 @@ interface Item {
   is_required: boolean
 }
 
-interface Template { id: string; name: string; description: string | null; is_active: boolean }
+interface Template { id: string; name: string; description: string | null; is_active: boolean; required_signatures: string[] }
 
 const BLANK_FORM = { category: '', element: '', requirement: '', notes_hint: '', is_required: true }
 
@@ -71,6 +73,7 @@ export default function PssrTemplateEditor({
   const [docPreview, setDocPreview] = useState<TemplatesBackup | null>(null)
 
   const grouped = groupByCategory(items)
+  const tp = useTranslations('PSSR')
 
   function openNew() {
     setEditingItem(null)
@@ -204,6 +207,26 @@ export default function PssrTemplateEditor({
             </button>
           </div>
         )}
+      </div>
+
+      {/* S16 (C-32): firmas que exige cada PSSR creado con esta plantilla (aprueba Comisionamiento). */}
+      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '14px 18px', marginBottom: '16px', display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <strong style={{ fontSize: '13px', color: 'var(--text-strong)' }}>{tp('templateSignatures')}</strong>
+        {PSSR_CAPACITIES.map(c => (
+          <label key={c} style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', fontSize: '13px', color: 'var(--text-strong)' }}>
+            <input type="checkbox" disabled={!canEdit || isPending} checked={template.required_signatures.includes(c)}
+              onChange={e => {
+                const next = e.target.checked ? [...template.required_signatures, c] : template.required_signatures.filter(x => x !== c)
+                startTransition(async () => {
+                  const res = await setPssrTemplateSignatures({ templateId: template.id, signatures: next as PssrCapacity[] })
+                  if (res.error) { setFormError(res.error); return }
+                  router.refresh()
+                })
+              }} />
+            {tp(`capacity.${c}`)}
+          </label>
+        ))}
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tp('templateSignaturesHint')}</span>
       </div>
 
       {/* Items by category */}

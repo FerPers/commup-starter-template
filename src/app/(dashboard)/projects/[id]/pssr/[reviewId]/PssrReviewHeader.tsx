@@ -57,7 +57,7 @@ export default function PssrReviewHeader({
   function handleSaveDueDate() {
     const value = dueDate || null
     startDateTransition(async () => {
-      const res = await updatePssrReviewDueDate(review.id, projectId, value)
+      const res = await updatePssrReviewDueDate({ reviewId: review.id, projectId, dueDate: value })
       if (res.error) { onError(res.error); return }
       setSavedDueDate(value ?? '')
       setEditingDueDate(false)

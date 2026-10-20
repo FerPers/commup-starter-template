@@ -1,6 +1,9 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import PssrReviewForm from './PssrReviewForm'
+import { loadMyCapacities } from '@/lib/capacities/server'
+import { ROLE_TIERS } from '@/lib/constants/roles'
+import { PSSR_CAPACITIES, type PssrCapacity } from '@/lib/constants/pssr'
 import type { ItemStatus, ReviewStatus } from './pssr-review-shared'
 import type { SystemPunch } from './PssrPunchDisposition'
 
@@ -15,7 +18,6 @@ export default async function PssrReviewPage({
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const canApprove = ['owner','admin','architect','leader'].includes(membership.role)
 
   const [
     { data: project },
@@ -27,7 +29,7 @@ export default async function PssrReviewPage({
     supabase.from('projects').select('id, name, code').eq('id', projectId).single(),
     supabase
       .from('pssr_reviews')
-      .select('id, review_number, title, status, notes, review_due_date, rfsu_certificate_id, approved_at, systems(id, code, name)')
+      .select('id, review_number, title, status, notes, review_due_date, rfsu_certificate_id, approved_at, required_signatures, submitted_by, rejected_reason, systems(id, code, name)')
       .eq('id', reviewId)
       .eq('project_id', projectId)
       .single(),
@@ -38,7 +40,7 @@ export default async function PssrReviewPage({
       .order('item_order'),
     supabase
       .from('pssr_signatures')
-      .select('id, user_id, discipline, signature_data, signed_at, profiles(full_name, id)')
+      .select('id, user_id, discipline, capacity, signature_data, signed_at, profiles(full_name, id)')
       .eq('review_id', reviewId)
       .order('signed_at'),
     supabase.from('profiles').select('id, full_name').eq('id', ctx.userId).single(),
@@ -77,17 +79,23 @@ export default async function PssrReviewPage({
     }
   }
 
+  // S16 (C-32): quién firma cada capacidad y quién aprueba (Comisionamiento) sale de S14 (designados o respaldo).
+  const caps = await loadMyCapacities(supabase, projectId)
+  const canApprove = ROLE_TIERS.editor.includes(membership.role) && caps.commissioning.allowed
+  const signableCaps = PSSR_CAPACITIES.filter(c => caps[c].allowed) as PssrCapacity[]
+
   return (
     <div style={{ padding: '32px' }}>
       <PssrReviewForm
         projectId={projectId}
-        review={{ ...review, status: review.status as ReviewStatus }}
+        review={{ ...review, status: review.status as ReviewStatus, required_signatures: (review.required_signatures ?? []) as PssrCapacity[] }}
         items={(items ?? []).map(i => ({ ...i, status: i.status as ItemStatus }))}
         signatures={signatures ?? []}
         project={project}
         currentUserId={ctx.userId}
         currentUserName={profile?.full_name ?? ctx.userEmail ?? 'Usuario'}
         canApprove={canApprove}
+        signableCaps={signableCaps}
         totalItems={totalItems}
         systemPunches={(systemPunches ?? []) as unknown as SystemPunch[]}
         canEditPunches={ctx.role !== 'client'}

@@ -2088,18 +2088,30 @@
         "done": "to verify",
         "verified": "verified",
         "cancelled": "cancelled"
-      }
+      },
+      "errorMissingSignatures": "Missing signatures: {caps}",
+      "rejectReasonRequired": "Give the rejection reason (min. 3 characters).",
+      "rejectedReason": "Rejected: {reason}. Fix it and resubmit; previous signatures were voided.",
+      "signaturesRequired": "Requires: {caps}; Commissioning approves (another person)",
+      "signaturesMissing": "missing {caps}"
     },
     "signModal": {
       "title": "Approval signature",
-      "disciplineLabel": "Discipline / Role",
-      "disciplinePlaceholder": "Process Engineer, HSE Lead, Operations Manager...",
+      "disciplineLabel": "Signing as",
+      "disciplinePlaceholder": "Pick the signature…",
       "signatureLabel": "Signature",
       "clear": "Clear",
       "cancel": "Cancel",
       "confirm": "Confirm signature",
       "saving": "Saving..."
-    }
+    },
+    "capacity": {
+      "commissioning": "Commissioning",
+      "operations": "Operations",
+      "hse": "HSE"
+    },
+    "templateSignatures": "Required signatures",
+    "templateSignaturesHint": "Each new PSSR freezes them; a leader with the Commissioning capacity, distinct from the signers, approves."
   },
   "Pwa": {
     "install": {

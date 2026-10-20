@@ -24,6 +24,8 @@ export interface Signature {
   id: string
   user_id: string
   discipline: string | null
+  /** S16 (C-32): capacidad firmada (commissioning · operations · hse); null en firmas anteriores. */
+  capacity: string | null
   signature_data: string
   signed_at: string
   profiles: { full_name: string; id: string } | null

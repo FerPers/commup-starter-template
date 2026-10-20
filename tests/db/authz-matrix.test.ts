@@ -125,14 +125,12 @@ const CASES: Case[] = [
   {
     name: 'pssr_reviews: editar una revisión (estado/aprobación)', op: 'update', table: 'pssr_reviews', column: 'title',
     rowId: fx => fx.pssrReviewId,
-    allow: EDITORS,
-    gap: { roles: ['inspector', 'client'], finding: 'A-04', session: 'S16' },
+    allow: [], // A-04 cerrado en S16: sin UPDATE directo; notas/fecha por update_pssr_meta, estado por submit/approve/reject_pssr
   },
   {
     name: 'pssr_signatures: firmar a nombre de otro', op: 'insert', table: 'pssr_signatures',
     payload: fx => (fx.pssrReviewId ? { review_id: fx.pssrReviewId, user_id: fakeUuid } : null), // falta signature_data
-    allow: [],
-    gap: { roles: [...ROLES], finding: 'A-04', session: 'S16' },
+    allow: [], // A-04 cerrado en S16: firmas solo por sign_pssr (user_id = auth.uid(), por capacidad)
   },
   {
     // I-11 (S02): las reglas llevan headers de terceros en action_payload; solo owner/admin/architect.

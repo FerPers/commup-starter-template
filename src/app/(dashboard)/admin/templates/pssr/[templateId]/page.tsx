@@ -18,7 +18,7 @@ export default async function PssrTemplateEditorPage({
 
   const { data: template } = await supabase
     .from('pssr_templates')
-    .select('id, name, description, is_active')
+    .select('id, name, description, is_active, required_signatures')
     .eq('id', templateId)
     .eq('org_id', membership.org_id)
     .single()

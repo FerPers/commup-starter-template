@@ -19,6 +19,7 @@ import PssrReviewHeader from './PssrReviewHeader'
 import PssrItemsChecklist from './PssrItemsChecklist'
 import PssrSignaturesPanel from './PssrSignaturesPanel'
 import PssrSignModal from './PssrSignModal'
+import type { PssrCapacity } from '@/lib/constants/pssr'
 import PssrPunchDisposition, { type SystemPunch } from './PssrPunchDisposition'
 import type { ItemAction, ItemStatus, ReviewItem, ReviewStatus, Signature } from './pssr-review-shared'
 
@@ -34,6 +35,9 @@ interface Props {
     rfsu_certificate_id: string | null
     systems: { id: string; code: string; name: string } | null
     approved_at: string | null
+    required_signatures: PssrCapacity[]
+    submitted_by: string | null
+    rejected_reason: string | null
   }
   items: ReviewItem[]
   signatures: Signature[]
@@ -41,6 +45,8 @@ interface Props {
   currentUserId: string
   currentUserName: string
   canApprove: boolean
+  /** Capacidades que el usuario puede firmar en el proyecto (S14). */
+  signableCaps: PssrCapacity[]
   totalItems: number
   systemPunches: SystemPunch[]
   canEditPunches: boolean
@@ -50,7 +56,7 @@ interface Props {
 
 export default function PssrReviewForm({
   projectId, review, items: initialItems, signatures: initialSigs,
-  project, currentUserId, currentUserName, canApprove,
+  project, currentUserId, currentUserName, canApprove, signableCaps,
   totalItems, systemPunches, canEditPunches, itemActions,
 }: Props) {
   const t = useTranslations('PSSR')
@@ -64,6 +70,13 @@ export default function PssrReviewForm({
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
   const readonly = review.status === 'approved'
+  // S16 (C-32): firmas que faltan y cuáles puede poner este usuario (no quien envió ni quien ya firmó).
+  const signedCaps = new Set(sigs.map(s => s.capacity).filter(Boolean))
+  const missingCaps = review.required_signatures.filter(c => !signedCaps.has(c))
+  const myOpenCaps = review.status === 'pending_approval' && review.submitted_by !== currentUserId && !sigs.some(s => s.user_id === currentUserId)
+    ? missingCaps.filter(c => signableCaps.includes(c)) : []
+  const iAmSigner = sigs.some(s => s.user_id === currentUserId)
+  const approvable = canApprove && review.submitted_by !== currentUserId && !iAmSigner
 
   // Computed progress from local state
   const localResolved = items.filter(i => i.status === 'si' || i.status === 'na').length
@@ -99,7 +112,7 @@ export default function PssrReviewForm({
 
   function handleSaveNotes() {
     startTransition(async () => {
-      const res = await updatePssrReviewNotes(review.id, projectId, notes)
+      const res = await updatePssrReviewNotes({ reviewId: review.id, projectId, notes })
       if (res.error) setActionError(res.error)
     })
   }
@@ -107,7 +120,7 @@ export default function PssrReviewForm({
   function handleSubmitForApproval() {
     setActionError(null)
     startTransition(async () => {
-      const res = await submitPssrForApproval(review.id, projectId)
+      const res = await submitPssrForApproval({ reviewId: review.id, projectId })
       if (res.error) { setActionError(res.error); return }
       router.refresh()
     })
@@ -115,12 +128,12 @@ export default function PssrReviewForm({
 
   function handleApprove() {
     setActionError(null)
-    if (sigs.length === 0) {
-      setActionError(t('review.errorNeedsSignature'))
+    if (missingCaps.length > 0) {
+      setActionError(t('review.errorMissingSignatures', { caps: missingCaps.map(c => t(`capacity.${c}`)).join(', ') }))
       return
     }
     startTransition(async () => {
-      const res = await approvePssrAndIssueRfsu(review.id, projectId)
+      const res = await approvePssrAndIssueRfsu({ reviewId: review.id, projectId })
       if (res.error ?? !res.cert) {
         setActionError(res.error ?? t('review.errorGeneric'))
         return
@@ -132,9 +145,10 @@ export default function PssrReviewForm({
 
   function handleReject() {
     if (!confirm(t('review.rejectConfirm'))) return
-    const reason = window.prompt(t('review.rejectReasonPrompt')) ?? undefined
+    const reason = window.prompt(t('review.rejectReasonPrompt'))?.trim() ?? ''
+    if (reason.length < 3) { setActionError(t('review.rejectReasonRequired')); return }
     startTransition(async () => {
-      const res = await rejectPssrReview(review.id, projectId, reason)
+      const res = await rejectPssrReview({ reviewId: review.id, projectId, reason })
       if (res.error) { setActionError(res.error); return }
       router.refresh()
     })
@@ -142,7 +156,7 @@ export default function PssrReviewForm({
 
   function handleRemoveSig(sigId: string) {
     startTransition(async () => {
-      const res = await removePssrSignature(sigId, review.id, projectId)
+      const res = await removePssrSignature({ signatureId: sigId, reviewId: review.id, projectId })
       if (res.error) { setActionError(res.error); return }
       setSigs(prev => prev.filter(s => s.id !== sigId))
     })
@@ -155,7 +169,7 @@ export default function PssrReviewForm({
         projectId={projectId}
         review={review}
         projectName={project.name}
-        canApprove={canApprove}
+        canApprove={approvable}
         readonly={readonly}
         allResolved={localAllResolved}
         sigsCount={sigs.length}
@@ -215,6 +229,12 @@ export default function PssrReviewForm({
         </div>
       )}
 
+      {review.status === 'rejected' && review.rejected_reason && (
+        <div role="status" style={{ padding: '12px 16px', borderRadius: '10px', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', fontSize: '13px', marginBottom: '16px' }}>
+          {t('review.rejectedReason', { reason: review.rejected_reason })}
+        </div>
+      )}
+
       {/* Checklist items ─────────────────────────────────────── */}
       <PssrItemsChecklist
         projectId={projectId}
@@ -258,6 +278,9 @@ export default function PssrReviewForm({
         reviewStatus={review.status}
         readonly={readonly}
         currentUserId={currentUserId}
+        required={review.required_signatures}
+        missing={missingCaps}
+        canSign={myOpenCaps.length > 0}
         onOpenSign={() => setShowSignModal(true)}
         onRemoveSig={handleRemoveSig}
       />
@@ -268,6 +291,7 @@ export default function PssrReviewForm({
           reviewId={review.id}
           projectId={projectId}
           currentUserName={currentUserName}
+          capacities={myOpenCaps}
           onSigned={(sig) => { setSigs(prev => [...prev, sig]); setShowSignModal(false) }}
           onClose={() => setShowSignModal(false)}
         />

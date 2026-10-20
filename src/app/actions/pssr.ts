@@ -1,15 +1,11 @@
 'use server'
 
-import { getProjectToday } from '@/lib/time/project-zones'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
-import { logActivity } from '@/lib/log-activity'
-import { startupDispositionBlockers } from '@/lib/punches/category-guide'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase.generated'
-import { DEFAULT_PSSR_ITEMS, PSSR_ALREADY_SIGNED } from '@/lib/constants/pssr'
+import { DEFAULT_PSSR_ITEMS, PSSR_ALREADY_SIGNED, PSSR_CAPACITIES, type PssrCapacity } from '@/lib/constants/pssr'
 import {
   notifyPssrSubmittedForApproval,
   notifyPssrApproved,
@@ -104,6 +100,20 @@ export const deletePssrTemplateItem = withAuthOnly(
 )
 
 // I-14 (S08): mismo tier que la RLS (owner/admin/architect) y se comprueba que algo se borró.
+/** S16 (C-32): firmas requeridas por los PSSR que se creen con la plantilla (se congelan en cada PSSR). */
+export const setPssrTemplateSignatures = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (ctx, input: { templateId: string; signatures: PssrCapacity[] }): Promise<{ error?: string }> => {
+    const signatures = [...new Set(input.signatures)].filter(c => PSSR_CAPACITIES.includes(c))
+    const { data, error } = await ctx.supabase.from('pssr_templates').update({ required_signatures: signatures, updated_at: new Date().toISOString() })
+      .eq('id', input.templateId).eq('org_id', ctx.orgId).select('id')
+    if (error) return { error: error.message }
+    if (!data?.length) return { error: 'Plantilla no encontrada o sin permiso' }
+    revalidatePath(`/admin/templates/pssr/${input.templateId}`)
+    return {}
+  },
+)
+
 export const deletePssrTemplate = withAuthOnly(
   { role: PRIVILEGED_ROLES },
   async (ctx, templateId: string): Promise<{ error?: string }> => {
@@ -210,23 +220,17 @@ export const updatePssrReviewItem = withAuth(
       completionDate?: string | null
     },
   ): Promise<{ error?: string }> => {
-    const supabase = ctx.supabase
-
+    if (ctx.role === 'client') return { error: 'Sin permiso' }
     const payload: TablesUpdate<'pssr_review_items'> = { updated_by: ctx.userId, updated_at: new Date().toISOString() }
     if (input.status !== undefined)         payload.status = input.status
     if (input.responsible !== undefined)    payload.responsible = input.responsible
     if (input.actions !== undefined)        payload.actions = input.actions
     if (input.completionDate !== undefined) payload.completion_date = input.completionDate
 
-    const { error } = await supabase.from('pssr_review_items').update(payload).eq('id', input.itemId)
+    // S16 (C-32): el trigger guard_pssr_review_item bloquea la edición después de enviar y pasa el PSSR a
+    // in_progress al tocar el primer ítem (antes lo hacía esta acción con un UPDATE directo).
+    const { error } = await ctx.supabase.from('pssr_review_items').update(payload).eq('id', input.itemId).eq('review_id', input.reviewId)
     if (error) return { error: error.message }
-
-    // Auto-advance review status to in_progress when first item is touched
-    await supabase
-      .from('pssr_reviews')
-      .update({ status: 'in_progress', updated_at: new Date().toISOString() })
-      .eq('id', input.reviewId)
-      .eq('status', 'draft')
 
     revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
     if (input.status === 'no') revalidatePath(`/projects/${input.projectId}/daily`)
@@ -234,98 +238,61 @@ export const updatePssrReviewItem = withAuth(
   },
 )
 
-export const updatePssrReviewNotes = withAuthOnly(
-  {},
-  async (ctx, reviewId: string, projectId: string, notes: string): Promise<{ error?: string }> => {
-    const { error } = await ctx.supabase
-      .from('pssr_reviews')
-      .update({ notes, updated_at: new Date().toISOString() })
-      .eq('id', reviewId)
+export const updatePssrReviewNotes = withAuth(
+  { guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { reviewId: string; projectId: string; notes: string }): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase.rpc('update_pssr_meta', {
+      p_review_id: input.reviewId, p_set_notes: true, p_notes: input.notes, p_set_due: false, p_due: null as unknown as string,
+    })
     if (error) return { error: error.message }
-    revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
+    revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
     return {}
   },
 )
 
-export const updatePssrReviewDueDate = withAuthOnly(
-  // Fecha límite es planificación → EDITOR
-  { role: EDITOR_ROLES },
-  async (ctx, reviewId: string, projectId: string, reviewDueDate: string | null): Promise<{ error?: string }> => {
-    const { error } = await ctx.supabase
-      .from('pssr_reviews')
-      .update({ review_due_date: reviewDueDate, last_overdue_notif_at: null, updated_at: new Date().toISOString() })
-      .eq('id', reviewId)
+export const updatePssrReviewDueDate = withAuth(
+  // Fecha límite es planificación → EDITOR (la RPC lo vuelve a exigir)
+  { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { reviewId: string; projectId: string; dueDate: string | null }): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase.rpc('update_pssr_meta', {
+      p_review_id: input.reviewId, p_set_notes: false, p_notes: null as unknown as string, p_set_due: true, p_due: input.dueDate as string,
+    })
     if (error) return { error: error.message }
-    revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
-    revalidatePath(`/projects/${projectId}/pssr`)
+    revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
+    revalidatePath(`/projects/${input.projectId}/pssr`)
     return {}
   },
 )
 
 /**
- * Fase 4 (§10.7, libro 16.37): todo punch abierto del sistema del PSSR necesita disposición para el
- * arranque y ninguno «cerrar antes del arranque» puede seguir abierto. Devuelve el error o null.
+ * S16 (A-04/C-12/C-32): enviar, firmar, aprobar y rechazar pasan por RPC SECURITY DEFINER con las reglas en SQL
+ * (ítems sí/NA, punch con disposición para el arranque —pssr_punch_blocker—, firmas por capacidad, aprobador
+ * distinto de quien envió y de los firmantes). Aquí solo quedan guards, notificaciones y revalidación.
  */
-async function startupPunchBlocker(supabase: SupabaseClient, reviewId: string): Promise<string | null> {
-  const { data: review } = await supabase.from('pssr_reviews').select('project_id, system_id').eq('id', reviewId).single()
-  if (!review?.system_id) return null
-  const { data: punches, error } = await supabase
-    .from('punches')
-    .select('punch_number, startup_disposition, subsystems!inner(system_id)')
-    .eq('project_id', review.project_id)
-    .eq('subsystems.system_id', review.system_id)
-    .in('status', ['open', 'in_progress'])
-  if (error) return error.message
-  const { missing, mustClose } = startupDispositionBlockers(punches ?? [])
-  const parts: string[] = []
-  if (missing.length) parts.push(`${missing.length} punch abierto(s) sin disposición para el arranque (${missing.slice(0, 5).map(p => p.punch_number).join(', ')}${missing.length > 5 ? '…' : ''})`)
-  if (mustClose.length) parts.push(`${mustClose.length} punch marcado(s) «cerrar antes del arranque» siguen abiertos (${mustClose.slice(0, 5).map(p => p.punch_number).join(', ')}${mustClose.length > 5 ? '…' : ''})`)
-  return parts.length ? parts.join('; ') : null
-}
-
-export const submitPssrForApproval = withAuthOnly(
-  {},
-  async (ctx, reviewId: string, projectId: string): Promise<{ error?: string }> => {
-    const supabase = ctx.supabase
-
-    // Verify all items are si or na
-    const { data: pendingItems } = await supabase
-      .from('pssr_review_items')
-      .select('id')
-      .eq('review_id', reviewId)
-      .in('status', ['pending', 'no'])
-
-    if (pendingItems && pendingItems.length > 0)
-      return { error: `${pendingItems.length} ítem(s) sin completar o con estado NO` }
-
-    const punchBlock = await startupPunchBlocker(supabase, reviewId)
-    if (punchBlock) return { error: punchBlock }
-
-    const { data: review, error: fetchErr } = await supabase
-      .from('pssr_reviews')
-      .select('id, org_id, review_number, systems(code, name)')
-      .eq('id', reviewId)
-      .single()
-    if (fetchErr || !review) return { error: fetchErr?.message ?? 'PSSR no encontrado' }
-
-    const { error } = await supabase
-      .from('pssr_reviews')
-      .update({ status: 'pending_approval', updated_at: new Date().toISOString() })
-      .eq('id', reviewId)
+export const submitPssrForApproval = withAuth(
+  { guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { reviewId: string; projectId: string }): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase.rpc('submit_pssr', { p_review_id: input.reviewId })
     if (error) return { error: error.message }
 
-    const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
-    await notifyPssrSubmittedForApproval(createAdminClient(), {
-      orgId: review.org_id,
-      submitterUserId: ctx.userId,
-      reviewId,
-      reviewNumber: review.review_number,
-      projectId,
-      systemCode: sys?.code ?? null,
-      systemName: sys?.name ?? null,
-    })
-
-    revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
+    const { data: review } = await ctx.supabase
+      .from('pssr_reviews')
+      .select('id, org_id, review_number, systems(code, name)')
+      .eq('id', input.reviewId)
+      .single()
+    if (review) {
+      const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
+      await notifyPssrSubmittedForApproval(createAdminClient(), {
+        orgId: review.org_id,
+        submitterUserId: ctx.userId,
+        reviewId: input.reviewId,
+        reviewNumber: review.review_number,
+        projectId: input.projectId,
+        systemCode: sys?.code ?? null,
+        systemName: sys?.name ?? null,
+      })
+    }
+    revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
     return {}
   },
 )
@@ -334,195 +301,91 @@ export const addPssrSignature = withAuth(
   { guards: [{ resource: 'project', field: 'projectId' }] },
   async (
     ctx,
-    input: {
-      reviewId: string
-      projectId: string
-      discipline: string
-      signatureData: string
-    },
+    input: { reviewId: string; projectId: string; capacity: PssrCapacity; signatureData: string },
   ): Promise<{ error?: string }> => {
-    const { error } = await ctx.supabase.from('pssr_signatures').insert({
-      review_id: input.reviewId,
-      user_id: ctx.userId,
-      discipline: input.discipline,
-      signature_data: input.signatureData,
-      signed_at: new Date().toISOString(),
+    if (!PSSR_CAPACITIES.includes(input.capacity)) return { error: 'Firma no válida' }
+    const { error } = await ctx.supabase.rpc('sign_pssr', {
+      p_review_id: input.reviewId, p_capacity: input.capacity, p_signature_data: input.signatureData,
     })
-    if (error) {
-      // 23505 unique_violation on (review_id, user_id) → user already signed
-      if (error.code === '23505') return { error: PSSR_ALREADY_SIGNED }
-      return { error: error.message }
-    }
-
+    if (error) return { error: error.code === '23505' && /Ya firmaste/.test(error.message) ? PSSR_ALREADY_SIGNED : error.message }
     revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
     return {}
   },
 )
 
-export const removePssrSignature = withAuthOnly(
-  // Identidad/admin la gobierna RLS sobre pssr_signatures; aquí solo auth
-  {},
-  async (ctx, signatureId: string, reviewId: string, projectId: string): Promise<{ error?: string }> => {
-    const { error } = await ctx.supabase.from('pssr_signatures').delete().eq('id', signatureId)
+export const removePssrSignature = withAuth(
+  { guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { signatureId: string; reviewId: string; projectId: string }): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase.rpc('unsign_pssr', { p_signature_id: input.signatureId })
     if (error) return { error: error.message }
-    revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
+    revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
     return {}
   },
 )
 
 // ── Approve PSSR + Issue RFSU Certificate ────────────────────
 
-export const approvePssrAndIssueRfsu = withAuthOnly(
-  { role: EDITOR_ROLES },
-  async (
-    ctx,
-    reviewId: string,
-    projectId: string,
-  ): Promise<{ cert?: Tables<'certificates'>; error?: string }> => {
-    const supabase = ctx.supabase
-
-    // Verify signatures exist
-    const { count: sigCount } = await supabase
-      .from('pssr_signatures')
-      .select('*', { count: 'exact', head: true })
-      .eq('review_id', reviewId)
-    if (!sigCount || sigCount === 0)
-      return { error: 'Se requiere al menos una firma antes de aprobar' }
-
-    const punchBlock = await startupPunchBlocker(supabase, reviewId)
-    if (punchBlock) return { error: punchBlock }
-
-    // Get review + system info
-    const { data: review } = await supabase
-      .from('pssr_reviews')
-      .select('*, systems(id, name, code), projects(id, org_id)')
-      .eq('id', reviewId)
-      .single()
-    if (!review) return { error: 'PSSR no encontrado' }
-
-    // Fase de arranque = la que emite el certificado RFSU (código SU por defecto).
-    // No se asume "la última fase": puede haber D (Decomisionamiento) o R después.
-    const orgId = (review.projects as { org_id: string }).org_id
-    const { data: rfsuPhase } = await supabase
-      .from('project_phases')
-      .select('id, certificate_name, code')
-      .eq('org_id', orgId)
-      .ilike('certificate_name', 'RFSU%')
-      .order('order_index', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    const phaseD = rfsuPhase ?? (await supabase
-      .from('project_phases')
-      .select('id, certificate_name, code')
-      .eq('org_id', orgId)
-      .order('order_index', { ascending: false })
-      .limit(1)
-      .maybeSingle()).data
-    if (!phaseD) return { error: 'No hay fases configuradas en la organización — crea las fases antes de aprobar el PSSR' }
-
-    // Auto-number RFSU certificate
-    const { count: certCount } = await supabase
-      .from('certificates')
-      .select('*', { count: 'exact', head: true })
-      .eq('project_id', projectId)
-    const certNumber = `RFSU-${String((certCount ?? 0) + 1).padStart(3, '0')}`
-
-    const system = review.systems as { id: string; name: string; code: string }
-
-    // Create RFSU certificate
-    const { data: cert, error: certError } = await supabase.from('certificates').insert({
-      project_id: projectId,
-      system_id: review.system_id,
-      phase_id: phaseD.id,
-      certificate_number: certNumber,
-      title: `RFSU — ${system?.name ?? 'Sistema'} (${system?.code ?? ''})`,
-      status: 'issued',
-      issued_date: (await getProjectToday(supabase, projectId)).today,  // S10 (B-29): día del proyecto
-      issued_by: ctx.userId,
-      approved_by: ctx.userId,
-    }).select().single()
-    if (certError) return { error: certError.message }
-
-    // Approve PSSR + link certificate
-    const { error } = await supabase.from('pssr_reviews').update({
-      status: 'approved',
-      approved_by: ctx.userId,
-      approved_at: new Date().toISOString(),
-      rfsu_certificate_id: cert.id,
-      updated_at: new Date().toISOString(),
-    }).eq('id', reviewId)
+export const approvePssrAndIssueRfsu = withAuth(
+  { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { reviewId: string; projectId: string }): Promise<{ cert?: Tables<'certificates'>; error?: string }> => {
+    const { data: certId, error } = await ctx.supabase.rpc('approve_pssr', { p_review_id: input.reviewId })
     if (error) return { error: error.message }
 
-    await logActivity(supabase, {
-      orgId: ctx.orgId,
-      userId: ctx.userId,
-      entityType: 'pssr',
-      entityId: reviewId,
-      action: 'approved',
-      payload: { projectId, certNumber: cert.certificate_number, certId: cert.id },
-    })
-
-    await notifyPssrApproved(createAdminClient(), {
-      orgId: ctx.orgId,
-      approverUserId: ctx.userId,
-      createdBy: review.created_by ?? null,
-      rfsuCertNumber: cert.certificate_number,
-      rfsuCertId: cert.id,
-      reviewId,
-      reviewNumber: review.review_number,
-      projectId,
-      systemCode: system?.code ?? null,
-      systemName: system?.name ?? null,
-    })
-
-    revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
-    revalidatePath(`/projects/${projectId}/pssr`)
+    const [{ data: cert }, { data: review }] = await Promise.all([
+      ctx.supabase.from('certificates').select('*').eq('id', certId as string).single(),
+      ctx.supabase.from('pssr_reviews').select('review_number, created_by, systems(code, name)').eq('id', input.reviewId).single(),
+    ])
+    if (cert && review) {
+      const system = review.systems as unknown as { code: string | null; name: string | null } | null
+      await notifyPssrApproved(createAdminClient(), {
+        orgId: ctx.orgId,
+        approverUserId: ctx.userId,
+        createdBy: review.created_by ?? null,
+        rfsuCertNumber: cert.certificate_number,
+        rfsuCertId: cert.id,
+        reviewId: input.reviewId,
+        reviewNumber: review.review_number,
+        projectId: input.projectId,
+        systemCode: system?.code ?? null,
+        systemName: system?.name ?? null,
+      })
+    }
+    revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
+    revalidatePath(`/projects/${input.projectId}/pssr`)
     revalidatePath(`/certificates`)
-    return { cert }
+    return { cert: cert ?? undefined }
   },
 )
 
-export const rejectPssrReview = withAuthOnly(
-  { role: EDITOR_ROLES },
-  async (ctx, reviewId: string, projectId: string, reason?: string): Promise<{ error?: string }> => {
-    const supabase = ctx.supabase
-
-    const { data: review, error: fetchErr } = await supabase
-      .from('pssr_reviews')
-      .select('id, org_id, review_number, created_by, systems(code, name)')
-      .eq('id', reviewId)
-      .single()
-    if (fetchErr || !review) return { error: fetchErr?.message ?? 'PSSR no encontrado' }
-
-    const { error } = await supabase
-      .from('pssr_reviews')
-      .update({ status: 'rejected', updated_at: new Date().toISOString() })
-      .eq('id', reviewId)
+export const rejectPssrReview = withAuth(
+  { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { reviewId: string; projectId: string; reason: string }): Promise<{ error?: string }> => {
+    const reason = (input.reason ?? '').trim()
+    if (reason.length < 3) return { error: 'Indica el motivo del rechazo' }
+    const { error } = await ctx.supabase.rpc('reject_pssr', { p_review_id: input.reviewId, p_reason: reason })
     if (error) return { error: error.message }
 
-    await logActivity(supabase, {
-      orgId: ctx.orgId,
-      userId: ctx.userId,
-      entityType: 'pssr',
-      entityId: reviewId,
-      action: 'rejected',
-      payload: { projectId, reason: reason ?? null },
-    })
-
-    const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
-    await notifyPssrRejected(createAdminClient(), {
-      orgId: review.org_id,
-      rejecterUserId: ctx.userId,
-      createdBy: review.created_by ?? null,
-      reason: reason?.trim() ?? null,
-      reviewId,
-      reviewNumber: review.review_number,
-      projectId,
-      systemCode: sys?.code ?? null,
-      systemName: sys?.name ?? null,
-    })
-
-    revalidatePath(`/projects/${projectId}/pssr/${reviewId}`)
+    const { data: review } = await ctx.supabase
+      .from('pssr_reviews')
+      .select('org_id, review_number, created_by, systems(code, name)')
+      .eq('id', input.reviewId)
+      .single()
+    if (review) {
+      const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
+      await notifyPssrRejected(createAdminClient(), {
+        orgId: review.org_id,
+        rejecterUserId: ctx.userId,
+        createdBy: review.created_by ?? null,
+        reason,
+        reviewId: input.reviewId,
+        reviewNumber: review.review_number,
+        projectId: input.projectId,
+        systemCode: sys?.code ?? null,
+        systemName: sys?.name ?? null,
+      })
+    }
+    revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
+    revalidatePath(`/projects/${input.projectId}/pssr`)
     return {}
   },
 )

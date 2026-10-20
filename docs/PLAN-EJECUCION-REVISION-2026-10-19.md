@@ -47,7 +47,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S13 | Correcciones de F8 (documentos y vendors) | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261108120000 en prod, 28 comprobaciones con ROLLBACK). Decisiones de Luis: referencias automáticas + masivas; IFR/IFA = aviso con bloqueo opcional por org; QR completo. Detalle en la cobertura |
 | S14 | Firmantes designados (capacidades) y roles | S03 | D14 | ✅ **Hecha** 2026-10-20 (migración 20261109120000 en prod, 17 comprobaciones con ROLLBACK incl. los dos «Listo cuando»). Detalle en la cobertura |
 | S15 | Miembros, auditoría y cuotas | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261110120000 en prod, 14 comprobaciones con ROLLBACK). Decisiones de Luis: invitación pendiente para cuentas existentes; suspensión y vencimiento de acceso; cuota de IA con modelo por tarea. Detalle en la cobertura |
-| S16 | PSSR por RPC | S14 | — | Pendiente |
+| S16 | PSSR por RPC | S14 | — | ✅ **Hecha** 2026-10-20 (migración 20261111120000 en prod, 11 comprobaciones con ROLLBACK). Decisiones de Luis: firmas Operaciones + HSE por defecto (por plantilla); al rechazar se anulan. Detalle en la cobertura |
 | S17 | Certificados por RPC | S14 | D6, D15 | Pendiente |
 | S18 | Offline por usuario (2 sesiones) | S06 | — | Pendiente |
 | S19 | Generación masiva de ITR | S05 | — | Pendiente |

@@ -38,7 +38,6 @@
   "src/app/actions/itr-templates.ts::itr_templates": 5,
   "src/app/actions/itr-translations.ts::itr_templates": 1,
   "src/app/actions/pssr.ts::pssr_templates": 1,
-  "src/app/actions/pssr.ts::punches": 1,
   "src/app/actions/registers.ts::register_items": 1,
   "src/app/actions/registers.ts::tags": 1,
   "src/app/actions/systems-ai.ts::subsystems": 1,

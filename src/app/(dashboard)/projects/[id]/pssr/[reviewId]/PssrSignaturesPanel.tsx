@@ -10,6 +10,9 @@ export default function PssrSignaturesPanel({
   reviewStatus,
   readonly,
   currentUserId,
+  required,
+  missing,
+  canSign,
   onOpenSign,
   onRemoveSig,
 }: {
@@ -17,6 +20,10 @@ export default function PssrSignaturesPanel({
   reviewStatus: ReviewStatus
   readonly: boolean
   currentUserId: string
+  /** S16 (C-32): firmas que exige el PSSR, las que faltan y si este usuario puede poner alguna. */
+  required: string[]
+  missing: string[]
+  canSign: boolean
   onOpenSign: () => void
   onRemoveSig: (sigId: string) => void
 }) {
@@ -33,10 +40,11 @@ export default function PssrSignaturesPanel({
             {t('review.signaturesTitle')}
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-            {t('review.signaturesSubtitle')}
+            {t('review.signaturesRequired', { caps: required.map(c => t(`capacity.${c}`)).join(' + ') })}
+            {missing.length > 0 && reviewStatus === 'pending_approval' && ` · ${t('review.signaturesMissing', { caps: missing.map(c => t(`capacity.${c}`)).join(', ') })}`}
           </p>
         </div>
-        {!readonly && reviewStatus !== 'draft' && (
+        {!readonly && reviewStatus === 'pending_approval' && canSign && (
           <button
             onClick={onOpenSign}
             style={{
@@ -77,14 +85,14 @@ export default function PssrSignaturesPanel({
                 <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>
                   {sig.profiles?.full_name ?? t('review.signUserFallback')}
                 </div>
-                {sig.discipline && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sig.discipline}</div>
+                {(sig.capacity ?? sig.discipline) && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sig.capacity ? t(`capacity.${sig.capacity}`) : sig.discipline}</div>
                 )}
                 <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginTop: '2px' }}>
                   {new Date(sig.signed_at).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
-              {!readonly && sig.user_id === currentUserId && (
+              {!readonly && reviewStatus === 'pending_approval' && sig.user_id === currentUserId && (
                 <button
                   onClick={() => onRemoveSig(sig.id)}
                   style={{

@@ -2088,18 +2088,30 @@
         "done": "por verificar",
         "verified": "verificada",
         "cancelled": "cancelada"
-      }
+      },
+      "errorMissingSignatures": "Faltan firmas: {caps}",
+      "rejectReasonRequired": "Indica el motivo del rechazo (mín. 3 caracteres).",
+      "rejectedReason": "Rechazado: {reason}. Corrige y vuelve a enviar; las firmas anteriores se anularon.",
+      "signaturesRequired": "Requiere: {caps}; aprueba Comisionamiento (otra persona)",
+      "signaturesMissing": "faltan {caps}"
     },
     "signModal": {
       "title": "Firma de aprobación",
-      "disciplineLabel": "Disciplina / Rol",
-      "disciplinePlaceholder": "Process Engineer, HSE Lead, Operations Manager...",
+      "disciplineLabel": "Firmo como",
+      "disciplinePlaceholder": "Elige la firma…",
       "signatureLabel": "Firma",
       "clear": "Limpiar",
       "cancel": "Cancelar",
       "confirm": "Confirmar firma",
       "saving": "Guardando..."
-    }
+    },
+    "capacity": {
+      "commissioning": "Comisionamiento",
+      "operations": "Operaciones",
+      "hse": "HSE"
+    },
+    "templateSignatures": "Firmas requeridas",
+    "templateSignaturesHint": "Cada PSSR nuevo las congela; aprueba un líder con capacidad de Comisionamiento distinto de los firmantes."
   },
   "Pwa": {
     "install": {

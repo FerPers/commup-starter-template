@@ -175,6 +175,10 @@ Rules for every new page/query/action:
 - `org_members` **no se escribe por REST**: solo RPC `add_org_member` / `set_member_role` / `remove_org_member` / `set_member_access` / `respond_org_invitation`. Estados `invited` · `active` · `suspended` + `access_expires_at`; todos los helpers de RLS exigen membresía activa y no vencida (`isActiveMembership` en `src/lib/members/catalog.ts`). Invitado o suspendido sin otra org activa → `/access`.
 - `activity_log` solo a nombre propio; `notifications` solo service role/DEFINER y `link_url` relativo. API v1 limitada por el binding `API_RATE_LIMITER` (wrangler.jsonc) y errores de BD con `apiDbError`.
 
+## PSSR (S16)
+
+- Estado, firmas y aprobación del PSSR **solo por RPC** (`submit_pssr`, `sign_pssr`, `unsign_pssr`, `approve_pssr` —emite el RFSU—, `reject_pssr`, `update_pssr_meta`); `pssr_reviews` no tiene UPDATE directo y los ítems se bloquean al enviar. Firmas por capacidad (`required_signatures` de la plantilla, defecto operations + hse); aprueba Comisionamiento, distinto de quien envió y de los firmantes.
+
 ## Firmantes designados (S14, D14)
 
 - `project_capacities` (persona × proyecto × `commissioning` | `operations` | `hse` | `client_rep`), solo owner/admin por `assign_project_capacity` / `revoke_project_capacity`; pantalla `/projects/[id]/signatories`. **Quién firma lo decide `has_capacity(proyecto, capacidad)`**, nunca un array de roles: con designados firman solo ellos (cualquier rol); sin designados, `capacity_fallback_roles` (= `CAPACITY_FALLBACK_ROLES` en `src/lib/constants/capacities.ts`). client_rep = empresa tipo `owner` o rol client; commissioning nunca rol client.

@@ -24,3 +24,9 @@ export const DEFAULT_PSSR_ITEMS = [
 ]
 
 export const PSSR_ALREADY_SIGNED = 'PSSR_ALREADY_SIGNED'
+
+/** S16 (C-32): capacidades que firman un PSSR (= CHECK de pssr_templates/pssr_reviews.required_signatures). */
+export const PSSR_CAPACITIES = ['commissioning', 'operations', 'hse'] as const
+export type PssrCapacity = (typeof PSSR_CAPACITIES)[number]
+/** Por defecto Operaciones + HSE (decisión de Luis, 2026-10-20); aprueba Comisionamiento. */
+export const PSSR_DEFAULT_SIGNATURES: readonly PssrCapacity[] = ['operations', 'hse']
