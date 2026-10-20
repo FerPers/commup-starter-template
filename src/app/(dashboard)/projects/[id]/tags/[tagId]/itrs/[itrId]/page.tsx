@@ -56,14 +56,13 @@ export default async function ItrExecutionPage({
     .eq('itr_id', itrId)
     .order('captured_at', { ascending: true })
 
-  const attachments = await Promise.all(
-    (rawAttachments ?? []).map(async att => {
-      const { data: signed } = await supabase.storage
-        .from('itr-attachments')
-        .createSignedUrl(att.file_url, 3600)
-      return { ...att, signed_url: signed?.signedUrl ?? null }
-    })
-  )
+  // C-41 (S06): una sola llamada para todas las URL firmadas.
+  const attachmentPaths = (rawAttachments ?? []).map(att => att.file_url)
+  const { data: signedList } = attachmentPaths.length
+    ? await supabase.storage.from('itr-attachments').createSignedUrls(attachmentPaths, 3600)
+    : { data: [] as { path: string | null; signedUrl: string }[] }
+  const signedByPath = new Map((signedList ?? []).map(s => [s.path, s.signedUrl]))
+  const attachments = (rawAttachments ?? []).map(att => ({ ...att, signed_url: signedByPath.get(att.file_url) ?? null }))
 
   const canEdit = ['owner', 'admin', 'architect', 'leader', 'inspector'].includes(membership.role)
 
@@ -109,6 +108,10 @@ export default async function ItrExecutionPage({
         canEdit={canEdit}
         attachments={attachments}
         memberIds={(members ?? []).map(m => m.user_id)}
+        punchAssignees={canEdit
+          ? (members ?? []).filter(m => m.role !== 'client').map(m => ({ user_id: m.user_id, full_name: (m.profiles as { full_name: string } | null)?.full_name ?? m.user_id }))
+            .sort((x, y) => x.full_name.localeCompare(y.full_name))
+          : []}
         assignable={canAssign
           ? (members ?? []).map(m => ({ user_id: m.user_id, role: m.role, full_name: (m.profiles as { full_name: string } | null)?.full_name ?? m.user_id }))
             .sort((x, y) => x.full_name.localeCompare(y.full_name))

@@ -351,7 +351,8 @@ export default function PunchListGlobal({
           >
             <option value="">{tc('choose')}</option>
             {/* Cerrar no es masivo: exige verificación en campo, punch por punch (fase 4). */}
-            {PUNCH_STATUS_KEYS.filter(k => k !== 'closed').map(k => (
+            {/* Cerrar = verificación en campo; cancelar = con motivo, uno por uno (S06, D8). */}
+            {PUNCH_STATUS_KEYS.filter(k => k !== 'closed' && k !== 'cancelled').map(k => (
               <option key={k} value={k}>{punchStatusLabels[k]}</option>
             ))}
           </select>

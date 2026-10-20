@@ -28,6 +28,8 @@ export const bulkUpdatePunchStatus = withAuthOnly(
     if (!ids.length) return {}
     // Fase 4: cerrar exige verificación en campo por otra persona, punch por punch.
     if (status === 'closed') return { error: 'Los punch se cierran verificándolos en campo, uno por uno' }
+    // S06 (C-11, D8): cancelar exige motivo y otra persona, punch por punch.
+    if (status === 'cancelled') return { error: 'Los punch se cancelan uno por uno, con motivo' }
 
     const { error } = await ctx.supabase
       .from('punches')

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TABLE_PRESETS, reshapeTable, type SourceRow } from '../itr/table'
-import { isNetworkFailure, localAttachmentId, localItrStatus, outboxPolicy, parseLocalAttachmentId, storagePathFor } from './outbox-utils'
+import { isNetworkFailure, localAttachmentId, localItrStatus, outboxPolicy, parseLocalAttachmentId, punchPhotoPath, storagePathFor } from './outbox-utils'
 
 describe('local attachment ids', () => {
   it('round-trips an outbox id', () => {
@@ -45,7 +45,9 @@ describe('outboxPolicy (conflictos al sincronizar)', () => {
     expect(outboxPolicy('photo', 0)).toBe('retry')
     expect(outboxPolicy('photo', 1)).toBe('retry')
     expect(outboxPolicy('photo', 2)).toBe('drop')
-    expect(outboxPolicy('punch', 2)).toBe('drop')
+    // S06: un punch nunca se descarta solo; queda «No sincronizado».
+    expect(outboxPolicy('punch', 2)).toBe('retry')
+    expect(outboxPolicy('punch', 50)).toBe('retry')
   })
   it('drops a signature on the first rejection (ITR changed state meanwhile)', () => {
     expect(outboxPolicy('signature', 0)).toBe('drop')
@@ -87,5 +89,13 @@ describe('localItrStatus (validación de contenido)', () => {
     expect(localItrStatus(table, { t: { value_text: value } }, [], rows)).toEqual({ pct: 100, status: 'completed' })
     // Sin la foto no hay forma de validar las filas: así quedaba bloqueada la firma.
     expect(localItrStatus(table, { t: { value_text: value } }).status).not.toBe('completed')
+  })
+})
+
+describe('punchPhotoPath (S06)', () => {
+  it('ruta fija por punch e índice, extensión saneada', () => {
+    expect(punchPhotoPath('abc', 0, 'IMG_1.JPG')).toBe('abc/campo-1.jpg')
+    expect(punchPhotoPath('abc', 2, 'sin-extension')).toBe('abc/campo-3.jpg')
+    expect(punchPhotoPath('abc', 1, 'x.he?ic')).toBe('abc/campo-2.heic')
   })
 })

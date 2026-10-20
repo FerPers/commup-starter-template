@@ -1,8 +1,8 @@
 'use client'
 
 import { PersonName } from '@/components/ui'
+import CancelPunchControl from '@/components/punch/CancelPunchControl'
 import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
-import type { Enums } from '@/types/supabase.generated'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -12,7 +12,7 @@ import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
 import { PunchClassification } from '@/components/punch/PunchClassification'
 import type { PunchImpact } from '@/lib/punches/category-guide'
 import { punchDisplayStatus } from '@/lib/punches/verification'
-import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
+import { bulkDeletePunches } from '@/app/actions/bulk'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
@@ -150,16 +150,6 @@ export default function PunchListView({
 
   function clearSelection() { setSelected(new Set()); setBulkError(null) }
 
-  function applyBulk(status: Enums<'punch_status'>) {
-    setBulkError(null)
-    startBulkTransition(async () => {
-      const res = await bulkUpdatePunchStatus([...selected], status)
-      if (res.error) { setBulkError(res.error); return }
-      clearSelection()
-      router.refresh()
-    })
-  }
-
   const canDelete = EDITOR_ROLES.includes(currentUserRole)
   const canCreate = canRaisePunch(currentUserRole)
 
@@ -269,13 +259,7 @@ export default function PunchListView({
           <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', flexShrink: 0 }}>
             {t('bulk.selected', { count: selected.size })}
           </span>
-          <button
-            onClick={() => applyBulk('cancelled')}
-            disabled={isBulkPending}
-            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}
-          >
-            {t('bulk.cancelSelected')}
-          </button>
+          {/* S06 (C-11, D8): ya no hay cancelación masiva: cada punch se cancela con su motivo. */}
           {canDelete && (
             <button
               onClick={handleBulkDelete}
@@ -516,7 +500,7 @@ function PunchDetailModal({
   const isClosed = punch.status === 'closed' || punch.status === 'cancelled'
   const reassignDirty = (reassignTo || null) !== (punch.assigned_to ?? null)
 
-  function handleStatusChange(newStatus: 'in_progress' | 'cancelled') {
+  function handleStatusChange(newStatus: 'in_progress') {
     startTransition(async () => {
       const res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId: punch.tags?.id ?? null })
       if (res.error) { setError(res.error); return }
@@ -611,9 +595,8 @@ function PunchDetailModal({
                   {t('detail.toInProgress')}
                 </button>
               )}
-              <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}>
-                {t('detail.cancel')}
-              </button>
+              {/* S06 (C-11, D8): cancelar con motivo, por un supervisor distinto de quien lo levantó */}
+              <CancelPunchControl punch={punch} projectId={projectId} tagId={punch.tags?.id ?? null} userId={userId} role={role} onDone={onUpdated} />
             </div>
           </div>
         )}

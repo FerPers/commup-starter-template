@@ -1266,7 +1266,14 @@
       "catA": "Cat A — Blocking",
       "catB": "Cat B — Transferable",
       "catC": "Cat C — Minor",
-      "queued": "Offline: the punch is stored on this device and will be registered when back online."
+      "queued": "Offline: the punch is stored on this device and will be registered when back online.",
+      "labelPhotos": "Defect photos",
+      "addPhoto": "📷 Add photo",
+      "removePhoto": "Remove photo",
+      "labelAssignee": "Assignee (optional)",
+      "assigneeNone": "Unassigned",
+      "fromItem": "From item: {item}",
+      "photosOffline": "Offline, the photos travel with the punch when you reconnect."
     },
     "item": {
       "titleCritical": "Critical",
@@ -1300,7 +1307,11 @@
     },
     "sync": {
       "pending": "Pending sync",
-      "signatureQueued": "Offline: the signature is stored on this device and will be registered when back online, after your responses."
+      "signatureQueued": "Offline: the signature is stored on this device and will be registered when back online, after your responses.",
+      "unsyncedTitle": "Not synced",
+      "unsyncedPunch": "Punch “{desc}”: {error}",
+      "discard": "Discard",
+      "discardConfirm": "Discard this punch without recording it? It will be lost."
     },
     "tagData": {
       "title": "Tag data ({count})",
@@ -4806,5 +4817,15 @@
       "note": "Implementation note",
       "implement": "Mark implemented"
     }
+  },
+  "PunchCancel": {
+    "button": "Cancel punch",
+    "ownPunch": "You raised it: another supervisor can cancel it.",
+    "reasonLabel": "Why is it being cancelled?",
+    "reasonPlaceholder": "E.g.: duplicate of P-0012; not a defect (approved design)…",
+    "hint": "At least 10 characters. It is kept in the comments and the audit log; a cancelled Cat A stops blocking certificates.",
+    "confirm": "Cancel the punch",
+    "cancelling": "Cancelling…",
+    "back": "Back"
   }
 }

@@ -59,6 +59,8 @@ AS $function$
         and p.resolved_at is not null
         and p.resolved_by is distinct from auth.uid()
         and p.project_id in (select id from proj)
+        -- S06 (C-44): quien lo levantó, o un supervisor; antes contaba todos los de la org para todos.
+        and (p.raised_by = auth.uid() or (select role from me) in ('owner', 'admin', 'architect', 'leader'))
     ),
     'punches_review', (
       select case when (select role from me) in ('owner', 'admin', 'architect', 'leader') then (
@@ -81,7 +83,8 @@ AS $function$
         and wp.project_id in (select id from proj)
     ),
     'signatures', (
-      select count(*)
+      -- S06 (C-44): solo para quien firma certificados (canSignCertificates en src/lib/my-work/queues.ts).
+      select case when (select role from me) in ('owner', 'admin', 'architect') then count(*) else 0 end
       from certificates c
       where c.status = 'issued'
         and c.project_id in (select id from proj)

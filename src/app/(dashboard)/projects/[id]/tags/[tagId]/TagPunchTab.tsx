@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import CancelPunchControl from '@/components/punch/CancelPunchControl'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createPunch, updatePunchStatus, addPunchComment, reassignPunch } from '@/app/actions/punches'
@@ -379,7 +380,7 @@ function PunchDetailModal({
   const isClosed = punch.status === 'closed' || punch.status === 'cancelled'
   const reassignDirty = (reassignTo || null) !== (punch.assigned_to ?? null)
 
-  function handleStatusChange(newStatus: 'in_progress' | 'cancelled') {
+  function handleStatusChange(newStatus: 'in_progress') {
     startTransition(async () => {
       const res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId })
       if (res.error) { setError(res.error); return }
@@ -469,9 +470,8 @@ function PunchDetailModal({
                   {t('punches.detail.toInProgress')}
                 </button>
               )}
-              <button onClick={() => handleStatusChange('cancelled')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-50)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}>
-                {t('punches.detail.cancel')}
-              </button>
+              {/* S06 (C-11, D8): cancelar con motivo, por un supervisor distinto de quien lo levantó */}
+              <CancelPunchControl punch={punch} projectId={projectId} tagId={tagId} userId={userId} role={role} onDone={onUpdated} />
             </div>
           </div>
         )}

@@ -11,11 +11,11 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { saveItrAttachment, signItr } from '@/app/actions/itr-instances'
-import { createPunch } from '@/app/actions/punches'
+import { addPunchAttachment, createPunch } from '@/app/actions/punches'
 import { enqueueOutbox, removeFromOutbox, type OutboxEntry, type OutboxPhoto, type OutboxSignature } from '@/lib/offline-queue'
 
 export { LOCAL_ATTACHMENT_PREFIX, localAttachmentId, parseLocalAttachmentId, isNetworkFailure, storagePathFor } from './outbox-utils'
-import { localAttachmentId, parseLocalAttachmentId, isNetworkFailure, storagePathFor } from './outbox-utils'
+import { localAttachmentId, parseLocalAttachmentId, isNetworkFailure, punchPhotoPath, storagePathFor } from './outbox-utils'
 
 export type PhotoAttachmentResult = {
   id: string
@@ -91,27 +91,57 @@ export async function discardPendingPhoto(attachmentId: string): Promise<boolean
   return true
 }
 
+export type PunchPhoto = { fileName: string; fileType: string; blob: Blob }
+
 export type PunchInput = {
+  /** S06 (C-22): id generado en el cliente (crypto.randomUUID): reenviar no duplica el punch ni sus fotos. */
+  punchId: string
   itrId: string
+  itrItemId: string | null
   projectId: string
   tagId: string
   category: 'A' | 'B' | 'C'
   description: string
   targetDate: string | null
+  assignedTo: string | null
   impact: 'safety' | 'process' | 'equipment' | 'operability' | 'environment'
+  photos: PunchPhoto[]
 }
 
-/** Registra el punch; sin red lo encola. `queued: true` cuando quedó pendiente. */
+/**
+ * Crea el punch y sube sus fotos a `punch-attachments/<punchId>/…`. Idempotente: el punch se busca por
+ * id antes de crearlo, cada foto tiene ruta fija y el adjunto no se duplica. Lanza ante un fallo de red
+ * (para encolar); devuelve `error` ante un rechazo del servidor.
+ */
+export async function sendPunch(input: PunchInput): Promise<{ ok: true; punchNumber?: string } | { error: string }> {
+  const res = await createPunch({
+    id: input.punchId, projectId: input.projectId, tagId: input.tagId, itrId: input.itrId, itrItemId: input.itrItemId,
+    category: input.category, description: input.description, targetDate: input.targetDate,
+    assignedTo: input.assignedTo, impact: input.impact,
+  })
+  if (res.error) return { error: res.error }
+  const supabase = createClient()
+  for (const [index, photo] of input.photos.entries()) {
+    const path = punchPhotoPath(input.punchId, index, photo.fileName)
+    const { error: upErr } = await supabase.storage.from('punch-attachments').upload(path, photo.blob, { contentType: photo.fileType, upsert: false })
+    if (upErr && !/already exists|duplicate/i.test(upErr.message)) {
+      if (isNetworkFailure(upErr)) throw upErr
+      return { error: `Foto ${index + 1}: ${upErr.message}` }
+    }
+    const att = await addPunchAttachment({ punchId: input.punchId, storagePath: path, projectId: input.projectId, tagId: input.tagId })
+    if (att.error) return { error: `Foto ${index + 1}: ${att.error}` }
+  }
+  return { ok: true, punchNumber: res.punchNumber }
+}
+
+/** Registra el punch con sus fotos; sin red lo encola entero. `queued: true` cuando quedó pendiente. */
 export async function createPunchOrQueue(
   input: PunchInput,
 ): Promise<{ queued: boolean; punchNumber?: string } | { error: string }> {
   if (typeof navigator !== 'undefined' && navigator.onLine) {
     try {
-      const res = await createPunch({
-        projectId: input.projectId, tagId: input.tagId, itrId: input.itrId,
-        category: input.category, description: input.description, targetDate: input.targetDate, impact: input.impact,
-      })
-      if (res.error) return { error: res.error }
+      const res = await sendPunch(input)
+      if ('error' in res) return { error: res.error }
       return { queued: false, punchNumber: res.punchNumber }
     } catch (err) {
       if (!isNetworkFailure(err)) return { error: err instanceof Error ? err.message : String(err) }

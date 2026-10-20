@@ -6794,6 +6794,7 @@ export type Database = {
           id: string
           impact: string | null
           itr_id: string | null
+          itr_item_id: string | null
           ops_notes: string | null
           ops_target_date: string | null
           post_handover_status: string | null
@@ -6826,6 +6827,7 @@ export type Database = {
           id?: string
           impact?: string | null
           itr_id?: string | null
+          itr_item_id?: string | null
           ops_notes?: string | null
           ops_target_date?: string | null
           post_handover_status?: string | null
@@ -6858,6 +6860,7 @@ export type Database = {
           id?: string
           impact?: string | null
           itr_id?: string | null
+          itr_item_id?: string | null
           ops_notes?: string | null
           ops_target_date?: string | null
           post_handover_status?: string | null
@@ -6918,6 +6921,13 @@ export type Database = {
             columns: ["itr_id"]
             isOneToOne: false
             referencedRelation: "itrs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punches_itr_item_id_fkey"
+            columns: ["itr_item_id"]
+            isOneToOne: false
+            referencedRelation: "itr_template_items"
             referencedColumns: ["id"]
           },
           {
@@ -11526,6 +11536,10 @@ export type Database = {
       }
       cancel_ownership_transfer: {
         Args: { p_reason: string; p_transfer_id: string }
+        Returns: undefined
+      }
+      cancel_punch: {
+        Args: { p_punch_id: string; p_reason: string }
         Returns: undefined
       }
       cancel_vendor_package: {

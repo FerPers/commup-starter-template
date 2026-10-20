@@ -19,7 +19,7 @@ import {
   getAllQueued, removeFromQueue, getOutbox, removeFromOutbox, markOutboxAttempt,
   notifyOutboxChanged, SYNC_DONE_EVENT, SYNC_DROPPED_EVENT, type OutboxEntry, type SyncDroppedDetail,
 } from '@/lib/offline-queue'
-import { uploadPhoto, isNetworkFailure } from '@/lib/sync/outbox'
+import { uploadPhoto, isNetworkFailure, sendPunch } from '@/lib/sync/outbox'
 import { outboxPolicy } from '@/lib/sync/outbox-utils'
 import { replayStartupOnce } from '@/lib/sync/startup-outbox'
 import { signItr } from '@/app/actions/itr-instances'
@@ -212,6 +212,15 @@ async function sendOutboxEntry(entry: OutboxEntry): Promise<{ ok: true } | { err
     const res = await signItr(entry.itrId, entry.role, entry.projectId, entry.tagId, entry.signatureImage)
     return res.error ? { error: res.error } : { ok: true }
   }
+  // S06 (C-22): entradas nuevas llevan id y fotos → envío idempotente; las viejas se crean como antes.
+  if (entry.punchId && entry.impact) {
+    const res = await sendPunch({
+      punchId: entry.punchId, itrId: entry.itrId, itrItemId: entry.itrItemId ?? null, projectId: entry.projectId, tagId: entry.tagId,
+      category: entry.category, description: entry.description, targetDate: entry.targetDate,
+      assignedTo: entry.assignedTo ?? null, impact: entry.impact, photos: entry.photos ?? [],
+    })
+    return 'error' in res ? { error: res.error } : { ok: true }
+  }
   const res = await createPunch({
     projectId: entry.projectId, tagId: entry.tagId, itrId: entry.itrId,
     category: entry.category, description: entry.description, targetDate: entry.targetDate,
@@ -227,5 +236,5 @@ function outboxPayload(entry: OutboxEntry): Json {
   if (entry.kind === 'signature') {
     return { kind: 'signature', itrId: entry.itrId, role: entry.role, hasImage: Boolean(entry.signatureImage) }
   }
-  return { kind: 'punch', itrId: entry.itrId, tagId: entry.tagId, category: entry.category, description: entry.description, targetDate: entry.targetDate }
+  return { kind: 'punch', itrId: entry.itrId, tagId: entry.tagId, punchId: entry.punchId ?? null, category: entry.category, description: entry.description, targetDate: entry.targetDate, photos: entry.photos?.length ?? 0 }
 }

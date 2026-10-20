@@ -9,6 +9,8 @@ import { logActivity } from '@/lib/log-activity'
 import type { TablesUpdate } from '@/types/supabase.generated'
 import { PUNCH_IMPACTS, STARTUP_DISPOSITIONS, type PunchImpact, type StartupDisposition } from '@/lib/punches/category-guide'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 // ── createPunch ────────────────────────────────────────────────────────────
 
 export const createPunch = withAuth(
@@ -34,6 +36,10 @@ export const createPunch = withAuth(
       impact?: PunchImpact | null
       /** Solo la cola offline: punch encolados antes de que el impacto fuera obligatorio. */
       legacyWithoutImpact?: boolean
+      /** S06 (C-22): id generado en el cliente para que la bandeja sin red sea idempotente (fotos en `<id>/…`). */
+      id?: string
+      /** S06 (C-22): ítem del ITR desde el que se levantó. */
+      itrItemId?: string | null
     },
   ): Promise<{ punchId?: string; punchNumber?: string; error?: string }> => {
     const { supabase, orgId, userId } = ctx
@@ -58,16 +64,25 @@ export const createPunch = withAuth(
     if (!subsystemId || !disciplineId) {
       return { error: 'No se puede resolver subsistema o disciplina del tag' }
     }
+    if (input.id && !UUID_RE.test(input.id)) return { error: 'Identificador de punch inválido' }
+
+    // Reintento de la bandeja: si ya se creó con este id, no se duplica.
+    if (input.id) {
+      const { data: existing } = await supabase.from('punches').select('id, punch_number').eq('id', input.id).maybeSingle()
+      if (existing) return { punchId: existing.id, punchNumber: existing.punch_number }
+    }
 
     const { data: punch, error } = await supabase
       .from('punches')
       .insert({
+        ...(input.id ? { id: input.id } : {}),
         project_id: input.projectId,
         subsystem_id: subsystemId,
         // El trigger punch_number_before_insert asigna el número atómico cuando llega ''
         punch_number: '',
         tag_id: input.tagId ?? null,
         itr_id: input.itrId ?? null,
+        itr_item_id: input.itrItemId ?? null,
         category: input.category,
         description: input.description,
         discipline_id: disciplineId,
@@ -210,11 +225,10 @@ export const updatePunchStatus = withAuth(
     const { supabase } = ctx
     // Cerrar solo por verificación en campo (verifyPunch); el trigger lo rechazaría igual.
     if (input.status === 'closed') return { error: 'Para cerrar un punch hay que verificarlo en campo' }
+    // S06 (C-11, D8): cancelar va por cancelPunch (motivo, supervisor distinto de quien lo levantó).
+    if (input.status === 'cancelled') return { error: 'Para cancelar un punch indica el motivo con «Cancelar»' }
 
     const update: TablesUpdate<'punches'> = { status: input.status }
-    if (input.status === 'cancelled') {
-      update.closed_date = new Date().toISOString().split('T')[0]
-    }
 
     const { error } = await supabase
       .from('punches')
@@ -228,6 +242,22 @@ export const updatePunchStatus = withAuth(
       revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
     }
 
+    return {}
+  },
+)
+
+// ── cancelPunch (S06, C-11/A-06, D8) ───────────────────────────────────────
+// Un supervisor (leader+) distinto de quien lo levantó, con motivo (≥ 10). La RPC lo deja en los
+// comentarios y en activity_log; el trigger impide cancelar por cualquier otra vía.
+
+export const cancelPunch = withAuth(
+  { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { punchId: string; projectId: string; tagId?: string | null; reason: string }): Promise<{ error?: string }> => {
+    const reason = (input.reason ?? '').trim()
+    if (reason.length < 10) return { error: 'Explica por qué se cancela (mínimo 10 caracteres)' }
+    const { error } = await ctx.supabase.rpc('cancel_punch', { p_punch_id: input.punchId, p_reason: reason })
+    if (error) return { error: error.message }
+    revalidatePunch(input.projectId, input.tagId)
     return {}
   },
 )
@@ -414,15 +444,18 @@ export const listPunchAttachments = withAuth(
 
     if (error) return { error: error.message }
 
+    // C-41 (S06): una sola llamada para todas las URL firmadas.
+    const paths = (rows ?? []).map(r => r.file_url)
+    const { data: signedList } = paths.length
+      ? await supabase.storage.from('punch-attachments').createSignedUrls(paths, 3600)
+      : { data: [] as { path: string | null; signedUrl: string }[] }
+    const signedByPath = new Map((signedList ?? []).map(s => [s.path, s.signedUrl]))
     const attachments = await Promise.all(
       (rows ?? []).map(async row => {
-        const { data: signed } = await supabase.storage
-          .from('punch-attachments')
-          .createSignedUrl(row.file_url, 3600)
         return {
           id: row.id,
           file_url: row.file_url,
-          signed_url: signed?.signedUrl ?? null,
+          signed_url: signedByPath.get(row.file_url) ?? null,
           uploaded_by: row.uploaded_by,
           uploaded_by_name: row.profiles?.full_name ?? null,
           created_at: row.created_at,
@@ -449,6 +482,9 @@ export const addPunchAttachment = withAuth(
       tagId?: string | null
     },
   ): Promise<{ id?: string; error?: string }> => {
+    // S06: la bandeja sin red reintenta con la misma ruta: no duplicar el adjunto.
+    const { data: existing } = await ctx.supabase.from('punch_attachments').select('id').eq('punch_id', input.punchId).eq('file_url', input.storagePath).maybeSingle()
+    if (existing) return { id: existing.id }
     const { data, error } = await ctx.supabase
       .from('punch_attachments')
       .insert({

@@ -1,14 +1,21 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { createPunchOrQueue } from '@/lib/sync/outbox'
 import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
 import type { PunchImpact } from '@/lib/punches/category-guide'
 
+// S06 (C-22): el punch desde el ITR lleva el ítem de origen, responsable opcional y las fotos del defecto.
+// Todo viaja junto (id generado aquí): sin red queda en la bandeja y se registra entero al reconectar.
+
+type DraftPhoto = { key: string; file: File; preview: string }
+
 export default function CreatePunchModal({
   itrId,
-  itrItemId: _itrItemId,
+  itrItemId,
+  itemLabel,
+  assignees = [],
   projectId,
   tagId,
   disciplineCode,
@@ -18,6 +25,10 @@ export default function CreatePunchModal({
 }: {
   itrId: string
   itrItemId: string | null
+  /** Número y texto del ítem de origen, para mostrarlo. */
+  itemLabel?: string | null
+  /** Personas a las que se puede asignar (vacío = sin selector). */
+  assignees?: Array<{ user_id: string; full_name: string }>
   projectId: string
   tagId: string
   disciplineCode: string | null
@@ -38,8 +49,25 @@ export default function CreatePunchModal({
   const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
   const [impact, setImpact] = useState<PunchImpact | null>(null)
   const [targetDate, setTargetDate] = useState('')
+  const [assignedTo, setAssignedTo] = useState('')
+  const [photos, setPhotos] = useState<DraftPhoto[]>([])
+  const photoInput = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  // Un id por modal: si el envío se corta a la mitad, el reintento no duplica el punch.
+  const [punchId] = useState(() => crypto.randomUUID())
+  // Las vistas previas se liberan al cerrar el modal (y al quitar cada foto), no en cada cambio.
+  const photosRef = useRef<DraftPhoto[]>([])
+  useEffect(() => { photosRef.current = photos }, [photos])
+  useEffect(() => () => photosRef.current.forEach(p => URL.revokeObjectURL(p.preview)), [])
+
+  function addPhotos(files: FileList | null) {
+    // Copiar ya: el FileList es «vivo» y se vacía al limpiar el input, antes de que corra el updater.
+    const picked = Array.from(files ?? [])
+    if (!picked.length) return
+    const added = picked.map(file => ({ key: `${file.name}-${file.size}-${Math.random()}`, file, preview: URL.createObjectURL(file) }))
+    setPhotos(prev => [...prev, ...added])
+  }
 
   function handleSubmit() {
     if (!description.trim()) { setError(t('punchModal.errorRequired')); return }
@@ -55,6 +83,10 @@ export default function CreatePunchModal({
         impact,
         description: description.trim(),
         targetDate: targetDate || null,
+        punchId,
+        itrItemId,
+        assignedTo: assignedTo || null,
+        photos: photos.map(p => ({ fileName: p.file.name, fileType: p.file.type || 'image/jpeg', blob: p.file })),
       })
       if ('error' in res) { setError(res.error); return }
       onCreated({ queued: res.queued })
@@ -68,7 +100,8 @@ export default function CreatePunchModal({
     >
       <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('punchModal.title')}</h2>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 20px' }}>{t('punchModal.subtitle')}</p>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: itemLabel ? '0 0 6px' : '0 0 20px' }}>{t('punchModal.subtitle')}</p>
+        {itemLabel && <p style={{ fontSize: '12px', color: 'var(--gray-700)', margin: '0 0 20px', fontWeight: 600 }}>{t('punchModal.fromItem', { item: itemLabel })}</p>}
 
         {/* Category */}
         <div style={{ marginBottom: '16px' }}>
@@ -106,6 +139,40 @@ export default function CreatePunchModal({
             style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
           />
         </div>
+
+        {/* Fotos del defecto (S06, C-22) */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelPhotos')}</label>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {photos.map(p => (
+              <div key={p.key} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--gray-50)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob URL) */}
+                <img src={p.preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button type="button" aria-label={t('punchModal.removePhoto')} onClick={() => { URL.revokeObjectURL(p.preview); setPhotos(prev => prev.filter(x => x.key !== p.key)) }}
+                  style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '12px', lineHeight: '20px', cursor: 'pointer', padding: 0 }}>×</button>
+              </div>
+            ))}
+            <button type="button" onClick={() => photoInput.current?.click()}
+              style={{ padding: '8px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '12px', color: '#15803d', fontWeight: 600, cursor: 'pointer' }}>
+              {t('punchModal.addPhoto')}
+            </button>
+            <input ref={photoInput} type="file" accept="image/*" capture="environment" multiple style={{ display: 'none' }}
+              onChange={e => { addPhotos(e.target.files); e.target.value = '' }} />
+          </div>
+          {photos.length > 0 && <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '6px 0 0' }}>{t('punchModal.photosOffline')}</p>}
+        </div>
+
+        {/* Responsable opcional (S06, C-22) */}
+        {assignees.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelAssignee')}</label>
+            <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)}
+              style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', color: 'var(--text-strong)' }}>
+              <option value="">{t('punchModal.assigneeNone')}</option>
+              {assignees.map(a => <option key={a.user_id} value={a.user_id}>{a.full_name}</option>)}
+            </select>
+          </div>
+        )}
 
         {/* Target date */}
         <div style={{ marginBottom: '20px' }}>

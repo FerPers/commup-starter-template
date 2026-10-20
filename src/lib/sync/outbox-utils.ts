@@ -29,6 +29,12 @@ export function isNetworkFailure(err: unknown, online: boolean = typeof navigato
   return err instanceof TypeError || /fetch|network|load failed|connection/i.test(msg)
 }
 
+/** S06 (C-22): ruta fija por foto del punch → reintentar no duplica (`<punchId>/…`, política de storage por punch). */
+export function punchPhotoPath(punchId: string, index: number, fileName: string): string {
+  const ext = (fileName.includes('.') ? fileName.split('.').pop()! : 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+  return `${punchId}/campo-${index + 1}.${ext}`
+}
+
 export function storagePathFor(itrId: string, itemId: string | null, fileName: string, now: number = Date.now()): string {
   const ext = fileName.split('.').pop() ?? 'jpg'
   return `${itrId}/${itemId ?? 'general'}/${now}-${Math.random().toString(36).slice(2)}.${ext}`
@@ -41,11 +47,13 @@ export type OutboxKind = 'photo' | 'punch' | 'signature'
 /**
  * Intentos máximos ante un rechazo lógico del servidor (no de red) antes de
  * descartar la entrada dejando rastro en sync_conflicts.
- * Fotos y punches: 3 (un permiso o validación transitoria puede corregirse).
+ * Fotos: 3 (un permiso o validación transitoria puede corregirse).
+ * Punches: nunca (S06, I-02): un defecto encontrado en campo no se pierde en silencio; queda en
+ * la bandeja «No sincronizado» del ITR con su error hasta que se corrige o alguien lo descarta.
  * Firmas: 1 — si el servidor la rechaza es porque el ITR cambió de estado
  * (rechazado, ya firmado, aprobado) y reintentar no la haría válida.
  */
-export const OUTBOX_MAX_ATTEMPTS: Record<OutboxKind, number> = { photo: 3, punch: 3, signature: 1 }
+export const OUTBOX_MAX_ATTEMPTS: Record<OutboxKind, number> = { photo: 3, punch: Number.POSITIVE_INFINITY, signature: 1 }
 
 export function outboxPolicy(kind: OutboxKind, attemptsSoFar: number): 'retry' | 'drop' {
   return attemptsSoFar + 1 >= OUTBOX_MAX_ATTEMPTS[kind] ? 'drop' : 'retry'

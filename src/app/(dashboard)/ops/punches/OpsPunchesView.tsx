@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { nextOpsStates, OPS_STATES } from '@/lib/punches/ops-states'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { transferPunchToOpsAction, updatePunchOpsStatusAction } from '@/app/actions/post-handover'
@@ -36,9 +37,7 @@ type OpsPunch = {
   assigned_to_name: string | null
 }
 
-const OPS_STATES = [
-  'in_progress_ops', 'deferred', 'resolved_ops', 'verified_ops', 'closed_final', 'cancelled_ops',
-] as const
+// S06 (C-04): solo las transiciones que la BD acepta (nextOpsStates = update_punch_ops_status).
 
 const btnPrimary: React.CSSProperties = {
   padding: '8px 14px', background: '#3b82f6', color: '#fff',
@@ -285,11 +284,11 @@ export default function OpsPunchesView({
                     style={btnOutline}
                     onClick={() => {
                       setEditingId(editingId === p.punch_id ? null : p.punch_id)
-                      setEditStatus(p.post_handover_status ?? 'in_progress_ops')
+                      setEditStatus(nextOpsStates(p.post_handover_status)[0] ?? '')
                       setEditNotes('')
                       setEditTargetDate('')
                     }}
-                    disabled={p.post_handover_status === 'closed_final'}
+                    disabled={nextOpsStates(p.post_handover_status).length === 0}
                   >
                     {editingId === p.punch_id ? t('actions.cancel') : t('actions.updateStatus')}
                   </button>
@@ -297,7 +296,7 @@ export default function OpsPunchesView({
                 {editingId === p.punch_id && (
                   <div style={{ marginTop: 10, padding: 10, background: 'var(--gray-50)', borderRadius: 6, display: 'grid', gridTemplateColumns: '1fr 140px auto', gap: 8 }}>
                     <select style={input} value={editStatus} onChange={e => setEditStatus(e.target.value)}>
-                      {OPS_STATES.map(s => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
+                      {nextOpsStates(p.post_handover_status).map(s => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
                     </select>
                     <input style={input} type="date" value={editTargetDate} onChange={e => setEditTargetDate(e.target.value)} />
                     <button style={btnPrimary} onClick={() => doUpdate(p.punch_id)} disabled={isPending}>

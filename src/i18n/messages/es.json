@@ -1266,7 +1266,14 @@
       "catA": "Cat A — Bloqueante",
       "catB": "Cat B — Transferible",
       "catC": "Cat C — Menor",
-      "queued": "Sin red: el punch quedó guardado en este dispositivo y se registrará al reconectar."
+      "queued": "Sin red: el punch quedó guardado en este dispositivo y se registrará al reconectar.",
+      "labelPhotos": "Fotos del defecto",
+      "addPhoto": "📷 Agregar foto",
+      "removePhoto": "Quitar foto",
+      "labelAssignee": "Responsable (opcional)",
+      "assigneeNone": "Sin asignar",
+      "fromItem": "Desde el ítem: {item}",
+      "photosOffline": "Sin red, las fotos viajan con el punch al reconectar."
     },
     "item": {
       "titleCritical": "Crítico",
@@ -1300,7 +1307,11 @@
     },
     "sync": {
       "pending": "Pendiente de sincronizar",
-      "signatureQueued": "Sin red: la firma quedó guardada en este dispositivo y se registrará al reconectar, después de tus respuestas."
+      "signatureQueued": "Sin red: la firma quedó guardada en este dispositivo y se registrará al reconectar, después de tus respuestas.",
+      "unsyncedTitle": "No sincronizado",
+      "unsyncedPunch": "Punch «{desc}»: {error}",
+      "discard": "Descartar",
+      "discardConfirm": "¿Descartar este punch sin registrarlo? Se perderá."
     },
     "tagData": {
       "title": "Datos del tag ({count})",
@@ -4806,5 +4817,15 @@
       "note": "Nota de implementación",
       "implement": "Marcar implementada"
     }
+  },
+  "PunchCancel": {
+    "button": "Cancelar punch",
+    "ownPunch": "Lo levantaste tú: otro supervisor puede cancelarlo.",
+    "reasonLabel": "¿Por qué se cancela?",
+    "reasonPlaceholder": "Ej.: duplicado de P-0012; no es un defecto (diseño aprobado)…",
+    "hint": "Mínimo 10 caracteres. Queda en los comentarios y en la auditoría; un Cat A cancelado deja de bloquear certificados.",
+    "confirm": "Cancelar el punch",
+    "cancelling": "Cancelando…",
+    "back": "Volver"
   }
 }

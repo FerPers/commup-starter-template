@@ -15,7 +15,7 @@ import { evaluateItrCompletion } from '@/lib/itr/completion'
 import { parseSourceRows } from '@/lib/itr/table'
 import { localItrStatus } from '@/lib/sync/outbox-utils'
 import { itemDescription } from '@/lib/itr/item-text'
-import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
+import { getOutbox, removeFromOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
 import { useItrAutosave } from './useItrAutosave'
 import ItemRow from './ItemRow'
 import SignModal from './SignModal'
@@ -39,6 +39,7 @@ export default function ItrExecution({
   testEquipment,
   documentsSlot,
   assignable,
+  punchAssignees = [],
 }: {
   itr: ItrData
   projectId: string
@@ -55,6 +56,8 @@ export default function ItrExecution({
   documentsSlot?: React.ReactNode
   /** S04 (C-01): miembros para completar o cambiar asignaciones de roles sin firmar (solo editores). */
   assignable?: AssignableMember[]
+  /** S06 (C-22): miembros a los que se puede asignar un punch desde el ITR. */
+  punchAssignees?: Array<{ user_id: string; full_name: string }>
 }) {
   const router = useRouter()
   const t = useTranslations('ItrExecution')
@@ -107,6 +110,8 @@ export default function ItrExecution({
   // Sprint O: fotos y firmas de este ITR que siguen en la bandeja de salida (sin red).
   const [pendingPhotos, setPendingPhotos] = useState<Attachment[]>([])
   const [pendingSignatures, setPendingSignatures] = useState<Signature[]>([])
+  /** S06 (I-02): punch que el servidor rechazó; quedan aquí hasta corregir o descartar, nunca se pierden en silencio. */
+  const [unsyncedPunches, setUnsyncedPunches] = useState<Array<{ id: number; description: string; error: string }>>([])
   const [justSigned, setJustSigned] = useState<Signature[]>([])
   useEffect(() => {
     setJustSigned(previous => previous.filter(local => !itr.itr_signatures.some(saved => saved.role === local.role)))
@@ -125,6 +130,9 @@ export default function ItrExecution({
         setPendingSignatures(own
           .filter((e): e is typeof e & { kind: 'signature' } => e.kind === 'signature')
           .map(e => pendingSignature(e, currentUserId, executorName)))
+        setUnsyncedPunches(own
+          .filter((e): e is typeof e & { kind: 'punch' } => e.kind === 'punch' && !!e.lastError && e.id !== undefined)
+          .map(e => ({ id: e.id!, description: e.description, error: e.lastError! })))
       }).catch(() => {})
     }
     load()
@@ -461,6 +469,22 @@ export default function ItrExecution({
           </div>
         )}
 
+        {/* S06 (I-02): punch rechazados por el servidor — visibles hasta corregir o descartar */}
+        {unsyncedPunches.length > 0 && (
+          <div role="alert" style={{ marginTop: '12px', padding: '10px 14px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
+            <p style={{ fontSize: '12px', fontWeight: 700, color: '#b91c1c', margin: '0 0 6px' }}>⚠ {t('sync.unsyncedTitle')}</p>
+            {unsyncedPunches.map(u => (
+              <div key={u.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '4px' }}>
+                <p style={{ fontSize: '12px', color: '#7f1d1d', margin: 0, flex: 1, wordBreak: 'break-word' }}>{t('sync.unsyncedPunch', { desc: u.description.slice(0, 60), error: u.error })}</p>
+                <button onClick={() => { if (window.confirm(t('sync.discardConfirm'))) void removeFromOutbox(u.id) }}
+                  style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid #fecaca', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer', flexShrink: 0 }}>
+                  {t('sync.discard')}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Critical blockers warning */}
         {criticalBlocked.length > 0 && (
           <div style={{ marginTop: '12px', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', border: '1px solid #fecaca' }}>
@@ -647,6 +671,11 @@ export default function ItrExecution({
         <CreatePunchModal
           itrId={itr.id}
           itrItemId={punchItrItemId}
+          itemLabel={(() => {
+            const item = punchItrItemId ? allItems.find(i => i.id === punchItrItemId) : null
+            return item ? `${item.item_number ? `${item.item_number} ` : ''}${itemDescription(item, itemLang)}`.slice(0, 120) : null
+          })()}
+          assignees={punchAssignees}
           projectId={projectId}
           tagId={tagId}
           disciplineCode={tag?.disciplines?.code ?? null}

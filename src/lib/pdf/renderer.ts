@@ -58,9 +58,16 @@ const UNICODE_MAP: Record<string, string> = {
   ' ': ' ',
 }
 
+/**
+ * Texto de una línea apto para WinAnsi. F-01 (S06): los caracteres de control (\n, \r, \t…) hacen que
+ * pdf-lib lance «WinAnsi cannot encode» y el PDF entero devolvía 500 con una descripción de varias líneas:
+ * se convierten en espacio. wrapText separa los párrafos antes de sanear.
+ */
 export function sanitize(s: string | null | undefined): string {
   if (s == null) return ''
-  return String(s).replace(/[^\x00-\xFF]/g, (c) => UNICODE_MAP[c] ?? '?')
+  return String(s)
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
+    .replace(/[^\x00-\xFF]/g, (c) => UNICODE_MAP[c] ?? '?')
 }
 
 export function truncateToWidth(rawText: string, font: PDFFont, size: number, maxWidth: number): string {
@@ -83,10 +90,9 @@ export function truncateToWidth(rawText: string, font: PDFFont, size: number, ma
  * Greedy word-wrap; breaks oversized words character-by-character as fallback.
  */
 export function wrapText(rawText: string, font: PDFFont, size: number, maxWidth: number): string[] {
-  const text = sanitize(rawText)
-  if (!text) return []
+  if (rawText == null || String(rawText) === '') return []
   const lines: string[] = []
-  const paragraphs = text.split('\n')
+  const paragraphs = String(rawText).replace(/\r\n?/g, '\n').split('\n').map(sanitize)
   for (const paragraph of paragraphs) {
     if (!paragraph) { lines.push(''); continue }
     const words = paragraph.split(/\s+/)

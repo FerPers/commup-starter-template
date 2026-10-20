@@ -103,8 +103,13 @@ const CASES: Case[] = [
   {
     name: 'punches: editar descripción por PostgREST', op: 'update', table: 'punches', column: 'description',
     rowId: fx => fx.punchId,
-    allow: EDITORS,
-    gap: { roles: ['inspector', 'client'], finding: 'A-06', session: 'S06' },
+    allow: EDITORS, // S06 (A-06): inspector → trigger 42501; client → fuera de la RLS
+  },
+  {
+    // S06 (A-06/C-11): la categoría solo cambia por review_punch_category (supervisor, con motivo): nadie por REST.
+    name: 'punches: cambiar categoría por PostgREST', op: 'update', table: 'punches', column: 'category',
+    rowId: fx => fx.punchId,
+    allow: [],
   },
   {
     name: 'certificates: editar un certificado', op: 'update', table: 'certificates', column: 'title',

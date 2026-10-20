@@ -49,6 +49,12 @@ export type OutboxPunch = {
   targetDate: string | null
   /** Ausente en punch encolados antes de la fase 4 (impacto obligatorio). */
   impact?: 'safety' | 'process' | 'equipment' | 'operability' | 'environment'
+  /** S06 (C-22): id generado en el cliente — el reenvío es idempotente y las fotos van a `<punchId>/…`. Ausente en entradas viejas. */
+  punchId?: string
+  itrItemId?: string | null
+  assignedTo?: string | null
+  /** S06 (C-22): fotos del defecto, tomadas con el punch (viajan juntas). */
+  photos?: Array<{ fileName: string; fileType: string; blob: Blob }>
 }
 
 export type OutboxSignature = {
@@ -222,7 +228,8 @@ export async function markOutboxAttempt(id: number, lastError: string): Promise<
       const row = req.result as OutboxEntry | undefined
       if (row) store.put({ ...row, attempts: (row.attempts ?? 0) + 1, lastError })
     }
-    tx.oncomplete = () => { db.close(); resolve() }
+    // S06: la bandeja «No sincronizado» del ITR se repinta con el error.
+    tx.oncomplete = () => { db.close(); notifyOutboxChanged(); resolve() }
     tx.onerror = () => { db.close(); reject(tx.error) }
   })
 }

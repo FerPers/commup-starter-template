@@ -99,10 +99,9 @@ export default async function MyWorkPage() {
       .in('project_id', projectIds)
       .order('next_due_date', { ascending: true })
       .limit(QUEUE_LIMIT + 1),
-    // Fase 4: resueltos por otros, por verificar en campo.
-    projectIds.length === 0 ? none : supabase
-      .from('punches')
-      .select(`${punchSel}, resolved_at`)
+    // Fase 4: resueltos por otros, por verificar en campo. S06 (C-44): los que levanté yo, o todos si superviso
+    // (igual que my_work_counts.punches_verify).
+    projectIds.length === 0 ? none : (oversight ? supabase.from('punches').select(`${punchSel}, resolved_at`) : supabase.from('punches').select(`${punchSel}, resolved_at`).eq('raised_by', userId))
       .eq('status', 'in_progress')
       .not('resolved_at', 'is', null)
       .neq('resolved_by', userId)
