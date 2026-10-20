@@ -165,6 +165,15 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | A-28 | Bajo | bug — Aprobación masiva de ITR muerta | [A-seguridad.md:213](revision-2026-10-19/A-seguridad.md) |
 | C-40 | Bajo | coherencia de permisos — Plantillas editables por el líder (`itr-templates.ts`, `EDITOR_ROLES`) cuando CLAUDE.md indica PRIVILEGED; `createItrAssignment` no comprueba que | [C-completions.md:287](revision-2026-10-19/C-completions.md) |
 
+**Estado S05 (2026-10-19, ae789f0; migración `20261103120000_itr_content_status_s05.sql` probada con ROLLBACK —10 escenarios— y **aplicada en prod** con autorización de Luis; D7 según recomendación):** verificados vigentes.
+- C-10 / A-28 ✅ (D7) sin cambio masivo de estado ni «aprobar seleccionados» (que siempre fallaba): la barra ofrece reprogramar (`bulkRescheduleItrs`), asignar y agregar a plan, en la lista del proyecto y en la global. Verificado en navegador.
+- C-34 ✅ `refresh_itr_status` (RPC) recalcula estado, avance y fecha de completado desde `evaluate_itr_capture`; las acciones de respuestas y evidencias la llaman en vez de escribir `itrs`; `guard_itr_derived` impide escribir esos campos por REST (también a editores); `itrs_update` solo editores. Recalculó 1 ITR DEMO (QA-FOTO: en progreso → sin iniciar).
+- C-15 ✅ `assign_itr_number` + `itr_number_counters`: el cliente manda la base y la BD agrega « Rn» bajo candado (R2, R3; tras borrar R3 sigue R4).
+- C-20 ✅ casilla cuenta solo marcada; un «No» cuenta solo con observación (SQL y `completion.ts`, + tests); la observación aparece y se marca obligatoria en un «No», con la sugerencia de punch.
+- C-23 ✅ `return_itr_to_executor`: el supervisor o cliente asignado devuelve con motivo; se retiran las firmas, se audita y se avisa al ejecutor (botón en la ejecución).
+- C-26 ✅ captura solo el ejecutor asignado o un supervisor (respuestas y evidencias); trazo PNG ≤ ~256 KB en la action y en `sign_itr_atomic`.
+- C-21 ✅ confirmado de S1-v1 (`itemDescription`). C-40 ✅ crear ITR exige plantilla activa, subsistema del tag y ejecutor que no sea cliente; el tier de edición de plantillas (líder) se deja como está (decisión de producto pendiente, no se cambió).
+
 ## S06 — Punch: permisos de campo y escritura por RPC
 
 | ID | Sev. | Hallazgo | Anexo |
