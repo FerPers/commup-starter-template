@@ -134,7 +134,8 @@ export default function TagItrTab({
   function handleDelete(itrId: string) {
     if (!confirm('¿Eliminar este ITR y todas sus respuestas?')) return
     startTransition(async () => {
-      await deleteItr(itrId, projectId, tagId)
+      const res = await deleteItr(itrId, projectId, tagId)
+      if (res.error) { window.alert(res.error); return }
       router.refresh()
     })
   }

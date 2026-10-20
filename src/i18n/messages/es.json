@@ -494,7 +494,8 @@
       "colFreq": "Frecuencia",
       "colNextDue": "Próximo venc.",
       "colLastRecord": "Último registro",
-      "colStatus": "Estado"
+      "colStatus": "Estado",
+      "execute": "Ejecutar"
     },
     "empty": "No hay planes de preservación que coincidan."
   },
@@ -1658,8 +1659,8 @@
     "sectionResult": "Resultado de la ejecución",
     "labelRemarks": "Observaciones / Notas",
     "placeholderRemarks": "Notas del técnico, condiciones encontradas, acciones tomadas…",
-    "raisePunchLabel": "Levantar Punch por anomalía",
-    "raisePunchDesc": "Crea un punch en el Punch List de este tag, vinculado a este registro",
+    "raisePunchLabel": "Un NOK levanta un punch",
+    "raisePunchDesc": "Se crea en el Punch List de este tag, vinculado a este registro. Elige su categoría.",
     "punchCategoryLabel": "Categoría del punch:",
     "punchCatA": "Bloqueante",
     "punchCatB": "Transferible",

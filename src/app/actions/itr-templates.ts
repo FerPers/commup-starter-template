@@ -3,7 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Json } from '@/types/supabase.generated'
 
-import { EDITOR_ROLES } from '@/lib/auth/permissions'
+import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
@@ -69,16 +69,20 @@ export const updateTemplateHeader = withAuthOnly(
   },
 )
 
+// I-14 (S08): la RLS de borrado es owner/admin/architect; con EDITOR el leader veía «borrado» y no pasaba
+// nada (0 filas sin error). Mismo tier que la RLS y se comprueba que algo se borró.
 export const deleteTemplate = withAuthOnly(
-  { role: EDITOR_ROLES },
+  { role: PRIVILEGED_ROLES },
   async (ctx, templateId: string): Promise<{ error?: string }> => {
-    const { error } = await ctx.supabase
+    const { data, error } = await ctx.supabase
       .from('itr_templates')
       .delete()
       .eq('id', templateId)
       .eq('org_id', ctx.orgId)
+      .select('id')
 
-    if (error) return { error: error.message }
+    if (error) return { error: /violates foreign key|Assigned revision/i.test(error.message) ? 'La plantilla tiene ITR: desactívala en lugar de borrarla' : error.message }
+    if (!data?.length) return { error: 'No se pudo borrar la plantilla (sin permiso o ya no existe)' }
     revalidatePath('/admin/templates')
     return {}
   },

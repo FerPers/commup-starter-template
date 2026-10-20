@@ -28,9 +28,12 @@ const PLAN_STYLE: Record<string, { color: string; bg: string }> = {
 export default function PreservationGlobal({
   projects,
   plans,
+  projectScope,
 }: {
   projects: Project[]
   plans: Plan[]
+  /** H-08 (S08): vista del proyecto — sin selector de proyecto. */
+  projectScope?: Project
 }) {
   const t  = useTranslations('Preservation')
   const tc = useTranslations('Common')
@@ -60,7 +63,7 @@ export default function PreservationGlobal({
   }
 
   const [search, setSearch] = useState('')
-  const [filterProject, setFilterProject] = useState('')
+  const [filterProject, setFilterProject] = useState(projectScope?.id ?? '')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterDue, setFilterDue] = useState<'overdue' | 'soon' | ''>('')
   const [page, setPage] = useState(1)
@@ -94,7 +97,7 @@ export default function PreservationGlobal({
     return true
   }), [plans, filterProject, filterStatus, filterDue, search, today, soon])
 
-  const hasFilters = filterProject || filterStatus || filterDue || search
+  const hasFilters = (!projectScope && filterProject) || filterStatus || filterDue || search
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -106,7 +109,7 @@ export default function PreservationGlobal({
       <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{tc('allOrg')}</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{projectScope ? `${projectScope.code} — ${projectScope.name}` : tc('allOrg')}</p>
         </div>
         <a
           href="/preservation/pdf"
@@ -152,17 +155,19 @@ export default function PreservationGlobal({
           aria-label={t('filters.search')}
           style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', width: '240px', fontFamily: 'inherit' }}
         />
-        <select value={filterProject} onChange={e => setFilterProject(e.target.value)} style={selStyle}>
-          <option value="">{tc('allProjects')}</option>
-          {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
-        </select>
+        {!projectScope && (
+          <select value={filterProject} onChange={e => setFilterProject(e.target.value)} style={selStyle}>
+            <option value="">{tc('allProjects')}</option>
+            {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+          </select>
+        )}
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={selStyle}>
           <option value="">{t('filters.allStatuses')}</option>
           {planStatusKeys.map(k => <option key={k} value={k}>{planStatusLabels[k]}</option>)}
         </select>
         {hasFilters && (
           <button
-            onClick={() => { setFilterProject(''); setFilterStatus(''); setFilterDue(''); setSearch(''); setPage(1) }}
+            onClick={() => { setFilterProject(projectScope?.id ?? ''); setFilterStatus(''); setFilterDue(''); setSearch(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {tc('clearFilters')}
@@ -216,9 +221,17 @@ export default function PreservationGlobal({
 
                 {/* Tag */}
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>
-                    {plan.tags?.tag_number ?? '—'}
-                  </div>
+                  {/* H-08 (S08): la fila lleva al tag y a ejecutar el plan */}
+                  {plan.tags ? (
+                    <a href={`/projects/${plan.project_id}/tags/${plan.tags.id}`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}>
+                      {plan.tags.tag_number}
+                    </a>
+                  ) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</div>}
+                  {plan.tags && plan.status === 'active' && (
+                    <a href={`/projects/${plan.project_id}/tags/${plan.tags.id}/preservation/${plan.id}`} style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 600, color: '#2563eb', textDecoration: 'none' }}>
+                      {t('table.execute')} →
+                    </a>
+                  )}
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
                     {plan.tags?.description ?? ''}
                   </div>

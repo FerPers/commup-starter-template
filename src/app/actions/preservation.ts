@@ -5,7 +5,7 @@ import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 import type { Enums } from '@/types/supabase.generated'
 
-// NOTA sobre roles: las funciones de EJECUCIÓN de campo (createPreservationRecord,
+// NOTA sobre roles: las funciones de EJECUCIÓN de campo (startPreservationRecord,
 // upsertRecordResponse, finalizeRecord, attachments) son auth-only a propósito —
 // los inspectores ejecutan preservación y NO están en EDITOR_ROLES. RLS gobierna
 // esas tablas. Misma desviación documentada que itr-instances.ts (S3).
@@ -288,40 +288,22 @@ export const updatePlanStatus = withAuthOnly(
 // RECORDS (EXECUTION) — auth-only: los ejecutan inspectores (ver nota arriba)
 // ═══════════════════════════════════════════════════════════
 
-export const createPreservationRecord = withAuth(
+// S08 (C-05/C-06/I-03, D10): la ejecución va por RPC SECURITY DEFINER (inspector o editor, nunca client).
+// Abrir no avanza la fecha; finalizar sí (con cualquier resultado) y un NOK levanta su punch, todo en una
+// transacción. Antes, con rol inspector, finalizar afectaba 0 filas sin error y la pantalla decía ✓.
+
+/** Abre (o retoma) el registro del plan: uno abierto por plan, idempotente. */
+export const startPreservationRecord = withAuth(
   {
     guards: [
       { resource: 'project', field: 'projectId' },
       { resource: 'tag', field: 'tagId', scopeField: 'projectId' },
     ],
   },
-  async (
-    ctx,
-    input: {
-      planId: string
-      tagId: string
-      projectId: string
-      result: 'ok' | 'nok' | 'na'
-      remarks?: string
-    },
-  ): Promise<{ data?: { id: string }; error?: string }> => {
-    const { data, error } = await ctx.supabase
-      .from('preservation_records')
-      .insert({
-        plan_id: input.planId,
-        tag_id: input.tagId,
-        performed_by: ctx.userId,
-        performed_at: new Date().toISOString(),
-        result: input.result,
-        remarks: input.remarks?.trim() ?? null,
-        punch_raised: false,
-      })
-      .select('id')
-      .single()
-
-    if (error) return { error: error.message }
-    revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
-    return { data }
+  async (ctx, input: { planId: string; tagId: string; projectId: string }): Promise<{ data?: { id: string }; error?: string }> => {
+    const { data, error } = await ctx.supabase.rpc('start_preservation_record', { p_plan_id: input.planId })
+    if (error || !data) return { error: error?.message ?? 'No se pudo abrir el registro' }
+    return { data: { id: data as string } }
   },
 )
 
@@ -345,19 +327,14 @@ export const upsertRecordResponse = withAuth(
       tagId: string
     },
   ): Promise<{ error?: string }> => {
-    const { error } = await ctx.supabase
-      .from('preservation_record_responses')
-      .upsert({
-        record_id: input.recordId,
-        item_id: input.itemId,
-        value_bool: input.valueBool ?? null,
-        value_numeric: input.valueNumeric ?? null,
-        value_text: input.valueText ?? null,
-        is_passed: input.isPassed ?? null,
-        responded_at: new Date().toISOString(),
-        responded_by: ctx.userId,
-      }, { onConflict: 'record_id,item_id' })
-
+    const { error } = await ctx.supabase.rpc('save_preservation_response', {
+      p_record_id: input.recordId,
+      p_item_id: input.itemId,
+      p_value_bool: input.valueBool ?? undefined,
+      p_value_numeric: input.valueNumeric ?? undefined,
+      p_value_text: input.valueText ?? undefined,
+      p_is_passed: input.isPassed ?? undefined,
+    })
     if (error) return { error: error.message }
     return {}
   },
@@ -377,109 +354,32 @@ export const finalizeRecord = withAuth(
       planId: string
       result: 'ok' | 'nok' | 'na'
       remarks?: string
-      raisePunch: boolean
+      /** Obligatoria con NOK (D10): el NOK siempre levanta punch. */
       punchCategory?: 'A' | 'B' | 'C'
       projectId: string
       tagId: string
     },
   ): Promise<{ error?: string; punchNumber?: string; alreadyFinalized?: boolean }> => {
-    // Guard: si el record ya está finalizado, no permitir sobreescribir
-    const { data: existing } = await ctx.supabase
-      .from('preservation_records')
-      .select('status')
-      .eq('id', input.recordId)
-      .single()
-
-    if (existing?.status === 'finalized') {
-      return { error: 'Este registro ya fue finalizado. Crea un nuevo record si necesitas re-evaluar.', alreadyFinalized: true }
-    }
-
-    const { error } = await ctx.supabase
-      .from('preservation_records')
-      .update({
-        result: input.result,
-        remarks: input.remarks?.trim() ?? null,
-        punch_raised: input.raisePunch,
-        status: 'finalized',
-      })
-      .eq('id', input.recordId)
-
-    if (error) return { error: error.message }
-
-    let createdPunchNumber: string | undefined
-
-    if (input.raisePunch) {
-      // Dedup: si ya hay punch vinculado a este record, no crear otro
-      const { data: existingPunch } = await ctx.supabase
-        .from('punches')
-        .select('punch_number')
-        .eq('preservation_record_id', input.recordId)
-        .maybeSingle()
-
-      if (existingPunch) {
-        createdPunchNumber = existingPunch.punch_number as string
-      } else {
-        // Resolve tag → subsystem + discipline (required by punches schema)
-        const { data: tag } = await ctx.supabase
-          .from('tags')
-          .select('tag_number, subsystem_id, discipline_id')
-          .eq('id', input.tagId)
-          .single()
-
-        if (!tag || !tag.subsystem_id || !tag.discipline_id) {
-          return { error: 'Record guardado pero no se pudo crear punch: tag sin subsistema o disciplina' }
-        }
-
-        // Resolve plan → procedure code for description
-        const { data: plan } = await ctx.supabase
-          .from('preservation_plans')
-          .select('preservation_procedures(code, title)')
-          .eq('id', input.planId)
-          .single()
-
-        const proc = plan?.preservation_procedures as { code: string; title: string } | { code: string; title: string }[] | null
-        const procRow = Array.isArray(proc) ? proc[0] : proc
-        const procCode = procRow?.code ?? 'PRES'
-        const procTitle = procRow?.title ?? ''
-
-        const description =
-          `[Preservación NOK] ${procCode} en ${tag.tag_number}` +
-          (procTitle ? ` — ${procTitle}` : '') +
-          (input.remarks?.trim() ? `\n${input.remarks.trim()}` : '')
-
-        const { data: punch, error: punchErr } = await ctx.supabase
-          .from('punches')
-          .insert({
-            project_id: input.projectId,
-            subsystem_id: tag.subsystem_id,
-            tag_id: input.tagId,
-            preservation_record_id: input.recordId,
-            category: input.punchCategory ?? 'B',
-            description,
-            discipline_id: tag.discipline_id,
-            raised_by: ctx.userId,
-            punch_number: '', // trigger punch_number_before_insert genera el correlativo
-            status: 'open',
-            priority: input.punchCategory === 'A' ? 'critical' : 'major',
-            created_via: 'preservation',
-          })
-          .select('punch_number')
-          .single()
-
-        if (punchErr) {
-          return { error: `Record guardado pero punch falló: ${punchErr.message}` }
-        }
-        createdPunchNumber = punch?.punch_number as string | undefined
-      }
-    }
+    if (input.result === 'nok' && !input.punchCategory) return { error: 'Un resultado NOK genera un punch: indica su categoría' }
+    const { data, error } = await ctx.supabase.rpc('finalize_preservation_record', {
+      p_record_id: input.recordId,
+      p_result: input.result,
+      p_remarks: input.remarks ?? undefined, // la RPC recorta y trata vacío como null
+      p_punch_category: input.result === 'nok' ? input.punchCategory : undefined,
+    })
+    if (error) return { error: error.message, alreadyFinalized: /ya fue finalizado/.test(error.message) }
+    const punchNumber = (data as { punch_number?: string | null } | null)?.punch_number ?? undefined
 
     revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
     revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}/preservation/${input.planId}`)
-    if (input.raisePunch) {
+    revalidatePath(`/projects/${input.projectId}/preservation`)
+    revalidatePath('/preservation')
+    revalidatePath('/my-work')
+    if (punchNumber) {
       revalidatePath(`/projects/${input.projectId}/punches`)
       revalidatePath('/punch-list')
     }
-    return { punchNumber: createdPunchNumber }
+    return { punchNumber }
   },
 )
 

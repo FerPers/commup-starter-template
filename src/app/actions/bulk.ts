@@ -3,6 +3,7 @@
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
+import { punchDeleteBlocker } from '@/lib/punches/deletable'
 import { revalidatePath } from 'next/cache'
 import type { Enums } from '@/types/supabase.generated'
 
@@ -89,21 +90,29 @@ export const bulkDeletePunches = withAuthOnly(
   async (ctx, ids: string[]): Promise<{ deleted?: number; error?: string }> => {
     if (!ids.length) return { deleted: 0 }
 
-    const { data: rows, error: fetchErr } = await ctx.supabase
+    const { data: found, error: fetchErr } = await ctx.supabase
       .from('punches')
-      .select('id, punch_number, project_id')
+      .select('id, punch_number, project_id, status, resolved_at, post_handover_status, preservation_record_id, punch_attachments(count)')
       .in('id', ids)
 
     if (fetchErr) return { deleted: 0, error: fetchErr.message }
-    if (!rows || rows.length === 0) return { deleted: 0 }
+    if (!found || found.length === 0) return { deleted: 0 }
 
+    // C-27 (S08): solo los que son errores de carga (abiertos, sin evidencia ni vínculos); el resto se cancela.
+    const blocked = found.filter(r => punchDeleteBlocker({ ...r, attachments: (r.punch_attachments as unknown as { count: number }[])[0]?.count ?? 0 }))
+    if (blocked.length) {
+      return { deleted: 0, error: `No se borró nada: ${blocked.length} punch no se pueden borrar (en curso, cerrados o con evidencia): ${blocked.slice(0, 5).map(r => r.punch_number).join(', ')}${blocked.length > 5 ? '…' : ''}. Cancélalos con motivo.` }
+    }
+    const rows = found
     const deletableIds = rows.map(r => r.id)
-    const { error } = await ctx.supabase
+    const { data: deleted, error } = await ctx.supabase
       .from('punches')
       .delete()
       .in('id', deletableIds)
+      .select('id')
 
     if (error) return { deleted: 0, error: error.message }
+    if ((deleted?.length ?? 0) !== deletableIds.length) return { deleted: deleted?.length ?? 0, error: 'Algunos punch no se pudieron borrar (sin permiso)' }
 
     await logActivity(ctx.supabase, {
       orgId: ctx.orgId,

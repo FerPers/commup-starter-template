@@ -125,8 +125,14 @@ export const deleteItr = withAuthOnly(
     projectId: string,
     tagId: string,
   ): Promise<{ error?: string }> => {
-    const { error } = await ctx.supabase.from('itrs').delete().eq('id', itrId)
-    if (error) return { error: error.message }
+    // C-27 (S08): un ITR firmado no se borra (guard); antes la UI ignoraba el error. Se informa y se audita.
+    const { data: deleted, error } = await ctx.supabase.from('itrs').delete().eq('id', itrId).eq('project_id', projectId).select('id, itr_number')
+    if (error) return { error: /signed ITR/i.test(error.message) ? 'El ITR tiene firmas: para borrarlo primero hay que reabrirlo' : error.message }
+    if (!deleted?.length) return { error: 'No se pudo borrar el ITR (sin permiso o ya no existe)' }
+    await ctx.supabase.from('activity_log').insert({
+      org_id: ctx.orgId, user_id: ctx.userId, entity_type: 'itr', entity_id: itrId, action: 'deleted',
+      payload: { itrNumber: deleted[0].itr_number, projectId, tagId },
+    })
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}`)
     revalidatePath(`/projects/${projectId}/itrs`)

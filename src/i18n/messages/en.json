@@ -494,7 +494,8 @@
       "colFreq": "Frequency",
       "colNextDue": "Next due",
       "colLastRecord": "Last record",
-      "colStatus": "Status"
+      "colStatus": "Status",
+      "execute": "Run"
     },
     "empty": "No preservation plans match the current filters."
   },
@@ -1658,8 +1659,8 @@
     "sectionResult": "Execution result",
     "labelRemarks": "Observations / Notes",
     "placeholderRemarks": "Technician notes, conditions found, actions taken…",
-    "raisePunchLabel": "Raise Punch for anomaly",
-    "raisePunchDesc": "Creates a punch in this tag’s Punch List, linked to this record",
+    "raisePunchLabel": "A NOK raises a punch",
+    "raisePunchDesc": "It is created in this tag’s Punch List, linked to this record. Choose its category.",
     "punchCategoryLabel": "Punch category:",
     "punchCatA": "Blocker",
     "punchCatB": "Transferable",

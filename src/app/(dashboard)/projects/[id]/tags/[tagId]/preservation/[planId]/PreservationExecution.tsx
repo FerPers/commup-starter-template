@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useRef, useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import {
-  createPreservationRecord,
+  startPreservationRecord,
   upsertRecordResponse,
   finalizeRecord,
 } from '@/app/actions/preservation'
@@ -141,7 +141,8 @@ export default function PreservationExecution({
   // Once user picks a result manually, stop auto-deriving so we don't fight them
   const [resultOverridden, setResultOverridden] = useState(false)
   const [remarks, setRemarks] = useState(openRecord?.remarks ?? '')
-  const [raisePunch, setRaisePunch] = useState(false)
+  // D10 (S08): un NOK siempre levanta punch; solo se elige la categoría.
+  const raisePunch = result === 'nok'
   const [punchCategory, setPunchCategory] = useState<'A' | 'B' | 'C'>('B')
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -165,22 +166,20 @@ export default function PreservationExecution({
         }
         return false
       })
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Derived: recompute pass/fail when responses or items change, unless the user overrode the result manually
     setResult(hasCriticalFail ? 'nok' : 'ok')
-    if (!hasCriticalFail) setRaisePunch(false)
   }, [responses, items, resultOverridden])
 
-  async function ensureRecord(): Promise<string | null> {
-    if (recordId) return recordId
-    const res = await createPreservationRecord({
-      planId: plan.id,
-      tagId,
-      projectId,
-      result: 'ok',
+  // C-06 (S08): una sola promesa compartida — dos toques rápidos no crean dos registros (la BD además
+  // admite un solo registro abierto por plan). Abrir no avanza la fecha: eso lo hace finalizar.
+  const recordPromise = useRef<Promise<string | null> | null>(null)
+  function ensureRecord(): Promise<string | null> {
+    if (recordId) return Promise.resolve(recordId)
+    recordPromise.current ??= startPreservationRecord({ planId: plan.id, tagId, projectId }).then(res => {
+      if (res.error || !res.data) { setSubmitError(res.error ?? t('errCreateRecord')); recordPromise.current = null; return null }
+      setRecordId(res.data.id)
+      return res.data.id
     })
-    if (res.error || !res.data) return null
-    setRecordId(res.data.id)
-    return res.data.id
+    return recordPromise.current
   }
 
   async function handleResponse(item: ProcItem, update: { bool?: boolean; numeric?: string; text?: string }) {
@@ -195,7 +194,8 @@ export default function PreservationExecution({
     const passed = isPassed(item, isNaN(numVal!) ? null : numVal)
 
     startTransition(async () => {
-      await upsertRecordResponse({
+      // C-06: antes los errores de guardado se ignoraban y la respuesta se perdía en silencio.
+      const res = await upsertRecordResponse({
         recordId: rId,
         itemId: item.id,
         valueBool: item.item_type === 'checkbox' || item.item_type === 'yes_no'
@@ -208,6 +208,7 @@ export default function PreservationExecution({
         projectId,
         tagId,
       })
+      if (res.error) setSubmitError(res.error)
     })
   }
 
@@ -237,7 +238,6 @@ export default function PreservationExecution({
         planId: plan.id,
         result,
         remarks: remarks || undefined,
-        raisePunch,
         punchCategory: raisePunch ? punchCategory : undefined,
         projectId,
         tagId,
@@ -487,20 +487,12 @@ export default function PreservationExecution({
 
         {result === 'nok' && (
           <div style={{ marginBottom: '14px', padding: '10px 14px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={raisePunch}
-                onChange={e => setRaisePunch(e.target.checked)}
-                style={{ width: '16px', height: '16px' }}
-              />
-              <div>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>{t('raisePunchLabel')}</span>
-                <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '1px' }}>
-                  {t('raisePunchDesc')}
-                </div>
+            <div>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>{t('raisePunchLabel')}</span>
+              <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '1px' }}>
+                {t('raisePunchDesc')}
               </div>
-            </label>
+            </div>
             {raisePunch && (
               <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #fecaca', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#7f1d1d' }}>{t('punchCategoryLabel')}</span>

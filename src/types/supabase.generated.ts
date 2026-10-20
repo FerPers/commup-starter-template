@@ -11940,6 +11940,15 @@ export type Database = {
         Args: { p_note: string; p_revision_id: string }
         Returns: undefined
       }
+      finalize_preservation_record: {
+        Args: {
+          p_punch_category?: Database["public"]["Enums"]["punch_category"]
+          p_record_id: string
+          p_remarks?: string
+          p_result: Database["public"]["Enums"]["preservation_result"]
+        }
+        Returns: Json
+      }
       function_definition_md5: {
         Args: { p_signatures: string[] }
         Returns: {
@@ -12410,6 +12419,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_preservation_response: {
+        Args: {
+          p_is_passed?: boolean
+          p_item_id: string
+          p_record_id: string
+          p_value_bool?: boolean
+          p_value_numeric?: number
+          p_value_text?: string
+        }
+        Returns: undefined
+      }
       save_procedure_revision: {
         Args: {
           p_change_reason?: string
@@ -12550,6 +12570,10 @@ export type Database = {
         Returns: string
       }
       start_performance_run: { Args: { p_test_id: string }; Returns: string }
+      start_preservation_record: {
+        Args: { p_plan_id: string }
+        Returns: string
+      }
       start_procedure_run: {
         Args: { p_procedure_id: string; p_system_id?: string }
         Returns: string

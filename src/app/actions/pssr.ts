@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { EDITOR_ROLES } from '@/lib/auth/permissions'
+import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
 import { startupDispositionBlockers } from '@/lib/punches/category-guide'
@@ -102,11 +102,13 @@ export const deletePssrTemplateItem = withAuthOnly(
   },
 )
 
+// I-14 (S08): mismo tier que la RLS (owner/admin/architect) y se comprueba que algo se borró.
 export const deletePssrTemplate = withAuthOnly(
-  { role: EDITOR_ROLES },
+  { role: PRIVILEGED_ROLES },
   async (ctx, templateId: string): Promise<{ error?: string }> => {
-    const { error } = await ctx.supabase.from('pssr_templates').delete().eq('id', templateId)
+    const { data, error } = await ctx.supabase.from('pssr_templates').delete().eq('id', templateId).eq('org_id', ctx.orgId).select('id')
     if (error) return { error: error.message }
+    if (!data?.length) return { error: 'No se pudo borrar la plantilla (sin permiso o ya no existe)' }
     revalidatePath('/admin/templates/pssr')
     return {}
   },

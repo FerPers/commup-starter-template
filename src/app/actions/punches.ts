@@ -6,6 +6,7 @@ import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/log-activity'
+import { punchDeleteBlocker } from '@/lib/punches/deletable'
 import type { TablesUpdate } from '@/types/supabase.generated'
 import { PUNCH_IMPACTS, STARTUP_DISPOSITIONS, type PunchImpact, type StartupDisposition } from '@/lib/punches/category-guide'
 
@@ -400,12 +401,29 @@ export const deletePunch = withAuth(
   ): Promise<{ error?: string }> => {
     const { supabase } = ctx
 
-    const { error } = await supabase
+    // C-27 (S08): borrar es para errores de carga; con estado o evidencia se cancela con motivo. Auditado.
+    const { data: punch } = await supabase
+      .from('punches')
+      .select('id, punch_number, category, status, resolved_at, post_handover_status, preservation_record_id, project_id, punch_attachments(count)')
+      .eq('id', input.punchId)
+      .eq('project_id', input.projectId)
+      .maybeSingle()
+    if (!punch) return { error: 'Punch no encontrado' }
+    const blocker = punchDeleteBlocker({ ...punch, attachments: (punch.punch_attachments as unknown as { count: number }[])[0]?.count ?? 0 })
+    if (blocker) return { error: `No se puede borrar: ${blocker}. Cancélalo con motivo.` }
+
+    const { data: deleted, error } = await supabase
       .from('punches')
       .delete()
       .eq('id', input.punchId)
+      .select('id')
 
     if (error) return { error: error.message }
+    if (!deleted?.length) return { error: 'No se pudo borrar el punch (sin permiso)' }
+    await logActivity(supabase, {
+      orgId: ctx.orgId, userId: ctx.userId, entityType: 'punch', entityId: input.punchId, action: 'deleted',
+      payload: { punchNumber: punch.punch_number, category: punch.category, projectId: input.projectId },
+    })
 
     revalidatePath(`/projects/${input.projectId}/punches`)
     if (input.tagId) {
@@ -520,16 +538,21 @@ export const deletePunchAttachment = withAuth(
       tagId?: string | null
     },
   ): Promise<{ error?: string }> => {
-    const { error: storageError } = await ctx.supabase.storage
-      .from('punch-attachments')
-      .remove([input.storagePath])
-    if (storageError) return { error: storageError.message }
-
-    const { error } = await ctx.supabase
+    // C-27 (S08): primero la fila (la RLS decide: la foto propia, o un supervisor) y solo si se borró, el
+    // archivo. Antes se borraba el archivo primero y, si la RLS rechazaba la fila, quedaba un adjunto roto.
+    const { data: deleted, error } = await ctx.supabase
       .from('punch_attachments')
       .delete()
       .eq('id', input.attachmentId)
+      .eq('file_url', input.storagePath)
+      .select('id')
     if (error) return { error: error.message }
+    if (!deleted?.length) return { error: 'No se pudo borrar la foto: solo la borra quien la subió o un supervisor' }
+
+    const { error: storageError } = await ctx.supabase.storage
+      .from('punch-attachments')
+      .remove([input.storagePath])
+    if (storageError) console.error('[punch-attachments.remove]', storageError.message)
 
     revalidatePath(`/projects/${input.projectId}/punches`)
     if (input.tagId) {

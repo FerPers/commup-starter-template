@@ -107,8 +107,10 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
     if (!confirm(t('deleteConfirm', { code }))) return
     setDeletingId(id)
     startTransition(async () => {
-      await deleteTemplate(id)
+      // I-14 (S08): antes el error se ignoraba y la UI daba por borrada una plantilla que seguía ahí.
+      const res = await deleteTemplate(id)
       setDeletingId(null)
+      if (res.error) { window.alert(res.error); return }
       router.refresh()
     })
   }
