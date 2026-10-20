@@ -88,14 +88,17 @@ describe.skipIf(!enabled)('sistematización — dependencias, criterio dependenc
   })
 
   it('rechaza ciclos (directos e indirectos) y autodependencia', async () => {
-    const g = gates[0].id
+    // S11 (D-35): el ciclo se mide por gate. Con el mismo gate (el primero) en todas las aristas: X.g necesita D.g.
+    const g = [...gates].sort((x, y) => x.order_index - y.order_index)[0].id
     const base = { project_id: pid, kind: 'process', required_gate_id: g, blocked_gate_id: g }
-    // X depende de D → cerrar P→X crea P→X→D→P.
     await one('X→D', a.from('system_dependencies').insert({ ...base, system_id: sys.other, depends_on_system_id: sys.dependent }).select('id').single())
 
-    const direct = await a.from('system_dependencies').insert({ ...base, system_id: sys.provider, depends_on_system_id: sys.dependent })
+    // Directo: D.g necesita X.g cierra D→X→D.
+    const direct = await a.from('system_dependencies').insert({ ...base, system_id: sys.dependent, depends_on_system_id: sys.other })
     expect(direct.error?.message).toMatch(/ciclo/)
-    const indirect = await a.from('system_dependencies').insert({ ...base, system_id: sys.provider, depends_on_system_id: sys.other })
+    // Indirecto: P.g necesita X.g (válido) y luego D.g necesita P.g cierra D→P→X→D.
+    await one('P→X', a.from('system_dependencies').insert({ ...base, system_id: sys.provider, depends_on_system_id: sys.other }).select('id').single())
+    const indirect = await a.from('system_dependencies').insert({ ...base, system_id: sys.dependent, depends_on_system_id: sys.provider })
     expect(indirect.error?.message).toMatch(/ciclo/)
     const self = await a.from('system_dependencies').insert({ ...base, system_id: sys.provider, depends_on_system_id: sys.provider })
     expect(self.error).not.toBeNull()

@@ -31,13 +31,13 @@ BEGIN
     UPDATE project_constraints SET status = 'open', resolved_by = NULL, resolved_at = NULL, updated_at = now() WHERE id = p_constraint_id;
 
   ELSIF v_c.status = 'resolved' AND p_to = 'closed' THEN
-    -- S11 (D-14): cierra otra persona distinta de quien la resolvió.
-    IF v_c.resolved_by = v_uid THEN RAISE EXCEPTION 'Cierra la restricción otra persona distinta de quien la resolvió' USING ERRCODE = '42501'; END IF;
     SELECT COUNT(*) INTO v_open FROM actions
      WHERE source_kind = 'constraint' AND source_id = p_constraint_id AND status IN ('open', 'in_progress', 'done');
     IF v_open > 0 THEN
       RAISE EXCEPTION 'La restricción % tiene % acción(es) sin verificar', v_c.number, v_open USING ERRCODE = 'P0001';
     END IF;
+    -- S11 (D-14): cierra otra persona distinta de quien la resolvió.
+    IF v_c.resolved_by = v_uid THEN RAISE EXCEPTION 'Cierra la restricción otra persona distinta de quien la resolvió' USING ERRCODE = '42501'; END IF;
     UPDATE project_constraints SET status = 'closed', closed_by = v_uid, closed_at = now(), updated_at = now() WHERE id = p_constraint_id;
 
   ELSE
