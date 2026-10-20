@@ -231,6 +231,15 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | C-39 | Bajo | bug — En el cron de preservación vencida, `.in('id', tagIds)` con hasta 2000 UUID supera el largo de URL de PostgREST, y el `limit(2000)` es global, para todas las organi | [C-completions.md:285](revision-2026-10-19/C-completions.md) |
 | C-42 | Bajo | pérdida de datos — Borrar un tag borra en cascada su historial de preservación (`baseline.sql:5888`, `ON DELETE CASCADE`). Usar RESTRICT o borrado lógico. S · alta. | [C-completions.md:291](revision-2026-10-19/C-completions.md) |
 
+**Estado S08 (2026-10-19, 68498e6; migración `20261102120000_preservation_rpc_s08.sql` probada con ROLLBACK —10 escenarios con roles inspector/client simulados, más RESTRICT con un tag sin ITR— y **aplicada en prod** con autorización de Luis; D10 según recomendación):** verificados vigentes (en prod había 0 planes y 0 registros).
+- C-05 / I-03 / C-06 ✅ RPC `start_preservation_record` (idempotente, índice único de un registro abierto por plan), `save_preservation_response` y `finalize_preservation_record` (roles de campo, nunca client). Se eliminó el trigger `AFTER INSERT` que avanzaba la fecha al primer toque: ahora avanza al finalizar, con cualquier resultado, en la misma transacción; un NOK exige categoría y levanta su punch. La pantalla comparte la promesa de apertura y muestra los errores de guardado.
+- C-42 ✅ `preservation_records.tag_id`/`plan_id` y `preservation_plans.tag_id` en `RESTRICT`: el historial ya no se borra con el tag ni con el plan. Escritura directa de registros y respuestas solo editores; fotos, roles de campo.
+- H-08 ✅ `/projects/[id]/preservation` (el aviso de vencido ya enlazaba ahí y daba 404) reutilizando la vista global con alcance de proyecto; las filas enlazan al tag y a «Ejecutar». Verificado en navegador.
+- C-39 ✅ cron de vencidos paginado (sin `limit(2000)` global) y `.in()` en lotes de 200.
+- I-14 ✅ borrar plantillas ITR/PSSR con el tier de la RLS (PRIVILEGED) y comprobando filas; la UI muestra el error.
+- C-27 ✅ borrar punch solo si es error de carga (abierto, sin resolución, fotos ni vínculos; `src/lib/punches/deletable.ts` + test) y auditado; masivo igual; `deleteItr` informa y audita; la foto de punch se borra fila primero.
+- **No hecho:** el mensaje amable al borrar un tag con historial (23503) — `tags.ts` lo estaba editando en paralelo la sesión del flujo «mover tag»; se le avisó. Sin verificación en navegador de la ejecución de un plan (prod no tiene planes; cubierto por los escenarios SQL).
+
 ## S09 — Índices y «cero filas para contar»
 
 | ID | Sev. | Hallazgo | Anexo |
