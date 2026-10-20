@@ -31,6 +31,8 @@ export type LineupRemote = { found: ValvePosition | null; setBy: string | null; 
 
 export type StartupEntry = StartupOp & {
   id?: number
+  /** S18: usuario que capturó (ausente en entradas de antes de S18). */
+  capturedBy?: string | null
   /** Hora de captura en el dispositivo (ISO): el servidor la guarda como hora de campo. */
   capturedAt: string
   state: StartupEntryState

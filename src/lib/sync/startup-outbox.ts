@@ -12,6 +12,8 @@ import {
 } from '@/lib/offline-queue'
 import type { Json } from '@/types/supabase.generated'
 import { isNetworkFailure } from './outbox-utils'
+import { currentUserId } from './owner'
+import { sendableBy } from './ownership'
 import { coalesceLineupSet, nextSendable, settle, type StartupEntry, type StartupOp, type StartupSendResult } from './startup-outbox-utils'
 
 /**
@@ -32,11 +34,13 @@ export async function sendOrQueueStartup(
       if (!isNetworkFailure(err)) return { error: err instanceof Error ? err.message : String(err) }
     }
   }
+  const uid = await currentUserId()
   if (op.kind === 'lineup_set') {
-    const { replaceId, op: merged } = coalesceLineupSet(await getStartupOutbox(), op)
-    await enqueueStartup(merged, replaceId)
+    // S18: solo se fusiona con una captura propia de la misma fila.
+    const { replaceId, op: merged } = coalesceLineupSet(sendableBy(await getStartupOutbox(), uid), op)
+    await enqueueStartup(merged, replaceId, uid)
   } else {
-    await enqueueStartup(op)
+    await enqueueStartup(op, null, uid)
   }
   return { queued: true }
 }
@@ -66,10 +70,11 @@ async function sendEntry(e: StartupEntry): Promise<StartupSendResult> {
  * entrada en la bandeja «No sincronizado» (sin reintento automático) y retiene los pasos posteriores de esa
  * ejecución. Lo llama replayQueueOnce (src/lib/sync/replay.ts), que ya serializa los replays.
  */
-export async function replayStartupOnce(): Promise<{ flushed: number; issues: number; remaining: number }> {
+export async function replayStartupOnce(userId: string | null): Promise<{ flushed: number; issues: number; remaining: number }> {
   let flushed = 0
   let issues = 0
-  let entries = await getStartupOutbox()
+  // S18: solo las capturas del usuario en sesión; las demás quedan retenidas (banner del shell).
+  let entries = sendableBy(await getStartupOutbox(), userId)
   for (let guard = 0; guard < 500; guard++) {
     const e = nextSendable(entries)
     if (!e || e.id === undefined) break
@@ -88,7 +93,7 @@ export async function replayStartupOnce(): Promise<{ flushed: number; issues: nu
       await patchStartupEntry(e.id, outcome.patch)
       issues++
     }
-    entries = await getStartupOutbox()
+    entries = sendableBy(await getStartupOutbox(), userId)
   }
   if (issues > 0 && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(STARTUP_SYNC_ISSUE_EVENT, { detail: { count: issues } }))
   return { flushed, issues, remaining: entries.length }

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   countPending, enqueueOutbox, enqueueResponse, enqueueStartup, getAllQueued, getOutbox, getStartupOutbox,
   markOutboxAttempt, patchStartupEntry, removeFromOutbox, removeStartupEntry,
+  claimLegacyEntries, clearOfflineData, entriesNotOwnedBy, markResponseAttempt, pendingByOwner,
 } from './offline-queue'
 
 async function resetDb() {
@@ -21,8 +22,8 @@ describe('offline outbox (IndexedDB)', () => {
 
   it('enqueues photos and punches in capture order and returns ids', async () => {
     const blob = new Blob(['x'], { type: 'image/jpeg' })
-    const a = await enqueueOutbox({ kind: 'photo', itrId: 'itr1', itemId: 'i1', projectId: 'p', tagId: 't', fileName: 'a.jpg', fileType: 'image/jpeg', blob })
-    const b = await enqueueOutbox({ kind: 'punch', itrId: 'itr1', projectId: 'p', tagId: 't', category: 'B', description: 'fuga', targetDate: null })
+    const a = await enqueueOutbox({ kind: 'photo', itrId: 'itr1', itemId: 'i1', projectId: 'p', tagId: 't', fileName: 'a.jpg', fileType: 'image/jpeg', blob }, 'u1')
+    const b = await enqueueOutbox({ kind: 'punch', itrId: 'itr1', projectId: 'p', tagId: 't', category: 'B', description: 'fuga', targetDate: null }, 'u1')
     expect(b).toBeGreaterThan(a)
 
     const rows = await getOutbox()
@@ -33,9 +34,9 @@ describe('offline outbox (IndexedDB)', () => {
 
   it('counts responses + outbox, optionally per ITR', async () => {
     const now = new Date().toISOString()
-    await enqueueResponse({ itrId: 'itr1', itemId: 'x', templateId: 'tpl', valueBool: true, queuedAt: now })
-    await enqueueOutbox({ kind: 'punch', itrId: 'itr1', projectId: 'p', tagId: 't', category: 'A', description: 'd', targetDate: null })
-    await enqueueOutbox({ kind: 'punch', itrId: 'itr2', projectId: 'p', tagId: 't', category: 'C', description: 'd', targetDate: null })
+    await enqueueResponse({ itrId: 'itr1', itemId: 'x', templateId: 'tpl', valueBool: true, queuedAt: now }, 'u1')
+    await enqueueOutbox({ kind: 'punch', itrId: 'itr1', projectId: 'p', tagId: 't', category: 'A', description: 'd', targetDate: null }, 'u1')
+    await enqueueOutbox({ kind: 'punch', itrId: 'itr2', projectId: 'p', tagId: 't', category: 'C', description: 'd', targetDate: null }, 'u1')
 
     expect(await countPending()).toBe(3)
     expect(await countPending('itr1')).toBe(2)
@@ -44,7 +45,7 @@ describe('offline outbox (IndexedDB)', () => {
   })
 
   it('marks attempts and removes entries', async () => {
-    const id = await enqueueOutbox({ kind: 'punch', itrId: 'itr1', projectId: 'p', tagId: 't', category: 'B', description: 'd', targetDate: null })
+    const id = await enqueueOutbox({ kind: 'punch', itrId: 'itr1', projectId: 'p', tagId: 't', category: 'B', description: 'd', targetDate: null }, 'u1')
     await markOutboxAttempt(id, 'Access denied')
     await markOutboxAttempt(id, 'Access denied')
     const [row] = await getOutbox()
@@ -61,9 +62,9 @@ describe('bandeja de arranque (IndexedDB)', () => {
   beforeEach(resetDb)
 
   it('encola en orden, reemplaza una fila re-fijada y cuenta en el total global', async () => {
-    const a = await enqueueStartup({ kind: 'run_step', projectId: 'p', runId: 'r1', stepId: 's1', ord: 1, isHold: false, na: false, actual: null, comment: null })
-    const b = await enqueueStartup({ kind: 'lineup_set', projectId: 'p', sheetId: 'sh', itemId: 'i1', found: 'open', remarks: null, expectedSetAt: null, expectedVerifiedAt: null })
-    const c = await enqueueStartup({ kind: 'lineup_set', projectId: 'p', sheetId: 'sh', itemId: 'i1', found: 'closed', remarks: null, expectedSetAt: null, expectedVerifiedAt: null }, b)
+    const a = await enqueueStartup({ kind: 'run_step', projectId: 'p', runId: 'r1', stepId: 's1', ord: 1, isHold: false, na: false, actual: null, comment: null }, null, 'u1')
+    const b = await enqueueStartup({ kind: 'lineup_set', projectId: 'p', sheetId: 'sh', itemId: 'i1', found: 'open', remarks: null, expectedSetAt: null, expectedVerifiedAt: null }, null, 'u1')
+    const c = await enqueueStartup({ kind: 'lineup_set', projectId: 'p', sheetId: 'sh', itemId: 'i1', found: 'closed', remarks: null, expectedSetAt: null, expectedVerifiedAt: null }, b, 'u1')
     expect(c).toBeGreaterThan(a)
     const rows = await getStartupOutbox()
     expect(rows.map(r => r.id)).toEqual([a, c])
@@ -76,5 +77,33 @@ describe('bandeja de arranque (IndexedDB)', () => {
     expect((await getStartupOutbox())[0]).toMatchObject({ id: a, state: 'rejected', error: 'La ejecución no está en curso (stopped)', kind: 'run_step' })
     await removeStartupEntry(a)
     expect((await getStartupOutbox()).length).toBe(1)
+  })
+})
+
+describe('dueño de las capturas (S18)', () => {
+  beforeEach(resetDb)
+
+  it('guarda quién capturó, cuenta por dueño y deja reclamar las de antes de S18', async () => {
+    const now = new Date().toISOString()
+    await enqueueResponse({ itrId: 'itr1', itemId: 'x', templateId: 'tpl', valueBool: true, queuedAt: now }, 'a')
+    await enqueueOutbox({ kind: 'punch', itrId: 'itr1', projectId: 'p', tagId: 't', category: 'B', description: 'd', targetDate: null }, 'b')
+    await enqueueStartup({ kind: 'run_stop', projectId: 'p', runId: 'r1', comment: 'stop' }, null, null)
+    expect((await getAllQueued())[0]).toMatchObject({ capturedBy: 'a', attempts: 0 })
+    expect(await pendingByOwner('a')).toEqual({ mine: 1, legacy: 1, other: 1 })
+
+    expect(await claimLegacyEntries('a')).toBe(1)
+    expect(await pendingByOwner('a')).toEqual({ mine: 2, legacy: 0, other: 1 })
+    const notMine = await entriesNotOwnedBy('a')
+    expect([notMine.responses.length, notMine.outbox.length, notMine.startup.length]).toEqual([0, 1, 0])
+  })
+
+  it('cuenta rechazos de respuestas y vacía todo al cerrar sesión', async () => {
+    await enqueueResponse({ itrId: 'itr1', itemId: 'x', templateId: 'tpl', queuedAt: new Date().toISOString() }, 'a')
+    const [r] = await getAllQueued()
+    await markResponseAttempt(r.id!, 'ITR firmado')
+    expect((await getAllQueued())[0]).toMatchObject({ attempts: 1, lastError: 'ITR firmado' })
+
+    await clearOfflineData()
+    expect(await countPending()).toBe(0)
   })
 })

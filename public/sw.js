@@ -1,18 +1,24 @@
-// CommUp Service Worker — v2.0 (Stage 14)
+// CommUp Service Worker — v2.1 (S18)
 // Strategy:
 //   /_next/static/*  → cache-first (immutable assets)
-//   navigate (HTML)  → network-first, fallback to cache, fallback to /offline
-//   images           → cache-first
-//   API/Supabase     → network-only with stale-cache fallback (5 min TTL)
+//   navigate (HTML)  → network-first, fallback to cache (commup-pages, últimas 40), fallback to /offline
+//   images           → cache-first (same-origin)
+//   API/Supabase     → NO se intercepta ni se cachea (S18, G-03): lo offline va por IndexedDB
+//   scripts/estilos  → network-first (S18, G-20)
 //   default          → stale-while-revalidate
-// Plus: Push notifications, Background Sync, Conflict log replay.
+// Plus: Push notifications.
+//
+// S18 (C-08/G-03/A-09): las páginas van en su propia caché (`commup-pages-*`) para que el cierre de sesión
+// (src/lib/sync/session.ts → purgeSessionCaches) las borre junto con las imágenes. Al activar esta versión se
+// borran las cachés viejas, incluida `commup-api-*` (respuestas REST/Auth de Supabase de versiones anteriores).
 
-const SW_VERSION = '2.0.2'
+const SW_VERSION = '2.1.0'
 const CACHE_STATIC = `commup-static-v${SW_VERSION}`
-const CACHE_API    = `commup-api-v${SW_VERSION}`
+const CACHE_PAGES  = `commup-pages-v${SW_VERSION}`
 const CACHE_IMAGES = `commup-images-v${SW_VERSION}`
-const KEEP_CACHES  = [CACHE_STATIC, CACHE_API, CACHE_IMAGES]
+const KEEP_CACHES  = [CACHE_STATIC, CACHE_PAGES, CACHE_IMAGES]
 const OFFLINE_URL  = '/offline'
+const MAX_PAGES    = 40
 
 const PRECACHE = [
   OFFLINE_URL,
@@ -69,14 +75,11 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // Supabase / external API → network-only with stale fallback
-  if (API_PATTERNS.some(p => p.test(request.url))) {
-    event.respondWith(networkWithStaleFallback(request))
-    return
-  }
+  // Supabase / API: nunca se cachea (datos y tokens de la sesión).
+  if (API_PATTERNS.some(p => p.test(request.url))) return
 
-  // Images
-  if (request.destination === 'image') {
+  // Images (solo del propio origen: las URLs firmadas de evidencias no se guardan)
+  if (url.origin === self.location.origin && request.destination === 'image') {
     event.respondWith(cacheFirst(request, CACHE_IMAGES))
     return
   }
@@ -86,7 +89,7 @@ self.addEventListener('fetch', event => {
     url.origin === self.location.origin &&
     (request.destination === 'script' || request.destination === 'style' || request.destination === 'font')
   ) {
-    event.respondWith(cacheFirst(request, CACHE_STATIC))
+    event.respondWith(networkFirst(request, CACHE_STATIC))
     return
   }
 
@@ -112,12 +115,32 @@ async function cacheFirst(request, cacheName) {
   }
 }
 
+async function networkFirst(request, cacheName) {
+  try {
+    const resp = await fetch(request)
+    if (resp.ok) {
+      const clone = resp.clone()
+      caches.open(cacheName).then(c => c.put(request, clone))
+    }
+    return resp
+  } catch {
+    const cached = await caches.match(request)
+    return cached ?? new Response('Asset offline', { status: 503 })
+  }
+}
+
+async function trimCache(cacheName, max) {
+  const cache = await caches.open(cacheName)
+  const keys = await cache.keys()
+  for (let i = 0; i < keys.length - max; i++) await cache.delete(keys[i])
+}
+
 async function navigateFirst(request) {
   try {
     const resp = await fetch(request)
     if (resp.ok) {
       const clone = resp.clone()
-      caches.open(CACHE_STATIC).then(c => c.put(request, clone))
+      caches.open(CACHE_PAGES).then(c => c.put(request, clone)).then(() => trimCache(CACHE_PAGES, MAX_PAGES))
     }
     return resp
   } catch {
@@ -125,29 +148,6 @@ async function navigateFirst(request) {
     if (cached) return cached
     const offline = await caches.match(OFFLINE_URL)
     return offline ?? new Response('Offline', { status: 503 })
-  }
-}
-
-async function networkWithStaleFallback(request) {
-  try {
-    const resp = await fetch(request)
-    if (resp.ok && request.method === 'GET') {
-      const headers = new Headers(resp.headers)
-      headers.set('sw-cached-at', String(Date.now()))
-      const clone = new Response(resp.clone().body, { status: resp.status, headers })
-      caches.open(CACHE_API).then(c => c.put(request, clone))
-    }
-    return resp
-  } catch {
-    const cached = await caches.match(request)
-    if (cached) {
-      const cachedAt = cached.headers.get('sw-cached-at')
-      if (cachedAt && Date.now() - Number(cachedAt) < 5 * 60 * 1000) return cached
-    }
-    return new Response(JSON.stringify({ error: 'offline', cached: false }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    })
   }
 }
 
@@ -159,21 +159,6 @@ async function staleWhileRevalidate(request, cacheName) {
     return resp
   }).catch(() => cached || new Response('Offline', { status: 503 }))
   return cached || fetchPromise
-}
-
-// ── Background Sync ───────────────────────────────────────────────────
-const SYNC_RESPONSES = 'commup-itr-responses-sync'
-
-self.addEventListener('sync', event => {
-  if (event.tag === SYNC_RESPONSES) {
-    event.waitUntil(replayResponseQueue())
-  }
-})
-
-async function replayResponseQueue() {
-  // Notify clients to drain their offline-queue (they own Supabase auth cookies)
-  const clients = await self.clients.matchAll({ includeUncontrolled: true })
-  clients.forEach(c => c.postMessage({ type: 'SYNC_REPLAY', tag: SYNC_RESPONSES }))
 }
 
 // ── Push Notifications ────────────────────────────────────────────────

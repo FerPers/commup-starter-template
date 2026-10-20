@@ -2145,7 +2145,8 @@
       "kind": {
         "photo": "una foto",
         "punch": "un punch",
-        "signature": "una firma"
+        "signature": "una firma",
+        "response": "una respuesta"
       },
       "startupIssue": "{n, plural, =1 {Un registro de arranque no se sincronizó} other {# registros de arranque no se sincronizaron}}: revísalos en la ejecución u hoja de line-up."
     }
@@ -5045,5 +5046,20 @@
     "expired": "Tu acceso venció. Habla con un administrador de la organización para renovarlo.",
     "back": "← Volver a CommUp",
     "logout": "Cerrar sesión"
+  },
+  "OfflineSession": {
+    "signOutTitle": "{n, plural, =1 {Tienes # registro sin sincronizar} other {Tienes # registros sin sincronizar}}",
+    "signOutBody": "Se capturaron sin red en este dispositivo. Al cerrar sesión se borran de aquí, para que la siguiente persona no los envíe a tu nombre ni vea tus datos: sincronízalos antes o descártalos.",
+    "stillPending": "{n, plural, =1 {Queda # registro} other {Quedan # registros}} que el servidor rechazó o que no son tuyos. Revísalos en su ITR, ejecución u hoja de line-up, o descártalos.",
+    "offlineNote": "Sin conexión no se puede sincronizar, y lo que descartes no queda registrado.",
+    "syncAndExit": "Sincronizar y salir",
+    "discardAndExit": "Descartar y salir",
+    "cancel": "Cancelar",
+    "working": "Procesando…",
+    "heldLegacy": "{n, plural, =1 {Hay # captura sin red} other {Hay # capturas sin red}} de antes de la actualización, sin autor registrado. Si las hiciste tú, envíalas; si no, descártalas.",
+    "heldOther": "{n, plural, =1 {# captura sin red de otra persona está retenida} other {# capturas sin red de otra persona están retenidas}} en este dispositivo: solo esa persona puede enviarlas al iniciar sesión.",
+    "claim": "Son mías — enviar",
+    "discard": "Descartar",
+    "needsNetwork": "Para descartar hace falta conexión (queda constancia de lo descartado)."
   }
 }

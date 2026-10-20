@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { currentUserId as sessionUserId } from '@/lib/sync/owner'
+import { sendableBy } from '@/lib/sync/ownership'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
@@ -22,8 +24,9 @@ export function useStartupOutbox(kind: 'run' | 'sheet', id: string) {
     let alive = true
     const scope = kind === 'run' ? { runId: id } : { sheetId: id }
     const refresh = () => {
-      getStartupOutbox()
-        .then(all => { if (alive) setEntries(all.filter(e => inScope(e, scope)).sort((a, b) => (a.id ?? 0) - (b.id ?? 0))) })
+      Promise.all([getStartupOutbox(), sessionUserId()])
+        // S18: solo las capturas de quien está en sesión.
+        .then(([all, uid]) => { if (alive) setEntries(sendableBy(all, uid).filter(e => inScope(e, scope)).sort((a, b) => (a.id ?? 0) - (b.id ?? 0))) })
         .catch(() => {})
     }
     const onDone = () => { setNetFailed(false); router.refresh() }

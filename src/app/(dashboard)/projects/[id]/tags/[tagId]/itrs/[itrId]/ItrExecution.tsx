@@ -1,6 +1,7 @@
 'use client'
 
 import { PersonName } from '@/components/ui'
+import { ownershipOf } from '@/lib/sync/ownership'
 import { isInactiveMember } from '@/lib/people/inactive'
 // Pantalla de ejecución de ITR — orquestador (Q2). El estado de autosave vive
 // en useItrAutosave; los bloques de UI (ItemRow, PhotoUpload, SignModal,
@@ -123,7 +124,8 @@ export default function ItrExecution({
     const load = () => {
       getOutbox().then(entries => {
         urls.forEach(u => URL.revokeObjectURL(u))
-        const own = entries.filter(e => e.itrId === itr.id)
+        // S18: solo lo capturado por quien está en sesión (lo demás queda retenido en el banner del shell).
+        const own = entries.filter(e => e.itrId === itr.id && ownershipOf(e, currentUserId) === 'mine')
         const photos = own
           .filter((e): e is typeof e & { kind: 'photo' } => e.kind === 'photo')
           .map(e => pendingAttachment(e))

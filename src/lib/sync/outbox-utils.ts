@@ -43,6 +43,8 @@ export function storagePathFor(itrId: string, itemId: string | null, fileName: s
 // ── Política de reintentos de la bandeja ──────────────────────────────
 
 export type OutboxKind = 'photo' | 'punch' | 'signature'
+/** S18 (C-07): las respuestas de ítems también cuentan intentos (antes un rechazo trababa toda la cola). */
+export type QueueKind = OutboxKind | 'response'
 
 /**
  * Intentos máximos ante un rechazo lógico del servidor (no de red) antes de
@@ -53,10 +55,18 @@ export type OutboxKind = 'photo' | 'punch' | 'signature'
  * Firmas: 1 — si el servidor la rechaza es porque el ITR cambió de estado
  * (rechazado, ya firmado, aprobado) y reintentar no la haría válida.
  */
-export const OUTBOX_MAX_ATTEMPTS: Record<OutboxKind, number> = { photo: 3, punch: Number.POSITIVE_INFINITY, signature: 1 }
+export const OUTBOX_MAX_ATTEMPTS: Record<QueueKind, number> = { photo: 3, punch: Number.POSITIVE_INFINITY, signature: 1, response: 3 }
 
-export function outboxPolicy(kind: OutboxKind, attemptsSoFar: number): 'retry' | 'drop' {
+export function outboxPolicy(kind: QueueKind, attemptsSoFar: number): 'retry' | 'drop' {
   return attemptsSoFar + 1 >= OUTBOX_MAX_ATTEMPTS[kind] ? 'drop' : 'retry'
+}
+
+/**
+ * S18 (C-07): una firma no se intenta mientras su ITR tenga respuestas en cola (aún no enviadas o rechazadas):
+ * el servidor la rechazaría por «contenido incompleto» y, con 1 intento, se perdería.
+ */
+export function signatureWaits(itrId: string, pendingResponseItrIds: ReadonlySet<string>): boolean {
+  return pendingResponseItrIds.has(itrId)
 }
 
 // ── Estado local del ITR (espejo de upsertResponse en el servidor) ─────

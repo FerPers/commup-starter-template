@@ -2145,7 +2145,8 @@
       "kind": {
         "photo": "a photo",
         "punch": "a punch",
-        "signature": "a signature"
+        "signature": "a signature",
+        "response": "a response"
       },
       "startupIssue": "{n, plural, =1 {A start-up record did not sync} other {# start-up records did not sync}}: review them in the run or line-up sheet."
     }
@@ -5045,5 +5046,20 @@
     "expired": "Your access expired. Contact an administrator of the organization to renew it.",
     "back": "← Back to CommUp",
     "logout": "Log out"
+  },
+  "OfflineSession": {
+    "signOutTitle": "{n, plural, =1 {You have # unsynced record} other {You have # unsynced records}}",
+    "signOutBody": "They were captured offline on this device. Signing out removes them from here, so the next person cannot send them under your name or see your data: sync them first or discard them.",
+    "stillPending": "{n, plural, =1 {# record remains} other {# records remain}} that the server rejected or that are not yours. Review them in their ITR, run or line-up sheet, or discard them.",
+    "offlineNote": "Without a connection you cannot sync, and anything you discard is not recorded.",
+    "syncAndExit": "Sync and sign out",
+    "discardAndExit": "Discard and sign out",
+    "cancel": "Cancel",
+    "working": "Working…",
+    "heldLegacy": "{n, plural, =1 {There is # offline capture} other {There are # offline captures}} from before the update, with no recorded author. If you made them, send them; otherwise discard them.",
+    "heldOther": "{n, plural, =1 {# offline capture from another person is held} other {# offline captures from another person are held}} on this device: only that person can send them after signing in.",
+    "claim": "They are mine — send",
+    "discard": "Discard",
+    "needsNetwork": "Discarding needs a connection (a record of what was discarded is kept)."
   }
 }

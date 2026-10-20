@@ -49,7 +49,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S15 | Miembros, auditoría y cuotas | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261110120000 en prod, 14 comprobaciones con ROLLBACK). Decisiones de Luis: invitación pendiente para cuentas existentes; suspensión y vencimiento de acceso; cuota de IA con modelo por tarea. Detalle en la cobertura |
 | S16 | PSSR por RPC | S14 | — | ✅ **Hecha** 2026-10-20 (migración 20261111120000 en prod, 11 comprobaciones con ROLLBACK). Decisiones de Luis: firmas Operaciones + HSE por defecto (por plantilla); al rechazar se anulan. Detalle en la cobertura |
 | S17 | Certificados por RPC | S14 | D6, D15 | ✅ **Hecha** 2026-10-20 (migración 20261112120000 en prod, 12 comprobaciones con ROLLBACK). Decisiones de Luis: Cliente = `client_rep`, Autoridad = Operaciones, invalidación = bloqueado con motivo (se desbloquea solo), fase anterior obligatoria. Detalle en la cobertura |
-| S18 | Offline por usuario (2 sesiones) | S06 | — | Pendiente |
+| S18 | Offline por usuario (2 sesiones) | S06 | — | 🟡 **Sesión 1 hecha** 2026-10-20 (sin migración): dueño en cada captura, replay solo de lo propio, cola de respuestas sin bloqueo, cierre de sesión «sincronizar o descartar» + limpieza, SW sin caché de Supabase. Decisiones de Luis: sincronizar o descartar al salir; capturas de antes con confirmación. **Falta sesión 2:** hora de captura + compare-and-set (C-35/B-16/E-27), «preparar para trabajar sin red» (C-09/C-38) y página offline (G-23) |
 | S19 | Generación masiva de ITR | S05 | — | Pendiente |
 | S20 | Readiness a escala (2 sesiones) | S09 | — | Pendiente |
 | S21 | Bus de eventos (outbox) | S03 | — | Pendiente |

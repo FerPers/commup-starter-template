@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import HeldCaptures from '@/components/offline/HeldCaptures'
 import Sidebar from '@/components/layout/sidebar'
 import Topbar from '@/components/layout/Topbar'
 import DashboardShell from '@/components/layout/DashboardShell'
@@ -117,6 +118,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Topbar>
         }
       >
+        <HeldCaptures userId={ctx.userId} />
         {pendingInvitations.length > 0 && (
           <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontSize: 13 }}>
             {tAccess('banner', { n: pendingInvitations.length, org: pendingInvitations[0].orgName })}{' '}

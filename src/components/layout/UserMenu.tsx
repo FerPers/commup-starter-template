@@ -9,6 +9,9 @@ import { createClient } from '@/lib/supabase/client'
 import LocaleSwitcher from '@/components/LocaleSwitcher'
 import ThemeToggle from '@/components/ThemeToggle'
 import type { OrgMemberRole } from '@/types/database'
+import SignOutDialog from '@/components/offline/SignOutDialog'
+import { countPending } from '@/lib/offline-queue'
+import { endDeviceSession } from '@/lib/sync/session'
 
 /**
  * Menú de usuario en la barra superior (Sprint N, 2026-09-04). Sustituye al OrgSwitcher
@@ -101,10 +104,21 @@ export default function UserMenu({
     })
   }
 
-  async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+  // S18 (C-08/A-09): con capturas sin red pendientes, primero «sincronizar o descartar»; al salir se vacían
+  // las bandejas y las cachés del dispositivo.
+  const [pendingOnExit, setPendingOnExit] = useState<number | null>(null)
+
+  async function signOutNow() {
+    setPendingOnExit(null)
+    await createClient().auth.signOut()
+    await endDeviceSession()
     router.push('/login')
+  }
+
+  async function handleLogout() {
+    const pending = await countPending().catch(() => 0)
+    if (pending > 0) { setOpen(false); setPendingOnExit(pending); return }
+    await signOutNow()
   }
 
   // Se encoge en el teléfono (S1): con flexShrink 0 y 360 px forzaba un layout de 504 px a 375 px.
@@ -245,6 +259,9 @@ export default function UserMenu({
             {t('logout')}
           </button>
         </div>
+      )}
+      {pendingOnExit !== null && (
+        <SignOutDialog pending={pendingOnExit} onCancel={() => setPendingOnExit(null)} onDone={() => { void signOutNow() }} />
       )}
     </div>
   )

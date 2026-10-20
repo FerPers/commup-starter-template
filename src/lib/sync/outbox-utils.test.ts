@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TABLE_PRESETS, reshapeTable, type SourceRow } from '../itr/table'
-import { isNetworkFailure, localAttachmentId, localItrStatus, outboxPolicy, parseLocalAttachmentId, punchPhotoPath, storagePathFor } from './outbox-utils'
+import { isNetworkFailure, localAttachmentId, localItrStatus, outboxPolicy, signatureWaits, parseLocalAttachmentId, punchPhotoPath, storagePathFor } from './outbox-utils'
 
 describe('local attachment ids', () => {
   it('round-trips an outbox id', () => {
@@ -97,5 +97,19 @@ describe('punchPhotoPath (S06)', () => {
     expect(punchPhotoPath('abc', 0, 'IMG_1.JPG')).toBe('abc/campo-1.jpg')
     expect(punchPhotoPath('abc', 2, 'sin-extension')).toBe('abc/campo-3.jpg')
     expect(punchPhotoPath('abc', 1, 'x.he?ic')).toBe('abc/campo-2.heic')
+  })
+})
+
+describe('cola de respuestas sin bloqueo (S18, C-07)', () => {
+  it('una respuesta rechazada se reintenta 3 veces y luego se descarta', () => {
+    expect(outboxPolicy('response', 0)).toBe('retry')
+    expect(outboxPolicy('response', 1)).toBe('retry')
+    expect(outboxPolicy('response', 2)).toBe('drop')
+  })
+
+  it('la firma espera mientras su ITR tenga respuestas en cola', () => {
+    const pending = new Set(['itr1'])
+    expect(signatureWaits('itr1', pending)).toBe(true)
+    expect(signatureWaits('itr2', pending)).toBe(false)
   })
 })

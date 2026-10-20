@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { purgeSessionCaches } from '@/lib/sync/session'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -34,6 +35,9 @@ export default function AccessView({ items, hasActive, title }: { items: Inactiv
 
   async function logout() {
     await createClient().auth.signOut()
+    // S18: sin membresía activa no puede sincronizar; se borran las páginas en caché (sus capturas quedan
+    // retenidas a su nombre y nadie más puede enviarlas).
+    await purgeSessionCaches()
     router.push('/login')
   }
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from '
 import { enqueueResponse, countPending, OUTBOX_CHANGED_EVENT } from '@/lib/offline-queue'
 import { upsertResponse } from '@/app/actions/itr-instances'
 import { replayQueueOnce } from '@/lib/sync/replay'
+import { currentUserId } from '@/lib/sync/owner'
 
 type ResponseData = {
   valueText?: string | null
@@ -38,7 +39,8 @@ export function useOfflineSync(itrId = '', templateId = '') {
 
   // Pendientes (respuestas + bandeja de salida) al montar y cada vez que cambia la bandeja.
   useEffect(() => {
-    const refresh = () => { countPending(itrId || undefined).then(setPendingCount).catch(() => {}) }
+    // S18: el indicador cuenta solo lo propio; lo retenido (sin autor o de otra persona) lo muestra el banner del shell.
+    const refresh = () => { currentUserId().then(uid => countPending(itrId || undefined, uid)).then(setPendingCount).catch(() => {}) }
     refresh()
     window.addEventListener(OUTBOX_CHANGED_EVENT, refresh)
     return () => window.removeEventListener(OUTBOX_CHANGED_EVENT, refresh)
@@ -51,7 +53,7 @@ export function useOfflineSync(itrId = '', templateId = '') {
     setSyncing(true)
     try {
       await replayQueueOnce()
-      setPendingCount(await countPending(itrId || undefined))
+      setPendingCount(await countPending(itrId || undefined, await currentUserId()))
     } catch {
       // IndexedDB unavailable — ignore
     }
@@ -75,7 +77,7 @@ export function useOfflineSync(itrId = '', templateId = '') {
     const now = new Date().toISOString()
     // If already known offline, queue immediately
     if (!navigator.onLine) {
-      await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now })
+      await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now }, await currentUserId())
       setPendingCount(c => c + 1)
       return { queued: true }
     }
@@ -86,7 +88,7 @@ export function useOfflineSync(itrId = '', templateId = '') {
       return res
     } catch {
       // Network error (fetch failed) → queue offline
-      await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now })
+      await enqueueResponse({ itrId, itemId, templateId, ...data, queuedAt: now, updatedAt: now }, await currentUserId())
       setPendingCount(c => c + 1)
       setSaveFailed(true)
       return { queued: true }

@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/client'
 import { saveItrAttachment, signItr } from '@/app/actions/itr-instances'
 import { addPunchAttachment, createPunch } from '@/app/actions/punches'
 import { enqueueOutbox, removeFromOutbox, type OutboxEntry, type OutboxPhoto, type OutboxSignature } from '@/lib/offline-queue'
+import { currentUserId } from './owner'
 
 export { LOCAL_ATTACHMENT_PREFIX, localAttachmentId, parseLocalAttachmentId, isNetworkFailure, storagePathFor } from './outbox-utils'
 import { localAttachmentId, parseLocalAttachmentId, isNetworkFailure, punchPhotoPath, storagePathFor } from './outbox-utils'
@@ -66,7 +67,7 @@ export async function uploadOrQueuePhoto(
       if (!isNetworkFailure(err)) return { error: err instanceof Error ? err.message : String(err) }
     }
   }
-  const id = await enqueueOutbox({ kind: 'photo', ...photo })
+  const id = await enqueueOutbox({ kind: 'photo', ...photo }, await currentUserId())
   // Sin vista previa: la miniatura real la pinta quien escucha OUTBOX_CHANGED_EVENT.
   return { queued: true, attachment: pendingAttachment({ id, kind: 'photo', ...photo, queuedAt: new Date().toISOString(), attempts: 0 }, false) }
 }
@@ -147,7 +148,7 @@ export async function createPunchOrQueue(
       if (!isNetworkFailure(err)) return { error: err instanceof Error ? err.message : String(err) }
     }
   }
-  await enqueueOutbox({ kind: 'punch', ...input })
+  await enqueueOutbox({ kind: 'punch', ...input }, await currentUserId())
   return { queued: true }
 }
 
@@ -170,7 +171,7 @@ export async function signOrQueue(
       if (!isNetworkFailure(err)) return { error: err instanceof Error ? err.message : String(err) }
     }
   }
-  await enqueueOutbox({ kind: 'signature', ...input })
+  await enqueueOutbox({ kind: 'signature', ...input }, await currentUserId())
   return { queued: true }
 }
 
