@@ -38,7 +38,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S04 | ITR: firmas requeridas e independencia | S03 | D4, D5, D6 | ✅ **Hecha** 2026-10-19 (ed0e4c6; migración 20261029120000 en prod, 17 escenarios con ROLLBACK) — D5 aprobó 0 ITR. Detalle en la cobertura |
 | S05 | ITR: contenido, estados y numeración | S04 | D7 | Pendiente |
 | S06 | Punch: permisos de campo y escritura por RPC | S03 | D8 | ✅ **Hecha** 2026-10-19 (037a15a + 3204f08; migración 20261030120000 en prod, 22 escenarios con ROLLBACK). Detalle en la cobertura |
-| S07 | Importaciones sin pérdida de datos | S03 | D9 | ✅ **Hecha** 2026-10-19 (ver commit; migración 20261031120000 en prod, 7 escenarios con ROLLBACK). Detalle en la cobertura |
+| S07 | Importaciones sin pérdida de datos | S03 | D9 | ✅ **Hecha** 2026-10-19 (6d3c75f; migración 20261031120000 en prod, 7 escenarios con ROLLBACK). Detalle en la cobertura |
 | S08 | Preservación | S03 | D10 | Pendiente |
 | S09 | Índices y «cero filas para contar» | S03 | D11 | Pendiente |
 | S10 | Reporte diario y zona horaria | S03 | D12 | Pendiente |
