@@ -3,9 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
+import { logActivity } from '@/lib/log-activity'
 import {
-  COMPANY_KINDS, DOC_TYPES, REFERENCE_KINDS, REVISION_STATUSES, REVALIDATION_MIN, isDocumentPathFor, isHttpsUrl,
-  type CompanyKind, type DocType, type ReferenceKind, type RevisionStatus,
+  COMPANY_KINDS, DOC_TYPES, REFERENCE_KINDS, REVISION_STATUSES, REVALIDATION_MIN, VOID_REASON_MIN, documentPolicy, isDocumentPathFor, isHttpsUrl,
+  type CompanyKind, type DocType, type DocumentPolicy, type ReferenceKind, type RevisionStatus,
 } from '@/lib/documents/catalog'
 
 // Empresas y registro maestro de documentos (fase 8 plan readiness, sesión 1; migración 20261021120000).
@@ -103,6 +104,70 @@ export const issueDocumentRevision = withAuth(
     })
     if (error) return { error: error.message }
     revalidateDocs(input.projectId, input.documentId)
+    return {}
+  },
+)
+
+/** S13 (F-24): anula una revisión emitida (líder+, motivo ≥ 10); sale del cálculo de vigente. */
+export const voidDocumentRevision = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; documentId: string; revisionId: string; reason: string }): Promise<{ error?: string }> => {
+    const reason = txt(input.reason, 2000)
+    if (reason.length < VOID_REASON_MIN) return { error: `Indica el motivo (mín. ${VOID_REASON_MIN} caracteres)` }
+    const { error } = await ctx.supabase.rpc('void_document_revision', { p_revision_id: input.revisionId, p_reason: reason })
+    if (error) return { error: error.message }
+    revalidateDocs(input.projectId, input.documentId)
+    return {}
+  },
+)
+
+/** S13 (F-02): referencia la revisión vigente en todos los ITR sin firmas de los sistemas (vacío = los del documento). */
+export const referenceDocumentInOpenItrs = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; documentId: string; systemIds?: string[] }): Promise<{ count?: number; error?: string }> => {
+    const ids = (input.systemIds ?? []).slice(0, 200)
+    const { data, error } = await ctx.supabase.rpc('reference_document_in_open_itrs', {
+      p_document_id: input.documentId, ...(ids.length ? { p_system_ids: ids } : {}),
+    })
+    if (error) return { error: error.message }
+    revalidateDocs(input.projectId, input.documentId)
+    return { count: data as number }
+  },
+)
+
+/**
+ * S13 (F-02): lleva todas las referencias superadas del documento a la vigente. Abiertas = se actualizan;
+ * firmadas/aprobadas = se revalidan con el motivo común (cada fila guarda quién, cuándo y desde qué revisión).
+ */
+export const revalidateDocumentReferences = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; documentId: string; reason: string }): Promise<{ updated?: number; revalidated?: number; error?: string }> => {
+    const reason = txt(input.reason, 2000)
+    if (reason.length < REVALIDATION_MIN) return { error: `Indica el motivo (mín. ${REVALIDATION_MIN} caracteres)` }
+    const { data, error } = await ctx.supabase.rpc('revalidate_document_references', { p_document_id: input.documentId, p_reason: reason })
+    if (error) return { error: error.message }
+    revalidateDocs(input.projectId, input.documentId)
+    const res = (data ?? {}) as { updated?: number; revalidated?: number }
+    return { updated: res.updated ?? 0, revalidated: res.revalidated ?? 0 }
+  },
+)
+
+/** S13 (F-20): política de la org frente a revisiones IFR/IFA (`organizations.settings.document_policy`). */
+export const setDocumentPolicy = withAuthOnly(
+  { role: ADMIN_ROLES },
+  async (ctx, input: DocumentPolicy): Promise<{ error?: string }> => {
+    const { data: org, error: fetchErr } = await ctx.supabase.from('organizations').select('settings').eq('id', ctx.orgId).single()
+    if (fetchErr) return { error: fetchErr.message }
+    const settings = (org?.settings as Record<string, unknown> | null) ?? {}
+    const before = documentPolicy(settings)
+    const next = documentPolicy({ document_policy: input })
+    const { error } = await ctx.supabase.from('organizations').update({ settings: { ...settings, document_policy: next } }).eq('id', ctx.orgId)
+    if (error) return { error: error.message }
+    await logActivity(ctx.supabase, {
+      orgId: ctx.orgId, userId: ctx.userId, action: 'document_policy.updated', entityType: 'organization', entityId: ctx.orgId,
+      payload: { before, after: next },
+    })
+    revalidatePath('/projects', 'layout')
     return {}
   },
 )

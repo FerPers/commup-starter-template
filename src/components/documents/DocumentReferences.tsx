@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { addDocumentReference, removeDocumentReference, updateDocumentReference } from '@/app/actions/documents'
-import { REVALIDATION_MIN, type ReferenceKind } from '@/lib/documents/catalog'
+import { REVALIDATION_MIN, isControlledStatus, type ReferenceKind } from '@/lib/documents/catalog'
 
 // Documentos que referencia un ITR o una revisión de procedimiento (fase 8, sesión 1; doc §15.3–15.4).
 // Revisión superada: bloquea firmar/aprobar mientras el registro está abierto («Actualizar»); si ya está
@@ -17,13 +17,15 @@ export type DocumentRef = {
   number: string
   title: string
   used_rev: string
+  /** S13 (F-20): estado de la revisión usada (IFR/IFA = aviso o bloqueo según la org). */
+  used_status: string | null
   current_rev: string | null
   outdated: boolean
   revalidated_at: string | null
   revalidated_from_rev: string | null
   revalidation_reason: string | null
 }
-export type DocumentOption = { id: string; number: string; title: string; current_rev: string | null }
+export type DocumentOption = { id: string; number: string; title: string; current_rev: string | null; current_status: string | null }
 
 const box: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 10, padding: 14, background: 'var(--card-bg)', display: 'flex', flexDirection: 'column', gap: 10 }
 const small: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }
@@ -99,6 +101,12 @@ export default function DocumentReferences({ projectId, kind, targetId, refs, op
                 }}>
                   {r.outdated ? t('refs.outdatedChip', { used: r.used_rev, current: r.current_rev ?? '—' }) : t('refs.currentChip', { rev: r.used_rev })}
                 </span>
+                {!r.outdated && r.used_status && !isControlledStatus(r.used_status) && (
+                  <span title={t('refs.notIfcHint')} style={{
+                    fontSize: 'var(--text-xs)', fontWeight: 600, padding: '2px 8px', borderRadius: 999,
+                    background: 'var(--warning-50, #fffbeb)', color: 'var(--warning-700, #b45309)', border: '1px solid #fde68a',
+                  }}>{t('refs.notIfcChip', { status: r.used_status.toUpperCase() })}</span>
+                )}
                 <span style={{ flex: 1 }} />
                 {r.outdated && canEdit && !locked && (
                   <button type="button" disabled={isPending} style={btn(true)}
@@ -137,7 +145,7 @@ export default function DocumentReferences({ projectId, kind, targetId, refs, op
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <select style={{ ...input, flex: 1, minWidth: 220 }} value={pick} aria-label={t('refs.add')} onChange={e => setPick(e.target.value)}>
             <option value="">{available.length ? t('refs.pick') : t('refs.none')}</option>
-            {available.map(o => <option key={o.id} value={o.id}>{o.number} · {o.title} (Rev {o.current_rev})</option>)}
+            {available.map(o => <option key={o.id} value={o.id}>{o.number} · {o.title} (Rev {o.current_rev}{o.current_status && !isControlledStatus(o.current_status) ? ` · ${o.current_status.toUpperCase()}` : ''})</option>)}
           </select>
           <button type="button" disabled={isPending || !pick} style={btn(true)}
             onClick={() => run(() => addDocumentReference({ projectId, kind, targetId, documentId: pick, path }), () => setPick(''))}>{t('refs.add')}</button>

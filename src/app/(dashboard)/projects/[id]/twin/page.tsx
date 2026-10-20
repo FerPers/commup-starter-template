@@ -68,7 +68,7 @@ export default async function TwinPage({
               Digital Twin — {project.code}
             </h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
-              Vista 360° por tag · Sistema › Subsistema › Asset card · Semáforo en tiempo real
+              Vista 360° por tag · Sistema › Subsistema › Asset card · Semáforo al cargar la página
             </p>
           </div>
 

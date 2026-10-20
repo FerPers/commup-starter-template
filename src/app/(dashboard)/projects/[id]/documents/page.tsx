@@ -1,6 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
-import { isDocumentController, type DocType, type RevisionStatus } from '@/lib/documents/catalog'
+import { documentPolicy, isDocumentController, type DocType, type RevisionStatus } from '@/lib/documents/catalog'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import DocumentsView, { type DocRow } from './DocumentsView'
 import { getTranslations } from 'next-intl/server'
@@ -18,7 +18,7 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
   if (!project) notFound()
 
   // S09 (F-07): PostgREST corta en 1000 filas aunque se pida .limit(5000); se pagina con .range().
-  const [docsRes, refsRes, { data: systems }, { data: disciplines }, { data: companies }] = await Promise.all([
+  const [docsRes, refsRes, { data: systems }, { data: disciplines }, { data: companies }, { data: org }] = await Promise.all([
     fetchAllRowsFlagged(() => supabase.from('documents')
       .select('id, number, title, doc_type, discipline_id, company_id, current_revision_id, updated_at, current:document_revisions!documents_current_revision_fkey(rev, status, issued_on), document_systems(system_id), document_revisions!document_revisions_document_id_fkey(status)')
       .eq('project_id', id).order('number')),
@@ -26,6 +26,7 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('disciplines').select('id, code, name').eq('org_id', ctx.orgId).order('code'),
     supabase.from('companies').select('id, name, short_name').eq('org_id', ctx.orgId).eq('is_active', true).order('name'),
+    supabase.from('organizations').select('settings').eq('id', ctx.orgId).single(),
   ])
 
   const docs = docsRes.rows
@@ -67,6 +68,8 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
       disciplines={disciplines ?? []}
       companies={(companies ?? []).map(c => ({ id: c.id, name: c.short_name?.trim() ? c.short_name : c.name }))}
       canEdit={isDocumentController(ctx.role)}
+      policy={documentPolicy(org?.settings)}
+      canAdmin={ctx.role === 'owner' || ctx.role === 'admin'}
     />
     </>
   )

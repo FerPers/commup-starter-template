@@ -55,6 +55,9 @@ const UNICODE_MAP: Record<string, string> = {
   '≥': '>=', '≤': '<=', '≠': '!=', '₂': '2', '•': '-',
   '“': '"', '”': '"', '‘': "'", '’': "'",
   '📷': '[photo]', '✍': '[sig]',
+  // S13 (F-10): unidades del catálogo ITR («MΩ» de megado, «ΔP»); antes salían como «M?».
+  // La «μ» griega pasa al signo micro de Latin-1 («µ», sí codificable).
+  '\u03A9': 'Ohm', '\u2126': 'Ohm', '\u0394': 'd', '\u03BC': '\u00B5', '\u221A': 'sqrt', '\u221E': 'inf', '\u2083': '3',
   ' ': ' ',
 }
 

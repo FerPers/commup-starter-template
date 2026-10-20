@@ -37,14 +37,24 @@ export type ExtractResult = {
   error?: string
 }
 
-/** Tags del proyecto que coinciden (sin mayúsculas/espacios) con los leídos. */
+/**
+ * Tags del proyecto que coinciden con los leídos sin mayúsculas, espacios, guiones, puntos, barras ni «_»
+ * (S13, F-15: se busca por la columna generada `tags.tag_key`, no por variantes del texto). Una clave que
+ * corresponde a más de un tag queda sin emparejar (ámbar) en lugar de elegir uno al azar.
+ */
 async function matchingTags(supabase: SupabaseClient, projectId: string, candidates: string[]): Promise<Map<string, string>> {
-  const variants = [...new Set(candidates.flatMap(c => [c.trim(), c.trim().toUpperCase()]).filter(Boolean))]
+  const keys = [...new Set(candidates.map(normalizeTag).filter(Boolean))]
   const out = new Map<string, string>()
-  for (let i = 0; i < variants.length; i += 200) {
-    const { data } = await supabase.from('tags').select('id, tag_number').eq('project_id', projectId).in('tag_number', variants.slice(i, i + 200))
-    for (const t of data ?? []) out.set(normalizeTag(t.tag_number), t.id)
+  const ambiguous = new Set<string>()
+  for (let i = 0; i < keys.length; i += 200) {
+    const { data } = await supabase.from('tags').select('id, tag_key').eq('project_id', projectId).in('tag_key', keys.slice(i, i + 200))
+    for (const t of data ?? []) {
+      if (!t.tag_key) continue
+      if (out.has(t.tag_key)) ambiguous.add(t.tag_key)
+      out.set(t.tag_key, t.id)
+    }
   }
+  for (const k of ambiguous) out.delete(k)
   return out
 }
 

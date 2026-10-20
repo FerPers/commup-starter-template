@@ -47,7 +47,7 @@ const TRIGGER_EVENTS: { value: string; label: string }[] = [
   { value: 'systems.updated',      label: 'Sistema actualizado' },
   { value: 'subsystems.updated',   label: 'Subsistema actualizado' },
   { value: 'loops.updated',        label: 'Loop actualizado' },
-  { value: 'interlocks.updated',   label: 'Interlock actualizado' },
+  // S13 (F-31): «interlocks.updated» se quitó: la tabla interlocks se reemplazó por las matrices C&E (fase 4-D) y el evento ya no ocurre.
   { value: 'signals.updated',      label: 'Signal actualizada' },
 ]
 

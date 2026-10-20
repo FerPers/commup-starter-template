@@ -28,6 +28,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!rev) return new Response('Not found', { status: 404 })
   const { data: steps } = await ctx.supabase.from('procedure_steps')
     .select('ord, action, responsible, expected_value, is_hold_point, hold_capacity, stop_criteria, tags(tag_number)').eq('revision_id', rev.id).order('ord')
+  // S13 (F-11): documentos referenciados por esta revisión.
+  const { data: refs } = await ctx.supabase.from('document_references')
+    .select('revalidation_reason, used:document_revisions!document_references_revision_id_fkey(rev), from:document_revisions!document_references_revalidated_from_fkey(rev), documents(number, title, current:document_revisions!documents_current_revision_fkey(rev))')
+    .eq('project_id', id).eq('procedure_revision_id', rev.id)
+  type DocRev = { rev: string } | null
+  const documentRefs = (refs ?? []).map(x => {
+    const d = x.documents as unknown as { number: string; title: string; current: DocRev } | null
+    return {
+      number: d?.number ?? '—', title: d?.title ?? '', used_rev: (x.used as unknown as DocRev)?.rev ?? '—', current_rev: d?.current?.rev ?? null,
+      revalidated_from: (x.from as unknown as DocRev)?.rev ?? null, revalidation_reason: x.revalidation_reason,
+    }
+  }).sort((a, b) => a.number.localeCompare(b.number))
   const people = [rev.created_by, rev.approved_by, rev.field_verified_by].filter((x): x is string => !!x)
   const { data: profiles } = people.length ? await ctx.supabase.from('profiles').select('id, full_name').in('id', people) : { data: [] }
   const name = (u: string | null) => (u ? profiles?.find(p => p.id === u)?.full_name ?? null : null)
@@ -58,6 +70,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     fieldVerifiedAt: rev.field_verified_at,
     walkdownNote: rev.walkdown_note,
     hash: rev.content_hash,
+    documentRefs,
   })
   return new Response(bytes as BodyInit, {
     status: 200,

@@ -16,6 +16,8 @@ BEGIN
   IF p_status IS NULL THEN
     DELETE FROM document_revisions WHERE id = r.id;
   ELSIF p_status IN ('ifr', 'ifa', 'ifc', 'as_built', 'final') THEN
+    -- S13 (F-24): la fecha de emisión no puede ser futura.
+    IF p_issued_on > public.project_today(r.project_id) THEN RAISE EXCEPTION 'La fecha de emisión no puede ser futura' USING ERRCODE = '22023'; END IF;
     UPDATE document_revisions SET status = p_status, issued_on = COALESCE(p_issued_on, public.project_today(r.project_id)) WHERE id = r.id;
   ELSE
     RAISE EXCEPTION 'Estado no válido' USING ERRCODE = '22023';

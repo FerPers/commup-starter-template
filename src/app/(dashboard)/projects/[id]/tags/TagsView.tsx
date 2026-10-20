@@ -188,9 +188,15 @@ export default function TagsView({
       {subsystemName && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', marginBottom: '12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', fontSize: '13px', color: '#1d4ed8' }}>
           <span>{t('list.filterBanner', { name: subsystemName, count: scopeTotal })}</span>
-          <a href={`/projects/${projectId}/tags`} style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
-            {t('list.clearFilter')}
-          </a>
+          <span style={{ display: 'flex', gap: '14px' }}>
+            <a href={`/projects/${projectId}/tags/labels?subsystem=${encodeURIComponent(filters.subsystem)}`} target="_blank" rel="noopener"
+              style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
+              {t('list.qrLabels')}
+            </a>
+            <a href={`/projects/${projectId}/tags`} style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
+              {t('list.clearFilter')}
+            </a>
+          </span>
         </div>
       )}
 
@@ -223,6 +229,10 @@ export default function TagsView({
           >
             {t('list.bulkApply')}
           </button>
+          <a href={`/projects/${projectId}/tags/labels?ids=${[...selected].slice(0, 400).join(',')}`} target="_blank" rel="noopener"
+            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: '1px solid #bae6fd', background: 'var(--card-bg)', color: '#0369a1', textDecoration: 'none' }}>
+            {t('list.qrLabels')}
+          </a>
           <button
             onClick={clearSelection}
             style={{ marginLeft: 'auto', padding: '7px 12px', borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', background: 'var(--card-bg)', border: '1px solid var(--border)', cursor: 'pointer' }}

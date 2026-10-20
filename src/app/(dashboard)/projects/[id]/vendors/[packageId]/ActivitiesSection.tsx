@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { addVendorFinding, recordVendorActivityResult, saveVendorActivity } from '@/app/actions/vendors'
+import { addVendorFinding, createVendorRetest, recordVendorActivityResult, saveVendorActivity } from '@/app/actions/vendors'
 import { ACTIVITY_KINDS, ACTIVITY_RESULTS, PUNCH_CATEGORIES, RESULT_TONE, resultNeedsFindings, type ActivityKind, type ActivityResult, type PunchCategory } from '@/lib/vendors/catalog'
 import { useLocalToday } from '@/lib/use-local-today'
 import { Alert, Chip, Evidence, Field, MemberSelect, btn, card, grid, input, linkStyle, small, type Member } from '../../daily/daily-ui'
@@ -73,12 +73,18 @@ export default function ActivitiesSection({ projectId, pkgId, pkgNumber, closed,
       {activities.map(a => {
         const isOpen = open === a.id
         const pending = a.result === 'pending'
+        // S13 (F-05): cadena de re-pruebas; la fallida con re-prueba ya no cuenta para el KPI.
+        const retestOf = a.retest_of ? activities.find(x => x.id === a.retest_of) ?? null : null
+        const retest = activities.find(x => x.retest_of === a.id) ?? null
+        const canRetest = !retest && (a.result === 'failed' || a.result === 'passed_with_findings')
         return (
           <article key={a.id} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <Chip tone="muted">{t(`tests.kinds.${a.kind}`)}</Chip>
               <strong style={{ color: 'var(--text-strong)' }}>{a.title}</strong>
               <Chip tone={RESULT_TONE[a.result]}>{t(`tests.results.${a.result}`)}</Chip>
+              {retestOf && <Chip tone="blue">{t('tests.retestOf', { title: retestOf.title })}</Chip>}
+              {retest && <Chip tone="struck">{t('tests.supersededBy')}</Chip>}
               <span style={small}>{a.performed_on ?? (a.planned_date ? t('tests.plannedOn', { date: a.planned_date }) : '')}{a.location ? ` · ${a.location}` : ''}</span>
               <span style={{ flex: 1 }} />
               <span style={small}>{t('tests.findingsN', { n: a.findings.length })}</span>
@@ -156,6 +162,13 @@ export default function ActivitiesSection({ projectId, pkgId, pkgNumber, closed,
                     <button type="button" disabled={isPending || !result.performedOn || (resultNeedsFindings(result.result) && a.findings.length === 0)}
                       style={btn('primary', isPending || !result.performedOn)} title={resultNeedsFindings(result.result) && a.findings.length === 0 ? t('tests.needFindings') : undefined}
                       onClick={() => { if (window.confirm(t('tests.resultConfirm'))) run(() => recordVendorActivityResult({ projectId, packageId: pkgId, activityId: a.id, ...result })) }}>{t('tests.record')}</button>
+                  </div>
+                )}
+                {canRetest && canEdit && !closed && (
+                  <div>
+                    <button type="button" disabled={isPending} style={btn('outline', isPending)}
+                      onClick={() => run(() => createVendorRetest({ projectId, packageId: pkgId, activityId: a.id }), () => setOpen(null))}>{t('tests.retest')}</button>
+                    <span style={{ ...small, fontSize: 'var(--text-xs)', marginLeft: 8 }}>{t('tests.retestHint')}</span>
                   </div>
                 )}
                 {!pending && a.result_by && <p style={{ ...small, margin: 0 }} suppressHydrationWarning>{t('tests.recordedBy', { who: names[a.result_by] ?? '—', when: a.result_at ? new Date(a.result_at).toLocaleString() : '' })}</p>}

@@ -12,9 +12,11 @@ import type { RecommendationRow, ReportRow } from './PackageView'
 // Reportes del vendor (estructurados e inmutables; el final es único y requisito de la desmovilización, §15.11)
 // y recomendaciones (aprobar/rechazar = líder+; «requiere MOC» no se implementa sin número de MOC, §15.10).
 
-export default function ReportsSection({ projectId, pkgId, status, reports, recommendations, names, canEdit, canLead }: {
+export default function ReportsSection({ projectId, pkgId, status, reports, recommendations, names, canEdit, canLead, userId }: {
   projectId: string; pkgId: string; status: PackageStatus; reports: ReportRow[]; recommendations: RecommendationRow[]
   names: Record<string, string>; canEdit: boolean; canLead: boolean
+  /** S13 (F-34): quien propone una recomendación no la decide. */
+  userId: string
 }) {
   const t = useTranslations('Vendors')
   const router = useRouter()
@@ -134,7 +136,10 @@ export default function ReportsSection({ projectId, pkgId, status, reports, reco
                 {r.rationale && <span style={small}>{r.rationale}</span>}
                 {r.decided_by && <span style={{ ...small, fontSize: 'var(--text-xs)' }}>{t('recs.decidedBy', { who: who(r.decided_by) })}{r.decision_reason ? ` — “${r.decision_reason}”` : ''}</span>}
                 {r.implemented_by && <span style={{ ...small, fontSize: 'var(--text-xs)' }}>{t('recs.implementedBy', { who: who(r.implemented_by) })}{r.implementation_note ? ` — “${r.implementation_note}”` : ''}</span>}
-                {r.status === 'proposed' && canLead && !closed && (
+                {r.status === 'proposed' && canLead && !closed && r.proposed_by === userId && (
+                  <span style={{ ...small, fontSize: 'var(--text-xs)' }}>{t('recs.ownProposal')}</span>
+                )}
+                {r.status === 'proposed' && canLead && !closed && r.proposed_by !== userId && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                     <input style={{ ...input, flex: 1, minWidth: 200 }} value={d(r.id).reason} maxLength={2000} placeholder={t('recs.reason')} aria-label={t('recs.reason')}
                       onChange={e => setDecide({ ...decide, [r.id]: { ...d(r.id), reason: e.target.value } })} />

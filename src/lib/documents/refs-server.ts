@@ -7,9 +7,9 @@ import type { ReferenceKind } from './catalog'
 // Carga, para un ITR o una revisión de procedimiento, sus referencias a documentos (con revisión usada vs
 // vigente) y los documentos del proyecto que se pueden referenciar (fase 8, sesión 1).
 
-type Rev = { id: string; rev: string } | null
+type Rev = { id: string; rev: string; status?: string } | null
 
-const DOC_SELECT = 'id, number, title, current_revision_id, current:document_revisions!documents_current_revision_fkey(id, rev)'
+const DOC_SELECT = 'id, number, title, current_revision_id, current:document_revisions!documents_current_revision_fkey(id, rev, status)'
 const IN_CHUNK = 200
 
 export async function loadDocumentRefs(
@@ -21,7 +21,7 @@ export async function loadDocumentRefs(
   // selector se paginan completas.
   const [{ data: rows }, { rows: docs }] = await Promise.all([
     db.from('document_references')
-      .select('id, document_id, revision_id, revalidated_at, revalidation_reason, used:document_revisions!document_references_revision_id_fkey(id, rev), from:document_revisions!document_references_revalidated_from_fkey(id, rev)')
+      .select('id, document_id, revision_id, revalidated_at, revalidation_reason, used:document_revisions!document_references_revision_id_fkey(id, rev, status), from:document_revisions!document_references_revalidated_from_fkey(id, rev)')
       .eq('project_id', projectId).eq(col, targetId),
     fetchAllRowsFlagged(() => db.from('documents').select(DOC_SELECT).eq('project_id', projectId).order('number')),
   ])
@@ -42,6 +42,7 @@ export async function loadDocumentRefs(
       number: d?.number ?? '—',
       title: d?.title ?? '',
       used_rev: (r.used as unknown as Rev)?.rev ?? '—',
+      used_status: (r.used as unknown as Rev)?.status ?? null,
       current_rev: cur?.rev ?? null,
       outdated: !!d?.current_revision_id && d.current_revision_id !== r.revision_id,
       revalidated_at: r.revalidated_at,
@@ -51,6 +52,7 @@ export async function loadDocumentRefs(
   }).sort((a, b) => a.number.localeCompare(b.number))
   const options: DocumentOption[] = docs.map(d => ({
     id: d.id, number: d.number, title: d.title, current_rev: (d.current as unknown as Rev)?.rev ?? null,
+    current_status: (d.current as unknown as Rev)?.status ?? null,
   }))
   return { refs, options }
 }

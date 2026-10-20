@@ -66,7 +66,12 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
     })
   }
 
+  // S13 (F-19): una causa o un efecto con ITR de prueba C&E no se borra (la BD lo impide); se avisa antes.
+  const testedItrs = Object.keys(causeItrs).length
+  const effectItrs = (effectId: string) => links.filter(l => l.effect_id === effectId && causeItrs[l.cause_id]).length
+
   function removeMatrix() {
+    if (testedItrs > 0) { setError(`La matriz tiene ${testedItrs} ITR de prueba C&E generados: no se puede borrar (crea una nueva revisión de la matriz).`); return }
     if (!window.confirm(`¿Borrar la matriz ${matrix.code} con sus ${causes.length} causas, ${effects.length} efectos y ${links.length} cruces?`)) return
     setError('')
     start(async () => {
@@ -173,11 +178,18 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
             )}
             {panel.kind === 'cause' && <CauseForm key={panel.row?.id ?? `new-${causes.length}`} row={panel.row} seq={nextSeq(causes)} pending={pending}
               onSave={input => run(() => saveCeCause({ projectId, matrixId: matrix.id, ...input }), !!panel.row)}
-              onDelete={panel.row ? () => { if (window.confirm(`¿Borrar la causa ${panel.row!.code} y sus cruces?`)) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'cause', id: panel.row!.id })) } : undefined}
+              onDelete={panel.row ? () => {
+                if (causeItrs[panel.row!.id]) { setError(`La causa ${panel.row!.code} tiene el ITR de prueba ${causeItrs[panel.row!.id].itrNumber}: no se puede borrar.`); return }
+                if (window.confirm(`¿Borrar la causa ${panel.row!.code} y sus cruces?`)) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'cause', id: panel.row!.id }))
+              } : undefined}
               onClose={() => setPanel(null)} />}
             {panel.kind === 'effect' && <EffectForm key={panel.row?.id ?? `new-${effects.length}`} row={panel.row} seq={nextSeq(effects)} pending={pending}
               onSave={input => run(() => saveCeEffect({ projectId, matrixId: matrix.id, ...input }), !!panel.row)}
-              onDelete={panel.row ? () => { if (window.confirm(`¿Borrar el efecto ${panel.row!.code} y sus cruces?`)) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'effect', id: panel.row!.id })) } : undefined}
+              onDelete={panel.row ? () => {
+                const n = effectItrs(panel.row!.id)
+                if (n > 0) { setError(`El efecto ${panel.row!.code} aparece en ${n} ITR de prueba C&E: no se puede borrar.`); return }
+                if (window.confirm(`¿Borrar el efecto ${panel.row!.code} y sus cruces?`)) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'effect', id: panel.row!.id }))
+              } : undefined}
               onClose={() => setPanel(null)} />}
             {error && <p role="alert" style={{ color: '#b91c1c', fontSize: '12px', margin: '10px 0 0' }}>{error}</p>}
           </aside>

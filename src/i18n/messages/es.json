@@ -1388,7 +1388,8 @@
       "bulkSelected": "{count, plural, one {# tag seleccionado} other {# tags seleccionados}}",
       "bulkChangeStatus": "Cambiar estado",
       "bulkDeselect": "Deseleccionar todo",
-      "bulkApply": "Aplicar"
+      "bulkApply": "Aplicar",
+      "qrLabels": "Etiquetas QR"
     },
     "detail": {
       "backLink": "← {project} / Tags",
@@ -1577,6 +1578,12 @@
       "safety": "Seguridad",
       "process": "Proceso",
       "normal": "Normal"
+    },
+    "labels": {
+      "kind": "Tag",
+      "scan": "Escanee con CommUp para abrir el tag (ITR, punch y estado actual).",
+      "system": "Sistema",
+      "printed": "CommUp · etiquetas de tags · impreso {date}"
     }
   },
   "PidDocuments": {
@@ -2604,7 +2611,7 @@
       "noRun": "Sin intentos"
     }
   },
-  "GatesAdmin": {  
+  "GatesAdmin": {
     "isStartupGate": "Gate de arranque (habilita primer arranque y primer HC)",
     "noStartupGate": "Ningún gate está marcado como gate de arranque: se usará el último gate con line-up que no exija prueba de desempeño.",
     "perfBeforeStartup": "{gates} exige prueba de desempeño y va antes o junto al gate de arranque {startup}: la prueba necesita la planta arrancada (bloqueo circular). Muévelo después.",
@@ -4581,7 +4588,8 @@
       "ifa": "IFA · para aprobación",
       "ifc": "IFC · para construcción",
       "as_built": "As-Built",
-      "final": "Final"
+      "final": "Final",
+      "void": "Anulada"
     },
     "noMatch": "Ningún documento coincide con el filtro.",
     "empty": "Aún no hay documentos registrados.",
@@ -4595,7 +4603,7 @@
     "rev": {
       "title": "Revisiones",
       "new": "Nueva revisión",
-      "help": "La vigente es la última revisión emitida. Al emitir una nueva, los ITR y procedimientos que usan la anterior quedan bloqueados para firmar o aprobar hasta actualizar su referencia.",
+      "help": "La vigente es la revisión emitida con la fecha de emisión más reciente (a igual fecha, la última registrada); se puede cargar el historial después de la vigente. Al emitir una nueva, los ITR y procedimientos que usan la anterior quedan bloqueados para firmar o aprobar hasta actualizar su referencia.",
       "rev": "Revisión",
       "issuedOn": "Fecha de emisión",
       "file": "Archivo (PDF, imagen, DWG)",
@@ -4614,7 +4622,13 @@
       "edms": "EDMS",
       "httpsOnly": "El enlace debe empezar con https://",
       "tooBig": "El archivo supera 50 MB.",
-      "openError": "No se pudo abrir el archivo"
+      "openError": "No se pudo abrir el archivo",
+      "historical": "Su fecha es anterior a la de la vigente (Rev {rev}, {date}): quedará como historial y la vigente no cambia.",
+      "void": "Anular",
+      "voidReason": "Motivo de la anulación",
+      "voidReasonPh": "Por qué se anula (mín. {n} caracteres)",
+      "voidConfirm": "Anular revisión",
+      "voidedBy": "Anulada por {who}: {reason}"
     },
     "usage": {
       "title": "Dónde se usa",
@@ -4623,7 +4637,13 @@
       "procedure_revision": "Procedimiento",
       "outdated": "Usa Rev {rev} · superada",
       "current": "Rev {rev} · vigente",
-      "revalidated": "revalidado con motivo"
+      "revalidated": "revalidado con motivo",
+      "bulkAdd": "Referenciar en ITR abiertos de sus sistemas",
+      "bulkAddHint": "Agrega la revisión vigente a todos los ITR sin firmas de los sistemas del documento.",
+      "bulkAdded": "{n, plural, =0 {No había ITR abiertos sin esta referencia.} one {Referenciado en # ITR.} other {Referenciado en # ITR.}}",
+      "bulkRevalidate": "Llevar {n, plural, one {# referencia} other {# referencias}} a la vigente",
+      "bulkHelp": "{n, plural, one {# referencia usa} other {# referencias usan}} una revisión anterior. Las de registros abiertos se actualizan; {locked, plural, =0 {no hay registros firmados} one {# de un registro firmado o aprobado se revalida} other {# de registros firmados o aprobados se revalidan}} con este motivo (queda quién, cuándo y desde qué revisión). Úsalo cuando la Rev {rev} no cambia lo que se probó (p. ej. cajetín).",
+      "bulkRevalidated": "{updated} actualizadas y {revalidated} revalidadas con el motivo."
     },
     "refs": {
       "title": "Documentos de referencia",
@@ -4645,7 +4665,18 @@
       "pick": "Elige un documento…",
       "none": "No hay documentos con revisión emitida",
       "lockedItr": "El ITR ya tiene firmas: sus referencias no se cambian (solo revalidación con motivo).",
-      "lockedProc": "La revisión no está en borrador: sus referencias no se cambian (solo revalidación con motivo)."
+      "lockedProc": "La revisión no está en borrador: sus referencias no se cambian (solo revalidación con motivo).",
+      "notIfcChip": "{status} · no IFC",
+      "notIfcHint": "La revisión no está emitida para construcción. Según la política de la organización es un aviso o un bloqueo."
+    },
+    "notIfcWarn": "La revisión vigente (Rev {rev}) está en {status}: no está emitida para construcción. Los registros de campo que la referencian lo muestran como aviso.",
+    "notIfcBlock": "La revisión vigente (Rev {rev}) está en {status}: la política de la organización exige IFC o superior, así que no se puede referenciar ni firmar contra ella.",
+    "policy": {
+      "label": "Revisiones IFR/IFA en registros de campo",
+      "warn": "IFR/IFA: aviso",
+      "block": "IFR/IFA: bloqueo",
+      "warnHelp": "Referenciar una revisión IFR/IFA (no emitida para construcción) en un ITR o procedimiento muestra un aviso.",
+      "blockHelp": "Solo se referencia y se firma contra revisiones IFC, As-Built o Final; una IFR/IFA bloquea."
     }
   },
   "Companies": {
@@ -4796,7 +4827,10 @@
       "checklist": "{n, plural, =0 {Checklist completo} one {Falta un ítem del checklist} other {Faltan # ítems del checklist}}",
       "authorize": "Autorizar desmovilización",
       "done": "Desmovilizado por {who} · {when}",
-      "notYet": "Disponible con el vendor movilizado."
+      "notYet": "Disponible con el vendor movilizado.",
+      "terminate": "Terminar anticipadamente",
+      "terminateHint": "Contrato rescindido o alcance retirado: cierra el paquete sin desmovilización normal. Escribe el motivo (mín. 10 caracteres) en la nota.",
+      "terminateConfirm": "¿Terminar el paquete anticipadamente? Queda cerrado con el motivo de la nota y no se puede reabrir."
     },
     "tests": {
       "title": "FAT / SAT",
@@ -4841,7 +4875,11 @@
       "record": "Registrar resultado",
       "needFindings": "Registra al menos un hallazgo",
       "resultConfirm": "¿Registrar el resultado? Después no cambia y no admite más hallazgos.",
-      "recordedBy": "Resultado registrado por {who} · {when}"
+      "recordedBy": "Resultado registrado por {who} · {when}",
+      "retest": "Programar re-prueba",
+      "retestHint": "Crea una nueva prueba pendiente ligada a esta; el KPI de vendors pasa a contar la re-prueba.",
+      "retestOf": "Re-prueba de: {title}",
+      "supersededBy": "Superada por re-prueba"
     },
     "reports": {
       "title": "Reportes del vendor",
@@ -4888,7 +4926,14 @@
       "reject": "Rechazar",
       "mocPh": "N.º de MOC",
       "note": "Nota de implementación",
-      "implement": "Marcar implementada"
+      "implement": "Marcar implementada",
+      "ownProposal": "La propusiste tú: la decide otro líder (segregación de funciones)."
+    },
+    "terminated": "Terminado anticipadamente: {reason}",
+    "hint": {
+      "docs": "Registro de documentos: {current} de {n} documentos de la empresa con revisión IFC o superior.",
+      "asBuilt": "Registro de documentos: {done} de {n} documentos de la empresa en As-Built o Final.",
+      "equipment": "Equipos de prueba de la empresa: {valid} de {n} con calibración vigente."
     }
   },
   "PunchCancel": {
@@ -4919,5 +4964,10 @@
     "confirm": "Mover",
     "moving": "Moviendo…",
     "done": "Movido a {to}: {itrs} ITR y {punches} punches."
+  },
+  "Tag360": {
+    "chooseTitle": "El tag {tag} existe en varios proyectos",
+    "chooseHelp": "{n} coincidencias. Elige el proyecto correcto antes de registrar nada en campo.",
+    "lastProject": "último proyecto visitado"
   }
 }

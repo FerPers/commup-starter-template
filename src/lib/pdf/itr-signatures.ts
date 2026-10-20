@@ -7,6 +7,8 @@ export type ItrPdfSignature = {
   signed_at: string
   profiles: { full_name: string } | null
   signature_image?: string | null
+  /** S13 (F-11, decisión §15.1): empresa del firmante congelada al firmar. */
+  signer_company?: string | null
 }
 
 /**
@@ -32,7 +34,8 @@ export async function drawItrSignatures(r: Renderer, signatures: ItrPdfSignature
         imageLabel = 'Trazo no disponible: imagen inválida'
       }
     }
-    const name = sig ? sig.profiles?.full_name ?? 'Usuario registrado (nombre no disponible)' : ''
+    const person = sig ? sig.profiles?.full_name ?? 'Usuario registrado (nombre no disponible)' : ''
+    const name = sig?.signer_company ? `${person} · ${sig.signer_company}` : person
     const parsedDate = sig ? new Date(sig.signed_at) : null
     const date = parsedDate && Number.isFinite(parsedDate.getTime())
       ? parsedDate.toISOString().replace('T', ' ').replace('Z', ' UTC')

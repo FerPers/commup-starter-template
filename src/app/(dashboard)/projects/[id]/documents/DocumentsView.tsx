@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { saveDocument } from '@/app/actions/documents'
-import { DOC_TYPES, REVISION_STATUSES, STATUS_TONE, type DocType, type RevisionStatus } from '@/lib/documents/catalog'
+import { saveDocument, setDocumentPolicy } from '@/app/actions/documents'
+import { DOC_TYPES, REVISION_STATUSES, STATUS_TONE, type DocType, type DocumentPolicy, type RevisionStatus } from '@/lib/documents/catalog'
 import { Alert, Chip, Field, btn, card, grid, input, label, small } from '../daily/daily-ui'
 
 // Registro maestro de documentos (fase 8, sesión 1). Lista con filtros, alta de documentos (líder+) y avisos de
@@ -21,13 +21,16 @@ type Opt = { id: string; code: string; name: string }
 const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', ...label, borderBottom: '1px solid var(--border)', background: 'var(--gray-50)', whiteSpace: 'nowrap' }
 const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 
-export default function DocumentsView({ project, rows, systems, disciplines, companies, canEdit }: {
+export default function DocumentsView({ project, rows, systems, disciplines, companies, canEdit, policy, canAdmin }: {
   project: { id: string; code: string; name: string }
   rows: DocRow[]
   systems: Opt[]
   disciplines: Opt[]
   companies: { id: string; name: string }[]
   canEdit: boolean
+  /** S13 (F-20): política de la org frente a revisiones IFR/IFA; la cambia owner/admin. */
+  policy: DocumentPolicy
+  canAdmin: boolean
 }) {
   const t = useTranslations('Documents')
   const router = useRouter()
@@ -89,6 +92,25 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
             <div style={{ fontSize: 24, fontWeight: 700, color: k.red && k.n > 0 ? 'var(--danger-700)' : 'var(--text-strong)' }}>{k.n}{k.of !== undefined && <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' }}> / {k.of}</span>}</div>
           </div>
         ))}
+      </div>
+
+      <div style={{ ...card, padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ ...small, flex: 1, minWidth: 240 }}>{t(policy.below_ifc === 'block' ? 'policy.blockHelp' : 'policy.warnHelp')}</span>
+        {canAdmin ? (
+          <select style={{ ...input, width: 'auto' }} aria-label={t('policy.label')} value={policy.below_ifc} disabled={isPending}
+            onChange={e => {
+              const below_ifc = e.target.value as DocumentPolicy['below_ifc']
+              setError(null)
+              start(async () => {
+                const res = await setDocumentPolicy({ below_ifc })
+                if (res.error) setError(res.error)
+                else router.refresh()
+              })
+            }}>
+            <option value="warn">{t('policy.warn')}</option>
+            <option value="block">{t('policy.block')}</option>
+          </select>
+        ) : <Chip tone={policy.below_ifc === 'block' ? 'red' : 'amber'}>{t(`policy.${policy.below_ifc}`)}</Chip>}
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}

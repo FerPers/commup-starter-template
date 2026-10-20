@@ -1388,7 +1388,8 @@
       "bulkSelected": "{count, plural, one {# tag selected} other {# tags selected}}",
       "bulkChangeStatus": "Change status",
       "bulkDeselect": "Deselect all",
-      "bulkApply": "Apply"
+      "bulkApply": "Apply",
+      "qrLabels": "QR labels"
     },
     "detail": {
       "backLink": "← {project} / Tags",
@@ -1577,6 +1578,12 @@
       "safety": "Safety",
       "process": "Process",
       "normal": "Normal"
+    },
+    "labels": {
+      "kind": "Tag",
+      "scan": "Scan with CommUp to open the tag (ITRs, punches and current status).",
+      "system": "System",
+      "printed": "CommUp · tag labels · printed {date}"
     }
   },
   "PidDocuments": {
@@ -2604,7 +2611,7 @@
       "noRun": "No attempts"
     }
   },
-  "GatesAdmin": {  
+  "GatesAdmin": {
     "isStartupGate": "Start-up gate (enables first start-up and first HC)",
     "noStartupGate": "No gate is marked as the start-up gate: the last gate with line-up that does not require a performance test is used.",
     "perfBeforeStartup": "{gates} requires a performance test and comes before or with the start-up gate {startup}: the test needs the plant running (circular block). Move it after.",
@@ -4581,7 +4588,8 @@
       "ifa": "IFA · for approval",
       "ifc": "IFC · for construction",
       "as_built": "As-Built",
-      "final": "Final"
+      "final": "Final",
+      "void": "Void"
     },
     "noMatch": "No document matches the filter.",
     "empty": "No documents registered yet.",
@@ -4595,7 +4603,7 @@
     "rev": {
       "title": "Revisions",
       "new": "New revision",
-      "help": "The current one is the latest issued revision. When a new one is issued, ITRs and procedures using the previous one cannot be signed or approved until their reference is updated.",
+      "help": "The current revision is the issued one with the latest issue date (same date: the last registered); history can be loaded after the current one. Issuing a new revision blocks signing or approving ITRs and procedures that use the previous one until their reference is updated.",
       "rev": "Revision",
       "issuedOn": "Issue date",
       "file": "File (PDF, image, DWG)",
@@ -4614,7 +4622,13 @@
       "edms": "EDMS",
       "httpsOnly": "The link must start with https://",
       "tooBig": "The file exceeds 50 MB.",
-      "openError": "Could not open the file"
+      "openError": "Could not open the file",
+      "historical": "Its date is earlier than the current one (Rev {rev}, {date}): it will be kept as history and the current revision does not change.",
+      "void": "Void",
+      "voidReason": "Reason for voiding",
+      "voidReasonPh": "Why it is voided (min. {n} characters)",
+      "voidConfirm": "Void revision",
+      "voidedBy": "Voided by {who}: {reason}"
     },
     "usage": {
       "title": "Where used",
@@ -4623,7 +4637,13 @@
       "procedure_revision": "Procedure",
       "outdated": "Uses Rev {rev} · superseded",
       "current": "Rev {rev} · current",
-      "revalidated": "revalidated with reason"
+      "revalidated": "revalidated with reason",
+      "bulkAdd": "Reference in open ITRs of its systems",
+      "bulkAddHint": "Adds the current revision to every unsigned ITR of the document's systems.",
+      "bulkAdded": "{n, plural, =0 {No open ITRs were missing this reference.} one {Referenced in # ITR.} other {Referenced in # ITRs.}}",
+      "bulkRevalidate": "Move {n, plural, one {# reference} other {# references}} to the current revision",
+      "bulkHelp": "{n, plural, one {# reference uses} other {# references use}} an earlier revision. Those in open records are updated; {locked, plural, =0 {there are no signed records} one {# in a signed or approved record is revalidated} other {# in signed or approved records are revalidated}} with this reason (who, when and from which revision are kept). Use it when Rev {rev} does not change what was tested (e.g. title block).",
+      "bulkRevalidated": "{updated} updated and {revalidated} revalidated with the reason."
     },
     "refs": {
       "title": "Reference documents",
@@ -4645,7 +4665,18 @@
       "pick": "Pick a document…",
       "none": "No documents with an issued revision",
       "lockedItr": "The ITR already has signatures: its references cannot change (revalidation with reason only).",
-      "lockedProc": "The revision is not a draft: its references cannot change (revalidation with reason only)."
+      "lockedProc": "The revision is not a draft: its references cannot change (revalidation with reason only).",
+      "notIfcChip": "{status} · not IFC",
+      "notIfcHint": "This revision is not issued for construction. Depending on the organization policy it is a warning or a block."
+    },
+    "notIfcWarn": "The current revision (Rev {rev}) is {status}: not issued for construction. Field records that reference it show a warning.",
+    "notIfcBlock": "The current revision (Rev {rev}) is {status}: the organization requires IFC or later, so it cannot be referenced or signed against.",
+    "policy": {
+      "label": "IFR/IFA revisions in field records",
+      "warn": "IFR/IFA: warning",
+      "block": "IFR/IFA: block",
+      "warnHelp": "Referencing an IFR/IFA revision (not issued for construction) in an ITR or procedure shows a warning.",
+      "blockHelp": "Only IFC, As-Built or Final revisions can be referenced and signed against; IFR/IFA blocks."
     }
   },
   "Companies": {
@@ -4796,7 +4827,10 @@
       "checklist": "{n, plural, =0 {Checklist complete} one {One checklist item missing} other {# checklist items missing}}",
       "authorize": "Authorize demobilization",
       "done": "Demobilized by {who} · {when}",
-      "notYet": "Available once the vendor is mobilized."
+      "notYet": "Available once the vendor is mobilized.",
+      "terminate": "Terminate early",
+      "terminateHint": "Contract terminated or scope withdrawn: closes the package without normal demobilization. Write the reason (min. 10 characters) in the note.",
+      "terminateConfirm": "Terminate the package early? It is closed with the note as reason and cannot be reopened."
     },
     "tests": {
       "title": "FAT / SAT",
@@ -4841,7 +4875,11 @@
       "record": "Record result",
       "needFindings": "Record at least one finding",
       "resultConfirm": "Record the result? It cannot change afterwards and no more findings are accepted.",
-      "recordedBy": "Result recorded by {who} · {when}"
+      "recordedBy": "Result recorded by {who} · {when}",
+      "retest": "Schedule retest",
+      "retestHint": "Creates a new pending test linked to this one; the vendor KPI then counts the retest.",
+      "retestOf": "Retest of: {title}",
+      "supersededBy": "Superseded by retest"
     },
     "reports": {
       "title": "Vendor reports",
@@ -4888,7 +4926,14 @@
       "reject": "Reject",
       "mocPh": "MOC no.",
       "note": "Implementation note",
-      "implement": "Mark implemented"
+      "implement": "Mark implemented",
+      "ownProposal": "You proposed it: another leader decides (segregation of duties)."
+    },
+    "terminated": "Terminated early: {reason}",
+    "hint": {
+      "docs": "Document register: {current} of {n} company documents at IFC or later.",
+      "asBuilt": "Document register: {done} of {n} company documents at As-Built or Final.",
+      "equipment": "Company test equipment: {valid} of {n} with valid calibration."
     }
   },
   "PunchCancel": {
@@ -4919,5 +4964,10 @@
     "confirm": "Move",
     "moving": "Moving…",
     "done": "Moved to {to}: {itrs} ITRs and {punches} punches."
+  },
+  "Tag360": {
+    "chooseTitle": "Tag {tag} exists in several projects",
+    "chooseHelp": "{n} matches. Pick the right project before recording anything in the field.",
+    "lastProject": "last visited project"
   }
 }

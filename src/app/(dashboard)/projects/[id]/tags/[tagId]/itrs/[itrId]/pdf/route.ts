@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { renderItrPdf, type ItrTestEquipmentRef } from '@/lib/pdf/itr'
+import { renderItrPdf, type ItrDocumentRef, type ItrTestEquipmentRef } from '@/lib/pdf/itr'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,6 +69,7 @@ export async function GET(
         role,
         signed_at,
         signature_image,
+        signer_company,
         profiles ( full_name )
       ),
       itr_attachments (
@@ -90,8 +91,23 @@ export async function GET(
     return new Response('ITR not found', { status: 404 })
   }
 
+  // S13 (F-11): documentos de referencia con la revisión usada y la vigente al imprimir.
+  const { data: refs } = await supabase.from('document_references')
+    .select('revalidation_reason, used:document_revisions!document_references_revision_id_fkey(rev, status), from:document_revisions!document_references_revalidated_from_fkey(rev), documents(number, title, current:document_revisions!documents_current_revision_fkey(rev))')
+    .eq('project_id', projectId).eq('itr_id', itrId)
+  type Rev = { rev: string; status?: string } | null
+  const documentRefs: ItrDocumentRef[] = (refs ?? []).map(x => {
+    const d = x.documents as unknown as { number: string; title: string; current: Rev } | null
+    const used = x.used as unknown as Rev
+    return {
+      number: d?.number ?? '-', title: d?.title ?? '', used_rev: used?.rev ?? '-', used_status: used?.status ?? null,
+      current_rev: d?.current?.rev ?? null, revalidated_from: (x.from as unknown as Rev)?.rev ?? null, revalidation_reason: x.revalidation_reason,
+    }
+  }).sort((a, b) => a.number.localeCompare(b.number))
+
   const bytes = await renderItrPdf({
     ...itr,
+    document_refs: documentRefs,
     // snapshot es jsonb: la foto de calibración que copió el trigger al registrar el equipo.
     itr_test_equipment: (itr.itr_test_equipment ?? []).map(u => ({ ...u, snapshot: u.snapshot as ItrTestEquipmentRef['snapshot'] })),
   })

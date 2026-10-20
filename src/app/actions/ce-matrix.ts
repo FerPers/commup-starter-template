@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { CE_ACTIONS, CE_VOTINGS, normalizeCeCode, parseDelay, type CeAction, type CeVoting } from '@/lib/ce/matrix'
+import { normalizeTag } from '@/lib/ce/import'
 
 // Matriz causa-efecto (fase 4 · bloque D, sesión 1; migración 20261016210000). Escriben los roles
 // de edición (RLS get_my_editor_project_ids); el trigger ce_guard deriva org/proyecto y valida que
@@ -22,11 +23,16 @@ async function matrixInProject(supabase: SupabaseClient, projectId: string, matr
   return !!data
 }
 
-/** Tag por número dentro del proyecto (vacío = sin tag). */
+/** «%» y «_» son comodines en ilike: se escapan para comparar el texto literal (S13, F-33). */
+const ilikeLiteral = (v: string) => v.replace(/[\\%_]/g, c => `\\${c}`)
+
+/** Tag por número dentro del proyecto (vacío = sin tag). S13 (F-15/F-33): por la clave normalizada `tag_key`. */
 async function resolveTag(supabase: SupabaseClient, projectId: string, tagNumber: string | null | undefined): Promise<{ id: string | null } | { error: string }> {
   const number = txt(tagNumber, 100)
   if (!number) return { id: null }
-  const { data } = await supabase.from('tags').select('id').eq('project_id', projectId).ilike('tag_number', number).limit(2)
+  const key = normalizeTag(number)
+  if (!key) return { error: `El tag ${number} no existe en el proyecto` }
+  const { data } = await supabase.from('tags').select('id').eq('project_id', projectId).eq('tag_key', key).limit(2)
   if (!data?.length) return { error: `El tag ${number} no existe en el proyecto` }
   if (data.length > 1) return { error: `Hay más de un tag ${number}; usa el número exacto` }
   return { id: data[0].id }
@@ -36,7 +42,7 @@ async function resolveTag(supabase: SupabaseClient, projectId: string, tagNumber
 async function resolveSignal(supabase: SupabaseClient, projectId: string, tagId: string | null, signalTag: string | null | undefined): Promise<{ id: string | null } | { error: string }> {
   const name = txt(signalTag, 100)
   if (!name) return { id: null }
-  let q = supabase.from('signals').select('id, tag_id, tags!inner(project_id)').eq('tags.project_id', projectId).ilike('signal_tag', name).limit(2)
+  let q = supabase.from('signals').select('id, tag_id, tags!inner(project_id)').eq('tags.project_id', projectId).ilike('signal_tag', ilikeLiteral(name)).limit(2)
   if (tagId) q = q.eq('tag_id', tagId)
   const { data } = await q
   if (!data?.length) return { error: `La señal ${name} no existe${tagId ? ' en ese instrumento' : ' en el proyecto'}` }

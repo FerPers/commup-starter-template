@@ -24,6 +24,10 @@ describe('importación C&E con IA', () => {
   it('empareja tags del proyecto y arma los cruces', () => {
     const r = toReview(output, ['PT-101', 'ESDV-7621003'])
     expect(normalizeTag(' pt 101 ')).toBe('PT101')
+    // S13 (F-15): guiones, «_», puntos y barras tampoco cuentan (= SQL tags.tag_key).
+    expect(normalizeTag('pt-101')).toBe('PT101')
+    expect(normalizeTag('PT_101')).toBe('PT101')
+    expect(normalizeTag('21-PT-1001/A')).toBe('21PT1001A')
     expect(r.causes.map(c => [c.code, c.tagMatched])).toEqual([['C-01', true], ['C-02', false]])
     expect(r.effects.map(e => e.tagMatched)).toEqual([true, true]) // sin tag no es «sin pareja»
     expect(r.links).toEqual([

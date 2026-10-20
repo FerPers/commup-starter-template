@@ -57,6 +57,21 @@ type ItrSignature = {
   role: string
   signed_at: string
   profiles: { full_name: string } | null
+  signer_company?: string | null
+}
+
+/**
+ * S13 (F-11): documento contra el que se ejecutó la prueba: revisión usada, vigente al imprimir y, si se
+ * revalidó tras firmar, desde qué revisión y por qué.
+ */
+export type ItrDocumentRef = {
+  number: string
+  title: string
+  used_rev: string
+  used_status: string | null
+  current_rev: string | null
+  revalidated_from: string | null
+  revalidation_reason: string | null
 }
 
 export type ItrPdfData = {
@@ -89,6 +104,7 @@ export type ItrPdfData = {
   source_rows?: unknown
   loops?: { loop_number: string } | null
   ce_causes?: { code: string; description: string; ce_matrices: { code: string } | null } | null
+  document_refs?: ItrDocumentRef[]
 }
 
 export type ItrTestEquipmentRef = {
@@ -531,6 +547,31 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
         snap.code ?? '-', humanKind(snap.kind), [snap.make, snap.model].filter(Boolean).join(' ') || '-', snap.serial_number ?? '-',
         u.certificate_number, u.calibration_due, u.used_on, ok ? 'VIGENTE' : 'VENCIDO',
       ], { alternate: i % 2 === 1, valueColors: [null, null, null, null, null, null, null, ok ? COLOR.green : COLOR.red], valueBold: [true, false, false, false, false, false, false, true] })
+    })
+  }
+
+  // ─── Documentos de referencia (F8, S13/F-11: contra qué revisión se ejecutó la prueba) ─────────
+  if (itr.document_refs?.length) {
+    r.moveY(10)
+    r.accentSection('Documentos de referencia / Reference documents')
+    const cols: TableCol[] = [
+      { w: 96, label: 'Documento' },
+      { w: 170, label: 'Título/Title' },
+      { w: 54, label: 'Rev usada', align: 'center' },
+      { w: 54, label: 'Vigente', align: 'center' },
+      { w: 149, label: 'Estado/Status' },
+    ]
+    r.tableHeader(cols)
+    itr.document_refs.forEach((d, i) => {
+      const outdated = d.current_rev !== null && d.current_rev !== d.used_rev
+      const state = outdated ? 'SUPERADA / SUPERSEDED'
+        : d.revalidated_from ? `Revalidada desde Rev ${d.revalidated_from}: ${d.revalidation_reason ?? ''}`
+          : d.used_status && !['ifc', 'as_built', 'final'].includes(d.used_status) ? `${d.used_status.toUpperCase()} - no IFC` : 'Vigente / Current'
+      r.tableRow(cols, [d.number, d.title, d.used_rev, d.current_rev ?? '-', state], {
+        alternate: i % 2 === 1,
+        valueColors: [null, null, null, null, outdated ? COLOR.red : null],
+        valueBold: [true, false, true, false, outdated],
+      })
     })
   }
 

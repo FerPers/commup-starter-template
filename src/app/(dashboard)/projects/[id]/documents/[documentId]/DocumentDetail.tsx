@@ -5,20 +5,30 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-import { addDocumentRevision, getDocumentFileUrl, issueDocumentRevision, saveDocument } from '@/app/actions/documents'
-import { DOC_TYPES, ISSUED_STATUSES, REVISION_STATUSES, STATUS_TONE, documentPath, isHttpsUrl, type DocType, type RevisionStatus } from '@/lib/documents/catalog'
+import {
+  addDocumentRevision, getDocumentFileUrl, issueDocumentRevision, referenceDocumentInOpenItrs, revalidateDocumentReferences, saveDocument, voidDocumentRevision,
+} from '@/app/actions/documents'
+import {
+  DOC_TYPES, ISSUED_STATUSES, REVALIDATION_MIN, REVISION_STATUSES, STATUS_TONE, VOID_REASON_MIN, documentPath, isControlledStatus, isHttpsUrl,
+  type DocType, type DocumentPolicy, type RevisionRowStatus, type RevisionStatus,
+} from '@/lib/documents/catalog'
+import { useLocalToday } from '@/lib/use-local-today'
 import { Alert, Chip, Field, btn, card, grid, input, label, linkStyle, small } from '../../daily/daily-ui'
 
 // Ficha del documento (fase 8, sesión 1): datos y sistemas, revisiones con PDF (bucket project-documents,
 // inmutable) y/o enlace https al EDMS, emisión de borradores y «dónde se usa» con referencias superadas.
 
 export type RevisionRow = {
-  id: string; seq: number; rev: string; status: RevisionStatus; issued_on: string | null; file_path: string | null; file_name: string | null
+  id: string; seq: number; rev: string; status: RevisionRowStatus; issued_on: string | null; file_path: string | null; file_name: string | null
   external_url: string | null; notes: string | null; created_by: string | null; created_at: string
+  /** S13 (F-24): anulada. */
+  void_from_status: RevisionStatus | null; void_reason: string | null; voided_by: string | null; voided_at: string | null
 }
 export type UsageRow = {
   id: string; kind: 'itr' | 'procedure_revision'; label: string; detail: string; href: string | null
   usedRev: string; outdated: boolean; revalidated: boolean; reason: string | null
+  /** ITR con firmas / procedimiento fuera de borrador: su referencia se revalida con motivo. */
+  locked: boolean
 }
 type Opt = { id: string; code: string; name: string }
 type Doc = { id: string; number: string; title: string; docType: DocType; disciplineId: string; companyId: string; currentRevisionId: string | null; systemIds: string[] }
@@ -27,7 +37,7 @@ const th: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', ...lab
 const td: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const MAX_BYTES = 50 * 1024 * 1024
 
-export default function DocumentDetail({ project, doc, revisions, usage, systems, disciplines, companies, names, canEdit }: {
+export default function DocumentDetail({ project, doc, revisions, usage, systems, disciplines, companies, names, canEdit, policy, lockedOutdated }: {
   project: { id: string; code: string; name: string }
   doc: Doc
   revisions: RevisionRow[]
@@ -37,6 +47,10 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
   companies: { id: string; name: string }[]
   names: Record<string, string>
   canEdit: boolean
+  /** S13 (F-20): política de la org frente a revisiones IFR/IFA. */
+  policy: DocumentPolicy
+  /** Referencias superadas en registros ya firmados/aprobados (se revalidan con motivo). */
+  lockedOutdated: number
 }) {
   const t = useTranslations('Documents')
   const router = useRouter()
@@ -45,18 +59,24 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
   const [edit, setEdit] = useState<Doc | null>(null)
   const [rev, setRev] = useState<null | { rev: string; status: RevisionStatus; issuedOn: string; url: string; notes: string; file: File | null }>(null)
   const [issueStatus, setIssueStatus] = useState<RevisionStatus>('ifc')
+  const today = useLocalToday()
+  const [voidFor, setVoidFor] = useState<string | null>(null)
+  const [voidReason, setVoidReason] = useState('')
+  const [bulkReason, setBulkReason] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const current = revisions.find(r => r.id === doc.currentRevisionId) ?? null
   const draft = revisions.find(r => r.status === 'draft') ?? null
   const sysCode = new Map(systems.map(s => [s.id, s.code]))
   const outdated = usage.filter(u => u.outdated)
 
-  function run(fn: () => Promise<{ error?: string }>, after?: () => void) {
+  function run<R extends { error?: string }>(fn: () => Promise<R>, after?: (res: R) => void) {
     setError(null)
+    setNotice(null)
     start(async () => {
       const res = await fn()
       if (res.error) { setError(res.error); return }
-      after?.()
+      after?.(res)
       router.refresh()
     })
   }
@@ -74,7 +94,7 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
         if (up) return { error: up.message }
       }
       return addDocumentRevision({
-        projectId: project.id, documentId: doc.id, rev: rev.rev, status: rev.status, issuedOn: rev.issuedOn || null,
+        projectId: project.id, documentId: doc.id, rev: rev.rev, status: rev.status, issuedOn: rev.issuedOn || today,
         filePath, fileName: rev.file?.name ?? null, externalUrl: url || null, notes: rev.notes,
       })
     }, () => setRev(null))
@@ -105,6 +125,12 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}
+      {notice && <Alert kind="ok">{notice}</Alert>}
+      {current && !isControlledStatus(current.status) && (
+        <Alert kind={policy.below_ifc === 'block' ? 'error' : 'warn'}>
+          {t(policy.below_ifc === 'block' ? 'notIfcBlock' : 'notIfcWarn', { rev: current.rev, status: t(`status.${current.status}`) })}
+        </Alert>
+      )}
 
       {edit && (
         <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 12 }} aria-label={t('editDoc')}>
@@ -149,7 +175,7 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <h2 id="doc-revs" style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text-strong)' }}>{t('rev.title')}</h2>
           {canEdit && !rev && !draft && (
-            <button type="button" style={btn('primary')} onClick={() => setRev({ rev: '', status: 'ifc', issuedOn: '', url: '', notes: '', file: null })}>+ {t('rev.new')}</button>
+            <button type="button" style={btn('primary')} onClick={() => setRev({ rev: '', status: 'ifc', issuedOn: today ?? '', url: '', notes: '', file: null })}>+ {t('rev.new')}</button>
           )}
         </div>
         <p style={{ ...small, margin: 0 }}>{t('rev.help')}</p>
@@ -163,16 +189,22 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
                   {REVISION_STATUSES.map(s => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
                 </select>
               </Field>
-              <Field text={t('rev.issuedOn')}><input type="date" style={input} value={rev.issuedOn} disabled={rev.status === 'draft'} onChange={e => setRev({ ...rev, issuedOn: e.target.value })} /></Field>
+              <Field text={t('rev.issuedOn')} required={rev.status !== 'draft'}>
+                <input type="date" style={input} value={rev.issuedOn} max={today ?? undefined} disabled={rev.status === 'draft'} onChange={e => setRev({ ...rev, issuedOn: e.target.value })} />
+              </Field>
               <Field text={t('rev.file')}>
                 <input type="file" accept=".pdf,.png,.jpg,.jpeg,.dwg,.dxf" aria-label={t('rev.file')} onChange={e => setRev({ ...rev, file: e.target.files?.[0] ?? null })} />
               </Field>
               <Field text={t('rev.url')} wide><input style={input} value={rev.url} placeholder="https://" maxLength={1000} onChange={e => setRev({ ...rev, url: e.target.value })} /></Field>
               <Field text={t('rev.notes')} wide><input style={input} value={rev.notes} maxLength={2000} onChange={e => setRev({ ...rev, notes: e.target.value })} /></Field>
             </div>
-            {rev.status !== 'draft' && current && <p style={{ ...small, margin: 0 }}>{t('rev.supersedes', { rev: current.rev, n: usage.length })}</p>}
+            {rev.status !== 'draft' && current && (
+              current.issued_on && rev.issuedOn && rev.issuedOn < current.issued_on
+                ? <p style={{ ...small, margin: 0 }}>{t('rev.historical', { rev: current.rev, date: current.issued_on })}</p>
+                : <p style={{ ...small, margin: 0 }}>{t('rev.supersedes', { rev: current.rev, n: usage.length })}</p>
+            )}
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" disabled={isPending || !rev.rev.trim()} style={btn('primary', isPending || !rev.rev.trim())} onClick={saveRevision}>{t('rev.save')}</button>
+              <button type="button" disabled={isPending || !rev.rev.trim() || (rev.status !== 'draft' && !rev.issuedOn)} style={btn('primary', isPending || !rev.rev.trim())} onClick={saveRevision}>{t('rev.save')}</button>
               <button type="button" style={btn('outline')} onClick={() => setRev(null)}>{t('cancel')}</button>
             </div>
           </div>
@@ -196,17 +228,21 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
             <thead><tr>
               <th style={th}>{t('rev.rev')}</th><th style={th}>{t('f.status')}</th><th style={th}>{t('rev.issuedOn')}</th>
               <th style={th}>{t('rev.source')}</th><th style={th}>{t('rev.notes')}</th><th style={th}>{t('rev.by')}</th>
+              {canEdit && <th style={th}><span className="sr-only">{t('rev.void')}</span></th>}
             </tr></thead>
             <tbody>
-              {revisions.length === 0 && <tr><td colSpan={6} style={{ ...td, color: 'var(--text-muted)' }}>{t('rev.empty')}</td></tr>}
+              {revisions.length === 0 && <tr><td colSpan={canEdit ? 7 : 6} style={{ ...td, color: 'var(--text-muted)' }}>{t('rev.empty')}</td></tr>}
               {revisions.map(r => {
-                const superseded = r.status !== 'draft' && r.id !== doc.currentRevisionId
+                const voided = r.status === 'void'
+                const superseded = r.status !== 'draft' && !voided && r.id !== doc.currentRevisionId
                 return (
-                  <tr key={r.id} style={{ opacity: superseded ? 0.65 : 1 }}>
+                  <tr key={r.id} style={{ opacity: superseded || voided ? 0.65 : 1 }}>
                     <td style={{ ...td, fontWeight: 600 }}>{r.rev}</td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                      <Chip tone={STATUS_TONE[r.status]}>{t(`status.${r.status}`)}</Chip>{' '}
-                      {r.id === doc.currentRevisionId ? <Chip tone="green">{t('current')}</Chip> : superseded ? <Chip tone="struck">{t('superseded')}</Chip> : null}
+                      {voided
+                        ? <Chip tone="struck">{t(`status.${r.void_from_status ?? 'ifc'}`)}</Chip>
+                        : <Chip tone={STATUS_TONE[r.status]}>{t(`status.${r.status}`)}</Chip>}{' '}
+                      {r.id === doc.currentRevisionId ? <Chip tone="green">{t('current')}</Chip> : voided ? <Chip tone="red">{t('status.void')}</Chip> : superseded ? <Chip tone="struck">{t('superseded')}</Chip> : null}
                     </td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>{r.issued_on ?? '—'}</td>
                     <td style={td}>
@@ -214,8 +250,27 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
                       {r.external_url && <a href={r.external_url} target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, marginLeft: r.file_path ? 8 : 0 }}>{t('rev.edms')} ↗</a>}
                       {!r.file_path && !r.external_url && '—'}
                     </td>
-                    <td style={td}>{r.notes ?? ''}</td>
+                    <td style={td}>
+                      {r.notes ?? ''}
+                      {voided && <div style={{ ...small, fontSize: 'var(--text-xs)', color: 'var(--danger-700)' }}>{t('rev.voidedBy', { who: (r.voided_by ? names[r.voided_by] : undefined) ?? '—', reason: r.void_reason ?? '' })}</div>}
+                      {voidFor === r.id && (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                          <input style={{ ...input, flex: 1, minWidth: 180 }} value={voidReason} aria-label={t('rev.voidReason')} placeholder={t('rev.voidReasonPh', { n: VOID_REASON_MIN })}
+                            onChange={e => setVoidReason(e.target.value)} />
+                          <button type="button" disabled={isPending || voidReason.trim().length < VOID_REASON_MIN} style={btn('danger', isPending || voidReason.trim().length < VOID_REASON_MIN)}
+                            onClick={() => run(() => voidDocumentRevision({ projectId: project.id, documentId: doc.id, revisionId: r.id, reason: voidReason }), () => setVoidFor(null))}>{t('rev.voidConfirm')}</button>
+                          <button type="button" style={btn('outline')} onClick={() => setVoidFor(null)}>{t('cancel')}</button>
+                        </div>
+                      )}
+                    </td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>{(r.created_by ? names[r.created_by] : undefined) ?? '—'}</td>
+                    {canEdit && (
+                      <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                        {r.status !== 'draft' && !voided && voidFor !== r.id && (
+                          <button type="button" style={{ ...btn('outline'), padding: '3px 10px' }} onClick={() => { setVoidFor(r.id); setVoidReason('') }}>{t('rev.void')}</button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 )
               })}
@@ -226,6 +281,36 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
 
       <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10 }} aria-labelledby="doc-usage">
         <h2 id="doc-usage" style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text-strong)' }}>{t('usage.title')}</h2>
+        {canEdit && current && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {doc.systemIds.length > 0 && (
+              <button type="button" disabled={isPending} style={btn('outline', isPending)} title={t('usage.bulkAddHint')}
+                onClick={() => run(() => referenceDocumentInOpenItrs({ projectId: project.id, documentId: doc.id }), res => setNotice(t('usage.bulkAdded', { n: res.count ?? 0 })))}>
+                {t('usage.bulkAdd')}
+              </button>
+            )}
+            {outdated.length > 0 && bulkReason === null && (
+              <button type="button" disabled={isPending} style={btn('primary', isPending)} onClick={() => setBulkReason('')}>
+                {t('usage.bulkRevalidate', { n: outdated.length })}
+              </button>
+            )}
+          </div>
+        )}
+        {bulkReason !== null && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 10, background: 'var(--gray-50)', borderRadius: 8 }}>
+            <span style={small}>{t('usage.bulkHelp', { n: outdated.length, locked: lockedOutdated, rev: current?.rev ?? '' })}</span>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <input style={{ ...input, flex: 1, minWidth: 220 }} value={bulkReason} aria-label={t('refs.reason')} placeholder={t('refs.reasonPh', { n: REVALIDATION_MIN })}
+                onChange={e => setBulkReason(e.target.value)} />
+              <button type="button" disabled={isPending || bulkReason.trim().length < REVALIDATION_MIN} style={btn('primary', isPending || bulkReason.trim().length < REVALIDATION_MIN)}
+                onClick={() => run(() => revalidateDocumentReferences({ projectId: project.id, documentId: doc.id, reason: bulkReason }),
+                  res => { setBulkReason(null); setNotice(t('usage.bulkRevalidated', { updated: res.updated ?? 0, revalidated: res.revalidated ?? 0 })) })}>
+                {t('refs.confirm')}
+              </button>
+              <button type="button" style={btn('outline')} onClick={() => setBulkReason(null)}>{t('cancel')}</button>
+            </div>
+          </div>
+        )}
         {usage.length === 0 ? <p style={{ ...small, margin: 0 }}>{t('usage.empty')}</p> : (
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {usage.map(u => (

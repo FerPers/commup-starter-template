@@ -1727,6 +1727,10 @@ export type Database = {
           rev: string
           seq: number
           status: string
+          void_from_status: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
           created_at?: string
@@ -1742,6 +1746,10 @@ export type Database = {
           rev: string
           seq: number
           status: string
+          void_from_status?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
           created_at?: string
@@ -1757,6 +1765,10 @@ export type Database = {
           rev?: string
           seq?: number
           status?: string
+          void_from_status?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {
@@ -9410,6 +9422,7 @@ export type Database = {
           sp_ll: number | null
           status: Database["public"]["Enums"]["tag_status"]
           subsystem_id: string
+          tag_key: string | null
           tag_number: string
         }
         Insert: {
@@ -9443,6 +9456,7 @@ export type Database = {
           sp_ll?: number | null
           status?: Database["public"]["Enums"]["tag_status"]
           subsystem_id: string
+          tag_key?: string | null
           tag_number: string
         }
         Update: {
@@ -9476,6 +9490,7 @@ export type Database = {
           sp_ll?: number | null
           status?: Database["public"]["Enums"]["tag_status"]
           subsystem_id?: string
+          tag_key?: string | null
           tag_number?: string
         }
         Relationships: [
@@ -9844,6 +9859,7 @@ export type Database = {
           result: string
           result_at: string | null
           result_by: string | null
+          retest_of: string | null
           title: string
         }
         Insert: {
@@ -9860,6 +9876,7 @@ export type Database = {
           result?: string
           result_at?: string | null
           result_by?: string | null
+          retest_of?: string | null
           title: string
         }
         Update: {
@@ -9876,6 +9893,7 @@ export type Database = {
           result?: string
           result_at?: string | null
           result_by?: string | null
+          retest_of?: string | null
           title?: string
         }
         Relationships: [
@@ -9891,6 +9909,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_activities_retest_of_fkey"
+            columns: ["retest_of"]
+            isOneToOne: false
+            referencedRelation: "vendor_activities"
             referencedColumns: ["id"]
           },
         ]
@@ -12066,6 +12091,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_vendor_retest: {
+        Args: { p_activity_id: string; p_planned_date?: string }
+        Returns: string
+      }
       create_webhook_subscription: {
         Args: {
           p_endpoint_url: string
@@ -12180,6 +12209,7 @@ export type Database = {
         Returns: undefined
       }
       document_is_controller: { Args: { p_role: string }; Returns: boolean }
+      document_key: { Args: { p_text: string }; Returns: string }
       document_reference_target: {
         Args: { p_kind: string; p_target_id: string }
         Returns: Record<string, unknown>
@@ -12191,6 +12221,10 @@ export type Database = {
       document_refresh_current: {
         Args: { p_document_id: string }
         Returns: string
+      }
+      document_status_controlled: {
+        Args: { p_status: string }
+        Returns: boolean
       }
       end_performance_disturbance: {
         Args: { p_disturbance_id: string; p_ended_at?: string }
@@ -12436,6 +12470,7 @@ export type Database = {
       }
       org_caller_role: { Args: { p_org_id: string }; Returns: string }
       org_cat_b_limit: { Args: { p_org_id: string }; Returns: number }
+      org_document_policy: { Args: { p_org_id: string }; Returns: string }
       org_gate_policy: { Args: { p_org_id: string }; Returns: Json }
       ownership_checklist: {
         Args: { p_system_id: string; p_to_stage: string }
@@ -12625,6 +12660,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      reference_document_in_open_itrs: {
+        Args: { p_document_id: string; p_system_ids?: string[] }
+        Returns: number
+      }
       refreeze_performance_run: { Args: { p_run_id: string }; Returns: number }
       refresh_daily_report_data: {
         Args: { p_report_id: string }
@@ -12671,6 +12710,10 @@ export type Database = {
       }
       return_itr_to_executor: {
         Args: { p_itr_id: string; p_reason: string }
+        Returns: Json
+      }
+      revalidate_document_references: {
+        Args: { p_document_id: string; p_reason: string }
         Returns: Json
       }
       review_punch_category: {
@@ -12926,6 +12969,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      storage_document_uploader: { Args: { p_name: string }; Returns: boolean }
       storage_object_in_my_project: {
         Args: { p_bucket: string; p_name: string }
         Returns: boolean
@@ -13198,6 +13242,10 @@ export type Database = {
       verify_lineup_item: { Args: { p_item_id: string }; Returns: undefined }
       verify_punch: {
         Args: { p_accept: boolean; p_comment?: string; p_punch_id: string }
+        Returns: undefined
+      }
+      void_document_revision: {
+        Args: { p_reason: string; p_revision_id: string }
         Returns: undefined
       }
       void_startup_event: {

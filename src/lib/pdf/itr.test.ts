@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest'
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, PDFPage } from 'pdf-lib'
 import { Renderer } from './renderer'
 import { renderItrPdf, type ItrPdfData } from './itr'
 
@@ -43,4 +43,34 @@ it('renders continuity conductor rows as a paginated table without JSON or lost 
     expect(texts.filter(t => t === 'Conductor').length).toBeGreaterThan(1)
     expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThan(1)
   } finally {draw.mockRestore()}
+})
+
+it('S13 (F-10/F-11): documentos de referencia, empresa del firmante y unidades MΩ legibles', async () => {
+  const draw = vi.spyOn(Renderer.prototype, 'drawText')
+  const cell = vi.spyOn(PDFPage.prototype, 'drawText')
+  const data: ItrPdfData = {
+    itr_number: 'E13A/M-101', status: 'completed', progress_pct: 100, scheduled_date: null, tags: null, projects: null,
+    itr_signatures: [{ role: 'executor', signed_at: '2026-10-20T15:00:00Z', profiles: { full_name: 'Ana Pérez' }, signer_company: 'Instrumentos del Llano' }],
+    required_signatures: ['executor'],
+    itr_templates: { code: 'E13A', title: 'Megado', description: null, itr_template_sections: [{ id: 's', title: 'Aislamiento', order_index: 0, itr_template_items: [{
+      id: 'i', item_number: '1', description: 'Resistencia de aislamiento', item_type: 'measurement', is_critical: true,
+      acceptance_min: 100, acceptance_max: null, acceptance_text: null, unit: 'MΩ', order_index: 0,
+    }] }] },
+    itr_responses: [{ item_id: 'i', value_text: null, value_numeric: 500, value_bool: null, value_option: null, remarks: null, is_passed: true }],
+    document_refs: [
+      { number: 'PID-A100-001', title: 'P&ID compresión', used_rev: 'B', used_status: 'ifc', current_rev: 'C', revalidated_from: null, revalidation_reason: null },
+      { number: 'DS-PT-101', title: 'Hoja de datos', used_rev: 'B', used_status: 'final', current_rev: 'B', revalidated_from: 'A', revalidation_reason: 'Cambio de cajetín' },
+    ],
+  }
+  try {
+    await renderItrPdf(data)
+    const texts = [...draw.mock.calls, ...cell.mock.calls].map(([text]) => text).join(' ')
+    expect(texts).toContain('DOCUMENTOS DE REFERENCIA')
+    expect(texts).toContain('PID-A100-001')
+    expect(texts).toContain('SUPERADA')
+    expect(texts).toContain('Revalidada desde Rev A')
+    expect(texts).toContain('Ana Pérez · Instrumentos del Llano')
+    expect(texts).toContain('500 MOhm')
+    expect(texts).not.toContain('M?')
+  } finally { draw.mockRestore(); cell.mockRestore() }
 })

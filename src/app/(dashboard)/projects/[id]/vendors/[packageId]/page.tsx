@@ -9,6 +9,7 @@ import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import PackageView, { type PackageData } from './PackageView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
+import { todayIn } from '@/lib/time/zone'
 
 // Paquete de vendor (fase 8, sesión 2): alcance, límites e interfaces, movilización (gate del sistema + checklist),
 // FAT/SAT con hallazgos (punch o ACC), reportes, recomendaciones con MOC y desmovilización.
@@ -18,7 +19,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
 
-  const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
+  const { data: project } = await supabase.from('projects').select('id, code, name, timezone').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
   const { data: pkg } = await supabase.from('vendor_packages')
     .select('*, vendor_package_systems(system_id), vendor_package_tags(tag_id)')
@@ -38,7 +39,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     supabase.rpc('vendor_mobilization_status', { p_package_id: packageId }),
     supabase.rpc('vendor_demobilization_status', { p_package_id: packageId }),
     supabase.from('vendor_activities')
-      .select('id, kind, title, planned_date, performed_on, location, result, notes, recorded_by, result_by, result_at, vendor_findings(id, description, tag_id, category, created_at, tags(tag_number), punches(id, punch_number, status, tag_id), actions(id, number, status))')
+      .select('id, kind, title, planned_date, performed_on, location, result, notes, recorded_by, result_by, result_at, retest_of, vendor_findings(id, description, tag_id, category, created_at, tags(tag_number), punches(id, punch_number, status, tag_id), actions(id, number, status))')
       .eq('package_id', packageId).order('created_at'),
     supabase.from('vendor_reports').select('id, kind, report_date, headcount, hours, activities, issues, issued_by, issued_at').eq('package_id', packageId).order('report_date', { ascending: false }),
     supabase.from('vendor_recommendations').select('*').eq('package_id', packageId).order('seq'),
@@ -51,6 +52,22 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     ? await fetchAllRowsFlagged(() => supabase.from('tags').select('id, tag_number, subsystems!inner(system_id)')
       .eq('project_id', id).in('subsystems.system_id', systemIds).order('tag_number'))
     : { rows: [] as { id: string; tag_number: string }[], truncated: false }
+
+  // S13 (F-34): documentos y equipos de prueba de la empresa del paquete, para los ítems del checklist.
+  const [{ data: companyDocs }, { data: equipment }] = await Promise.all([
+    supabase.from('documents').select('id, current:document_revisions!documents_current_revision_fkey(status)')
+      .eq('project_id', id).eq('company_id', pkg.company_id).limit(1000),
+    supabase.from('test_equipment').select('id, calibration_due').eq('org_id', ctx.orgId).eq('owner_company_id', pkg.company_id).eq('is_active', true).limit(1000),
+  ])
+  const today = todayIn(project.timezone)
+  const docStatus = (companyDocs ?? []).map(d => (d.current as unknown as { status: string } | null)?.status ?? null)
+  const hints: PackageData['hints'] = {
+    docs: docStatus.length,
+    docsCurrent: docStatus.filter(s => s === 'ifc' || s === 'as_built' || s === 'final').length,
+    docsAsBuilt: docStatus.filter(s => s === 'as_built' || s === 'final').length,
+    equipment: (equipment ?? []).length,
+    equipmentValid: (equipment ?? []).filter(e => e.calibration_due >= today).length,
+  }
 
   const entityIds = [...(activities ?? []).map(a => a.id), ...(reports ?? []).map(r => r.id)]
   const { data: attachments } = entityIds.length
@@ -79,7 +96,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     demobilization: (demob ?? null) as PackageData['demobilization'],
     activities: (activities ?? []).map(a => ({
       id: a.id, kind: a.kind as ActivityKind, title: a.title, planned_date: a.planned_date, performed_on: a.performed_on, location: a.location,
-      result: a.result as ActivityResult, notes: a.notes, result_by: a.result_by, result_at: a.result_at,
+      result: a.result as ActivityResult, notes: a.notes, result_by: a.result_by, result_at: a.result_at, retest_of: a.retest_of,
       findings: ((a.vendor_findings as unknown as {
         id: string; description: string; tag_id: string | null; category: string | null; created_at: string
         tags: { tag_number: string } | null; punches: { id: string; punch_number: string; status: string; tag_id: string | null } | null
@@ -89,6 +106,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     })),
     reports: (reports ?? []).map(r => ({ ...r, kind: r.kind as ReportKind, hours: r.hours === null ? null : Number(r.hours), attachments: attachmentsBy[r.id] ?? [] })),
     recommendations: (recs ?? []).map(r => ({ ...r, status: r.status as RecommendationStatus })),
+    hints,
   }
 
   const tl = await getTranslations('Common')
@@ -98,7 +116,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
       <PartialNote>{tl('listPartial')}</PartialNote>
     )}
     <PackageView
-      project={project}
+      project={{ id: project.id, code: project.code, name: project.name }}
       pkg={data}
       companies={(companies ?? []).map(c => ({ id: c.id, name: c.short_name?.trim() ? c.short_name : c.name, active: c.is_active }))}
       systems={systems ?? []}

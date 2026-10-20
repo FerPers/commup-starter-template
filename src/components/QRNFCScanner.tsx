@@ -11,6 +11,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseRegisterQr } from '@/lib/registers/qr';
+import { parseTagScan, tag360Path } from '@/lib/tags/qr';
+import { NAV_STORAGE } from '@/lib/constants/navigation';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 interface ScanResult {
@@ -52,31 +54,21 @@ interface Html5QrcodeScannerLike {
   ): Promise<void>;
 }
 
-// ─── CommUP Tag URL pattern ────────────────────────────────────────────────
-// Formatos aceptados:
-//   https://app.commup.io/tag_360/EQ-001-PUMP-001
-//   commup://tag/EQ-001-PUMP-001
-//   EQ-001-PUMP-001  (tag_id directo)
-const COMMUP_TAG_PATTERNS = [
-  /\/tag_360\/([A-Z0-9\-_]+)/i,
-  /commup:\/\/tag\/([A-Z0-9\-_]+)/i,
-  /^([A-Z]{2,4}-\d{3,6}-[A-Z0-9\-]+)$/i,
-];
+// ─── Lectura del QR / NFC ──────────────────────────────────────────────────
+// S13 (F-18/C-31): las etiquetas de CommUp llevan https://commup.app/tag_360/<uuid>; además se acepta cualquier
+// texto (número de tag en cualquier formato, commup://tag/…, URLs con «/», «.» o «%»). Tag 360 resuelve por la
+// clave normalizada y, si el número existe en varios proyectos, ofrece elegir. Lógica pura en src/lib/tags/qr.ts.
 
 /** Registro (`/r/<uuid>`) o tag; null si no se reconoce. */
 function parseScan(raw: string): { tag_id: string; register_id?: string } | null {
   const registerId = parseRegisterQr(raw);
   if (registerId) return { tag_id: '', register_id: registerId };
-  const tagId = parseTagId(raw);
+  const tagId = parseTagScan(raw);
   return tagId ? { tag_id: tagId } : null;
 }
 
-function parseTagId(raw: string): string | null {
-  for (const pattern of COMMUP_TAG_PATTERNS) {
-    const match = raw.trim().match(pattern);
-    if (match) return match[1].toUpperCase();
-  }
-  return null;
+function lastProject(): string | null {
+  try { return window.localStorage.getItem(NAV_STORAGE.lastProject); } catch { return null; }
 }
 
 // ─── Hook: NFC Scanner ─────────────────────────────────────────────────────
@@ -284,7 +276,7 @@ export default function QRNFCScanner() {
     });
 
     // Navegar a tag_360 después de 300ms (feedback visual primero)
-    setTimeout(() => router.push(`/tag_360/${result.tag_id}`), 300);
+    setTimeout(() => router.push(tag360Path(result.tag_id, lastProject())), 300);
   }, [router]);
 
   const handleError = useCallback((err: string) => {
@@ -318,7 +310,7 @@ export default function QRNFCScanner() {
     if (parsed) {
       handleScan({ ...parsed, tag_type: 'MANUAL', raw: manualInput, timestamp: new Date().toISOString() });
     } else {
-      handleError('ID de tag no válido. Formato: XX-000-NOMBRE-000');
+      handleError('Escribe el número del tag o pega el enlace de su etiqueta.');
     }
   };
 
@@ -535,8 +527,8 @@ export default function QRNFCScanner() {
           </button>
           <div style={{ marginTop: 8, padding: 12, background: 'var(--gray-800)', borderRadius: 'var(--radius-md)' }}>
             <p style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>Formatos válidos:</p>
-            <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', marginTop: 4, marginBottom: 0 }}>PMP-001-P-001A</p>
-            <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>https://app.commup.io/tag_360/XXX</p>
+            <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', marginTop: 4, marginBottom: 0 }}>PT-101 · 21-PT-1001A · FT-101/A</p>
+            <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>https://commup.app/tag_360/…</p>
             <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>commup://tag/XXX</p>
           </div>
         </div>
@@ -561,7 +553,7 @@ export default function QRNFCScanner() {
                     key={i}
                     onClick={() => {
                       setShowHistory(false);
-                      router.push(`/tag_360/${scan.tag_id}`);
+                      router.push(tag360Path(scan.tag_id, lastProject()));
                     }}
                     style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'var(--gray-700)', borderRadius: 'var(--radius-lg)', transition: 'background 0.15s', textAlign: 'left', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}
                   >

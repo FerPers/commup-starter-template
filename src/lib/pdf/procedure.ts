@@ -33,6 +33,8 @@ export type ProcedurePdfInput = {
   hash: string | null
   /** S10 (E-15c): zona del proyecto para las horas de aprobación y verificación. */
   timezone?: string
+  /** S13 (F-11): documentos contra los que se redactó la revisión (usada vs vigente al imprimir). */
+  documentRefs?: { number: string; title: string; used_rev: string; current_rev: string | null; revalidated_from: string | null; revalidation_reason: string | null }[]
 }
 
 const T = {
@@ -49,6 +51,11 @@ const T = {
   walkdown: { es: 'Walkdown', en: 'Walkdown' },
   page: { es: 'Página', en: 'Page' },
   notApproved: { es: 'NO APROBADO — no usar en campo', en: 'NOT APPROVED — do not use in the field' },
+  docs: { es: 'Documentos de referencia', en: 'Reference documents' },
+  docUsed: { es: 'usa Rev', en: 'uses Rev' },
+  docCurrent: { es: 'vigente', en: 'current' },
+  docSuperseded: { es: 'SUPERADA', en: 'SUPERSEDED' },
+  docRevalidated: { es: 'revalidada desde Rev', en: 'revalidated from Rev' },
 }
 
 export async function renderProcedurePdf(x: ProcedurePdfInput): Promise<Uint8Array> {
@@ -110,6 +117,17 @@ export async function renderProcedurePdf(x: ProcedurePdfInput): Promise<Uint8Arr
     r.accentSection(`${idx + 1}. ${x.sectionLabels[k]}`)
     para(body)
   })
+
+  if (x.documentRefs?.length) {
+    r.moveY(8)
+    r.accentSection(T.docs[L])
+    for (const d of x.documentRefs) {
+      const outdated = d.current_rev !== null && d.current_rev !== d.used_rev
+      const state = outdated ? ` · ${T.docSuperseded[L]} (${T.docCurrent[L]} ${d.current_rev})`
+        : d.revalidated_from ? ` · ${T.docRevalidated[L]} ${d.revalidated_from}: ${d.revalidation_reason ?? ''}` : ` · ${T.docCurrent[L]}`
+      r.kv(d.number, `${d.title} — ${T.docUsed[L]} ${d.used_rev}${state}`)
+    }
+  }
 
   r.moveY(8)
   r.accentSection(T.signoff[L])

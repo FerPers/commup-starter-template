@@ -25,6 +25,8 @@ export type Finding = {
 export type ActivityRow = {
   id: string; kind: ActivityKind; title: string; planned_date: string | null; performed_on: string | null; location: string | null
   result: ActivityResult; notes: string | null; result_by: string | null; result_at: string | null; findings: Finding[]; attachments: Attachment[]
+  /** S13 (F-05): actividad que esta repite. */
+  retest_of: string | null
 }
 export type ReportRow = {
   id: string; kind: ReportKind; report_date: string; headcount: number | null; hours: number | null; activities: string; issues: string | null
@@ -48,6 +50,11 @@ export type PackageData = {
   activities: ActivityRow[]
   reports: ReportRow[]
   recommendations: RecommendationRow[]
+  /**
+   * S13 (F-34): datos del registro para los ítems del checklist que antes eran casillas a ciegas: documentos de la
+   * empresa con revisión vigente / As-Built y equipos de prueba de la empresa con calibración vigente.
+   */
+  hints: { docs: number; docsCurrent: number; docsAsBuilt: number; equipment: number; equipmentValid: number }
 }
 type Opt = { id: string; code: string; name: string }
 
@@ -102,6 +109,14 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
     }), () => setEdit(false))
   }
 
+  // S13 (F-34): lo que dice el registro sobre los ítems que dependen de documentos y equipos de la empresa.
+  const h = pkg.hints
+  const hint = (k: string): string | null =>
+    k === 'documents_current' ? t('hint.docs', { current: h.docsCurrent, n: h.docs })
+      : k === 'as_built_delivered' ? t('hint.asBuilt', { done: h.docsAsBuilt, n: h.docs })
+        : k === 'calibrated_equipment' ? t('hint.equipment', { valid: h.equipmentValid, n: h.equipment })
+          : null
+
   function renderChecklist(phase: ChecklistPhase, editable: boolean) {
     const map = done(phase)
     return (
@@ -115,6 +130,7 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
               <span style={{ flex: 1 }}>
                 {t(`check.${k}`)}
                 {row?.done && <span style={{ ...small, fontSize: 'var(--text-xs)' }} suppressHydrationWarning> · {who(row.checked_by)} · {when(row.checked_at)}</span>}
+                {hint(k) && <span style={{ display: 'block', ...small, fontSize: 'var(--text-xs)' }}>{hint(k)}</span>}
               </span>
             </li>
           )
@@ -136,7 +152,7 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
           <span style={small}>{companyName(pkg.companyId)} · {pkg.systemIds.map(sysCode).join(', ') || t('noSystems')}</span>
           {canLead && !closed && !edit && <button type="button" style={btn('outline')} onClick={() => setEdit(true)}>{t('editPkg')}</button>}
         </div>
-        {pkg.status === 'cancelled' && <p style={{ ...small, margin: '6px 0 0' }}>{t('cancelled', { reason: pkg.cancelReason ?? '' })}</p>}
+        {pkg.status === 'cancelled' && <p style={{ ...small, margin: '6px 0 0' }}>{t(pkg.mobilizedAt ? 'terminated' : 'cancelled', { reason: pkg.cancelReason ?? '' })}</p>}
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}
@@ -286,7 +302,7 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
         tags={pkg.tagIds.length ? tags.filter(x => pkg.tagIds.includes(x.id)).concat(tags.filter(x => !pkg.tagIds.includes(x.id))) : tags}
         members={members} names={names} userId={userId} canEdit={canEdit} canLead={canLead} />
 
-      <ReportsSection projectId={project.id} pkgId={pkg.id} status={pkg.status} reports={pkg.reports} recommendations={pkg.recommendations}
+      <ReportsSection projectId={project.id} pkgId={pkg.id} status={pkg.status} reports={pkg.reports} recommendations={pkg.recommendations} userId={userId}
         names={names} canEdit={canEdit} canLead={canLead} />
 
       {/* ── Desmovilización (20.55) ────────────────────────────────────── */}
@@ -307,6 +323,8 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
                 <input style={{ ...input, flex: 1, minWidth: 200 }} value={note} maxLength={2000} placeholder={t('mob.note')} aria-label={t('mob.note')} onChange={e => setNote(e.target.value)} />
                 <button type="button" disabled={isPending || !demob.ready} style={btn('primary', isPending || !demob.ready)}
                   onClick={() => run(() => transitionVendorPackage({ projectId: project.id, packageId: pkg.id, to: 'demobilize', note }), () => setNote(''))}>{t('demob.authorize')}</button>
+                <button type="button" disabled={isPending || note.trim().length < 10} style={btn('danger', isPending || note.trim().length < 10)} title={t('demob.terminateHint')}
+                  onClick={() => { if (window.confirm(t('demob.terminateConfirm'))) run(() => transitionVendorPackage({ projectId: project.id, packageId: pkg.id, to: 'cancel', note })) }}>{t('demob.terminate')}</button>
               </div>
             )}
           </>

@@ -86,7 +86,10 @@ export const setVendorChecklistItem = withAuth(
   },
 )
 
-/** mobilize | demobilize | cancel (líder+; la RPC valida gate, checklist, interfaces, reporte final y Cat A). */
+/**
+ * mobilize | demobilize | cancel (líder+; la RPC valida gate, checklist, interfaces, reporte final y Cat A).
+ * S13 (F-34): `cancel` sobre un paquete movilizado = terminación anticipada (motivo ≥ 10).
+ */
 export const transitionVendorPackage = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; packageId: string; to: 'mobilize' | 'demobilize' | 'cancel'; note?: string }): Promise<{ error?: string }> => {
@@ -133,6 +136,18 @@ export const recordVendorActivityResult = withAuth(
     if (error) return { error: error.message }
     revalidate(input.projectId, input.packageId)
     return {}
+  },
+)
+
+/** S13 (F-05): re-prueba de una FAT/SAT fallida o con hallazgos; el KPI cuenta la última de la cadena. */
+export const createVendorRetest = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; packageId: string; activityId: string; plannedDate?: string | null }): Promise<{ id?: string; error?: string }> => {
+    if (!(await owned(ctx.supabase, 'vendor_activities', input.activityId, input.projectId))) return { error: 'Actividad no encontrada' }
+    const { data, error } = await ctx.supabase.rpc('create_vendor_retest', { p_activity_id: input.activityId, p_planned_date: date(input.plannedDate) })
+    if (error) return { error: error.message }
+    revalidate(input.projectId, input.packageId)
+    return { id: data as string }
   },
 )
 

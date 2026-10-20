@@ -145,7 +145,9 @@ BEGIN
              'open_findings', COALESCE(SUM(vb.open_findings), 0))
            FROM vendor_packages vp
            CROSS JOIN LATERAL (SELECT
-             EXISTS (SELECT 1 FROM vendor_activities va WHERE va.package_id = vp.id AND va.result IN ('pending', 'failed')) AS bad_tests,
+             -- S13 (F-05): una FAT/SAT fallida que ya tiene re-prueba no cuenta; cuenta la última de la cadena.
+             EXISTS (SELECT 1 FROM vendor_activities va WHERE va.package_id = vp.id AND va.result IN ('pending', 'failed')
+                       AND NOT EXISTS (SELECT 1 FROM vendor_activities rt WHERE rt.retest_of = va.id)) AS bad_tests,
              (SELECT COUNT(*) FROM vendor_findings vf
                 LEFT JOIN punches pu ON pu.id = vf.punch_id
                 LEFT JOIN actions ac ON ac.id = vf.action_id

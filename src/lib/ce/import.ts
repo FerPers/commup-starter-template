@@ -40,7 +40,11 @@ export const AiCeOutput = z.object({
 export type AiCeOutput = z.infer<typeof AiCeOutput>
 
 /** Número de tag comparable: mayúsculas, sin espacios. */
-export const normalizeTag = (value: string | null | undefined) => (value ?? '').toUpperCase().replace(/\s+/g, '')
+/**
+ * Clave de emparejamiento de tags: sin mayúsculas, espacios, guiones, puntos, barras ni «_» («pt-101», «PT 101» y
+ * «PT_101» → «PT101»). S13 (F-15): = columna generada SQL `tags.tag_key`, que es por donde se busca en la BD.
+ */
+export const normalizeTag = (value: string | null | undefined) => (value ?? '').toUpperCase().replace(/[\s_./-]+/g, '')
 
 export type ReviewCause = {
   key: string; code: string; description: string; tag: string; tagMatched: boolean; signal: string

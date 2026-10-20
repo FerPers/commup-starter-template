@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
-import { isDocumentController, type DocType, type RevisionStatus } from '@/lib/documents/catalog'
+import { documentPolicy, isDocumentController, type DocType, type RevisionRowStatus } from '@/lib/documents/catalog'
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import DocumentDetail, { type RevisionRow, type UsageRow } from './DocumentDetail'
 
 // Ficha de un documento del registro maestro (fase 8, sesión 1): revisiones (PDF y/o enlace al EDMS), vigente,
@@ -18,16 +19,18 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     .eq('id', documentId).eq('project_id', id).maybeSingle()
   if (!doc) notFound()
 
-  const [{ data: revisions }, { data: refs }, { data: systems }, { data: disciplines }, { data: companies }, { data: members }] = await Promise.all([
-    supabase.from('document_revisions').select('id, seq, rev, status, issued_on, file_path, file_name, external_url, notes, created_by, created_at')
+  // S13: las referencias se paginan completas (un P&ID puede estar en miles de ITR).
+  const [{ data: revisions }, refs, { data: systems }, { data: disciplines }, { data: companies }, { data: members }, { data: org }] = await Promise.all([
+    supabase.from('document_revisions').select('id, seq, rev, status, issued_on, file_path, file_name, external_url, notes, created_by, created_at, void_from_status, void_reason, voided_by, voided_at')
       .eq('document_id', documentId).order('seq', { ascending: false }),
-    supabase.from('document_references')
-      .select('id, target_kind, revision_id, revalidated_at, revalidation_reason, itrs(id, itr_number, tag_id, status), procedure_revisions(id, rev, status, procedure_id, procedures!procedure_revisions_procedure_id_fkey(number, title))')
-      .eq('document_id', documentId).eq('project_id', id),
+    fetchAllRows(() => supabase.from('document_references')
+      .select('id, target_kind, revision_id, revalidated_at, revalidation_reason, itrs(id, itr_number, tag_id, status, itr_signatures(count)), procedure_revisions(id, rev, status, procedure_id, procedures!procedure_revisions_procedure_id_fkey(number, title))')
+      .eq('document_id', documentId).eq('project_id', id)),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('disciplines').select('id, code, name').eq('org_id', ctx.orgId).order('code'),
     supabase.from('companies').select('id, name, short_name').eq('org_id', ctx.orgId).order('name'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
+    supabase.from('organizations').select('settings').eq('id', ctx.orgId).single(),
   ])
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
@@ -36,9 +39,11 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   }
   const revById = new Map((revisions ?? []).map(r => [r.id, r.rev]))
 
-  const usage: UsageRow[] = (refs ?? []).map(r => {
-    const itr = r.itrs as unknown as { id: string; itr_number: string; tag_id: string; status: string } | null
+  const usage: UsageRow[] = refs.map(r => {
+    const itr = r.itrs as unknown as { id: string; itr_number: string; tag_id: string; status: string; itr_signatures: { count: number }[] } | null
     const pr = r.procedure_revisions as unknown as { id: string; rev: number; status: string; procedure_id: string; procedures: { number: string; title: string } | null } | null
+    const outdated = !!doc.current_revision_id && doc.current_revision_id !== r.revision_id
+    const locked = itr ? (itr.itr_signatures?.[0]?.count ?? 0) > 0 : pr ? pr.status !== 'draft' : false
     return {
       id: r.id,
       kind: r.target_kind as 'itr' | 'procedure_revision',
@@ -46,7 +51,8 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       detail: itr ? itr.status : pr ? `${pr.procedures?.title ?? ''} · ${pr.status}` : '',
       href: itr ? `/projects/${id}/tags/${itr.tag_id}/itrs/${itr.id}` : pr ? `/projects/${id}/startup/procedures/${pr.procedure_id}?rev=${pr.id}` : null,
       usedRev: revById.get(r.revision_id) ?? '—',
-      outdated: !!doc.current_revision_id && doc.current_revision_id !== r.revision_id,
+      outdated,
+      locked,
       revalidated: !!r.revalidated_at,
       reason: r.revalidation_reason,
     }
@@ -60,13 +66,15 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
         companyId: doc.company_id ?? '', currentRevisionId: doc.current_revision_id,
         systemIds: ((doc.document_systems as unknown as { system_id: string }[] | null) ?? []).map(s => s.system_id),
       }}
-      revisions={(revisions ?? []).map(r => ({ ...r, status: r.status as RevisionStatus })) as RevisionRow[]}
+      revisions={(revisions ?? []).map(r => ({ ...r, status: r.status as RevisionRowStatus })) as RevisionRow[]}
       usage={usage}
       systems={systems ?? []}
       disciplines={disciplines ?? []}
       companies={(companies ?? []).map(c => ({ id: c.id, name: c.short_name?.trim() ? c.short_name : c.name }))}
       names={names}
       canEdit={isDocumentController(ctx.role)}
+      policy={documentPolicy(org?.settings)}
+      lockedOutdated={usage.filter(u => u.outdated && u.locked).length}
     />
   )
 }
