@@ -52,7 +52,7 @@ export default function ItrListGlobal({
   page: number
   pageSize: number
   counts: ItrStatusCounts
-  filters: { status: string; phase: string; disc: string; q: string; project: string }
+  filters: { status: string; phase: string; disc: string; q: string; project: string; assignee: string }
   sort: ItrSortKey
   dir: SortDir
   phases: Phase[]
@@ -90,7 +90,7 @@ export default function ItrListGlobal({
   const selectedRows = useMemo(() => rows.filter(r => selectedIds.has(r.id)), [rows, selectedIds])
   const allPageSelected = rows.length > 0 && selectedRows.length === rows.length
   const totalAll = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts])
-  const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.project || filters.q)
+  const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.project || filters.q || filters.assignee)
   const busy = url.isPending
 
   function toggleSelectAll() {
@@ -121,7 +121,7 @@ export default function ItrListGlobal({
 
   function exportCsv() {
     startExport(async () => {
-      const res = await exportItrList({ filters: { status: filters.status, phase: filters.phase, disc: filters.disc, q: filters.q, project: filters.project } })
+      const res = await exportItrList({ filters: { status: filters.status, phase: filters.phase, disc: filters.disc, q: filters.q, project: filters.project, assignee: filters.assignee } })
       if (res.error || !res.rows) { setBulkError(res.error ?? 'Export error'); return }
       const headers = [
         t('exportHeaders.project'), t('exportHeaders.itr'), t('exportHeaders.tag'),
@@ -231,8 +231,14 @@ export default function ItrListGlobal({
           <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </Select>
+        {/* S19 (C-30) */}
+        <Select selectSize="sm" fullWidth={false} value={filters.assignee} onChange={e => url.set({ assignee: e.target.value })} style={{ minWidth: 150 }} aria-label={t('filters.anyAssignee')}>
+          <option value="">{t('filters.anyAssignee')}</option>
+          <option value="me">{t('filters.mine')}</option>
+          <option value="none">{t('filters.unassigned')}</option>
+        </Select>
         {hasFilters && (
-          <Button variant="ghost" size="sm" leftIcon={<X size={13} />} onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'project', 'q']) }}>
+          <Button variant="ghost" size="sm" leftIcon={<X size={13} />} onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'project', 'q', 'assignee']) }}>
             {tc('clear')}
           </Button>
         )}

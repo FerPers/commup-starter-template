@@ -7,7 +7,7 @@ import { fetchItrPage, fetchItrStatusCounts } from '@/lib/list/itr-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
 import { ITR_SORT_KEYS } from '@/lib/list/itr-types'
 
-type Search = { page?: string; sort?: string; dir?: string; status?: string; phase?: string; disc?: string; q?: string; project?: string }
+type Search = { page?: string; sort?: string; dir?: string; status?: string; phase?: string; disc?: string; q?: string; project?: string; assignee?: string }
 
 export default async function GlobalItrsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams
@@ -18,7 +18,7 @@ export default async function GlobalItrsPage({ searchParams }: { searchParams: P
   const page = parsePage(sp.page)
   const sort = parseSort(sp.sort, ITR_SORT_KEYS, 'created_at')
   const dir = parseDir(sp.dir, sort === 'created_at' ? 'desc' : 'asc')
-  const filters = { status: sp.status, phase: sp.phase, disc: sp.disc, q: sp.q, project: sp.project }
+  const filters = { status: sp.status, phase: sp.phase, disc: sp.disc, q: sp.q, project: sp.project, assignee: sp.assignee === 'me' ? ctx.userId : sp.assignee }
   const scope = { orgId: ctx.orgId }
 
   const [{ data: projects }, pageRes, counts, { data: phases }, { data: disciplines }, { data: members }] = await Promise.all([
@@ -42,7 +42,7 @@ export default async function GlobalItrsPage({ searchParams }: { searchParams: P
         page={page}
         pageSize={LIST_PAGE_SIZE}
         counts={counts}
-        filters={{ status: sp.status ?? '', phase: sp.phase ?? '', disc: sp.disc ?? '', q: sp.q ?? '', project: sp.project ?? '' }}
+        filters={{ status: sp.status ?? '', phase: sp.phase ?? '', disc: sp.disc ?? '', q: sp.q ?? '', project: sp.project ?? '', assignee: sp.assignee ?? '' }}
         sort={sort}
         dir={dir}
         phases={phases ?? []}

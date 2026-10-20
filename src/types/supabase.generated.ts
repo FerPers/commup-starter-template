@@ -11227,6 +11227,8 @@ export type Database = {
       }
       itr_list_v: {
         Row: {
+          area_id: string | null
+          assignee_ids: string[] | null
           completed_date: string | null
           created_at: string | null
           discipline_code: string | null
@@ -11247,6 +11249,7 @@ export type Database = {
           search_text: string | null
           status: Database["public"]["Enums"]["itr_status"] | null
           subsystem_id: string | null
+          system_id: string | null
           tag_description: string | null
           tag_id: string | null
           tag_number: string | null
@@ -11338,6 +11341,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subsystems_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "systems_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "systems_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["area_id"]
           },
         ]
       }
@@ -12535,6 +12580,18 @@ export type Database = {
         Args: { p_project_id: string; p_system_ids?: string[] }
         Returns: Json
       }
+      generate_itrs: {
+        Args: {
+          p_assign?: Json
+          p_limit?: number
+          p_phase_ids: string[]
+          p_project_id: string
+          p_subsystem_ids?: string[]
+          p_system_ids?: string[]
+          p_tag_ids?: string[]
+        }
+        Returns: Json
+      }
       generate_punch_number: { Args: { p_project_id: string }; Returns: string }
       get_my_editor_project_ids: { Args: never; Returns: string[] }
       get_my_org_ids: { Args: never; Returns: string[] }
@@ -12608,6 +12665,37 @@ export type Database = {
         Returns: string
       }
       itr_cause_source_rows: { Args: { p_cause_id: string }; Returns: Json }
+      itr_generation_candidates: {
+        Args: {
+          p_phase_ids: string[]
+          p_project_id: string
+          p_subsystem_ids?: string[]
+          p_system_ids?: string[]
+          p_tag_ids?: string[]
+        }
+        Returns: {
+          discipline_id: string
+          equipment_type_id: string
+          outcome: string
+          phase_id: string
+          subsystem_id: string
+          tag_id: string
+          tag_number: string
+          template_code: string
+          template_id: string
+          template_title: string
+        }[]
+      }
+      itr_generation_summary: {
+        Args: {
+          p_phase_ids: string[]
+          p_project_id: string
+          p_subsystem_ids?: string[]
+          p_system_ids?: string[]
+          p_tag_ids?: string[]
+        }
+        Returns: Json
+      }
       itr_loop_source_rows: { Args: { p_loop_id: string }; Returns: Json }
       itr_option_outcomes_valid: {
         Args: { p_options: Json; p_outcomes: Json }

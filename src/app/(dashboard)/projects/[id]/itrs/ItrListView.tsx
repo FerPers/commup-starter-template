@@ -45,6 +45,7 @@ export default function ItrListView({
   disciplines,
   users = [],
   userRole = '',
+  scopes = { systems: [], subsystems: [], areas: [] },
 }: {
   projectId: string
   projectName: string
@@ -53,7 +54,13 @@ export default function ItrListView({
   page: number
   pageSize: number
   counts: ItrStatusCounts
-  filters: { status: string; phase: string; disc: string; q: string }
+  filters: { status: string; phase: string; disc: string; q: string; system: string; subsystem: string; area: string; assignee: string }
+  /** S19 (C-30): jerarquía del proyecto para filtrar. */
+  scopes?: {
+    systems: { id: string; code: string; name: string; area_id: string | null }[]
+    subsystems: { id: string; code: string; name: string; system_id: string }[]
+    areas: { id: string; code: string; name: string }[]
+  }
   sort: ItrSortKey
   dir: SortDir
   phases: Phase[]
@@ -94,7 +101,9 @@ export default function ItrListView({
   const allPageSelected = rows.length > 0 && selectedCount === rows.length
 
   const totalAll = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts])
-  const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.q)
+  const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.q || filters.system || filters.subsystem || filters.area || filters.assignee)
+  const visibleSystems = filters.area ? scopes.systems.filter(s => s.area_id === filters.area) : scopes.systems
+  const visibleSubsystems = filters.system ? scopes.subsystems.filter(s => s.system_id === filters.system) : scopes.subsystems
 
   function toggleSort(key: ItrSortKey) {
     if (sort === key) url.set({ sort: key, dir: dir === 'asc' ? 'desc' : 'asc' }, { resetPage: false })
@@ -156,6 +165,15 @@ export default function ItrListView({
           </a>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>ITRs</h1>
         </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {canEdit && (
+          <a href={`/projects/${projectId}/itrs/generate`} style={{
+            padding: '9px 14px', background: 'var(--primary-500)', border: '1px solid var(--primary-500)',
+            borderRadius: '8px', fontSize: '13px', color: '#fff', textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 600,
+          }}>
+            {t('generate')}
+          </a>
+        )}
         <a
           href={`/projects/${projectId}/reports/itr-test-pack/pdf`}
           target="_blank"
@@ -167,6 +185,7 @@ export default function ItrListView({
         >
           {t('testPackPdf')}
         </a>
+        </div>
       </div>
 
       {/* Summary cards (conteos en SQL) */}
@@ -305,9 +324,29 @@ export default function ItrListView({
           <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </select>
+        {scopes.areas.length > 0 && (
+          <select value={filters.area} onChange={e => url.set({ area: e.target.value, system: '', subsystem: '' })} style={selStyle} aria-label={t('filters.allAreas')}>
+            <option value="">{t('filters.allAreas')}</option>
+            {scopes.areas.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+          </select>
+        )}
+        <select value={filters.system} onChange={e => url.set({ system: e.target.value, subsystem: '' })} style={selStyle} aria-label={t('filters.allSystems')}>
+          <option value="">{t('filters.allSystems')}</option>
+          {visibleSystems.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
+        </select>
+        <select value={filters.subsystem} onChange={e => url.set({ subsystem: e.target.value })} style={selStyle} aria-label={t('filters.allSubsystems')}>
+          <option value="">{t('filters.allSubsystems')}</option>
+          {visibleSubsystems.map(s => <option key={s.id} value={s.id}>{s.code}</option>)}
+        </select>
+        <select value={filters.assignee} onChange={e => url.set({ assignee: e.target.value })} style={selStyle} aria-label={t('filters.anyAssignee')}>
+          <option value="">{t('filters.anyAssignee')}</option>
+          <option value="me">{t('filters.mine')}</option>
+          <option value="none">{t('filters.unassigned')}</option>
+          {users.map(u => <option key={u.user_id} value={u.user_id}>{u.full_name}</option>)}
+        </select>
         {hasFilters && (
           <button
-            onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'q']) }}
+            onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'q', 'system', 'subsystem', 'area', 'assignee']) }}
             style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('filters.allPhases').replace('All ', '')} ×

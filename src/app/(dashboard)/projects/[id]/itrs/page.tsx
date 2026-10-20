@@ -7,7 +7,7 @@ import { fetchItrPage, fetchItrStatusCounts } from '@/lib/list/itr-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
 import { ITR_SORT_KEYS } from '@/lib/list/itr-types'
 
-type Search = { page?: string; sort?: string; dir?: string; status?: string; phase?: string; disc?: string; q?: string }
+type Search = { page?: string; sort?: string; dir?: string; status?: string; phase?: string; disc?: string; q?: string; system?: string; subsystem?: string; area?: string; assignee?: string }
 
 export default async function ProjectItrsPage({
   params,
@@ -27,16 +27,24 @@ export default async function ProjectItrsPage({
   const page = parsePage(sp.page)
   const sort = parseSort(sp.sort, ITR_SORT_KEYS, 'created_at')
   const dir = parseDir(sp.dir, sort === 'created_at' ? 'desc' : 'asc')
-  const filters = { status: sp.status, phase: sp.phase, disc: sp.disc, q: sp.q }
+  // S19 (C-30): «míos» = el usuario en sesión.
+  const filters = { status: sp.status, phase: sp.phase, disc: sp.disc, q: sp.q, system: sp.system, subsystem: sp.subsystem, area: sp.area,
+    assignee: sp.assignee === 'me' ? ctx.userId : sp.assignee }
   const scope = { orgId: ctx.orgId, projectId }
 
-  const [{ data: project }, pageRes, counts, { data: phases }, { data: disciplines }, { data: members }] = await Promise.all([
+  const [{ data: project }, pageRes, counts, { data: phases }, { data: disciplines }, { data: members }, { data: systems }, { data: subsystems }, { data: areas }] = await Promise.all([
     supabase.from('projects').select('id, name').eq('id', projectId).eq('org_id', ctx.orgId).single(),
     fetchItrPage(supabase, scope, { filters, page, sort, dir }),
     fetchItrStatusCounts(supabase, scope),
     supabase.from('project_phases').select('id, code, name, color, order_index').eq('org_id', ctx.orgId).order('order_index'),
     supabase.from('disciplines').select('code, name, color').eq('org_id', ctx.orgId).order('code'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
+    // bounded: jerarquía de un proyecto (decenas a cientos de filas)
+    supabase.from('systems').select('id, code, name, area_id').eq('project_id', projectId).order('code'),
+    // bounded: subsistemas de un proyecto
+    supabase.from('subsystems').select('id, code, name, system_id').eq('project_id', projectId).order('code'),
+    // bounded: áreas de un proyecto
+    supabase.from('areas').select('id, code, name').eq('project_id', projectId).order('code'),
   ])
 
   if (!project) notFound()
@@ -57,7 +65,8 @@ export default async function ProjectItrsPage({
         page={page}
         pageSize={LIST_PAGE_SIZE}
         counts={counts}
-        filters={{ status: sp.status ?? '', phase: sp.phase ?? '', disc: sp.disc ?? '', q: sp.q ?? '' }}
+        filters={{ status: sp.status ?? '', phase: sp.phase ?? '', disc: sp.disc ?? '', q: sp.q ?? '', system: sp.system ?? '', subsystem: sp.subsystem ?? '', area: sp.area ?? '', assignee: sp.assignee ?? '' }}
+        scopes={{ systems: systems ?? [], subsystems: subsystems ?? [], areas: areas ?? [] }}
         sort={sort}
         dir={dir}
         phases={phases ?? []}

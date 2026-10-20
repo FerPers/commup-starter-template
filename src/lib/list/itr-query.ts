@@ -13,7 +13,10 @@ const VIEW_COLS =
 
 const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected']
 
-type FilterQ = { eq: (c: string, v: string) => FilterQ; or: (f: string) => FilterQ }
+type FilterQ = { eq: (c: string, v: string) => FilterQ; or: (f: string) => FilterQ; contains: (c: string, v: string[]) => FilterQ }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const isUuid = (v: string | undefined): v is string => !!v && UUID_RE.test(v)
 
 function applyFilters<Q extends FilterQ>(
   query: Q,
@@ -30,6 +33,12 @@ function applyFilters<Q extends FilterQ>(
   if (phaseIds?.length) q = q.or(`phase_id.in.(${phaseIds.join(',')})`) as Q
   else if (f.phase) q = q.eq('phase_code', f.phase) as Q  // código inexistente → 0 filas
   if (f.disc) q = q.eq('discipline_code', f.disc) as Q
+  // S19 (C-30): sistema / subsistema / área (columnas de itr_list_v) y responsable (assignee_ids).
+  if (isUuid(f.system)) q = q.eq('system_id', f.system) as Q
+  if (isUuid(f.subsystem)) q = q.eq('subsystem_id', f.subsystem) as Q
+  if (isUuid(f.area)) q = q.eq('area_id', f.area) as Q
+  if (f.assignee === 'none') q = q.eq('assignee_ids', '{}') as Q
+  else if (isUuid(f.assignee)) q = q.contains('assignee_ids', [f.assignee]) as Q
   const search = normalizeSearch(f.q)
   if (search) {
     // Sprint E: ilike solo sobre columnas con índice trigram (itr_number) + ids

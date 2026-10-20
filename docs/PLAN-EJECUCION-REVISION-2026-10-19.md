@@ -50,7 +50,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S16 | PSSR por RPC | S14 | — | ✅ **Hecha** 2026-10-20 (migración 20261111120000 en prod, 11 comprobaciones con ROLLBACK). Decisiones de Luis: firmas Operaciones + HSE por defecto (por plantilla); al rechazar se anulan. Detalle en la cobertura |
 | S17 | Certificados por RPC | S14 | D6, D15 | ✅ **Hecha** 2026-10-20 (migración 20261112120000 en prod, 12 comprobaciones con ROLLBACK). Decisiones de Luis: Cliente = `client_rep`, Autoridad = Operaciones, invalidación = bloqueado con motivo (se desbloquea solo), fase anterior obligatoria. Detalle en la cobertura |
 | S18 | Offline por usuario (2 sesiones) | S06 | — | ✅ **Hecha** 2026-10-20 (sesión 1 sin migración; sesión 2 migración 20261113120000 en prod). Decisiones de Luis: al salir «sincronizar o descartar»; capturas de antes con confirmación; conflicto de respuesta = decide el usuario; «preparar sin red» = mis ITR pendientes (hasta 30). E-27 en pasos de arranque → S25. Detalle en la cobertura |
-| S19 | Generación masiva de ITR | S05 | — | Pendiente |
+| S19 | Generación masiva de ITR | S05 | — | ✅ **Hecha** 2026-10-20 (migración 20261114120000 en prod, 9 comprobaciones con ROLLBACK). Decisión de Luis: responsables por disciplina en la vista previa (vacío = sin asignar). Detalle en la cobertura |
 | S20 | Readiness a escala (2 sesiones) | S09 | — | Pendiente |
 | S21 | Bus de eventos (outbox) | S03 | — | Pendiente |
 | S22 | Avisos y colas | S04, S20, S21 | D16 | Pendiente |

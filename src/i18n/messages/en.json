@@ -309,7 +309,13 @@
       "allDisciplines": "All disciplines",
       "count": "{filtered} of {total} ITRs",
       "selectAll": "Select {count} ITRs",
-      "selectPage": "Select this page ({count})"
+      "selectPage": "Select this page ({count})",
+      "allAreas": "All areas",
+      "allSystems": "All systems",
+      "allSubsystems": "All subsystems",
+      "anyAssignee": "Any assignee",
+      "mine": "Mine",
+      "unassigned": "Unassigned"
     },
     "bulk": {
       "selected": "{count, plural, one {# ITR selected} other {# ITRs selected}}",
@@ -353,7 +359,8 @@
       "signE": "Sign.E",
       "signS": "Sign.S",
       "signC": "Sign.C"
-    }
+    },
+    "generate": "Generate ITRs"
   },
   "PunchList": {
     "title": "Punch List",
@@ -5076,5 +5083,54 @@
     "prepared": "{ok, plural, =1 {# ITR ready} other {# ITRs ready}} to work offline{failed, plural, =0 {} other { · # could not be downloaded}}.",
     "ready": "Available offline",
     "readyTitle": "Saved on this device: opens without a connection"
+  },
+  "ItrGenerate": {
+    "title": "Generate ITRs",
+    "intro": "Creates the ITRs for a scope and phases from the approved <matrix>equipment type × template matrix</matrix>. Only accepted rows and the active revision of each template are used; what already exists is not repeated.",
+    "step1": "1 · Phases and scope",
+    "scope": {
+      "project": "Whole project",
+      "systems": "Systems",
+      "subsystems": "Subsystems"
+    },
+    "preview": "Preview",
+    "previewing": "Calculating…",
+    "step2": "2 · Preview",
+    "stat": {
+      "create": "ITRs to create",
+      "exists": "Already exist",
+      "tags": "Tags in scope",
+      "noType": "Tags without equipment type",
+      "noRule": "Tags without a matrix rule",
+      "noSubsystem": "Tags without subsystem (skipped)"
+    },
+    "sample": {
+      "no_equipment_type": "No equipment type:",
+      "no_rule": "No accepted rule:",
+      "no_subsystem": "No subsystem:"
+    },
+    "col": {
+      "template": "Template",
+      "create": "To create",
+      "exists": "Already exist"
+    },
+    "step3": "3 · Assignees by discipline",
+    "assignHint": "Optional. Each role is taken by a different person; anything left empty is created unassigned (“Unassigned” filter in the list).",
+    "noDiscipline": "No discipline",
+    "itrCount": "{n, plural, =1 {# ITR} other {# ITRs}}",
+    "role": {
+      "executor": "Executor",
+      "supervisor": "Supervisor",
+      "client": "Client"
+    },
+    "unassigned": "unassigned",
+    "run": "Generate {n, plural, =1 {# ITR} other {# ITRs}}",
+    "running": "Generating…",
+    "progress": "{created} of {total} created…",
+    "done": "{n, plural, =1 {# ITR was created} other {# ITRs were created}}.",
+    "seeUnassigned": "See unassigned",
+    "seeAll": "See all",
+    "samePerson": "Each signing role must be a different person.",
+    "error": "Could not compute the preview."
   }
 }

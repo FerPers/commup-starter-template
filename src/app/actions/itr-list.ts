@@ -18,7 +18,8 @@ export const exportItrList = withAuth(
       const rows = await fetchItrRowsAll(
         ctx.supabase,
         { orgId: ctx.orgId, projectId: input.projectId },
-        input.filters,
+        // S19: «míos» se resuelve en el servidor con la sesión.
+        input.filters.assignee === 'me' ? { ...input.filters, assignee: ctx.userId } : input.filters,
       )
       return { rows }
     } catch (e) {

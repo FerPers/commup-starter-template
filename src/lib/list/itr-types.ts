@@ -35,6 +35,11 @@ export type ItrListFilters = {
   disc?: string
   q?: string
   project?: string
+  /** S19 (C-30): alcance y responsable. `assignee` = uuid o 'none' (sin asignar); «míos» lo resuelve la página. */
+  system?: string
+  subsystem?: string
+  area?: string
+  assignee?: string
 }
 
 export type ItrStatusCounts = Record<string, number>

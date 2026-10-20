@@ -309,7 +309,13 @@
       "allDisciplines": "Todas las disciplinas",
       "count": "{filtered} de {total} ITRs",
       "selectAll": "Seleccionar {count} ITRs",
-      "selectPage": "Seleccionar esta página ({count})"
+      "selectPage": "Seleccionar esta página ({count})",
+      "allAreas": "Todas las áreas",
+      "allSystems": "Todos los sistemas",
+      "allSubsystems": "Todos los subsistemas",
+      "anyAssignee": "Cualquier responsable",
+      "mine": "Míos",
+      "unassigned": "Sin asignar"
     },
     "bulk": {
       "selected": "{count, plural, one {# ITR seleccionado} other {# ITRs seleccionados}}",
@@ -353,7 +359,8 @@
       "signE": "Firm.E",
       "signS": "Firm.S",
       "signC": "Firm.C"
-    }
+    },
+    "generate": "Generar ITR"
   },
   "PunchList": {
     "title": "Punch List",
@@ -5076,5 +5083,54 @@
     "prepared": "{ok, plural, =1 {# ITR listo} other {# ITR listos}} para trabajar sin red{failed, plural, =0 {} other { · # no se pudieron descargar}}.",
     "ready": "Disponible sin red",
     "readyTitle": "Guardado en este dispositivo: se abre sin conexión"
+  },
+  "ItrGenerate": {
+    "title": "Generar ITR",
+    "intro": "Crea los ITR de un alcance y unas fases según la <matrix>matriz tipo de equipo × plantilla</matrix> aprobada. Solo se usan filas aceptadas y la revisión activa de cada plantilla; lo que ya existe no se repite.",
+    "step1": "1 · Fases y alcance",
+    "scope": {
+      "project": "Todo el proyecto",
+      "systems": "Sistemas",
+      "subsystems": "Subsistemas"
+    },
+    "preview": "Vista previa",
+    "previewing": "Calculando…",
+    "step2": "2 · Vista previa",
+    "stat": {
+      "create": "ITR a crear",
+      "exists": "Ya existen",
+      "tags": "Tags en el alcance",
+      "noType": "Tags sin tipo de equipo",
+      "noRule": "Tags sin regla en la matriz",
+      "noSubsystem": "Tags sin subsistema (no se generan)"
+    },
+    "sample": {
+      "no_equipment_type": "Sin tipo de equipo:",
+      "no_rule": "Sin regla aceptada:",
+      "no_subsystem": "Sin subsistema:"
+    },
+    "col": {
+      "template": "Plantilla",
+      "create": "A crear",
+      "exists": "Ya existen"
+    },
+    "step3": "3 · Responsables por disciplina",
+    "assignHint": "Opcional. Cada rol lo asume una persona distinta; lo que dejes vacío se crea sin asignar (filtro «Sin asignar» en la lista).",
+    "noDiscipline": "Sin disciplina",
+    "itrCount": "{n, plural, =1 {# ITR} other {# ITR}}",
+    "role": {
+      "executor": "Ejecutor",
+      "supervisor": "Supervisor",
+      "client": "Cliente"
+    },
+    "unassigned": "sin asignar",
+    "run": "Generar {n, plural, =1 {# ITR} other {# ITR}}",
+    "running": "Generando…",
+    "progress": "{created} de {total} creados…",
+    "done": "{n, plural, =1 {Se creó # ITR} other {Se crearon # ITR}}.",
+    "seeUnassigned": "Ver sin asignar",
+    "seeAll": "Ver todos",
+    "samePerson": "Cada rol de firma lo asume una persona distinta.",
+    "error": "No se pudo calcular la vista previa."
   }
 }
