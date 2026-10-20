@@ -84,11 +84,11 @@ export interface TagImportPreview {
   /** Columna de BD → cantidad de tags existentes en que cambia. */
   fieldChanges: Record<string, number>
   /** Tags que el archivo cambia de subsistema; `blocked` = tienen ITR o punch y se quedan donde están. */
-  moves: { tag: string; blocked: boolean }[]
+  moves: { tag: string; tagId: string | null; blocked: boolean }[]
 }
 
 type Prepared = {
-  plans: { plan: TagPlan; index: number; tag: string; isNew: boolean }[]
+  plans: { plan: TagPlan; index: number; tag: string; isNew: boolean; id: string | null }[]
   errors: ImportResult['errors']
   warnings: string[]
 }
@@ -202,7 +202,7 @@ async function prepareTagImport(
       projectId, subsystemId: target ?? `nuevo:${normalizeCode(row.subsystem_code, DEFAULT_SUBSYSTEM)}`, disciplineId,
       equipmentTypeId: present.has('equipment_type') || !existing ? resolveEquipmentType(row.equipment_type_code, tagNumber) : null,
     })
-    plans.push({ plan, index, tag: tagNumber, isNew: !existing })
+    plans.push({ plan, index, tag: tagNumber, isNew: !existing, id: existing?.id ?? null })
   }
 
   if (unknownTypes.size > 0) {
@@ -214,7 +214,7 @@ async function prepareTagImport(
   }
   const blocked = plans.filter(p => p.plan.move?.blocked).map(p => p.tag)
   if (blocked.length) {
-    warnings.push(`${blocked.length} tag(s) con ITR o punch no se movieron de subsistema (muévelos con su flujo, no por importación): ${blocked.slice(0, 6).join(', ')}${blocked.length > 6 ? '…' : ''}`)
+    warnings.push(`${blocked.length} tag(s) con ITR o punch no se movieron de subsistema (muévelos desde el detalle de cada tag → «Mover de subsistema»): ${blocked.slice(0, 6).join(', ')}${blocked.length > 6 ? '…' : ''}`)
   }
   return { plans, errors, warnings }
 }
@@ -228,11 +228,11 @@ export const previewTagImport = withAuthOnly(
     const prep = await prepareTagImport(ctx, createAdminClient(), projectId, rows, presentFromColumns(columns), false)
     if ('error' in prep) return { error: prep.error }
     const preview: TagImportPreview = { newTags: 0, updatedTags: 0, unchangedTags: 0, fieldChanges: {}, moves: [] }
-    for (const { plan, isNew, tag } of prep.plans) {
+    for (const { plan, isNew, tag, id } of prep.plans) {
       if (isNew) { preview.newTags++; continue }
       if (plan.changes.length) preview.updatedTags++; else preview.unchangedTags++
       for (const c of plan.changes) preview.fieldChanges[c] = (preview.fieldChanges[c] ?? 0) + 1
-      if (plan.move) preview.moves.push({ tag, blocked: plan.move.blocked })
+      if (plan.move) preview.moves.push({ tag, tagId: id, blocked: plan.move.blocked })
     }
     return { preview }
   },

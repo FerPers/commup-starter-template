@@ -13,6 +13,7 @@ import TagPhotosTab from './TagPhotosTab'
 import TagOverviewTab from './TagOverviewTab'
 import TagDocsTab from './TagDocsTab'
 import TagEditForm from './TagEditForm'
+import TagMoveControl, { type SubsystemOption } from './TagMoveControl'
 import { STATUS, navBtn, type ItrTemplate, type OrgMember, type Tag, type TagItr } from './tag-detail-shared'
 import type { ConsolidatedTagPhoto } from '@/lib/tag-photos'
 
@@ -31,6 +32,8 @@ export default function TagDetail({
   prevTagId,
   nextTagId,
   canEdit,
+  canMove = false,
+  subsystemOptions = [],
   currentUserRole,
   currentUserId,
   tagItrs,
@@ -49,6 +52,8 @@ export default function TagDetail({
   prevTagId: string | null
   nextTagId: string | null
   canEdit: boolean
+  canMove?: boolean
+  subsystemOptions?: SubsystemOption[]
   currentUserRole: string
   currentUserId: string
   tagItrs: TagItr[]
@@ -63,6 +68,7 @@ export default function TagDetail({
   const t = useTranslations('Tags')
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [editMode, setEditMode]   = useState(false)
+  const [moveOpen, setMoveOpen]   = useState(false)
 
   const status = STATUS[tag.status] ?? STATUS.not_started
   const d      = tag.disciplines
@@ -276,10 +282,21 @@ export default function TagDetail({
           </span>
         )}
 
-        {/* Edit button floated right */}
-        {canEdit && (
-          <div style={{ marginLeft: 'auto', paddingRight: '16px' }}>
-            {!editMode ? (
+        {/* Edit / move buttons floated right */}
+        {(canEdit || canMove) && (
+          <div style={{ marginLeft: 'auto', paddingRight: '16px', display: 'flex', gap: '6px' }}>
+            {canMove && !editMode && !moveOpen && (
+              <button
+                onClick={() => setMoveOpen(true)}
+                style={{
+                  padding: '6px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                  borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
+                }}
+              >
+                {t('detail.moveSubsystem')}
+              </button>
+            )}
+            {!canEdit ? null : !editMode ? (
               <button
                 onClick={() => setEditMode(true)}
                 style={{
@@ -313,6 +330,15 @@ export default function TagDetail({
           <TagEditForm tag={tag} projectId={projectId} onCancel={() => setEditMode(false)} canDelete={canEdit} />
         ) : (
           <>
+            {moveOpen && (
+              <TagMoveControl
+                projectId={projectId}
+                tagId={tag.id}
+                currentSubsystemId={tag.subsystems.id}
+                subsystems={subsystemOptions}
+                onClose={() => setMoveOpen(false)}
+              />
+            )}
             {activeTab === 'overview'     && <TagOverviewTab tag={tag} area={area} sys={sys} sub={sub} pidSignedUrl={pidSignedUrl} projectId={projectId} canEdit={canEdit} />}
             {activeTab === 'itrs'         && (
               <TagItrTab

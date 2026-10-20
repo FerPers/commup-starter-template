@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import { fetchConsolidatedTagPhotos } from '@/lib/tag-photos'
+import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import TagDetail from './TagDetail'
 
 export default async function TagDetailPage({
@@ -16,6 +17,8 @@ export default async function TagDetailPage({
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
   const canEdit = ['owner', 'admin', 'architect'].includes(membership.role)
+  // C-16 (D9): mover de subsistema es de líder+ (la RPC lo vuelve a verificar).
+  const canMove = EDITOR_ROLES.includes(membership.role)
 
   const [
     { data: project },
@@ -135,6 +138,15 @@ export default async function TagDetailPage({
     : { data: [] as { itr_template_id: string }[] }
   const matrixTemplateIds = (matrixRows ?? []).map(r => r.itr_template_id)
 
+  const { data: subsystemRows } = canMove
+    ? await supabase
+        .from('subsystems')
+        .select('id, code, name, systems!inner(code, project_id)')
+        .eq('systems.project_id', projectId)
+        .order('code')
+    : { data: [] }
+  const subsystemOptions = (subsystemRows ?? []).map(s => ({ id: s.id, code: s.code, name: s.name, system_code: s.systems.code }))
+
   // Prev / next tag navigation
   const tagIndex = (allTagIds ?? []).findIndex(t => t.id === tagId)
   const prevTagId = tagIndex > 0 ? allTagIds![tagIndex - 1].id : null
@@ -179,6 +191,8 @@ export default async function TagDetailPage({
       prevTagId={prevTagId}
       nextTagId={nextTagId}
       canEdit={canEdit}
+      canMove={canMove}
+      subsystemOptions={subsystemOptions}
       currentUserRole={membership.role}
       currentUserId={ctx.userId}
       tagItrs={tagItrs ?? []}

@@ -12125,6 +12125,10 @@ export type Database = {
         Args: { p_note?: string; p_package_id: string }
         Returns: undefined
       }
+      move_tag_subsystem: {
+        Args: { p_reason: string; p_subsystem_id: string; p_tag_id: string }
+        Returns: Json
+      }
       my_work_counts: { Args: { p_org_id: string }; Returns: Json }
       new_performance_revision: {
         Args: { p_reason: string; p_test_id: string }
@@ -12624,6 +12628,10 @@ export type Database = {
           discipline_name: string
           n: number
         }[]
+      }
+      tag_subsystem_move_preview: {
+        Args: { p_subsystem_id: string; p_tag_id: string }
+        Returns: Json
       }
       take_mgmt_snapshot: {
         Args: { p_date?: string; p_project_id: string }

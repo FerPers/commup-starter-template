@@ -6,6 +6,7 @@ import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
 import type { Enums } from '@/types/supabase.generated'
 import { isCriticality, type Criticality } from '@/lib/tags/criticality'
+import { TAG_MOVE_REASON_MIN, type TagMovePreview } from '@/lib/tags/move'
 
 export interface TagUpdatePayload {
   description?: string
@@ -46,6 +47,10 @@ export const deleteTag = withAuthOnly(
       .eq('id', tagId)
       .eq('project_id', projectId)
 
+    // C-42 (S08): el historial de preservación protege al tag (ON DELETE RESTRICT).
+    if (error?.code === '23503' && error.message.includes('preservation_')) {
+      return { error: 'El tag tiene historial de preservación: no se puede eliminar' }
+    }
     if (error) return { error: error.message }
 
     revalidatePath(`/projects/${projectId}/tags`)
@@ -143,5 +148,53 @@ export const unlinkNfc = withAuth(
 
     revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
     return {}
+  },
+)
+// ── Mover de subsistema (C-16, D9) ──────────────────────────────────────────
+// Líder+ con motivo (≥ 10). La RPC mueve en una transacción el tag, sus ITR sin firmar y sus punches
+// abiertos, y lo deja en activity_log; un ITR firmado bloquea. Por REST el trigger lo impide.
+
+export const previewTagMove = withAuth(
+  {
+    role: EDITOR_ROLES,
+    guards: [
+      { resource: 'project', field: 'projectId' },
+      { resource: 'tag', field: 'tagId', scopeField: 'projectId' },
+      { resource: 'subsystem', field: 'subsystemId', scopeField: 'projectId' },
+    ],
+  },
+  async (ctx, input: { projectId: string; tagId: string; subsystemId: string }): Promise<{ error?: string; preview?: TagMovePreview }> => {
+    const { data, error } = await ctx.supabase.rpc('tag_subsystem_move_preview', { p_tag_id: input.tagId, p_subsystem_id: input.subsystemId })
+    if (error) return { error: error.message }
+    return { preview: data as unknown as TagMovePreview }
+  },
+)
+
+export const moveTagSubsystem = withAuth(
+  {
+    role: EDITOR_ROLES,
+    guards: [
+      { resource: 'project', field: 'projectId' },
+      { resource: 'tag', field: 'tagId', scopeField: 'projectId' },
+      { resource: 'subsystem', field: 'subsystemId', scopeField: 'projectId' },
+    ],
+  },
+  async (
+    ctx,
+    input: { projectId: string; tagId: string; subsystemId: string; reason: string },
+  ): Promise<{ error?: string; itrsMoved?: number; punchesMoved?: number }> => {
+    const reason = (input.reason ?? '').trim()
+    if (reason.length < TAG_MOVE_REASON_MIN) return { error: `Explica por qué se mueve (mínimo ${TAG_MOVE_REASON_MIN} caracteres)` }
+    const { data, error } = await ctx.supabase.rpc('move_tag_subsystem', {
+      p_tag_id: input.tagId, p_subsystem_id: input.subsystemId, p_reason: reason,
+    })
+    if (error) return { error: error.message }
+    const res = data as unknown as { itrs_moved: number; punches_moved: number }
+    revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
+    revalidatePath(`/projects/${input.projectId}/tags`)
+    revalidatePath(`/projects/${input.projectId}/itrs`)
+    revalidatePath(`/projects/${input.projectId}/punches`)
+    revalidatePath('/control-tower')
+    return { itrsMoved: res.itrs_moved, punchesMoved: res.punches_moved }
   },
 )

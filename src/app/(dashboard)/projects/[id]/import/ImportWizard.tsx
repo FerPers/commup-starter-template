@@ -459,7 +459,11 @@ export default function ImportWizard({
                   )}
                   {preview.moves.some(m => m.blocked) && (
                     <p style={{ fontSize: '12px', color: '#b45309', margin: '6px 0 0' }}>
-                      ⚠ {preview.moves.filter(m => m.blocked).length} tag(s) cambiarían de subsistema pero tienen ITR o punch: <strong>se quedan donde están</strong> ({preview.moves.filter(m => m.blocked).slice(0, 5).map(m => m.tag).join(', ')}{preview.moves.filter(m => m.blocked).length > 5 ? '…' : ''}).
+                      ⚠ {preview.moves.filter(m => m.blocked).length} tag(s) cambiarían de subsistema pero tienen ITR o punch: <strong>se quedan donde están</strong> ({preview.moves.filter(m => m.blocked).slice(0, 5).map((m, n) => (
+                        <span key={m.tag}>{n > 0 && ', '}{m.tagId
+                          ? <a href={`/projects/${projectId}/tags/${m.tagId}`} target="_blank" rel="noopener noreferrer" style={{ color: '#b45309' }}>{m.tag}</a>
+                          : m.tag}</span>
+                      ))}{preview.moves.filter(m => m.blocked).length > 5 ? '…' : ''}). Para moverlos con sus ITR y punches, usa «Mover de subsistema» en el detalle de cada tag (líder+, con motivo).
                     </p>
                   )}
                 </>
