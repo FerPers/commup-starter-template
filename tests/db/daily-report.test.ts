@@ -29,12 +29,28 @@ describe.skipIf(!enabled)('reporte diario y relevo — borradores', () => {
     for (const id of handovers) await a.rpc('delete_shift_handover_draft', { p_handover_id: id })
   }, 30_000)
 
-  it('arma los datos del día en SQL', async () => {
+  // Timeout por defecto (5 s): S10 (B-20) quitó la TEMP TABLE y «aprobados hoy» parte de las firmas del día.
+  it('arma los datos del día en SQL, con la zona del proyecto y los totales de las listas (S10)', async () => {
     const { data, error } = await a.rpc('daily_report_data', { p_project_id: pid, p_date: date })
     expect(error).toBeNull()
-    expect(Object.keys(data as object).sort()).toEqual(
-      ['actions', 'area', 'constraints', 'date', 'gates', 'itrs', 'lookahead_7d', 'performance_today', 'progress', 'project',
-        'punches', 'registers_in_field', 'startup_events_today', 'tqs'])
+    const d = data as Record<string, Record<string, unknown>>
+    expect(Object.keys(d).sort()).toEqual(
+      ['actions', 'area', 'as_of', 'constraints', 'date', 'gates', 'itrs', 'lookahead_7d', 'performance_today', 'progress', 'project',
+        'punches', 'registers_in_field', 'registers_in_field_count', 'startup_events_today', 'timezone', 'tqs'])
+    expect(d.itrs).toHaveProperty('approved_today_count')
+    expect(d.punches).toHaveProperty('raised_today_count')
+    expect(d.actions).toHaveProperty('overdue_count')
+    expect(d.constraints).toHaveProperty('open_high_count')
+    const { data: proj } = await a.from('projects').select('timezone').eq('id', pid).single()
+    expect(d.timezone).toBe(proj?.timezone)
+  })
+
+  it('sin fecha usa el día local del proyecto (S10, D-05)', async () => {
+    const [{ data }, { data: today }] = await Promise.all([
+      a.rpc('daily_report_data', { p_project_id: pid }),
+      a.rpc('project_today', { p_project_id: pid }),
+    ])
+    expect((data as { date: string }).date).toBe(today)
   })
 
   it('el borrador es único por fecha y la IA no pisa lo editado', async () => {
@@ -48,6 +64,16 @@ describe.skipIf(!enabled)('reporte diario y relevo — borradores', () => {
     await a.rpc('set_daily_report_ai_draft', { p_report_id: first.data, p_draft: { summary: 'IA', key_events: '- IA', issues: '', constraints: '', next_day_plan: '' }, p_model: 'test' })
     const { data: r } = await a.from('daily_reports').select('summary, key_events, status').eq('id', first.data).single()
     expect(r).toEqual({ summary: 'Escrito a mano', key_events: '- IA', status: 'draft' })
+  })
+
+  it('«Rehacer con IA» reemplaza todas las secciones en una sola RPC (S10, D-28)', async () => {
+    const id = reports[0]
+    const { error } = await a.rpc('replace_daily_report_ai_draft', {
+      p_report_id: id, p_draft: { summary: 'Nuevo', key_events: '', issues: '- Falla', constraints: '', next_day_plan: '' }, p_model: 'test',
+    })
+    expect(error).toBeNull()
+    const { data: r } = await a.from('daily_reports').select('summary, key_events, issues').eq('id', id).single()
+    expect(r).toEqual({ summary: 'Nuevo', key_events: null, issues: '- Falla' })
   })
 
   it('relevo: snapshot al abrir y edición solo en borrador', async () => {

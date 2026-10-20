@@ -4,7 +4,8 @@
  * las secciones guardadas; lo inmutable es el contenido con su hash, no el archivo. Bilingüe.
  */
 
-import { progressDelta, type ReportData } from '@/lib/daily/report'
+import { cutInUtc, progressDelta, reportTotals, type ReportData } from '@/lib/daily/report'
+import { dateTimeIn, timeIn, zoneLabel } from '@/lib/time/zone'
 import { A4_W, COLOR, CONTENT_W, FOOTER_H, MARGIN, Renderer, sanitize, wrapText, type TableCol } from './renderer'
 
 type Lang = 'es' | 'en'
@@ -40,6 +41,10 @@ const T = {
   startup: { es: 'Bitácora de arranque', en: 'Start-up log' },
   performance: { es: 'Pruebas de desempeño', en: 'Performance tests' },
   none: { es: 'Sin registros.', en: 'None.' },
+  utcCut: { es: 'Reporte armado antes de la zona horaria del proyecto: su día se cortó en UTC (00:00–24:00 UTC). Queda tal como se emitió; para corregirlo, emita una revisión.',
+    en: 'Report built before the project time zone existed: its day was cut in UTC (00:00–24:00 UTC). It stays as issued; issue a revision to correct it.' },
+  asOf: { es: 'Avance, gates en regresión, abiertos y vencidos: estado al', en: 'Progress, regressed gates, open and overdue items: status as of' },
+  listed: { es: 'se listan', en: 'listing' },
   issuedBy: { es: 'Emitido por', en: 'Issued by' },
   hash: { es: 'Hash', en: 'Hash' },
   revision: { es: 'Revisión', en: 'Revision' },
@@ -130,17 +135,24 @@ export type DailyReportPdfInput = {
   issuedBy: string | null
   issuedAt: string | null
   hash: string | null
+  /** S10: zona del proyecto para las horas (por defecto la del reporte). */
+  timezone?: string
 }
 
 export async function renderDailyReportPdf(x: DailyReportPdfInput): Promise<Uint8Array> {
   const L = x.lang
   const d = x.data
+  // S10 (D12): las horas en la zona del proyecto; un reporte anterior a S10 cortó su día en UTC.
+  const tz = d.timezone ?? x.timezone ?? 'UTC'
+  const at = (iso: string | null | undefined) => (iso ? `${dateTimeIn(iso, tz)} ${zoneLabel(tz, new Date(iso))}` : '')
+  const n = reportTotals(d)
+  const count = (label: string, total: number, shown: number) => `${label} (${total}${total > shown ? ` · ${T.listed[L]} ${shown}` : ''})`
   const r = await Renderer.create()
   r.doc.setTitle(sanitize(`${x.number} · ${T.report[L]}`))
   r.doc.setAuthor('CommUp')
   const footer = x.status === 'draft'
     ? `${x.number} · ${T.draft[L]}`
-    : `${x.number} · ${T.issuedBy[L]}: ${x.issuedBy ?? '—'} ${x.issuedAt?.slice(0, 16).replace('T', ' ') ?? ''} · ${T.hash[L]} ${x.hash?.slice(0, 16) ?? ''}`
+    : `${x.number} · ${T.issuedBy[L]}: ${x.issuedBy ?? '—'} ${at(x.issuedAt)} · ${T.hash[L]} ${x.hash?.slice(0, 16) ?? ''}`
   setup(r, footer, L)
   const stamp = x.status === 'issued' ? { text: T.issued[L], fg: COLOR.green, bg: COLOR.greenBg }
     : x.status === 'superseded' ? { text: T.superseded[L], fg: COLOR.muted, bg: COLOR.borderXlight }
@@ -150,13 +162,15 @@ export async function renderDailyReportPdf(x: DailyReportPdfInput): Promise<Uint
   if (x.revision > 0) {
     r.paragraph(`${T.revision[L]} R${x.revision}${x.revisionReason ? ` — ${T.reason[L]}: ${x.revisionReason}` : ''}`, { size: 8.5, color: COLOR.muted, oblique: true })
   }
+  if (cutInUtc(d)) r.paragraph(T.utcCut[L], { size: 8.5, color: COLOR.amber, oblique: true })
+  else if (d.as_of) r.paragraph(`${T.asOf[L]} ${at(d.as_of)}.`, { size: 8, color: COLOR.muted, oblique: true })
 
   const delta = progressDelta(d.progress)
   const lv = d.constraints.open_by_level
   r.infoCardRow([
     { label: T.weighted[L], value: `${(Number(d.progress.weighted_pct) * 100).toFixed(1)} %`, sub: delta === null ? '—' : `${delta >= 0 ? '+' : ''}${delta} pp` },
     { label: T.gates[L], value: `${d.progress.gates_approved}/${d.progress.gates_total}` },
-    { label: T.itrToday[L], value: String(d.itrs.approved_today.length), sub: `${d.itrs.in_progress} ${L === 'es' ? 'en curso' : 'in progress'}` },
+    { label: T.itrToday[L], value: String(n.approvedToday), sub: `${d.itrs.in_progress} ${L === 'es' ? 'en curso' : 'in progress'}` },
     { label: T.punchA[L], value: String(d.punches.open_a), sub: `B ${d.punches.open_b}` },
     { label: T.constraints[L], value: String(Number(lv['1']) + Number(lv['2']) + Number(lv['3']) + Number(lv['4'])), sub: `N3 ${lv['3']} · N4 ${lv['4']}` },
   ])
@@ -167,26 +181,26 @@ export async function renderDailyReportPdf(x: DailyReportPdfInput): Promise<Uint
     block(r, x.sections[key], L)
   }
 
-  r.accentSection(`${T.data[L]} ${x.dataAt.slice(0, 16).replace('T', ' ')})`)
-  r.paragraph(T.itrApproved[L], { size: 9 })
+  r.accentSection(`${T.data[L]} ${at(x.dataAt)})`)
+  r.paragraph(count(T.itrApproved[L], n.approvedToday, d.itrs.approved_today.length), { size: 9 })
   table(r, [{ label: T.col.number[L], w: w(0.35) }, { label: T.col.tag[L], w: w(0.35) }, { label: T.col.system[L], w: w(0.3) }],
     d.itrs.approved_today.map(i => [i.number, i.tag ?? '', i.system ?? '']), L)
-  r.paragraph(T.punchRaised[L], { size: 9 })
+  r.paragraph(count(T.punchRaised[L], n.raisedToday, d.punches.raised_today.length), { size: 9 })
   table(r, [{ label: T.col.number[L], w: w(0.16) }, { label: T.col.cat[L], w: w(0.07), align: 'center' }, { label: T.col.description[L], w: w(0.5) }, { label: T.col.tag[L], w: w(0.14) }, { label: T.col.system[L], w: w(0.13) }],
     d.punches.raised_today.map(p => [p.number, p.category, p.description, p.tag ?? '', p.system ?? '']), L)
-  r.paragraph(T.critical[L], { size: 9 })
+  r.paragraph(count(T.critical[L], n.constraintsHigh, d.constraints.open_high.length), { size: 9 })
   table(r, [{ label: T.col.number[L], w: w(0.13) }, { label: T.col.level[L], w: w(0.08), align: 'center' }, { label: T.col.title[L], w: w(0.47) }, { label: T.col.system[L], w: w(0.16) }, { label: T.col.need[L], w: w(0.16) }],
     d.constraints.open_high.map(c => [c.number, `N${c.level}`, c.title, c.system ?? '', c.need_date]), L)
-  r.paragraph(T.overdueActions[L], { size: 9 })
+  r.paragraph(count(T.overdueActions[L], n.actionsOverdue, d.actions.overdue.length), { size: 9 })
   table(r, [{ label: T.col.number[L], w: w(0.15) }, { label: T.col.title[L], w: w(0.55) }, { label: T.col.system[L], w: w(0.15) }, { label: T.col.due[L], w: w(0.15) }],
     d.actions.overdue.map(a => [a.number, a.title, a.system ?? '', a.due_date]), L)
-  r.paragraph(T.field[L], { size: 9 })
+  r.paragraph(count(T.field[L], n.registersInField, d.registers_in_field.length), { size: 9 })
   table(r, [{ label: T.col.number[L], w: w(0.15) }, { label: T.col.kind[L], w: w(0.15) }, { label: T.col.status[L], w: w(0.12) }, { label: T.col.title[L], w: w(0.43) }, { label: T.col.system[L], w: w(0.15) }],
     d.registers_in_field.map(g => [g.number, g.kind, g.status, g.title, g.system ?? '']), L)
   if ((d.startup_events_today ?? []).length > 0) {
     r.paragraph(T.startup[L], { size: 9 })
     table(r, [{ label: T.col.date[L], w: w(0.1) }, { label: T.col.number[L], w: w(0.12) }, { label: T.col.title[L], w: w(0.4) }, { label: T.col.system[L], w: w(0.13) }, { label: T.col.status[L], w: w(0.25) }],
-      (d.startup_events_today ?? []).map(e => [e.occurred_at.slice(11, 16), e.number, e.title, e.system ?? '', e.params.map(p => `${p.label} ${p.value ?? ''}${p.unit ? ` ${p.unit}` : ''}`).join(' · ') || e.status]), L)
+      (d.startup_events_today ?? []).map(e => [timeIn(e.occurred_at, tz), e.number, e.title, e.system ?? '', e.params.map(p => `${p.label} ${p.value ?? ''}${p.unit ? ` ${p.unit}` : ''}`).join(' · ') || e.status]), L)
   }
   if ((d.performance_today ?? []).length > 0) {
     r.paragraph(T.performance[L], { size: 9 })
@@ -229,11 +243,15 @@ export type HandoverPdfInput = {
   receivedAt: string | null
   receiverComment: string | null
   hash: string | null
+  /** S10: zona del proyecto para las horas de entrega y recepción. */
+  timezone?: string
 }
 
 export async function renderHandoverPdf(x: HandoverPdfInput): Promise<Uint8Array> {
   const L = x.lang
   const s = x.snapshot
+  const tz = x.timezone ?? 'UTC'
+  const at = (iso: string | null | undefined) => (iso ? `${dateTimeIn(iso, tz)} ${zoneLabel(tz, new Date(iso))}` : '')
   const r = await Renderer.create()
   r.doc.setTitle(sanitize(`${x.number} · ${T.handover[L]}`))
   r.doc.setAuthor('CommUp')
@@ -262,8 +280,8 @@ export async function renderHandoverPdf(x: HandoverPdfInput): Promise<Uint8Array
     s.itrs_in_progress.map(i => [i.number, i.tag ?? '', `${Math.round(Number(i.progress))} %`]), L)
 
   r.moveY(6)
-  r.kv(T.handedBy[L], `${x.handedBy ?? '—'}  ${x.handedAt?.slice(0, 16).replace('T', ' ') ?? ''}`)
-  r.kv(T.receivedBy[L], `${x.receivedBy ?? '—'}  ${x.receivedAt?.slice(0, 16).replace('T', ' ') ?? ''}`)
+  r.kv(T.handedBy[L], `${x.handedBy ?? '—'}  ${at(x.handedAt)}`)
+  r.kv(T.receivedBy[L], `${x.receivedBy ?? '—'}  ${at(x.receivedAt)}`)
   if (x.receiverComment) r.kv(T.comment[L], x.receiverComment)
 
   r.finalizePagePlaceholders()

@@ -14,6 +14,7 @@ import {
 } from '@/lib/startup/catalog'
 import { TagPicker } from '../../../registers/RegisterFields'
 import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, label, linkStyle, small } from '../../../daily/daily-ui'
+import { useLocalTime } from '@/lib/use-local-time'
 
 type Revision = {
   id: string; rev: number; status: string; sections: Record<string, string>; changeReason: string | null; returnedReason: string | null
@@ -53,7 +54,8 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
   const isClient = role === 'client'
   const editable = revision.status === 'draft' && !isClient
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string | null) => localTime(iso)
   const ids = { projectId: project.id, procedureId: procedure.id, revisionId: revision.id }
   const isCurrent = revision.id === procedure.currentRevisionId
   const openRev = revisions.find(r => r.status === 'draft' || r.status === 'in_review')

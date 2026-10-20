@@ -12,15 +12,19 @@ import type { Certificate } from './CertificateCard'
 const PAGE = 1000
 const CAP = 30000
 
-/** PostgREST corta en 1000 filas: pagina hasta CAP. */
-async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null }>): Promise<T[]> {
+/**
+ * PostgREST corta en 1000 filas: pagina hasta CAP. S10 (B-26): un error de red a mitad ya no devuelve una
+ * serie parcial sin aviso (lanza), y superar CAP se marca para que la consola lo diga.
+ */
+async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>): Promise<{ rows: T[]; truncated: boolean }> {
   const out: T[] = []
   for (let from = 0; from < CAP; from += PAGE) {
-    const { data } = await page(from, from + PAGE - 1)
+    const { data, error } = await page(from, from + PAGE - 1)
+    if (error) throw new Error(error.message)
     out.push(...(data ?? []))
-    if (!data || data.length < PAGE) break
+    if (!data || data.length < PAGE) return { rows: out, truncated: false }
   }
-  return out
+  return { rows: out, truncated: true }
 }
 
 export default async function PerformanceRunPage({ params }: { params: Promise<{ id: string; runId: string }> }) {
@@ -47,23 +51,27 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
   const frozen = run.status === 'closed'
   type Point = { variableId: string; bucket: string; value: number | null; source: 'iiot' | 'manual'; enteredBy: string | null }
   let points: Point[] = []
+  let truncated = false
   if (frozen || run.stabilization_started_at) {
     // Datos del intento (congelados y manuales).
-    const stored = await fetchAll<{ variable_id: string; bucket: string; avg_val: number | null; source: string; entered_by: string | null }>((a, b) =>
+    const { rows: stored, truncated: t1 } = await fetchAll<{ variable_id: string; bucket: string; avg_val: number | null; source: string; entered_by: string | null }>((a, b) =>
       supabase.from('performance_run_data').select('variable_id, bucket, avg_val, source, entered_by').eq('run_id', runId).order('bucket').range(a, b))
+    truncated ||= t1
     points = stored.map(r => ({ variableId: r.variable_id, bucket: r.bucket, value: r.avg_val, source: r.source as 'iiot' | 'manual', enteredBy: r.entered_by }))
     // En curso: las señales se leen en vivo desde la vista de 1 minuto.
     const live = variables.filter(v => v.source === 'signal' && v.signal_id)
     if (!frozen && live.length) {
       const bySignal = new Map(live.map(v => [v.signal_id as string, v.id]))
-      const rows = await fetchAll<{ signal_id: string; bucket: string; avg_val: number | null }>((a, b) =>
+      const { rows, truncated: t2 } = await fetchAll<{ signal_id: string; bucket: string; avg_val: number | null }>((a, b) =>
         supabase.from('signal_samples_1min').select('signal_id, bucket, avg_val').in('signal_id', [...bySignal.keys()])
           .gte('bucket', run.stabilization_started_at!).order('bucket').range(a, b))
+      truncated ||= t2
       points.push(...rows.map(r => ({ variableId: bySignal.get(r.signal_id)!, bucket: r.bucket, value: r.avg_val, source: 'iiot' as const, enteredBy: null })))
     }
   }
 
-  // Evaluación: en vivo (la calcula la BD) mientras está cerrado; congelada una vez registrado el resultado.
+  // Evaluación: previa mientras está cerrado (la BD la guarda y la recalcula solo si cambian sus entradas, S10
+  // B-26); congelada una vez registrado el resultado.
   let evaluation: Evaluation | null = null
   let evaluationError: string | null = null
   if (run.status === 'evaluated') evaluation = run.evaluation as unknown as Evaluation
@@ -97,6 +105,7 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
       rev={{ rev: rev.rev, stabilization_min: rev.stabilization_min, formal_min: rev.formal_min, sample_interval_s: rev.sample_interval_s, outdated: test.current_revision_id !== rev.id }}
       variables={variables.map(v => ({ id: v.id, key: v.key, label: v.label, unit: v.unit, source: v.source as VariableSource }))}
       points={points.map(p => ({ ...p, value: p.value === null ? null : Number(p.value) }))}
+      pointsTruncated={truncated}
       disturbances={(disturbances ?? []).map(d => ({ ...d, kind: d.kind as DisturbanceKind }))}
       names={names}
       userId={ctx.userId}

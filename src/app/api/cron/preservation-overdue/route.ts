@@ -1,6 +1,8 @@
 import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { latestPossibleToday, daysBetween } from '@/lib/time/zone'
+import { loadProjectTimezones, projectTodayFn } from '@/lib/time/project-zones'
 
 /**
  * POST /api/cron/preservation-overdue
@@ -40,8 +42,10 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const today = new Date().toISOString().split('T')[0]
-  const dayStartIso = `${today}T00:00:00.000Z`
+  // S10 (D-05/B-29): vencido = próxima fecha anterior a hoy del proyecto (cota UTC+14 en la BD, zona aquí).
+  // dayStartIso solo deduplica avisos del mismo día del cron.
+  const bound = latestPossibleToday()
+  const dayStartIso = `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`
 
   // C-39 (S08): paginado (antes un limit(2000) global para todas las orgs cortaba en silencio).
   const plans: PlanRow[] = []
@@ -50,7 +54,7 @@ export async function POST(req: NextRequest) {
       .from('preservation_plans')
       .select('id, project_id, tag_id, responsible_user_id, procedure_id, next_due_date')
       .eq('status', 'active')
-      .lt('next_due_date', today)
+      .lt('next_due_date', bound)
       .not('responsible_user_id', 'is', null)
       .order('id')
       .range(from, from + PAGE - 1)
@@ -59,7 +63,7 @@ export async function POST(req: NextRequest) {
     if (!page || page.length < PAGE) break
   }
   if (plans.length === 0) {
-    return NextResponse.json({ scanned: 0, inserted: 0, skipped: 0, date: today })
+    return NextResponse.json({ scanned: 0, inserted: 0, skipped: 0 })
   }
 
   const projectIds = Array.from(new Set(plans.map(p => p.project_id)))
@@ -91,7 +95,15 @@ export async function POST(req: NextRequest) {
   let inserted = 0
   let skipped = 0
 
+  let todayOf: (projectId: string) => string
+  try {
+    todayOf = projectTodayFn(await loadProjectTimezones(admin, projectIds))
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
+
   for (const plan of plans) {
+    if (plan.next_due_date >= todayOf(plan.project_id)) continue
     const orgId = projectOrgId.get(plan.project_id)
     const recipient = plan.responsible_user_id
     if (!orgId || !recipient) {
@@ -114,10 +126,7 @@ export async function POST(req: NextRequest) {
 
     const tagLabel = tagNumber.get(plan.tag_id) ?? ''
     const procTitle = procLabel.get(plan.procedure_id) ?? 'Procedimiento'
-    const overdueDays = Math.max(
-      0,
-      Math.floor((Date.parse(today) - Date.parse(plan.next_due_date)) / 86_400_000),
-    )
+    const overdueDays = Math.max(0, daysBetween(plan.next_due_date, todayOf(plan.project_id)))
 
     const { error: notifErr } = await admin.from('notifications').insert({
       org_id: orgId,
@@ -146,6 +155,5 @@ export async function POST(req: NextRequest) {
     scanned: plans.length,
     inserted,
     skipped,
-    date: today,
   })
 }

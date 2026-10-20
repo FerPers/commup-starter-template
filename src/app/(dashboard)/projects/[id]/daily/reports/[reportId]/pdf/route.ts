@@ -12,7 +12,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!ctx) return new Response('Unauthorized', { status: 401 })
 
   const [{ data: project }, { data: org }, locale] = await Promise.all([
-    ctx.supabase.from('projects').select('id').eq('id', id).eq('org_id', ctx.orgId).maybeSingle(),
+    ctx.supabase.from('projects').select('id, timezone').eq('id', id).eq('org_id', ctx.orgId).maybeSingle(),
     ctx.supabase.from('organizations').select('name').eq('id', ctx.orgId).single(),
     getLocale(),
   ])
@@ -36,6 +36,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     issuedBy: issuer?.full_name ?? null,
     issuedAt: r.issued_at,
     hash: r.content_hash,
+    timezone: project.timezone,
   })
   return new Response(bytes as BodyInit, {
     status: 200,

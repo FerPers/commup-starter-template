@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatInZone } from '@/lib/time/zone'
 import { acceptShiftHandover, deleteShiftHandoverDraft, handOverShift, updateShiftHandover } from '@/app/actions/daily-report'
 import type { HandoverSnapshot } from '@/lib/pdf/daily-report'
 import { Alert, Chip, btn, card, input, label, small } from '../../daily-ui'
@@ -21,7 +22,7 @@ const KIND_TONE: Record<string, 'red' | 'amber' | 'violet' | 'blue' | 'muted'> =
 }
 
 export default function HandoverView({ project, handover: h, isOpener, canReceive }: {
-  project: { id: string; code: string; name: string }; handover: Handover; isOpener: boolean; canReceive: boolean
+  project: { id: string; code: string; name: string; timezone: string }; handover: Handover; isOpener: boolean; canReceive: boolean
 }) {
   const t = useTranslations('Daily')
   const router = useRouter()
@@ -34,7 +35,8 @@ export default function HandoverView({ project, handover: h, isOpener, canReceiv
   const dirty = pending !== h.pending || safety !== h.safety
   const base = { projectId: project.id, handoverId: h.id }
   const s = h.snapshot
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const locale = useLocale()
+  const when = (iso: string | null) => (iso ? formatInZone(iso, project.timezone, locale) : '')  // S10: zona del proyecto
 
   function run(fn: () => Promise<{ error?: string }>, after?: () => void) {
     setError(null)
@@ -85,7 +87,7 @@ export default function HandoverView({ project, handover: h, isOpener, canReceiv
           <Chip tone={TONE[h.status]}>{t(`handover.status.${h.status}`)}</Chip>
           <Chip tone="muted">{h.date} · {t(`handover.label.${h.label}`)}</Chip>
         </div>
-        <p style={{ ...small, margin: '6px 0 0' }} suppressHydrationWarning>
+        <p style={{ ...small, margin: '6px 0 0' }}>
           {t('handover.snapshotAt', { when: when(h.snapshotAt) })}
           {h.status === 'draft' && <> · {t('handover.snapshotRefresh')}</>}
         </p>
@@ -114,10 +116,10 @@ export default function HandoverView({ project, handover: h, isOpener, canReceiv
 
       <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 6 }} aria-label={t('handover.signatures')}>
         <div style={label}>{t('handover.signatures')}</div>
-        <p style={{ ...small, margin: 0 }} suppressHydrationWarning>
+        <p style={{ ...small, margin: 0 }}>
           {t('handover.handedBy')}: <strong style={{ color: 'var(--text-strong)' }}>{h.handedBy ?? '—'}</strong> {when(h.handedAt)}
         </p>
-        <p style={{ ...small, margin: 0 }} suppressHydrationWarning>
+        <p style={{ ...small, margin: 0 }}>
           {t('handover.receivedBy')}: <strong style={{ color: 'var(--text-strong)' }}>{h.receivedBy ?? '—'}</strong> {when(h.receivedAt)}
           {h.receiverComment && <em> — {h.receiverComment}</em>}
         </p>

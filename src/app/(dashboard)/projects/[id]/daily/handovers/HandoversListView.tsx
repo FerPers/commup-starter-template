@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { openShiftHandover } from '@/app/actions/daily-report'
-import { todayIso } from '@/lib/daily/catalog'
+import { formatInZone, todayIn } from '@/lib/time/zone'
 import { Alert, Chip, DailyTabs, btn, card, input, small } from '../daily-ui'
 
 type Row = {
@@ -21,15 +21,17 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const TONE = { draft: 'amber', handed_over: 'blue', accepted: 'green' } as const
 
-export default function HandoversListView({ project, rows, canOpen }: { project: { id: string; code: string; name: string }; rows: Row[]; canOpen: boolean }) {
+export default function HandoversListView({ project, rows, canOpen }: { project: { id: string; code: string; name: string; timezone: string }; rows: Row[]; canOpen: boolean }) {
   const t = useTranslations('Daily')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const today = useMemo(() => todayIso(), [])
+  // S10 (D-05/G-13): «hoy» y horas en la zona del proyecto, iguales en el servidor y en el navegador
+  const today = useMemo(() => todayIn(project.timezone), [project.timezone])
+  const locale = useLocale()
   const [date, setDate] = useState(today)
   const [label, setLabel] = useState<'day' | 'night' | 'other'>('day')
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const when = (iso: string | null) => (iso ? formatInZone(iso, project.timezone, locale) : '')
 
   function open() {
     setError(null)
@@ -79,8 +81,8 @@ export default function HandoversListView({ project, rows, canOpen }: { project:
                   <Chip tone={TONE[h.status]}>{t(`handover.status.${h.status}`)}</Chip>
                   {h.mineToReceive && <span style={{ ...small, marginLeft: 6, color: '#1d4ed8', fontWeight: 600 }}>{t('handover.toReceive')}</span>}
                 </td>
-                <td style={{ ...td, ...small }} suppressHydrationWarning>{h.handedBy ? `${h.handedBy} · ${when(h.handedAt)}` : `${h.openedBy ?? '—'} (${t('handover.status.draft').toLowerCase()})`}</td>
-                <td style={{ ...td, ...small }} suppressHydrationWarning>{h.receivedBy ? `${h.receivedBy} · ${when(h.receivedAt)}` : '—'}</td>
+                <td style={{ ...td, ...small }}>{h.handedBy ? `${h.handedBy} · ${when(h.handedAt)}` : `${h.openedBy ?? '—'} (${t('handover.status.draft').toLowerCase()})`}</td>
+                <td style={{ ...td, ...small }}>{h.receivedBy ? `${h.receivedBy} · ${when(h.receivedAt)}` : '—'}</td>
               </tr>
             ))}
             {rows.length === 0 && <tr><td colSpan={6} style={{ ...td, ...small, textAlign: 'center', padding: 32 }}>{t('handover.empty')}</td></tr>}

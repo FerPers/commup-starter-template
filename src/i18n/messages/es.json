@@ -854,7 +854,8 @@
       "actionsHint": "{open} abiertas · {overdue} vencidas · {verify} por verificar",
       "constraints": "Restricciones abiertas",
       "constraintsHint": "N1 {l1} · N2 {l2} · N3 {l3} · N4 {l4} · edad promedio {age} d",
-      "curve": "Curva S — avance físico ponderado",
+      "curve": "Curva S — avance físico ponderado (línea punteada: plan según compromisos por gate)",
+      "plan": "Plan (compromisos)",
       "curveEmpty": "La curva aparece desde el segundo snapshot diario.",
       "startup": "Éxito de primer arranque",
       "startupHint": "Sin trip ni parada hasta operación estable · {ok} de {done} · {pending} pendientes",
@@ -3671,6 +3672,8 @@
         "performance": "Pruebas de desempeño"
       },
       "dataNote": "Las cifras del PDF salen de estos datos, no del texto. «Actualizar datos» vuelve a tomar la foto (solo en borrador).",
+      "utcCut": "Este reporte se armó antes de la zona horaria del proyecto: su día se cortó en UTC (en Colombia, de 19:00 del día anterior a 19:00). Queda tal como se emitió; para corregirlo, emite una revisión.",
+      "asOf": "Avance, gates en regresión, abiertos y vencidos: estado al {when} (no se reconstruyen para fechas pasadas).",
       "aiReplaceConfirm": "Ya hay texto en el reporte. ¿Reemplazarlo por la redacción de la IA? (Cancelar = la IA solo llena las secciones vacías)",
       "issueConfirm": "Al emitir, el reporte queda inmutable. ¿Emitir ahora?",
       "revisePrompt": "Motivo de la revisión:"
@@ -4213,6 +4216,7 @@
       "confirmCancel": "Cancelar traspaso"
     },
     "perf": {
+      "pointsTruncated": "La serie tiene más de 30.000 puntos: el gráfico y las lecturas muestran solo los primeros. La evaluación (en la base de datos) usa todos.",
       "subtitle": "Prueba de desempeño (cap. 18): definición aprobada con criterios medibles, intento con estabilización y periodo formal, perturbaciones y datos congelados.",
       "new": "Nueva prueba",
       "titlePlaceholder": "Ej.: Capacidad del compresor C-103",

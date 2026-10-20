@@ -13,7 +13,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!ctx) return new Response('Unauthorized', { status: 401 })
 
   const [{ data: project }, { data: org }, locale, t] = await Promise.all([
-    ctx.supabase.from('projects').select('id, code').eq('id', id).eq('org_id', ctx.orgId).maybeSingle(),
+    ctx.supabase.from('projects').select('id, code, timezone').eq('id', id).eq('org_id', ctx.orgId).maybeSingle(),
     ctx.supabase.from('organizations').select('name').eq('id', ctx.orgId).single(),
     getLocale(),
     getTranslations('Startup'),
@@ -34,6 +34,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const sys = proc.systems as unknown as { code: string; name: string } | null
 
   const bytes = await renderProcedurePdf({
+    timezone: project.timezone,
     lang: locale === 'en' ? 'en' : 'es',
     orgName: org?.name ?? 'CommUp',
     projectCode: project.code,

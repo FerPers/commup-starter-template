@@ -2,6 +2,8 @@ import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import { latestPossibleToday, daysBetween } from '@/lib/time/zone'
+import { loadProjectTimezones, projectTodayFn } from '@/lib/time/project-zones'
 
 /**
  * POST /api/cron/constraints-overdue
@@ -41,7 +43,9 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const today = new Date().toISOString().split('T')[0]
+  // S10 (D-05/B-29): «vencida» = fecha requerida anterior a hoy del proyecto (projects.timezone), no de UTC.
+  // La BD filtra con la cota UTC+14 y aquí se aplica la zona de cada proyecto.
+  const bound = latestPossibleToday()
   const redispatchCutoffIso = new Date(Date.now() - REDISPATCH_DAYS * 86_400_000).toISOString()
 
   // S09 (B-07): paginado; .limit(2000) devolvía igual 1000 y las demás vencidas no se avisaban
@@ -51,11 +55,18 @@ export async function POST(req: NextRequest) {
       .from('project_constraints')
       .select('id, org_id, project_id, number, title, need_date, escalation_level, owner_id, created_by, last_overdue_notif_at')
       .eq('status', 'open')
-      .lt('need_date', today))
+      .lt('need_date', bound))
     rows = res.rows as ConstraintRow[]
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
+  let todayOf: (projectId: string) => string
+  try {
+    todayOf = projectTodayFn(await loadProjectTimezones(admin, rows.map(r => r.project_id)))
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
+  rows = rows.filter(r => r.need_date < todayOf(r.project_id))
   const due = rows.filter(r => !r.last_overdue_notif_at || r.last_overdue_notif_at < redispatchCutoffIso)
 
   let inserted = 0
@@ -65,7 +76,7 @@ export async function POST(req: NextRequest) {
   for (const c of due) {
     const recipients = Array.from(new Set([c.owner_id, c.created_by].filter((x): x is string => !!x)))
     if (recipients.length === 0) continue
-    const overdueDays = Math.max(0, Math.floor((Date.parse(today) - Date.parse(c.need_date)) / 86_400_000))
+    const overdueDays = Math.max(0, daysBetween(c.need_date, todayOf(c.project_id)))
     const next = Math.min(c.escalation_level + 1, 4)
 
     const notifs = recipients.map(uid => ({
@@ -101,5 +112,5 @@ export async function POST(req: NextRequest) {
     if (updErr) console.error('[project_constraints.update last_overdue_notif_at]', updErr)
   }
 
-  return NextResponse.json({ scanned: rows.length, fired, inserted, date: today })
+  return NextResponse.json({ scanned: rows.length, fired, inserted })
 }

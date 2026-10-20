@@ -7,7 +7,8 @@ CREATE OR REPLACE FUNCTION public.my_work_counts(p_org_id uuid)
  SET search_path TO 'public'
 AS $function$
   with proj as (
-    select id from projects where org_id = p_org_id
+    -- S10 (G-13/D-05): «hoy» de cada proyecto según projects.timezone
+    select id, public.tz_today(timezone) as today from projects where org_id = p_org_id
   ),
   me as (
     select role::text as role from org_members where org_id = p_org_id and user_id = auth.uid()
@@ -79,8 +80,7 @@ AS $function$
       where wi.assigned_to = auth.uid()
         and wi.status in ('not_started', 'in_progress')
         and wp.status in ('published', 'in_progress')
-        and wp.plan_date <= current_date
-        and wp.project_id in (select id from proj)
+        and wp.plan_date <= (select today from proj where proj.id = wp.project_id)
     ),
     'signatures', (
       -- S06 (C-44): solo para quien firma certificados (canSignCertificates en src/lib/my-work/queues.ts).
@@ -96,8 +96,8 @@ AS $function$
     'preservation_overdue', (
       select count(*)
       from preservation_plans pp
-      where public.preservation_is_overdue(pp.status, pp.next_due_date)
-        and pp.project_id in (select id from proj)
+      join proj on proj.id = pp.project_id
+      where public.preservation_is_overdue(pp.status, pp.next_due_date, proj.today)
     ),
     'actions_mine', (
       select count(*)

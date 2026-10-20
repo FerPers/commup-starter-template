@@ -20,7 +20,7 @@ BEGIN
   END IF;
 
   IF p_accept THEN
-    UPDATE punches SET status = 'closed', closed_date = CURRENT_DATE, verified_by = auth.uid() WHERE id = p_punch_id;
+    UPDATE punches SET status = 'closed', closed_date = public.project_today(v.project_id), verified_by = auth.uid() WHERE id = p_punch_id;
     INSERT INTO punch_comments (punch_id, user_id, comment)
     VALUES (p_punch_id, auth.uid(), 'Verificado en campo y cerrado' || COALESCE(': ' || v_comment, '.'));
     PERFORM public.punch_log(v, 'verified', jsonb_build_object('comment', v_comment));

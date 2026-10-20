@@ -42,13 +42,15 @@ BEGIN
   UPDATE preservation_records SET result = p_result, remarks = v_remarks, status = 'finalized', performed_by = auth.uid(),
     performed_at = now(), punch_raised = v_punch IS NOT NULL, punch_id = v_punch
   WHERE id = p_record_id;
-  UPDATE preservation_plans SET last_performed_date = CURRENT_DATE, next_due_date = CURRENT_DATE + COALESCE(v_proc.interval_days, 0)
+  -- S10 (B-29): «hoy» del proyecto, no de UTC.
+  UPDATE preservation_plans SET last_performed_date = public.project_today(v_plan.project_id),
+    next_due_date = public.project_today(v_plan.project_id) + COALESCE(v_proc.interval_days, 0)
   WHERE id = v_plan.id;
 
   INSERT INTO activity_log (org_id, user_id, entity_type, entity_id, action, payload)
   VALUES (v_org, auth.uid(), 'preservation_record', p_record_id, 'finalized',
           jsonb_build_object('planId', v_plan.id, 'tagId', v_tag.id, 'result', p_result, 'punchNumber', v_number,
-                             'nextDueDate', CURRENT_DATE + COALESCE(v_proc.interval_days, 0)));
-  RETURN jsonb_build_object('punch_number', v_number, 'next_due_date', CURRENT_DATE + COALESCE(v_proc.interval_days, 0));
+                             'nextDueDate', public.project_today(v_plan.project_id) + COALESCE(v_proc.interval_days, 0)));
+  RETURN jsonb_build_object('punch_number', v_number, 'next_due_date', public.project_today(v_plan.project_id) + COALESCE(v_proc.interval_days, 0));
 END;
 $function$;

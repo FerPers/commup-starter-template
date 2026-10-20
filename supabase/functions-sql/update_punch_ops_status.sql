@@ -57,7 +57,7 @@ BEGIN
     post_handover_status = p_new_status,
     ops_notes            = COALESCE(p_notes, ops_notes),
     ops_target_date      = COALESCE(p_target_date, ops_target_date),
-    closed_date          = CASE WHEN p_new_status = 'closed_final' THEN CURRENT_DATE ELSE closed_date END,
+    closed_date          = CASE WHEN p_new_status = 'closed_final' THEN public.project_today(v.project_id) ELSE closed_date END,
     status               = CASE WHEN p_new_status = 'closed_final' THEN 'closed'::punch_status ELSE status END
   WHERE id = p_punch_id;
 

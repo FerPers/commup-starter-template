@@ -122,17 +122,16 @@ export const takeProjectSnapshot = withAuthOnly(
     const access = await checkProjectAccess(supabase, ctx.orgId, projectId)
     if (!access.ok) return { success: false, error: access.error }
 
-    const today = new Date().toISOString().split('T')[0]
     const admin = createAdminClient()
 
     // S09 (B-01/B-25): snapshot KPI en SQL (conteos completos, upsert por clave única). Igual que
     // take_mgmt_snapshot, solo service_role escribe snapshots; el proyecto ya se verificó arriba.
-    const { error: kpiErr } = await admin.rpc('take_kpi_snapshot', { p_project_id: projectId, p_date: today })
+    const { error: kpiErr } = await admin.rpc('take_kpi_snapshot', { p_project_id: projectId })  // S10: día local del proyecto
     if (kpiErr) return { success: false, error: kpiErr.message }
 
     // Readiness (fase 5): avance ponderado y KPIs de gestión diaria. take_mgmt_snapshot es solo de
     // service_role (escribe snapshots sin políticas de escritura); el proyecto ya se verificó arriba.
-    const { error: mgmtErr } = await admin.rpc('take_mgmt_snapshot', { p_project_id: projectId, p_date: today })
+    const { error: mgmtErr } = await admin.rpc('take_mgmt_snapshot', { p_project_id: projectId })
     if (mgmtErr) return { success: false, error: mgmtErr.message }
 
     revalidatePath(`/projects/${projectId}/kpis`)

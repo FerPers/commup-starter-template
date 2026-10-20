@@ -14,6 +14,7 @@ import {
 } from '@/lib/performance/catalog'
 import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, label, small } from '../../../daily/daily-ui'
 import { REV_TONE, RUN_TONE } from '../PerformanceView'
+import { useLocalTime } from '@/lib/use-local-time'
 
 type Rev = {
   id: string; rev: number; status: RevisionStatus; changeReason: string | null; returnedReason: string | null
@@ -56,7 +57,8 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
   const openRev = revisions.find(r => r.status === 'draft' || r.status === 'in_review')
   const liveRun = runs.find(r => LIVE_RUN_STATUSES.includes(r.status))
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string | null) => localTime(iso)
   const sysLabel = (id: string) => { const s = systems.find(x => x.id === id); return s ? `${s.code} — ${s.name}` : '—' }
   const frontier = new Set([test.primarySystemId, ...draft.system_ids])
   const keys = draft.variables.map(v => normKey(v.key)).filter(Boolean)

@@ -6,6 +6,7 @@
 
 import { criterionText, type Evaluation } from '@/lib/performance/catalog'
 import { A4_W, COLOR, CONTENT_W, FOOTER_H, MARGIN, Renderer, sanitize, wrapText, type Color } from './renderer'
+import { dateTimeIn, timeIn, zoneLabel } from '@/lib/time/zone'
 
 type Lang = 'es' | 'en'
 
@@ -31,6 +32,8 @@ export type PerformancePdfInput = {
   action: string | null
   certificate: { number: string; status: string; hash: string | null; signatures: { capacity: string; name: string | null; at: string | null }[] } | null
   labels: { result: (r: string) => string; outcome: (o: string) => string; reason: (r: string) => string; source: (s: string) => string; distKind: (k: string) => string; certStatus: (s: string) => string; capacity: (c: string) => string }
+  /** S10 (E-15c): zona del proyecto para las horas (antes UTC). */
+  timezone?: string
 }
 
 const T = {
@@ -73,7 +76,8 @@ const T = {
   yes: { es: 'Evaluable', en: 'Evaluable' }, no: { es: 'No evaluable', en: 'Not evaluable' }, ok: { es: 'Reconciliados', en: 'Reconciled' }, bad: { es: 'Fuera', en: 'Out' },
 }
 
-const dt = (iso: string | null) => (iso ? iso.slice(0, 16).replace('T', ' ') + ' UTC' : '—')
+// S10 (E-15c): hora del proyecto con su zona (antes «… UTC»).
+const fmtDt = (iso: string | null, tz: string) => (iso ? `${dateTimeIn(iso, tz)} ${zoneLabel(tz, new Date(iso))}` : '—')
 const num = (n: number | null | undefined, d = 3) => (n === null || n === undefined ? '—' : String(Math.round(Number(n) * 10 ** d) / 10 ** d))
 const RESULT_COLOR: Record<string, [Color, Color]> = {
   accepted: [COLOR.green, COLOR.greenBg], accepted_with_deviation: [COLOR.amber, COLOR.amberBg], failed: [COLOR.red, COLOR.redBg],
@@ -88,6 +92,8 @@ export function thinSeries<P>(points: P[], n = 300): P[] {
 }
 
 export async function renderPerformancePdf(x: PerformancePdfInput): Promise<Uint8Array> {
+  const tz = x.timezone ?? 'UTC'
+  const dt = (iso: string | null) => fmtDt(iso, tz)
   const L = x.lang
   const e = x.evaluation
   const result = e.result ?? null
@@ -188,7 +194,7 @@ export async function renderPerformancePdf(x: PerformancePdfInput): Promise<Uint
   section(8)
   if (!x.disturbances.length) para(T.noDist[L], 9, COLOR.muted)
   else table([{ label: T.col.window[L], frac: 0.28 }, { label: T.col.kind[L], frac: 0.16 }, { label: T.col.desc[L], frac: 0.36 }, { label: T.col.calc[L], frac: 0.2 }],
-    x.disturbances.map(d => [`${dt(d.start).slice(0, 16)} -> ${d.end ? d.end.slice(11, 16) : '...'}`, x.labels.distKind(d.kind), `${d.description}${d.reason ? ` (${d.reason})` : ''}`, d.excluded ? T.excluded[L] : T.included[L]]))
+    x.disturbances.map(d => [`${dt(d.start)} -> ${d.end ? timeIn(d.end, tz) : '...'}`, x.labels.distKind(d.kind), `${d.description}${d.reason ? ` (${d.reason})` : ''}`, d.excluded ? T.excluded[L] : T.included[L]]))
 
   // 10. Validación de datos + gráficos
   r.ensureSpace(90)

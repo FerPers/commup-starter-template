@@ -16,6 +16,7 @@ import { bulkUpdatePunchStatus, bulkDeletePunches } from '@/app/actions/bulk'
 import { reassignPunch } from '@/app/actions/punches'
 import { punchDisplayStatus } from '@/lib/punches/verification'
 import { toSafeCsv } from '@/lib/excel/sanitize'
+import { browserToday } from '@/lib/time/zone'
 
 const REASSIGN_ROLES = ['owner', 'admin', 'architect', 'leader']
 const EDITOR_ROLES = ['owner', 'admin', 'architect', 'leader']
@@ -208,7 +209,7 @@ export default function PunchListGlobal({
       const href = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = href
-      a.download = `punches_${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = `punches_${browserToday()}.csv`
       a.click()
       URL.revokeObjectURL(href)
     })
@@ -494,7 +495,7 @@ export default function PunchListGlobal({
             width: 100,
             header: t('table.colDue'),
             cell: (p) => {
-              const today = new Date().toISOString().slice(0, 10)
+              const today = browserToday()
               const isOverdue = !!(p.target_date && p.target_date < today && p.status !== 'closed' && p.status !== 'cancelled')
               return (
                 <div style={{ fontSize: 'var(--text-xs)', color: isOverdue ? 'var(--danger-500)' : 'var(--text-muted)', fontWeight: isOverdue ? 600 : 400 }}>

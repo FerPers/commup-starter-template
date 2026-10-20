@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { issuePerformanceCertificate, revokePerformanceCertificate, signPerformanceCertificate } from '@/app/actions/performance'
 import { CERT_TONE, canSignCertificate, isPerformanceLead, type CertCapacity, type CertificateStatus, type PerfResult } from '@/lib/performance/catalog'
 import { Alert, Chip, btn, card, label, small } from '../../../../daily/daily-ui'
+import { useLocalTime } from '@/lib/use-local-time'
 
 // Certificado PTC (fase 7, sesión 2b): quien emite firma como Comisionamiento; faltan Operaciones y Cliente
 // (rol client), cada firma de una persona distinta. Las reglas viven en las RPC; aquí solo se muestran.
@@ -36,7 +37,8 @@ export default function CertificateCard({ projectId, run, certificate, names, us
   const lead = isPerformanceLead(role)
   const certifiable = run.status === 'evaluated' && (run.result === 'accepted' || run.result === 'accepted_with_deviation')
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string | null) => localTime(iso)
   const pdfHref = `/projects/${projectId}/startup/performance/runs/${run.id}/pdf`
 
   function act(fn: () => Promise<{ error?: string }>) {

@@ -9,6 +9,7 @@ import { getSignedHandoverUrlsAction } from '@/app/actions/handover'
 import type { OwnershipStage } from '@/lib/startup/catalog'
 import { Alert, Chip, Field, btn, card, input, linkStyle, small } from '../../../daily/daily-ui'
 import { Checklist, StageChip, type CheckItem } from '../../operations/ownership-ui'
+import { useLocalTime } from '@/lib/use-local-time'
 
 type Transfer = {
   id: string; number: string; system: string; from_stage: OwnershipStage; to_stage: OwnershipStage; is_reversal: boolean; reason: string | null; status: string
@@ -38,7 +39,8 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
   const [cancelling, setCancelling] = useState(false)
   const [reason, setReason] = useState('')
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string | null) => localTime(iso)
   const toOps = tr.to_stage === 'operations' && !tr.is_reversal
 
   function run<T extends { error?: string }>(fn: () => Promise<T>, after?: (res: T) => void) {

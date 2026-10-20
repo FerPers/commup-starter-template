@@ -167,6 +167,11 @@ Rules for every new page/query/action:
 - Sesión 2 (migración `20261022120000`): paquetes de vendor `/projects/[id]/vendors` — `vendor_packages` (VND-0001) + interfaces + checklist fijo (`vendor_checklist_keys`, = `VENDOR_CHECKLIST` en `src/lib/vendors/catalog.ts`); movilizar = gate del sistema aprobado + checklist + interfaces acordadas; FAT/SAT → hallazgo con tag = punch, sin tag = ACC (origen `vendor`); reporte final único requisito de desmovilizar junto con checklist y cero Cat A abiertos del paquete; recomendaciones con MOC por referencia. No afecta gates (solo chip en Control Tower). Acciones en `src/app/actions/vendors.ts`.
 - Sesión 3 (migración `20261023120000`): KPIs `documents` (As-Built/Final sobre documentos ligados a sistemas) y `vendors` (paquetes activos sin bloqueos) en `take_mgmt_snapshot`; trigger `company_link_from_text` enlaza la empresa de `ops_personnel.company` / `test_equipment.owner_company` por nombre. Seed DEMO `scripts/demo-data/seed_documents_vendors_demo.sql`. **Con esto el plan readiness F0–F8 está completo.**
 
+## Zona horaria del proyecto (S10, D12)
+
+- `projects.timezone` (IANA, por defecto `America/Bogota`) define «hoy» y el corte del día. En SQL: `project_today(project_id)` / `tz_today(tz)` / `tz_day_start(date, tz)` — **nunca `CURRENT_DATE`** en funciones nuevas. En TS: `src/lib/time/zone.ts` (`todayIn`, `formatInZone`, `latestPossibleToday` para filtrar crons) y `src/lib/time/project-zones.ts`; el Worker corre en UTC, así que `new Date().toISOString().slice(0, 10)` es el día equivocado desde las 19:00 en Colombia.
+- Horas en pantallas: con la zona del proyecto y rotuladas (`formatInZone`, sin `suppressHydrationWarning`) o, donde se carga con `datetime-local`, `useLocalTime()` (zona del navegador). Reportes emitidos antes de S10 no traen `data.timezone`: se avisa que su día se cortó en UTC y se corrigen solo con revisión.
+
 ## AI (Claude) — matriz ITR híbrida
 
 - `src/lib/ai/claude.ts` crea el cliente (`@anthropic-ai/sdk`, modelo `claude-opus-5-5`). Requiere el secreto `ANTHROPIC_API_KEY` (Wrangler secret en Cloudflare; `.env.local` en dev). Sin clave, las acciones de IA devuelven un error claro y la UI lo muestra.

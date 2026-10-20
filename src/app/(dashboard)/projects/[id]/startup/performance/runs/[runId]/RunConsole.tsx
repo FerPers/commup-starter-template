@@ -17,6 +17,7 @@ import EvaluationPanel from './EvaluationPanel'
 import CertificateCard, { type Certificate } from './CertificateCard'
 import { Alert, Chip, Field, btn, card, grid, input, label, small } from '../../../../daily/daily-ui'
 import { RUN_TONE } from '../../PerformanceView'
+import { useLocalTime } from '@/lib/use-local-time'
 
 type Run = {
   id: string; number: string; status: PerfRunStatus; created_at: string
@@ -52,14 +53,14 @@ const th: React.CSSProperties = { textAlign: 'left', padding: '6px 8px', fontSiz
 const td: React.CSSProperties = { padding: '6px 8px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const sectionTitle: React.CSSProperties = { fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }
 
-export default function RunConsole({ project, test, run, rev, variables, points, disturbances, names, userId, role, evaluation, evaluationError, action, certificate }: {
+export default function RunConsole({ project, test, run, rev, variables, points, pointsTruncated = false, disturbances, names, userId, role, evaluation, evaluationError, action, certificate }: {
   project: { id: string; code: string; name: string }
   test: { id: string; number: string; title: string }
   run: Run
   evaluation: Evaluation | null; evaluationError: string | null; action: { id: string; number: string; status: string } | null
   certificate: Certificate | null
   rev: { rev: number; stabilization_min: number; formal_min: number; sample_interval_s: number; outdated: boolean }
-  variables: Variable[]; points: Point[]; disturbances: Disturbance[]
+  variables: Variable[]; points: Point[]; pointsTruncated?: boolean; disturbances: Disturbance[]
   names: Record<string, string>; userId: string; role: string
 }) {
   const t = useTranslations('Startup')
@@ -79,7 +80,8 @@ export default function RunConsole({ project, test, run, rev, variables, points,
   const member = role !== 'client'
   const live = run.status === 'stabilizing' || run.status === 'formal'
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string | null) => localTime(iso)
   const clock = now ? runClock(run, rev, now) : null
   // El campo de hora no tiene segundos: el mismo minuto del inicio de la estabilización cuenta desde ese instante.
   const inWindow = (v: string) => {
@@ -187,6 +189,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
       )}
       <CertificateCard projectId={project.id} run={run} certificate={certificate} names={names} userId={userId} role={role} />
 
+      {pointsTruncated && <Alert kind="warn">{t('perf.pointsTruncated')}</Alert>}
       {/* Gráficos */}
       {chartFrom && chartTo && charted.length > 0 && (
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 12 }}>

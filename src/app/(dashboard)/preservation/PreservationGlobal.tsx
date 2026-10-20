@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { addDaysIso, browserToday } from '@/lib/time/zone'
 
 const PAGE_SIZE = 50
 
@@ -70,11 +71,9 @@ export default function PreservationGlobal({
 
   // Lazy initial state: pinned to mount time so the wall clock isn't read every render
   const [{ today, soon }] = useState(() => {
-    const now = Date.now()
-    return {
-      today: new Date(now).toISOString().slice(0, 10),
-      soon: new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    }
+    // S10 (G-13): día del navegador, no de UTC
+    const today = browserToday()
+    return { today, soon: addDaysIso(today, 7) }
   })
 
   const overdueCnt = plans.filter(p => p.status === 'active' && p.next_due_date < today).length

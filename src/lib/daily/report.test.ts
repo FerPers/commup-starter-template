@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { progressDelta, reportFacts, type ReportData } from './report'
+import { cutInUtc, progressDelta, reportFacts, reportTotals, type ReportData } from './report'
 
 const base: ReportData = {
   date: '2026-10-16',
@@ -34,5 +34,35 @@ describe('reporte diario — hechos para la IA', () => {
     expect(txt).toContain('BYP-0001 (bypass, active)')
     expect(txt).toContain('(ninguno levantado hoy)')
     expect(txt).toContain('(nada comprometido)')
+  })
+})
+
+describe('reporte diario — totales y zona horaria (S10)', () => {
+  it('usa el total de la BD y no el largo de la lista recortada a 30 (D-06)', () => {
+    const d: ReportData = {
+      ...base, timezone: 'America/Bogota',
+      itrs: { ...base.itrs, approved_today_count: 200 },
+      actions: { ...base.actions, overdue_count: 45 },
+    }
+    expect(reportTotals(d).approvedToday).toBe(200)
+    const txt = reportFacts(d)
+    expect(txt).toContain('ITR: 200 aprobados hoy (se listan 1)')
+    expect(txt).toContain('45 vencidas (se listan 0)')
+    expect(txt).toContain('día local, zona America/Bogota')
+  })
+
+  it('reporte congelado antes de S10: total = largo de la lista y día cortado en UTC (D12)', () => {
+    expect(reportTotals(base).approvedToday).toBe(1)
+    expect(cutInUtc(base)).toBe(true)
+    expect(cutInUtc({ ...base, timezone: 'America/Bogota' })).toBe(false)
+  })
+
+  it('las horas de los eventos de arranque salen en la zona del proyecto', () => {
+    const d: ReportData = {
+      ...base, timezone: 'America/Bogota',
+      startup_events_today: [{ number: 'EVT-0001', kind: 'milestone', code: 'first_startup', title: 'Arranque', system: 'A100-S01',
+        occurred_at: '2026-10-17T02:10:00+00:00', status: 'witnessed', params: [] }],
+    }
+    expect(reportFacts(d)).toContain('21:10 EVT-0001 HITO first_startup')
   })
 })

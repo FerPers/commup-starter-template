@@ -1,5 +1,6 @@
 'use server'
 
+import { getProjectToday } from '@/lib/time/project-zones'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
@@ -436,7 +437,7 @@ export const approvePssrAndIssueRfsu = withAuthOnly(
       certificate_number: certNumber,
       title: `RFSU — ${system?.name ?? 'Sistema'} (${system?.code ?? ''})`,
       status: 'issued',
-      issued_date: new Date().toISOString().split('T')[0],
+      issued_date: (await getProjectToday(supabase, projectId)).today,  // S10 (B-29): día del proyecto
       issued_by: ctx.userId,
       approved_by: ctx.userId,
     }).select().single()

@@ -1,5 +1,6 @@
 import { getRequestConfig } from 'next-intl/server'
 import { cookies, headers } from 'next/headers'
+import { DEFAULT_TIMEZONE } from '@/lib/time/zone'
 
 const SUPPORTED = ['es', 'en'] as const
 type Locale = (typeof SUPPORTED)[number]
@@ -43,5 +44,7 @@ export default getRequestConfig(async () => {
     ? (await import('./messages/en.json')).default
     : (await import('./messages/es.json')).default
 
-  return { locale, messages }
+  // S10 (G-13): zona fija para los formateadores de next-intl (el Worker corre en UTC). Las fechas de un
+  // proyecto usan projects.timezone (src/lib/time/zone.ts).
+  return { locale, messages, timeZone: DEFAULT_TIMEZONE }
 })

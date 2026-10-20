@@ -2,6 +2,8 @@ import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import { latestPossibleToday, daysBetween } from '@/lib/time/zone'
+import { loadProjectTimezones, projectTodayFn } from '@/lib/time/project-zones'
 
 /**
  * POST /api/cron/pssr-review-overdue
@@ -41,7 +43,8 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const today = new Date().toISOString().split('T')[0]
+  // S10 (D-05/B-29): vencido según el día local del proyecto (cota UTC+14 en la BD, zona aquí).
+  const bound = latestPossibleToday()
   const redispatchCutoffIso = new Date(Date.now() - REDISPATCH_DAYS * 86_400_000).toISOString()
 
   // S09 (B-07): paginado; .limit(2000) devolvía igual 1000
@@ -51,18 +54,25 @@ export async function POST(req: NextRequest) {
       .from('pssr_reviews')
       .select('id, org_id, project_id, review_number, title, review_due_date, status, last_overdue_notif_at')
       .in('status', OVERDUE_STATUSES)
-      .lt('review_due_date', today)
+      .lt('review_due_date', bound)
       .not('review_due_date', 'is', null))
     reviews = res.rows as ReviewRow[]
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
+  let todayOf: (projectId: string) => string
+  try {
+    todayOf = projectTodayFn(await loadProjectTimezones(admin, reviews.map(r => r.project_id)))
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
+  reviews = reviews.filter(r => r.review_due_date < todayOf(r.project_id))
   const due = reviews.filter(r =>
     !r.last_overdue_notif_at || r.last_overdue_notif_at < redispatchCutoffIso,
   )
 
   if (due.length === 0) {
-    return NextResponse.json({ scanned: reviews.length, fired: 0, inserted: 0, date: today })
+    return NextResponse.json({ scanned: reviews.length, fired: 0, inserted: 0 })
   }
 
   // Fetch org members per org in bulk (one query per unique org).
@@ -87,10 +97,7 @@ export async function POST(req: NextRequest) {
     const recipients = membersByOrg.get(review.org_id) ?? []
     if (recipients.length === 0) continue
 
-    const overdueDays = Math.max(
-      0,
-      Math.floor((Date.parse(today) - Date.parse(review.review_due_date)) / 86_400_000),
-    )
+    const overdueDays = Math.max(0, daysBetween(review.review_due_date, todayOf(review.project_id)))
 
     const rows = recipients.map(uid => ({
       org_id: review.org_id,
@@ -128,6 +135,5 @@ export async function POST(req: NextRequest) {
     scanned: reviews.length,
     fired,
     inserted,
-    date: today,
   })
 }

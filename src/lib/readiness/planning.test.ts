@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, gateAtRisk, gateGap, groupBySystem, inWindow, normalizeWeights, sortLookahead, type LookaheadItem } from './planning'
+import { addDays, gateAtRisk, gateGap, groupBySystem, inWindow, normalizeWeights, sortLookahead, type LookaheadItem, plannedCurve } from './planning'
 
 const item = (over: Partial<LookaheadItem>): LookaheadItem => ({
   kind: 'action', id: 'x', ref: 'ACC-0001', title: 't', systemId: null, systemCode: null, date: '2026-10-20', status: 'open', href: '#', ...over,
@@ -43,5 +43,27 @@ describe('planificación — look-ahead', () => {
     expect(normalizeWeights([null, null, null, null])).toEqual([0.25, 0.25, 0.25, 0.25])
     expect(normalizeWeights([10, 20, 30, 40])).toEqual([0.1, 0.2, 0.3, 0.4])
     expect(normalizeWeights([0, 0])).toEqual([0, 0])
+  })
+})
+
+describe('curva S planificada (S10, D-27)', () => {
+  const systems = [
+    { systemId: 'S1', itrTotal: 30, gates: [{ gateId: 'MC', weight: 0.5, itrTotal: 20 }, { gateId: 'RFSU', weight: 0.5, itrTotal: 10 }] },
+    { systemId: 'S2', itrTotal: 10, gates: [{ gateId: 'MC', weight: 0.5, itrTotal: 10 }, { gateId: 'RFSU', weight: 0.5, itrTotal: 0 }] },
+  ]
+  const plans = [
+    { systemId: 'S1', gateId: 'MC', date: '2026-11-01' },
+    { systemId: 'S1', gateId: 'RFSU', date: '2026-12-01' },
+    { systemId: 'S2', gateId: 'MC', date: '2026-11-15' },
+    { systemId: 'S2', gateId: 'RFSU', date: '2026-11-20' },
+  ]
+
+  it('suma el peso del gate en su fecha comprometida, ponderado por ITR del sistema', () => {
+    expect(plannedCurve(systems, plans, ['2026-10-31', '2026-11-01', '2026-11-15', '2026-11-20', '2026-12-01']))
+      .toEqual([0, 0.375, 0.5, 0.5, 0.875])
+  })
+
+  it('sin ITR no hay curva', () => {
+    expect(plannedCurve([], plans, ['2026-11-01'])).toEqual([0])
   })
 })

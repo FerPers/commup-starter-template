@@ -80,7 +80,7 @@ export const refreshDailyReportData = withAuth(
 
 /**
  * Pide a Claude la redacción a partir de los datos congelados del reporte. La RPC guarda la propuesta en
- * ai_draft y solo llena secciones vacías; con `replace` el editor las vacía antes (confirmado en la UI).
+ * ai_draft y solo llena secciones vacías; con `replace` (confirmado en la UI) las reemplaza todas.
  */
 export const generateDailyReportAi = withAuth(
   { guards: projectGuard },
@@ -113,12 +113,8 @@ export const generateDailyReportAi = withAuth(
     const parsed = response.parsed_output
     if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
 
-    if (input.replace) {
-      const clear = Object.fromEntries(REPORT_SECTIONS.map(s => [s, '']))
-      const { error } = await ctx.supabase.rpc('update_daily_report_sections', { p_report_id: input.reportId, p_sections: clear })
-      if (error) return { error: error.message }
-    }
-    const { error } = await ctx.supabase.rpc('set_daily_report_ai_draft', {
+    // S10 (D-28): reemplazar es una sola RPC (antes vaciar + llenar en dos: si la segunda fallaba, se perdían las ediciones).
+    const { error } = await ctx.supabase.rpc(input.replace ? 'replace_daily_report_ai_draft' : 'set_daily_report_ai_draft', {
       p_report_id: input.reportId, p_draft: parsed, p_model: response.model,
     })
     if (error) return { error: error.message }

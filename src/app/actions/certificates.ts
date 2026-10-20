@@ -1,5 +1,6 @@
 'use server'
 
+import { getProjectToday } from '@/lib/time/project-zones'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -117,7 +118,7 @@ export const issueCertificate = withAuth(
         certificate_number: certNumber,
         title,
         status: 'issued',
-        issued_date: new Date().toISOString().split('T')[0],
+        issued_date: (await getProjectToday(supabase, projectId)).today,  // S10 (B-29): día del proyecto
         issued_by: userId,
         notes: input.notes ?? null,
       } as never)

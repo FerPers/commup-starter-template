@@ -12,6 +12,8 @@ import {
 import { greetingName } from '@/lib/utils'
 import type { OrgMemberRole } from '@/types/database'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import { DEFAULT_TIMEZONE, latestPossibleToday } from '@/lib/time/zone'
+import { projectTodayFn } from '@/lib/time/project-zones'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,11 +55,16 @@ export default async function MyWorkPage() {
     getTranslations('Startup'),
     getLocale(),
     supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle(),
-    supabase.from('projects').select('id, code').eq('org_id', orgId),
+    supabase.from('projects').select('id, code, timezone').eq('org_id', orgId),
   ])
   const projectIds = (projects ?? []).map(p => p.id)
   const projectSet = new Set(projectIds)
-  const today = new Date().toISOString().slice(0, 10)
+  // S10 (G-13/D-05): «hoy» de cada proyecto (projects.timezone); el servidor corre en UTC. La BD filtra con la
+  // cota UTC+14 y aquí se aplica el día de cada proyecto.
+  const zones = new Map((projects ?? []).map(p => [p.id, p.timezone ?? DEFAULT_TIMEZONE]))
+  const todayOf = projectTodayFn(zones)
+  const bound = latestPossibleToday()
+  const headerTz = projects?.[0]?.timezone ?? DEFAULT_TIMEZONE
 
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
@@ -86,7 +93,7 @@ export default async function MyWorkPage() {
       .eq('assigned_to', userId)
       .in('status', ['not_started', 'in_progress'])
       .in('work_plans.status', ['published', 'in_progress'])
-      .lte('work_plans.plan_date', today)
+      .lte('work_plans.plan_date', bound)
       .in('work_plans.project_id', projectIds)
       .limit(QUEUE_LIMIT + 1),
     !signer || projectIds.length === 0 ? none : supabase
@@ -100,7 +107,7 @@ export default async function MyWorkPage() {
       .from('preservation_plans')
       .select('id, next_due_date, project_id, tags(id, tag_number, description), preservation_procedures(code, title), projects(code)')
       .eq('status', 'active')
-      .lt('next_due_date', today)
+      .lt('next_due_date', bound)
       .in('project_id', projectIds)
       .order('next_due_date', { ascending: true })
       .limit(QUEUE_LIMIT + 1),
@@ -212,9 +219,10 @@ export default async function MyWorkPage() {
   const counts = parseCounts(countsRaw)
   const queues = splitAssignments((assignments ?? []) as unknown as AssignmentRow[], projectSet, userId)
   const myPunches = sortPunches((punches ?? []) as unknown as PunchRow[])
-  const plan = (planItems ?? []) as unknown as PlanItemRow[]
+  const plan = ((planItems ?? []) as unknown as PlanItemRow[])
+    .filter(i => !i.work_plans || i.work_plans.plan_date <= todayOf(i.work_plans.project_id))
   const pendingCerts = ((certs ?? []) as unknown as CertRow[]).filter(c => !c.certificate_signatures.some(s => s.role === 'completion'))
-  const overduePres = (preservation ?? []) as unknown as PreservationRow[]
+  const overduePres = ((preservation ?? []) as unknown as PreservationRow[]).filter(p => p.next_due_date < todayOf(p.project_id))
   const verifyRows = (toVerify ?? []) as unknown as PunchRow[]
   const reviewRows = (toReview ?? []) as unknown as (PunchRow & { impact: string | null })[]
   type ActionQueueRow = { id: string; number: string; title: string; priority: string; due_date: string | null; project_id: string; projects: { code: string } | null }
@@ -268,12 +276,12 @@ export default async function MyWorkPage() {
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
-  const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' })
+  const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: headerTz })
   const roleLabel = t(`roles.${role}`)
   const fmt = (d: string) => new Date(`${d.slice(0, 10)}T00:00:00`).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })
 
-  const duePill = (date: string | null | undefined, opts?: { doneLabel?: string }) => {
-    const state: DueState = dueState(date, today)
+  const duePill = (date: string | null | undefined, projectId: string | null | undefined, opts?: { doneLabel?: string }) => {
+    const state: DueState = dueState(date, todayOf(projectId ?? ''))
     if (!date || !state) return opts?.doneLabel ? <Pill tone="info">{opts.doneLabel}</Pill> : null
     if (state === 'overdue') return <Pill tone="danger">{t('due.overdue', { date: fmt(date) })}</Pill>
     if (state === 'today') return <Pill tone="warning">{t('due.today')}</Pill>
@@ -330,7 +338,7 @@ export default async function MyWorkPage() {
                 right={itr.status === 'completed' ? <Pill tone="success">{t('due.signPending')}</Pill>
                   : itr.status === 'rejected' ? <Pill tone="danger">{t('due.rejected')}</Pill>
                   : itr.status === 'in_progress' ? <Pill tone="info">{t('due.inProgress', { pct: Math.round(itr.progress_pct) })}</Pill>
-                  : duePill(itr.scheduled_date)}
+                  : duePill(itr.scheduled_date, itr.project_id)}
               />
             )
           })}
@@ -363,7 +371,7 @@ export default async function MyWorkPage() {
                 tag={<span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>}
                 what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`}
                 project={p.projects?.code}
-                right={p.target_date ? duePill(p.target_date) : <Pill tone={p.status === 'in_progress' ? 'info' : 'neutral'} style={{ background: pStyle.bg, color: pStyle.color }}>{t(`punchStatus.${p.status}`)}</Pill>}
+                right={p.target_date ? duePill(p.target_date, p.project_id) : <Pill tone={p.status === 'in_progress' ? 'info' : 'neutral'} style={{ background: pStyle.bg, color: pStyle.color }}>{t(`punchStatus.${p.status}`)}</Pill>}
               />
             )
           })}
@@ -407,7 +415,7 @@ export default async function MyWorkPage() {
         <Queue title={t('queues.actions')} count={Math.min(actionRows.length, QUEUE_LIMIT)} total={counts.actions_mine} emptyText={t('empty.actions')} moreHref={dailyHref(actionRows[0]?.project_id, 'actions')} moreLabel={t('viewAll', { count: counts.actions_mine })} limit={QUEUE_LIMIT}>
           {actionRows.slice(0, QUEUE_LIMIT).map(a => (
             <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe={a.priority === 'critical' ? 'var(--danger-500)' : a.priority === 'high' ? 'var(--warning-600)' : 'var(--primary-500)'}
-              code={a.number} what={a.title} project={a.projects?.code} right={duePill(a.due_date)} />
+              code={a.number} what={a.title} project={a.projects?.code} right={duePill(a.due_date, a.project_id)} />
           ))}
         </Queue>
 
@@ -505,9 +513,9 @@ export default async function MyWorkPage() {
               tag={<span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--gray-100)', color: 'var(--text-strong)' }}>{t('constraintLevel', { n: c.escalation_level })}</span>}
               what={`${c.title}${c.systems?.code ? ` · ${c.systems.code}` : ''}`}
               project={c.projects?.code}
-              right={dueState(c.need_date, today) === 'overdue'
-                ? <Pill tone="danger">{t('due.escalate', { days: daysOverdue(c.need_date, today) })}</Pill>
-                : duePill(c.need_date)} />
+              right={dueState(c.need_date, todayOf(c.project_id)) === 'overdue'
+                ? <Pill tone="danger">{t('due.escalate', { days: daysOverdue(c.need_date, todayOf(c.project_id)) })}</Pill>
+                : duePill(c.need_date, c.project_id)} />
           ))}
         </Queue>
 
@@ -518,7 +526,7 @@ export default async function MyWorkPage() {
               code={item.itrs?.itr_number ?? '—'}
               what={item.title ?? item.itrs?.tags?.tag_number ?? ''}
               project={item.work_plans?.projects?.code}
-              right={duePill(item.planned_finish ?? item.work_plans?.plan_date)}
+              right={duePill(item.planned_finish ?? item.work_plans?.plan_date, item.work_plans?.project_id)}
             />
           ))}
         </Queue>
@@ -545,7 +553,7 @@ export default async function MyWorkPage() {
                 code={p.tags?.tag_number ?? '—'}
                 what={`${p.preservation_procedures?.code ?? ''} ${p.preservation_procedures?.title ?? ''}`.trim()}
                 project={p.projects?.code}
-                right={<Pill tone="danger">{t('due.overdueDays', { days: daysOverdue(p.next_due_date, today) })}</Pill>}
+                right={<Pill tone="danger">{t('due.overdueDays', { days: daysOverdue(p.next_due_date, todayOf(p.project_id)) })}</Pill>}
               />
             ))}
           </Queue>

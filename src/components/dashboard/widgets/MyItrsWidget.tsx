@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { ITR_STYLE, TaskSection } from './_shared'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import { todayIn } from '@/lib/time/zone'
 
 export default async function MyItrsWidget({ userId }: { userId: string }) {
   const supabase = await createClient()
@@ -10,7 +11,7 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
   // S09 (B-07): solo las activas, paginado (antes: todas mis asignaciones, cortadas en 1000 sin orden)
   const { rows: myAssignments } = await fetchAllRowsFlagged(() => supabase
     .from('itr_assignments')
-    .select(`id, role, itrs!inner(id, itr_number, status, progress_pct, scheduled_date, project_id, tags(id, tag_number, description), projects(id, name, code), project_phases(code, color, name))`)
+    .select(`id, role, itrs!inner(id, itr_number, status, progress_pct, scheduled_date, project_id, tags(id, tag_number, description), projects(id, name, code, timezone), project_phases(code, color, name))`)
     .eq('user_id', userId)
     .not('itrs.status', 'in', '(approved,rejected)'), { maxRows: 10_000 })
 
@@ -37,8 +38,6 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
       return da.localeCompare(db)
     })
 
-  const todayStr = new Date().toISOString().slice(0, 10)
-
   return (
     <TaskSection title={t('inspector.myItrs')} count={activeItrs.length} emptyText={t('inspector.myItrsEmpty')}>
       {activeItrs.map(a => {
@@ -46,7 +45,8 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
         if (!itr) return null
         const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
         const phase = itr.project_phases
-        const overdue = itr.scheduled_date && itr.scheduled_date < todayStr && itr.status === 'not_started'
+        // S10 (G-13): vencido según el día del proyecto, no el de UTC
+        const overdue = itr.scheduled_date && itr.scheduled_date < todayIn((itr.projects as { timezone?: string } | null)?.timezone) && itr.status === 'not_started'
         return (
           <a key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
             <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? '#fecaca' : 'var(--border)'}`, borderLeft: `3px solid ${overdue ? 'var(--danger-500)' : style.color}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>

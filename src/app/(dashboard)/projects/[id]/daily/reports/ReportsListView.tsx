@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { createDailyReportDraft } from '@/app/actions/daily-report'
-import { todayIso } from '@/lib/daily/catalog'
+import { formatInZone, todayIn } from '@/lib/time/zone'
 import { Alert, Chip, DailyTabs, btn, card, input, small } from '../daily-ui'
 
 export type ReportRow = {
@@ -21,7 +21,7 @@ const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid
 const TONE = { draft: 'amber', issued: 'green', superseded: 'struck' } as const
 
 export default function ReportsListView({ project, reports, areas, canCreate }: {
-  project: { id: string; code: string; name: string }
+  project: { id: string; code: string; name: string; timezone: string }
   reports: ReportRow[]
   areas: { id: string; code: string; name: string }[]
   canCreate: boolean
@@ -30,7 +30,9 @@ export default function ReportsListView({ project, reports, areas, canCreate }: 
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const today = useMemo(() => todayIso(), [])
+  // S10 (D-05/G-13): «hoy» del proyecto, igual en el servidor (UTC) y en el navegador
+  const today = useMemo(() => todayIn(project.timezone), [project.timezone])
+  const locale = useLocale()
   const [date, setDate] = useState(today)
   const [areaId, setAreaId] = useState('')
 
@@ -83,7 +85,7 @@ export default function ReportsListView({ project, reports, areas, canCreate }: 
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>{r.date}</td>
                 <td style={td}>{r.area ?? t('report.allAreas')}</td>
                 <td style={td}><Chip tone={TONE[r.status]}>{t(`report.status.${r.status}`)}</Chip></td>
-                <td style={{ ...td, ...small }} suppressHydrationWarning>{r.issuedAt ? `${r.issuedBy ?? '—'} · ${new Date(r.issuedAt).toLocaleString()}` : '—'}</td>
+                <td style={{ ...td, ...small }}>{r.issuedAt ? `${r.issuedBy ?? '—'} · ${formatInZone(r.issuedAt, project.timezone, locale)}` : '—'}</td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>
                   <a href={`/projects/${project.id}/daily/reports/${r.id}/pdf`} target="_blank" rel="noopener" style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)' }}>PDF</a>
                 </td>

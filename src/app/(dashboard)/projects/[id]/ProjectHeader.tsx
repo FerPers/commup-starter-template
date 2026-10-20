@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { updateProject, deleteProject } from '@/app/actions/projects'
+import { DEFAULT_TIMEZONE, TIMEZONE_OPTIONS } from '@/lib/time/zone'
 import type { ProjectStatus } from '@/types/database'
 
 const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
@@ -33,6 +34,7 @@ interface ProjectData {
   region: string | null
   start_date: string | null
   end_date: string | null
+  timezone?: string | null
 }
 
 interface Props {
@@ -57,6 +59,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
   const [region, setRegion] = useState(initial.region ?? '')
   const [startDate, setStartDate] = useState(initial.start_date?.slice(0, 10) ?? '')
   const [endDate, setEndDate] = useState(initial.end_date?.slice(0, 10) ?? '')
+  const [timezone, setTimezone] = useState(initial.timezone ?? DEFAULT_TIMEZONE)
 
   const statusStyle = STATUS_STYLE[project.status] ?? STATUS_STYLE.planning
   const statusLabel = STATUS_OPTIONS.find(o => o.value === project.status)?.label ?? project.status
@@ -82,6 +85,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
     setRegion(project.region ?? '')
     setStartDate(project.start_date?.slice(0, 10) ?? '')
     setEndDate(project.end_date?.slice(0, 10) ?? '')
+    setTimezone(project.timezone ?? DEFAULT_TIMEZONE)
     setError(null)
     setShowModal(true)
   }
@@ -97,6 +101,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
         region: region.trim() || null,
         start_date: startDate || null,
         end_date: endDate || null,
+        timezone,
       })
       if (result.error) {
         setError(result.error)
@@ -111,6 +116,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
         region: region.trim() || null,
         start_date: startDate || null,
         end_date: endDate || null,
+        timezone,
       }))
       setShowModal(false)
     })
@@ -234,6 +240,13 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                   <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={inputStyle} />
                 </Field>
               </div>
+              {/* S10 (D12): define «hoy» y el corte del día en reportes, relevos, snapshots y vencimientos */}
+              <Field label="Zona horaria">
+                <select value={timezone} onChange={e => setTimezone(e.target.value)} style={inputStyle}>
+                  {(TIMEZONE_OPTIONS as readonly string[]).includes(timezone) ? null : <option value={timezone}>{timezone}</option>}
+                  {TIMEZONE_OPTIONS.map(z => <option key={z} value={z}>{z}</option>)}
+                </select>
+              </Field>
 
               {error && (
                 <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '7px', fontSize: '13px', color: '#dc2626' }}>

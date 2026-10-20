@@ -6,6 +6,7 @@
 
 import { PROCEDURE_SECTIONS, type ProcedureSection } from '@/lib/startup/catalog'
 import { A4_W, COLOR, CONTENT_W, FOOTER_H, MARGIN, Renderer, sanitize, wrapText } from './renderer'
+import { dateTimeIn, zoneLabel } from '@/lib/time/zone'
 
 type Lang = 'es' | 'en'
 
@@ -30,6 +31,8 @@ export type ProcedurePdfInput = {
   fieldVerifiedAt: string | null
   walkdownNote: string | null
   hash: string | null
+  /** S10 (E-15c): zona del proyecto para las horas de aprobación y verificación. */
+  timezone?: string
 }
 
 const T = {
@@ -49,6 +52,8 @@ const T = {
 }
 
 export async function renderProcedurePdf(x: ProcedurePdfInput): Promise<Uint8Array> {
+  const tz = x.timezone ?? 'UTC'
+  const at = (iso: string | null | undefined) => (iso ? `${dateTimeIn(iso, tz)} ${zoneLabel(tz, new Date(iso))}` : '')
   const L = x.lang
   const r = await Renderer.create()
   r.doc.setTitle(sanitize(`${x.number} R${x.rev} · ${x.title}`))
@@ -109,8 +114,8 @@ export async function renderProcedurePdf(x: ProcedurePdfInput): Promise<Uint8Arr
   r.moveY(8)
   r.accentSection(T.signoff[L])
   r.kv(T.author[L], x.author ?? '—')
-  r.kv(T.approved[L], `${x.approvedBy ?? '—'}  ${x.approvedAt?.slice(0, 16).replace('T', ' ') ?? ''}`)
-  r.kv(T.verified[L], `${x.fieldVerifiedBy ?? '—'}  ${x.fieldVerifiedAt?.slice(0, 16).replace('T', ' ') ?? ''}`)
+  r.kv(T.approved[L], `${x.approvedBy ?? '—'}  ${at(x.approvedAt)}`)
+  r.kv(T.verified[L], `${x.fieldVerifiedBy ?? '—'}  ${at(x.fieldVerifiedAt)}`)
   if (x.walkdownNote) r.kv(T.walkdown[L], x.walkdownNote)
 
   r.finalizePagePlaceholders()

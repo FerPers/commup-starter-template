@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { getProjectPlanContext, addItrsToWorkPlan, createWorkPlanAndAddItrs } from '@/app/actions/work-plans'
+import { browserToday } from '@/lib/time/zone'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
 
   // New plan form
   const [newDisc, setNewDisc]   = useState('')
-  const [newDate, setNewDate]   = useState(new Date().toISOString().slice(0, 10))
+  const [newDate, setNewDate]   = useState(browserToday())
   const [newNotes, setNewNotes] = useState('')
 
   // Per-ITR assigned_to (keyed by itr.id)

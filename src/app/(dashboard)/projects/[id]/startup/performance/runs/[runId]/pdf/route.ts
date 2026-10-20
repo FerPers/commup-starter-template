@@ -13,7 +13,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const db = ctx.supabase
 
   const [{ data: project }, { data: org }, locale, t] = await Promise.all([
-    db.from('projects').select('id, code').eq('id', id).eq('org_id', ctx.orgId).maybeSingle(),
+    db.from('projects').select('id, code, timezone').eq('id', id).eq('org_id', ctx.orgId).maybeSingle(),
     db.from('organizations').select('name').eq('id', ctx.orgId).single(),
     getLocale(),
     getTranslations('Startup'),
@@ -60,6 +60,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const proc = rev.procedures as unknown as { number: string; title: string } | null
 
   const bytes = await renderPerformancePdf({
+    timezone: project.timezone,
     lang: locale === 'en' ? 'en' : 'es',
     orgName: org?.name ?? 'CommUp',
     projectCode: project.code,

@@ -1,6 +1,6 @@
 -- fn: public.take_mgmt_snapshot(uuid, date)
 -- Canónico (S03). Volcado de prod con scripts/sql/canonical-functions.mjs; no editar sin migración.
-CREATE OR REPLACE FUNCTION public.take_mgmt_snapshot(p_project_id uuid, p_date date DEFAULT CURRENT_DATE)
+CREATE OR REPLACE FUNCTION public.take_mgmt_snapshot(p_project_id uuid, p_date date DEFAULT NULL::date)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -9,8 +9,12 @@ AS $function$
 DECLARE
   v_org uuid; r record; v_systems integer := 0;
   v_itr bigint := 0; v_wsum numeric := 0; v_gapp integer := 0; v_gtot integer := 0; v_kpis jsonb;
-  v_from timestamptz := (p_date - 30)::timestamptz; v_to timestamptz := (p_date + 1)::timestamptz;
+  v_tz text; v_from timestamptz; v_to timestamptz;
 BEGIN
+  -- S10 (D-05/D-27): el día y la ventana de 30 días se cortan en la zona del proyecto.
+  v_tz := public.project_timezone(p_project_id);
+  p_date := COALESCE(p_date, public.tz_today(v_tz));
+  v_from := public.tz_day_start(p_date - 30, v_tz); v_to := public.tz_day_start(p_date + 1, v_tz);
   SELECT org_id INTO v_org FROM projects WHERE id = p_project_id;
   IF v_org IS NULL THEN RAISE EXCEPTION 'Proyecto no encontrado' USING ERRCODE = 'P0002'; END IF;
 
@@ -39,7 +43,7 @@ BEGIN
              'answered_pending_close', COUNT(*) FILTER (WHERE status = 'answered'),
              'closed_30d', COUNT(*) FILTER (WHERE closed_at >= v_from AND closed_at < v_to),
              'answered_30d', COUNT(*) FILTER (WHERE responded_at >= v_from AND responded_at < v_to),
-             'on_time_30d', COUNT(*) FILTER (WHERE responded_at >= v_from AND responded_at < v_to AND required_by IS NOT NULL AND responded_at::date <= required_by),
+             'on_time_30d', COUNT(*) FILTER (WHERE responded_at >= v_from AND responded_at < v_to AND required_by IS NOT NULL AND (responded_at AT TIME ZONE v_tz)::date <= required_by),
              'with_due_30d', COUNT(*) FILTER (WHERE responded_at >= v_from AND responded_at < v_to AND required_by IS NOT NULL),
              'avg_days_to_answer_30d', round(AVG(EXTRACT(EPOCH FROM (responded_at - issued_at)) / 86400)
                                        FILTER (WHERE responded_at >= v_from AND responded_at < v_to AND issued_at IS NOT NULL)::numeric, 1),
@@ -50,7 +54,7 @@ BEGIN
              'to_verify', COUNT(*) FILTER (WHERE status = 'done'),
              'overdue', COUNT(*) FILTER (WHERE status IN ('open', 'in_progress') AND due_date < p_date),
              'verified_30d', COUNT(*) FILTER (WHERE verified_at >= v_from AND verified_at < v_to),
-             'on_time_30d', COUNT(*) FILTER (WHERE verified_at >= v_from AND verified_at < v_to AND due_date IS NOT NULL AND done_at::date <= due_date),
+             'on_time_30d', COUNT(*) FILTER (WHERE verified_at >= v_from AND verified_at < v_to AND due_date IS NOT NULL AND (done_at AT TIME ZONE v_tz)::date <= due_date),
              'with_due_30d', COUNT(*) FILTER (WHERE verified_at >= v_from AND verified_at < v_to AND due_date IS NOT NULL))
            FROM actions WHERE project_id = p_project_id),
     'constraints', (SELECT jsonb_build_object(
@@ -60,14 +64,14 @@ BEGIN
                 '2', COUNT(*) FILTER (WHERE status = 'open' AND escalation_level = 2),
                 '3', COUNT(*) FILTER (WHERE status = 'open' AND escalation_level = 3),
                 '4', COUNT(*) FILTER (WHERE status = 'open' AND escalation_level = 4)),
-             'avg_age_days', round(AVG(p_date - created_at::date) FILTER (WHERE status = 'open')::numeric, 1),
+             'avg_age_days', round(AVG(p_date - (created_at AT TIME ZONE v_tz)::date) FILTER (WHERE status = 'open')::numeric, 1),
              'overdue', COUNT(*) FILTER (WHERE status = 'open' AND need_date < p_date),
              'closed_30d', COUNT(*) FILTER (WHERE closed_at >= v_from AND closed_at < v_to))
            FROM project_constraints WHERE project_id = p_project_id),
     -- Cumplimiento del compromiso: gates aprobados en la ventana que tenían compromiso.
     'commitments', (SELECT jsonb_build_object(
              'approved_30d', COUNT(*),
-             'on_time_30d', COUNT(*) FILTER (WHERE a.approved_at::date <= gp.commitment_date))
+             'on_time_30d', COUNT(*) FILTER (WHERE (a.approved_at AT TIME ZONE v_tz)::date <= gp.commitment_date))
            FROM system_gate_approvals a
            JOIN system_gate_plans gp ON gp.system_id = a.system_id AND gp.gate_id = a.gate_id AND gp.commitment_date IS NOT NULL
            WHERE a.project_id = p_project_id AND a.revoked_at IS NULL

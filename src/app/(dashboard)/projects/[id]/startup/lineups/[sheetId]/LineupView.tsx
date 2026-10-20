@@ -11,6 +11,7 @@ import { SyncBanner, SyncTray, useStartupOutbox } from '../../OfflineSync'
 import { TagPicker } from '../../../registers/RegisterFields'
 import { Alert, Chip, btn, card, input, small } from '../../../daily/daily-ui'
 import { SHEET_TONE } from '../../StartupView'
+import { useLocalTime } from '@/lib/use-local-time'
 
 type Item = {
   id: string; ord: number; tag_id: string | null; tag_number: string | null; description: string | null; label: string
@@ -47,7 +48,8 @@ export default function LineupView({ project, sheet, items: serverItems, registe
   const netOk = networkActionsAllowed(!outbox.isOffline, outbox.entries.length)
   const online = !outbox.isOffline
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string | null) => localTime(iso)
   const ids = { projectId: project.id, sheetId: sheet.id }
 
   function act(fn: () => Promise<{ error?: string }>, after?: () => void) {

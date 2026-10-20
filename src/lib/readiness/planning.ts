@@ -88,3 +88,31 @@ export function normalizeWeights(weights: (number | null)[]): number[] {
   const total = w.reduce((s, x) => s + x, 0)
   return w.map(x => (total > 0 ? x / total : 0))
 }
+
+/** Sistema con su avance por gate (de `system_progress_snapshots.per_gate`, mismos pesos que el avance real). */
+export type PlanSystem = { systemId: string; itrTotal: number; gates: { gateId: string; weight: number; itrTotal: number }[] }
+export type GateCommitment = { systemId: string; gateId: string; date: string }
+
+/**
+ * S10 (D-27): línea base de la curva S a partir de los compromisos por gate. Supone que en la fecha
+ * comprometida el gate completa sus ITR (aporte = peso del gate) y la pondera igual que
+ * compute_system_progress / compute_project_progress: Σ peso × avance por sistema, y el proyecto ponderado
+ * por cantidad de ITR. Un gate sin ITR no aporta (tampoco al avance real). Devuelve un valor 0–1 por fecha.
+ */
+export function plannedCurve(systems: PlanSystem[], commitments: GateCommitment[], dates: string[]): number[] {
+  const due = new Map(commitments.map(c => [`${c.systemId}:${c.gateId}`, c.date]))
+  const total = systems.reduce((s, x) => s + x.itrTotal, 0)
+  if (total <= 0) return dates.map(() => 0)
+  return dates.map(d => {
+    let sum = 0
+    for (const s of systems) {
+      if (s.itrTotal <= 0) continue
+      const pct = s.gates.reduce((acc, g) => {
+        const when = due.get(`${s.systemId}:${g.gateId}`)
+        return acc + (g.itrTotal > 0 && when && when <= d ? g.weight : 0)
+      }, 0)
+      sum += pct * s.itrTotal
+    }
+    return Math.round((sum / total) * 10000) / 10000
+  })
+}

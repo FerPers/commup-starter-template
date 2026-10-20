@@ -9,7 +9,7 @@ export default async function DailyReportsPage({ params }: { params: Promise<{ i
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
 
-  const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
+  const { data: project } = await supabase.from('projects').select('id, code, name, timezone').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
 
   const [{ data: reports }, { data: areas }, { data: members }] = await Promise.all([

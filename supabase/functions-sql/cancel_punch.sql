@@ -23,7 +23,7 @@ BEGIN
     RAISE EXCEPTION 'Explica por qué se cancela (mínimo 10 caracteres)' USING ERRCODE = '22023';
   END IF;
 
-  UPDATE punches SET status = 'cancelled', closed_date = CURRENT_DATE WHERE id = p_punch_id;
+  UPDATE punches SET status = 'cancelled', closed_date = public.project_today(v.project_id) WHERE id = p_punch_id;
   INSERT INTO punch_comments (punch_id, user_id, comment) VALUES (p_punch_id, auth.uid(), 'Cancelado: ' || v_reason);
   PERFORM public.punch_log(v, 'cancelled', jsonb_build_object('reason', v_reason, 'category', v.category, 'previousStatus', v.status));
 END;

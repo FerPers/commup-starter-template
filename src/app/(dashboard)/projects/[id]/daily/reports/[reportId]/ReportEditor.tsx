@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import {
   deleteDailyReportDraft, generateDailyReportAi, issueDailyReport, refreshDailyReportData, reviseDailyReport, updateDailyReportSections,
 } from '@/app/actions/daily-report'
-import { REPORT_SECTIONS, progressDelta, type ReportData, type ReportSections } from '@/lib/daily/report'
+import { REPORT_SECTIONS, cutInUtc, progressDelta, reportTotals, type ReportData, type ReportSections } from '@/lib/daily/report'
+import { formatInZone } from '@/lib/time/zone'
 import { Alert, Chip, btn, card, input, label, small } from '../../daily-ui'
 
 type Report = {
@@ -22,7 +23,7 @@ const TONE = { draft: 'amber', issued: 'green', superseded: 'struck' } as const
 const mini: React.CSSProperties = { ...small, fontSize: 'var(--text-xs)', margin: 0 }
 
 export default function ReportEditor({ project, report, canEdit, canIssue, canDelete, aiConfigured }: {
-  project: { id: string; code: string; name: string }
+  project: { id: string; code: string; name: string; timezone: string }
   report: Report
   canEdit: boolean
   canIssue: boolean
@@ -43,6 +44,11 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
   const base = { projectId: project.id, reportId: report.id }
   const d = report.data
   const delta = progressDelta(d.progress)
+  const n = reportTotals(d)
+  // S10 (D12): horas en la zona con la que se cortó el día (un reporte anterior a S10 la cortó en UTC).
+  const locale = useLocale()
+  const tz = d.timezone ?? (cutInUtc(d) ? 'UTC' : project.timezone)
+  const when = (iso: string) => formatInZone(iso, tz, locale)
 
   function run(tag: string, fn: () => Promise<{ error?: string }>, after?: () => void) {
     setError(null); setSaved(false); setBusy(tag)
@@ -133,10 +139,10 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
           <Chip tone={TONE[report.status]}>{t(`report.status.${report.status}`)}</Chip>
           {d.area && <Chip tone="muted">{d.area.code}</Chip>}
         </div>
-        <p style={{ ...small, margin: '6px 0 0' }} suppressHydrationWarning>
-          {project.code} · {report.date} · {t('report.dataAt', { when: new Date(report.dataAt).toLocaleString() })}
-          {report.aiGeneratedAt && <> · {t('report.aiAt', { when: new Date(report.aiGeneratedAt).toLocaleString() })}</>}
-          {report.issuedAt && <> · {t('report.issuedBy', { who: report.issuedBy ?? '—', when: new Date(report.issuedAt).toLocaleString() })}</>}
+        <p style={{ ...small, margin: '6px 0 0' }}>
+          {project.code} · {report.date} · {t('report.dataAt', { when: when(report.dataAt) })}
+          {report.aiGeneratedAt && <> · {t('report.aiAt', { when: when(report.aiGeneratedAt) })}</>}
+          {report.issuedAt && <> · {t('report.issuedBy', { who: report.issuedBy ?? '—', when: when(report.issuedAt) })}</>}
         </p>
         {report.revision > 0 && <p style={{ ...small, margin: '4px 0 0', fontStyle: 'italic' }}>{t('report.revisionOf', { n: report.revision, reason: report.revisionReason ?? '' })}</p>}
         {report.hash && <p style={{ ...mini, marginTop: 4, fontFamily: 'ui-monospace, monospace' }}>sha256 {report.hash}</p>}
@@ -145,6 +151,7 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
       {report.status === 'superseded' && report.laterRevision && (
         <Alert kind="warn">{t('report.superseded')} <Link href={`/projects/${project.id}/daily/reports/${report.laterRevision.id}`}>{report.laterRevision.number}</Link></Alert>
       )}
+      {cutInUtc(d) && <Alert kind="warn">{t('report.utcCut')}</Alert>}
       {error && <Alert kind="error">{error}</Alert>}
       {saved && <Alert kind="ok">{t('form.saved')}</Alert>}
       {editable && !aiConfigured && <Alert kind="warn">{t('report.aiOff')}</Alert>}
@@ -176,33 +183,35 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {fact(t('report.fact.weighted'), `${(Number(d.progress.weighted_pct) * 100).toFixed(1)} %`, delta === null ? t('report.fact.noPrev') : `${delta >= 0 ? '+' : ''}${delta} pp`)}
             {fact(t('report.fact.gates'), `${d.progress.gates_approved}/${d.progress.gates_total}`)}
-            {fact(t('report.fact.itrs'), d.itrs.approved_today.length, t('report.fact.itrsSub', { done: d.itrs.completed_today, wip: d.itrs.in_progress }))}
-            {fact(t('report.fact.punches'), d.punches.raised_today.length, t('report.fact.punchesSub', { closed: d.punches.closed_today, a: d.punches.open_a }))}
+            {fact(t('report.fact.itrs'), n.approvedToday, t('report.fact.itrsSub', { done: d.itrs.completed_today, wip: d.itrs.in_progress }))}
+            {fact(t('report.fact.punches'), n.raisedToday, t('report.fact.punchesSub', { closed: d.punches.closed_today, a: d.punches.open_a }))}
             {fact(t('report.fact.constraints'), Number(lv['1']) + Number(lv['2']) + Number(lv['3']) + Number(lv['4']), `N3 ${lv['3']} · N4 ${lv['4']} · ${t('report.fact.overdue', { n: d.constraints.overdue })}`)}
-            {fact(t('report.fact.actions'), d.actions.open, t('report.fact.overdue', { n: d.actions.overdue.length }))}
+            {fact(t('report.fact.actions'), d.actions.open, t('report.fact.overdue', { n: n.actionsOverdue }))}
           </div>
-          <List title={t('report.list.critical')} rows={d.constraints.open_high.map(c => `${c.number} N${c.level} · ${c.title}${c.system ? ` [${c.system}]` : ''} · ${c.need_date}`)} empty={t('report.list.none')} />
+          <List title={t('report.list.critical')} total={n.constraintsHigh} rows={d.constraints.open_high.map(c => `${c.number} N${c.level} · ${c.title}${c.system ? ` [${c.system}]` : ''} · ${c.need_date}`)} empty={t('report.list.none')} />
           <List title={t('report.list.regressed')} rows={d.gates.regressed.map(g => `${g.system} ${g.gate}`)} empty={t('report.list.none')} />
-          <List title={t('report.list.field')} rows={d.registers_in_field.map(r => `${r.number} · ${r.kind} · ${r.title}${r.system ? ` [${r.system}]` : ''}`)} empty={t('report.list.none')} />
+          <List title={t('report.list.field')} total={n.registersInField} rows={d.registers_in_field.map(r => `${r.number} · ${r.kind} · ${r.title}${r.system ? ` [${r.system}]` : ''}`)} empty={t('report.list.none')} />
           {(d.performance_today ?? []).length > 0 && (
             <List title={t('report.list.performance')} rows={(d.performance_today ?? []).map(p => `${p.number} · ${p.title}${p.system ? ` [${p.system}]` : ''} · ${p.kind === 'run' ? (p.result ? tStartup(`perf.result.${p.result}`) : tStartup(`perf.runStatus.${p.status}`)) : tStartup(`perf.certStatus.${p.status}`)}`)} empty={t('report.list.none')} />
           )}
           <List title={t('report.list.lookahead')} rows={d.lookahead_7d.map(i => `${i.date} · ${i.ref} · ${i.title}${i.system ? ` [${i.system}]` : ''}`)} empty={t('report.list.none')} />
           <p style={mini}>{t('report.dataNote')}</p>
+          {d.as_of && <p style={mini}>{t('report.asOf', { when: when(d.as_of) })}</p>}
         </aside>
       </div>
     </div>
   )
 }
 
-function List({ title, rows, empty }: { title: string; rows: string[]; empty: string }) {
+/** `total`: el total de la BD cuando la lista viene recortada a 30 (S10, D-06). */
+function List({ title, rows, empty, total = rows.length }: { title: string; rows: string[]; empty: string; total?: number }) {
   return (
     <div>
-      <div style={{ ...label, marginBottom: 4 }}>{title} ({rows.length})</div>
+      <div style={{ ...label, marginBottom: 4 }}>{title} ({total})</div>
       {rows.length === 0 ? <p style={mini}>{empty}</p> : (
         <ul style={{ margin: 0, paddingLeft: 16, ...small, fontSize: 'var(--text-xs)', display: 'flex', flexDirection: 'column', gap: 2 }}>
           {rows.slice(0, 12).map((r, i) => <li key={i}>{r}</li>)}
-          {rows.length > 12 && <li>+{rows.length - 12}</li>}
+          {total > 12 && <li>+{total - 12}</li>}
         </ul>
       )}
     </div>

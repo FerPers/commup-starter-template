@@ -2,8 +2,9 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import KpiDashboard from './KpiDashboard'
 import ReadinessKpis, { type MgmtSnapshot } from './ReadinessKpis'
-import { todayIso } from '@/lib/daily/catalog'
-import { addDays } from '@/lib/readiness/planning'
+import { addDays, plannedCurve, type PlanSystem } from '@/lib/readiness/planning'
+import { todayIn } from '@/lib/time/zone'
+import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
 import { getProjectAlerts } from '@/app/actions/alerts'
 import { fetchItrPhaseCounts, sumItr } from '@/lib/list/kpi-query'
@@ -26,7 +27,7 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
   ] = await Promise.all([
     supabase
       .from('projects')
-      .select('id, name, code, start_date, end_date')
+      .select('id, name, code, start_date, end_date, timezone')
       .eq('id', projectId)
       .eq('org_id', membership.org_id)
       .single(),
@@ -53,12 +54,31 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
   })
 
   // Readiness (fase 5, sesión 2): avance ponderado en vivo + snapshots diarios (curva S, KPIs).
-  const since = addDays(todayIso(), -180)
-  const [{ data: progress }, { data: mgmtSnaps }] = await Promise.all([
+  const since = addDays(todayIn(project.timezone), -180)
+  const [{ data: progress }, { data: mgmtSnaps }, { data: commitments }] = await Promise.all([
     supabase.rpc('compute_project_progress', { p_project_id: projectId }),
     supabase.from('mgmt_kpi_snapshots').select('snapshot_date, weighted_pct, gates_approved, gates_total, kpis')
       .eq('project_id', projectId).gte('snapshot_date', since).order('snapshot_date'),
+    // Clave única (system_id, gate_id): orden por sistema + clave gate_id del helper.
+    fetchAllRows(() => supabase.from('system_gate_plans').select('system_id, gate_id, commitment_date')
+      .eq('project_id', projectId).not('commitment_date', 'is', null).order('system_id'), { key: 'gate_id' }).then(rows => ({ data: rows })),
   ])
+
+  // S10 (D-27): línea base desde los compromisos por gate, con los pesos y los ITR del último snapshot por sistema.
+  const lastSnap = mgmtSnaps?.at(-1)?.snapshot_date
+  const sysSnaps = lastSnap
+    ? await fetchAllRows(() => supabase.from('system_progress_snapshots').select('id, system_id, itr_total, per_gate')
+      .eq('project_id', projectId).eq('snapshot_date', lastSnap))
+    : []
+  const planSystems: PlanSystem[] = sysSnaps.map(s => ({
+    systemId: s.system_id, itrTotal: s.itr_total,
+    gates: ((s.per_gate ?? []) as { gate_id: string; weight: number; itr_total: number }[])
+      .map(g => ({ gateId: g.gate_id, weight: Number(g.weight), itrTotal: g.itr_total })),
+  }))
+  const plan = (commitments ?? []).map(c => ({ systemId: c.system_id, gateId: c.gate_id, date: c.commitment_date as string }))
+  const planDates = Array.from(new Set([...(mgmtSnaps ?? []).map(m => m.snapshot_date), ...plan.map(p => p.date)]))
+    .filter(d => d >= since).sort()
+  const planPcts = plan.length > 0 && planSystems.length > 0 ? plannedCurve(planSystems, plan, planDates) : []
   const itrSum = (progress ?? []).reduce((sum, p) => sum + p.itr_total, 0)
   const livePct = itrSum > 0 ? (progress ?? []).reduce((sum, p) => sum + Number(p.weighted_pct) * p.itr_total, 0) / itrSum : 0
 
@@ -84,6 +104,7 @@ export default async function KpiPage({ params }: { params: Promise<{ id: string
         total: (progress ?? []).reduce((sum, p) => sum + p.gates_total, 0),
       }}
       snapshots={(mgmtSnaps ?? []).map(m => ({ ...m, weighted_pct: Number(m.weighted_pct), kpis: m.kpis as MgmtSnapshot['kpis'] }))}
+      plan={planPcts.map((pct, i) => ({ date: planDates[i], pct }))}
     />
     </>
   )

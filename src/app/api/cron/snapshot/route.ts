@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = createAdminClient()
-  const today = new Date().toISOString().split('T')[0]
 
   // ── Load all active projects ──────────────────────────────────────────
   let projects: { id: string }[]
@@ -45,11 +44,13 @@ export async function POST(req: NextRequest) {
     const pid = project.id
 
     try {
-      // S09 (B-01/B-25): conteos completos en SQL e idempotente (antes: ≤1000 filas en JS, borrar + insertar)
-      const { error: kpiErr } = await supabase.rpc('take_kpi_snapshot', { p_project_id: pid, p_date: today })
+      // S09 (B-01/B-25): conteos completos en SQL e idempotente (antes: ≤1000 filas en JS, borrar + insertar).
+      // S10 (D-27/B-29): sin p_date la BD usa el día local del proyecto (projects.timezone); el cron de las
+      // 02:00 UTC es el cierre del día anterior en América y ya no queda etiquetado con la fecha siguiente.
+      const { error: kpiErr } = await supabase.rpc('take_kpi_snapshot', { p_project_id: pid })
 
       // ── Readiness (fase 5): avance ponderado por sistema y KPIs de gestión diaria, en SQL ──
-      const { error: mgmtErr } = await supabase.rpc('take_mgmt_snapshot', { p_project_id: pid, p_date: today })
+      const { error: mgmtErr } = await supabase.rpc('take_mgmt_snapshot', { p_project_id: pid })
 
       const errMsg = kpiErr?.message ?? mgmtErr?.message
       results.push({ projectId: pid, ok: !errMsg, error: errMsg })
@@ -62,7 +63,6 @@ export async function POST(req: NextRequest) {
   const failed = results.filter(r => !r.ok).length
 
   return NextResponse.json({
-    date: today,
     total: results.length,
     ok,
     failed,

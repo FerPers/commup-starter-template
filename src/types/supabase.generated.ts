@@ -4621,6 +4621,7 @@ export type Database = {
           early_close_reason: string | null
           evaluation: Json | null
           evaluation_hash: string | null
+          evaluation_preview: Json | null
           formal_start_note: string | null
           formal_started_at: string | null
           formal_started_by: string | null
@@ -4656,6 +4657,7 @@ export type Database = {
           early_close_reason?: string | null
           evaluation?: Json | null
           evaluation_hash?: string | null
+          evaluation_preview?: Json | null
           formal_start_note?: string | null
           formal_started_at?: string | null
           formal_started_by?: string | null
@@ -4691,6 +4693,7 @@ export type Database = {
           early_close_reason?: string | null
           evaluation?: Json | null
           evaluation_hash?: string | null
+          evaluation_preview?: Json | null
           formal_start_note?: string | null
           formal_started_at?: string | null
           formal_started_by?: string | null
@@ -6238,6 +6241,7 @@ export type Database = {
           region: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
+          timezone: string
         }
         Insert: {
           client?: string | null
@@ -6252,6 +6256,7 @@ export type Database = {
           region?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
+          timezone?: string
         }
         Update: {
           client?: string | null
@@ -6266,6 +6271,7 @@ export type Database = {
           region?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
+          timezone?: string
         }
         Relationships: [
           {
@@ -12268,6 +12274,8 @@ export type Database = {
           status: Database["public"]["Enums"]["punch_status"]
         }[]
       }
+      project_timezone: { Args: { p_project_id: string }; Returns: string }
+      project_today: { Args: { p_project_id: string }; Returns: string }
       propose_vendor_recommendation: {
         Args: {
           p_description: string
@@ -12393,6 +12401,10 @@ export type Database = {
       reopen_itr_atomic: {
         Args: { p_itr_id: string; p_reason: string }
         Returns: Json
+      }
+      replace_daily_report_ai_draft: {
+        Args: { p_draft: Json; p_model: string; p_report_id: string }
+        Returns: undefined
       }
       request_ownership_transfer: {
         Args: {
@@ -12752,6 +12764,8 @@ export type Database = {
         Args: { p_comment?: string; p_to: string; p_tq_id: string }
         Returns: string
       }
+      tz_day_start: { Args: { p_date: string; p_tz: string }; Returns: string }
+      tz_today: { Args: { p_tz: string }; Returns: string }
       update_action: {
         Args: {
           p_action_id: string

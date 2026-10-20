@@ -9,6 +9,7 @@ import { canReleaseHold, nextRunStep, runProgress, type HoldCapacity, type RunSt
 import { networkActionsAllowed, overlayRun, type StartupEntry } from '@/lib/sync/startup-outbox-utils'
 import { Alert, Chip, btn, card, input, small } from '../../../daily/daily-ui'
 import { SyncBanner, SyncTray, useStartupOutbox } from '../../OfflineSync'
+import { useLocalTime } from '@/lib/use-local-time'
 
 type Step = {
   stepId: string; ord: number; status: RunStepStatus; actual: string | null; comment: string | null
@@ -36,7 +37,8 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
   const [actual, setActual] = useState('')
   const [note, setNote] = useState('')
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string | null) => localTime(iso)
   const ids = { projectId: project.id, runId: serverRun.id }
   // Offline (F6): lo capturado sin red se superpone a lo que trajo el servidor hasta sincronizar.
   const outbox = useStartupOutbox('run', serverRun.id)

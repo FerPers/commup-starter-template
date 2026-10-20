@@ -7,6 +7,7 @@ import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { updatePssrReviewDueDate } from '@/app/actions/pssr'
 import { STATUS_KEY_MAP, STATUS_STYLES, type ReviewStatus } from './pssr-review-shared'
+import { browserToday } from '@/lib/time/zone'
 
 export default function PssrReviewHeader({
   projectId,
@@ -95,7 +96,7 @@ export default function PssrReviewHeader({
 
           {/* Due date chip / editor */}
           {(() => {
-            const today = new Date().toISOString().split('T')[0]
+            const today = browserToday()
             const isOverdue = !!(savedDueDate && savedDueDate < today && review.status !== 'approved')
             const canEditDate = canApprove && review.status !== 'approved'
 

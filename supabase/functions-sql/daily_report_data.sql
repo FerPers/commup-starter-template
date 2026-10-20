@@ -1,17 +1,21 @@
 -- fn: public.daily_report_data(uuid, date, uuid)
 -- Canónico (S03). Volcado de prod con scripts/sql/canonical-functions.mjs; no editar sin migración.
-CREATE OR REPLACE FUNCTION public.daily_report_data(p_project_id uuid, p_date date DEFAULT CURRENT_DATE, p_area_id uuid DEFAULT NULL::uuid)
+CREATE OR REPLACE FUNCTION public.daily_report_data(p_project_id uuid, p_date date DEFAULT NULL::date, p_area_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 DECLARE
-  v_proj projects%ROWTYPE; v_from timestamptz := p_date::timestamptz; v_to timestamptz := (p_date + 1)::timestamptz;
+  v_proj projects%ROWTYPE; v_from timestamptz; v_to timestamptz; v_sys uuid[];
   v_now numeric; v_itr bigint; v_prev record; v_gapp integer; v_gtot integer; v_out jsonb;
 BEGIN
   SELECT * INTO v_proj FROM projects WHERE id = p_project_id;
   IF v_proj.id IS NULL THEN RAISE EXCEPTION 'Proyecto no encontrado' USING ERRCODE = 'P0002'; END IF;
+  -- S10 (D-05/E-15, D12): el día del reporte se corta en la zona del proyecto, no en UTC.
+  p_date := COALESCE(p_date, public.tz_today(v_proj.timezone));
+  v_from := public.tz_day_start(p_date, v_proj.timezone);
+  v_to := public.tz_day_start(p_date + 1, v_proj.timezone);
   IF auth.uid() IS NOT NULL AND NOT public.is_project_member(p_project_id) THEN
     RAISE EXCEPTION 'Access denied' USING ERRCODE = '42501';
   END IF;
@@ -19,22 +23,25 @@ BEGIN
     RAISE EXCEPTION 'El área no pertenece al proyecto' USING ERRCODE = '22023';
   END IF;
 
-  CREATE TEMP TABLE IF NOT EXISTS _dr_sys (id uuid PRIMARY KEY, code text) ON COMMIT DROP;
-  TRUNCATE _dr_sys;
-  INSERT INTO _dr_sys SELECT s.id, s.code FROM systems s WHERE s.project_id = p_project_id AND (p_area_id IS NULL OR s.area_id = p_area_id);
+  -- S10 (B-20): sistemas del alcance en un arreglo (antes una TEMP TABLE por llamada).
+  v_sys := ARRAY(SELECT s.id FROM systems s WHERE s.project_id = p_project_id AND (p_area_id IS NULL OR s.area_id = p_area_id));
 
   -- Avance ponderado actual vs último snapshot previo.
   SELECT COALESCE(SUM(pp.weighted_pct * pp.itr_total), 0), COALESCE(SUM(pp.itr_total), 0), COALESCE(SUM(pp.gates_approved), 0), COALESCE(SUM(pp.gates_total), 0)
     INTO v_now, v_itr, v_gapp, v_gtot
-  FROM public.compute_project_progress(p_project_id) pp JOIN _dr_sys ds ON ds.id = pp.system_id;
+  FROM public.compute_project_progress(p_project_id) pp WHERE pp.system_id = ANY (v_sys);
   SELECT NULL::date AS snapshot_date, NULL::numeric AS weighted_pct INTO v_prev;
   IF p_area_id IS NULL THEN
     SELECT snapshot_date, weighted_pct INTO v_prev FROM mgmt_kpi_snapshots
      WHERE project_id = p_project_id AND snapshot_date < p_date ORDER BY snapshot_date DESC LIMIT 1;
   END IF;
 
-  v_out := jsonb_build_object(
+  WITH _dr_sys AS MATERIALIZED (SELECT s.id, s.code FROM systems s WHERE s.id = ANY (v_sys))
+  SELECT jsonb_build_object(
     'date', p_date,
+    -- S10 (D12/D-29): zona con la que se cortó el día y momento del cálculo. Avance, gates en regresión,
+    -- abiertos y vencidos son el estado al generar (no se reconstruyen para fechas pasadas).
+    'timezone', v_proj.timezone, 'as_of', now(),
     'project', jsonb_build_object('code', v_proj.code, 'name', v_proj.name),
     'area', (SELECT jsonb_build_object('code', a.code, 'name', a.name) FROM areas a WHERE a.id = p_area_id),
     'progress', jsonb_build_object(
@@ -44,17 +51,25 @@ BEGIN
     'itrs', jsonb_build_object(
       'completed_today', (SELECT COUNT(*) FROM itrs i JOIN subsystems ss ON ss.id = i.subsystem_id JOIN _dr_sys ds ON ds.id = ss.system_id
                            WHERE i.project_id = p_project_id AND i.completed_date = p_date),
+      -- S10 (B-20): parte de las firmas del día (índice itr_signatures.signed_at) y no de todos los ITR aprobados.
+      -- Aprobado hoy = aprobado y sin firmas posteriores al día. S10 (D-06): total aparte de la lista recortada.
+      'approved_today_count', (SELECT COUNT(*) FROM itrs i JOIN subsystems ss ON ss.id = i.subsystem_id JOIN _dr_sys ds ON ds.id = ss.system_id
+          WHERE i.id IN (SELECT sg.itr_id FROM itr_signatures sg WHERE sg.signed_at >= v_from AND sg.signed_at < v_to)
+            AND i.project_id = p_project_id AND i.status = 'approved'
+            AND NOT EXISTS (SELECT 1 FROM itr_signatures sg WHERE sg.itr_id = i.id AND sg.signed_at >= v_to)),
       'approved_today', COALESCE((SELECT jsonb_agg(x ORDER BY x ->> 'system', x ->> 'number') FROM (
           SELECT jsonb_build_object('number', i.itr_number, 'tag', t.tag_number, 'system', ds.code) AS x
           FROM itrs i JOIN subsystems ss ON ss.id = i.subsystem_id JOIN _dr_sys ds ON ds.id = ss.system_id
           LEFT JOIN tags t ON t.id = i.tag_id
-          WHERE i.project_id = p_project_id AND i.status = 'approved'
-            AND (SELECT MAX(sg.signed_at) FROM itr_signatures sg WHERE sg.itr_id = i.id) >= v_from
-            AND (SELECT MAX(sg.signed_at) FROM itr_signatures sg WHERE sg.itr_id = i.id) < v_to
-          LIMIT 30) q), '[]'::jsonb),
+          WHERE i.id IN (SELECT sg.itr_id FROM itr_signatures sg WHERE sg.signed_at >= v_from AND sg.signed_at < v_to)
+            AND i.project_id = p_project_id AND i.status = 'approved'
+            AND NOT EXISTS (SELECT 1 FROM itr_signatures sg WHERE sg.itr_id = i.id AND sg.signed_at >= v_to)
+          ORDER BY ds.code, i.itr_number LIMIT 30) q), '[]'::jsonb),
       'in_progress', (SELECT COUNT(*) FROM itrs i JOIN subsystems ss ON ss.id = i.subsystem_id JOIN _dr_sys ds ON ds.id = ss.system_id
                        WHERE i.project_id = p_project_id AND i.status = 'in_progress')),
     'punches', jsonb_build_object(
+      'raised_today_count', (SELECT COUNT(*) FROM punches p JOIN subsystems ss ON ss.id = p.subsystem_id JOIN _dr_sys ds ON ds.id = ss.system_id
+          WHERE p.project_id = p_project_id AND p.created_at >= v_from AND p.created_at < v_to),
       'raised_today', COALESCE((SELECT jsonb_agg(x) FROM (
           SELECT jsonb_build_object('number', p.punch_number, 'category', p.category, 'description', left(p.description, 160),
                                     'tag', t.tag_number, 'system', ds.code) AS x
@@ -89,6 +104,8 @@ BEGIN
       'escalated_today', COALESCE((SELECT jsonb_agg(jsonb_build_object('number', c.number, 'title', c.title, 'system', ds.code, 'from', e.from_value, 'to', e.to_value, 'reason', e.comment) ORDER BY c.number)
           FROM mgmt_events e JOIN project_constraints c ON c.id = e.entity_id JOIN _dr_sys ds ON ds.id = c.system_id
           WHERE e.project_id = p_project_id AND e.entity_kind = 'constraint' AND e.action = 'escalated' AND e.created_at >= v_from AND e.created_at < v_to), '[]'::jsonb),
+      'open_high_count', (SELECT COUNT(*) FROM project_constraints c JOIN _dr_sys ds ON ds.id = c.system_id
+          WHERE c.project_id = p_project_id AND c.status = 'open' AND (c.escalation_level >= 3 OR c.need_date < p_date)),
       'open_high', COALESCE((SELECT jsonb_agg(x) FROM (
           SELECT jsonb_build_object('number', c.number, 'title', c.title, 'system', ds.code, 'level', c.escalation_level, 'need_date', c.need_date,
                                     'impact', c.impact_kind, 'recovery', left(c.recovery_plan, 200)) AS x
@@ -100,6 +117,8 @@ BEGIN
                 AND (p_area_id IS NULL OR a.system_id IN (SELECT id FROM _dr_sys))),
       'verified_today', (SELECT COUNT(*) FROM actions a WHERE a.project_id = p_project_id AND a.verified_at >= v_from AND a.verified_at < v_to
                           AND (p_area_id IS NULL OR a.system_id IN (SELECT id FROM _dr_sys))),
+      'overdue_count', (SELECT COUNT(*) FROM actions a WHERE a.project_id = p_project_id AND a.status IN ('open', 'in_progress') AND a.due_date < p_date
+                         AND (p_area_id IS NULL OR a.system_id IN (SELECT id FROM _dr_sys))),
       'overdue', COALESCE((SELECT jsonb_agg(x) FROM (
           SELECT jsonb_build_object('number', a.number, 'title', a.title, 'due_date', a.due_date, 'priority', a.priority,
                                     'system', (SELECT code FROM systems WHERE id = a.system_id)) AS x
@@ -112,6 +131,8 @@ BEGIN
           'overdue', COUNT(*) FILTER (WHERE status = 'issued' AND required_by < p_date),
           'design_changes_today', COUNT(*) FILTER (WHERE design_change AND responded_at >= v_from AND responded_at < v_to))
         FROM technical_queries q WHERE q.project_id = p_project_id AND (p_area_id IS NULL OR q.system_id IN (SELECT id FROM _dr_sys))),
+    'registers_in_field_count', (SELECT COUNT(*) FROM register_items ri WHERE ri.project_id = p_project_id AND ri.status IN ('active', 'removed')
+          AND (p_area_id IS NULL OR ri.system_id IN (SELECT id FROM _dr_sys))),
     'registers_in_field', COALESCE((SELECT jsonb_agg(x) FROM (
           SELECT jsonb_build_object('number', ri.number, 'kind', ri.kind, 'status', ri.status, 'title', ri.title,
                                     'system', (SELECT code FROM systems WHERE id = ri.system_id)) AS x
@@ -140,7 +161,7 @@ BEGIN
                                        FROM (SELECT * FROM startup_event_params WHERE event_id = ev.id AND source <> 'iiot_missing' ORDER BY created_at LIMIT 4) pr), '[]'::jsonb)) AS x
           FROM startup_events ev JOIN _dr_sys ds ON ds.id = ev.system_id
           WHERE ev.project_id = p_project_id AND ev.status <> 'voided' AND ev.occurred_at >= v_from AND ev.occurred_at < v_to
-          LIMIT 30) q), '[]'::jsonb),
+          ORDER BY ev.occurred_at LIMIT 30) q), '[]'::jsonb),
     -- F7: intentos de prueba de desempeño cerrados o con resultado del día, y certificados aceptados.
     'performance_today', COALESCE((SELECT jsonb_agg(x ORDER BY x ->> 'at') FROM (
           SELECT jsonb_build_object('kind', 'run', 'number', pr.number, 'title', pt.title, 'system', ds.code,
@@ -155,7 +176,7 @@ BEGIN
           WHERE pc.project_id = p_project_id AND pc.status = 'accepted'
             AND GREATEST(pc.operations_signed_at, pc.client_signed_at) >= v_from AND GREATEST(pc.operations_signed_at, pc.client_signed_at) < v_to
           LIMIT 30) q), '[]'::jsonb)
-  );
+  ) INTO v_out;
   RETURN v_out;
 END;
 $function$;

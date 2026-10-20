@@ -10,6 +10,7 @@ import {
   type Evaluation, type PerfResult,
 } from '@/lib/performance/catalog'
 import { Alert, Chip, Field, btn, card, input, label, small } from '../../../../daily/daily-ui'
+import { useLocalTime } from '@/lib/use-local-time'
 
 // Evaluación de un intento (fase 7, sesión 2): la calcula la BD (evaluate_performance_run); aquí solo se
 // muestra y se registra el resultado. Una vez registrado, la evaluación queda congelada con hash.
@@ -29,6 +30,7 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
   canLead: boolean
 }) {
   const t = useTranslations('Startup')
+  const localTime = useLocalTime()  // S10 (E-15b)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -132,7 +134,7 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
       {/* Resultado */}
       {frozen ? (
         <div style={{ ...small, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span suppressHydrationWarning>{t('perf.eval.recordedBy', { who: who(run.result_by), when: run.result_at ? new Date(run.result_at).toLocaleString() : '' })}</span>
+          <span>{t('perf.eval.recordedBy', { who: who(run.result_by), when: localTime(run.result_at) })}</span>
           {run.result_reason && <span>{t('perf.eval.reason')}: {run.result_reason}</span>}
           {action && <span>{t('perf.eval.action')}: <Link href={`/projects/${projectId}/daily/action/${action.id}`} style={{ color: 'var(--primary-600, #2563eb)' }}>{action.number}</Link></span>}
           {run.evaluation_hash && <span style={{ fontFamily: 'ui-monospace, monospace' }}>sha256 {run.evaluation_hash.slice(0, 16)}…</span>}

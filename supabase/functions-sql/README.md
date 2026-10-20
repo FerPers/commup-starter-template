@@ -17,6 +17,11 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 | `guard_assigned_itr_template` / `create_itr_template_revision` / `clone_itr_template_from_catalog` | Plantillas: inmutables con ITR, revisiones y clones del catálogo |
 | `transition_procedure_revision` | Flujo de revisiones de procedimientos |
 | `add_mgmt_attachment` / `update_punch_ops_status` | Evidencias de gestión y estado operativo del punch |
+| `project_today` / `project_timezone` | «Hoy» del proyecto (`projects.timezone`, S10/D12). Toda fecha «de hoy» en SQL pasa por aquí, no por `CURRENT_DATE` |
+| `create_daily_report_draft` / `refresh_daily_report_data` / `set_daily_report_ai_draft` / `replace_daily_report_ai_draft` / `update_daily_report_sections` / `issue_daily_report` / `revise_daily_report` / `open_shift_handover` / `handover_snapshot` | Reporte diario y relevo (S10) |
+| `take_kpi_snapshot` / `preservation_is_overdue` / `preservation_due_counts` | Snapshot KPI y vencidas de preservación (S09/S10) |
+| `evaluate_performance_run` | Evaluación previa de desempeño, guardada en `evaluation_preview` (S10/B-26) |
+| Sellos de fecha con el día del proyecto (S10) | `sign_itr_atomic`, `refresh_itr_status`, `cancel_punch`, `verify_punch`, `finalize_preservation_record`, `itr_test_equipment_fill`, `record_decision`, `record_competency`, `person_system_level`, `add_document_revision`, `issue_document_revision`, `add_vendor_report`, `record_vendor_activity_result`, `analytics_project_forecast` |
 
 ## Cambiar una función
 

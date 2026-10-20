@@ -23,7 +23,7 @@ BEGIN
   v_status := CASE WHEN v_fail THEN 'rejected' WHEN v_complete THEN 'completed'
                    WHEN COALESCE((e->>'completed_count')::int, 0) > 0 THEN 'in_progress' ELSE 'not_started' END;
   UPDATE itrs SET status = v_status::itr_status, progress_pct = COALESCE((e->>'progress_pct')::numeric, 0),
-    completed_date = CASE WHEN v_complete AND NOT v_fail THEN COALESCE(v.completed_date, CURRENT_DATE) ELSE NULL END
+    completed_date = CASE WHEN v_complete AND NOT v_fail THEN COALESCE(v.completed_date, public.project_today(v.project_id)) ELSE NULL END
   WHERE id = p_itr_id;
   RETURN jsonb_build_object('status', v_status, 'progress_pct', COALESCE((e->>'progress_pct')::numeric, 0), 'changed', v_status IS DISTINCT FROM v.status::text);
 END;

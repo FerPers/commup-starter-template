@@ -13,6 +13,7 @@ import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
 import type { SortDir } from '@/lib/list/params'
 import { toSafeCsv } from '@/lib/excel/sanitize'
+import { browserToday } from '@/lib/time/zone'
 
 type Project    = { id: string; name: string; code: string }
 type Phase      = { id: string; code: string; name: string; color: string; order_index: number }
@@ -153,7 +154,7 @@ export default function ItrListGlobal({
       const href = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = href
-      a.download = `itrs_${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = `itrs_${browserToday()}.csv`
       a.click()
       URL.revokeObjectURL(href)
     })

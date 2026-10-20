@@ -11,6 +11,7 @@ import {
 } from '@/lib/startup/catalog'
 import { TagPicker } from '../../registers/RegisterFields'
 import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, linkStyle, small } from '../../daily/daily-ui'
+import { useLocalTime } from '@/lib/use-local-time'
 
 type Ev = {
   id: string; number: string; systemId: string; kind: 'milestone' | 'free'; milestone: Milestone | null; category: EventCategory | null
@@ -57,7 +58,8 @@ export default function EventsView({ project, systems, initialSystemId, events, 
   const [prereq, setPrereq] = useState<Prereq | null>(null)
   const root = `/projects/${project.id}/startup`
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string) => new Date(iso).toLocaleString()
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string) => localTime(iso)
   const sysCode = (id: string) => systems.find(s => s.id === id)?.code ?? '—'
 
   const live = events.filter(e => e.status !== 'voided')

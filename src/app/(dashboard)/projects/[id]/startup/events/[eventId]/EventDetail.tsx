@@ -9,6 +9,7 @@ import { addStartupEventParam, voidStartupEvent, witnessStartupEvent } from '@/a
 import { canWitness, type EventCategory, type Milestone, type StartupEventStatus } from '@/lib/startup/catalog'
 import { Alert, Chip, btn, card, input, label, small } from '../../../daily/daily-ui'
 import { EVENT_TONE } from '../EventsView'
+import { useLocalTime } from '@/lib/use-local-time'
 
 type Param = {
   id: string; signal_id: string | null; label: string; value: number | null; value_text: string | null; unit: string | null
@@ -34,7 +35,8 @@ export default function EventDetail({ project, event: e, params, series, names, 
   const [error, setError] = useState<string | null>(null)
   const [manual, setManual] = useState({ label: '', value: '', unit: '' })
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
-  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '')
+  const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
+  const when = (iso: string | null) => localTime(iso)
   const ids = { projectId: project.id, eventId: e.id }
   const open = e.status === 'pending_witness' || e.status === 'recorded'
   const root = `/projects/${project.id}/startup`

@@ -12,7 +12,7 @@ export default async function DailyReportPage({ params }: { params: Promise<{ id
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
 
-  const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
+  const { data: project } = await supabase.from('projects').select('id, code, name, timezone').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
   const { data: r } = await supabase.from('daily_reports').select('*').eq('id', reportId).eq('project_id', id).maybeSingle()
   if (!r) notFound()

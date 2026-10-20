@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { browserToday } from '@/lib/time/zone'
 import {
   createWorkPlan,
   updateWorkPlanStatus,
@@ -98,7 +99,7 @@ export default function WorkPlansGlobal({
   const [showCreate, setShowCreate] = useState(false)
   const [createProject, setCreateProject]   = useState('')
   const [createDisc, setCreateDisc]         = useState('')
-  const [createDate, setCreateDate]         = useState(new Date().toISOString().slice(0, 10))
+  const [createDate, setCreateDate]         = useState(browserToday())
   const [createNotes, setCreateNotes]       = useState('')
   const [createError, setCreateError]       = useState<string | null>(null)
   const [createPending, startCreateTransition] = useTransition()
@@ -167,7 +168,7 @@ export default function WorkPlansGlobal({
       if (res.error) { setCreateError(res.error); return }
       setShowCreate(false)
       setCreateProject(''); setCreateDisc(''); setCreateNotes('')
-      setCreateDate(new Date().toISOString().slice(0, 10))
+      setCreateDate(browserToday())
       router.refresh()
     })
   }

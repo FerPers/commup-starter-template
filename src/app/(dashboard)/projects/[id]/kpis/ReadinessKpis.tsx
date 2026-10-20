@@ -31,16 +31,23 @@ const label: React.CSSProperties = { fontSize: 'var(--text-xs)', fontWeight: 600
 const sub: React.CSSProperties = { fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 4 }
 const rate = (ok: number, of: number) => (of > 0 ? `${Math.round((ok / of) * 100)} %` : '—')
 
-export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots }: {
+export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots, plan = [] }: {
   projectId: string
   livePct: number
   liveGates: { approved: number; total: number }
   snapshots: MgmtSnapshot[]
+  /** S10 (D-27): línea base desde los compromisos por gate (0–1 por fecha). */
+  plan?: { date: string; pct: number }[]
 }) {
   const t = useTranslations('Kpis.readiness')
   const last = snapshots.at(-1)
   const k = last?.kpis ?? {}
-  const data = snapshots.map(s => ({ date: s.snapshot_date.slice(5), pct: Number((s.weighted_pct * 100).toFixed(1)) }))
+  // Real (snapshots) y plan (compromisos) sobre el mismo eje de fechas.
+  const byDate = new Map<string, { date: string; pct?: number; plan?: number }>()
+  for (const s of snapshots) byDate.set(s.snapshot_date, { date: s.snapshot_date.slice(5), pct: Number((s.weighted_pct * 100).toFixed(1)) })
+  for (const p of plan) byDate.set(p.date, { ...(byDate.get(p.date) ?? { date: p.date.slice(5) }), plan: Number((p.pct * 100).toFixed(1)) })
+  const data = [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v)
+  const hasPlan = plan.length > 0
   const lv = k.constraints?.by_level ?? {}
   const su = k.startup
   const suDone = (su?.successful ?? 0) + (su?.failed ?? 0)
@@ -90,7 +97,7 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
       </div>
       <div style={{ ...card, padding: 16 }}>
         <div style={{ ...label, marginBottom: 10 }}>{t('curve')}</div>
-        {data.length < 2 ? (
+        {snapshots.length < 2 && !hasPlan ? (
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: 0 }}>{t('curveEmpty')}</p>
         ) : (
           <ResponsiveContainer width="100%" height={240}>
@@ -98,8 +105,9 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={v => [`${String(v)} %`, t('weighted')]} />
-              <Line type="monotone" dataKey="pct" stroke="var(--primary-500, #2563eb)" strokeWidth={2} dot={false} />
+              <Tooltip formatter={(v, name) => [`${String(v)} %`, name === 'plan' ? t('plan') : t('weighted')]} />
+              <Line type="monotone" dataKey="pct" stroke="var(--primary-500, #2563eb)" strokeWidth={2} dot={false} connectNulls />
+              {hasPlan && <Line type="stepAfter" dataKey="plan" stroke="var(--text-muted, #64748b)" strokeDasharray="5 4" strokeWidth={1.5} dot={false} connectNulls />}
             </LineChart>
           </ResponsiveContainer>
         )}

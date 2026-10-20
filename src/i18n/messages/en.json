@@ -854,7 +854,8 @@
       "actionsHint": "{open} open · {overdue} overdue · {verify} to verify",
       "constraints": "Open constraints",
       "constraintsHint": "L1 {l1} · L2 {l2} · L3 {l3} · L4 {l4} · average age {age} d",
-      "curve": "S-curve — weighted physical progress",
+      "curve": "S-curve — weighted physical progress (dashed: plan from gate commitments)",
+      "plan": "Plan (commitments)",
       "curveEmpty": "The curve appears from the second daily snapshot.",
       "startup": "First start-up success",
       "startupHint": "No trip or shutdown until stable operation · {ok} of {done} · {pending} pending",
@@ -3671,6 +3672,8 @@
         "performance": "Performance tests"
       },
       "dataNote": "PDF figures come from this data, not from the text. “Refresh data” retakes the snapshot (draft only).",
+      "utcCut": "This report was built before the project time zone existed: its day was cut in UTC. It stays as issued; issue a revision to correct it.",
+      "asOf": "Progress, regressed gates, open and overdue items: status as of {when} (not rebuilt for past dates).",
       "aiReplaceConfirm": "The report already has text. Replace it with the AI draft? (Cancel = AI only fills empty sections)",
       "issueConfirm": "Once issued the report becomes immutable. Issue now?",
       "revisePrompt": "Reason for the revision:"
@@ -4213,6 +4216,7 @@
       "confirmCancel": "Cancel transfer"
     },
     "perf": {
+      "pointsTruncated": "The series has more than 30,000 points: the chart and readings show only the first ones. The evaluation (in the database) uses all of them.",
       "subtitle": "Performance test (ch. 18): approved definition with measurable criteria, attempt with stabilization and formal period, disturbances and frozen data.",
       "new": "New test",
       "titlePlaceholder": "E.g. C-103 compressor capacity",

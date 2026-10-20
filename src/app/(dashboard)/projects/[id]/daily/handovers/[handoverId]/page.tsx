@@ -11,7 +11,7 @@ export default async function HandoverPage({ params }: { params: Promise<{ id: s
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
 
-  const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
+  const { data: project } = await supabase.from('projects').select('id, code, name, timezone').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
   const { data: h } = await supabase.from('shift_handovers').select('*').eq('id', handoverId).eq('project_id', id).maybeSingle()
   if (!h) notFound()
