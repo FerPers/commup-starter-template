@@ -218,10 +218,15 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
   })
 
   it('Cat A cerrado, 1 Cat B abierto: ámbar (listo con condiciones); TS amarillo', async () => {
-    // Cerrar exige verificación en campo por otra persona (fase 4, migración 20261016120000) y este test
-    // tiene un solo usuario: para el gate, cancelled es tan terminal como closed.
-    const { error: closeErr } = await a.from('punches').update({ status: 'cancelled' }).eq('subsystem_id', ids.subsystem).eq('category', 'A')
-    expect(closeErr).toBeNull()
+    // Cerrar exige verificación en campo por otra persona (fase 4) y, desde S06 (D8), cancelar exige cancel_punch
+    // por un supervisor distinto de quien lo levantó. Este test tiene un solo usuario: el REST a «cancelled» falla
+    // (criterio de cierre de S06) y el Cat A se elimina (editor), que para el gate es tan terminal como cerrarlo.
+    const { error: restCancel } = await a.from('punches').update({ status: 'cancelled' }).eq('subsystem_id', ids.subsystem).eq('category', 'A')
+    expect(restCancel?.code).toBe('42501')
+    const { error: selfCancel } = await a.rpc('cancel_punch', { p_punch_id: (await a.from('punches').select('id').eq('subsystem_id', ids.subsystem).eq('category', 'A').single()).data!.id, p_reason: 'prueba de independencia S06' })
+    expect(selfCancel?.message).toMatch(/distinta de quien lo levantó/)
+    const { error: delErr } = await a.from('punches').delete().eq('subsystem_id', ids.subsystem).eq('category', 'A')
+    expect(delErr).toBeNull()
     const r = await readiness()
     expect(gate(r)).toMatchObject({ level: 'yellow', ready: true })
     const el = await tsEligibility()
@@ -242,8 +247,9 @@ describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numer
     expect(await tsEligibility()).toMatchObject({ eligible: 'red', catBOverLimit: true })
   })
 
-  it('Cat B cancelados y Cat C abiertos: verde (Cat C no bloquea); TS verde', async () => {
-    await a.from('punches').update({ status: 'cancelled' }).eq('subsystem_id', ids.subsystem).eq('category', 'B')
+  it('Cat B eliminados y Cat C abiertos: verde (Cat C no bloquea); TS verde', async () => {
+    // S06: un solo usuario no puede cancelar lo que levantó; se eliminan (editor).
+    await a.from('punches').delete().eq('subsystem_id', ids.subsystem).eq('category', 'B')
     await a.from('punches').update({ status: 'in_progress' }).eq('subsystem_id', ids.subsystem).eq('category', 'C')
     const r = await readiness()
     expect(r).toMatchObject({ open_punches_b: 0, open_punches_c: 3 })

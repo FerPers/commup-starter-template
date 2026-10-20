@@ -1,6 +1,6 @@
--- fn: public.punch_caller_role(punches)
+-- fn: public.punch_caller_role(public.punches)
 -- Canónico (S03). Volcado de prod con scripts/sql/canonical-functions.mjs; no editar sin migración.
-CREATE OR REPLACE FUNCTION public.punch_caller_role(p_punch punches)
+CREATE OR REPLACE FUNCTION public.punch_caller_role(p_punch public.punches)
  RETURNS text
  LANGUAGE sql
  STABLE SECURITY DEFINER

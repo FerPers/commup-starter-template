@@ -1,6 +1,6 @@
--- fn: public.punch_log(punches, text, jsonb)
+-- fn: public.punch_log(public.punches, text, jsonb)
 -- Canónico (S03). Volcado de prod con scripts/sql/canonical-functions.mjs; no editar sin migración.
-CREATE OR REPLACE FUNCTION public.punch_log(p_punch punches, p_action text, p_payload jsonb)
+CREATE OR REPLACE FUNCTION public.punch_log(p_punch public.punches, p_action text, p_payload jsonb)
  RETURNS void
  LANGUAGE sql
  SECURITY DEFINER

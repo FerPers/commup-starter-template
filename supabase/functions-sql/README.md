@@ -29,4 +29,4 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 falla en cualquier migración posterior a `20261028120000`. `tests/db/function-drift.test.ts` compara
 el md5 de cada archivo con la BD (RPC `function_definition_md5`, que nunca devuelve el cuerpo).
 
-Para sumar una función: `node scripts/sql/canonical-functions.mjs dump 'public.<nombre>(<tipos>)'`.
+Para sumar una función: `node scripts/sql/canonical-functions.mjs dump 'public.<nombre>(<tipos>)'`. Los tipos propios van calificados (`public.punches`, `public.punch_category`): `function_definition_md5` resuelve la firma con `search_path` vacío.

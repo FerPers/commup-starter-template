@@ -1,6 +1,6 @@
--- fn: public.review_punch_category(uuid, punch_category, text)
+-- fn: public.review_punch_category(uuid, public.punch_category, text)
 -- Canónico (S03). Volcado de prod con scripts/sql/canonical-functions.mjs; no editar sin migración.
-CREATE OR REPLACE FUNCTION public.review_punch_category(p_punch_id uuid, p_category punch_category, p_note text DEFAULT NULL::text)
+CREATE OR REPLACE FUNCTION public.review_punch_category(p_punch_id uuid, p_category public.punch_category, p_note text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER

@@ -53,10 +53,13 @@ function dump(sigs) {
   const list = sigs.length ? sigs : existing().map((e) => e.sig)
   for (const s of list) if (!/^public\.[a-z0-9_]+\([a-z0-9_ ,."[\]]*\)$/i.test(s)) throw new Error(`firma inválida: ${s}`)
   const values = list.map((s) => `('${s.replace(/'/g, "''")}')`).join(',')
+  // search_path vacío, igual que function_definition_md5: pg_get_functiondef califica los tipos propios
+  // (public.punches) según el search_path, y el test de deriva compara ese texto exacto.
   const rows = query(
-    `select s as sig, p.proname as name, pg_get_functiondef(p.oid) as def
+    `set search_path to '';
+     select s as sig, p.proname as name, pg_catalog.pg_get_functiondef(p.oid) as def
        from (values ${values}) v(s)
-       left join pg_proc p on p.oid = to_regprocedure(v.s)`,
+       left join pg_catalog.pg_proc p on p.oid = pg_catalog.to_regprocedure(v.s)`,
   )
   for (const r of rows) {
     if (!r.def) throw new Error(`no existe en prod: ${r.sig}`)
