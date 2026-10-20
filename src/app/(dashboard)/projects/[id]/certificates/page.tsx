@@ -58,7 +58,7 @@ export default async function CertificatesPage({
       .order('punch_number')),
     fetchAllRows(() => supabase
       .from('certificates')
-      .select('id, subsystem_id, phase_id, certificate_number, title, status, issued_date, issued_by')
+      .select('id, subsystem_id, phase_id, certificate_number, title, status, issued_date, issued_by, is_blocked')
       .eq('project_id', projectId)
       .neq('status', 'rejected')
       .order('created_at', { ascending: false })),
@@ -79,6 +79,7 @@ export default async function CertificatesPage({
     title: string
     status: string
     issued_date: string | null
+    is_blocked: boolean
   }
 
   type PhaseEligibility = {

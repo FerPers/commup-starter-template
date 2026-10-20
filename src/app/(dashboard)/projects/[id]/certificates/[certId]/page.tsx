@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import CertificateDetail from './CertificateDetail'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import { loadMyCapacities } from '@/lib/capacities/server'
 
 export default async function CertificateDetailPage({
   params,
@@ -30,11 +31,12 @@ export default async function CertificateDetailPage({
     { data: exceptions },
     { data: signatures },
     { data: members },
+    caps,
   ] = await Promise.all([
     supabase
       .from('certificates')
       .select(`
-        id, certificate_number, title, status,
+        id, certificate_number, title, status, is_blocked, block_reason,
         issued_date, notes, created_at,
         project_phases(id, code, name, color, certificate_name),
         subsystems(id, code, name, systems(id, code, name)),
@@ -61,6 +63,7 @@ export default async function CertificateDetailPage({
       .eq('certificate_id', certId)
       .order('signed_at'),
     supabase.from('org_members').select('user_id').eq('org_id', membership.org_id),
+    loadMyCapacities(supabase, projectId),
   ])
 
   if (!cert) notFound()
@@ -83,7 +86,6 @@ export default async function CertificateDetailPage({
         .order('itr_number')
     : { data: [] }
 
-  const canEdit = ROLE_TIERS.editor.includes(membership.role)
   const isAdmin = ROLE_TIERS.admin.includes(membership.role)
 
   return (
@@ -98,7 +100,7 @@ export default async function CertificateDetailPage({
       signatures={signatures ?? []}
       memberIds={(members ?? []).map(m => m.user_id)}
       currentUserId={ctx.userId}
-      canEdit={canEdit}
+      caps={caps}
       isAdmin={isAdmin}
     />
   )

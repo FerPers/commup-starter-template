@@ -114,13 +114,12 @@ const CASES: Case[] = [
   {
     name: 'certificates: editar un certificado', op: 'update', table: 'certificates', column: 'title',
     rowId: fx => fx.certificateId,
-    allow: EDITORS,
+    allow: [], // A-05 cerrado en S17: emitir/revocar/reabrir y el bloqueo solo por RPC (issue/revoke/reopen_certificate)
   },
   {
     name: 'certificate_signatures: firmar a nombre de otro', op: 'insert', table: 'certificate_signatures',
     payload: fx => (fx.certificateId ? { certificate_id: fx.certificateId, user_id: fakeUuid } : null), // falta role
-    allow: [],
-    gap: { roles: ['owner', 'admin', 'architect', 'leader'], finding: 'A-05', session: 'S17' },
+    allow: [], // S17: firmar solo por sign_certificate (capacidad del rol, una persona por rol)
   },
   {
     name: 'pssr_reviews: editar una revisión (estado/aprobación)', op: 'update', table: 'pssr_reviews', column: 'title',

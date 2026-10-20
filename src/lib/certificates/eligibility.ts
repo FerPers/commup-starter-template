@@ -10,7 +10,8 @@
  *   - Cat C nunca bloquea (decisión 2026-10-12; exige buena categorización al levantar el punch).
  * Un punch está "abierto" si su estado es open o in_progress (closed/cancelled no cuentan).
  *
- * La usan `actions/certificates.ts` y la página de certificados; los tests viven en
+ * S17: el SQL `certificate_eligibility` / `certificate_blocker` (supabase/functions-sql) es el espejo que decide al emitir;
+ * aquí quedan la matriz de certificados y los tests. La usan la página de certificados; los tests viven en
  * `eligibility.test.ts` y el contraste con el SQL real en `tests/db/readiness.test.ts`.
  */
 

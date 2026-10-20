@@ -21,6 +21,8 @@ type CertRow = {
   title: string
   status: string
   issued_date: string | null
+  /** S17: emitido pero la base cambió (no se firma hasta que vuelva a cumplir). */
+  is_blocked: boolean
 }
 
 type PhaseEligibility = {
@@ -325,6 +327,11 @@ export default function CertificatesView({
                             }}>
                               {certLabel}
                             </span>
+                            {pd.certificate.status === 'issued' && pd.certificate.is_blocked && (
+                              <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 600, background: '#fee2e2', color: '#b91c1c' }}>
+                                {t('blocked')}
+                              </span>
+                            )}
                             {pd.certificate.issued_date && (
                               <span style={{ fontSize: '11px', color: '#94a3b8' }}>
                                 {new Date(pd.certificate.issued_date).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}

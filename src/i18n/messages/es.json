@@ -505,6 +505,7 @@
     "empty": "No hay planes de preservación que coincidan."
   },
   "Certificates": {
+    "blocked": "Bloqueado",
     "title": "Certificados",
     "subtitle": "Todos los proyectos de la organización",
     "status": {
@@ -627,6 +628,10 @@
       "sigUnsigning": "Quitando…",
       "sigSignedOn": "Firmado el {date}",
       "sigPending": "Pendiente de firma",
+      "blockedTitle": "Certificado bloqueado",
+      "blockedHint": "La base cambió después de emitirlo. No se puede firmar hasta que vuelva a cumplir; se desbloquea solo.",
+      "sigNoCapacity": "No estás designado para firmar como {role}",
+      "sigAlreadyOther": "Ya firmaste otro rol (cada rol lo firma una persona distinta)",
       "sigCommentsLabel": "Comentarios (opcional)",
       "sigCommentsPlaceholder": "Notas sobre la firma…",
       "sigConfirmTitle": "Firmar como {role}",

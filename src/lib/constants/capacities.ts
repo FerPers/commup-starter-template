@@ -46,3 +46,7 @@ export function capacityIneligible(capacity: Capacity, member: { role: string; c
   if (capacity === 'client_rep' && member.role !== 'client' && member.companyKind !== 'owner') return 'client_rep_company'
   return null
 }
+
+/** Rol de firma de un certificado → capacidad que lo firma (S17, D15; = SQL certificate_role_capacity). */
+export const CERT_ROLE_CAPACITY = { completion: 'commissioning', client: 'client_rep', authority: 'operations' } as const satisfies Record<string, Capacity>
+export type CertSignRole = keyof typeof CERT_ROLE_CAPACITY

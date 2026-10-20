@@ -7,8 +7,9 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeCertificate, reopenCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { CERT_ROLE_CAPACITY, can, type CertSignRole, type MyCapacities } from '@/lib/constants/capacities'
 
-type CertSignatureRoleId = 'completion' | 'client' | 'authority'
+type CertSignatureRoleId = CertSignRole
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,9 @@ type CertFull = {
   certificate_number: string
   title: string
   status: 'pending' | 'in_review' | 'issued' | 'rejected'
+  /** S17: la base cambió después de emitir (trigger); no se firma hasta que vuelva a cumplir. */
+  is_blocked: boolean
+  block_reason: string | null
   issued_date: string | null
   notes: string | null
   created_at: string
@@ -75,7 +79,7 @@ export default function CertificateDetail({
   signatures,
   memberIds: memberIdList = [],
   currentUserId,
-  canEdit,
+  caps,
   isAdmin,
 }: {
   projectId: string
@@ -89,7 +93,8 @@ export default function CertificateDetail({
   /** Ids de miembros actuales de la org: nombres fuera del conjunto se marcan «(inactivo)». */
   memberIds?: string[]
   currentUserId: string
-  canEdit: boolean
+  /** Capacidades del usuario en el proyecto (my_capacities): cada rol de firma exige la suya (CERT_ROLE_CAPACITY). */
+  caps: MyCapacities
   isAdmin: boolean
 }) {
   const t      = useTranslations('Certificates')
@@ -203,6 +208,7 @@ export default function CertificateDetail({
   const SIG_ROLES: CertSignatureRoleId[] = ['completion', 'client', 'authority']
   const sigByRole = new Map<CertSignatureRoleId, SignatureRow>()
   for (const s of signatures) sigByRole.set(s.role, s)
+  const iSigned = signatures.some(s => s.user_id === currentUserId)
 
   return (
     <div style={{ padding: '32px' }}>
@@ -226,6 +232,18 @@ export default function CertificateDetail({
           {t('detail.backLink', { projectName })}
         </a>
       </div>
+
+      {/* S17: bloqueado por cambio de base (trigger trg_certificate_base_changed) */}
+      {cert.status === 'issued' && cert.is_blocked && (
+        <div role="alert" style={{
+          background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px',
+          padding: '14px 18px', marginBottom: '20px', color: '#991b1b',
+        }}>
+          <div style={{ fontSize: '14px', fontWeight: 700 }}>{t('detail.blockedTitle')}</div>
+          {cert.block_reason && <div style={{ fontSize: '13px', marginTop: '4px' }}>{cert.block_reason}</div>}
+          <div style={{ fontSize: '12px', marginTop: '6px', color: '#b91c1c' }}>{t('detail.blockedHint')}</div>
+        </div>
+      )}
 
       {/* Certificate Header */}
       <div className="print-card" style={{
@@ -468,7 +486,11 @@ export default function CertificateDetail({
             const roleLabel = t(`detail.sigRoles.${role}`)
             const isOwner = sig?.user_id === currentUserId
             const canRemove = sig && (isOwner || isAdmin)
-            const canSign = canEdit && cert.status === 'issued' && !sig
+            const capacity = CERT_ROLE_CAPACITY[role]
+            const signable = cert.status === 'issued' && !cert.is_blocked && !sig
+            const canSign = signable && can(caps, capacity) && !iSigned
+            const whyNot = !signable || canSign ? null
+              : iSigned ? t('detail.sigAlreadyOther') : t('detail.sigNoCapacity', { role: roleLabel })
 
             return (
               <div key={role}>
@@ -523,6 +545,9 @@ export default function CertificateDetail({
                     <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '3px' }}>
                       {t('detail.sigPending')}
                     </div>
+                    {whyNot && (
+                      <div className="no-print" style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '8px' }}>{whyNot}</div>
+                    )}
                     {canSign && (
                       <button
                         className="no-print"

@@ -11878,6 +11878,14 @@ export type Database = {
         Args: { p_template_id: string }
         Returns: Json
       }
+      add_certificate_exception: {
+        Args: {
+          p_certificate_id: string
+          p_justification: string
+          p_punch_id: string
+        }
+        Returns: string
+      }
       add_document_reference: {
         Args: { p_document_id: string; p_kind: string; p_target_id: string }
         Returns: string
@@ -12059,6 +12067,23 @@ export type Database = {
         Args: { p_capacity: string }
         Returns: string[]
       }
+      certificate_blocker: {
+        Args: {
+          p_justified: string[]
+          p_phase_id: string
+          p_subsystem_id: string
+        }
+        Returns: string
+      }
+      certificate_eligibility: {
+        Args: { p_phase_id: string; p_subsystem_id: string }
+        Returns: Json
+      }
+      certificate_previous_blocker: {
+        Args: { p_phase_id: string; p_subsystem_id: string }
+        Returns: string
+      }
+      certificate_role_capacity: { Args: { p_role: string }; Returns: string }
       cleanup_signal_samples_retention: { Args: never; Returns: number }
       clone_itr_template_from_catalog: {
         Args: {
@@ -12557,6 +12582,15 @@ export type Database = {
         Returns: boolean
       }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      issue_certificate: {
+        Args: {
+          p_exceptions?: Json
+          p_notes?: string
+          p_phase_id: string
+          p_subsystem_id: string
+        }
+        Returns: string
+      }
       issue_daily_report: { Args: { p_report_id: string }; Returns: string }
       issue_document_revision: {
         Args: { p_issued_on?: string; p_revision_id: string; p_status: string }
@@ -12907,6 +12941,14 @@ export type Database = {
         Returns: number
       }
       refreeze_performance_run: { Args: { p_run_id: string }; Returns: number }
+      refresh_certificate_block: {
+        Args: { p_certificate_id: string }
+        Returns: undefined
+      }
+      refresh_certificates_for: {
+        Args: { p_phase_id?: string; p_subsystem_id: string }
+        Returns: undefined
+      }
       refresh_daily_report_data: {
         Args: { p_report_id: string }
         Returns: undefined
@@ -12929,11 +12971,19 @@ export type Database = {
         Args: { p_comment?: string; p_run_id: string; p_step_id: string }
         Returns: undefined
       }
+      remove_certificate_exception: {
+        Args: { p_exception_id: string }
+        Returns: undefined
+      }
       remove_document_reference: {
         Args: { p_reference_id: string }
         Returns: undefined
       }
       remove_org_member: { Args: { p_member_id: string }; Returns: undefined }
+      reopen_certificate: {
+        Args: { p_certificate_id: string; p_reason: string }
+        Returns: undefined
+      }
       reopen_itr_atomic: {
         Args: { p_itr_id: string; p_reason: string }
         Returns: Json
@@ -12980,6 +13030,10 @@ export type Database = {
         Returns: string
       }
       revoke_api_key: { Args: { p_key_id: string }; Returns: undefined }
+      revoke_certificate: {
+        Args: { p_certificate_id: string; p_reason: string }
+        Returns: Json
+      }
       revoke_gate_attestation: {
         Args: { p_attestation_id: string; p_reason: string }
         Returns: undefined
@@ -13181,6 +13235,15 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sign_certificate: {
+        Args: {
+          p_certificate_id: string
+          p_comments?: string
+          p_role: string
+          p_signature_image?: string
+        }
+        Returns: Json
+      }
       sign_itr_atomic: {
         Args: { p_itr_id: string; p_role: string; p_signature_image?: string }
         Returns: Json
@@ -13362,6 +13425,10 @@ export type Database = {
       try_timestamptz: { Args: { p: string }; Returns: string }
       tz_day_start: { Args: { p_date: string; p_tz: string }; Returns: string }
       tz_today: { Args: { p_tz: string }; Returns: string }
+      unsign_certificate: {
+        Args: { p_signature_id: string }
+        Returns: undefined
+      }
       unsign_pssr: { Args: { p_signature_id: string }; Returns: undefined }
       update_action: {
         Args: {

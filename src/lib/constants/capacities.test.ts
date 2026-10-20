@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { CAPACITIES, CAPACITY_FALLBACK_ROLES, can, capacityIneligible, fallbackCapacities, toMyCapacities } from './capacities'
+import { CAPACITIES, CAPACITY_FALLBACK_ROLES, CERT_ROLE_CAPACITY, can, capacityIneligible, fallbackCapacities, toMyCapacities } from './capacities'
 import { HOLD_RELEASE_ROLES } from '@/lib/startup/catalog'
 
 describe('capacidades de firma (S14, D14)', () => {
@@ -12,6 +12,12 @@ describe('capacidades de firma (S14, D14)', () => {
       const roles = [...m![1].matchAll(/'([a-z_]+)'/g)].map(x => x[1])
       expect(roles).toEqual([...CAPACITY_FALLBACK_ROLES[c]])
     }
+  })
+
+  it('rol de firma de certificado → capacidad igual al SQL certificate_role_capacity() (S17)', () => {
+    const sql = readFileSync('supabase/functions-sql/certificate_role_capacity.sql', 'utf8')
+    const pairs = Object.fromEntries([...sql.matchAll(/WHEN '([a-z_]+)' THEN '([a-z_]+)'/g)].map(m => [m[1], m[2]]))
+    expect(pairs).toEqual(CERT_ROLE_CAPACITY)
   })
 
   it('los hold points usan la misma fuente', () => {

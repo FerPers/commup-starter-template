@@ -505,6 +505,7 @@
     "empty": "No preservation plans match the current filters."
   },
   "Certificates": {
+    "blocked": "Blocked",
     "title": "Certificates",
     "subtitle": "All organization projects",
     "status": {
@@ -627,6 +628,10 @@
       "sigUnsigning": "Removing…",
       "sigSignedOn": "Signed on {date}",
       "sigPending": "Awaiting signature",
+      "blockedTitle": "Certificate blocked",
+      "blockedHint": "Its basis changed after issuance. It cannot be signed until it complies again; it unblocks automatically.",
+      "sigNoCapacity": "You are not designated to sign as {role}",
+      "sigAlreadyOther": "You already signed another role (each role is signed by a different person)",
       "sigCommentsLabel": "Comments (optional)",
       "sigCommentsPlaceholder": "Notes about the signature…",
       "sigConfirmTitle": "Sign as {role}",

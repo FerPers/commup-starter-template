@@ -179,6 +179,10 @@ Rules for every new page/query/action:
 
 - Estado, firmas y aprobación del PSSR **solo por RPC** (`submit_pssr`, `sign_pssr`, `unsign_pssr`, `approve_pssr` —emite el RFSU—, `reject_pssr`, `update_pssr_meta`); `pssr_reviews` no tiene UPDATE directo y los ítems se bloquean al enviar. Firmas por capacidad (`required_signatures` de la plantilla, defecto operations + hse); aprueba Comisionamiento, distinto de quien envió y de los firmantes.
 
+## Certificados (S17)
+
+- Emitir, firmar, revocar, reabrir y excepciones Cat B **solo por RPC** (`issue_certificate`, `sign_certificate`, `unsign_certificate`, `revoke_certificate`, `reopen_certificate`, `add/remove_certificate_exception`); elegibilidad en SQL `certificate_eligibility` (= `eligibility.ts`, mantener en paridad) + fase anterior `certificate_previous_blocker`. Cada rol firma con su capacidad (`CERT_ROLE_CAPACITY` en `src/lib/constants/capacities.ts` = SQL `certificate_role_capacity`) y una persona por rol. Si la base cambia (punch, ITR, excepción), el trigger `trg_certificate_base_changed` marca `is_blocked` con `block_reason` y lo desbloquea solo cuando vuelve a cumplir; bloqueado no se firma.
+
 ## Firmantes designados (S14, D14)
 
 - `project_capacities` (persona × proyecto × `commissioning` | `operations` | `hse` | `client_rep`), solo owner/admin por `assign_project_capacity` / `revoke_project_capacity`; pantalla `/projects/[id]/signatories`. **Quién firma lo decide `has_capacity(proyecto, capacidad)`**, nunca un array de roles: con designados firman solo ellos (cualquier rol); sin designados, `capacity_fallback_roles` (= `CAPACITY_FALLBACK_ROLES` en `src/lib/constants/capacities.ts`). client_rep = empresa tipo `owner` o rol client; commissioning nunca rol client.
