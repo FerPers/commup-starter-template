@@ -7,6 +7,7 @@ import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchSubsystemRollup } from '@/lib/list/kpi-query'
+import { fetchAllRows } from '@/lib/list/fetch-all'
 
 // getSubsystemKpis / getProjectSnapshots devuelven arrays pelados (no satisfacen
 // el constraint ActionResult del wrapper) — quedan manuales con getCtx; son
@@ -34,7 +35,12 @@ export type SnapshotRow = {
   completed_itrs: number
   open_punches_a: number
   open_punches_b: number
+  /** D11: snapshot histórico que pudo calcularse sobre ≤1000 filas (no se recalcula). */
+  suspect: boolean
 }
+
+/** Días de historial que se grafican (≈ 2 años; PostgREST corta en 1000 filas). */
+const SNAPSHOT_HISTORY_DAYS = 730
 
 // ── getSubsystemKpis ───────────────────────────────────────────────────────
 
@@ -46,11 +52,11 @@ export async function getSubsystemKpis(projectId: string): Promise<SubsystemKpi[
 
   // Sprint E: rollup por subsistema en SQL
   const [{ data: subsystems }, rollup] = await Promise.all([
-    supabase
+    fetchAllRows(() => supabase
       .from('subsystems')
       .select('id, code, name, systems(id, code, name)')
       .eq('project_id', projectId)
-      .order('code'),
+      .order('code')).then(data => ({ data })),
     fetchSubsystemRollup(supabase, projectId),
   ])
 
@@ -84,19 +90,22 @@ export async function getProjectSnapshots(projectId: string): Promise<SnapshotRo
 
   const { data } = await ctx.supabase
     .from('kpi_snapshots')
-    .select('snapshot_date, completion_pct, total_itrs, completed_itrs, open_punches_a, open_punches_b')
+    .select('snapshot_date, completion_pct, total_itrs, completed_itrs, open_punches_a, open_punches_b, suspect')
     .eq('project_id', projectId)
     .is('phase_id', null)
     .is('subsystem_id', null)
-    .order('snapshot_date', { ascending: true })
+    .order('snapshot_date', { ascending: false })
+    .limit(SNAPSHOT_HISTORY_DAYS)
 
-  return (data ?? []).map(d => ({
+  // B-07: los más recientes (antes: los 1000 más antiguos, la curva dejaba de avanzar a los ~2,7 años)
+  return (data ?? []).reverse().map(d => ({
     snapshot_date: d.snapshot_date as string,
     completion_pct: Number(d.completion_pct),
     total_itrs: d.total_itrs as number,
     completed_itrs: d.completed_itrs as number,
     open_punches_a: d.open_punches_a as number,
     open_punches_b: d.open_punches_b as number,
+    suspect: !!d.suspect,
   }))
 }
 
@@ -113,106 +122,17 @@ export const takeProjectSnapshot = withAuthOnly(
     const access = await checkProjectAccess(supabase, ctx.orgId, projectId)
     if (!access.ok) return { success: false, error: access.error }
 
-  const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0]
+    const admin = createAdminClient()
 
-  const [
-    { data: itrs },
-    { data: punches },
-    { count: tagCount },
-    { data: preservationPlans },
-  ] = await Promise.all([
-    supabase.from('itrs').select('id, status, phase_id').eq('project_id', projectId),
-    supabase.from('punches').select('id, category, status').eq('project_id', projectId),
-    supabase.from('tags').select('id', { count: 'exact', head: true }).eq('project_id', projectId),
-    supabase
-      .from('preservation_plans')
-      .select('id, next_due_date')
-      .eq('project_id', projectId)
-      .eq('status', 'active'),
-  ])
-
-  const totalItrs = itrs?.length ?? 0
-  const completedItrs = itrs?.filter(i => i.status === 'approved').length ?? 0
-  const punchesA = (punches ?? []).filter(p => p.category === 'A')
-  const punchesB = (punches ?? []).filter(p => p.category === 'B')
-  const openPunchesA = punchesA.filter(p => !['closed', 'cancelled'].includes(p.status)).length
-  const openPunchesB = punchesB.filter(p => !['closed', 'cancelled'].includes(p.status)).length
-  const overduePreservation = (preservationPlans ?? []).filter(p => (p.next_due_date as string) < today).length
-  const completionPct = totalItrs > 0 ? Number(((completedItrs / totalItrs) * 100).toFixed(2)) : 0
-
-  // Remove existing snapshot for today at project level (re-snapshot same day)
-  await supabase
-    .from('kpi_snapshots')
-    .delete()
-    .eq('project_id', projectId)
-    .eq('snapshot_date', today)
-    .is('phase_id', null)
-    .is('subsystem_id', null)
-    .is('area_id', null)
-    .is('system_id', null)
-
-  const { error } = await supabase.from('kpi_snapshots').insert({
-    project_id: projectId,
-    area_id: null,
-    system_id: null,
-    subsystem_id: null,
-    phase_id: null,
-    total_itrs: totalItrs,
-    completed_itrs: completedItrs,
-    total_punches_a: punchesA.length,
-    open_punches_a: openPunchesA,
-    total_punches_b: punchesB.length,
-    open_punches_b: openPunchesB,
-    total_tags: tagCount ?? 0,
-    total_preservation: preservationPlans?.length ?? 0,
-    overdue_preservation: overduePreservation,
-    completion_pct: completionPct,
-    snapshot_date: today,
-  })
-
-  if (error) return { success: false, error: error.message }
-
-  // ── Per-phase snapshots (mismo criterio que /api/cron/snapshot) ──────────
-  const phaseIds = [...new Set((itrs ?? []).map(i => i.phase_id).filter((p): p is string => !!p))]
-
-  await supabase
-    .from('kpi_snapshots')
-    .delete()
-    .eq('project_id', projectId)
-    .eq('snapshot_date', today)
-    .not('phase_id', 'is', null)
-
-  if (phaseIds.length > 0) {
-    const phaseRows = phaseIds.map(phaseId => {
-      const phaseItrs = (itrs ?? []).filter(i => i.phase_id === phaseId)
-      const phaseTotal = phaseItrs.length
-      const phaseDone = phaseItrs.filter(i => i.status === 'approved').length
-      return {
-        project_id: projectId,
-        area_id: null,
-        system_id: null,
-        subsystem_id: null,
-        phase_id: phaseId,
-        total_itrs: phaseTotal,
-        completed_itrs: phaseDone,
-        total_punches_a: 0,
-        open_punches_a: 0,
-        total_punches_b: 0,
-        open_punches_b: 0,
-        total_tags: 0,
-        total_preservation: 0,
-        overdue_preservation: 0,
-        completion_pct: phaseTotal > 0 ? Number(((phaseDone / phaseTotal) * 100).toFixed(2)) : 0,
-        snapshot_date: today,
-      }
-    })
-    const { error: phaseErr } = await supabase.from('kpi_snapshots').insert(phaseRows)
-    if (phaseErr) return { success: false, error: `Snapshot de proyecto OK pero fases fallaron: ${phaseErr.message}` }
-  }
+    // S09 (B-01/B-25): snapshot KPI en SQL (conteos completos, upsert por clave única). Igual que
+    // take_mgmt_snapshot, solo service_role escribe snapshots; el proyecto ya se verificó arriba.
+    const { error: kpiErr } = await admin.rpc('take_kpi_snapshot', { p_project_id: projectId, p_date: today })
+    if (kpiErr) return { success: false, error: kpiErr.message }
 
     // Readiness (fase 5): avance ponderado y KPIs de gestión diaria. take_mgmt_snapshot es solo de
     // service_role (escribe snapshots sin políticas de escritura); el proyecto ya se verificó arriba.
-    const { error: mgmtErr } = await createAdminClient().rpc('take_mgmt_snapshot', { p_project_id: projectId, p_date: today })
+    const { error: mgmtErr } = await admin.rpc('take_mgmt_snapshot', { p_project_id: projectId, p_date: today })
     if (mgmtErr) return { success: false, error: mgmtErr.message }
 
     revalidatePath(`/projects/${projectId}/kpis`)

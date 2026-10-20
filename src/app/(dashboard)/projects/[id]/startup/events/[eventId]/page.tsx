@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { chartWindow, type EventCategory, type Milestone, type StartupEventStatus } from '@/lib/startup/catalog'
 import EventDetail from './EventDetail'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 // Ficha de un evento de arranque (fase 6, sesión 2): parámetros congelados (IIoT o manuales), gráfico
 // −30/+30 min por señal desde signal_samples_1min, testigo y anulación.
@@ -25,10 +26,11 @@ export default async function StartupEventPage({ params }: { params: Promise<{ i
   ])
   const signalIds = [...new Set((paramsRows ?? []).map(p => p.signal_id).filter((x): x is string => !!x))]
   const win = chartWindow(ev.occurred_at)
-  const { data: series } = signalIds.length
-    ? await supabase.from('signal_samples_1min').select('signal_id, bucket, avg_val')
-        .in('signal_id', signalIds).gte('bucket', win.from).lte('bucket', win.to).order('bucket').limit(5000)
-    : { data: [] }
+  // S09 (B-07): paginado por (bucket, signal_id); .limit(5000) devolvía igual 1000 minutos-señal
+  const { rows: series } = signalIds.length
+    ? await fetchAllRowsFlagged(() => supabase.from('signal_samples_1min').select('signal_id, bucket, avg_val')
+        .in('signal_id', signalIds).gte('bucket', win.from).lte('bucket', win.to).order('bucket'), { key: 'signal_id' })
+    : { rows: [] }
 
   const names: Record<string, string> = {}
   for (const m of members ?? []) {

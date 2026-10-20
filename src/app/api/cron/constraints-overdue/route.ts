@@ -1,6 +1,7 @@
 import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 /**
  * POST /api/cron/constraints-overdue
@@ -43,15 +44,18 @@ export async function POST(req: NextRequest) {
   const today = new Date().toISOString().split('T')[0]
   const redispatchCutoffIso = new Date(Date.now() - REDISPATCH_DAYS * 86_400_000).toISOString()
 
-  const { data, error } = await admin
-    .from('project_constraints')
-    .select('id, org_id, project_id, number, title, need_date, escalation_level, owner_id, created_by, last_overdue_notif_at')
-    .eq('status', 'open')
-    .lt('need_date', today)
-    .limit(2000)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  const rows = (data ?? []) as ConstraintRow[]
+  // S09 (B-07): paginado; .limit(2000) devolvía igual 1000 y las demás vencidas no se avisaban
+  let rows: ConstraintRow[]
+  try {
+    const res = await fetchAllRowsFlagged(() => admin
+      .from('project_constraints')
+      .select('id, org_id, project_id, number, title, need_date, escalation_level, owner_id, created_by, last_overdue_notif_at')
+      .eq('status', 'open')
+      .lt('need_date', today))
+    rows = res.rows as ConstraintRow[]
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
   const due = rows.filter(r => !r.last_overdue_notif_at || r.last_overdue_notif_at < redispatchCutoffIso)
 
   let inserted = 0

@@ -60,14 +60,26 @@ export function evaluateEligibility(
   punches: PunchLike[],
   catBLimit: number | null = DEFAULT_CAT_B_LIMIT,
 ): Eligibility {
-  const totalItrs = itrs.length
-  const approvedItrs = itrs.filter(i => i.status === 'approved').length
   const open = punches.filter(p => isOpenPunchStatus(p.status))
-  const openCatA = open.filter(p => p.category === 'A').length
-  const openCatBPunches = open
-    .filter(p => p.category === 'B')
-    .map(p => ({ id: p.id, punch_number: p.punch_number, description: p.description }))
+  return evaluateEligibilityCounts({
+    totalItrs: itrs.length,
+    approvedItrs: itrs.filter(i => i.status === 'approved').length,
+    openCatA: open.filter(p => p.category === 'A').length,
+    openCatBPunches: open
+      .filter(p => p.category === 'B')
+      .map(p => ({ id: p.id, punch_number: p.punch_number, description: p.description })),
+  }, catBLimit)
+}
 
+/**
+ * S09 (B-02): misma regla sobre conteos ya agregados en SQL (`subsystem_phase_itr_counts`,
+ * `subsystem_rollup`). La matriz de certificados la usa para no cargar todos los ITR del proyecto.
+ */
+export function evaluateEligibilityCounts(
+  c: Pick<Eligibility, 'totalItrs' | 'approvedItrs' | 'openCatA' | 'openCatBPunches'>,
+  catBLimit: number | null = DEFAULT_CAT_B_LIMIT,
+): Eligibility {
+  const { totalItrs, approvedItrs, openCatA, openCatBPunches } = c
   const catBOverLimit = catBLimit !== null && openCatBPunches.length > catBLimit
 
   let eligible: EligibilityLevel

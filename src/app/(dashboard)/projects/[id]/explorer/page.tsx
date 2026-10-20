@@ -4,6 +4,9 @@ import ExplorerTree from './ExplorerTree'
 import type { ExplorerArea, ExplorerSubsystem, ExplorerSystem } from '@/types/database'
 import Link from 'next/link'
 import { fetchSubsystemRollup } from '@/lib/list/kpi-query'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 export default async function ExplorerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -23,18 +26,21 @@ export default async function ExplorerPage({ params }: { params: Promise<{ id: s
   if (!project) notFound()
 
   // Sprint E: rollup por subsistema en SQL (antes: todas las filas de tags/itrs/punches)
-  const [{ data: areas }, { data: systems }, { data: subsystems }, rollup] = await Promise.all([
+  // S09 (B-07): los subsistemas pueden pasar de 1000 (tope de PostgREST) → se paginan.
+  const [{ data: areas }, { data: systems }, subsystemsRes, rollup] = await Promise.all([
     supabase.from('areas').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('systems').select('id, area_id, code, name').eq('project_id', id).order('code'),
-    supabase.from('subsystems').select('id, system_id, code, name').eq('project_id', id).order('code'),
+    fetchAllRowsFlagged(() => supabase.from('subsystems').select('id, system_id, code, name').eq('project_id', id).order('code')),
     fetchSubsystemRollup(supabase, id),
   ])
+
+  const subsystems = subsystemsRes.rows
 
   // Build tree
   const explorerData: ExplorerArea[] = (areas ?? []).map(area => {
     const areaSystems = (systems ?? []).filter(s => s.area_id === area.id)
     const explorerSystems: ExplorerSystem[] = areaSystems.map(sys => {
-      const sysSubs = (subsystems ?? []).filter(sub => sub.system_id === sys.id)
+      const sysSubs = subsystems.filter(sub => sub.system_id === sys.id)
       const explorerSubs: ExplorerSubsystem[] = sysSubs.map(sub => ({
         id: sub.id,
         code: sub.code,
@@ -49,6 +55,7 @@ export default async function ExplorerPage({ params }: { params: Promise<{ id: s
     return { id: area.id, code: area.code, name: area.name, systems: explorerSystems }
   })
 
+  const tl = await getTranslations('Common')
   return (
     <div style={{ padding: '32px' }}>
       {/* Header */}
@@ -66,6 +73,10 @@ export default async function ExplorerPage({ params }: { params: Promise<{ id: s
           Árbol jerárquico Área › Sistema › Subsistema
         </p>
       </div>
+
+      {subsystemsRes.truncated && (
+        <PartialNote>{tl('listPartial')}</PartialNote>
+      )}
 
       <ExplorerTree explorerData={explorerData} projectId={id} />
     </div>

@@ -1,6 +1,9 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import WorkPlansGlobal from './WorkPlansGlobal'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 
 export default async function WorkPlansPage() {
@@ -33,8 +36,11 @@ export default async function WorkPlansPage() {
     .eq('org_id', orgId)
     .order('role')
 
-  // Fetch work plans with items count + leader info
-  const { data: rawPlans } = await supabase
+  // Fetch work plans with items count + leader info. S09 (B-07): PostgREST corta en 1000 filas → se pagina.
+  const projectIds = (projects ?? []).map(p => p.id)
+  const { rows: rawPlans, truncated } = projectIds.length === 0
+    ? { rows: [], truncated: false }
+    : await fetchAllRowsFlagged(() => supabase
     .from('work_plans')
     .select(`
       id, plan_date, status, notes,
@@ -51,17 +57,23 @@ export default async function WorkPlansPage() {
         assigned:profiles!work_plan_items_assigned_to_fkey(full_name)
       )
     `)
-    .in('project_id', (projects ?? []).map(p => p.id))
-    .order('plan_date', { ascending: false })
+    .in('project_id', projectIds)
+    .order('plan_date', { ascending: false }))
 
+  const tl = await getTranslations('Common')
   return (
+    <>
+    {truncated && (
+      <PartialNote>{tl('listPartial')}</PartialNote>
+    )}
     <WorkPlansGlobal
       projects={projects ?? []}
       disciplines={disciplines ?? []}
       orgMembers={members ?? []}
-      workPlans={rawPlans ?? []}
+      workPlans={rawPlans}
       canEdit={canEdit}
       currentUserId={ctx.userId}
     />
+    </>
   )
 }

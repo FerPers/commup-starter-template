@@ -11,6 +11,7 @@ import {
 } from '@/lib/my-work/queues'
 import { greetingName } from '@/lib/utils'
 import type { OrgMemberRole } from '@/types/database'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,10 +64,14 @@ export default async function MyWorkPage() {
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
   const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }, { data: perfToDecide }, { data: perfCerts }] = await Promise.all([
     supabase.rpc('my_work_counts', { p_org_id: orgId }),
-    supabase
+    // S09 (B-07): solo ITR no aprobados de los proyectos de la org, paginado (antes: TODAS mis asignaciones,
+    // cortadas en 1000 → podían faltar las pendientes mientras el badge SQL contaba bien).
+    projectIds.length === 0 ? Promise.resolve({ data: [] }) : fetchAllRowsFlagged(() => supabase
       .from('itr_assignments')
-      .select('role, itrs(id, itr_number, status, progress_pct, scheduled_date, completed_date, project_id, required_signatures, tags(id, tag_number, description), projects(code), project_phases(code, color), itr_signatures(role, user_id))')
-      .eq('user_id', userId),
+      .select('role, itrs!inner(id, itr_number, status, progress_pct, scheduled_date, completed_date, project_id, required_signatures, tags(id, tag_number, description), projects(code), project_phases(code, color), itr_signatures(role, user_id))')
+      .eq('user_id', userId)
+      .neq('itrs.status', 'approved')
+      .in('itrs.project_id', projectIds), { maxRows: 10_000 }).then(r => ({ data: r.rows })),
     projectIds.length === 0 ? none : supabase
       .from('punches')
       .select('id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)')
@@ -101,6 +106,7 @@ export default async function MyWorkPage() {
       .limit(QUEUE_LIMIT + 1),
     // Fase 4: resueltos por otros, por verificar en campo. S06 (C-44): los que levanté yo, o todos si superviso
     // (igual que my_work_counts.punches_verify).
+    // bounded: .limit(QUEUE_LIMIT + 1) al final de la cadena
     projectIds.length === 0 ? none : (oversight ? supabase.from('punches').select(`${punchSel}, resolved_at`) : supabase.from('punches').select(`${punchSel}, resolved_at`).eq('raised_by', userId))
       .eq('status', 'in_progress')
       .not('resolved_at', 'is', null)

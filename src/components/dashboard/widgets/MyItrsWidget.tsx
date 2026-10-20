@@ -1,15 +1,18 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { ITR_STYLE, TaskSection } from './_shared'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 export default async function MyItrsWidget({ userId }: { userId: string }) {
   const supabase = await createClient()
   const t = await getTranslations('Dashboard')
 
-  const { data: myAssignments } = await supabase
+  // S09 (B-07): solo las activas, paginado (antes: todas mis asignaciones, cortadas en 1000 sin orden)
+  const { rows: myAssignments } = await fetchAllRowsFlagged(() => supabase
     .from('itr_assignments')
-    .select(`id, role, itrs(id, itr_number, status, progress_pct, scheduled_date, project_id, tags(id, tag_number, description), projects(id, name, code), project_phases(code, color, name))`)
+    .select(`id, role, itrs!inner(id, itr_number, status, progress_pct, scheduled_date, project_id, tags(id, tag_number, description), projects(id, name, code), project_phases(code, color, name))`)
     .eq('user_id', userId)
+    .not('itrs.status', 'in', '(approved,rejected)'), { maxRows: 10_000 })
 
   const itrLabels: Record<string, string> = {
     not_started: t('itrStatus.not_started'),

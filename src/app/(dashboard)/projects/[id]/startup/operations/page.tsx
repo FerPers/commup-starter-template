@@ -2,7 +2,10 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { currentLevel, type OwnershipStage, type SpareStatus } from '@/lib/startup/catalog'
 import { todayIso } from '@/lib/daily/catalog'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import OperationsView from './OperationsView'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 // Readiness de operaciones (fase 6 plan readiness, sesión 3): etapa de propiedad por sistema y traspasos,
 // matriz de competencias, personal de operaciones y repuestos críticos.
@@ -19,13 +22,17 @@ export default async function StartupOperationsPage({ params, searchParams }: {
   const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
 
-  const [{ data: systems }, { data: ownership }, { data: transfers }, { data: people }, { data: records }, { data: targets }, { data: spares }, { data: members }, { data: companies }] = await Promise.all([
+  // S09 (E-20): PostgREST corta en 1000 filas. competency_records con .limit(10000) y sin orden devolvía un
+  // subconjunto arbitrario y el «nivel vigente = última evaluación» podía salir de una evaluación vieja; se lee
+  // completo (y el historial de traspasos también).
+  const [{ data: systems }, { data: ownership }, transfersRes, { data: people }, recordsRes, { data: targets }, { data: spares }, { data: members }, { data: companies }] = await Promise.all([
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('system_ownership').select('system_id, stage, since').eq('project_id', id),
-    supabase.from('ownership_transfers').select('id, number, system_id, from_stage, to_stage, is_reversal, status, requested_at, completed_at')
-      .eq('project_id', id).order('seq', { ascending: false }).limit(1000),
+    fetchAllRowsFlagged(() => supabase.from('ownership_transfers').select('id, number, system_id, from_stage, to_stage, is_reversal, status, requested_at, completed_at')
+      .eq('project_id', id).order('seq', { ascending: false })),
     supabase.from('ops_personnel').select('id, full_name, company, position, shift, user_id, active').eq('project_id', id).order('full_name'),
-    supabase.from('competency_records').select('person_id, system_id, level, assessed_at, created_at, expires_at').eq('project_id', id).limit(10000),
+    fetchAllRowsFlagged(() => supabase.from('competency_records').select('id, person_id, system_id, level, assessed_at, created_at, expires_at')
+      .eq('project_id', id), { maxRows: 200_000 }),
     supabase.from('system_competency_targets').select('system_id, required').eq('project_id', id),
     supabase.from('critical_spares').select('id, system_id, kind, item, part_number, is_critical, qty_required, qty_available, status, eta, notes')
       .eq('project_id', id).order('item'),
@@ -33,12 +40,16 @@ export default async function StartupOperationsPage({ params, searchParams }: {
     supabase.from('companies').select('name').eq('org_id', ctx.orgId).eq('is_active', true).order('name'),
   ])
 
+  const transfers = transfersRes.rows
+  const records = recordsRes.rows
   const today = todayIso()
-  type Rec = NonNullable<typeof records>[number]
+  type Rec = (typeof records)[number]
   const byCell = new Map<string, Rec[]>()
-  for (const r of records ?? []) {
+  for (const r of records) {
     const k = `${r.person_id}:${r.system_id}`
-    byCell.set(k, [...(byCell.get(k) ?? []), r])
+    const list = byCell.get(k)
+    if (list) list.push(r)
+    else byCell.set(k, [r])
   }
   // Celda: nivel vigente + último nivel registrado (para pintar en gris una evaluación vencida).
   const levels: Record<string, { level: number; last: number; expired: boolean; expiresAt: string | null }> = {}
@@ -48,7 +59,12 @@ export default async function StartupOperationsPage({ params, searchParams }: {
     levels[k] = { level: lvl, last: last.level, expired: !!last.expires_at && last.expires_at < today, expiresAt: last.expires_at }
   }
 
+  const tl = await getTranslations('Common')
   return (
+    <>
+    {recordsRes.truncated && (
+      <PartialNote>{tl('listPartial')}</PartialNote>
+    )}
     <OperationsView
       project={project}
       initialView={view === 'competency' || view === 'personnel' || view === 'spares' ? view : 'systems'}
@@ -59,7 +75,7 @@ export default async function StartupOperationsPage({ params, searchParams }: {
           required: (targets ?? []).find(x => x.system_id === s.id)?.required ?? 2,
         }
       })}
-      transfers={(transfers ?? []).map(x => ({ ...x, from_stage: x.from_stage as OwnershipStage, to_stage: x.to_stage as OwnershipStage }))}
+      transfers={transfers.map(x => ({ ...x, from_stage: x.from_stage as OwnershipStage, to_stage: x.to_stage as OwnershipStage }))}
       people={people ?? []}
       companies={(companies ?? []).map(c => c.name)}
       levels={levels}
@@ -68,5 +84,6 @@ export default async function StartupOperationsPage({ params, searchParams }: {
       canEdit={ctx.role !== 'client'}
       canAssess={['owner', 'admin', 'architect', 'leader'].includes(ctx.role)}
     />
+    </>
   )
 }

@@ -1,6 +1,9 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import CertificatesGlobal from './CertificatesGlobal'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 export default async function GlobalCertificatesPage() {
   const ctx = await getActiveMembership()
@@ -16,10 +19,11 @@ export default async function GlobalCertificatesPage() {
 
   const projectIds = (projects ?? []).map(p => p.id)
 
-  const [{ data: certificates }, { data: phases }] = await Promise.all([
+  // S09 (B-07): PostgREST corta en 1000 filas → se pagina.
+  const [{ rows: certificates, truncated }, { data: phases }] = await Promise.all([
     projectIds.length === 0
-      ? Promise.resolve({ data: [] })
-      : supabase
+      ? Promise.resolve({ rows: [], truncated: false })
+      : fetchAllRowsFlagged(() => supabase
           .from('certificates')
           .select(`
             id, certificate_number, title, status, issued_date, project_id,
@@ -28,7 +32,7 @@ export default async function GlobalCertificatesPage() {
             subsystems(id, code, name, systems(code, name))
           `)
           .in('project_id', projectIds)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })),
     supabase
       .from('project_phases')
       .select('id, code, name, color, certificate_name')
@@ -36,11 +40,17 @@ export default async function GlobalCertificatesPage() {
       .order('order_index'),
   ])
 
+  const tl = await getTranslations('Common')
   return (
+    <>
+    {truncated && (
+      <PartialNote>{tl('listPartial')}</PartialNote>
+    )}
     <CertificatesGlobal
       projects={projects ?? []}
-      certificates={certificates ?? []}
+      certificates={certificates}
       phases={phases ?? []}
     />
+    </>
   )
 }

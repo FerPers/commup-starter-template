@@ -2,6 +2,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import { fetchConsolidatedTagPhotos } from '@/lib/tag-photos'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import TagDetail from './TagDetail'
 
 export default async function TagDetailPage({
@@ -23,7 +24,6 @@ export default async function TagDetailPage({
   const [
     { data: project },
     { data: tag },
-    { data: allTagIds },
     { data: tagItrs },
     { data: orgMembers },
     { data: tagPunches },
@@ -57,11 +57,6 @@ export default async function TagDetailPage({
       .eq('id', tagId)
       .eq('project_id', projectId)
       .single(),
-    supabase
-      .from('tags')
-      .select('id')
-      .eq('project_id', projectId)
-      .order('tag_number'),
     supabase
       .from('itrs')
       .select(`
@@ -138,19 +133,36 @@ export default async function TagDetailPage({
     : { data: [] as { itr_template_id: string }[] }
   const matrixTemplateIds = (matrixRows ?? []).map(r => r.itr_template_id)
 
-  const { data: subsystemRows } = canMove
-    ? await supabase
-        .from('subsystems')
-        .select('id, code, name, systems!inner(code, project_id)')
-        .eq('systems.project_id', projectId)
-        .order('code')
-    : { data: [] }
-  const subsystemOptions = (subsystemRows ?? []).map(s => ({ id: s.id, code: s.code, name: s.name, system_code: s.systems.code }))
-
-  // Prev / next tag navigation
-  const tagIndex = (allTagIds ?? []).findIndex(t => t.id === tagId)
-  const prevTagId = tagIndex > 0 ? allTagIds![tagIndex - 1].id : null
-  const nextTagId = tagIndex < (allTagIds?.length ?? 0) - 1 ? allTagIds![tagIndex + 1].id : null
+  // S09 (B-07): subsistemas paginados (PostgREST corta en 1000) y navegación anterior/siguiente con dos
+  // lecturas de 1 fila por tag_number (único por proyecto) en vez de cargar todos los ids del proyecto.
+  const [subsystemRes, { data: prevRow }, { data: nextRow }] = await Promise.all([
+    canMove
+      ? fetchAllRowsFlagged(() => supabase
+          .from('subsystems')
+          .select('id, code, name, systems!inner(code, project_id)')
+          .eq('systems.project_id', projectId)
+          .order('code'))
+      : Promise.resolve({ rows: [], truncated: false }),
+    supabase
+      .from('tags')
+      .select('id')
+      .eq('project_id', projectId)
+      .lt('tag_number', tag.tag_number)
+      .order('tag_number', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('tags')
+      .select('id')
+      .eq('project_id', projectId)
+      .gt('tag_number', tag.tag_number)
+      .order('tag_number', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+  ])
+  const subsystemOptions = subsystemRes.rows.map(s => ({ id: s.id, code: s.code, name: s.name, system_code: s.systems.code }))
+  const prevTagId = prevRow?.id ?? null
+  const nextTagId = nextRow?.id ?? null
 
   // Consolidated photos across ITR + Punch + Preservation (D1c)
   const tagPhotos = await fetchConsolidatedTagPhotos(supabase, {

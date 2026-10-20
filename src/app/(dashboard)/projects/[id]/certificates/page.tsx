@@ -1,5 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
-import { evaluateEligibility, resolveCatBLimit } from '@/lib/certificates/eligibility'
+import { evaluateEligibilityCounts, resolveCatBLimit } from '@/lib/certificates/eligibility'
+import { fetchAllRows } from '@/lib/list/fetch-all'
+import { fetchSubsystemPhaseItrCounts, fetchSubsystemRollup } from '@/lib/list/kpi-query'
 import { redirect, notFound } from 'next/navigation'
 import CertificatesView from './CertificatesView'
 
@@ -15,13 +17,17 @@ export default async function CertificatesPage({
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
+  // S09 (B-02): la matriz subsistema × fase sale de conteos SQL (antes: todos los ITR y punches del
+  // proyecto, cortados en 1000 filas, y un bucle subsistemas × fases × ITR en el Worker). La lista de
+  // Cat B abiertos se carga completa porque el modal de emisión exige justificar cada uno.
   const [
     { data: project },
     { data: phases },
-    { data: subsystems },
-    { data: itrs },
-    { data: openPunches },
-    { data: certificates },
+    subsystems,
+    itrCounts,
+    rollup,
+    openCatB,
+    certificates,
     { data: org },
   ] = await Promise.all([
     supabase
@@ -35,25 +41,26 @@ export default async function CertificatesPage({
       .select('id, code, name, color, certificate_name, order_index')
       .eq('org_id', membership.org_id)
       .order('order_index'),
-    supabase
+    fetchAllRows(() => supabase
       .from('subsystems')
       .select('id, code, name, system_id, systems(id, code, name)')
       .eq('project_id', projectId)
-      .order('code'),
-    supabase
-      .from('itrs')
-      .select('id, status, subsystem_id, phase_id')
-      .eq('project_id', projectId),
-    supabase
+      .order('code')),
+    fetchSubsystemPhaseItrCounts(supabase, projectId),
+    fetchSubsystemRollup(supabase, projectId),
+    fetchAllRows(() => supabase
       .from('punches')
-      .select('id, punch_number, description, subsystem_id, category, status')
+      .select('id, punch_number, description, subsystem_id')
       .eq('project_id', projectId)
-      .not('status', 'in', '(closed,cancelled)'),
-    supabase
+      .eq('category', 'B')
+      .in('status', ['open', 'in_progress'])
+      .order('punch_number')),
+    fetchAllRows(() => supabase
       .from('certificates')
       .select('id, subsystem_id, phase_id, certificate_number, title, status, issued_date, issued_by')
       .eq('project_id', projectId)
-      .order('created_at', { ascending: false }),
+      .neq('status', 'rejected')
+      .order('created_at', { ascending: false })),
     supabase
       .from('organizations')
       .select('settings')
@@ -93,15 +100,33 @@ export default async function CertificatesPage({
     phaseData: PhaseEligibility[]
   }
 
-  const subsystemRows: SubsystemRow[] = (subsystems ?? []).map(ss => {
-    const phaseData = (phases ?? []).map(phase => {
-      const ssItrs = (itrs ?? []).filter(i => i.subsystem_id === ss.id && i.phase_id === phase.id)
-      const ssPunches = (openPunches ?? []).filter(p => p.subsystem_id === ss.id)
-      const { totalItrs, approvedItrs, openCatA, openCatBPunches, eligible, catBOverLimit } = evaluateEligibility(ssItrs, ssPunches, catBLimit)
+  const countKey = (ssId: string, phaseId: string) => `${ssId}|${phaseId}`
+  const itrByKey = new Map(itrCounts.map(c => [countKey(c.subsystem_id, c.phase_id), c]))
+  const catBBySubsystem = new Map<string, { id: string; punch_number: string; description: string }[]>()
+  for (const p of openCatB) {
+    if (!p.subsystem_id) continue
+    const list = catBBySubsystem.get(p.subsystem_id) ?? []
+    list.push({ id: p.id, punch_number: p.punch_number, description: p.description })
+    catBBySubsystem.set(p.subsystem_id, list)
+  }
+  // El más reciente no rechazado por (subsistema, fase); vienen ordenados por created_at desc.
+  const certByKey = new Map<string, CertRow>()
+  for (const c of certificates) {
+    if (!c.subsystem_id || !c.phase_id) continue
+    const k = countKey(c.subsystem_id, c.phase_id)
+    if (!certByKey.has(k)) certByKey.set(k, c)
+  }
 
-      const certificate = (certificates ?? []).find(
-        c => c.subsystem_id === ss.id && c.phase_id === phase.id && c.status !== 'rejected'
-      ) ?? null
+  const subsystemRows: SubsystemRow[] = subsystems.map(ss => {
+    const phaseData = (phases ?? []).map(phase => {
+      const counts = itrByKey.get(countKey(ss.id, phase.id))
+      const { totalItrs, approvedItrs, openCatA, openCatBPunches, eligible, catBOverLimit } = evaluateEligibilityCounts({
+        totalItrs: counts?.itr_total ?? 0,
+        approvedItrs: counts?.itr_approved ?? 0,
+        openCatA: rollup.get(ss.id)?.open_punches_a ?? 0,
+        openCatBPunches: catBBySubsystem.get(ss.id) ?? [],
+      }, catBLimit)
+      const certificate = certByKey.get(countKey(ss.id, phase.id)) ?? null
 
       return { phaseId: phase.id, totalItrs, approvedItrs, openCatA, openCatBPunches, certificate, eligible, catBOverLimit, catBLimit }
     })

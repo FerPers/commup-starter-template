@@ -1,6 +1,7 @@
 import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRows } from '@/lib/list/fetch-all'
 
 /**
  * POST /api/cron/snapshot
@@ -31,120 +32,26 @@ export async function POST(req: NextRequest) {
   const today = new Date().toISOString().split('T')[0]
 
   // ── Load all active projects ──────────────────────────────────────────
-  const { data: projects, error: projectsErr } = await supabase
-    .from('projects')
-    .select('id')
-    .eq('status', 'active')
-
-  if (projectsErr) {
-    return NextResponse.json({ error: projectsErr.message }, { status: 500 })
+  let projects: { id: string }[]
+  try {
+    projects = await fetchAllRows(() => supabase.from('projects').select('id').eq('status', 'active'))
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 
   const results: Array<{ projectId: string; ok: boolean; error?: string }> = []
 
-  for (const project of projects ?? []) {
+  for (const project of projects) {
     const pid = project.id
 
     try {
-      const [
-        { data: itrs },
-        { data: punches },
-        { count: tagCount },
-        { data: preservationPlans },
-      ] = await Promise.all([
-        supabase.from('itrs').select('id, status, phase_id').eq('project_id', pid),
-        supabase.from('punches').select('id, category, status').eq('project_id', pid),
-        supabase.from('tags').select('id', { count: 'exact', head: true }).eq('project_id', pid),
-        supabase
-          .from('preservation_plans')
-          .select('id, next_due_date')
-          .eq('project_id', pid)
-          .eq('status', 'active'),
-      ])
-
-      const totalItrs = itrs?.length ?? 0
-      const completedItrs = (itrs ?? []).filter(i => i.status === 'approved').length
-      const punchesA = (punches ?? []).filter(p => p.category === 'A')
-      const punchesB = (punches ?? []).filter(p => p.category === 'B')
-      const openPunchesA = punchesA.filter(p => !['closed', 'cancelled'].includes(p.status)).length
-      const openPunchesB = punchesB.filter(p => !['closed', 'cancelled'].includes(p.status)).length
-      const overduePreservation = (preservationPlans ?? []).filter(p => (p.next_due_date as string) < today).length
-      const completionPct = totalItrs > 0 ? Number(((completedItrs / totalItrs) * 100).toFixed(2)) : 0
-
-      // Delete any existing project-level snapshot for today before re-inserting
-      await supabase
-        .from('kpi_snapshots')
-        .delete()
-        .eq('project_id', pid)
-        .eq('snapshot_date', today)
-        .is('phase_id', null)
-        .is('subsystem_id', null)
-        .is('area_id', null)
-        .is('system_id', null)
-
-      const { error: insertErr } = await supabase.from('kpi_snapshots').insert({
-        project_id: pid,
-        area_id: null,
-        system_id: null,
-        subsystem_id: null,
-        phase_id: null,
-        total_itrs: totalItrs,
-        completed_itrs: completedItrs,
-        total_punches_a: punchesA.length,
-        open_punches_a: openPunchesA,
-        total_punches_b: punchesB.length,
-        open_punches_b: openPunchesB,
-        total_tags: tagCount ?? 0,
-        total_preservation: preservationPlans?.length ?? 0,
-        overdue_preservation: overduePreservation,
-        completion_pct: completionPct,
-        snapshot_date: today,
-      })
-
-      // ── Per-phase snapshots (KPI history → S-curves / delta chips) ────
-      // Solo métricas de ITRs: punches/tags/preservación no tienen fase.
-      const phaseIds = [...new Set((itrs ?? []).map(i => i.phase_id).filter((p): p is string => !!p))]
-
-      await supabase
-        .from('kpi_snapshots')
-        .delete()
-        .eq('project_id', pid)
-        .eq('snapshot_date', today)
-        .not('phase_id', 'is', null)
-
-      let phaseErr: string | undefined
-      if (phaseIds.length > 0) {
-        const phaseRows = phaseIds.map(phaseId => {
-          const phaseItrs = (itrs ?? []).filter(i => i.phase_id === phaseId)
-          const phaseTotal = phaseItrs.length
-          const phaseDone = phaseItrs.filter(i => i.status === 'approved').length
-          return {
-            project_id: pid,
-            area_id: null,
-            system_id: null,
-            subsystem_id: null,
-            phase_id: phaseId,
-            total_itrs: phaseTotal,
-            completed_itrs: phaseDone,
-            total_punches_a: 0,
-            open_punches_a: 0,
-            total_punches_b: 0,
-            open_punches_b: 0,
-            total_tags: 0,
-            total_preservation: 0,
-            overdue_preservation: 0,
-            completion_pct: phaseTotal > 0 ? Number(((phaseDone / phaseTotal) * 100).toFixed(2)) : 0,
-            snapshot_date: today,
-          }
-        })
-        const { error: phaseInsertErr } = await supabase.from('kpi_snapshots').insert(phaseRows)
-        phaseErr = phaseInsertErr?.message
-      }
+      // S09 (B-01/B-25): conteos completos en SQL e idempotente (antes: ≤1000 filas en JS, borrar + insertar)
+      const { error: kpiErr } = await supabase.rpc('take_kpi_snapshot', { p_project_id: pid, p_date: today })
 
       // ── Readiness (fase 5): avance ponderado por sistema y KPIs de gestión diaria, en SQL ──
       const { error: mgmtErr } = await supabase.rpc('take_mgmt_snapshot', { p_project_id: pid, p_date: today })
 
-      const errMsg = insertErr?.message ?? phaseErr ?? mgmtErr?.message
+      const errMsg = kpiErr?.message ?? mgmtErr?.message
       results.push({ projectId: pid, ok: !errMsg, error: errMsg })
     } catch (err) {
       results.push({ projectId: pid, ok: false, error: String(err) })

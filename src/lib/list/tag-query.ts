@@ -69,6 +69,7 @@ export async function fetchTagPage(
 ): Promise<{ rows: TagListRow[]; total: number }> {
   const size = opts.pageSize ?? LIST_PAGE_SIZE
   const [from, to] = rangeFor(opts.page, size)
+  // bounded: .range(from, to) más abajo
   const base = supabase.from('tag_list_v').select(VIEW_COLS, { count: 'exact' })
   const { data, count, error } = await applyFilters(base, projectId, opts.filters)
     .order(opts.sort, { ascending: opts.dir === 'asc', nullsFirst: false })

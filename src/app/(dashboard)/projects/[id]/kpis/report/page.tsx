@@ -1,4 +1,4 @@
-import { fetchAllRows } from '@/lib/list/fetch-all'
+import { fetchItrPhaseCounts, fetchPunchCounts, sumItr, sumPunch, isOpenPunch } from '@/lib/list/kpi-query'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import ReportPrint from './ReportPrint'
@@ -16,8 +16,8 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
     { data: project },
     { data: org },
     { data: phases },
-    itrs,
-    { data: openPunches },
+    itrCounts,
+    punchCounts,
     subsystemKpis,
     snapshots,
   ] = await Promise.all([
@@ -37,15 +37,9 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
       .select('id, code, name, color, order_index')
       .eq('org_id', membership.org_id)
       .order('order_index'),
-    fetchAllRows(() => supabase
-      .from('itrs')
-      .select('id, status, phase_id')
-      .eq('project_id', projectId)),
-    supabase
-      .from('punches')
-      .select('id, category, status')
-      .eq('project_id', projectId)
-      .not('status', 'in', '(closed,cancelled)'),
+    // S09 (F-04): conteos SQL (antes: punches abiertos cortados en 1000 → Cat A/B subcontados)
+    fetchItrPhaseCounts(supabase, { projectId }),
+    fetchPunchCounts(supabase, { projectId }),
     getSubsystemKpis(projectId),
     getProjectSnapshots(projectId),
   ])
@@ -53,9 +47,8 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
   if (!project) notFound()
 
   const phaseKpis = (phases ?? []).map(phase => {
-    const phaseItrs = (itrs ?? []).filter(i => i.phase_id === phase.id)
-    const total = phaseItrs.length
-    const approved = phaseItrs.filter(i => i.status === 'approved').length
+    const total = sumItr(itrCounts, i => i.phase_id === phase.id)
+    const approved = sumItr(itrCounts, i => i.phase_id === phase.id && i.status === 'approved')
     const pct = total > 0 ? Math.round((approved / total) * 100) : 0
     return { id: phase.id, code: phase.code, name: phase.name, color: phase.color, total, approved, pct }
   })
@@ -63,8 +56,8 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
   const totalItrs = phaseKpis.reduce((s, p) => s + p.total, 0)
   const totalApproved = phaseKpis.reduce((s, p) => s + p.approved, 0)
   const overallPct = totalItrs > 0 ? Math.round((totalApproved / totalItrs) * 100) : 0
-  const openCatA = (openPunches ?? []).filter(p => p.category === 'A').length
-  const openCatB = (openPunches ?? []).filter(p => p.category === 'B').length
+  const openCatA = sumPunch(punchCounts, p => isOpenPunch(p) && p.category === 'A')
+  const openCatB = sumPunch(punchCounts, p => isOpenPunch(p) && p.category === 'B')
   const lastSnapshot = snapshots[snapshots.length - 1]
   const snapshotNum = snapshots.length
 

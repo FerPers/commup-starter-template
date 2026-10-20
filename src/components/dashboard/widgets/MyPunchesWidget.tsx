@@ -2,16 +2,28 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { CATEGORY_CFG, PUNCH_STYLE, TaskSection } from './_shared'
 
+/** S09 (B-07): el widget muestra los más urgentes; la lista completa vive en /punch-list. */
+const WIDGET_LIMIT = 50
+
 export default async function MyPunchesWidget({ userId }: { userId: string }) {
   const supabase = await createClient()
   const t = await getTranslations('Dashboard')
 
-  const { data: myPunches } = await supabase
-    .from('punches')
-    .select(`id, punch_number, category, description, status, priority, target_date, project_id, projects(id, name, code), tags(tag_number)`)
-    .eq('assigned_to', userId)
-    .in('status', ['open', 'in_progress'])
-    .order('target_date', { ascending: true, nullsFirst: false })
+  const [{ data: myPunches }, { count: total }] = await Promise.all([
+    supabase
+      .from('punches')
+      .select(`id, punch_number, category, description, status, priority, target_date, project_id, projects(id, name, code), tags(tag_number)`)
+      .eq('assigned_to', userId)
+      .in('status', ['open', 'in_progress'])
+      .order('target_date', { ascending: true, nullsFirst: false })
+      .order('id')
+      .limit(WIDGET_LIMIT),
+    supabase
+      .from('punches')
+      .select('id', { count: 'exact', head: true })
+      .eq('assigned_to', userId)
+      .in('status', ['open', 'in_progress']),
+  ])
 
   const punchLabels: Record<string, string> = {
     open: t('punchStatus.open'),
@@ -25,7 +37,7 @@ export default async function MyPunchesWidget({ userId }: { userId: string }) {
 
 
   return (
-    <TaskSection title={t('inspector.myPunches')} count={items.length} emptyText={t('inspector.myPunchesEmpty')}>
+    <TaskSection title={t('inspector.myPunches')} count={total ?? items.length} emptyText={t('inspector.myPunchesEmpty')}>
       {(items ?? []).map(p => {
         const cat = CATEGORY_CFG[p.category]
         const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open

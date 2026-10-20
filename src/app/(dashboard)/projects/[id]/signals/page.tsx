@@ -1,6 +1,9 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import SignalsView from './SignalsView'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 export default async function SignalsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,7 +22,9 @@ export default async function SignalsPage({ params }: { params: Promise<{ id: st
 
   if (!project) notFound()
 
-  const { data: signals } = await supabase
+  // S09 (B-07): PostgREST corta en 1000 filas; un proyecto real tiene 10k–50k señales → se pagina.
+  const [signalsRes, subsystemsRes] = await Promise.all([
+    fetchAllRowsFlagged(() => supabase
     .from('signals')
     .select(`
       id, signal_tag, description, signal_type,
@@ -40,21 +45,30 @@ export default async function SignalsPage({ params }: { params: Promise<{ id: st
       )
     `)
     .eq('tags.project_id', id)
-    .order('signal_tag')
+    .order('signal_tag')),
+    fetchAllRowsFlagged(() => supabase
+      .from('subsystems')
+      .select('id, code, name, systems!inner(project_id)')
+      .eq('systems.project_id', id)
+      .order('code')),
+  ])
+  const signals = signalsRes.rows
+  const subsystems = subsystemsRes.rows
+  const truncated = signalsRes.truncated || subsystemsRes.truncated
 
-  const { data: subsystems } = await supabase
-    .from('subsystems')
-    .select('id, code, name, systems!inner(project_id)')
-    .eq('systems.project_id', id)
-    .order('code')
-
+  const tl = await getTranslations('Common')
   return (
+    <>
+    {truncated && (
+      <PartialNote>{tl('listPartial')}</PartialNote>
+    )}
     <SignalsView
       projectId={project.id}
       projectName={project.name}
-      signals={signals ?? []}
-      subsystems={subsystems ?? []}
+      signals={signals}
+      subsystems={subsystems}
       canEdit={['owner', 'admin', 'architect', 'leader'].includes(membership.role)}
     />
+    </>
   )
 }

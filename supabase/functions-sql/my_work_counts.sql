@@ -96,8 +96,7 @@ AS $function$
     'preservation_overdue', (
       select count(*)
       from preservation_plans pp
-      where pp.status = 'active'
-        and pp.next_due_date < current_date
+      where public.preservation_is_overdue(pp.status, pp.next_due_date)
         and pp.project_id in (select id from proj)
     ),
     'actions_mine', (

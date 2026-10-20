@@ -1,5 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 import ItrListView from './ItrListView'
 import { fetchItrPage, fetchItrStatusCounts } from '@/lib/list/itr-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
@@ -43,22 +45,26 @@ export default async function ProjectItrsPage({
     .map(m => ({ user_id: m.user_id, full_name: m.profiles?.full_name ?? '' }))
     .filter(u => u.full_name)
 
+  const tc = await getTranslations('Common')
   return (
-    <ItrListView
-      projectId={projectId}
-      projectName={project.name}
-      rows={pageRes.rows}
-      total={pageRes.total}
-      page={page}
-      pageSize={LIST_PAGE_SIZE}
-      counts={counts}
-      filters={{ status: sp.status ?? '', phase: sp.phase ?? '', disc: sp.disc ?? '', q: sp.q ?? '' }}
-      sort={sort}
-      dir={dir}
-      phases={phases ?? []}
-      disciplines={disciplines ?? []}
-      users={users}
-      userRole={ctx.role}
-    />
+    <>
+      {pageRes.searchCapped && <PartialNote>{tc('searchPartial')}</PartialNote>}
+      <ItrListView
+        projectId={projectId}
+        projectName={project.name}
+        rows={pageRes.rows}
+        total={pageRes.total}
+        page={page}
+        pageSize={LIST_PAGE_SIZE}
+        counts={counts}
+        filters={{ status: sp.status ?? '', phase: sp.phase ?? '', disc: sp.disc ?? '', q: sp.q ?? '' }}
+        sort={sort}
+        dir={dir}
+        phases={phases ?? []}
+        disciplines={disciplines ?? []}
+        users={users}
+        userRole={ctx.role}
+      />
+    </>
   )
 }

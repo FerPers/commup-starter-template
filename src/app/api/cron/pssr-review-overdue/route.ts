@@ -1,6 +1,7 @@
 import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 /**
  * POST /api/cron/pssr-review-overdue
@@ -43,17 +44,19 @@ export async function POST(req: NextRequest) {
   const today = new Date().toISOString().split('T')[0]
   const redispatchCutoffIso = new Date(Date.now() - REDISPATCH_DAYS * 86_400_000).toISOString()
 
-  const { data: reviewsData, error: reviewsErr } = await admin
-    .from('pssr_reviews')
-    .select('id, org_id, project_id, review_number, title, review_due_date, status, last_overdue_notif_at')
-    .in('status', OVERDUE_STATUSES)
-    .lt('review_due_date', today)
-    .not('review_due_date', 'is', null)
-    .limit(2000)
-
-  if (reviewsErr) return NextResponse.json({ error: reviewsErr.message }, { status: 500 })
-
-  const reviews = (reviewsData ?? []) as ReviewRow[]
+  // S09 (B-07): paginado; .limit(2000) devolvía igual 1000
+  let reviews: ReviewRow[]
+  try {
+    const res = await fetchAllRowsFlagged(() => admin
+      .from('pssr_reviews')
+      .select('id, org_id, project_id, review_number, title, review_due_date, status, last_overdue_notif_at')
+      .in('status', OVERDUE_STATUSES)
+      .lt('review_due_date', today)
+      .not('review_due_date', 'is', null))
+    reviews = res.rows as ReviewRow[]
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
   const due = reviews.filter(r =>
     !r.last_overdue_notif_at || r.last_overdue_notif_at < redispatchCutoffIso,
   )

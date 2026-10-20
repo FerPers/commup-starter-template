@@ -3,7 +3,10 @@ import { notFound, redirect } from 'next/navigation'
 import type {
   CertificateStatus, ContentDraft, CriterionDraft, DerivedOp, PerfResult, PerfRunStatus, PerformanceSection, RevisionStatus, Statistic, TotalBasis, UncertaintyMode, VariableSource,
 } from '@/lib/performance/catalog'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import TestView from './TestView'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 // Ficha de una prueba de desempeño (fase 7, sesión 1): definición con revisiones (frontera, variables,
 // criterios, pares de medidores) e intentos.
@@ -22,15 +25,18 @@ export default async function PerformanceTestPage({ params, searchParams }: {
   const { data: test } = await supabase.from('performance_tests').select('*').eq('id', testId).eq('project_id', id).maybeSingle()
   if (!test) notFound()
 
-  const [{ data: revisions }, { data: runs }, { data: systems }, { data: signals }, { data: procedures }, { data: members }] = await Promise.all([
+  // S09 (E-20): PostgREST corta en 1000 filas aunque se pida .limit(2000); el catálogo de señales se pagina.
+  const [{ data: revisions }, { data: runs }, { data: systems }, signalsRes, { data: procedures }, { data: members }] = await Promise.all([
     supabase.from('performance_test_revisions').select('*').eq('test_id', testId).order('rev', { ascending: false }),
     supabase.from('performance_runs').select('id, number, attempt, status, revision_id, created_at, stabilization_started_at, formal_started_at, closed_at, early_close, aborted_at, result')
       .eq('test_id', testId).order('attempt', { ascending: false }),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
-    supabase.from('signals').select('id, signal_tag, eng_unit, tags!inner(project_id, subsystems(system_id))').eq('tags.project_id', id).order('signal_tag').limit(2000),
+    fetchAllRowsFlagged(() => supabase.from('signals').select('id, signal_tag, eng_unit, tags!inner(project_id, subsystems(system_id))')
+      .eq('tags.project_id', id).order('signal_tag')),
     supabase.from('procedures').select('id, number, title').eq('project_id', id).not('current_revision_id', 'is', null).order('number'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
   ])
+  const signals = signalsRes.rows
   const revs = revisions ?? []
   const { data: liveCert } = await supabase.from('performance_certificates').select('id, number, status, run_id')
     .eq('test_id', testId).in('status', ['pending_signatures', 'accepted']).maybeSingle()
@@ -70,7 +76,12 @@ export default async function PerformanceTestPage({ params, searchParams }: {
     pairs: (pairs ?? []).map(p => ({ variable_a: p.variable_a, variable_b: p.variable_b, max_diff_pct: s(p.max_diff_pct) })),
   }
 
+  const tl = await getTranslations('Common')
   return (
+    <>
+    {signalsRes.truncated && (
+      <PartialNote>{tl('listPartial')}</PartialNote>
+    )}
     <TestView
       key={`${shown.id}:${shown.status}`}
       project={project}
@@ -84,7 +95,7 @@ export default async function PerformanceTestPage({ params, searchParams }: {
       content={content}
       runs={(runs ?? []).map(r => ({ ...r, status: r.status as PerfRunStatus, result: r.result as PerfResult | null, rev: revs.find(x => x.id === r.revision_id)?.rev ?? null }))}
       systems={systems ?? []}
-      signals={(signals ?? []).map(x => ({
+      signals={signals.map(x => ({
         id: x.id, tag: x.signal_tag, unit: x.eng_unit,
         systemId: (x.tags as unknown as { subsystems: { system_id: string } | null } | null)?.subsystems?.system_id ?? null,
       }))}
@@ -93,5 +104,6 @@ export default async function PerformanceTestPage({ params, searchParams }: {
       userId={ctx.userId}
       role={ctx.role}
     />
+    </>
   )
 }

@@ -272,6 +272,8 @@
     }
   },
   "Common": {
+    "listPartial": "Incomplete list: there are more records than the read limit and not all are shown. Narrow the filters or use the export.",
+    "searchPartial": "The search matches too many tags or templates: results may be incomplete. Use a more specific term.",
     "prevPage": "← Previous",
     "nextPage": "Next →",
     "page": "Page {page} of {total}",
@@ -812,6 +814,8 @@
       "lastRecord": "last record",
       "scurvePlanned": "Planned",
       "scurveActual": "Actual",
+      "scurveSuspectShort": "doubtful",
+      "scurveSuspectNote": "{count, plural, one {# hollow point} other {# hollow points}} = old record computed on ≤1000 rows: it may be undercounted and cannot be recomputed.",
       "noChartEmpty": "No data for S-curve",
       "noChartEdit": "Use \"Take Snapshot\" to record the first progress point",
       "noChartView": "Add start/end dates to the project to see the planned line",
@@ -4510,8 +4514,8 @@
     "kpi": {
       "total": "Documents",
       "noRev": "No issued revision",
-      "asBuilt": "As-Built / Final",
-      "outdated": "With superseded references"
+      "asBuilt": "As-Built / Final (linked to systems)",
+      "outdated": "With superseded references (incl. open ITRs)"
     },
     "f": {
       "number": "Number",

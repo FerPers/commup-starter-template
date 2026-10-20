@@ -2,7 +2,10 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import { isEditor } from '@/lib/auth/permissions'
 import { loadGenerationTemplates, loadMembers, loadSourceItrs } from '@/lib/itr/source-itrs-server'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import LoopsView from './LoopsView'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 export default async function LoopsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -21,7 +24,8 @@ export default async function LoopsPage({ params }: { params: Promise<{ id: stri
 
   if (!project) notFound()
 
-  const { data: loops } = await supabase
+  // S09 (B-07): PostgREST corta en 1000 filas → se pagina.
+  const { rows: loops, truncated } = await fetchAllRowsFlagged(() => supabase
     .from('loops')
     .select(`
       id, loop_number, description, status,
@@ -37,25 +41,31 @@ export default async function LoopsPage({ params }: { params: Promise<{ id: stri
       signals ( id, signal_tag, signal_type, origin, junction_box, marshalling, io_card, io_channel, dcs_tag, hmi_display, tags ( tag_number ) )
     `)
     .eq('project_id', id)
-    .order('loop_number')
+    .order('loop_number'))
 
   // Fase 4-D: ITR de loop check por lazo (vigente, desactualizado, resultado por señal) y generación.
   const canEdit = isEditor(ctx.role)
   const [loopItrs, templates, members] = await Promise.all([
-    loadSourceItrs(supabase, 'loop', (loops ?? []).map(l => l.id)),
+    loadSourceItrs(supabase, 'loop', loops.map(l => l.id)),
     canEdit ? loadGenerationTemplates(supabase, ctx.orgId, 'loop_signals') : Promise.resolve([]),
     canEdit ? loadMembers(supabase, ctx.orgId) : Promise.resolve([]),
   ])
 
+  const tl = await getTranslations('Common')
   return (
+    <>
+    {truncated && (
+      <PartialNote>{tl('listPartial')}</PartialNote>
+    )}
     <LoopsView
       projectId={project.id}
       projectName={project.name}
-      loops={loops ?? []}
+      loops={loops}
       loopItrs={loopItrs}
       templates={templates}
       members={members}
       canEdit={canEdit}
     />
+    </>
   )
 }

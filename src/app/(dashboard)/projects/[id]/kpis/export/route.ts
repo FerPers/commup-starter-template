@@ -1,4 +1,4 @@
-import { fetchAllRows } from '@/lib/list/fetch-all'
+import { fetchItrPhaseCounts, sumItr } from '@/lib/list/kpi-query'
 import { createClient } from '@/lib/supabase/server'
 import * as XLSX from 'xlsx'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
@@ -25,7 +25,7 @@ export async function GET(
   const [
     { data: project },
     { data: phases },
-    itrs,
+    itrCounts,
     subsystemKpis,
     snapshots,
   ] = await Promise.all([
@@ -40,10 +40,7 @@ export async function GET(
       .select('id, code, name, order_index')
       .eq('org_id', membership.org_id)
       .order('order_index'),
-    fetchAllRows(() => supabase
-      .from('itrs')
-      .select('id, status, phase_id')
-      .eq('project_id', projectId)),
+    fetchItrPhaseCounts(supabase, { projectId }),
     getSubsystemKpis(projectId),
     getProjectSnapshots(projectId),
   ])
@@ -54,9 +51,8 @@ export async function GET(
 
   // Sheet 1: KPI por Fase
   const phaseRows = (phases ?? []).map(phase => {
-    const phaseItrs = (itrs ?? []).filter(i => i.phase_id === phase.id)
-    const total = phaseItrs.length
-    const approved = phaseItrs.filter(i => i.status === 'approved').length
+    const total = sumItr(itrCounts, i => i.phase_id === phase.id)
+    const approved = sumItr(itrCounts, i => i.phase_id === phase.id && i.status === 'approved')
     const pct = total > 0 ? Math.round((approved / total) * 100) : 0
     return {
       Fase: phase.code,
@@ -93,6 +89,8 @@ export async function GET(
     Aprobados: s.completed_itrs,
     'Punch A abiertos': s.open_punches_a,
     'Punch B abiertos': s.open_punches_b,
+    // D11: snapshots viejos calculados sobre ≤1000 filas; no se pueden recalcular
+    'Dato dudoso': s.suspect ? 'Sí — calculado sobre ≤1000 filas' : '',
   }))
   XLSX.utils.book_append_sheet(
     wb,

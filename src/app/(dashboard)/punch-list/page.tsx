@@ -1,5 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 import PunchListGlobal from './PunchListGlobal'
 import { fetchPunchPage, fetchPunchSummary, PUNCH_SORT_KEYS } from '@/lib/list/punch-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
@@ -60,18 +62,22 @@ export default async function GlobalPunchListPage({ searchParams }: { searchPara
     },
   }))
 
+  const tc = await getTranslations('Common')
   return (
-    <PunchListGlobal
-      currentUserRole={ctx.role}
-      projects={projects ?? []}
-      punches={punches}
-      total={pageRes.total}
-      page={page}
-      pageSize={LIST_PAGE_SIZE}
-      summary={summary}
-      filters={{ project: sp.project ?? '', cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', q: sp.q ?? '' }}
-      disciplines={disciplines ?? []}
-      orgMembers={orgMembers ?? []}
-    />
+    <>
+      {pageRes.searchCapped && <PartialNote>{tc('searchPartial')}</PartialNote>}
+      <PunchListGlobal
+        currentUserRole={ctx.role}
+        projects={projects ?? []}
+        punches={punches}
+        total={pageRes.total}
+        page={page}
+        pageSize={LIST_PAGE_SIZE}
+        summary={summary}
+        filters={{ project: sp.project ?? '', cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', q: sp.q ?? '' }}
+        disciplines={disciplines ?? []}
+        orgMembers={orgMembers ?? []}
+      />
+    </>
   )
 }

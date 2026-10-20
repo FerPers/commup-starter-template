@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { sanitizeRow } from '@/lib/excel/sanitize'
 import { getActiveMembership } from '@/lib/supabase/membership'
-import { fetchAllRows } from '@/lib/list/fetch-all'
+import { fetchAllRows, TruncatedError } from '@/lib/list/fetch-all'
 
 export async function GET(req: NextRequest) {
   // I-22 (S02): la org ACTIVA (cookie), no la primera membresía; y lectura completa por lotes.
@@ -28,33 +28,36 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 })
 
   // Fetch all data in parallel (por lotes: PostgREST corta en 1000 filas)
-  const [tags, itrs, punches, preservation, certificates] = await Promise.all([
+  // S09 (B-08): fetchAllRows ordena por id y falla (en vez de cortar) si se supera el tope.
+  let data
+  try {
+    data = await Promise.all([
     fetchAllRows(() => supabase
       .from('tags')
       .select('tag_number, description, status, subsystems(code), disciplines(code), equipment_types(name)')
-      .eq('project_id', projectId)
-      .order('id')),
+      .eq('project_id', projectId)),
     fetchAllRows(() => supabase
       .from('itrs')
       .select('itr_number, status, progress_pct, scheduled_date, itr_templates(code, title), tags(tag_number)')
-      .eq('project_id', projectId)
-      .order('id')),
+      .eq('project_id', projectId)),
     fetchAllRows(() => supabase
       .from('punches')
       .select('punch_number, category, description, status, priority, created_at, closed_date, tags(tag_number)')
-      .eq('project_id', projectId)
-      .order('id')),
+      .eq('project_id', projectId)),
     fetchAllRows(() => supabase
       .from('preservation_plans')
       .select('tags(tag_number), preservation_procedures(title, frequency), status, next_due_date')
-      .eq('project_id', projectId)
-      .order('id')),
+      .eq('project_id', projectId)),
     fetchAllRows(() => supabase
       .from('certificates')
       .select('certificate_number, title, status, issued_date, subsystems(code)')
-      .eq('project_id', projectId)
-      .order('id')),
-  ])
+      .eq('project_id', projectId)),
+    ])
+  } catch (err) {
+    if (err instanceof TruncatedError) return NextResponse.json({ error: err.message }, { status: 413 })
+    throw err
+  }
+  const [tags, itrs, punches, preservation, certificates] = data
 
   const wb = XLSX.utils.book_new()
 

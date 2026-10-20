@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
+import { TruncatedError } from './fetch-all'
 import { normalizeSearch, rangeFor, LIST_PAGE_SIZE, type SortDir } from './params'
 
 type Client = SupabaseClient<Database>
@@ -82,8 +83,11 @@ function applyFilters<Q extends FilterQ>(
   return q
 }
 
+/** Tope de tags resueltos por búsqueda (cabe en la URL); al alcanzarlo el resultado es parcial (B-22). */
+export const SEARCH_TAG_CAP = 150
+
 async function resolveTagIds(supabase: Client, scope: { orgId: string; projectId?: string }, search: string): Promise<string[]> {
-  let q = supabase.from('tags').select('id').ilike('tag_number', `%${search}%`).limit(150)
+  let q = supabase.from('tags').select('id').ilike('tag_number', `%${search}%`).limit(SEARCH_TAG_CAP)
   if (scope.projectId) q = q.eq('project_id', scope.projectId)
   const { data } = await q
   return (data ?? []).map(t => t.id)
@@ -93,18 +97,19 @@ export async function fetchPunchPage(
   supabase: Client,
   scope: { orgId: string; projectId?: string },
   opts: { filters: PunchListFilters; page: number; sort: PunchSortKey; dir: SortDir; pageSize?: number },
-): Promise<{ rows: PunchListRow[]; total: number }> {
+): Promise<{ rows: PunchListRow[]; total: number; searchCapped: boolean }> {
   const size = opts.pageSize ?? LIST_PAGE_SIZE
   const [from, to] = rangeFor(opts.page, size)
   const search = normalizeSearch(opts.filters.q)
   const tagIds = search ? await resolveTagIds(supabase, scope, search) : null
+  // bounded: .range(from, to) más abajo
   const base = supabase.from('punch_list_v').select(VIEW_COLS, { count: 'exact' })
   const { data, count, error } = await applyFilters(base, scope, opts.filters, tagIds)
     .order(opts.sort, { ascending: opts.dir === 'asc', nullsFirst: false })
     .order('id', { ascending: true })
     .range(from, to)
   if (error) throw new Error(error.message)
-  return { rows: (data ?? []) as unknown as PunchListRow[], total: count ?? 0 }
+  return { rows: (data ?? []) as unknown as PunchListRow[], total: count ?? 0, searchCapped: (tagIds?.length ?? 0) >= SEARCH_TAG_CAP }
 }
 
 export async function fetchPunchSummary(
@@ -137,10 +142,11 @@ export async function fetchPunchRowsAll(
 ): Promise<PunchListRow[]> {
   const out: PunchListRow[] = []
   const batch = 1000
-  for (let page = 1; out.length < maxRows; page++) {
+  for (let page = 1; out.length <= maxRows; page++) {
     const { rows } = await fetchPunchPage(supabase, scope, { filters, page, sort: 'punch_number', dir: 'asc', pageSize: batch })
     out.push(...rows)
-    if (rows.length < batch) break
+    if (rows.length < batch) return out
   }
-  return out.slice(0, maxRows)
+  // S09 (B-08): antes devolvía las primeras maxRows sin avisar
+  throw new TruncatedError(maxRows)
 }

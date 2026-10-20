@@ -3,6 +3,8 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import PidViewer from './PidViewer'
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
+import { fetchAllRows, fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 export default async function PidViewerPage({
   params,
@@ -46,13 +48,11 @@ export default async function PidViewerPage({
 
   if (!signedData?.signedUrl) notFound()
 
-  // Fetch hotspots + tag + discipline
-  const [
-    { data: rawHotspots },
-    { data: allTags },
-    { data: openPunches },
-    { data: itrData },
-  ] = await Promise.all([
+  // S09 (B-07, F-08): el estado de cada pin se calcula SOLO con los tags que tienen pin en este plano
+  // (antes se leían todos los tags/punches/ITR del proyecto y PostgREST cortaba en 1000 filas, así que
+  // `itr_completion_pct` salía de una muestra). La lista del selector de tags (solo para editores) se pagina.
+  const pickerTagsSelect = 'id, tag_number, description, status, discipline_id, disciplines:discipline_id(id, code, name, color), subsystems:subsystem_id(systems:system_id(id, code, name))'
+  const [{ data: rawHotspots }, pickerRes] = await Promise.all([
     supabase
       .from('pid_hotspots')
       .select(`
@@ -64,28 +64,41 @@ export default async function PidViewerPage({
       `)
       .eq('pid_document_id', docId)
       .eq('project_id', id),
-    supabase
-      .from('tags')
-      .select('id, tag_number, description, status, discipline_id, disciplines:discipline_id(id, code, name, color), subsystems:subsystem_id(systems:system_id(id, code, name))')
-      .eq('project_id', id)
-      .order('tag_number'),
-    supabase
-      .from('punches')
-      .select('tag_id, category')
-      .eq('project_id', id)
-      .in('category', ['A', 'B'])
-      .in('status', ['open', 'in_progress']),
-    supabase
-      .from('itrs')
-      .select('tag_id, status')
-      .eq('project_id', id)
-      .not('tag_id', 'is', null),
+    canEdit
+      ? fetchAllRowsFlagged(() => supabase
+          .from('tags')
+          .select(pickerTagsSelect)
+          .eq('project_id', id)
+          .order('tag_number'))
+      : Promise.resolve({ rows: [], truncated: false }),
   ])
+  const allTags = pickerRes.rows
+
+  // Estado por tag con pin, en lotes de 200 ids (largo de URL de PostgREST).
+  const hotspotTagIds = [...new Set((rawHotspots ?? []).map(h => h.tag_id).filter(Boolean))]
+  const chunks: string[][] = []
+  for (let i = 0; i < hotspotTagIds.length; i += 200) chunks.push(hotspotTagIds.slice(i, i + 200))
+  const [punchChunks, itrChunks] = await Promise.all([
+    Promise.all(chunks.map(ids => fetchAllRows(() => supabase
+      .from('punches')
+      .select('id, tag_id, category')
+      .eq('project_id', id)
+      .in('tag_id', ids)
+      .in('category', ['A', 'B'])
+      .in('status', ['open', 'in_progress'])))),
+    Promise.all(chunks.map(ids => fetchAllRows(() => supabase
+      .from('itrs')
+      .select('id, tag_id, status')
+      .eq('project_id', id)
+      .in('tag_id', ids)))),
+  ])
+  const openPunches = punchChunks.flat()
+  const itrData = itrChunks.flat()
 
   // Build enrichment maps
   const punchACountByTag = new Map<string, number>()
   const punchBCountByTag = new Map<string, number>()
-  for (const p of openPunches ?? []) {
+  for (const p of openPunches) {
     if (!p.tag_id) continue
     const map = p.category === 'A' ? punchACountByTag : punchBCountByTag
     map.set(p.tag_id, (map.get(p.tag_id) ?? 0) + 1)
@@ -93,7 +106,7 @@ export default async function PidViewerPage({
 
   const itrTotalByTag = new Map<string, number>()
   const itrApprovedByTag = new Map<string, number>()
-  for (const itr of itrData ?? []) {
+  for (const itr of itrData) {
     if (!itr.tag_id) continue
     itrTotalByTag.set(itr.tag_id, (itrTotalByTag.get(itr.tag_id) ?? 0) + 1)
     if (itr.status === 'approved') {
@@ -144,7 +157,7 @@ export default async function PidViewerPage({
     system: SystemRef | null
   }
 
-  const tags: TagItem[] = (allTags ?? []).map(t => {
+  const tags: TagItem[] = allTags.map(t => {
     const disc = t.disciplines
     return {
       id: t.id,
@@ -161,6 +174,7 @@ export default async function PidViewerPage({
     }
   })
 
+  const tl = await getTranslations('Common')
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
       {/* Top bar */}
@@ -185,6 +199,12 @@ export default async function PidViewerPage({
           {hotspots.length} hotspot{hotspots.length !== 1 ? 's' : ''} marcados
         </div>
       </div>
+
+      {pickerRes.truncated && (
+        <div style={{ padding: '6px 20px', background: 'var(--warning-50)', color: 'var(--warning-700)', fontSize: '12px', flexShrink: 0 }}>
+          {tl('listPartial')}
+        </div>
+      )}
 
       {/* Viewer */}
       <PidViewer

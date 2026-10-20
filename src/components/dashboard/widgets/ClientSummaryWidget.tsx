@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { isMyTurnToSign } from '@/lib/my-work/queues'
 import { SummaryPill } from './_shared'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 export default async function ClientSummaryWidget({ userId, orgId }: { userId: string; orgId: string }) {
   const supabase = await createClient()
@@ -13,11 +14,13 @@ export default async function ClientSummaryWidget({ userId, orgId }: { userId: s
       .select('id', { count: 'exact', head: true })
       .eq('org_id', orgId)
       .eq('status', 'active'),
-    supabase
+    // S09 (B-07): sin los aprobados, paginado
+    fetchAllRowsFlagged(() => supabase
       .from('itr_assignments')
-      .select(`itrs(id, status, required_signatures, itr_signatures(role, user_id))`)
+      .select(`itrs!inner(id, status, required_signatures, itr_signatures(role, user_id))`)
       .eq('user_id', userId)
-      .eq('role', 'client'),
+      .eq('role', 'client')
+      .neq('itrs.status', 'approved'), { maxRows: 10_000 }).then(r => ({ data: r.rows })),
   ])
 
   const pendingSignature = (clientAssignments ?? []).filter(a => {

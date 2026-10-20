@@ -1,5 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 import PunchListView from './PunchListView'
 import { fetchPunchPage, fetchPunchSummary, PUNCH_SORT_KEYS } from '@/lib/list/punch-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
@@ -84,22 +86,26 @@ export default async function PunchListPage({
     },
   }))
 
+  const tc = await getTranslations('Common')
   return (
-    <PunchListView
-      projectId={projectId}
-      projectName={project.name}
-      currentUserRole={ctx.role}
-      currentUserId={ctx.userId}
-      punches={punches}
-      total={pageRes.total}
-      page={page}
-      pageSize={LIST_PAGE_SIZE}
-      summary={summary}
-      filters={{ cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', system: sp.system ?? '', q: sp.q ?? '' }}
-      phases={phases ?? []}
-      disciplines={disciplines ?? []}
-      systems={systems ?? []}
-      orgMembers={orgMembers ?? []}
-    />
+    <>
+      {pageRes.searchCapped && <PartialNote>{tc('searchPartial')}</PartialNote>}
+      <PunchListView
+        projectId={projectId}
+        projectName={project.name}
+        currentUserRole={ctx.role}
+        currentUserId={ctx.userId}
+        punches={punches}
+        total={pageRes.total}
+        page={page}
+        pageSize={LIST_PAGE_SIZE}
+        summary={summary}
+        filters={{ cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', system: sp.system ?? '', q: sp.q ?? '' }}
+        phases={phases ?? []}
+        disciplines={disciplines ?? []}
+        systems={systems ?? []}
+        orgMembers={orgMembers ?? []}
+      />
+    </>
   )
 }

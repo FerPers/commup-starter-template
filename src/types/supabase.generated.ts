@@ -3105,6 +3105,7 @@ export type Database = {
           project_id: string
           snapshot_date: string
           subsystem_id: string | null
+          suspect: boolean
           system_id: string | null
           total_itrs: number
           total_preservation: number
@@ -3124,6 +3125,7 @@ export type Database = {
           project_id: string
           snapshot_date: string
           subsystem_id?: string | null
+          suspect?: boolean
           system_id?: string | null
           total_itrs?: number
           total_preservation?: number
@@ -3143,6 +3145,7 @@ export type Database = {
           project_id?: string
           snapshot_date?: string
           subsystem_id?: string | null
+          suspect?: boolean
           system_id?: string | null
           total_itrs?: number
           total_preservation?: number
@@ -12209,6 +12212,23 @@ export type Database = {
         Args: { p_person_id: string; p_system_id: string }
         Returns: number
       }
+      preservation_due_counts: {
+        Args: { p_days?: number; p_project_ids: string[] }
+        Returns: {
+          active: number
+          due_soon: number
+          overdue: number
+          project_id: string
+        }[]
+      }
+      preservation_is_overdue: {
+        Args: {
+          p_next_due: string
+          p_ref?: string
+          p_status: Database["public"]["Enums"]["preservation_plan_status"]
+        }
+        Returns: boolean
+      }
       procedure_revision_hash: {
         Args: { p_revision_id: string }
         Returns: string
@@ -12631,6 +12651,15 @@ export type Database = {
         Args: { p_bucket: string; p_name: string }
         Returns: boolean
       }
+      subsystem_phase_itr_counts: {
+        Args: { p_project_id: string }
+        Returns: {
+          itr_approved: number
+          itr_total: number
+          phase_id: string
+          subsystem_id: string
+        }[]
+      }
       subsystem_rollup: {
         Args: { p_project_id: string }
         Returns: {
@@ -12662,6 +12691,10 @@ export type Database = {
       }
       tag_subsystem_move_preview: {
         Args: { p_subsystem_id: string; p_tag_id: string }
+        Returns: Json
+      }
+      take_kpi_snapshot: {
+        Args: { p_date?: string; p_project_id: string }
         Returns: Json
       }
       take_mgmt_snapshot: {

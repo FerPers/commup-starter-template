@@ -9,6 +9,7 @@ import { ToastProvider } from '@/components/ui'
 import { getActiveMembership, listMemberships } from '@/lib/supabase/membership'
 import type { OrgMemberRole } from '@/types/database'
 import { badgeTotal, parseCounts } from '@/lib/my-work/queues'
+import { fetchPreservationDueCounts } from '@/lib/list/kpi-query'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getActiveMembership()
@@ -29,8 +30,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const supabase = ctx.supabase
-  // eslint-disable-next-line react-hooks/purity -- Server Component: runs once per request, not on client render
-  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   const { data: orgProjects } = await supabase
     .from('projects')
@@ -59,14 +58,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           .in('project_id', projectIds)
           .eq('category', 'A')
           .in('status', ['open', 'in_progress']),
-    projectIds.length === 0
-      ? Promise.resolve({ count: 0 })
-      : supabase
-          .from('preservation_plans')
-          .select('*', { count: 'exact', head: true })
-          .in('project_id', projectIds)
-          .neq('status', 'completed')
-          .lt('next_due_date', threeDaysAgo),
+    // S09 (B-24): misma definición de «vencida» que Mi trabajo, dashboard y snapshot (sin tolerancia de 3 días)
+    fetchPreservationDueCounts(supabase, projectIds)
+      .then(rows => ({ count: rows.reduce((a, r) => a + r.overdue, 0) }))
+      .catch(() => ({ count: 0 })),
     supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })

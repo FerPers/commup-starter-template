@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { KpiCard, type KpiDelta } from './_shared'
-import { fetchItrPhaseCounts, fetchPunchCounts, sumItr, sumPunch, isOpenPunch } from '@/lib/list/kpi-query'
+import { fetchItrPhaseCounts, fetchPunchCounts, fetchPreservationDueCounts, sumItr, sumPunch, isOpenPunch } from '@/lib/list/kpi-query'
 
 export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
   const supabase = await createClient()
@@ -14,18 +14,12 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
 
   const projectIds = (projects ?? []).map(p => p.id)
 
-  const in7Days = new Date()
-  in7Days.setDate(in7Days.getDate() + 7)
-  const in7DaysStr = in7Days.toISOString().split('T')[0]
-  const today = new Date().toISOString().split('T')[0]
   const ago7 = new Date()
   ago7.setDate(ago7.getDate() - 7)
   const ago7Str = ago7.toISOString().split('T')[0]
 
-  type PreservationRow = { id: string; next_due_date: string }
-
   // Sprint E: conteos de ITRs y punches en SQL (antes: todas las filas de la org)
-  const [{ data: phases }, orgItrs, orgPunches, { data: orgPreservationDue }] = await Promise.all([
+  const [{ data: phases }, orgItrs, orgPunches, preservation] = await Promise.all([
     supabase
       .from('project_phases')
       .select('id, name, code, color, order_index')
@@ -33,23 +27,16 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
       .order('order_index'),
     fetchItrPhaseCounts(supabase, { orgId }),
     fetchPunchCounts(supabase, { orgId }),
-    projectIds.length > 0
-      ? supabase
-          .from('preservation_plans')
-          .select('id, next_due_date')
-          .in('project_id', projectIds)
-          .eq('status', 'active')
-          .lte('next_due_date', in7DaysStr)
-      : Promise.resolve({ data: [] as PreservationRow[] }),
+    fetchPreservationDueCounts(supabase, projectIds, 7),
   ])
 
   const openCount = sumPunch(orgPunches, isOpenPunch)
   const catA = sumPunch(orgPunches, p => isOpenPunch(p) && p.category === 'A')
   const catB = sumPunch(orgPunches, p => isOpenPunch(p) && p.category === 'B')
 
-  const due = (orgPreservationDue ?? []) as PreservationRow[]
-  const overdue = due.filter(p => p.next_due_date < today).length
-  const upcoming = due.filter(p => p.next_due_date >= today).length
+  // S09 (B-24): vencida = definición única de SQL (preservation_is_overdue); por vencer = próximos 7 días
+  const overdue = preservation.reduce((a, r) => a + r.overdue, 0)
+  const upcoming = preservation.reduce((a, r) => a + r.due_soon, 0)
 
   // ── Deltas vs hace 7 días (kpi_snapshots, cron diario 02:00 UTC) ─────────
   // Fases: snapshots por (project, phase) agregados a nivel org.
@@ -83,6 +70,7 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
 
     const [phaseSnapRes, projSnapRes] = await Promise.all([
       phaseDateRow?.snapshot_date
+        // bounded: una fecha × proyectos × fases de la org
         ? supabase
             .from('kpi_snapshots')
             .select('phase_id, total_itrs, completed_itrs')
@@ -91,6 +79,7 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
             .eq('snapshot_date', phaseDateRow.snapshot_date)
         : Promise.resolve({ data: null }),
       projDateRow?.snapshot_date
+        // bounded: una fila por proyecto de la org en esa fecha
         ? supabase
             .from('kpi_snapshots')
             .select('open_punches_a, open_punches_b')
@@ -131,7 +120,7 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-      {(phases ?? []).slice(0, 3).map(phase => {
+      {(phases ?? []).map(phase => {
         const phaseTotal = sumItr(orgItrs, i => i.phase_id === phase.id)
         const phaseApproved = sumItr(orgItrs, i => i.phase_id === phase.id && i.status === 'approved')
         const total = phaseTotal
@@ -144,7 +133,7 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
       <KpiCard label={t('kpi.punchesOpen')} value={String(openCount)} color="var(--danger-500)" sub={t('kpi.punchesOpenSub', { catA, catB })} danger delta={punchDelta} />
       <KpiCard
         label={t('kpi.preservation')}
-        value={String(due.length)}
+        value={String(overdue + upcoming)}
         color={overdue > 0 ? 'var(--warning-500)' : '#8b5cf6'}
         sub={overdue > 0 ? t('kpi.preservationOverdue', { overdue, upcoming }) : t('kpi.preservationUpcoming', { upcoming })}
         danger={overdue > 0}

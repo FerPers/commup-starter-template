@@ -2,7 +2,10 @@ import { Diamond, FolderTree } from 'lucide-react'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import TwinView, { type Tag360 } from './TwinView'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 export const metadata = { title: 'Digital Twin — CommUp' }
 
@@ -26,18 +29,24 @@ export default async function TwinPage({
 
   if (!project) notFound()
 
-  // Fetch tag_360 view for this project
-  const { data: tags, error } = await supabase
-    .from('tag_360')
-    .select('*')
-    .eq('project_id', id)
-    .eq('org_id', membership.org_id)
-    .order('tag_number')
-
-  if (error) {
+  // Vista tag_360 del proyecto. S09 (B-07): PostgREST corta en 1000 filas → se pagina (clave única de la
+  // vista = tag_id).
+  let tags: Tag360[] = []
+  let truncated = false
+  try {
+    const res = await fetchAllRowsFlagged(() => supabase
+      .from('tag_360')
+      .select('*')
+      .eq('project_id', id)
+      .eq('org_id', membership.org_id)
+      .order('tag_number'), { key: 'tag_id' })
+    tags = res.rows as Tag360[]
+    truncated = res.truncated
+  } catch (error) {
     console.error('tag_360 error:', error)
   }
 
+  const tl = await getTranslations('Common')
   return (
     <div style={{ padding: '32px' }}>
       {/* Header */}
@@ -90,10 +99,14 @@ export default async function TwinPage({
         </div>
       </div>
 
+      {truncated && (
+        <PartialNote>{tl('listPartial')}</PartialNote>
+      )}
+
       {/* Main view */}
       <TwinView
         projectId={id}
-        tags={(tags ?? []) as Tag360[]}
+        tags={tags}
       />
     </div>
   )

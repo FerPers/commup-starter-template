@@ -21,7 +21,7 @@ IF NOT trusted AND (OLD.status='approved' OR EXISTS(SELECT 1 FROM public.itr_sig
 IF TG_OP='UPDATE' AND NOT trusted AND NEW.required_signatures IS DISTINCT FROM OLD.required_signatures THEN RAISE EXCEPTION 'Required signatures are fixed when the ITR is created'; END IF;
 IF TG_OP='DELETE' THEN IF OLD.status='approved' OR EXISTS(SELECT 1 FROM public.itr_signatures WHERE itr_id=OLD.id) THEN RAISE EXCEPTION 'Cannot delete signed ITR'; END IF; RETURN OLD; END IF;
 ELSE
-SELECT org_id INTO tpl_org FROM public.itr_templates WHERE id=NEW.template_id FOR UPDATE;
+SELECT org_id INTO tpl_org FROM public.itr_templates WHERE id=NEW.template_id FOR KEY SHARE;
 SELECT org_id INTO project_org FROM public.projects WHERE id=NEW.project_id;
 IF tpl_org IS NULL OR (tpl_org IS DISTINCT FROM project_org AND NOT EXISTS(SELECT 1 FROM public.itr_templates WHERE id=NEW.template_id AND is_global)) THEN RAISE EXCEPTION 'Template organization mismatch'; END IF;
 IF NOT EXISTS(SELECT 1 FROM public.subsystems s JOIN public.systems sy ON sy.id=s.system_id WHERE s.id=NEW.subsystem_id AND sy.project_id=NEW.project_id) THEN RAISE EXCEPTION 'Subsystem project mismatch'; END IF;

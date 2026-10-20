@@ -5,7 +5,10 @@ import {
   isVendorLead,
   type ActivityKind, type ActivityResult, type InterfaceStatus, type PackageStatus, type RecommendationStatus, type ReportKind,
 } from '@/lib/vendors/catalog'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import PackageView, { type PackageData } from './PackageView'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 // Paquete de vendor (fase 8, sesión 2): alcance, límites e interfaces, movilización (gate del sistema + checklist),
 // FAT/SAT con hallazgos (punch o ACC), reportes, recomendaciones con MOC y desmovilización.
@@ -43,9 +46,11 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
   ])
 
   // Tags elegibles: los de los sistemas del paquete (más los ya elegidos), para el alcance y los hallazgos.
-  const { data: tags } = systemIds.length
-    ? await supabase.from('tags').select('id, tag_number, subsystems!inner(system_id)').eq('project_id', id).in('subsystems.system_id', systemIds).order('tag_number').limit(3000)
-    : { data: [] as { id: string; tag_number: string }[] }
+  // S09 (F-07): PostgREST corta en 1000 filas aunque se pida .limit(3000); se pagina con .range().
+  const { rows: tags, truncated: tagsTruncated } = systemIds.length
+    ? await fetchAllRowsFlagged(() => supabase.from('tags').select('id, tag_number, subsystems!inner(system_id)')
+      .eq('project_id', id).in('subsystems.system_id', systemIds).order('tag_number'))
+    : { rows: [] as { id: string; tag_number: string }[], truncated: false }
 
   const entityIds = [...(activities ?? []).map(a => a.id), ...(reports ?? []).map(r => r.id)]
   const { data: attachments } = entityIds.length
@@ -86,19 +91,25 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     recommendations: (recs ?? []).map(r => ({ ...r, status: r.status as RecommendationStatus })),
   }
 
+  const tl = await getTranslations('Common')
   return (
+    <>
+    {tagsTruncated && (
+      <PartialNote>{tl('listPartial')}</PartialNote>
+    )}
     <PackageView
       project={project}
       pkg={data}
       companies={(companies ?? []).map(c => ({ id: c.id, name: c.short_name?.trim() ? c.short_name : c.name, active: c.is_active }))}
       systems={systems ?? []}
       gates={gates ?? []}
-      tags={(tags ?? []).map(t => ({ id: t.id, tag_number: t.tag_number }))}
+      tags={tags.map(t => ({ id: t.id, tag_number: t.tag_number }))}
       members={Object.entries(names).map(([mid, name]) => ({ id: mid, name })).sort((a, b) => a.name.localeCompare(b.name))}
       names={names}
       userId={ctx.userId}
       canLead={isVendorLead(ctx.role)}
       canEdit={ctx.role !== 'client'}
     />
+    </>
   )
 }

@@ -58,7 +58,7 @@ function buildPlannedPoints(startDate: string | null, endDate: string | null) {
   return points
 }
 
-type ChartPoint = { date: string; planned?: number; actual?: number }
+type ChartPoint = { date: string; planned?: number; actual?: number; suspect?: boolean }
 
 function buildChartData(
   plannedPoints: { date: string; planned: number }[],
@@ -71,7 +71,7 @@ function buildChartData(
   }
   for (const s of snapshots) {
     const existing = map.get(s.snapshot_date) ?? { date: s.snapshot_date }
-    map.set(s.snapshot_date, { ...existing, actual: s.completion_pct })
+    map.set(s.snapshot_date, { ...existing, actual: s.completion_pct, suspect: s.suspect })
   }
 
   return [...map.values()].sort((a, b) => a.date.localeCompare(b.date))
@@ -146,6 +146,7 @@ export default function KpiDashboard({
   const plannedPoints = buildPlannedPoints(startDate, endDate)
   const chartData = buildChartData(plannedPoints, snapshots)
   const hasChart = chartData.length > 0
+  const suspectCount = snapshots.filter(s => s.suspect).length
   const lastSnapshot = snapshots[snapshots.length - 1]
 
   const totalItrs = phaseKpis.reduce((s, p) => s + p.total, 0)
@@ -345,7 +346,10 @@ export default function KpiDashboard({
                 width={40}
               />
               <Tooltip
-                formatter={(value, name) => [`${value}%`, name === 'planned' ? plannedLabel : actualLabel]}
+                formatter={(value, name, item) => [
+                  `${value}%${name === 'actual' && (item?.payload as ChartPoint | undefined)?.suspect ? ` · ${t('scurveSuspectShort')}` : ''}`,
+                  name === 'planned' ? plannedLabel : actualLabel,
+                ]}
                 labelFormatter={value => formatDateTick(String(value))}
                 contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
               />
@@ -369,7 +373,16 @@ export default function KpiDashboard({
                 name="actual"
                 stroke="#3b82f6"
                 strokeWidth={2.5}
-                dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
+                // D11: snapshot histórico calculado sobre ≤1000 filas → punto hueco ámbar
+                dot={(props: { cx?: number; cy?: number; payload?: ChartPoint; index?: number }) => (
+                  <circle
+                    key={`dot-${props.index}`}
+                    cx={props.cx} cy={props.cy} r={4}
+                    fill={props.payload?.suspect ? 'var(--card-bg)' : '#3b82f6'}
+                    stroke={props.payload?.suspect ? '#f59e0b' : 'none'}
+                    strokeWidth={props.payload?.suspect ? 2 : 0}
+                  />
+                )}
                 activeDot={{ r: 6 }}
                 connectNulls
               />
@@ -386,6 +399,11 @@ export default function KpiDashboard({
               {canEdit ? t('noChartEdit') : t('noChartView')}
             </p>
           </div>
+        )}
+        {suspectCount > 0 && (
+          <p style={{ fontSize: '12px', color: '#b45309', margin: '10px 0 0' }}>
+            {t('scurveSuspectNote', { count: suspectCount })}
+          </p>
         )}
       </div>
 

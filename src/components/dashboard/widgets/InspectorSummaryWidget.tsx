@@ -1,16 +1,19 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { SummaryPill } from './_shared'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 
 export default async function InspectorSummaryWidget({ userId }: { userId: string }) {
   const supabase = await createClient()
   const t = await getTranslations('Dashboard')
 
   const [{ data: assignments }, { count: punchCount }] = await Promise.all([
-    supabase
+    // S09 (B-07): solo las activas, paginado
+    fetchAllRowsFlagged(() => supabase
       .from('itr_assignments')
-      .select('itrs(id, status)')
-      .eq('user_id', userId),
+      .select('itrs!inner(id, status)')
+      .eq('user_id', userId)
+      .not('itrs.status', 'in', '(approved,rejected)'), { maxRows: 10_000 }).then(r => ({ data: r.rows })),
     supabase
       .from('punches')
       .select('id', { count: 'exact', head: true })

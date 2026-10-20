@@ -43,7 +43,8 @@ export default async function AdminUsersPage() {
       .eq('org_id', orgId)
       .not('user_id', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(2000),
+      // S09: PostgREST devuelve como máximo 1000 (antes pedía 2000); quien no actuó en esas 1000 queda sin fecha
+      .limit(1000),
     supabase.from('companies').select('id, name, short_name').eq('org_id', orgId).eq('is_active', true).order('name'),
   ])
 

@@ -1,7 +1,10 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { isDocumentController, type DocType, type RevisionStatus } from '@/lib/documents/catalog'
+import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import DocumentsView, { type DocRow } from './DocumentsView'
+import { getTranslations } from 'next-intl/server'
+import PartialNote from '@/components/ui/PartialNote'
 
 // Registro maestro de documentos (fase 8, sesión 1; libro 19.6): número, revisión vigente, estado, sistemas y
 // cuántos registros (ITR / procedimientos) usan una revisión superada.
@@ -14,19 +17,24 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
   const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
 
-  const [{ data: docs }, { data: refs }, { data: systems }, { data: disciplines }, { data: companies }] = await Promise.all([
-    supabase.from('documents')
+  // S09 (F-07): PostgREST corta en 1000 filas aunque se pida .limit(5000); se pagina con .range().
+  const [docsRes, refsRes, { data: systems }, { data: disciplines }, { data: companies }] = await Promise.all([
+    fetchAllRowsFlagged(() => supabase.from('documents')
       .select('id, number, title, doc_type, discipline_id, company_id, current_revision_id, updated_at, current:document_revisions!documents_current_revision_fkey(rev, status, issued_on), document_systems(system_id), document_revisions!document_revisions_document_id_fkey(status)')
-      .eq('project_id', id).order('number').limit(5000),
-    supabase.from('document_references').select('document_id, revision_id').eq('project_id', id).limit(20000),
+      .eq('project_id', id).order('number')),
+    fetchAllRowsFlagged(() => supabase.from('document_references').select('id, document_id, revision_id').eq('project_id', id), { maxRows: 200_000 }),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('disciplines').select('id, code, name').eq('org_id', ctx.orgId).order('code'),
     supabase.from('companies').select('id, name, short_name').eq('org_id', ctx.orgId).eq('is_active', true).order('name'),
   ])
 
+  const docs = docsRes.rows
+  const refs = refsRes.rows
+  const truncated = docsRes.truncated || refsRes.truncated
+
   const refsByDoc = new Map<string, { total: number; outdated: number }>()
-  const current = new Map((docs ?? []).map(d => [d.id, d.current_revision_id]))
-  for (const r of refs ?? []) {
+  const current = new Map(docs.map(d => [d.id, d.current_revision_id]))
+  for (const r of refs) {
     const e = refsByDoc.get(r.document_id) ?? { total: 0, outdated: 0 }
     e.total += 1
     const cur = current.get(r.document_id)
@@ -34,7 +42,7 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
     refsByDoc.set(r.document_id, e)
   }
 
-  const rows: DocRow[] = (docs ?? []).map(d => {
+  const rows: DocRow[] = docs.map(d => {
     const cur = d.current as unknown as { rev: string; status: RevisionStatus; issued_on: string | null } | null
     const revs = (d.document_revisions as unknown as { status: string }[] | null) ?? []
     return {
@@ -46,7 +54,12 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
     }
   })
 
+  const tl = await getTranslations('Common')
   return (
+    <>
+    {truncated && (
+      <PartialNote>{tl('listPartial')}</PartialNote>
+    )}
     <DocumentsView
       project={project}
       rows={rows}
@@ -55,5 +68,6 @@ export default async function DocumentsPage({ params }: { params: Promise<{ id: 
       companies={(companies ?? []).map(c => ({ id: c.id, name: c.short_name?.trim() ? c.short_name : c.name }))}
       canEdit={isDocumentController(ctx.role)}
     />
+    </>
   )
 }

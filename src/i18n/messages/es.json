@@ -272,6 +272,8 @@
     }
   },
   "Common": {
+    "listPartial": "Lista incompleta: hay más registros que el tope de lectura y no se muestran todos. Acote los filtros o use la exportación.",
+    "searchPartial": "La búsqueda coincide con demasiados tags o plantillas: los resultados pueden estar incompletos. Use un término más específico.",
     "prevPage": "← Anterior",
     "nextPage": "Siguiente →",
     "page": "Página {page} de {total}",
@@ -812,6 +814,8 @@
       "lastRecord": "último registro",
       "scurvePlanned": "Planificado",
       "scurveActual": "Real",
+      "scurveSuspectShort": "dato dudoso",
+      "scurveSuspectNote": "{count, plural, one {# punto hueco} other {# puntos huecos}} = registro antiguo calculado sobre ≤1000 filas: puede estar subcontado y no se puede recalcular.",
       "noChartEmpty": "Sin datos para la S-curve",
       "noChartEdit": "Usa \"Tomar Snapshot\" para registrar el primer punto de avance",
       "noChartView": "Agrega fechas de inicio/fin al proyecto para ver la línea planificada",
@@ -4510,8 +4514,8 @@
     "kpi": {
       "total": "Documentos",
       "noRev": "Sin revisión emitida",
-      "asBuilt": "As-Built / Final",
-      "outdated": "Con referencias superadas"
+      "asBuilt": "As-Built / Final (ligados a sistemas)",
+      "outdated": "Con referencias superadas (incl. ITR abiertos)"
     },
     "f": {
       "number": "Número",

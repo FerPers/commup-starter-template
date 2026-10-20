@@ -5,6 +5,7 @@ import {
   type PreservationProjectGroup,
   type PreservationPlanRow,
 } from '@/lib/pdf/preservation-status'
+import { fetchAllRows, TruncatedError } from '@/lib/list/fetch-all'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,17 +32,25 @@ export async function GET() {
   const projectList = (projects ?? []) as { id: string; name: string; code: string }[]
   const projectIds = projectList.map(p => p.id)
 
-  const { data: plans } = projectIds.length === 0
-    ? { data: [] }
-    : await supabase
+  // S09 (B-07): PostgREST corta en 1000 filas → se pagina; si supera el tope se responde 413 en vez de
+  // un PDF incompleto.
+  let plans
+  try {
+    plans = projectIds.length === 0
+      ? []
+      : await fetchAllRows(() => supabase
         .from('preservation_plans')
         .select(`
-          status, next_due_date, last_performed_date, project_id,
+          id, status, next_due_date, last_performed_date, project_id,
           tags(tag_number),
           preservation_procedures(code, title, frequency)
         `)
         .in('project_id', projectIds)
-        .order('next_due_date', { ascending: true })
+        .order('next_due_date', { ascending: true }))
+  } catch (e) {
+    if (e instanceof TruncatedError) return new Response(e.message, { status: 413 })
+    throw e
+  }
 
   // Compute due bucket against today (UTC date, matching stored date-only values)
   const today = new Date()
@@ -59,7 +68,7 @@ export async function GET() {
   }
 
   const plansByProject = new Map<string, PreservationPlanRow[]>()
-  for (const plan of plans ?? []) {
+  for (const plan of plans) {
     const tag = pickOne(plan.tags)
     const proc = pickOne(plan.preservation_procedures)
     const row: PreservationPlanRow = {

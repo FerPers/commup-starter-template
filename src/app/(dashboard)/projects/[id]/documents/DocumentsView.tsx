@@ -47,10 +47,13 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
     && (!system || r.systemIds.includes(system))
     && (!status || (status === 'none' ? !r.currentRev : status === 'outdated' ? r.outdatedRefs > 0 : r.currentStatus === status)))
 
-  const kpis = [
+  // S09 (F-29): As-Built/Final con la misma definición que el KPI de /kpis (take_mgmt_snapshot):
+  // sobre los documentos ligados a sistemas. «Superadas» aquí incluye ITR abiertos (avisa antes de firmar).
+  const linked = rows.filter(r => r.systemIds.length > 0)
+  const kpis: { key: string; n: number; of?: number; red?: boolean }[] = [
     { key: 'total', n: rows.length },
     { key: 'noRev', n: rows.filter(r => !r.currentRev).length },
-    { key: 'asBuilt', n: rows.filter(r => r.currentStatus === 'as_built' || r.currentStatus === 'final').length },
+    { key: 'asBuilt', n: linked.filter(r => r.currentStatus === 'as_built' || r.currentStatus === 'final').length, of: linked.length },
     { key: 'outdated', n: rows.filter(r => r.outdatedRefs > 0).length, red: true },
   ]
 
@@ -83,7 +86,7 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
         {kpis.map(k => (
           <div key={k.key} style={{ ...card, padding: 14 }}>
             <div style={label}>{t(`kpi.${k.key}`)}</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: k.red && k.n > 0 ? 'var(--danger-700)' : 'var(--text-strong)' }}>{k.n}</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: k.red && k.n > 0 ? 'var(--danger-700)' : 'var(--text-strong)' }}>{k.n}{k.of !== undefined && <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' }}> / {k.of}</span>}</div>
           </div>
         ))}
       </div>
