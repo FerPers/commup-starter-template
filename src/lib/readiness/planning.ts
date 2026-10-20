@@ -49,7 +49,7 @@ export function gateGap(forecast: string | null | undefined, commitment: string 
 }
 
 /** Estados del motor de gates que ya no representan riesgo de fecha. */
-const SETTLED = new Set(['approved', 'approved_with_conditions', 'pending_signatures'])
+const SETTLED = new Set(['approved', 'approved_with_conditions', 'approved_needs_review', 'pending_signatures'])
 const READY = new Set(['ready', 'ready_with_conditions'])
 
 /** Un gate está en riesgo si su fecha cae en la ventana (o ya pasó) y no está listo ni aprobado. */

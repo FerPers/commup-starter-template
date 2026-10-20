@@ -54,7 +54,7 @@ BEGIN
              'to_verify', COUNT(*) FILTER (WHERE status = 'done'),
              'overdue', COUNT(*) FILTER (WHERE status IN ('open', 'in_progress') AND due_date < p_date),
              'verified_30d', COUNT(*) FILTER (WHERE verified_at >= v_from AND verified_at < v_to),
-             'on_time_30d', COUNT(*) FILTER (WHERE verified_at >= v_from AND verified_at < v_to AND due_date IS NOT NULL AND (done_at AT TIME ZONE v_tz)::date <= due_date),
+             'on_time_30d', COUNT(*) FILTER (WHERE verified_at >= v_from AND verified_at < v_to AND due_date IS NOT NULL AND (done_at AT TIME ZONE v_tz)::date <= COALESCE(original_due_date, due_date)),
              'with_due_30d', COUNT(*) FILTER (WHERE verified_at >= v_from AND verified_at < v_to AND due_date IS NOT NULL))
            FROM actions WHERE project_id = p_project_id),
     'constraints', (SELECT jsonb_build_object(
@@ -69,14 +69,15 @@ BEGIN
              'closed_30d', COUNT(*) FILTER (WHERE closed_at >= v_from AND closed_at < v_to))
            FROM project_constraints WHERE project_id = p_project_id),
     -- Cumplimiento del compromiso: gates aprobados en la ventana que tenían compromiso.
+    -- S11 (D-17): denominador = compromisos que vencían en la ventana (cumplidos o no); a tiempo = gate con todas
+    -- sus firmas (completed_at) en o antes de la fecha comprometida. approved_30d queda por compatibilidad.
     'commitments', (SELECT jsonb_build_object(
-             'approved_30d', COUNT(*),
-             'on_time_30d', COUNT(*) FILTER (WHERE (a.approved_at AT TIME ZONE v_tz)::date <= gp.commitment_date))
-           FROM system_gate_approvals a
-           JOIN system_gate_plans gp ON gp.system_id = a.system_id AND gp.gate_id = a.gate_id AND gp.commitment_date IS NOT NULL
-           WHERE a.project_id = p_project_id AND a.revoked_at IS NULL
-             AND a.status IN ('approved', 'approved_with_conditions')
-             AND a.approved_at >= v_from AND a.approved_at < v_to),
+             'due_30d', COUNT(*),
+             'approved_30d', COUNT(*) FILTER (WHERE a.completed_at IS NOT NULL),
+             'on_time_30d', COUNT(*) FILTER (WHERE a.completed_at IS NOT NULL AND (a.completed_at AT TIME ZONE v_tz)::date <= gp.commitment_date))
+           FROM system_gate_plans gp
+           LEFT JOIN system_gate_approvals a ON a.system_id = gp.system_id AND a.gate_id = gp.gate_id AND a.revoked_at IS NULL
+           WHERE gp.project_id = p_project_id AND gp.commitment_date > p_date - 30 AND gp.commitment_date <= p_date),
     -- Éxito de primer arranque (F6, decisión 2026-10-19): sin trip/parada entre «primer arranque» y «operación estable».
     'startup', (SELECT jsonb_build_object(
              'started', COUNT(*),

@@ -127,10 +127,12 @@ export const revokeGateAttestation = withAuth(
   { role: EDITOR_ROLES, guards: systemGuards },
   async (
     ctx,
-    input: { projectId: string; systemId: string; attestationId: string },
+    input: { projectId: string; systemId: string; attestationId: string; reason: string },
   ): Promise<{ error?: string }> => {
+    // S11 (D-21): con motivo (≥ 10), auditado en la BD y no con el gate aprobado.
     const { error } = await ctx.supabase.rpc('revoke_gate_attestation', {
       p_attestation_id: input.attestationId,
+      p_reason: (input.reason ?? '').trim().slice(0, 2000),
     })
     if (error) return { error: error.message }
     revalidate(input.projectId, input.systemId)

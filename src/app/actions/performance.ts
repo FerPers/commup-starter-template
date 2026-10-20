@@ -109,6 +109,19 @@ export const deletePerformanceTest = withAuth(
   },
 )
 
+/** S11 (E-14): retirar una prueba que ya no aplica (líder+, motivo ≥ 10): deja de contar para el gate. */
+export const withdrawPerformanceTest = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; testId: string; reason: string }): Promise<{ error?: string }> => {
+    if (!(await owned(ctx.supabase, 'performance_tests', input.testId, input.projectId))) return { error: 'Prueba no encontrada' }
+    const { error } = await ctx.supabase.rpc('withdraw_performance_test', { p_test_id: input.testId, p_reason: (input.reason ?? '').trim().slice(0, 2000) })
+    if (error) return { error: error.message }
+    revalidate(input.projectId)
+    revalidatePath(`/projects/${input.projectId}/startup/performance/${input.testId}`)
+    return {}
+  },
+)
+
 // ── Ejecución ────────────────────────────────────────────────────────────
 export const startPerformanceRun = withAuth(
   { guards: projectGuard },

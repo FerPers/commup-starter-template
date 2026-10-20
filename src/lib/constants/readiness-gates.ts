@@ -16,6 +16,8 @@ export type CatalogGate = {
   name: string
   description: string
   criteria: CatalogCriterion[]
+  /** Gate que exige line-up verificado (criterio automático lineup_verified). */
+  requiresLineup?: boolean
 }
 
 export const READINESS_GATE_CATALOG: CatalogGate[] = [
@@ -48,8 +50,10 @@ export const READINESS_GATE_CATALOG: CatalogGate[] = [
       { kind: 'pssr_approved' },
       { kind: 'critical_tags_ready' },
       { kind: 'manual_attestation', label: 'Inertización aceptada (O₂ medido en puntos representativos)' },
-      { kind: 'manual_attestation', label: 'Line-up verificado de forma independiente y sin bypasses de protección activos' },
     ],
+    // S11 (D-31): el line-up verificado y sin registros activos ya lo cubren los criterios automáticos
+    // lineup_verified (requires_lineup) y registers_clear; antes era una declaración manual redundante.
+    requiresLineup: true,
   },
   {
     key: 'performance_ready',

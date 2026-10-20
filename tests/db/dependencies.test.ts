@@ -101,6 +101,20 @@ describe.skipIf(!enabled)('sistematización — dependencias, criterio dependenc
     expect(self.error).not.toBeNull()
   })
 
+  it('S11 (D-35): el ciclo se mide por gates — «D.tardío necesita P.temprano» y «P.tardío necesita D.temprano» conviven', async () => {
+    const sorted = [...gates].sort((x, y) => x.order_index - y.order_index)
+    const [early, late] = [sorted[0], sorted[sorted.length - 1]]
+    const ok1 = await a.from('system_dependencies').insert({ project_id: pid, kind: 'process', system_id: sys.dependent, depends_on_system_id: sys.provider, required_gate_id: early.id, blocked_gate_id: late.id })
+    expect(ok1.error).toBeNull()
+    const ok2 = await a.from('system_dependencies').insert({ project_id: pid, kind: 'process', system_id: sys.provider, depends_on_system_id: sys.dependent, required_gate_id: early.id, blocked_gate_id: late.id })
+    expect(ok2.error).toBeNull()
+    // Pero «P.temprano necesita D.tardío» sí cierra un ciclo (D.tardío ya necesita P.temprano).
+    const bad = await a.from('system_dependencies').insert({ project_id: pid, kind: 'process', system_id: sys.provider, depends_on_system_id: sys.dependent, required_gate_id: late.id, blocked_gate_id: early.id })
+    expect(bad.error?.message).toMatch(/ciclo/)
+    // Y el cálculo termina (cada proveedor se evalúa solo hasta su gate requerido).
+    expect((await systemGates(sys.dependent)).length).toBeGreaterThan(0)
+  })
+
   it('congelar fija quién congela y audita los cambios de alcance posteriores', async () => {
     const frozen = await one<{ boundary_frozen_by: string | null }>('freeze', a.from('systems')
       .update({ boundary_frozen_at: new Date().toISOString(), boundary_frozen_by: '00000000-0000-0000-0000-000000000000' })

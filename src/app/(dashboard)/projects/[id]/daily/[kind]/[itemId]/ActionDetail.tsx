@@ -35,7 +35,14 @@ export default function ActionDetail({ project, opts, names, userId, role, event
   const base = { projectId: project.id, actionId: item.id }
 
   function save() {
-    run(() => updateAction({ ...base, ...form, systemId: form.systemId || null, dueDate: form.dueDate || null }), undefined, true)
+    // S11 (D-15): mover la fecha comprometida es replanificar: pide el motivo (el KPI mide contra la original).
+    let reason: string | undefined
+    if (item.due_date && form.dueDate !== item.due_date) {
+      const r = window.prompt(t('detail.replanPrompt'))
+      if (r === null) return
+      reason = r
+    }
+    run(() => updateAction({ ...base, ...form, systemId: form.systemId || null, dueDate: form.dueDate || null, reason }), undefined, true)
   }
   function go(to: ActionStatus, needComment = false) {
     if (needComment && comment.trim().length < 3) return

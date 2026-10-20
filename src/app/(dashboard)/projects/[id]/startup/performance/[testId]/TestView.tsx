@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
   deletePerformanceTest, newPerformanceRevision, savePerformanceRevision, startPerformanceRun, transitionPerformanceRevision, updatePerformanceTest,
+  withdrawPerformanceTest,
 } from '@/app/actions/performance'
 import {
   DERIVED_OPS, OPERATORS, PERFORMANCE_SECTIONS, STATISTICS, TOTAL_BASES, UNCERTAINTY_MODES, VARIABLE_SOURCES, LIVE_RUN_STATUSES,
@@ -33,7 +34,7 @@ const sectionTitle: React.CSSProperties = { fontSize: 'var(--text-base)', fontWe
 
 export default function TestView({ project, test, revisions, shownId, liveCertificate, content, runs, systems, signals, procedures, names, userId, role }: {
   project: { id: string; code: string; name: string }
-  test: { id: string; number: string; title: string; primarySystemId: string; currentRevisionId: string | null; createdBy: string | null }
+  test: { id: string; number: string; title: string; primarySystemId: string; currentRevisionId: string | null; createdBy: string | null; status: string; withdrawReason: string | null }
   revisions: Rev[]; shownId: string; content: ContentDraft; runs: Run[]
   liveCertificate: { id: string; number: string; status: CertificateStatus; run_id: string } | null
   systems: { id: string; code: string; name: string }[]; signals: Signal[]; procedures: { id: string; label: string }[]
@@ -120,10 +121,20 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
                   <Chip tone={CERT_TONE[liveCertificate.status]}>{liveCertificate.number} · {t(`perf.certStatus.${liveCertificate.status}`)}</Chip>
                 </Link>
               )}
+              {test.status === 'withdrawn' && <Chip tone="muted">{t('perf.withdrawn')}</Chip>}
               {lead && <button type="button" style={{ ...btn('outline'), padding: '3px 10px' }} onClick={() => setEditingHead(true)}>{t('perf.editHead')}</button>}
+              {/* S11 (E-14): una prueba que ya no aplica se retira (deja de bloquear el gate), con motivo */}
+              {lead && test.status !== 'withdrawn' && !liveRun && (
+                <button type="button" style={{ ...btn('outline'), padding: '3px 10px', color: 'var(--danger-700)' }} disabled={isPending}
+                  onClick={() => {
+                    const r = window.prompt(t('perf.withdrawPrompt'))
+                    if (r !== null) act(() => withdrawPerformanceTest({ ...ids, reason: r }))
+                  }}>{t('perf.withdraw')}</button>
+              )}
             </div>
             <p style={{ margin: '4px 0 0', color: 'var(--text-strong)', fontSize: 'var(--text-base)' }}>{test.title}</p>
             <p style={{ ...small, margin: '2px 0 0' }}>{t('perf.primarySystem')}: {sysLabel(test.primarySystemId)}</p>
+            {test.status === 'withdrawn' && <p style={{ ...small, margin: '2px 0 0' }}>{t('perf.withdrawnNote', { reason: test.withdrawReason ?? '' })}</p>}
           </>
         )}
       </div>

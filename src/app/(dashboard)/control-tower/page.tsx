@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
-import { GATE_STATUS_STYLE, isApproved, type MatrixGate } from '@/lib/readiness/gates'
+import { GATE_STATUS_STYLE, gatePolicy, isApproved, type MatrixGate } from '@/lib/readiness/gates'
 import { dependencyBlocks, type SystemType } from '@/lib/systems/dependencies'
 
 type GateLevel = 'green' | 'yellow' | 'red'
@@ -106,12 +106,13 @@ export default async function ControlTowerPage({
   // Avance físico ponderado por gate (fase 5, sesión 2), aparte del readiness.
   const weighted = new Map<string, { pct: number; itrs: number }>()
   if (projectId) {
-    const [readiness, gates, deps, systems, progress] = await Promise.all([
+    const [readiness, gates, deps, systems, progress, org] = await Promise.all([
       supabase.rpc('compute_project_readiness', { p_project_id: projectId }),
       supabase.rpc('compute_project_gates', { p_project_id: projectId }),
       supabase.from('system_dependencies').select('system_id, depends_on_system_id, required_gate_id, blocked_gate_id').eq('project_id', projectId),
       supabase.from('systems').select('id, code, system_type, priority').eq('project_id', projectId),
       supabase.rpc('compute_project_progress', { p_project_id: projectId }),
+      supabase.from('organizations').select('settings').eq('id', orgId).maybeSingle(),
     ])
     for (const p of progress.data ?? []) weighted.set(p.system_id, { pct: Number(p.weighted_pct), itrs: p.itr_total })
     for (const s of systems.data ?? []) sysInfo.set(s.id, { code: s.code, system_type: s.system_type as SystemType | null, priority: s.priority })
@@ -123,6 +124,7 @@ export default async function ControlTowerPage({
       deps.data ?? [],
       (systemId, gateId) => gatesBySystem.get(systemId)?.find(x => x.gate_id === gateId)?.status,
       systemId => sysInfo.get(systemId)?.code ?? '?',
+      gatePolicy(org.data?.settings).regressed_dependency,  // S11 (D13)
     )
   }
 

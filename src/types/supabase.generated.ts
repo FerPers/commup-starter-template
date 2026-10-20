@@ -35,6 +35,7 @@ export type Database = {
           id: string
           number: string
           org_id: string
+          original_due_date: string | null
           owner_id: string | null
           priority: string
           project_id: string
@@ -65,6 +66,7 @@ export type Database = {
           id?: string
           number: string
           org_id: string
+          original_due_date?: string | null
           owner_id?: string | null
           priority?: string
           project_id: string
@@ -95,6 +97,7 @@ export type Database = {
           id?: string
           number?: string
           org_id?: string
+          original_due_date?: string | null
           owner_id?: string | null
           priority?: string
           project_id?: string
@@ -2081,6 +2084,7 @@ export type Database = {
       gate_criteria: {
         Row: {
           created_at: string
+          deleted_at: string | null
           gate_id: string
           id: string
           is_blocking: boolean
@@ -2091,6 +2095,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           gate_id: string
           id?: string
           is_blocking?: boolean
@@ -2101,6 +2106,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           gate_id?: string
           id?: string
           is_blocking?: boolean
@@ -4868,8 +4874,12 @@ export type Database = {
           primary_system_id: string
           project_id: string
           seq: number
+          status: string
           title: string
           updated_at: string
+          withdraw_reason: string | null
+          withdrawn_at: string | null
+          withdrawn_by: string | null
         }
         Insert: {
           created_at?: string
@@ -4881,8 +4891,12 @@ export type Database = {
           primary_system_id: string
           project_id: string
           seq: number
+          status?: string
           title: string
           updated_at?: string
+          withdraw_reason?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
         }
         Update: {
           created_at?: string
@@ -4894,8 +4908,12 @@ export type Database = {
           primary_system_id?: string
           project_id?: string
           seq?: number
+          status?: string
           title?: string
           updated_at?: string
+          withdraw_reason?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
         }
         Relationships: [
           {
@@ -7140,6 +7158,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          is_startup_gate: boolean
           name: string
           order_index: number
           org_id: string
@@ -7158,6 +7177,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_startup_gate?: boolean
           name: string
           order_index?: number
           org_id: string
@@ -7176,6 +7196,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_startup_gate?: boolean
           name?: string
           order_index?: number
           org_id?: string
@@ -8463,6 +8484,7 @@ export type Database = {
           approved_by: string
           approved_company: string | null
           approved_role: string
+          completed_at: string | null
           conditions: Json
           evidence: Json
           gate_id: string
@@ -8482,6 +8504,7 @@ export type Database = {
           approved_by: string
           approved_company?: string | null
           approved_role: string
+          completed_at?: string | null
           conditions?: Json
           evidence?: Json
           gate_id: string
@@ -8501,6 +8524,7 @@ export type Database = {
           approved_by?: string
           approved_company?: string | null
           approved_role?: string
+          completed_at?: string | null
           conditions?: Json
           evidence?: Json
           gate_id?: string
@@ -8577,6 +8601,7 @@ export type Database = {
           id: string
           org_id: string
           project_id: string
+          revoke_reason: string | null
           revoked_at: string | null
           revoked_by: string | null
           system_id: string
@@ -8590,6 +8615,7 @@ export type Database = {
           id?: string
           org_id: string
           project_id: string
+          revoke_reason?: string | null
           revoked_at?: string | null
           revoked_by?: string | null
           system_id: string
@@ -8603,6 +8629,7 @@ export type Database = {
           id?: string
           org_id?: string
           project_id?: string
+          revoke_reason?: string | null
           revoked_at?: string | null
           revoked_by?: string | null
           system_id?: string
@@ -11670,6 +11697,24 @@ export type Database = {
           status: string
         }[]
       }
+      compute_system_gates_upto: {
+        Args: { p_max_order: number; p_system_id: string }
+        Returns: {
+          approval: Json
+          approval_roles: string[]
+          computed_level: string
+          cosign_roles: string[]
+          criteria: Json
+          gate_code: string
+          gate_id: string
+          gate_name: string
+          gate_order: number
+          gate_phase_id: string
+          required_signatures: string[]
+          requires_previous: boolean
+          status: string
+        }[]
+      }
       compute_system_progress: {
         Args: { p_system_id: string }
         Returns: {
@@ -12187,6 +12232,7 @@ export type Database = {
       }
       org_caller_role: { Args: { p_org_id: string }; Returns: string }
       org_cat_b_limit: { Args: { p_org_id: string }; Returns: number }
+      org_gate_policy: { Args: { p_org_id: string }; Returns: Json }
       ownership_checklist: {
         Args: { p_system_id: string; p_to_stage: string }
         Returns: Json
@@ -12437,7 +12483,7 @@ export type Database = {
       }
       revoke_api_key: { Args: { p_key_id: string }; Returns: undefined }
       revoke_gate_attestation: {
-        Args: { p_attestation_id: string }
+        Args: { p_attestation_id: string; p_reason: string }
         Returns: undefined
       }
       revoke_performance_certificate: {
@@ -12685,9 +12731,15 @@ export type Database = {
         }[]
       }
       system_phase_level: {
-        Args: { p_limit: number; p_phase_id: string; p_system_id: string }
+        Args: {
+          p_limit: number
+          p_phase_id: string
+          p_punches_before?: string
+          p_system_id: string
+        }
         Returns: Json
       }
+      system_pssr_status: { Args: { p_system_id: string }; Returns: Json }
       system_staffing: {
         Args: { p_level: number; p_system_id: string }
         Returns: Json
@@ -12773,6 +12825,7 @@ export type Database = {
           p_due_date: string
           p_owner_id: string
           p_priority: string
+          p_reason?: string
           p_source_ref?: string
           p_system_id: string
           p_title: string
@@ -12789,6 +12842,7 @@ export type Database = {
           p_impact_kind: string
           p_need_date: string
           p_owner_id: string
+          p_reason?: string
           p_recovery_plan: string
           p_system_id: string
           p_title: string
@@ -12925,6 +12979,10 @@ export type Database = {
       }
       void_startup_event: {
         Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
+      }
+      withdraw_performance_test: {
+        Args: { p_reason: string; p_test_id: string }
         Returns: undefined
       }
       witness_startup_event: {

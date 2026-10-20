@@ -134,6 +134,7 @@ Rules for every new page/query/action:
 - Multifirma (migración `20261012200000`): quien aprueba firma como Comisionamiento y el gate queda `pending_signatures` hasta que firmen Operaciones y HSE (`readiness_gates.required_signatures`, roles en `cosign_roles`), cada firma de una persona distinta (`sign_system_gate`). Un gate pendiente de firmas no habilita al siguiente.
 - Escritura SOLO por RPCs SECURITY DEFINER (`approve_system_gate`, `sign_system_gate`, `revoke_system_gate_approval`, `attest_gate_criterion`, `revoke_gate_attestation`): las tablas de aprobaciones/declaraciones no tienen políticas de escritura. Evidencia en bucket `gate-evidence` con ruta `<org>/<system>/…`, inmutable.
 - UI: Control Tower = matriz sistema × gate → `/control-tower/[systemId]` (detalle + aprobación); configuración en `/admin/gates`. `tags.criticality` (safety/process/normal) alimenta `critical_tags_ready`.
+- S11 (D13): regresión configurable por org (`organizations.settings.gate_policy` = SQL `org_gate_policy` = TS `gatePolicy`): anterior en regresión bloquea, proveedor en regresión es condición, un punch nuevo no regresa gates aprobados. Gate de arranque explícito (`readiness_gates.is_startup_gate`). Estado `approved_needs_review`. Cambios de configuración auditados por trigger; criterios con declaraciones se archivan (`deleted_at`).
 
 ## Gestión diaria — fase 5 del plan readiness
 

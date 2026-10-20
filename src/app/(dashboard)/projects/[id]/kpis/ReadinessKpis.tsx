@@ -17,7 +17,8 @@ export type MgmtSnapshot = {
     tq?: { open: number; overdue: number; closed_30d: number; answered_30d: number; on_time_30d: number; with_due_30d: number; avg_days_to_answer_30d: number | null }
     actions?: { open: number; overdue: number; to_verify: number; verified_30d: number; on_time_30d: number; with_due_30d: number }
     constraints?: { open: number; overdue: number; by_level: Record<string, number>; avg_age_days: number | null; closed_30d: number }
-    commitments?: { approved_30d: number; on_time_30d: number }
+    /** S11 (D-17): due_30d = compromisos que vencían en la ventana (snapshots anteriores: solo approved_30d). */
+    commitments?: { due_30d?: number; approved_30d: number; on_time_30d: number }
     startup?: { started: number; successful: number; failed: number; pending: number }
     trips?: { events_30d: number; systems_30d: number; repeat_systems_30d: number }
     performance?: { tests: number; accepted: number; accepted_first: number; failed_runs: number }
@@ -55,7 +56,7 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
   const tiles = [
     { title: t('weighted'), value: `${(livePct * 100).toFixed(1)} %`, hint: t('weightedHint') },
     { title: t('readiness'), value: `${liveGates.approved}/${liveGates.total}`, hint: t('readinessHint') },
-    { title: t('commitments'), value: rate(k.commitments?.on_time_30d ?? 0, k.commitments?.approved_30d ?? 0), hint: t('commitmentsHint', { n: k.commitments?.approved_30d ?? 0 }) },
+    { title: t('commitments'), value: rate(k.commitments?.on_time_30d ?? 0, k.commitments?.due_30d ?? k.commitments?.approved_30d ?? 0), hint: t('commitmentsHint', { n: k.commitments?.due_30d ?? k.commitments?.approved_30d ?? 0 }) },
     { title: t('tq'), value: rate(k.tq?.on_time_30d ?? 0, k.tq?.with_due_30d ?? 0),
       hint: t('tqHint', { closed: k.tq?.closed_30d ?? 0, days: k.tq?.avg_days_to_answer_30d ?? '—', open: k.tq?.open ?? 0 }) },
     { title: t('actions'), value: rate(k.actions?.on_time_30d ?? 0, k.actions?.with_due_30d ?? 0),

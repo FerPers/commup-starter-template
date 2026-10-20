@@ -9,11 +9,13 @@ import {
   createGate,
   deleteGate,
   deleteGateCriterion,
+  gateCriterionImpact,
   moveGate,
   updateGate,
   updateGateCriterion,
+  updateGatePolicy,
 } from '@/app/actions/gates-admin'
-import { COSIGN_CAPACITIES, CONFIGURABLE_CRITERIA } from '@/lib/readiness/gates'
+import { COSIGN_CAPACITIES, CONFIGURABLE_CRITERIA, type GatePolicy } from '@/lib/readiness/gates'
 import { GATE_APPROVAL_ROLES, READINESS_GATE_CATALOG } from '@/lib/constants/readiness-gates'
 
 type Gate = {
@@ -26,6 +28,7 @@ type Gate = {
   requires_previous: boolean
   requires_lineup: boolean
   requires_performance: boolean
+  is_startup_gate: boolean
   is_active: boolean
   approval_roles: string[]
   required_signatures: string[]
@@ -47,7 +50,7 @@ const btn = (primary = false): React.CSSProperties => ({
 })
 const linkBtn: React.CSSProperties = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }
 
-export default function GatesAdminView({ gates, criteria, phases, weights }: { gates: Gate[]; criteria: Crit[]; phases: Phase[]; weights?: React.ReactNode }) {
+export default function GatesAdminView({ gates, criteria, phases, weights, policy }: { gates: Gate[]; criteria: Crit[]; phases: Phase[]; weights?: React.ReactNode; policy: GatePolicy }) {
   const t = useTranslations('GatesAdmin')
   const tg = useTranslations('Gates')
   const router = useRouter()
@@ -66,6 +69,19 @@ export default function GatesAdminView({ gates, criteria, phases, weights }: { g
   }
 
   const existingCodes = new Set(gates.map(g => g.code))
+  // S11 (E-07): una prueba de desempeño necesita la planta arrancada; exigirla antes del gate de arranque es circular.
+  const startup = gates.find(g => g.is_startup_gate && g.is_active)
+  const perfBeforeStartup = startup ? gates.filter(g => g.is_active && g.requires_performance && g.order_index <= startup.order_index) : []
+
+  async function removeCriterion(id: string) {
+    // S11 (D-20): confirmar con el impacto; con declaraciones el criterio se archiva (no se borra la evidencia).
+    const impact = await gateCriterionImpact(id)
+    if (impact.error) { setError(impact.error); return }
+    const msg = (impact.attestations ?? 0) > 0
+      ? t('confirmRemoveCriterionImpact', { n: impact.attestations ?? 0, systems: impact.systems ?? 0 })
+      : t('confirmRemoveCriterion')
+    if (window.confirm(msg)) act(() => deleteGateCriterion(id))
+  }
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -77,6 +93,42 @@ export default function GatesAdminView({ gates, criteria, phases, weights }: { g
       {error && (
         <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>
           {error}
+        </div>
+      )}
+
+      {/* S11 (D13): qué pasa cuando un gate aprobado entra en regresión */}
+      <section style={card} aria-label={t('policy.title')}>
+        <div style={{ fontWeight: 700, color: 'var(--text-strong)', marginBottom: 6 }}>{t('policy.title')}</div>
+        <p style={{ ...small, margin: '0 0 10px' }}>{t('policy.hint')}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+          <label style={{ ...small, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {t('policy.previous')}
+            <select style={input} value={policy.regressed_previous} disabled={isPending}
+              onChange={e => act(() => updateGatePolicy({ regressed_previous: e.target.value as GatePolicy['regressed_previous'] }))}>
+              <option value="block">{t('policy.block')}</option>
+              <option value="condition">{t('policy.condition')}</option>
+            </select>
+          </label>
+          <label style={{ ...small, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {t('policy.dependency')}
+            <select style={input} value={policy.regressed_dependency} disabled={isPending}
+              onChange={e => act(() => updateGatePolicy({ regressed_dependency: e.target.value as GatePolicy['regressed_dependency'] }))}>
+              <option value="condition">{t('policy.condition')}</option>
+              <option value="block">{t('policy.block')}</option>
+            </select>
+          </label>
+          <label style={{ ...small, display: 'flex', alignItems: 'center', gap: 8, marginTop: 18 }}>
+            <input type="checkbox" checked={policy.cat_a_regresses_approved} disabled={isPending}
+              onChange={e => act(() => updateGatePolicy({ cat_a_regresses_approved: e.target.checked }))} />
+            {t('policy.catA')}
+          </label>
+        </div>
+      </section>
+
+      {!startup && <div role="alert" style={{ ...small, padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, color: '#b45309' }}>{t('noStartupGate')}</div>}
+      {perfBeforeStartup.length > 0 && (
+        <div role="alert" style={{ ...small, padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, color: '#b45309' }}>
+          {t('perfBeforeStartup', { gates: perfBeforeStartup.map(g => g.code).join(', '), startup: startup?.code ?? '' })}
         </div>
       )}
 
@@ -133,6 +185,11 @@ export default function GatesAdminView({ gates, criteria, phases, weights }: { g
                 <input type="checkbox" checked={g.requires_performance} disabled={isPending}
                   onChange={e => act(() => updateGate(g.id, { requiresPerformance: e.target.checked }))} />
                 {t('requiresPerformance')}
+              </label>
+              <label style={{ ...small, display: 'flex', alignItems: 'center', gap: 8, marginTop: 18 }}>
+                <input type="checkbox" checked={g.is_startup_gate} disabled={isPending}
+                  onChange={e => act(() => updateGate(g.id, { isStartupGate: e.target.checked }))} />
+                {t('isStartupGate')}
               </label>
               <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
                 <legend style={small}>{t('approvalRoles')}</legend>
@@ -195,7 +252,7 @@ export default function GatesAdminView({ gates, criteria, phases, weights }: { g
                         onChange={e => act(() => updateGateCriterion(c.id, { isBlocking: e.target.checked }))} />
                       {t('blocking')}
                     </label>
-                    <button type="button" style={linkBtn} disabled={isPending} onClick={() => act(() => deleteGateCriterion(c.id))}>{t('remove')}</button>
+                    <button type="button" style={linkBtn} disabled={isPending} onClick={() => removeCriterion(c.id)}>{t('remove')}</button>
                   </li>
                 ))}
               </ul>

@@ -9,6 +9,8 @@ export type GateStatus =
   | 'pending_signatures'
   | 'approved'
   | 'approved_with_conditions'
+  /** S11 (D-10): aprobado sin condiciones al que le apareció una condición nueva (p. ej. un documento superado). */
+  | 'approved_needs_review'
   | 'regressed'
   | 'ready'
   | 'ready_with_conditions'
@@ -117,13 +119,35 @@ export const GATE_STATUS_STYLE: Record<GateStatus, { bg: string; fg: string; bor
   pending_signatures:       { bg: '#eff6ff',           fg: '#1d4ed8',           border: '#93c5fd', icon: '✎' },
   approved:                 { bg: '#059669',           fg: '#ffffff',           border: '#059669', icon: '✓' },
   approved_with_conditions: { bg: '#059669',           fg: '#ffffff',           border: '#f59e0b', icon: '✓!' },
+  approved_needs_review:    { bg: '#059669',           fg: '#ffffff',           border: '#f59e0b', icon: '✓?' },
   regressed:                { bg: 'var(--danger-50)',  fg: 'var(--danger-700)', border: '#ef4444', icon: '↺' },
   ready:                    { bg: 'var(--success-50)', fg: 'var(--success-700)', border: '#a7f3d0', icon: '●' },
   ready_with_conditions:    { bg: '#fffbeb',           fg: '#b45309',           border: '#fde68a', icon: '◐' },
   not_ready:                { bg: 'var(--danger-50)',  fg: 'var(--danger-700)', border: '#fecaca', icon: '○' },
 }
 
-export const isApproved = (s: GateStatus) => s === 'approved' || s === 'approved_with_conditions' || s === 'regressed'
+export const isApproved = (s: GateStatus) =>
+  s === 'approved' || s === 'approved_with_conditions' || s === 'approved_needs_review' || s === 'regressed'
+
+/**
+ * S11 (D13): política de regresión de la org (`organizations.settings.gate_policy`, igual que SQL `org_gate_policy`).
+ * El anterior en regresión bloquea el siguiente; un proveedor en regresión deja condición; un punch nuevo no
+ * regresa los gates ya aprobados.
+ */
+export type GatePolicy = {
+  regressed_previous: 'block' | 'condition'
+  regressed_dependency: 'condition' | 'block'
+  cat_a_regresses_approved: boolean
+}
+
+export function gatePolicy(settings: unknown): GatePolicy {
+  const p = (settings && typeof settings === 'object' ? (settings as Record<string, unknown>).gate_policy : null) as Record<string, unknown> | null
+  return {
+    regressed_previous: p?.regressed_previous === 'condition' ? 'condition' : 'block',
+    regressed_dependency: p?.regressed_dependency === 'block' ? 'block' : 'condition',
+    cat_a_regresses_approved: p?.cat_a_regresses_approved === true,
+  }
+}
 
 /** ¿Puede este rol aprobar el gate ahora? (la RPC lo vuelve a validar). */
 export function canApprove(gate: Pick<SystemGate, 'status' | 'approval_roles'>, role: string): boolean {

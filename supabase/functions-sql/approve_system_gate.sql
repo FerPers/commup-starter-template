@@ -75,13 +75,15 @@ BEGIN
   v_notes  := NULLIF(left(btrim(COALESCE(p_notes, '')), 2000), '');
 
   INSERT INTO system_gate_approvals (org_id, project_id, system_id, gate_id, status, target_status,
-                                     conditions, evidence, notes, approved_by, approved_role)
+                                     conditions, evidence, notes, approved_by, approved_role, completed_at)
   VALUES (v_org, v_project, p_system_id, p_gate_id,
           CASE WHEN cardinality(v_gate.required_signatures) > 0 THEN 'pending_signatures' ELSE v_target END,
           v_target, v_conditions,
           jsonb_build_object('computed_level', v_row.computed_level, 'criteria', v_row.criteria,
                              'evaluated_at', now()),
-          v_notes, auth.uid(), v_role)
+          v_notes, auth.uid(), v_role,
+          -- S11 (D-17): momento en que el gate quedó con todas sus firmas (KPI de compromisos).
+          CASE WHEN cardinality(v_gate.required_signatures) > 0 THEN NULL ELSE now() END)
   RETURNING id INTO v_id;
 
   INSERT INTO system_gate_signatures (approval_id, org_id, project_id, capacity, user_id, user_role, comments)

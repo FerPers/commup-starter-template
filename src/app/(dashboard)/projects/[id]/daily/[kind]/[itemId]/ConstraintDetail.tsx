@@ -37,7 +37,15 @@ export default function ConstraintDetail({ project, opts, names, userId, role, e
   const overdue = status === 'open' ? daysOverdue(item.need_date, today) : 0
 
   function save() {
-    run(() => updateConstraint({ ...base, ...form, gateId: form.gateId || null }), undefined, true)
+    // S11 (D-14): sacar una restricción abierta de su gate o sistema (líder+) o cambiar la fecha requerida pide motivo.
+    let reason: string | undefined
+    const moved = status === 'open' && ((form.gateId || null) !== (item.gate_id ?? null) || form.systemId !== item.system_id)
+    if (moved || form.needDate !== item.need_date) {
+      const r = window.prompt(t(moved ? 'detail.movePrompt' : 'detail.needDatePrompt'))
+      if (r === null) return
+      reason = r
+    }
+    run(() => updateConstraint({ ...base, ...form, gateId: form.gateId || null, reason }), undefined, true)
   }
   function go(to: ConstraintStatus) {
     run(() => transitionConstraint({ ...base, to, comment }), () => setComment(''))

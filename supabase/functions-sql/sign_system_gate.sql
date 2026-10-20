@@ -61,7 +61,7 @@ BEGIN
 
   IF v_signed >= cardinality(v_gate.required_signatures) THEN
     UPDATE system_gate_approvals
-       SET status = COALESCE(target_status, 'approved')
+       SET status = COALESCE(target_status, 'approved'), completed_at = now()  -- S11 (D-17)
      WHERE id = p_approval_id;
     RETURN COALESCE(v_appr.target_status, 'approved');
   END IF;

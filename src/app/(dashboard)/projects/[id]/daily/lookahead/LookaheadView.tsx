@@ -34,7 +34,7 @@ type Props = {
   canCommit: boolean
 }
 
-const SETTLED = new Set(['approved', 'approved_with_conditions'])
+const SETTLED = new Set(['approved', 'approved_with_conditions', 'approved_needs_review'])
 const KIND_TONE = { gate: 'violet', action: 'blue', constraint: 'red', tq: 'amber', work_plan: 'muted' } as const
 const th: React.CSSProperties = {
   textAlign: 'left', padding: '8px 10px', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)',

@@ -847,7 +847,7 @@
       "readiness": "Readiness",
       "readinessHint": "Approved gates / gates with a phase (live)",
       "commitments": "Commitment compliance",
-      "commitmentsHint": "Gates approved on time · {n} in 30 days",
+      "commitmentsHint": "Gates fully signed on time · {n} commitments due in 30 days",
       "tq": "TQs answered on time",
       "tqHint": "{closed} closed in 30 d · {days} d average · {open} open",
       "actions": "Actions on time",
@@ -1827,6 +1827,7 @@
     "gateStatus": {
       "approved": "approved",
       "approved_with_conditions": "approved with conditions",
+      "approved_needs_review": "approved — review new condition",
       "regressed": "approved — regressed",
       "ready": "ready to approve",
       "ready_with_conditions": "ready with conditions",
@@ -2428,7 +2429,7 @@
   },
   "Gates": {
     "back": "Back to Control Tower",
-    "intro": "Each gate is a hold point: it is computed from its criteria and, once ready, someone with authority approves it. Approval freezes the evidence at that moment. If something later falls back (e.g. a Cat A appears), the gate is flagged as regressed instead of being revoked automatically.",
+    "intro": "Each gate is a hold point: it is computed from its criteria and, once ready, someone with authority approves it. Approval freezes the evidence at that moment. If it later stops complying (e.g. an ITR is reopened), it is flagged as regressed instead of being revoked automatically, and it holds the next gate. A punch raised after approval does not regress the gate: it holds the next one.",
     "noGates": "The organization has no active gates. Configure them in Admin → Gates.",
     "unknownUser": "user",
     "revokePrompt": "Reason for revoking the {gate} approval:",
@@ -2450,6 +2451,7 @@
     "status": {
       "approved": "Approved",
       "approved_with_conditions": "Approved with conditions",
+      "approved_needs_review": "Approved — review new condition",
       "regressed": "Approved — regressed",
       "ready": "Ready to approve",
       "ready_with_conditions": "Ready with conditions",
@@ -2478,9 +2480,11 @@
     "crit": {
       "previousOk": "The previous gate is approved.",
       "previousMissing": "The previous gate must be approved first.",
+      "previousRegressed": "The previous gate is approved but regressed: recover it first.",
       "depsSummary": "{ok}/{total} enabling systems ready",
       "depsMissing": "{gate} missing",
       "depsPending": "{gate} pending signatures",
+      "depsRegressed": "{gate} approved but regressed",
       "depsOk": "{gate} approved",
       "noPhase": "The gate has no phase: set it in Admin → Gates.",
       "itrSummary": "{approved}/{total} ITRs approved · {red} of {subsystems} subsystems not ready",
@@ -2533,6 +2537,7 @@
       "normal": "normal"
     },
     "attest": {
+      "revokePrompt": "Reason to withdraw the attestation (at least 10 characters):",
       "view": "View attachment",
       "revoke": "Withdraw attestation",
       "pending": "Awaiting attestation by an editor.",
@@ -2599,7 +2604,21 @@
       "noRun": "No attempts"
     }
   },
-  "GatesAdmin": {
+  "GatesAdmin": {  
+    "isStartupGate": "Start-up gate (enables first start-up and first HC)",
+    "noStartupGate": "No gate is marked as the start-up gate: the last gate with line-up that does not require a performance test is used.",
+    "perfBeforeStartup": "{gates} requires a performance test and comes before or with the start-up gate {startup}: the test needs the plant running (circular block). Move it after.",
+    "confirmRemoveCriterion": "Remove this criterion? It changes the status of every system.",
+    "confirmRemoveCriterionImpact": "This criterion has {n} active attestation(s) in {systems} system(s). It will be archived (evidence kept) and no longer evaluated in any system. Continue?",
+    "policy": {
+      "title": "Gate regression",
+      "hint": "What happens when an approved gate no longer meets its criteria (regressed).",
+      "previous": "Previous gate regressed",
+      "dependency": "Provider system regressed",
+      "block": "Blocks (red)",
+      "condition": "Condition (yellow)",
+      "catA": "A new punch also regresses already approved gates (by default it only holds the next one)"
+    },
     "title": "Gates (hold points)",
     "subtitle": "Each gate is a per-system checkpoint: it is computed from its criteria and formally approved by someone with authority. By default there is one per phase (MC, RFPC, RFC, RFSU); you can add the optional gates from the commissioning guide.",
     "name": "Name",
@@ -3013,6 +3032,9 @@
       "missing": "Missing fields for this step: {fields}",
       "cancel": "Cancel register",
       "cancelPrompt": "Cancellation reason:",
+      "replanPrompt": "Reason for the new date (kept in the timeline; the on-time KPI measures against the original date):",
+      "movePrompt": "Reason to change the constraint gate or system (leader or above only):",
+      "needDatePrompt": "Reason for the new need date:",
       "delete": "Delete draft",
       "deleteConfirm": "Delete this draft? This cannot be undone.",
       "closed": "Closed register: it can no longer be edited.",
@@ -3581,6 +3603,7 @@
         "pending_signatures": "Pending signatures",
         "approved": "Approved",
         "approved_with_conditions": "Approved with conditions",
+        "approved_needs_review": "Review",
         "regressed": "Regressed",
         "ready": "Ready",
         "ready_with_conditions": "Ready with conditions",
@@ -4216,6 +4239,10 @@
       "confirmCancel": "Cancel transfer"
     },
     "perf": {
+      "withdraw": "Withdraw test",
+      "withdrawPrompt": "Reason to withdraw the test (it stops counting for the gate; at least 10 characters):",
+      "withdrawn": "Withdrawn",
+      "withdrawnNote": "Withdrawn test: it does not count for the gate. Reason: {reason}",
       "pointsTruncated": "The series has more than 30,000 points: the chart and readings show only the first ones. The evaluation (in the database) uses all of them.",
       "subtitle": "Performance test (ch. 18): approved definition with measurable criteria, attempt with stabilization and formal period, disturbances and frozen data.",
       "new": "New test",
@@ -4695,6 +4722,7 @@
     "gateStatus": {
       "approved": "approved",
       "approved_with_conditions": "approved with conditions",
+      "approved_needs_review": "approved, new condition to review",
       "pending_signatures": "pending signatures",
       "ready": "ready, not approved",
       "ready_with_conditions": "ready with conditions, not approved",

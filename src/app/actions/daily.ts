@@ -107,7 +107,7 @@ export const createAction = withAuth(
 
 export const updateAction = withAuth(
   { guards: [...projectGuard, systemGuard] },
-  async (ctx, input: ActionInput & { actionId: string }): Promise<{ error?: string }> => {
+  async (ctx, input: ActionInput & { actionId: string; reason?: string }): Promise<{ error?: string }> => {
     const bad = badAction(input)
     if (bad) return { error: bad }
     if (!(await belongs(ctx.supabase, 'action', input.actionId, input.projectId))) return { error: 'Acción no encontrada' }
@@ -121,6 +121,7 @@ export const updateAction = withAuth(
       p_priority: input.priority,
       p_verification_method: input.verificationMethod,
       p_source_ref: opt(text(input.sourceRef, 200)),
+      p_reason: opt(text(input.reason, 2000)),  // S11 (D-15): replanificar exige motivo
     })
     if (error) return { error: error.message }
     revalidate(input.projectId, 'action', input.actionId)
@@ -190,7 +191,7 @@ export const createConstraint = withAuth(
 
 export const updateConstraint = withAuth(
   { guards: [...projectGuard, { ...systemGuard, optional: false }] },
-  async (ctx, input: ConstraintInput & { constraintId: string }): Promise<{ error?: string }> => {
+  async (ctx, input: ConstraintInput & { constraintId: string; reason?: string }): Promise<{ error?: string }> => {
     const bad = badConstraint(input)
     if (bad) return { error: bad }
     if (!(await belongs(ctx.supabase, 'constraint', input.constraintId, input.projectId))) return { error: 'Restricción no encontrada' }
@@ -205,6 +206,7 @@ export const updateConstraint = withAuth(
       p_impact_kind: input.impactKind,
       p_impact: nullable(text(input.impact, 4000)),
       p_recovery_plan: nullable(text(input.recoveryPlan, 4000)),
+      p_reason: opt(text(input.reason, 2000)),  // S11 (D-14): mover de gate/sistema o cambiar la fecha exige motivo
     })
     if (error) return { error: error.message }
     revalidate(input.projectId, 'constraint', input.constraintId)

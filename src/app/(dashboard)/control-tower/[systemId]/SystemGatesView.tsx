@@ -25,6 +25,7 @@ import {
   canApprove,
   canRevoke,
   evidencePath,
+  isApproved,
   missingSignatures,
   signableCapacities,
   type Criterion,
@@ -178,7 +179,8 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
 
     switch (c.kind) {
       case 'previous_gate':
-        return <span style={small}>{c.result === 'pass' ? t('crit.previousOk') : t('crit.previousMissing')}</span>
+        // S11 (D-02/D13): el anterior aprobado pero en regresión bloquea (o deja condición, según la org).
+        return <span style={small}>{c.result === 'pass' ? t('crit.previousOk') : (d as { regressed?: boolean }).regressed ? t('crit.previousRegressed') : t('crit.previousMissing')}</span>
 
       case 'dependencies_ready': {
         const deps = (d as DependencyCriterionDetail).dependencies ?? []
@@ -193,6 +195,7 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
                   {' · '}
                   <span style={{ color: x.ok ? 'var(--success-700)' : 'var(--danger-700)' }}>
                     {x.ok ? t('crit.depsOk', { gate: x.gate_code })
+                      : x.provider_status === 'regressed' ? t('crit.depsRegressed', { gate: x.gate_code })
                       : x.provider_status === 'pending_signatures' ? t('crit.depsPending', { gate: x.gate_code })
                       : t('crit.depsMissing', { gate: x.gate_code })}
                   </span>
@@ -382,7 +385,10 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
                   onClick={() => openEvidence(String(d.file_path))}>{t('attest.view')}</button>
                 {canEdit && !g.approval && (
                   <button type="button" disabled={isPending} style={{ ...linkStyle, color: 'var(--danger-500)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                    onClick={() => run(() => revokeGateAttestation({ ...base, attestationId: attId }))}>{t('attest.revoke')}</button>
+                    onClick={() => {
+                      const reason = window.prompt(t('attest.revokePrompt'))
+                      if (reason !== null) run(() => revokeGateAttestation({ ...base, attestationId: attId, reason }))
+                    }}>{t('attest.revoke')}</button>
                 )}
               </div>
             </div>
@@ -438,7 +444,7 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
         <p style={{ ...small, margin: '6px 0 0' }}>
           <strong style={{ color: 'var(--text-strong)' }}>{t('plan.header', {
             pct: (planning.weightedPct * 100).toFixed(1),
-            approved: gates.filter(g => g.status === 'approved' || g.status === 'approved_with_conditions').length,
+            approved: gates.filter(g => isApproved(g.status) && g.status !== 'regressed').length,
             total: gates.length,
           })}</strong>
           {' · '}<Link href={`/projects/${project.id}/daily/lookahead`} style={linkStyle}>{t('plan.lookahead')}</Link>
@@ -530,7 +536,7 @@ export default function SystemGatesView({ orgId, role, userId, canEdit, project,
               progress={planning.progress[g.gate_id]} plan={planning.plans[g.gate_id]}
               events={planning.events.filter(e => e.gate_id === g.gate_id)} names={names}
               canEdit={role !== 'client'} canCommit={planning.canCommit}
-              settled={g.status === 'approved' || g.status === 'approved_with_conditions'}
+              settled={isApproved(g.status) && g.status !== 'regressed'}
             />
 
             <ul style={{ listStyle: 'none', margin: '16px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>

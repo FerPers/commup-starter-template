@@ -73,19 +73,22 @@ export function enablingSystemIds(edges: Pick<SystemDependency, 'depends_on_syst
 
 /**
  * Bloqueos por dependencia para la matriz de Control Tower, a partir del estado de cada gate
- * (mismo criterio que la BD: el proveedor cumple con su gate aprobado con todas las firmas; una
- * aprobación vigente en regresión sigue contando, porque la BD mira la aprobación, no el cálculo).
+ * (mismo criterio que la BD, `compute_system_gates_upto`): el proveedor cumple con su gate aprobado con todas
+ * las firmas. S11 (D-02, D13): un proveedor en regresión deja condición (no bloquea) salvo que la org lo pida
+ * con `regressed_dependency = 'block'`.
  * Devuelve `${systemId}:${gateId}` → códigos de los proveedores que faltan.
  */
 export function dependencyBlocks(
   edges: Pick<SystemDependency, 'system_id' | 'depends_on_system_id' | 'required_gate_id' | 'blocked_gate_id'>[],
   statusOf: (systemId: string, gateId: string) => string | undefined,
   codeOf: (systemId: string) => string,
+  regressedDependency: 'condition' | 'block' = 'condition',
 ): Map<string, string[]> {
   const out = new Map<string, string[]>()
   for (const e of edges) {
     const st = statusOf(e.depends_on_system_id, e.required_gate_id)
-    if (st === 'approved' || st === 'approved_with_conditions' || st === 'regressed') continue
+    if (st === 'approved' || st === 'approved_with_conditions' || st === 'approved_needs_review') continue
+    if (st === 'regressed' && regressedDependency === 'condition') continue
     const key = `${e.system_id}:${e.blocked_gate_id}`
     out.set(key, [...(out.get(key) ?? []), codeOf(e.depends_on_system_id)])
   }

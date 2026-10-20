@@ -847,7 +847,7 @@
       "readiness": "Readiness",
       "readinessHint": "Gates aprobados / gates con fase (en vivo)",
       "commitments": "Cumplimiento del compromiso",
-      "commitmentsHint": "Gates aprobados a tiempo · {n} en 30 días",
+      "commitmentsHint": "Gates con todas las firmas a tiempo · {n} compromisos vencían en 30 días",
       "tq": "TQ respondidos a tiempo",
       "tqHint": "{closed} cerrados en 30 d · {days} d promedio · {open} abiertos",
       "actions": "Acciones a tiempo",
@@ -1827,6 +1827,7 @@
     "gateStatus": {
       "approved": "aprobado",
       "approved_with_conditions": "aprobado con condiciones",
+      "approved_needs_review": "aprobado — revisar condición nueva",
       "regressed": "aprobado — en regresión",
       "ready": "listo para aprobar",
       "ready_with_conditions": "listo con condiciones",
@@ -2428,7 +2429,7 @@
   },
   "Gates": {
     "back": "Volver a Control Tower",
-    "intro": "Cada gate es un hold point: se calcula con sus criterios y, cuando está listo, alguien con autoridad lo aprueba. La aprobación congela la evidencia del momento. Si después algo se cae (p. ej. aparece un Cat A), el gate se marca «en regresión» sin revocarse solo.",
+    "intro": "Cada gate es un hold point: se calcula con sus criterios y, cuando está listo, alguien con autoridad lo aprueba. La aprobación congela la evidencia del momento. Si después deja de cumplir (p. ej. se reabre un ITR), se marca «en regresión» sin revocarse solo, y frena al gate siguiente. Un punch levantado después de aprobar no regresa el gate: frena el siguiente.",
     "noGates": "La organización no tiene gates activos. Configúralos en Administración → Gates.",
     "unknownUser": "usuario",
     "revokePrompt": "Motivo para revocar la aprobación de {gate}:",
@@ -2450,6 +2451,7 @@
     "status": {
       "approved": "Aprobado",
       "approved_with_conditions": "Aprobado con condiciones",
+      "approved_needs_review": "Aprobado — revisar condición nueva",
       "regressed": "Aprobado — en regresión",
       "ready": "Listo para aprobar",
       "ready_with_conditions": "Listo con condiciones",
@@ -2478,9 +2480,11 @@
     "crit": {
       "previousOk": "El gate anterior está aprobado.",
       "previousMissing": "Requiere aprobar primero el gate anterior.",
+      "previousRegressed": "El gate anterior está aprobado pero en regresión: hay que recuperarlo primero.",
       "depsSummary": "{ok}/{total} sistemas habilitantes listos",
       "depsMissing": "Falta {gate}",
       "depsPending": "{gate} pendiente de firmas",
+      "depsRegressed": "{gate} aprobado pero en regresión",
       "depsOk": "{gate} aprobado",
       "noPhase": "El gate no tiene una fase asociada: configúrala en Administración → Gates.",
       "itrSummary": "{approved}/{total} ITRs aprobados · {red} de {subsystems} subsistemas no listos",
@@ -2533,6 +2537,7 @@
       "normal": "normal"
     },
     "attest": {
+      "revokePrompt": "Motivo para retirar la declaración (mínimo 10 caracteres):",
       "view": "Ver adjunto",
       "revoke": "Retirar declaración",
       "pending": "Pendiente de declaración por un editor.",
@@ -2599,7 +2604,21 @@
       "noRun": "Sin intentos"
     }
   },
-  "GatesAdmin": {
+  "GatesAdmin": {  
+    "isStartupGate": "Gate de arranque (habilita primer arranque y primer HC)",
+    "noStartupGate": "Ningún gate está marcado como gate de arranque: se usará el último gate con line-up que no exija prueba de desempeño.",
+    "perfBeforeStartup": "{gates} exige prueba de desempeño y va antes o junto al gate de arranque {startup}: la prueba necesita la planta arrancada (bloqueo circular). Muévelo después.",
+    "confirmRemoveCriterion": "¿Quitar este criterio? Cambia el estado de todos los sistemas.",
+    "confirmRemoveCriterionImpact": "Este criterio tiene {n} declaración(es) vigente(s) en {systems} sistema(s). Se archiva (la evidencia se conserva) y deja de evaluarse en todos los sistemas. ¿Continuar?",
+    "policy": {
+      "title": "Regresión de gates",
+      "hint": "Qué pasa cuando un gate ya aprobado deja de cumplir sus criterios (en regresión).",
+      "previous": "Gate anterior en regresión",
+      "dependency": "Sistema proveedor en regresión",
+      "block": "Bloquea (rojo)",
+      "condition": "Condición (amarillo)",
+      "catA": "Un punch nuevo regresa también los gates ya aprobados (por defecto solo frena el siguiente)"
+    },
     "title": "Gates (hold points)",
     "subtitle": "Cada gate es un punto de control por sistema: se calcula con sus criterios y quien tenga autoridad lo aprueba formalmente. Por defecto hay uno por fase (MC, RFPC, RFC, RFSU); puedes sumar los gates opcionales de la guía de comisionamiento.",
     "name": "Nombre",
@@ -3483,6 +3502,9 @@
       "data": "Datos",
       "closed": "Registro cerrado: solo lectura.",
       "cancelPrompt": "Motivo de la cancelación:",
+      "replanPrompt": "Motivo del cambio de fecha (queda en la línea de tiempo; el KPI «a tiempo» mide contra la fecha original):",
+      "movePrompt": "Motivo para cambiar el gate o el sistema de la restricción (solo líder o superior):",
+      "needDatePrompt": "Motivo del cambio de fecha requerida:",
       "deleteConfirm": "¿Borrar este borrador? No se puede deshacer."
     },
     "action": {
@@ -3581,6 +3603,7 @@
         "pending_signatures": "Pendiente de firmas",
         "approved": "Aprobado",
         "approved_with_conditions": "Aprobado con condiciones",
+        "approved_needs_review": "Revisar",
         "regressed": "Regresión",
         "ready": "Listo",
         "ready_with_conditions": "Listo con condiciones",
@@ -4216,6 +4239,10 @@
       "confirmCancel": "Cancelar traspaso"
     },
     "perf": {
+      "withdraw": "Retirar prueba",
+      "withdrawPrompt": "Motivo para retirar la prueba (deja de contar para el gate; mínimo 10 caracteres):",
+      "withdrawn": "Retirada",
+      "withdrawnNote": "Prueba retirada: no cuenta para el gate. Motivo: {reason}",
       "pointsTruncated": "La serie tiene más de 30.000 puntos: el gráfico y las lecturas muestran solo los primeros. La evaluación (en la base de datos) usa todos.",
       "subtitle": "Prueba de desempeño (cap. 18): definición aprobada con criterios medibles, intento con estabilización y periodo formal, perturbaciones y datos congelados.",
       "new": "Nueva prueba",
@@ -4695,6 +4722,7 @@
     "gateStatus": {
       "approved": "aprobado",
       "approved_with_conditions": "aprobado con condiciones",
+      "approved_needs_review": "aprobado, con condición nueva por revisar",
       "pending_signatures": "pendiente de firmas",
       "ready": "listo, sin aprobar",
       "ready_with_conditions": "listo con condiciones, sin aprobar",

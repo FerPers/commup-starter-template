@@ -93,10 +93,15 @@ describe('dependencyBlocks', () => {
     expect(Object.fromEntries(blocks)).toEqual({ 'comp:rfc': ['U100'], 'tea:rfsu': ['U100'] })
   })
 
-  it('aprobado, con condiciones o en regresión no bloquea', () => {
-    for (const st of ['approved', 'approved_with_conditions', 'regressed']) {
+  it('aprobado, con condiciones, por revisar o en regresión (política por defecto: condición) no bloquea', () => {
+    for (const st of ['approved', 'approved_with_conditions', 'approved_needs_review', 'regressed']) {
       expect(dependencyBlocks(edges, () => st, id => codes[id]).size).toBe(0)
     }
+  })
+
+  it('S11 (D13): con regressed_dependency = block, un proveedor en regresión bloquea', () => {
+    const blocks = dependencyBlocks(edges, (s) => (s === 'aire' ? 'regressed' : 'approved'), id => codes[id], 'block')
+    expect(Object.fromEntries(blocks)).toEqual({ 'comp:rfc': ['U100'], 'tea:rfsu': ['U100'] })
   })
 })
 
