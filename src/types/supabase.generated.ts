@@ -9334,6 +9334,79 @@ export type Database = {
           },
         ]
       }
+      system_gate_status: {
+        Row: {
+          computed_at: string | null
+          computed_version: number | null
+          gates: Json | null
+          org_id: string
+          project_id: string
+          system_id: string
+          version: number
+        }
+        Insert: {
+          computed_at?: string | null
+          computed_version?: number | null
+          gates?: Json | null
+          org_id: string
+          project_id: string
+          system_id: string
+          version?: number
+        }
+        Update: {
+          computed_at?: string | null
+          computed_version?: number | null
+          gates?: Json | null
+          org_id?: string
+          project_id?: string
+          system_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_gate_status_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_status_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_status_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_status_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "system_gate_status_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_gate_status_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: true
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+        ]
+      }
       system_ownership: {
         Row: {
           last_transfer_id: string | null
@@ -12576,6 +12649,13 @@ export type Database = {
         Args: { p_gate_id: string; p_system_id: string }
         Returns: Record<string, unknown>
       }
+      gate_status_audit: { Args: { p_project_id: string }; Returns: Json }
+      gate_status_compute: { Args: { p_system_id: string }; Returns: Json }
+      gate_status_mark: { Args: { p_system_ids: string[] }; Returns: undefined }
+      gate_status_systems: {
+        Args: { p_rows: Json; p_table: string }
+        Returns: string[]
+      }
       generate_handover_package: {
         Args: { p_project_id: string; p_system_ids?: string[] }
         Returns: Json
@@ -12594,6 +12674,7 @@ export type Database = {
       }
       generate_punch_number: { Args: { p_project_id: string }; Returns: string }
       get_my_editor_project_ids: { Args: never; Returns: string[] }
+      get_my_field_project_ids: { Args: never; Returns: string[] }
       get_my_org_ids: { Args: never; Returns: string[] }
       get_my_project_ids: { Args: never; Returns: string[] }
       get_org_member_emails: {
@@ -12826,6 +12907,9 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: string
       }
+      notify_constraints_overdue: { Args: never; Returns: Json }
+      notify_preservation_overdue: { Args: never; Returns: Json }
+      notify_pssr_reviews_overdue: { Args: never; Returns: Json }
       open_shift_handover: {
         Args: {
           p_project_id: string

@@ -1,6 +1,7 @@
 -- S20 — mide en la BD lo que piden las pantallas sobre el banco LOADTEST (seed.sql), como el usuario del banco y con
 -- RLS (SET ROLE authenticated + claims). 5 corridas por consulta; informa mín / mediana / máx en ms (con 5 muestras el
--- máx es la cota del p95). No escribe nada (ROLLBACK al final).
+-- máx es la cota del p95). No escribe nada (ROLLBACK al final). Las funciones que devuelven un solo valor van
+-- dentro de length(): con count(*) Postgres no las evalúa (S20 sesión 2: my_work_counts salía en 0 ms).
 -- Uso: supabase db query --linked -o table -f scripts/loadtest/bench.sql
 BEGIN;
 SET LOCAL statement_timeout = 0;
@@ -19,14 +20,17 @@ BEGIN
     ('control_tower.compute_project_readiness', format('SELECT count(*) FROM (SELECT public.compute_project_readiness(%L)) x', v_proj)),
     ('control_tower.compute_project_gates', format('SELECT count(*) FROM (SELECT public.compute_project_gates(%L)) x', v_proj)),
     ('control_tower.compute_project_progress', format('SELECT count(*) FROM (SELECT public.compute_project_progress(%L)) x', v_proj)),
-    ('layout.my_work_counts', format('SELECT count(*) FROM (SELECT public.my_work_counts(%L)) x', v_org)),
+    ('layout.my_work_counts', format('SELECT length(public.my_work_counts(%L)::text)', v_org)),
     ('layout.punch_cat_a_count', format('SELECT count(*) FROM punches WHERE project_id = %L AND category = ''A'' AND status IN (''open'', ''in_progress'')', v_proj)),
     ('itr_list.page', format('SELECT count(*) FROM (SELECT id FROM itr_list_v WHERE org_id = %L AND project_id = %L ORDER BY created_at DESC, id LIMIT 50) x', v_org, v_proj)),
     ('itr_list.count', format('SELECT count(*) FROM itr_list_v WHERE org_id = %L AND project_id = %L', v_org, v_proj)),
     ('itr_list.mine', format('SELECT count(*) FROM itr_list_v WHERE org_id = %L AND project_id = %L AND assignee_ids @> ARRAY[%L]::uuid[]', v_org, v_proj, v_user)),
     ('itr_list.status_counts', format('SELECT count(*) FROM public.itr_status_counts(%L, NULL)', v_proj)),
     ('certificates.subsystem_rollup', format('SELECT count(*) FROM public.subsystem_rollup(%L)', v_proj)),
-    ('itr_generation_summary', format('SELECT count(*) FROM (SELECT public.itr_generation_summary(%L, (SELECT array_agg(id) FROM project_phases WHERE org_id = %L))) x', v_proj, v_org))
+    -- S20 sesión 2 (B-06): políticas set-based en tablas hijas
+    ('rls.punch_attachments', 'SELECT count(*) FROM punch_attachments'),
+    ('rls.work_plan_items', 'SELECT count(*) FROM work_plan_items'),
+    ('itr_generation_summary', format('SELECT length(public.itr_generation_summary(%L, (SELECT array_agg(id) FROM project_phases WHERE org_id = %L))::text)', v_proj, v_org))
   ) v(label, sql) LOOP
     FOR i IN 1..5 LOOP
       t0 := clock_timestamp();
