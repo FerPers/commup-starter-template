@@ -6,7 +6,8 @@
  * Tests en planning.test.ts.
  */
 
-export const LOOKAHEAD_WINDOWS = [7, 30, 90] as const
+// S23 (D-26): también la ventana diaria (reunión de la mañana).
+export const LOOKAHEAD_WINDOWS = [1, 7, 30, 90] as const
 export type LookaheadWindow = (typeof LOOKAHEAD_WINDOWS)[number]
 
 export type LookaheadKind = 'gate' | 'action' | 'constraint' | 'tq' | 'work_plan'
@@ -29,6 +30,8 @@ export type LookaheadItem = {
   gapDays?: number | null
   /** Solo gates: vence en la ventana y no está listo ni aprobado. */
   atRisk?: boolean
+  /** S23 (D-26): por qué no avanza (primer criterio que falla del gate). */
+  detail?: string | null
 }
 
 /** Diferencia en días entre dos fechas ISO (b − a). */

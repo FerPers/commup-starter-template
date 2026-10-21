@@ -13,7 +13,7 @@ export const EVIDENCE_KINDS: EvidenceKind[] = [...MGMT_KINDS, 'vendor_report', '
 
 // ── Acciones ────────────────────────────────────────────────────────────
 export type ActionStatus = 'open' | 'in_progress' | 'done' | 'verified' | 'cancelled'
-export type ActionSource = 'manual' | 'pssr' | 'constraint' | 'meeting' | 'tq' | 'vendor' | 'performance'
+export type ActionSource = 'manual' | 'pssr' | 'constraint' | 'meeting' | 'tq' | 'vendor' | 'performance' | 'gate'
 export type ActionPriority = 'critical' | 'high' | 'medium' | 'low'
 export type VerificationMethod = 'field' | 'document' | 'test' | 'review'
 
@@ -21,7 +21,8 @@ export const ACTION_STATUSES: ActionStatus[] = ['open', 'in_progress', 'done', '
 export const ACTION_LIVE: ActionStatus[] = ['open', 'in_progress', 'done']
 /** Orígenes que el usuario elige a mano (pssr / constraint / tq nacen desde su registro). */
 export const ACTION_FREE_SOURCES: ActionSource[] = ['manual', 'meeting', 'vendor', 'performance']
-export const ACTION_SOURCES: ActionSource[] = ['manual', 'pssr', 'constraint', 'meeting', 'tq', 'vendor', 'performance']
+/** S23 (D-12): «gate» = condición de un gate aprobado con condiciones; la crea la BD al aprobar, nunca a mano. */
+export const ACTION_SOURCES: ActionSource[] = ['manual', 'pssr', 'constraint', 'meeting', 'tq', 'vendor', 'performance', 'gate']
 export const ACTION_PRIORITIES: ActionPriority[] = ['critical', 'high', 'medium', 'low']
 export const VERIFICATION_METHODS: VerificationMethod[] = ['field', 'document', 'test', 'review']
 /** Orígenes que exigen el id del registro que la generó (CHECK actions_source_id_check). */

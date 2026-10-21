@@ -10,7 +10,6 @@
   "src/app/(dashboard)/control-tower/[systemId]/page.tsx::system_gate_plan_events": 1,
   "src/app/(dashboard)/control-tower/[systemId]/page.tsx::system_gate_plans": 1,
   "src/app/(dashboard)/control-tower/[systemId]/page.tsx::vendor_package_systems": 1,
-  "src/app/(dashboard)/control-tower/page.tsx::system_dependencies": 1,
   "src/app/(dashboard)/ops/punches/page.tsx::ops_dashboard": 1,
   "src/app/(dashboard)/projects/[id]/ce-matrices/page.tsx::ce_matrices": 1,
   "src/app/(dashboard)/projects/[id]/daily/lookahead/page.tsx::system_gate_plans": 1,

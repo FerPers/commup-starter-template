@@ -3,44 +3,10 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
-import { GATE_STATUS_STYLE, gatePolicy, isApproved, type MatrixGate } from '@/lib/readiness/gates'
-import { dependencyBlocks, type SystemType } from '@/lib/systems/dependencies'
-
-type GateLevel = 'green' | 'yellow' | 'red'
-
-type Gate = {
-  phase_id: string
-  code: string
-  name: string
-  certificate: string
-  order: number
-  itr_total: number
-  itr_approved: number
-  subsystems_total: number
-  subsystems_red: number
-  subsystems_yellow: number
-  level: GateLevel
-  ready: boolean
-}
-
-type Blocker = { code: string; severity: string; message: string; count?: number; pending?: number; limit?: number }
-
-type Readiness = {
-  system_id: string
-  system_code: string
-  system_name: string
-  area_code: string
-  area_name: string
-  itr_total: number
-  itr_approved: number
-  itr_pct: number
-  open_punches_a: number
-  open_punches_b: number
-  open_punches_c: number
-  cat_b_limit: number | null
-  gates: Gate[]
-  blockers: Blocker[]
-}
+import { GATE_STATUS_STYLE, type MatrixGate } from '@/lib/readiness/gates'
+import { blockerCount, filterMatrix, nextGate, parseMatrixFilters, readinessSummary, rowState, type RowState } from '@/lib/readiness/matrix'
+import { loadMatrix, type MatrixData } from '@/lib/readiness/matrix-server'
+import RememberProject from './RememberProject'
 
 // Estado del hold point por sistema (fase 1): aprobado / listo / no listo / regresión.
 // ⛓ = bloqueado por un sistema del que depende (fase 2).
@@ -71,24 +37,28 @@ function Bar({ pct }: { pct: number }) {
         <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', background: color, transition: 'width .3s' }} />
       </div>
       <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', minWidth: 42, textAlign: 'right' }}>
-        {pct.toFixed(0)}%
+        {pct.toFixed(1)}%
       </span>
     </div>
   )
 }
 
+const STATE_TONE: Record<RowState, string> = {
+  regressed: 'var(--danger-700)', blocked: 'var(--danger-500)', signing: '#1d4ed8', ready: 'var(--success-700)', done: 'var(--success-500)',
+}
+const ROW_STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
+
 export default async function ControlTowerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ projectId?: string }>
+  searchParams: Promise<Record<string, string | undefined>>
 }) {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
-  const membership = { org_id: ctx.orgId, role: ctx.role }
-  const orgId = membership.org_id
+  const orgId = ctx.orgId
 
-  const t = await getTranslations('ControlTower')
+  const [t, tg] = await Promise.all([getTranslations('ControlTower'), getTranslations('Gates')])
 
   const { data: projects } = await supabase
     .from('projects')
@@ -97,98 +67,97 @@ export default async function ControlTowerPage({
     .order('code')
 
   const params = await searchParams
-  const projectId = params.projectId ?? projects?.[0]?.id ?? null
+  // S23 (H-12): el proyecto de la URL; si no viene, el último visitado (RememberProject) o el primero.
+  const projectId = (params.projectId && projects?.some(p => p.id === params.projectId) ? params.projectId : null) ?? projects?.[0]?.id ?? null
+  const filters = parseMatrixFilters(params)
 
-  let rows: Readiness[] = []
-  const gatesBySystem = new Map<string, MatrixGate[]>()
-  let blocks = new Map<string, string[]>()
-  const sysInfo = new Map<string, { code: string; system_type: SystemType | null; priority: number | null }>()
-  // Avance físico ponderado por gate (fase 5, sesión 2), aparte del readiness.
-  const weighted = new Map<string, { pct: number; itrs: number }>()
-  if (projectId) {
-    const [readiness, gates, deps, systems, progress, org] = await Promise.all([
-      supabase.rpc('compute_project_readiness', { p_project_id: projectId }),
-      supabase.rpc('compute_project_gates', { p_project_id: projectId }),
-      supabase.from('system_dependencies').select('system_id, depends_on_system_id, required_gate_id, blocked_gate_id').eq('project_id', projectId),
-      supabase.from('systems').select('id, code, system_type, priority').eq('project_id', projectId),
-      supabase.rpc('compute_project_progress', { p_project_id: projectId }),
-      supabase.from('organizations').select('settings').eq('id', orgId).maybeSingle(),
-    ])
-    for (const p of progress.data ?? []) weighted.set(p.system_id, { pct: Number(p.weighted_pct), itrs: p.itr_total })
-    for (const s of systems.data ?? []) sysInfo.set(s.id, { code: s.code, system_type: s.system_type as SystemType | null, priority: s.priority })
-    if (readiness.error) console.error('[ControlTower] readiness rpc error:', readiness.error)
-    else rows = (readiness.data ?? []) as unknown as Readiness[]
-    if (gates.error) console.error('[ControlTower] gates rpc error:', gates.error)
-    for (const g of gates.data ?? []) gatesBySystem.set(g.system_id, (g.gates ?? []) as unknown as MatrixGate[])
-    blocks = dependencyBlocks(
-      deps.data ?? [],
-      (systemId, gateId) => gatesBySystem.get(systemId)?.find(x => x.gate_id === gateId)?.status,
-      systemId => sysInfo.get(systemId)?.code ?? '?',
-      gatePolicy(org.data?.settings).regressed_dependency,  // S11 (D13)
-    )
-  }
+  let data: MatrixData | null = null
+  if (projectId) data = await loadMatrix(supabase, projectId, orgId)
+  const rows = data?.rows ?? []
+  const shown = data ? filterMatrix(rows, filters, {
+    commitment: (s, g) => data!.commitments.get(`${s}:${g}`) ?? null,
+    changedIds: data.changedIds,
+    today: data.today,
+  }) : []
 
-  const totals = rows.reduce(
-    (acc, r) => ({
-      systems: acc.systems + 1,
-      punchesA: acc.punchesA + r.open_punches_a,
-      punchesB: acc.punchesB + r.open_punches_b,
-      itrPctSum: acc.itrPctSum + Number(r.itr_pct),
-    }),
-    { systems: 0, punchesA: 0, punchesB: 0, itrPctSum: 0 },
-  )
-  const avgItrPct = totals.systems > 0 ? totals.itrPctSum / totals.systems : 0
-  const weightedItrs = [...weighted.values()].reduce((sum, w) => sum + w.itrs, 0)
-  const projectWeighted = weightedItrs > 0 ? [...weighted.values()].reduce((sum, w) => sum + w.pct * w.itrs, 0) / weightedItrs : 0
+  // D-18: dos números canónicos — avance físico ponderado (ITR aprobados × peso de gate) y readiness (gates
+  // aprobados vigentes / total), con la misma definición que KPIs.
+  const weightedVals = [...(data?.weighted.values() ?? [])]
+  const weightedItrs = weightedVals.reduce((sum, w) => sum + w.itrs, 0)
+  const projectWeighted = weightedItrs > 0 ? weightedVals.reduce((sum, w) => sum + w.pct * w.itrs, 0) / weightedItrs : 0
+  const readiness = readinessSummary(rows.map(r => r.gates))
+  const punchTotals = [...(data?.punches.values() ?? [])].reduce((acc, p) => ({ a: acc.a + p.a, b: acc.b + p.b }), { a: 0, b: 0 })
 
-  // Por gate: sistemas aprobados y, aparte, los que ya están listos para aprobar.
-  const gateDefs = rows.length > 0 ? (gatesBySystem.get(rows[0].system_id) ?? []) : []
+  // Por gate: sistemas aprobados y, aparte, los que ya están listos para aprobar o esperan firmas.
+  const gateDefs = rows[0]?.gates ?? []
   const byGate = gateDefs.map(g => {
-    const statuses = rows.map(r => gatesBySystem.get(r.system_id)?.find(x => x.gate_id === g.gate_id)?.status)
+    const statuses = rows.map(r => r.gates.find(x => x.gate_id === g.gate_id)?.status)
     return {
       code: g.code,
-      approved: statuses.filter(st => st && isApproved(st) && st !== 'regressed').length,
+      approved: statuses.filter(st => st === 'approved' || st === 'approved_with_conditions').length,
       toApprove: statuses.filter(st => st === 'ready' || st === 'ready_with_conditions').length,
       toSign: statuses.filter(st => st === 'pending_signatures').length,
     }
   })
+  const areas = [...new Map(rows.map(r => [r.area_code, r.area_name])).entries()].sort((a, b) => a[0].localeCompare(b[0]))
 
-  const blockerText = (b: Blocker): string => {
-    switch (b.code) {
-      case 'no_subsystems':        return t('blocker.noSubsystems')
-      case 'no_itrs':              return t('blocker.noItrs')
-      case 'itrs_incomplete':      return t('blocker.itrsIncomplete', { pending: b.pending ?? 0 })
-      case 'punches_a_open':       return t('blocker.punchesA', { count: b.count ?? 0 })
-      case 'punches_b_over_limit': return t('blocker.punchesBOverLimit', { count: b.count ?? 0, limit: b.limit ?? 0 })
-      case 'punches_b_open':       return t('blocker.punchesB', { count: b.count ?? 0 })
-      default:                     return b.message
-    }
+  const blockerText = (g: MatrixGate): string => {
+    if (g.status === 'pending_signatures') return t('next.signing')
+    if (g.status === 'ready' || g.status === 'ready_with_conditions') return t('next.ready')
+    if (!g.blocker) return t(`gateStatus.${g.status}`)
+    const label = g.blocker.label ?? tg(`kind.${g.blocker.kind}`)
+    const n = blockerCount(g.blocker)
+    return n ? t('next.blockerCount', { label, count: n }) : label
   }
+  const query = new URLSearchParams(Object.entries({ ...params, projectId: projectId ?? '' }).filter(([, v]) => !!v) as [string, string][])
 
   return (
     <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto' }}>
+      {projectId && <RememberProject projectId={projectId} fromUrl={!!params.projectId} />}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
         <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', margin: '4px 0 0' }}>{t('subtitle')}</p>
       </div>
 
-      {/* Project picker */}
+      {/* Proyecto y filtros (S23, D-19): todo en la URL, se puede guardar como enlace */}
       {projects && projects.length > 0 && (
         <Card padding="sm" style={{ marginBottom: 16 }}>
-          <form method="get" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <form method="get" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <label htmlFor="ct-project" style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-600)' }}>{t('project')}</label>
-            <Select
-              id="ct-project"
-              name="projectId"
-              defaultValue={projectId ?? ''}
-              fullWidth={false}
-              style={{ flex: 1, maxWidth: 360 }}
-            >
+            <Select id="ct-project" name="projectId" defaultValue={projectId ?? ''} fullWidth={false} style={{ maxWidth: 300 }}>
               {projects.map(p => (
                 <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
               ))}
             </Select>
+            <Select name="area" defaultValue={filters.area ?? ''} fullWidth={false} aria-label={t('filter.area')}>
+              <option value="">{t('filter.allAreas')}</option>
+              {areas.map(([code, name]) => <option key={code} value={code}>{code} — {name}</option>)}
+            </Select>
+            <Select name="state" defaultValue={filters.state ?? ''} fullWidth={false} aria-label={t('filter.state')}>
+              <option value="">{t('filter.allStates')}</option>
+              {ROW_STATES.map(s => <option key={s} value={s}>{t(`rowState.${s}`)}</option>)}
+            </Select>
+            <Select name="committed" defaultValue={filters.committedDays ? String(filters.committedDays) : ''} fullWidth={false} aria-label={t('filter.committed')}>
+              <option value="">{t('filter.anyCommitment')}</option>
+              {[7, 30, 90].map(d => <option key={d} value={d}>{t('filter.committedIn', { days: d })}</option>)}
+            </Select>
+            <Select name="sort" defaultValue={filters.sort ?? 'risk'} fullWidth={false} aria-label={t('filter.sort')}>
+              <option value="risk">{t('filter.sortRisk')}</option>
+              <option value="code">{t('filter.sortCode')}</option>
+              <option value="commitment">{t('filter.sortCommitment')}</option>
+            </Select>
+            <input name="q" defaultValue={filters.q ?? ''} placeholder={t('filter.search')} aria-label={t('filter.search')}
+              style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', background: 'var(--card-bg)', color: 'var(--text-strong)', width: 160 }} />
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--gray-600)' }}>
+              <input type="checkbox" name="changed" value="1" defaultChecked={filters.changed} />
+              {t('filter.changed')}
+            </label>
             <Button type="submit">{t('load')}</Button>
+            {projectId && (
+              <a href={`/control-tower/export?${query.toString()}`} style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600)' }}>
+                ↓ {t('export')}
+              </a>
+            )}
           </form>
         </Card>
       )}
@@ -198,17 +167,17 @@ export default async function ControlTowerPage({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
           <Card padding="md">
             <div style={kpiLabel}>{t('kpi.systems')}</div>
-            <div style={{ ...kpiValue, color: 'var(--text-strong)' }}>{totals.systems}</div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.avgItr', { pct: avgItrPct.toFixed(1) })}</div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.weighted', { pct: (projectWeighted * 100).toFixed(1) })}</div>
+            <div style={{ ...kpiValue, color: 'var(--text-strong)' }}>{rows.length}</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.physical', { pct: (projectWeighted * 100).toFixed(1) })}</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.readiness', { done: readiness.done, total: readiness.total, pct: (readiness.pct * 100).toFixed(1) })}</div>
           </Card>
           <Card padding="md" style={{ gridColumn: 'span 2' }}>
             <div style={kpiLabel}>{t('kpi.approvedByGate')}</div>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginTop: 4 }}>
               {byGate.map(g => (
                 <div key={g.code}>
-                  <div style={{ ...kpiValue, marginTop: 0, color: g.approved === totals.systems ? 'var(--success-500)' : 'var(--text-strong)' }}>
-                    {g.approved}/{totals.systems}
+                  <div style={{ ...kpiValue, marginTop: 0, color: g.approved === rows.length ? 'var(--success-500)' : 'var(--text-strong)' }}>
+                    {g.approved}/{rows.length}
                   </div>
                   <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>
                     {g.code}{g.toApprove > 0 && <span style={{ color: 'var(--success-700)' }}> · {t('kpi.toApprove', { count: g.toApprove })}</span>}
@@ -218,17 +187,15 @@ export default async function ControlTowerPage({
               ))}
             </div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 6 }}>
-              {rows[0]?.cat_b_limit == null
-                ? t('kpi.catBNoLimit')
-                : t('kpi.catBLimit', { limit: rows[0].cat_b_limit })}
+              {data?.catBLimit == null ? t('kpi.catBNoLimit') : t('kpi.catBLimit', { limit: data.catBLimit })}
             </div>
           </Card>
           <Card padding="md">
             <div style={kpiLabel}>{t('kpi.punchesOpen')}</div>
             <div style={{ ...kpiValue, color: 'var(--danger-500)' }}>
-              {totals.punchesA}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> A</span>
+              {punchTotals.a}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> A</span>
               {' · '}
-              {totals.punchesB}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> B</span>
+              {punchTotals.b}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> B</span>
             </div>
           </Card>
         </div>
@@ -241,23 +208,33 @@ export default async function ControlTowerPage({
         </Card>
       ) : (
         <TableWrapper>
+          <div style={{ padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+            {t('showing', { shown: shown.length, total: rows.length })}
+          </div>
           <div style={{ overflowX: 'auto' }}>
             <Table aria-label={t('title')}>
               <THead>
                 <TR>
                   <TH style={{ position: 'sticky', left: 0, background: 'var(--gray-50)', zIndex: 2, minWidth: 140 }}>{t('col.area')}</TH>
                   <TH style={{ minWidth: 160 }}>{t('col.system')}</TH>
-                  <TH style={{ width: 220 }}>{t('col.itrs')}</TH>
-                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchA')}</TH>
-                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchB')}</TH>
-                  <TH style={{ width: 80, textAlign: 'center' }}>{t('col.punchC')}</TH>
+                  <TH style={{ width: 180 }}>{t('col.physical')}</TH>
+                  <TH style={{ width: 64, textAlign: 'center' }}>{t('col.punchA')}</TH>
+                  <TH style={{ width: 64, textAlign: 'center' }}>{t('col.punchB')}</TH>
                   <TH style={{ width: 240 }}>{t('col.gates')}</TH>
-                  <TH style={{ minWidth: 220 }}>{t('col.topBlocker')}</TH>
+                  <TH style={{ minWidth: 260 }}>{t('col.next')}</TH>
                 </TR>
               </THead>
               <TBody>
-                {rows.map(r => {
-                  const topBlocker = r.blockers[0]
+                {shown.map(r => {
+                  const info = data!.sysInfo.get(r.system_id)
+                  const w = data!.weighted.get(r.system_id)
+                  const p = data!.punches.get(r.system_id) ?? { a: 0, b: 0 }
+                  const next = nextGate(r.gates)
+                  const state = rowState(r.gates)
+                  const commit = next ? data!.commitments.get(`${r.system_id}:${next.gate_id}`) : undefined
+                  const blockedBy = next ? data!.blocks.get(`${r.system_id}:${next.gate_id}`) : undefined
+                  const conditions = r.gates.reduce((n, g) => n + (g.approval?.id ? (data!.openConditions.get(g.approval.id) ?? 0) : 0), 0)
+                  const parts = [info?.system_type && t(`systemType.${info.system_type}`), info?.priority && `P${info.priority}`].filter(Boolean)
                   return (
                     <TR key={r.system_id}>
                       <TD style={{ position: 'sticky', left: 0, background: 'var(--card-bg)', zIndex: 1 }}>
@@ -267,48 +244,46 @@ export default async function ControlTowerPage({
                       <TD>
                         <Link href={`/control-tower/${r.system_id}`} style={{ fontWeight: 600, color: 'var(--text-strong)', textDecoration: 'none' }}>{r.system_code}</Link>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.system_name}</div>
-                        {(() => {
-                          const info = sysInfo.get(r.system_id)
-                          const parts = [info?.system_type && t(`systemType.${info.system_type}`), info?.priority && `P${info.priority}`].filter(Boolean)
-                          return parts.length > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-500)', marginTop: 2 }}>{parts.join(' · ')}</div>
-                        })()}
+                        {parts.length > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-500)', marginTop: 2 }}>{parts.join(' · ')}</div>}
                       </TD>
                       <TD>
-                        <Bar pct={Number(r.itr_pct)} />
-                        <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
-                          {r.itr_approved}/{r.itr_total} {t('approved')}
-                          {weighted.has(r.system_id) && <> · {t('weightedShort', { pct: ((weighted.get(r.system_id)?.pct ?? 0) * 100).toFixed(1) })}</>}
-                        </div>
+                        <Bar pct={(w?.pct ?? 0) * 100} />
+                        <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>{t('itrsWeighing', { count: w?.itrs ?? 0 })}</div>
                       </TD>
-                      <TD style={{ textAlign: 'center', color: r.open_punches_a > 0 ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: 600 }}>
-                        {r.open_punches_a}
-                      </TD>
-                      <TD style={{ textAlign: 'center', color: r.open_punches_b > 0 ? 'var(--warning-500)' : 'var(--gray-400)', fontWeight: 600 }}>
-                        {r.open_punches_b}
-                      </TD>
-                      <TD style={{ textAlign: 'center', color: r.open_punches_c > 0 ? 'var(--gray-500)' : 'var(--gray-300)', fontWeight: 600 }}>
-                        {r.open_punches_c}
-                      </TD>
+                      <TD style={{ textAlign: 'center', color: p.a > 0 ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: 600 }}>{p.a}</TD>
+                      <TD style={{ textAlign: 'center', color: p.b > 0 ? 'var(--warning-500)' : 'var(--gray-400)', fontWeight: 600 }}>{p.b}</TD>
                       <TD>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          {(gatesBySystem.get(r.system_id) ?? []).map(g => {
-                            const blockedBy = blocks.get(`${r.system_id}:${g.gate_id}`)
+                          {r.gates.map(g => {
+                            const by = data!.blocks.get(`${r.system_id}:${g.gate_id}`)
                             const title = t('gateTitle', { name: g.name, status: t(`gateStatus.${g.status}`), failing: g.failing })
                             return (
-                              <GateBadge
-                                key={g.gate_id}
-                                gate={g}
-                                label={g.code}
-                                href={`/control-tower/${r.system_id}`}
-                                blocked={!!blockedBy}
-                                title={blockedBy ? `${title}\n${t('blockedBy', { systems: blockedBy.join(', ') })}` : title}
-                              />
+                              <GateBadge key={g.gate_id} gate={g} label={g.code} href={`/control-tower/${r.system_id}`} blocked={!!by}
+                                title={by ? `${title}\n${t('blockedBy', { systems: by.join(', ') })}` : title} />
                             )
                           })}
                         </div>
                       </TD>
                       <TD style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-                        {topBlocker ? blockerText(topBlocker) : <span style={{ color: 'var(--success-500)', fontWeight: 600 }}>{t('noBlockers')}</span>}
+                        {next ? (
+                          <>
+                            <div>
+                              <strong style={{ color: STATE_TONE[state] }}>{next.code}</strong>
+                              {' · '}{blockedBy ? t('blockedBy', { systems: blockedBy.join(', ') }) : blockerText(next)}
+                            </div>
+                            {(!!commit || conditions > 0) && (
+                              <div style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
+                                {commit && <span style={{ color: commit < data!.today ? 'var(--danger-600)' : 'var(--text-muted)' }}>{t('committedOn', { date: commit })}</span>}
+                                {commit && conditions > 0 && ' · '}
+                                {conditions > 0 && <span style={{ color: '#b45309' }}>{t('conditionsOpen', { count: conditions })}</span>}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <span style={{ color: 'var(--success-500)', fontWeight: 600 }}>
+                            {t('noBlockers')}{conditions > 0 && <span style={{ color: '#b45309', fontWeight: 500 }}> · {t('conditionsOpen', { count: conditions })}</span>}
+                          </span>
+                        )}
                       </TD>
                     </TR>
                   )

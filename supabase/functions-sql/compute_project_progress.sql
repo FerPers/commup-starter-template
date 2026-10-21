@@ -37,13 +37,21 @@ BEGIN
                      AND a.status IN ('approved', 'approved_with_conditions')) AS approved
     FROM sys CROSS JOIN g CROSS JOIN tot
     LEFT JOIN cnt ON cnt.system_id = sys.id AND cnt.phase_id = g.phase_id
+  ),
+  -- S23 (D-18): readiness = la misma definición que Control Tower (readinessSummary): todos los gates activos,
+  -- aprobados solo los vigentes (sin regresión ni condición nueva), del estado guardado de S20.
+  rd AS (
+    SELECT st.system_id, jsonb_array_length(COALESCE(st.gates, '[]'::jsonb))::int AS total,
+           (SELECT COUNT(*) FROM jsonb_array_elements(COALESCE(st.gates, '[]'::jsonb)) x
+            WHERE x ->> 'status' IN ('approved', 'approved_with_conditions'))::int AS done
+    FROM system_gate_status st WHERE st.project_id = p_project_id
   )
   SELECT sys.id, sys.code,
          COALESCE(SUM(cp.total), 0)::int, COALESCE(SUM(cp.ok), 0)::int,
          round(COALESCE(SUM(cp.weight * cp.pct), 0), 6),
-         (COUNT(*) FILTER (WHERE cp.approved))::int, COUNT(cp.gate_id)::int
-  FROM sys LEFT JOIN cp ON cp.system_id = sys.id
-  GROUP BY sys.id, sys.code
+         COALESCE(rd.done, 0), COALESCE(rd.total, 0)
+  FROM sys LEFT JOIN cp ON cp.system_id = sys.id LEFT JOIN rd ON rd.system_id = sys.id
+  GROUP BY sys.id, sys.code, rd.done, rd.total
   ORDER BY sys.code;
 END;
 $function$;

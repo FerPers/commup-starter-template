@@ -10,7 +10,15 @@ AS $function$
            'gate_id', g.gate_id, 'code', g.gate_code, 'name', g.gate_name,
            'order', g.gate_order, 'computed_level', g.computed_level, 'status', g.status,
            'failing', (SELECT COUNT(*) FROM jsonb_array_elements(g.criteria) cr WHERE cr ->> 'result' = 'fail'),
-           'approval', g.approval
+           'approval', g.approval,
+           -- S23 (D-01): primer criterio que falla (bloqueante), sin las listas del detalle, para la fila de la matriz.
+           'blocker', (SELECT jsonb_build_object('kind', cr ->> 'kind', 'label', cr ->> 'label',
+                         'detail', (SELECT COALESCE(jsonb_object_agg(d.key, d.value), '{}'::jsonb)
+                                    FROM jsonb_each(COALESCE(cr -> 'detail', '{}'::jsonb)) d
+                                    WHERE jsonb_typeof(d.value) NOT IN ('array', 'object')))
+                       FROM jsonb_array_elements(g.criteria) WITH ORDINALITY AS c(cr, ord)
+                       WHERE cr ->> 'result' = 'fail'
+                       ORDER BY c.ord LIMIT 1)
          ) ORDER BY g.gate_order, g.gate_code), '[]'::jsonb)
   FROM public.compute_system_gates(p_system_id) g
 $function$;

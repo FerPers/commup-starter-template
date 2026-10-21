@@ -636,6 +636,17 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | D-26 | Medio | Practicidad del look-ahead — No muestra qué bloquea cada gate en riesgo | [D-readiness-gestion.md:205](revision-2026-10-19/D-readiness-gestion.md) |
 | H-12 | Medio | Contexto · Control Tower es de organización pero opera sobre un proyecto | [H-navegacion.md:271](revision-2026-10-19/H-navegacion.md) |
 
+**Estado S23 (2026-10-20; migración `20261120120000_readiness_v2_s23.sql` —12 comprobaciones con ROLLBACK— **aplicada en prod** con autorización de Luis):**
+- D-01 ✅ Control Tower sin `compute_project_readiness`: filas desde `compute_project_gates`; cada gate guardado trae `blocker` (primer criterio que falla, sin listas) y la fila muestra el siguiente gate (`nextGate`: regresión primero) con su bloqueo y cantidad, o el proveedor que lo frena; compromiso y condiciones abiertas. Punch A/B por sistema con `system_open_punches`. Lógica pura en `src/lib/readiness/matrix.ts`, datos en `matrix-server.ts`.
+- D-18 ✅ Dos números: avance físico ponderado y readiness = gates aprobados vigentes / total (`readinessSummary` = `compute_project_progress.gates_approved/gates_total`, que ahora cuenta todos los gates activos desde el estado guardado; antes excluía los gates sin fase). Fuera el «ITR promedio» y la columna Cat C. Verificado DEMO: 0/70 en ambas.
+- D-19 ✅ Filtros en la URL (área, estado del siguiente gate, compromiso ≤ 7/30/90 d, búsqueda, «cambió en 24 h» por eventos `gate.*`), orden por riesgo / código / compromiso, Excel con los mismos filtros (`/control-tower/export`). Detalle: gates aprobados colapsados, abierto el siguiente.
+- H-12 ✅ (mínimo) El sidebar abre Control Tower con el proyecto actual o el último; Control Tower recuerda el proyecto (`RememberProject`). Mover a `/projects/[id]/readiness` queda para N1–N3.
+- D-12 ✅ Al quedar «aprobado con condiciones» (con todas sus firmas) cada condición es una acción ACC de origen `gate` (dueño = quien aprobó; `gate_conditions_create_actions`, idempotente, también para las vigentes) y la matriz muestra las abiertas. Exigirlas cerradas para el gate siguiente: no se hizo.
+- D-25 ✅ Aprobar y revocar con diálogo (`Modal`): criterios, condiciones, firmas pendientes y lo que se habilita; al revocar, gates posteriores que quedan en regresión y sistemas que vuelven a bloquearse (`src/lib/readiness/impact.ts`). Sin `window.prompt`.
+- D-26 ✅ Look-ahead con el bloqueo de cada gate (estado guardado, sin recalcular) y ventana de 1 día.
+- D-22 ✅ `transition_register_item` exige los campos de cada estado (`register_required_fields` = `REGISTER_CATALOG`, test de paridad) y no deja cambiar el resultado de un test pack ya registrado; pg_cron `registers-overdue` (12:00 UTC) avisa bypass que excedieron su duración y temporales vencidos (`register_overdue`, dedupe 24 h).
+- Corregido al verificar: `fetchAllRows` sobre `system_gate_plans` (sin columna `id`) paginaba por `id`; ahora por `system_id` + `gate_id`.
+
 ## S24 — Paquete de handover v2
 
 | ID | Sev. | Hallazgo | Anexo |

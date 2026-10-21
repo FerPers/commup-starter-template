@@ -61,6 +61,12 @@ export default async function DailyDetailPage({ params }: { params: Promise<{ id
       const { data } = await supabase.from('pssr_review_items').select('element, status, review_id, pssr_reviews(review_number)').eq('id', item.source_id).maybeSingle()
       const review = data?.pssr_reviews as { review_number: string } | null
       if (data) origin = { label: `${review?.review_number ?? 'PSSR'} — ${data.element} (${data.status.toUpperCase()})`, href: `/projects/${id}/pssr/${data.review_id}` }
+    } else if (item.source_id && item.source_kind === 'gate') {
+      // S23 (D-12): condición de un gate aprobado con condiciones → la ficha del sistema.
+      const { data } = await supabase.from('system_gate_approvals').select('system_id, systems(code), readiness_gates(code)').eq('id', item.source_id).maybeSingle()
+      const sys = data?.systems as { code: string } | null
+      const gate = data?.readiness_gates as { code: string } | null
+      if (data) origin = { label: `${sys?.code ?? ''} · ${gate?.code ?? ''}`, href: `/control-tower/${data.system_id}` }
     }
     return <ActionDetail {...common} item={item} origin={origin} />
   }

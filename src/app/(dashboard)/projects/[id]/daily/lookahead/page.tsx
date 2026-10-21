@@ -6,6 +6,8 @@ import LookaheadView, { type GateCell, type PlanSource } from './LookaheadView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import type { GateBlocker } from '@/lib/readiness/gates'
+import { blockerCount } from '@/lib/readiness/matrix'
 
 // Look-ahead 90/30/7 (fase 5 plan readiness, sesión 2): gates por forecast y compromiso + acciones,
 // restricciones, TQ e ítems de work plan que vencen en la ventana, agrupados por sistema.
@@ -45,7 +47,14 @@ export default async function LookaheadPage({ params, searchParams }: {
   const planItems = planItemsRes.rows
   const truncated = actionsRes.truncated || constraintsRes.truncated || tqsRes.truncated || planItemsRes.truncated
 
-  type GateJson = { gate_id: string; code: string; name: string; order: number; status: string }
+  type GateJson = { gate_id: string; code: string; name: string; order: number; status: string; blocker?: GateBlocker | null }
+  const tg = await getTranslations('Gates')
+  // S23 (D-26): el primer criterio que falla, del estado guardado de S20 (sin recalcular nada).
+  const blockerText = (b: GateBlocker | null | undefined) => {
+    if (!b) return null
+    const n = blockerCount(b)
+    return `${b.label ?? tg(`kind.${b.kind}`)}${n ? ` (${n})` : ''}`
+  }
   const systems = ((gatesRaw ?? []) as unknown as { system_id: string; system_code: string; system_name: string; gates: GateJson[] }[])
   const planMap = new Map((plans ?? []).map(p => [`${p.system_id}:${p.gate_id}`, p]))
   const cells: GateCell[] = systems.flatMap(s => s.gates.map(g => {
@@ -54,6 +63,7 @@ export default async function LookaheadPage({ params, searchParams }: {
       systemId: s.system_id, systemCode: s.system_code, systemName: s.system_name,
       gateId: g.gate_id, gateCode: g.code, gateName: g.name, gateOrder: g.order, status: g.status,
       forecast: plan?.forecast_date ?? null, commitment: plan?.commitment_date ?? null,
+      blocker: g.status === 'not_ready' || g.status === 'regressed' ? blockerText(g.blocker) : null,
     }
   }))
   const codeOf = new Map(systems.map(s => [s.system_id, s.system_code]))

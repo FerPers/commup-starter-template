@@ -105,6 +105,9 @@ export type SystemGate = {
   approval: Approval | null
 }
 
+/** S23 (D-01): primer criterio que falla de un gate guardado, sin las listas del detalle. */
+export type GateBlocker = { kind: CriterionKind; label: string | null; detail: Record<string, string | number | boolean | null> }
+
 /** Gate compacto dentro de `compute_project_gates`. */
 export type MatrixGate = {
   gate_id: string
@@ -115,6 +118,7 @@ export type MatrixGate = {
   status: GateStatus
   failing: number
   approval: Approval | null
+  blocker?: GateBlocker | null
 }
 
 export const GATE_STATUS_STYLE: Record<GateStatus, { bg: string; fg: string; border: string; icon: string }> = {

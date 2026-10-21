@@ -16,6 +16,8 @@ export type GateCell = {
   systemId: string; systemCode: string; systemName: string
   gateId: string; gateCode: string; gateName: string; gateOrder: number; status: string
   forecast: string | null; commitment: string | null
+  /** S23 (D-26): qué lo frena (texto ya traducido), si no está listo. */
+  blocker: string | null
 }
 export type PlanSource = {
   kind: Exclude<LookaheadKind, 'gate'>; id: string; ref: string; title: string; status: string; date: string
@@ -69,7 +71,7 @@ export default function LookaheadView({ project, initialWindow, initialEdit, cel
       out.push({
         kind: 'gate', id: `${c.systemId}:${c.gateId}`, ref: c.gateCode, title: c.gateName, systemId: c.systemId, systemCode: c.systemCode,
         date, basis, status: c.status, href: `/control-tower/${c.systemId}`,
-        gapDays: gateGap(c.forecast, c.commitment), atRisk: gateAtRisk(c.status, date, end),
+        gapDays: gateGap(c.forecast, c.commitment), atRisk: gateAtRisk(c.status, date, end), detail: c.blocker,
       })
     }
     for (const s of sources) {
@@ -179,7 +181,10 @@ export default function LookaheadView({ project, initialWindow, initialEdit, cel
                         <td style={{ ...td, width: 120, whiteSpace: 'nowrap' }}>
                           <Link href={it.href} style={{ fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{it.ref}</Link>
                         </td>
-                        <td style={td}>{it.title}</td>
+                        <td style={td}>
+                          {it.title}
+                          {it.detail && <div style={{ ...small, color: it.atRisk ? 'var(--danger-700)' : undefined }}>{it.detail}</div>}
+                        </td>
                         <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                           {it.kind === 'gate' && (
                             <span style={{ display: 'inline-flex', gap: 6 }}>

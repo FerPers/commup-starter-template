@@ -12713,6 +12713,10 @@ export type Database = {
         Args: { p_gate_id: string; p_project_id: string }
         Returns: string[]
       }
+      gate_conditions_create_actions: {
+        Args: { p_approval_id: string }
+        Returns: number
+      }
       gate_cosigners: {
         Args: { p_capacity: string; p_gate_id: string; p_project_id: string }
         Returns: string[]
@@ -12996,6 +13000,7 @@ export type Database = {
       notify_constraints_overdue: { Args: never; Returns: Json }
       notify_preservation_overdue: { Args: never; Returns: Json }
       notify_pssr_reviews_overdue: { Args: never; Returns: Json }
+      notify_registers_overdue: { Args: never; Returns: Json }
       notify_users: {
         Args: {
           p_body: string
@@ -13237,6 +13242,10 @@ export type Database = {
       }
       refresh_itr_status: { Args: { p_itr_id: string }; Returns: Json }
       register_caller_role: { Args: { p_project_id: string }; Returns: string }
+      register_required_fields: {
+        Args: { p_kind: string; p_status: string }
+        Returns: string[]
+      }
       register_set_tags: {
         Args: { p_item_id: string; p_project_id: string; p_tags: Json }
         Returns: undefined
@@ -13615,6 +13624,14 @@ export type Database = {
           open_punches_c: number
           subsystem_id: string
           tag_count: number
+        }[]
+      }
+      system_open_punches: {
+        Args: { p_project_id: string }
+        Returns: {
+          open_a: number
+          open_b: number
+          system_id: string
         }[]
       }
       system_phase_level: {

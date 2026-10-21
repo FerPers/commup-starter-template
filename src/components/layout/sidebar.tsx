@@ -219,12 +219,13 @@ function visibleFor(items: NavItem[], role?: OrgMemberRole): NavItem[] {
 }
 
 function isActive(pathname: string, item: NavItem): boolean {
-  if (item.exact) return pathname === item.href
+  const href = item.href.split('?')[0]
+  if (item.exact) return pathname === href
   // «Templates ITR» (/admin/templates) no debe activarse en /admin/templates/pssr
   if (item.href === '/admin/templates') {
     return pathname === item.href || (pathname.startsWith(item.href + '/') && !/^\/admin\/templates\/(preservation|pssr)/.test(pathname))
   }
-  return pathname === item.href || pathname.startsWith(item.href + '/')
+  return pathname === href || pathname.startsWith(href + '/')
 }
 
 function readStorage(key: string): string | null {
@@ -279,7 +280,9 @@ export default function Sidebar({
   const projectLabel = projectId ? (projectNames[projectId] ?? t('groups.project')) : null
   const projectHeader = currentProjectId ? t('groups.project') : t('groups.lastProject')
 
-  const orgItems = visibleFor(ORG_GROUP.items, role)
+  // S23 (H-12): Control Tower abre el proyecto en el que estás (o el último), no el primero por código.
+  const orgItems = visibleFor(ORG_GROUP.items, role).map(item =>
+    item.href === '/control-tower' && projectId ? { ...item, href: `/control-tower?projectId=${projectId}` } : item)
   const adminItems = visibleFor(ADMIN_GROUP.items, role)
   const tNav = (k: string) => t(`nav.${k}`)
 

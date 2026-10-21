@@ -40,6 +40,7 @@ const KIND_TOPIC: Record<string, NotificationTopic> = {
   preservation_overdue: 'overdue',
   constraint_overdue: 'overdue',
   pssr_review_overdue: 'overdue',
+  register_overdue: 'overdue',
 
   punch_cat_a: 'punch_cat_a',
 }

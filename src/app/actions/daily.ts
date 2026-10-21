@@ -82,7 +82,8 @@ export const createAction = withAuth(
     const bad = badAction(input)
     if (bad) return { error: bad }
     const sourceKind = input.sourceKind ?? 'manual'
-    if (!ACTION_SOURCES.includes(sourceKind)) return { error: 'Origen no válido' }
+    // S23 (D-12): las acciones de origen «gate» las crea la BD al aprobar un gate con condiciones.
+    if (!ACTION_SOURCES.includes(sourceKind) || sourceKind === 'gate') return { error: 'Origen no válido' }
     const { data, error } = await ctx.supabase.rpc('create_action', {
       p_project_id: input.projectId,
       p_title: text(input.title, 200),

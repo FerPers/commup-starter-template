@@ -1843,7 +1843,9 @@
       "approvedByGate": "Sistemas aprobados por gate",
       "toApprove": "{count} por aprobar",
       "toSign": "{count} por firmar",
-      "weighted": "Avance ponderado por gate: {pct} %"
+      "weighted": "Avance ponderado por gate: {pct} %",
+      "physical": "Avance físico ponderado: {pct} %",
+      "readiness": "Readiness: {done}/{total} gates aprobados ({pct} %)"
     },
     "col": {
       "area": "Área",
@@ -1853,7 +1855,13 @@
       "punchB": "Cat B",
       "punchC": "Cat C",
       "gates": "Gates",
-      "topBlocker": "Blocker Principal"
+      "topBlocker": "Blocker Principal",
+      "physical": "Avance físico",
+      "next": "Siguiente gate · qué lo frena",
+      "nextState": "Estado",
+      "blocker": "Bloqueo",
+      "commitment": "Compromiso",
+      "conditions": "Condiciones abiertas"
     },
     "gateTitle": "{name}: {status} · {failing} criterio(s) sin cumplir — clic para ver el detalle",
     "blocker": {
@@ -1880,7 +1888,39 @@
       "utility": "Utility",
       "safety": "Seguridad"
     },
-    "weightedShort": "ponderado {pct} %"
+    "weightedShort": "ponderado {pct} %",
+    "filter": {
+      "area": "Área",
+      "allAreas": "Todas las áreas",
+      "state": "Estado",
+      "allStates": "Todos los estados",
+      "committed": "Compromiso",
+      "anyCommitment": "Cualquier compromiso",
+      "committedIn": "Comprometido en ≤ {days} días",
+      "sort": "Orden",
+      "sortRisk": "Por riesgo",
+      "sortCode": "Por código",
+      "sortCommitment": "Por compromiso",
+      "search": "Buscar sistema",
+      "changed": "Cambió en 24 h"
+    },
+    "rowState": {
+      "regressed": "En regresión",
+      "blocked": "Bloqueado",
+      "signing": "Esperando firmas",
+      "ready": "Listo para aprobar",
+      "done": "Todo aprobado"
+    },
+    "next": {
+      "signing": "esperando firmas",
+      "ready": "listo para aprobar",
+      "blockerCount": "{label} ({count})"
+    },
+    "committedOn": "Comprometido {date}",
+    "conditionsOpen": "{count, plural, one {# condición abierta} other {# condiciones abiertas}}",
+    "export": "Excel",
+    "showing": "{shown} de {total} sistemas",
+    "itrsWeighing": "{count} ITR"
   },
   "DataQuality": {
     "title": "Calidad de Datos & Cuellos de Botella",
@@ -2691,7 +2731,22 @@
     "performance": {
       "noRun": "Sin intentos"
     },
-    "pendingSignaturesDesignated": "Firman solo las personas designadas del proyecto (Firmantes)."
+    "pendingSignaturesDesignated": "Firman solo las personas designadas del proyecto (Firmantes).",
+    "criteriaSummary": "Criterios: {pass} de {total} cumplen",
+    "confirm": {
+      "approveTitle": "Aprobar {gate} de {system}",
+      "revokeTitle": "Revocar {gate} de {system}",
+      "cancel": "Cancelar",
+      "criteria": "{pass} de {total} criterios cumplen.",
+      "conditions": "Condiciones (cada una pasa a una acción ACC a tu nombre):",
+      "pendingSignatures": "Quedará esperando las firmas de: {capacities}.",
+      "noCosign": "No requiere otras firmas: queda aprobado al confirmar.",
+      "enablesGate": "Habilita el siguiente gate del sistema: {gates}.",
+      "enablesSystems": "Deja de bloquear a: {systems}.",
+      "regressesGates": "Quedan en regresión los gates aprobados posteriores: {gates}.",
+      "noOwnImpact": "Ningún gate posterior de este sistema está aprobado.",
+      "affectsSystems": "Vuelve a bloquear a: {systems}."
+    }
   },
   "GatesAdmin": {
     "isStartupGate": "Gate de arranque (habilita primer arranque y primer HC)",
@@ -3468,7 +3523,8 @@
       "meeting": "Reunión",
       "tq": "TQ",
       "vendor": "Vendor",
-      "performance": "Desempeño"
+      "performance": "Desempeño",
+      "gate": "Condición de gate"
     },
     "impact": {
       "safety": "Seguridad",
@@ -3661,8 +3717,8 @@
       "supersede": "Reemplazar decisión"
     },
     "lookahead": {
-      "subtitle": "Qué vence en los próximos 7, 30 o 90 días: gates por forecast o compromiso, acciones, restricciones, TQ y work plans. Lo vencido sigue apareciendo hasta cerrarse.",
-      "window": "{n} días",
+      "subtitle": "Qué vence en los próximos 1, 7, 30 o 90 días: gates por forecast o compromiso, acciones, restricciones, TQ y work plans. Lo vencido sigue apareciendo hasta cerrarse.",
+      "window": "{n, plural, one {# día} other {# días}}",
       "basis": {
         "forecast": "Por forecast",
         "commitment": "Por compromiso"
@@ -5205,7 +5261,8 @@
       "action_assigned": "Acción asignada",
       "action_to_verify": "Acción por verificar",
       "register_to_authorize": "Registro por autorizar",
-      "register_to_verify": "Registro por verificar"
+      "register_to_verify": "Registro por verificar",
+      "register_overdue": "Registro vencido"
     },
     "markAll": "Marcar todas"
   }

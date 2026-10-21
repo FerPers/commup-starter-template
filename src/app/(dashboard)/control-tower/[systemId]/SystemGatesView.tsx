@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatInZone } from '@/lib/time/zone'
+import { Modal } from '@/components/ui'
+import { approveImpact, revokeImpact, type ProvidedDependency } from '@/lib/readiness/impact'
+import { isDone, nextGate } from '@/lib/readiness/matrix'
 import { MILESTONES, type OwnershipStage } from '@/lib/startup/catalog'
 import { StageChip } from '@/app/(dashboard)/projects/[id]/startup/operations/ownership-ui'
 import { Chip } from '@/app/(dashboard)/projects/[id]/daily/daily-ui'
@@ -57,6 +60,7 @@ type Props = {
   phaseCodes: Record<string, string>
   dependsOn: { id: string; code: string }[]
   enables: { id: string; code: string }[]
+  provides: ProvidedDependency[]
   /** Planificación (fase 5, sesión 2): avance ponderado por gate y forecast/compromiso. */
   planning: {
     progress: Record<string, GateProgress>
@@ -114,7 +118,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, caps, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, planning, milestones, ownership, performance, vendors, daily }: Props) {
+export default function SystemGatesView({ orgId, role, userId, caps, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, provides, planning, milestones, ownership, performance, vendors, daily }: Props) {
   const t = useTranslations('Gates')
   const ts = useTranslations('Startup')
   const tv = useTranslations('Vendors')
@@ -141,7 +145,18 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
     })
   }
 
+  // S23 (D-25): aprobar y revocar pasan por un diálogo que muestra qué se firma y qué cambia aguas abajo.
+  const [confirm, setConfirm] = useState<{ kind: 'approve' | 'revoke'; gate: SystemGate } | null>(null)
+  const [revokeReason, setRevokeReason] = useState('')
+  const nextGateId = nextGate(gates.map(x => ({ gate_id: x.gate_id, code: x.gate_code, name: x.gate_name, order: x.gate_order, computed_level: x.computed_level, status: x.status, failing: 0, approval: null })))?.gate_id
+  const impactGates = gates.map(x => ({ gate_id: x.gate_id, gate_code: x.gate_code, gate_order: x.gate_order, status: x.status }))
+
   function approve(g: SystemGate) {
+    setConfirm({ kind: 'approve', gate: g })
+  }
+
+  function doApprove(g: SystemGate) {
+    setConfirm(null)
     run(() => approveSystemGate({ ...base, gateId: g.gate_id, conditions: conditions[g.gate_id] ?? '', notes: notes[g.gate_id] ?? '' }))
   }
 
@@ -152,9 +167,14 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
 
   function revoke(g: SystemGate) {
     if (!g.approval) return
-    const reason = window.prompt(t('revokePrompt', { gate: g.gate_code }))
-    if (!reason?.trim()) return
-    run(() => revokeSystemGateApproval({ ...base, approvalId: g.approval!.id, reason }))
+    setRevokeReason('')
+    setConfirm({ kind: 'revoke', gate: g })
+  }
+
+  function doRevoke(g: SystemGate) {
+    if (!g.approval || !revokeReason.trim()) return
+    setConfirm(null)
+    run(() => revokeSystemGateApproval({ ...base, approvalId: g.approval!.id, reason: revokeReason }))
   }
 
   async function openEvidence(path: string) {
@@ -538,6 +558,9 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
               <StatusBadge status={g.status} label={t(`status.${g.status}`)} />
             </div>
 
+            {/* S23 (D-19): los gates ya aprobados se colapsan; queda abierto el siguiente que pide trabajo */}
+            <details open={!isDone(g.status) || g.gate_id === nextGateId} style={{ marginTop: 8 }}>
+            <summary style={{ ...small, cursor: 'pointer', fontWeight: 600 }}>{t('criteriaSummary', { pass: g.criteria.filter(c => c.result === 'pass').length, total: g.criteria.length })}</summary>
             <GatePlanPanel
               projectId={project.id} systemId={system.id} gateId={g.gate_id}
               progress={planning.progress[g.gate_id]} plan={planning.plans[g.gate_id]}
@@ -563,6 +586,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                 )
               })}
             </ul>
+            </details>
 
             <div style={{ borderTop: '1px solid var(--border)', marginTop: 16, paddingTop: 14 }}>
               {g.approval ? (
@@ -636,6 +660,50 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
           </section>
         )
       })}
+
+      {confirm && (() => {
+        const g = confirm.gate
+        const impact = confirm.kind === 'approve' ? approveImpact(impactGates, g.gate_id, provides) : revokeImpact(impactGates, g.gate_id, provides)
+        const conds = (conditions[g.gate_id] ?? '').split('\n').map(x => x.trim()).filter(Boolean)
+        const pending = g.required_signatures.filter(c => c !== 'commissioning')
+        return (
+          <Modal open onClose={() => setConfirm(null)} size="md"
+            title={confirm.kind === 'approve' ? t('confirm.approveTitle', { gate: g.gate_code, system: system.code }) : t('confirm.revokeTitle', { gate: g.gate_code, system: system.code })}
+            footer={
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button type="button" style={btn('outline')} onClick={() => setConfirm(null)}>{t('confirm.cancel')}</button>
+                {confirm.kind === 'approve'
+                  ? <button type="button" style={btn('primary')} disabled={isPending} onClick={() => doApprove(g)}>{t('approve', { gate: g.gate_code })}</button>
+                  : <button type="button" style={btn('primary')} disabled={isPending || !revokeReason.trim()} onClick={() => doRevoke(g)}>{t('revoke')}</button>}
+              </div>
+            }>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>
+              {confirm.kind === 'approve' ? (
+                <>
+                  <span>{t('confirm.criteria', { pass: g.criteria.filter(c => c.result === 'pass').length, total: g.criteria.length })}</span>
+                  {conds.length > 0 && (
+                    <div>{t('confirm.conditions')}<ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>{conds.map((c, i) => <li key={i}>{c}</li>)}</ul></div>
+                  )}
+                  <span style={small}>{pending.length > 0
+                    ? t('confirm.pendingSignatures', { capacities: pending.map(c => t(`capacity.${c}`)).join(', ') })
+                    : t('confirm.noCosign')}</span>
+                  {impact.ownGates.length > 0 && <span>{t('confirm.enablesGate', { gates: impact.ownGates.join(', ') })}</span>}
+                  {impact.dependents.length > 0 && <span>{t('confirm.enablesSystems', { systems: impact.dependents.join(', ') })}</span>}
+                </>
+              ) : (
+                <>
+                  {impact.ownGates.length > 0
+                    ? <span style={{ color: 'var(--danger-700)' }}>{t('confirm.regressesGates', { gates: impact.ownGates.join(', ') })}</span>
+                    : <span>{t('confirm.noOwnImpact')}</span>}
+                  {impact.dependents.length > 0 && <span style={{ color: 'var(--danger-700)' }}>{t('confirm.affectsSystems', { systems: impact.dependents.join(', ') })}</span>}
+                  <label style={{ ...small, fontWeight: 600 }}>{t('revokePrompt', { gate: g.gate_code })}</label>
+                  <textarea rows={3} style={input} value={revokeReason} onChange={e => setRevokeReason(e.target.value)} autoFocus />
+                </>
+              )}
+            </div>
+          </Modal>
+        )
+      })()}
     </div>
   )
 }

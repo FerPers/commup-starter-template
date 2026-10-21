@@ -1843,7 +1843,9 @@
       "approvedByGate": "Systems approved per gate",
       "toApprove": "{count} to approve",
       "toSign": "{count} to sign",
-      "weighted": "Weighted progress by gate: {pct} %"
+      "weighted": "Weighted progress by gate: {pct} %",
+      "physical": "Weighted physical progress: {pct} %",
+      "readiness": "Readiness: {done}/{total} gates approved ({pct} %)"
     },
     "col": {
       "area": "Area",
@@ -1853,7 +1855,13 @@
       "punchB": "Cat B",
       "punchC": "Cat C",
       "gates": "Gates",
-      "topBlocker": "Top Blocker"
+      "topBlocker": "Top Blocker",
+      "physical": "Physical progress",
+      "next": "Next gate · what holds it",
+      "nextState": "State",
+      "blocker": "Blocker",
+      "commitment": "Commitment",
+      "conditions": "Open conditions"
     },
     "gateTitle": "{name}: {status} · {failing} criteria not met — click for details",
     "blocker": {
@@ -1880,7 +1888,39 @@
       "utility": "Utility",
       "safety": "Safety"
     },
-    "weightedShort": "weighted {pct} %"
+    "weightedShort": "weighted {pct} %",
+    "filter": {
+      "area": "Area",
+      "allAreas": "All areas",
+      "state": "State",
+      "allStates": "All states",
+      "committed": "Commitment",
+      "anyCommitment": "Any commitment",
+      "committedIn": "Committed within {days} days",
+      "sort": "Sort",
+      "sortRisk": "By risk",
+      "sortCode": "By code",
+      "sortCommitment": "By commitment",
+      "search": "Search system",
+      "changed": "Changed in 24 h"
+    },
+    "rowState": {
+      "regressed": "Regressed",
+      "blocked": "Blocked",
+      "signing": "Waiting for signatures",
+      "ready": "Ready to approve",
+      "done": "All approved"
+    },
+    "next": {
+      "signing": "waiting for signatures",
+      "ready": "ready to approve",
+      "blockerCount": "{label} ({count})"
+    },
+    "committedOn": "Committed {date}",
+    "conditionsOpen": "{count, plural, one {# open condition} other {# open conditions}}",
+    "export": "Excel",
+    "showing": "{shown} of {total} systems",
+    "itrsWeighing": "{count} ITRs"
   },
   "DataQuality": {
     "title": "Data Quality & Bottlenecks",
@@ -2691,7 +2731,22 @@
     "performance": {
       "noRun": "No attempts"
     },
-    "pendingSignaturesDesignated": "Only the project's designated people can sign (Signatories)."
+    "pendingSignaturesDesignated": "Only the project's designated people can sign (Signatories).",
+    "criteriaSummary": "Criteria: {pass} of {total} met",
+    "confirm": {
+      "approveTitle": "Approve {gate} of {system}",
+      "revokeTitle": "Revoke {gate} of {system}",
+      "cancel": "Cancel",
+      "criteria": "{pass} of {total} criteria are met.",
+      "conditions": "Conditions (each becomes an ACC action assigned to you):",
+      "pendingSignatures": "It will wait for signatures from: {capacities}.",
+      "noCosign": "No other signatures needed: approved on confirm.",
+      "enablesGate": "Enables the next gate of the system: {gates}.",
+      "enablesSystems": "Stops blocking: {systems}.",
+      "regressesGates": "Later approved gates will regress: {gates}.",
+      "noOwnImpact": "No later gate of this system is approved.",
+      "affectsSystems": "Blocks again: {systems}."
+    }
   },
   "GatesAdmin": {
     "isStartupGate": "Start-up gate (enables first start-up and first HC)",
@@ -3471,7 +3526,8 @@
       "meeting": "Meeting",
       "tq": "TQ",
       "vendor": "Vendor",
-      "performance": "Performance"
+      "performance": "Performance",
+      "gate": "Gate condition"
     },
     "impact": {
       "safety": "Safety",
@@ -3661,8 +3717,8 @@
       "supersede": "Supersede decision"
     },
     "lookahead": {
-      "subtitle": "What is due in the next 7, 30 or 90 days: gates by forecast or commitment, actions, constraints, TQs and work plans. Overdue items keep showing until closed.",
-      "window": "{n} days",
+      "subtitle": "What is due in the next 1, 7, 30 or 90 days: gates by forecast or commitment, actions, constraints, TQs and work plans. Overdue items keep showing until closed.",
+      "window": "{n, plural, one {# day} other {# days}}",
       "basis": {
         "forecast": "By forecast",
         "commitment": "By commitment"
@@ -5205,7 +5261,8 @@
       "action_assigned": "Action assigned",
       "action_to_verify": "Action to verify",
       "register_to_authorize": "Register to authorize",
-      "register_to_verify": "Register to verify"
+      "register_to_verify": "Register to verify",
+      "register_overdue": "Register overdue"
     },
     "markAll": "Mark all"
   }

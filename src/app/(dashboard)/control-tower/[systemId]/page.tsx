@@ -35,7 +35,7 @@ export default async function SystemGatesPage({
     supabase.from('project_phases').select('id, code').eq('org_id', ctx.orgId),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
     supabase.from('system_dependencies')
-      .select(`system_id, depends_on_system_id,
+      .select(`system_id, depends_on_system_id, required_gate_id, blocked_gate_id,
         provider:systems!system_dependencies_depends_on_system_id_fkey(id, code),
         dependent:systems!system_dependencies_system_id_fkey(id, code)`)
       .eq('project_id', system.project_id)
@@ -83,6 +83,9 @@ export default async function SystemGatesPage({
   type Ref = { id: string; code: string }
   const dependsOn = (deps ?? []).filter(d => d.system_id === systemId).map(d => d.provider as unknown as Ref).filter(Boolean)
   const enables = (deps ?? []).filter(d => d.depends_on_system_id === systemId).map(d => d.dependent as unknown as Ref).filter(Boolean)
+  // S23 (D-25): dependencias en las que este sistema es proveedor (impacto de aprobar o revocar).
+  const provides = (deps ?? []).filter(d => d.depends_on_system_id === systemId && d.dependent)
+    .map(d => ({ system_code: (d.dependent as unknown as Ref).code, required_gate_id: d.required_gate_id, blocked_gate_id: d.blocked_gate_id }))
   if (gatesError) console.error('[SystemGates] rpc error:', gatesError)
 
   const names: Record<string, string> = {}
@@ -107,6 +110,7 @@ export default async function SystemGatesPage({
       phaseCodes={phaseCodes}
       dependsOn={dependsOn}
       enables={enables}
+      provides={provides}
       planning={{
         progress: Object.fromEntries((progress ?? []).map(p => [p.gate_id, { weight: Number(p.weight), itr_total: p.itr_total, itr_approved: p.itr_approved, pct: Number(p.pct) }])),
         weightedPct: (progress ?? []).reduce((sum, p) => sum + Number(p.weight) * Number(p.pct), 0),
