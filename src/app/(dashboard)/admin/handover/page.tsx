@@ -12,6 +12,7 @@ type Pkg = {
   generated_at: string
   json_path: string | null
   pdf_path: string | null
+  zip_path: string | null
   signature_hash: string | null
   metadata: Record<string, unknown>
   error_message: string | null
@@ -33,7 +34,7 @@ export default async function AdminHandoverPage() {
       .order('name'),
     supabase
       .from('handover_packages')
-      .select('id, project_id, version, status, generated_by, generated_at, json_path, pdf_path, signature_hash, metadata, error_message, created_at')
+      .select('id, project_id, version, status, generated_by, generated_at, json_path, pdf_path, zip_path, signature_hash, metadata, error_message, created_at')
       .eq('org_id', membership.org_id)
       .order('generated_at', { ascending: false })
       .limit(100),

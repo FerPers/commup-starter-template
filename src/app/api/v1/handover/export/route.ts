@@ -9,7 +9,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders, parsePagination, apiDbError } from '@/lib/api/auth'
 import { requireProjectAccess, requireSystemsAccess } from '@/lib/api/access'
-import { generateHandoverPackage } from '@/lib/handover/generate'
+import { generateHandoverPackage, siteUrl, type HandoverFormat } from '@/lib/handover/generate'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -57,16 +57,16 @@ export async function POST(req: NextRequest) {
 
   const projectId = body.project_id
   const systemIds = Array.isArray(body.system_ids) && body.system_ids.length > 0 ? body.system_ids : null
-  const rawFormats = Array.isArray(body.format) && body.format.length > 0 ? body.format : ['json', 'pdf']
+  const rawFormats = Array.isArray(body.format) && body.format.length > 0 ? body.format : ['json', 'pdf', 'zip']
   const formats = rawFormats
     .map(f => f.toLowerCase())
-    .filter((f): f is 'json' | 'pdf' => f === 'json' || f === 'pdf')
+    .filter((f): f is HandoverFormat => f === 'json' || f === 'pdf' || f === 'zip')
 
   if (!projectId) {
     return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
   }
   if (formats.length === 0) {
-    return NextResponse.json({ error: 'format must include at least one of: json, pdf' }, { status: 422, headers: apiHeaders() })
+    return NextResponse.json({ error: 'format must include at least one of: json, pdf, zip' }, { status: 422, headers: apiHeaders() })
   }
 
   const admin = createAdminClient()
@@ -99,7 +99,9 @@ export async function POST(req: NextRequest) {
         files: {
           json: result.jsonPath ? { path: result.jsonPath, url: result.jsonUrl, expires_in: result.expiresIn } : null,
           pdf:  result.pdfPath  ? { path: result.pdfPath,  url: result.pdfUrl,  expires_in: result.expiresIn } : null,
+          zip:  result.zipPath  ? { path: result.zipPath,  url: result.zipUrl,  expires_in: result.expiresIn } : null,
         },
+        verify_url: `${siteUrl()}/verify/${result.signatureHash}`,
       },
     }, { status: 201, headers: apiHeaders() })
   } catch (err) {

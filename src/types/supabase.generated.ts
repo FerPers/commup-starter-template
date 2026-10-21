@@ -2275,13 +2275,18 @@ export type Database = {
           generated_by: string | null
           id: string
           json_path: string | null
+          key_id: string | null
+          manifest: Json | null
           metadata: Json
           org_id: string
           pdf_path: string | null
           project_id: string
+          signature: string | null
+          signature_alg: string | null
           signature_hash: string | null
           status: string
           version: string
+          zip_path: string | null
         }
         Insert: {
           created_at?: string
@@ -2290,13 +2295,18 @@ export type Database = {
           generated_by?: string | null
           id?: string
           json_path?: string | null
+          key_id?: string | null
+          manifest?: Json | null
           metadata?: Json
           org_id: string
           pdf_path?: string | null
           project_id: string
+          signature?: string | null
+          signature_alg?: string | null
           signature_hash?: string | null
           status?: string
           version?: string
+          zip_path?: string | null
         }
         Update: {
           created_at?: string
@@ -2305,13 +2315,18 @@ export type Database = {
           generated_by?: string | null
           id?: string
           json_path?: string | null
+          key_id?: string | null
+          manifest?: Json | null
           metadata?: Json
           org_id?: string
           pdf_path?: string | null
           project_id?: string
+          signature?: string | null
+          signature_alg?: string | null
           signature_hash?: string | null
           status?: string
           version?: string
+          zip_path?: string | null
         }
         Relationships: [
           {
@@ -13090,6 +13105,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      profile_full_name: { Args: { p_user_id: string }; Returns: string }
       project_cert_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {
@@ -13894,6 +13910,7 @@ export type Database = {
         Args: { p_lead: boolean; p_package_id: string }
         Returns: Record<string, unknown>
       }
+      verify_handover_package: { Args: { p_hash: string }; Returns: Json }
       verify_lineup_item: { Args: { p_item_id: string }; Returns: undefined }
       verify_punch: {
         Args: { p_accept: boolean; p_comment?: string; p_punch_id: string }

@@ -1,22 +1,32 @@
 /**
- * Shared handover generation logic — called by the public API route and the
- * `/admin/handover` server action. Runs entirely server-side with the service
- * role client (the caller is responsible for org-level authorization).
+ * Shared handover generation logic — called by the public API route, the
+ * `/admin/handover` server action and the ownership transfer to Operations.
+ * Runs entirely server-side with the service role client (the caller is
+ * responsible for org-level authorization).
+ *
+ * v3 (S24): RPC esquema 3.0 → ZIP con anexos, manifest.json firmado con Ed25519
+ * (`buildHandoverBundle`). `signature_hash` = sha256 de handover.json (/verify/<hash>).
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { hmacSha256 } from '@/lib/api/auth'
-import { renderHandoverPdf } from './pdf'
+import { getTranslations } from 'next-intl/server'
+import type { Database } from '@/types/supabase.generated'
+import type { Json } from '@/types/supabase.generated'
+import { buildHandoverBundle } from './bundle'
+import { loadSigningKey } from './sign'
 import type { HandoverPackageData } from './types'
+
+export type HandoverFormat = 'json' | 'pdf' | 'zip'
 
 export type GenerateInput = {
   orgId:     string
   projectId: string
   systemIds: string[] | null
-  formats:   ('json' | 'pdf')[]
+  formats:   HandoverFormat[]
   actorId:   string | null
   source:    'api_v1' | 'ui'
   keyId?:    string | null
+  lang?:     'es' | 'en'
 }
 
 export type GenerateResult = {
@@ -24,9 +34,16 @@ export type GenerateResult = {
   signatureHash: string
   jsonPath:      string | null
   pdfPath:       string | null
+  zipPath:       string | null
   jsonUrl:       string | null
   pdfUrl:        string | null
+  zipUrl:        string | null
   expiresIn:     number
+}
+
+/** Origen público para los enlaces de verificación. */
+export function siteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '') ?? 'https://commup.app'
 }
 
 function errMsg(e: unknown): string {
@@ -42,10 +59,14 @@ function errMsg(e: unknown): string {
 }
 
 export async function generateHandoverPackage(
-  admin: SupabaseClient,
+  admin: SupabaseClient<Database>,
   input: GenerateInput,
 ): Promise<GenerateResult> {
   const { orgId, projectId, systemIds, formats, actorId, source, keyId } = input
+  const lang = input.lang ?? 'es'
+
+  const signingKey = await loadSigningKey()
+  if (!signingKey) throw new Error('HANDOVER_ED25519_PRIVATE_KEY is required')
 
   // 1. Create DRAFT row
   const { data: pkgRow, error: insErr } = await admin
@@ -54,6 +75,7 @@ export async function generateHandoverPackage(
       org_id:     orgId,
       project_id: projectId,
       status:     'GENERATING',
+      version:    '3.0',
       generated_by: actorId,
       metadata:   { system_ids: systemIds, format: formats, source, key_id: keyId ?? null },
     })
@@ -65,45 +87,39 @@ export async function generateHandoverPackage(
   try {
     const { data: payload, error: rpcErr } = await admin.rpc('generate_handover_package', {
       p_project_id: projectId,
-      p_system_ids: systemIds,
+      p_system_ids: systemIds ?? undefined,
     })
     if (rpcErr) throw new Error(`RPC generate_handover_package failed: ${errMsg(rpcErr)}`)
     const handoverData = payload as unknown as HandoverPackageData
 
-    const signingSecret = process.env.HANDOVER_SIGNING_SECRET
-    if (!signingSecret) {
-      throw new Error('HANDOVER_SIGNING_SECRET is required')
-    }
-    const jsonString    = JSON.stringify(handoverData)
-    const signatureHash = await hmacSha256(signingSecret, jsonString)
+    const [t, { data: org }] = await Promise.all([
+      getTranslations({ locale: lang, namespace: 'Startup' }),
+      admin.from('organizations').select('name').eq('id', orgId).single(),
+    ])
+    const bundle = await buildHandoverBundle({
+      db: admin, packageId, data: handoverData, orgName: org?.name ?? 'CommUp', lang,
+      t: (k: string) => t(k as never), key: signingKey, verifyBaseUrl: siteUrl(),
+    })
+    const signatureHash = bundle.dataSha256
 
     const basePath = `${orgId}/${packageId}`
-    let jsonPath: string | null = null
-    let pdfPath:  string | null = null
-
-    if (formats.includes('json')) {
-      jsonPath = `${basePath}.json`
-      const { error: upErr } = await admin.storage
-        .from('handover-packages')
-        .upload(jsonPath, new Blob([jsonString], { type: 'application/json' }), {
-          contentType: 'application/json',
-          upsert: true,
-        })
-      if (upErr) throw new Error(`JSON upload failed: ${errMsg(upErr)}`)
+    const uploads: { path: string; body: Uint8Array; type: string }[] = []
+    const jsonPath = formats.includes('json') ? `${basePath}.json` : null
+    const pdfPath  = formats.includes('pdf')  ? `${basePath}.pdf`  : null
+    const zipPath  = formats.includes('zip')  ? `${basePath}.zip`  : null
+    if (jsonPath) uploads.push({ path: jsonPath, body: bundle.json, type: 'application/json' })
+    if (pdfPath)  uploads.push({ path: pdfPath,  body: bundle.indexPdf, type: 'application/pdf' })
+    if (zipPath)  uploads.push({ path: zipPath,  body: bundle.zip, type: 'application/zip' })
+    for (const u of uploads) {
+      const { error: upErr } = await admin.storage.from('handover-packages')
+        .upload(u.path, new Blob([u.body as BlobPart], { type: u.type }), { contentType: u.type, upsert: true })
+      if (upErr) throw new Error(`Upload failed (${u.path}): ${errMsg(upErr)}`)
     }
 
-    if (formats.includes('pdf')) {
-      const pdfBytes = await renderHandoverPdf(handoverData, signatureHash)
-      pdfPath = `${basePath}.pdf`
-      const { error: upErr } = await admin.storage
-        .from('handover-packages')
-        .upload(pdfPath, pdfBytes, { contentType: 'application/pdf', upsert: true })
-      if (upErr) throw new Error(`PDF upload failed: ${errMsg(upErr)}`)
-    }
-
-    if (systemIds && systemIds.length > 0) {
+    // Sistemas del paquete (también los de un paquete de proyecto completo): /verify los muestra.
+    if (handoverData.handover_package.systems.length > 0) {
       await admin.from('handover_package_systems').insert(
-        systemIds.map((sid) => ({ package_id: packageId, system_id: sid })),
+        handoverData.handover_package.systems.map((s) => ({ package_id: packageId, system_id: s.system_id })),
       )
     }
 
@@ -113,14 +129,20 @@ export async function generateHandoverPackage(
         status: 'ISSUED',
         json_path: jsonPath,
         pdf_path: pdfPath,
+        zip_path: zipPath,
         signature_hash: signatureHash,
+        signature: bundle.signature,
+        signature_alg: 'ed25519',
+        key_id: signingKey.keyId,
+        manifest: bundle.manifest as unknown as Json,
       })
       .eq('id', packageId)
     if (updErr) throw new Error(`Package update failed: ${errMsg(updErr)}`)
 
-    const [jsonSigned, pdfSigned] = await Promise.all([
+    const [jsonSigned, pdfSigned, zipSigned] = await Promise.all([
       jsonPath ? admin.storage.from('handover-packages').createSignedUrl(jsonPath, 3600) : null,
       pdfPath  ? admin.storage.from('handover-packages').createSignedUrl(pdfPath,  3600) : null,
+      zipPath  ? admin.storage.from('handover-packages').createSignedUrl(zipPath,  3600) : null,
     ])
 
     await admin.from('domain_events').insert({
@@ -133,6 +155,8 @@ export async function generateHandoverPackage(
         system_ids: systemIds,
         formats,
         signature_hash: signatureHash,
+        key_id_ed25519: signingKey.keyId,
+        omitted: bundle.manifest.omitted.length,
         source,
         key_id: keyId ?? null,
       },
@@ -144,8 +168,10 @@ export async function generateHandoverPackage(
       signatureHash,
       jsonPath,
       pdfPath,
+      zipPath,
       jsonUrl: jsonSigned?.data?.signedUrl ?? null,
       pdfUrl:  pdfSigned?.data?.signedUrl  ?? null,
+      zipUrl:  zipSigned?.data?.signedUrl  ?? null,
       expiresIn: 3600,
     }
   } catch (err) {

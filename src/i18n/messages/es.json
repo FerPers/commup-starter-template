@@ -2036,7 +2036,7 @@
   },
   "AdminHandover": {
     "title": "Paquetes de Handover",
-    "subtitle": "Exportá el libro de vida digital del proyecto como paquete firmado JSON + PDF, listo para importar a un CMMS.",
+    "subtitle": "Exportá el libro de vida digital del proyecto: JSON + índice PDF + ZIP con los anexos (procedimientos, PTC, PSSR, certificados, ITR y documentos), firmado con Ed25519 y verificable por la operadora.",
     "generator": {
       "title": "Generar nuevo paquete",
       "project": "Proyecto",
@@ -2047,7 +2047,8 @@
       "selectedCount": "{n} sistema(s) seleccionado(s)",
       "generate": "Generar paquete",
       "generating": "Generando…",
-      "done": "Paquete generado con éxito. Los links de descarga son válidos 1 hora."
+      "done": "Paquete generado con éxito. Los links de descarga son válidos 1 hora.",
+      "zip": "ZIP con anexos firmado"
     },
     "history": {
       "title": "Historial",
@@ -2058,11 +2059,12 @@
       "files": "Archivos",
       "signature": "Firma",
       "actions": "Acciones",
-      "download": "Obtener links"
+      "download": "Obtener links",
+      "verify": "Verificar"
     },
     "errors": {
       "selectProject": "Seleccioná un proyecto primero.",
-      "selectFormat": "Seleccioná al menos un formato (JSON o PDF)."
+      "selectFormat": "Seleccioná al menos un formato (JSON, PDF o ZIP)."
     }
   },
   "PSSR": {
@@ -4382,7 +4384,9 @@
       "generating": "Generando…",
       "cancel": "Cancelar traspaso",
       "cancelReason": "Motivo de la cancelación",
-      "confirmCancel": "Cancelar traspaso"
+      "confirmCancel": "Cancelar traspaso",
+      "downloadZip": "Descargar ZIP",
+      "verifyHandover": "Verificar firma"
     },
     "perf": {
       "withdraw": "Retirar prueba",
@@ -5265,5 +5269,35 @@
       "register_overdue": "Registro vencido"
     },
     "markAll": "Marcar todas"
+  },
+  "HandoverVerify": {
+    "title": "Verificar paquete de handover",
+    "found": "Paquete emitido por CommUp",
+    "notFound": "No hay un paquete emitido con este hash",
+    "notFoundHint": "Revise que el hash sea el sha256 de handover.json tal como aparece en el índice PDF (64 caracteres hexadecimales).",
+    "organization": "Organización",
+    "project": "Proyecto",
+    "systems": "Sistemas",
+    "generated": "Generado",
+    "version": "Esquema",
+    "signature": "Firma",
+    "ed25519": "Ed25519 · clave {key}",
+    "hmac": "HMAC-SHA256 (paquete v2): solo verificable por CommUp",
+    "rotated": "Firmado con una clave anterior; verifíquelo con la clave pública de esa fecha.",
+    "filesTitle": "Archivos del paquete",
+    "filesHint": "Elija archivos del ZIP: se calcula su sha256 en este navegador (no se sube nada). Incluya manifest.json para comprobar la firma.",
+    "drop": "Elegir archivos del ZIP…",
+    "checking": "Comprobando…",
+    "file": "Archivo",
+    "size": "Tamaño",
+    "offline": "Para verificar sin CommUp use OpenSSL (instrucciones en LEEME.txt) con la",
+    "publicKey": "clave pública (PEM)",
+    "result": {
+      "match": "coincide con {path}",
+      "nomatch": "no coincide con ningún archivo del paquete",
+      "sig_ok": "firma Ed25519 válida",
+      "sig_bad": "firma NO válida: el manifiesto fue modificado",
+      "sig_unavailable": "verifíquelo con OpenSSL y la clave pública de su fecha"
+    }
   }
 }

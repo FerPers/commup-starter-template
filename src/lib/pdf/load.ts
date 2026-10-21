@@ -1,0 +1,357 @@
+/**
+ * Cargadores de los PDF de registro (S24): arman la entrada de cada renderer desde la BD. Los usan las rutas
+ * `…/pdf` (cliente del usuario, con RLS) y el paquete de handover (service role, la org ya verificada), así el
+ * PDF del ZIP es el mismo que se descarga desde la pantalla. Todos filtran por `projectId`.
+ */
+
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
+import type { ProcedurePdfInput } from './procedure'
+import type { PerformancePdfInput } from './performance-report'
+import type { PssrPdfData } from './pssr'
+import type { CertPdfData } from './certificate'
+import type { ItrDocumentRef, ItrPdfData, ItrTestEquipmentRef } from './itr'
+import type { Evaluation } from '@/lib/performance/catalog'
+import { PROCEDURE_SECTIONS, type ProcedureSection } from '@/lib/startup/catalog'
+
+type Db = SupabaseClient<Database>
+/** Traductor del espacio `Startup` (next-intl). */
+type T = (key: string) => string
+type Lang = 'es' | 'en'
+
+type DocRef = { number: string; title: string; used_rev: string; current_rev: string | null; revalidated_from: string | null; revalidation_reason: string | null }
+
+async function profileNames(db: Db, ids: (string | null | undefined)[]) {
+  const people = [...new Set(ids.filter((x): x is string => !!x))]
+  const { data } = people.length ? await db.from('profiles').select('id, full_name').in('id', people) : { data: [] }
+  return (u: string | null | undefined) => (u ? (data ?? []).find(p => p.id === u)?.full_name ?? null : null)
+}
+
+/** Revisión de un procedimiento (`revId`; por defecto la vigente). */
+export async function loadProcedurePdf(
+  db: Db,
+  x: { projectId: string; procedureId: string; revId?: string | null; orgName: string; lang: Lang; t: T },
+): Promise<{ input: ProcedurePdfInput; filename: string } | null> {
+  const { projectId, procedureId, t } = x
+  const [{ data: project }, { data: proc }] = await Promise.all([
+    db.from('projects').select('code, timezone').eq('id', projectId).maybeSingle(),
+    db.from('procedures').select('id, number, title, kind, current_revision_id, systems(code, name)').eq('id', procedureId).eq('project_id', projectId).maybeSingle(),
+  ])
+  if (!project || !proc) return null
+  const targetRev = x.revId ?? proc.current_revision_id
+  const { data: rev } = targetRev
+    ? await db.from('procedure_revisions').select('*').eq('id', targetRev).eq('procedure_id', procedureId).maybeSingle()
+    : await db.from('procedure_revisions').select('*').eq('procedure_id', procedureId).order('rev', { ascending: false }).limit(1).maybeSingle()
+  if (!rev) return null
+  const [{ data: steps }, { data: refs }, name] = await Promise.all([
+    db.from('procedure_steps')
+      .select('ord, action, responsible, expected_value, is_hold_point, hold_capacity, stop_criteria, tags(tag_number)').eq('revision_id', rev.id).order('ord'),
+    // S13 (F-11): documentos referenciados por esta revisión.
+    db.from('document_references')
+      .select('revalidation_reason, used:document_revisions!document_references_revision_id_fkey(rev), from:document_revisions!document_references_revalidated_from_fkey(rev), documents(number, title, current:document_revisions!documents_current_revision_fkey(rev))')
+      .eq('project_id', projectId).eq('procedure_revision_id', rev.id),
+    profileNames(db, [rev.created_by, rev.approved_by, rev.field_verified_by]),
+  ])
+  type Rev = { rev: string } | null
+  const documentRefs: DocRef[] = (refs ?? []).map(r => {
+    const d = r.documents as unknown as { number: string; title: string; current: Rev } | null
+    return {
+      number: d?.number ?? '—', title: d?.title ?? '', used_rev: (r.used as unknown as Rev)?.rev ?? '—', current_rev: d?.current?.rev ?? null,
+      revalidated_from: (r.from as unknown as Rev)?.rev ?? null, revalidation_reason: r.revalidation_reason,
+    }
+  }).sort((a, b) => a.number.localeCompare(b.number))
+  const sys = proc.systems as unknown as { code: string; name: string } | null
+
+  return {
+    filename: `${project.code}-${proc.number}-R${rev.rev}.pdf`,
+    input: {
+      timezone: project.timezone,
+      lang: x.lang,
+      orgName: x.orgName,
+      projectCode: project.code,
+      number: proc.number,
+      title: proc.title,
+      kindLabel: t(`kind.${proc.kind}`),
+      system: sys ? `${sys.code} — ${sys.name}` : null,
+      rev: rev.rev,
+      statusLabel: t(`revStatus.${rev.status}`),
+      approved: rev.status === 'approved',
+      sectionLabels: Object.fromEntries(PROCEDURE_SECTIONS.map(k => [k, t(`section.${k}`)])) as Record<ProcedureSection, string>,
+      sections: (rev.sections ?? {}) as Record<string, string>,
+      steps: (steps ?? []).map(s => ({
+        ord: s.ord, action: s.action, responsible: s.responsible, expected: s.expected_value, tag: (s.tags as unknown as { tag_number: string } | null)?.tag_number ?? null,
+        hold: s.is_hold_point, capacityLabel: s.hold_capacity ? t(`capacity.${s.hold_capacity}`) : null, stop: s.stop_criteria,
+      })),
+      author: name(rev.created_by),
+      approvedBy: name(rev.approved_by),
+      approvedAt: rev.approved_at,
+      fieldVerifiedBy: name(rev.field_verified_by),
+      fieldVerifiedAt: rev.field_verified_at,
+      walkdownNote: rev.walkdown_note,
+      hash: rev.content_hash,
+      documentRefs,
+    },
+  }
+}
+
+/**
+ * Reporte de un intento de desempeño cerrado o evaluado. Sin evaluación guardada la calcula con
+ * `evaluate_performance_run`; `{ error }` si la RPC falla.
+ */
+export async function loadPerformancePdf(
+  db: Db,
+  x: { projectId: string; runId: string; orgName: string; lang: Lang; t: T },
+): Promise<{ input: PerformancePdfInput; filename: string } | { error: string } | null> {
+  const { projectId, runId, t } = x
+  const [{ data: project }, { data: run }] = await Promise.all([
+    db.from('projects').select('code, timezone').eq('id', projectId).maybeSingle(),
+    db.from('performance_runs').select('*').eq('id', runId).eq('project_id', projectId).maybeSingle(),
+  ])
+  if (!project || !run || !['closed', 'evaluated'].includes(run.status)) return null
+
+  let evaluation = run.evaluation as unknown as Evaluation | null
+  if (!evaluation) {
+    const { data, error } = await db.rpc('evaluate_performance_run', { p_run_id: runId })
+    if (error) return { error: error.message }
+    evaluation = data as unknown as Evaluation
+  }
+
+  const [{ data: test }, { data: rev }, { data: vars }, { data: rsys }, { data: dist }, { data: cert }, { data: action }] = await Promise.all([
+    db.from('performance_tests').select('number, title, systems!performance_tests_primary_system_id_fkey(code, name)').eq('id', run.test_id).single(),
+    db.from('performance_test_revisions').select('*, procedures(number, title)').eq('id', run.revision_id).single(),
+    db.from('performance_variables').select('id, key, label, unit, source, op, operand_a, operand_b, manual_every_min, signals(signal_tag)').eq('revision_id', run.revision_id).order('ord'),
+    db.from('performance_revision_systems').select('systems(code)').eq('revision_id', run.revision_id),
+    db.from('performance_disturbances').select('*').eq('run_id', runId).order('started_at'),
+    db.from('performance_certificates').select('*').eq('run_id', runId).maybeSingle(),
+    run.action_id ? db.from('actions').select('number, title').eq('id', run.action_id).maybeSingle() : Promise.resolve({ data: null }),
+  ])
+  if (!test || !rev) return null
+
+  // Series del periodo formal desde los datos congelados (PostgREST corta en 1000 filas: se pagina).
+  const plotted = (vars ?? []).filter(v => v.source !== 'derived')
+  const rows: { variable_id: string; bucket: string; avg_val: number | null }[] = []
+  if (run.formal_started_at) {
+    for (let from = 0; from < 30000; from += 1000) {
+      const { data } = await db.from('performance_run_data').select('variable_id, bucket, avg_val').eq('run_id', runId)
+        .gte('bucket', run.formal_started_at.slice(0, 16)).order('bucket').range(from, from + 999)
+      rows.push(...(data ?? []))
+      if (!data || data.length < 1000) break
+    }
+  }
+
+  const name = await profileNames(db, [rev.approved_by, run.result_by, cert?.commissioning_signed_by, cert?.operations_signed_by, cert?.client_signed_by, ...(dist ?? []).map(d => d.excluded_by)])
+  const sys = test.systems as unknown as { code: string; name: string } | null
+  const proc = rev.procedures as unknown as { number: string; title: string } | null
+
+  return {
+    filename: `${project.code}-${run.number.replace('/', '-')}.pdf`,
+    input: {
+      timezone: project.timezone,
+      lang: x.lang,
+      orgName: x.orgName,
+      projectCode: project.code,
+      test: { number: test.number, title: test.title },
+      run: {
+        number: run.number, status: run.status, stabilizationAt: run.stabilization_started_at, formalAt: run.formal_started_at, formalNote: run.formal_start_note,
+        closedAt: run.closed_at, earlyClose: run.early_close, earlyReason: run.early_close_reason, evaluationHash: run.evaluation_hash,
+        resultBy: name(run.result_by), resultAt: run.result_at,
+      },
+      revision: {
+        rev: rev.rev, hash: rev.content_hash, stabilizationMin: rev.stabilization_min, formalMin: rev.formal_min, sampleIntervalS: rev.sample_interval_s,
+        minCoveragePct: Number(rev.min_coverage_pct), approvedBy: name(rev.approved_by), approvedAt: rev.approved_at,
+      },
+      sections: (rev.sections ?? {}) as Record<string, string>,
+      primarySystem: sys ? `${sys.code} — ${sys.name}` : '—',
+      systems: (rsys ?? []).map(s => (s.systems as unknown as { code: string } | null)?.code).filter((c): c is string => !!c).sort(),
+      procedure: proc ? `${proc.number} — ${proc.title}` : null,
+      variables: (vars ?? []).map(v => ({
+        key: v.key, label: v.label, source: v.source, unit: v.unit, every: v.source === 'manual' ? v.manual_every_min : null,
+        ref: v.source === 'signal' ? (v.signals as unknown as { signal_tag: string } | null)?.signal_tag ?? '' : v.source === 'derived' ? `${v.operand_a} ${v.op} ${v.operand_b}` : '',
+      })),
+      evaluation,
+      disturbances: (dist ?? []).map(d => ({ start: d.started_at, end: d.ended_at, kind: d.kind, description: d.description, excluded: d.excluded, reason: d.exclusion_reason, by: name(d.excluded_by) })),
+      series: plotted.map(v => ({
+        key: v.key, unit: v.unit,
+        points: rows.filter(p => p.variable_id === v.id && p.avg_val !== null).map(p => ({ t: Date.parse(p.bucket), v: Number(p.avg_val) })),
+      })),
+      action: action ? `${action.number} — ${action.title}` : null,
+      certificate: cert ? {
+        number: cert.number, status: cert.status, hash: cert.content_hash,
+        signatures: (['commissioning', 'operations', 'client'] as const).map(c => ({ capacity: c, name: name(cert[`${c}_signed_by`]), at: cert[`${c}_signed_at`] })),
+      } : null,
+      labels: {
+        result: r => t(`perf.result.${r}`), outcome: o => t(`perf.outcome.${o}`), reason: r => t(`perf.reason.${r}`), source: s => t(`perf.source.${s}`),
+        distKind: k => t(`perf.distKind.${k}`), certStatus: s => t(`perf.certStatus.${s}`), capacity: c => t(`perf.cert.cap.${c}`),
+      },
+    },
+  }
+}
+
+export async function loadPssrPdf(db: Db, x: { projectId: string; reviewId: string }): Promise<{ input: PssrPdfData; filename: string } | null> {
+  const [{ data: review }, { data: project }, { data: items }, { data: signatures }] = await Promise.all([
+    db.from('pssr_reviews')
+      .select('id, review_number, title, status, notes, review_due_date, approved_at, rfsu_certificate_id, systems(code, name)')
+      .eq('id', x.reviewId).eq('project_id', x.projectId).maybeSingle(),
+    db.from('projects').select('code, name, client').eq('id', x.projectId).maybeSingle(),
+    db.from('pssr_review_items')
+      .select('id, item_order, category, element, requirement, notes_hint, status, responsible, actions, completion_date')
+      .eq('review_id', x.reviewId).order('item_order'),
+    db.from('pssr_signatures').select('id, discipline, signature_data, signed_at, profiles(full_name)').eq('review_id', x.reviewId).order('signed_at'),
+  ])
+  if (!review) return null
+  // status es columna text en DB — casts estrechos a los unions del PDF
+  return {
+    filename: `PSSR-${review.review_number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    input: {
+      ...review,
+      status: review.status as PssrPdfData['status'],
+      projectName: project?.name ?? '',
+      projectCode: project?.code ?? '',
+      projectClient: project?.client ?? null,
+      items: (items ?? []).map(i => ({ ...i, status: i.status as PssrPdfData['items'][number]['status'] })),
+      signatures: signatures ?? [],
+    },
+  }
+}
+
+export async function loadCertificatePdf(db: Db, x: { projectId: string; certId: string }): Promise<{ input: CertPdfData; filename: string } | null> {
+  const [{ data: cert }, { data: project }, { data: exceptions }, { data: signatures }] = await Promise.all([
+    db.from('certificates')
+      .select(`
+        id, certificate_number, title, status,
+        issued_date, notes, created_at,
+        project_phases(id, code, name, color, certificate_name),
+        subsystems(id, code, name, systems(id, code, name)),
+        issued_by_profile:profiles!issued_by(full_name)
+      `)
+      .eq('id', x.certId).eq('project_id', x.projectId).maybeSingle(),
+    db.from('projects').select('code, name, client').eq('id', x.projectId).maybeSingle(),
+    db.from('certificate_punch_exceptions')
+      .select('id, justification, approved_at, punches(punch_number, description, category), approved_by_profile:profiles!approved_by(full_name)')
+      .eq('certificate_id', x.certId).order('approved_at'),
+    db.from('certificate_signatures')
+      .select('id, role, signed_at, comments, signer_profile:profiles!user_id(full_name)')
+      .eq('certificate_id', x.certId).order('signed_at'),
+  ])
+  if (!cert) return null
+
+  const subsystemId = cert.subsystems?.id
+  const phaseId = cert.project_phases?.id
+  const { data: itrs } = subsystemId && phaseId
+    ? await db.from('itrs')
+        .select('id, itr_number, status, progress_pct, itr_templates(code, title), tags(tag_number, description)')
+        .eq('project_id', x.projectId).eq('subsystem_id', subsystemId).eq('phase_id', phaseId).eq('status', 'approved')
+    : { data: [] }
+
+  return {
+    filename: `CERT-${cert.certificate_number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    input: {
+      ...cert,
+      projectName: project?.name ?? '',
+      projectCode: project?.code ?? '',
+      projectClient: project?.client ?? null,
+      exceptions: exceptions ?? [],
+      itrs: itrs ?? [],
+      signatures: signatures ?? [],
+    },
+  }
+}
+
+/** ITR con respuestas, firmas, adjuntos, equipos y documentos de referencia. `tagId` acota a la ruta del tag. */
+export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; tagId?: string }): Promise<{ input: ItrPdfData; filename: string } | null> {
+  let q = db.from('itrs')
+    .select(`
+      id,
+      itr_number,
+      status,
+      progress_pct,
+      scheduled_date,
+      template_id,
+      project_id,
+      tag_id,
+      source_rows,
+      required_signatures,
+      loops ( loop_number ),
+      ce_causes ( code, description, ce_matrices ( code ) ),
+      itr_templates (
+        code,
+        title,
+        title_es,
+        description,
+        itr_template_sections (
+          id,
+          title,
+          order_index,
+          itr_template_items (
+            id,
+            item_number,
+            description,
+            description_es,
+            item_type,
+            is_critical,
+            is_required,
+            acceptance_min,
+            acceptance_max,
+            acceptance_text,
+            unit,
+            options,
+            order_index
+          )
+        )
+      ),
+      itr_responses (
+        item_id,
+        value_text,
+        value_numeric,
+        value_bool,
+        value_option,
+        remarks,
+        is_passed
+      ),
+      itr_signatures (
+        role,
+        signed_at,
+        signature_image,
+        signer_company,
+        profiles ( full_name )
+      ),
+      itr_attachments (
+        item_id,
+        file_url,
+        file_type,
+        captured_at
+      ),
+      itr_test_equipment ( used_on, calibrated_on, calibration_due, certificate_number, snapshot ),
+      tags ( tag_number, description, manufacturer, model, serial_number, datasheet_number, pid_drawing, range_min, range_max, eng_unit, revision ),
+      projects ( code, name )
+    `)
+    .eq('id', x.itrId)
+    .eq('project_id', x.projectId)
+  if (x.tagId) q = q.eq('tag_id', x.tagId)
+  const { data: itr } = await q.maybeSingle()
+  if (!itr) return null
+
+  // S13 (F-11): documentos de referencia con la revisión usada y la vigente al imprimir.
+  const { data: refs } = await db.from('document_references')
+    .select('revalidation_reason, used:document_revisions!document_references_revision_id_fkey(rev, status), from:document_revisions!document_references_revalidated_from_fkey(rev), documents(number, title, current:document_revisions!documents_current_revision_fkey(rev))')
+    .eq('project_id', x.projectId).eq('itr_id', x.itrId)
+  type Rev = { rev: string; status?: string } | null
+  const documentRefs: ItrDocumentRef[] = (refs ?? []).map(r => {
+    const d = r.documents as unknown as { number: string; title: string; current: Rev } | null
+    const used = r.used as unknown as Rev
+    return {
+      number: d?.number ?? '-', title: d?.title ?? '', used_rev: used?.rev ?? '-', used_status: used?.status ?? null,
+      current_rev: d?.current?.rev ?? null, revalidated_from: (r.from as unknown as Rev)?.rev ?? null, revalidation_reason: r.revalidation_reason,
+    }
+  }).sort((a, b) => a.number.localeCompare(b.number))
+
+  return {
+    filename: `ITR-${itr.itr_number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    input: {
+      ...itr,
+      document_refs: documentRefs,
+      // snapshot es jsonb: la foto de calibración que copió el trigger al registrar el equipo.
+      itr_test_equipment: (itr.itr_test_equipment ?? []).map(u => ({ ...u, snapshot: u.snapshot as ItrTestEquipmentRef['snapshot'] })),
+    },
+  }
+}

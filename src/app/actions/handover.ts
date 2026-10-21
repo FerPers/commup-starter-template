@@ -4,12 +4,12 @@ import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { generateHandoverPackage } from '@/lib/handover/generate'
+import { generateHandoverPackage, type HandoverFormat } from '@/lib/handover/generate'
 
 export type GenerateHandoverInput = {
   projectId: string
   systemIds: string[] | null
-  formats:   ('json' | 'pdf')[]
+  formats:   HandoverFormat[]
 }
 
 export type GenerateHandoverResult = {
@@ -18,6 +18,7 @@ export type GenerateHandoverResult = {
   signatureHash?: string
   jsonUrl?:       string | null
   pdfUrl?:        string | null
+  zipUrl?:        string | null
 }
 
 export const generateHandoverPackageAction = withAuth(
@@ -46,6 +47,7 @@ export const generateHandoverPackageAction = withAuth(
       signatureHash: result.signatureHash,
       jsonUrl:       result.jsonUrl,
       pdfUrl:        result.pdfUrl,
+      zipUrl:        result.zipUrl,
     }
   } catch (err) {
     let message: string
@@ -66,25 +68,27 @@ export const getSignedHandoverUrlsAction = withAuthOnly(
   async (
     ctx,
     packageId: string,
-  ): Promise<{ error?: string; jsonUrl?: string | null; pdfUrl?: string | null }> => {
+  ): Promise<{ error?: string; jsonUrl?: string | null; pdfUrl?: string | null; zipUrl?: string | null }> => {
 
   const admin = createAdminClient()
   const { data: pkg } = await admin
     .from('handover_packages')
-    .select('json_path, pdf_path, org_id')
+    .select('json_path, pdf_path, zip_path, org_id')
     .eq('id', packageId)
     .maybeSingle()
 
   if (!pkg || pkg.org_id !== ctx.orgId) return { error: 'Package not found' }
 
-  const [j, p] = await Promise.all([
+  const [j, p, z] = await Promise.all([
     pkg.json_path ? admin.storage.from('handover-packages').createSignedUrl(pkg.json_path, 3600) : null,
     pkg.pdf_path  ? admin.storage.from('handover-packages').createSignedUrl(pkg.pdf_path,  3600) : null,
+    pkg.zip_path  ? admin.storage.from('handover-packages').createSignedUrl(pkg.zip_path,  3600) : null,
   ])
 
   return {
     jsonUrl: j?.data?.signedUrl ?? null,
     pdfUrl:  p?.data?.signedUrl ?? null,
+    zipUrl:  z?.data?.signedUrl ?? null,
   }
   },
 )

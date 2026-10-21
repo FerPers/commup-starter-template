@@ -55,7 +55,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S21 | Bus de eventos (outbox) | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261117120000 en prod + webhook-dispatcher y evaluate-workflow desplegados). Outbox con pg_cron por minuto, 0 HTTP sin suscriptores, catálogo v1 en singular + eventos de negocio, push con cola, retención. Detalle en la cobertura |
 | S22 | Avisos y colas | S04, S20, S21 | D16 | 🟡 **Hecha salvo el correo** 2026-10-20 (migración 20261119120000 en prod): colas de readiness en Mi trabajo, avisos por cada obligación nueva y por transiciones de gates, push desde la bandeja con temas por usuario, badge personal y chips agrupados. Falta el resumen diario por correo (D16): no hay proveedor de correo transaccional, decisión pendiente de Luis. Detalle en la cobertura |
 | S23 | Readiness v2 (pantallas) | S20 | — | ✅ **Hecha** 2026-10-20 (migración 20261120120000 en prod): Control Tower desde el motor de gates (siguiente gate y qué lo frena), un solo readiness en todas las pantallas, filtros en la URL, Excel, diálogo con impacto al aprobar/revocar, condiciones = acciones ACC, look-ahead con bloqueo y ventana diaria, registros validados en la RPC con aviso de vencidos. Detalle en la cobertura |
-| S24 | Paquete de handover v2 | S14 | D17 | Pendiente |
+| S24 | Paquete de handover v2 (2 sesiones) | S14 | D17 | 🟡 **S24a hecha** 2026-10-21 (migración 20261121120000 en prod): RPC esquema 3.0 con todo F1–F8 por sistema y firmas, ZIP con anexos PDF reales (procedimientos, desempeño/PTC, PSSR, certificados, ITR, archivos de documentos), manifest.json firmado con Ed25519 y verificable con OpenSSL, página pública `/verify/<hash>`. Falta S24b: PDF de ejecución, line-up y evento (E-22). Detalle en la cobertura |
 | S25 | Correcciones de F6–F7 | S14 | — | Pendiente |
 | N0 | Navegación: arreglos rápidos | S01 | D18 | Pendiente — **puede ir en paralelo** en su propio worktree |
 | N1 | Navegación: Mi trabajo y menú por fase y rol | S14, S22 | D18 | Pendiente |
@@ -256,6 +256,7 @@ Formato: **Objetivo** · **Hallazgos** · **Archivos clave** (puntos de partida;
 ### Hito F — Entregable y cierre
 
 #### S24 — Paquete de handover v2 · M–L · D17
+- **Decisiones de Luis (2026-10-21):** firma Ed25519 con clave pública publicada + página `/verify/<hash>`; ZIP generado en línea, un sistema por paquete, con topes; E-22 dentro de S24 → dos sesiones (S24a paquete y firma, S24b PDF nuevos).
 - **Hallazgos:** E-05/F-22/E-22: gates con firmas, procedimientos, ejecuciones, line-ups, hitos, traspaso, competencias, repuestos, PTC, documentos y vendors, con hashes, PDFs adjuntos y respaldo imprimible. De paso: E-31 (firma verificable por la operadora).
 - **Archivos clave:** `generate_handover_package`, `src/app/actions/ops-readiness.ts`, `src/lib/handover/types.ts`, `src/lib/pdf/procedure.ts`, `performance-report.ts`.
 

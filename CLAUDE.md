@@ -183,6 +183,12 @@ Rules for every new page/query/action:
 - S13 (migración `20261108120000`): vigente = fecha de emisión más reciente; revisiones anuladas (`void`); referencias automáticas al crear un ITR (trigger `itrs_auto_document_refs`) y masivas en la ficha del documento; `organizations.settings.document_policy.below_ifc` (`warn` | `block`) para IFR/IFA; FAT/SAT con re-prueba (`retest_of`); `tags.tag_key` (número normalizado) para C&E y QR; etiquetas QR por tag en `/projects/[id]/tags/labels` (QR con `/tag_360/<uuid>`).
 - Sesión 3 (migración `20261023120000`): KPIs `documents` (As-Built/Final sobre documentos ligados a sistemas) y `vendors` (paquetes activos sin bloqueos) en `take_mgmt_snapshot`; trigger `company_link_from_text` enlaza la empresa de `ops_personnel.company` / `test_equipment.owner_company` por nombre. Seed DEMO `scripts/demo-data/seed_documents_vendors_demo.sql`. **Con esto el plan readiness F0–F8 está completo.**
 
+## Paquete de handover (S24, D17)
+
+- `generate_handover_package` (esquema 3.0, solo service_role) devuelve todo F1–F8 por sistema con firmas y hashes; `src/lib/handover/generate.ts` lo empaqueta (JSON + índice PDF + ZIP) vía `bundle.ts`: anexos con los mismos cargadores que las rutas PDF (`src/lib/pdf/load.ts`), topes `MAX_ITR_PDFS` / `MAX_DOCUMENT_BYTES`, lo omitido queda en el manifiesto.
+- Firma Ed25519 (`src/lib/handover/sign.ts`, secreto `HANDOVER_ED25519_PRIVATE_KEY` = PKCS#8 base64, en Wrangler y `.env.local`): `manifest.sig` firma los bytes de `manifest.json`. `signature_hash` = sha256 de handover.json = el hash de `/verify/<hash>` (página pública, RPC `verify_handover_package` solo service_role). Clave pública en `/api/v1/handover/public-key`. Rotar la clave = nuevo `key_id`; los paquetes viejos se verifican con la pública de su fecha.
+- Un PDF nuevo que deba ir al paquete: cargador en `load.ts` (lo usan la ruta y el ZIP) + tarea en `bundle.ts`.
+
 ## Miembros y acceso (S15)
 
 - `org_members` **no se escribe por REST**: solo RPC `add_org_member` / `set_member_role` / `remove_org_member` / `set_member_access` / `respond_org_invitation`. Estados `invited` · `active` · `suspended` + `access_expires_at`; todos los helpers de RLS exigen membresía activa y no vencida (`isActiveMembership` en `src/lib/members/catalog.ts`). Invitado o suspendido sin otra org activa → `/access`.

@@ -2036,7 +2036,7 @@
   },
   "AdminHandover": {
     "title": "Handover Packages",
-    "subtitle": "Export the digital life-book of a project as a signed JSON + PDF package, ready for CMMS import.",
+    "subtitle": "Export the project's digital life book: JSON + PDF index + ZIP with annexes (procedures, PTC, PSSR, certificates, ITRs and documents), Ed25519-signed and verifiable by the operator.",
     "generator": {
       "title": "Generate new package",
       "project": "Project",
@@ -2047,7 +2047,8 @@
       "selectedCount": "{n} system(s) selected",
       "generate": "Generate package",
       "generating": "Generating…",
-      "done": "Package generated successfully. Download links are valid for 1 hour."
+      "done": "Package generated successfully. Download links are valid for 1 hour.",
+      "zip": "Signed ZIP with annexes"
     },
     "history": {
       "title": "History",
@@ -2058,11 +2059,12 @@
       "files": "Files",
       "signature": "Signature",
       "actions": "Actions",
-      "download": "Get links"
+      "download": "Get links",
+      "verify": "Verify"
     },
     "errors": {
       "selectProject": "Pick a project first.",
-      "selectFormat": "Select at least one format (JSON or PDF)."
+      "selectFormat": "Select at least one format (JSON, PDF or ZIP)."
     }
   },
   "PSSR": {
@@ -4382,7 +4384,9 @@
       "generating": "Generating…",
       "cancel": "Cancel transfer",
       "cancelReason": "Cancellation reason",
-      "confirmCancel": "Cancel transfer"
+      "confirmCancel": "Cancel transfer",
+      "downloadZip": "Download ZIP",
+      "verifyHandover": "Verify signature"
     },
     "perf": {
       "withdraw": "Withdraw test",
@@ -5265,5 +5269,35 @@
       "register_overdue": "Register overdue"
     },
     "markAll": "Mark all"
+  },
+  "HandoverVerify": {
+    "title": "Verify handover package",
+    "found": "Package issued by CommUp",
+    "notFound": "No package was issued with this hash",
+    "notFoundHint": "Check that the hash is the sha256 of handover.json as printed in the PDF index (64 hex characters).",
+    "organization": "Organization",
+    "project": "Project",
+    "systems": "Systems",
+    "generated": "Generated",
+    "version": "Schema",
+    "signature": "Signature",
+    "ed25519": "Ed25519 · key {key}",
+    "hmac": "HMAC-SHA256 (v2 package): verifiable by CommUp only",
+    "rotated": "Signed with a previous key; verify it with the public key of that date.",
+    "filesTitle": "Package files",
+    "filesHint": "Pick files from the ZIP: their sha256 is computed in this browser (nothing is uploaded). Include manifest.json to check the signature.",
+    "drop": "Choose files from the ZIP…",
+    "checking": "Checking…",
+    "file": "File",
+    "size": "Size",
+    "offline": "To verify without CommUp use OpenSSL (see LEEME.txt) with the",
+    "publicKey": "public key (PEM)",
+    "result": {
+      "match": "matches {path}",
+      "nomatch": "does not match any file in the package",
+      "sig_ok": "valid Ed25519 signature",
+      "sig_bad": "INVALID signature: the manifest was modified",
+      "sig_unavailable": "verify it with OpenSSL and the public key of its date"
+    }
   }
 }

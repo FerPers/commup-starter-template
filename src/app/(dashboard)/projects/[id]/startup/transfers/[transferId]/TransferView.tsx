@@ -19,7 +19,7 @@ type Transfer = {
   completed_at: string | null; cancelled_by: string | null; cancelled_at: string | null; cancel_reason: string | null
   handover_package_id: string | null; content_hash: string | null
 }
-type Pkg = { id: string; version: string; status: string; generated_at: string | null; signature_hash: string | null } | null
+type Pkg = { id: string; version: string; status: string; generated_at: string | null; signature_hash: string | null; zip_path: string | null } | null
 
 const TONE: Record<string, 'amber' | 'green' | 'struck'> = { pending_signatures: 'amber', completed: 'green', cancelled: 'struck' }
 
@@ -52,9 +52,12 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
       router.refresh()
     })
   }
-  function download() {
+  function download(kind: 'pdf' | 'zip') {
     if (!pkg) return
-    run(() => getSignedHandoverUrlsAction(pkg.id), res => { if (res.pdfUrl) window.open(res.pdfUrl, '_blank', 'noopener') })
+    run(() => getSignedHandoverUrlsAction(pkg.id), res => {
+      const url = kind === 'zip' ? res.zipUrl : res.pdfUrl
+      if (url) window.open(url, '_blank', 'noopener')
+    })
   }
 
   const signatures: { cap: 'commissioning' | 'operations'; by: string | null; at: string | null }[] = [
@@ -124,7 +127,15 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
             </p>
           </div>
           {pkg ? (
-            <button type="button" style={btn('outline', isPending || pkg.status !== 'ISSUED')} disabled={isPending || pkg.status !== 'ISSUED'} onClick={download}>{t('ops.downloadPdf')}</button>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" style={btn('outline', isPending || pkg.status !== 'ISSUED')} disabled={isPending || pkg.status !== 'ISSUED'} onClick={() => download('pdf')}>{t('ops.downloadPdf')}</button>
+              {pkg.zip_path && (
+                <button type="button" style={btn('outline', isPending || pkg.status !== 'ISSUED')} disabled={isPending || pkg.status !== 'ISSUED'} onClick={() => download('zip')}>{t('ops.downloadZip')}</button>
+              )}
+              {pkg.signature_hash && pkg.zip_path && (
+                <a href={`/verify/${pkg.signature_hash}`} target="_blank" rel="noopener" style={{ ...small, alignSelf: 'center' }}>{t('ops.verifyHandover')}</a>
+              )}
+            </div>
           ) : canEdit && (
             <button type="button" style={btn('primary', isPending)} disabled={isPending}
               onClick={() => run(() => generateTransferHandover({ projectId: project.id, transferId: tr.id }))}>{isPending ? t('ops.generating') : t('ops.generateHandover')}</button>

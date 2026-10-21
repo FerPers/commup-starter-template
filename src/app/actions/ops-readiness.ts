@@ -139,7 +139,7 @@ export const requestOwnershipTransfer = withAuth(
 async function generateForTransfer(orgId: string, projectId: string, transferId: string, systemId: string, actorId: string): Promise<{ error?: string }> {
   const admin = createAdminClient()
   try {
-    const res = await generateHandoverPackage(admin, { orgId, projectId, systemIds: [systemId], formats: ['pdf', 'json'], actorId, source: 'ui', keyId: null })
+    const res = await generateHandoverPackage(admin, { orgId, projectId, systemIds: [systemId], formats: ['pdf', 'json', 'zip'], actorId, source: 'ui', keyId: null })
     const { error } = await admin.rpc('link_transfer_handover', { p_transfer_id: transferId, p_package_id: res.packageId })
     return error ? { error: error.message } : {}
   } catch (err) {

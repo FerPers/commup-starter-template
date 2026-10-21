@@ -1,393 +1,400 @@
 /**
- * Handover Package PDF — server-side render via pdf-lib.
- * Returns a Uint8Array that the export endpoint uploads to Storage.
+ * Índice PDF del paquete de handover (v3, S24) — pdf-lib sobre el renderer compartido.
  *
- * pdf-lib is Workers-native (pure Web APIs — no Node runtime dependency).
- * The previous @react-pdf/renderer implementation failed to resolve its
- * dynamic chunk inside the OpenNext Worker bundle.
+ * Es el «respaldo imprimible» del paquete: por sistema, etapa de propiedad, gates con firmas, PSSR, procedimientos
+ * (revisión vigente + última ejecución con pasos y holds), line-ups verificados, bitácora de arranque, traspasos,
+ * competencias, repuestos, desempeño/PTC, documentos y vendors; después punch Cat B, certificados, la lista de anexos
+ * del ZIP y cómo verificar la firma. Lee también paquetes v2 (sin las secciones nuevas).
  */
 
-import { PDFDocument, type PDFPage, type PDFFont, StandardFonts, rgb, type RGB } from 'pdf-lib'
-import type { HandoverPackageData } from './types'
+import { Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H, sanitize, wrapText, type TableCol } from '@/lib/pdf/renderer'
+import { dateTimeIn, zoneLabel } from '@/lib/time/zone'
+import type { HandoverPackageData, HandoverSigner } from './types'
 
-const A4_W = 595.28
-const A4_H = 841.89
-const MARGIN = 36
-const CONTENT_W = A4_W - MARGIN * 2
-const FOOTER_H = 22
-const BOTTOM_LIMIT = MARGIN + FOOTER_H
+type Lang = 'es' | 'en'
 
-const COLOR = {
-  text:         rgb(0.059, 0.090, 0.165),
-  muted:        rgb(0.392, 0.455, 0.545),
-  border:       rgb(0.796, 0.835, 0.882),
-  borderLight:  rgb(0.886, 0.910, 0.941),
-  borderXlight: rgb(0.945, 0.961, 0.976),
-  tableHeadBg:  rgb(0.945, 0.961, 0.976),
-  empty:        rgb(0.580, 0.639, 0.722),
-  white:        rgb(1, 1, 1),
-  green:        rgb(0.086, 0.396, 0.204),
-  greenBg:      rgb(0.863, 0.988, 0.906),
-  blue:         rgb(0.118, 0.251, 0.686),
-  blueBg:       rgb(0.859, 0.918, 0.996),
-  red:          rgb(0.600, 0.106, 0.106),
-  redBg:        rgb(0.996, 0.886, 0.886),
-  amber:        rgb(0.573, 0.251, 0.055),
-  amberBg:      rgb(0.996, 0.953, 0.780),
+const T = {
+  title:        { es: 'Paquete de handover', en: 'Handover package' },
+  project:      { es: 'Proyecto', en: 'Project' },
+  client:       { es: 'Cliente', en: 'Client' },
+  location:     { es: 'Ubicación', en: 'Location' },
+  generated:    { es: 'Generado', en: 'Generated' },
+  systems:      { es: 'Sistemas', en: 'Systems' },
+  system:       { es: 'Sistema', en: 'System' },
+  stage:        { es: 'Etapa de propiedad', en: 'Ownership stage' },
+  progress:     { es: 'Tags / ITR', en: 'Tags / ITRs' },
+  itrApproved:  { es: 'ITR aprobados', en: 'ITRs approved' },
+  punchOpen:    { es: 'Punch abiertos', en: 'Open punch' },
+  gates:        { es: 'Gates de readiness', en: 'Readiness gates' },
+  gate:         { es: 'Gate', en: 'Gate' },
+  status:       { es: 'Estado', en: 'Status' },
+  approvedBy:   { es: 'Aprobó', en: 'Approved by' },
+  signatures:   { es: 'Firmas', en: 'Signatures' },
+  attest:       { es: 'Declaración', en: 'Attestation' },
+  conditions:   { es: 'Condiciones', en: 'Conditions' },
+  pssr:         { es: 'PSSR', en: 'PSSR' },
+  number:       { es: 'Número', en: 'Number' },
+  items:        { es: 'Ítems sí / NA / no', en: 'Items yes / NA / no' },
+  procedures:   { es: 'Procedimientos', en: 'Procedures' },
+  rev:          { es: 'Rev', en: 'Rev' },
+  fieldVerif:   { es: 'Verificó en campo', en: 'Field verified' },
+  lastRun:      { es: 'Última ejecución', en: 'Last run' },
+  step:         { es: 'Paso', en: 'Step' },
+  expected:     { es: 'Esperado', en: 'Expected' },
+  actual:       { es: 'Real', en: 'Actual' },
+  doneBy:       { es: 'Hecho por', en: 'Done by' },
+  holdBy:       { es: 'Hold liberado por', en: 'Hold released by' },
+  lineups:      { es: 'Line-ups verificados', en: 'Verified line-ups' },
+  position:     { es: 'Posición requerida / encontrada', en: 'Required / found position' },
+  verifiedBy:   { es: 'Verificó', en: 'Verified by' },
+  events:       { es: 'Bitácora de arranque', en: 'Start-up log' },
+  date:         { es: 'Fecha', en: 'Date' },
+  event:        { es: 'Evento', en: 'Event' },
+  witness:      { es: 'Testigo', en: 'Witness' },
+  transfers:    { es: 'Traspasos de propiedad', en: 'Ownership transfers' },
+  commissioning:{ es: 'Comisionamiento', en: 'Commissioning' },
+  operations:   { es: 'Operaciones', en: 'Operations' },
+  clientSig:    { es: 'Cliente', en: 'Client' },
+  exceptions:   { es: 'Excepciones justificadas', en: 'Justified exceptions' },
+  competencies: { es: 'Competencias del personal de operaciones', en: 'Operations staff competencies' },
+  perShift:     { es: 'Personas por turno exigidas', en: 'Required per shift' },
+  person:       { es: 'Persona', en: 'Person' },
+  company:      { es: 'Empresa', en: 'Company' },
+  shift:        { es: 'Turno', en: 'Shift' },
+  level:        { es: 'Nivel', en: 'Level' },
+  expires:      { es: 'Vence', en: 'Expires' },
+  spares:       { es: 'Repuestos y herramientas críticas', en: 'Critical spares and tools' },
+  item:         { es: 'Ítem', en: 'Item' },
+  qty:          { es: 'Req. / disp.', en: 'Req. / avail.' },
+  performance:  { es: 'Pruebas de desempeño', en: 'Performance tests' },
+  test:         { es: 'Prueba', en: 'Test' },
+  attempts:     { es: 'Intentos', en: 'Attempts' },
+  ptc:          { es: 'Certificado (PTC)', en: 'Certificate (PTC)' },
+  documents:    { es: 'Documentos vigentes', en: 'Current documents' },
+  title2:       { es: 'Título', en: 'Title' },
+  file:         { es: 'Archivo', en: 'File' },
+  vendors:      { es: 'Paquetes de vendor', en: 'Vendor packages' },
+  fatSat:       { es: 'FAT / SAT', en: 'FAT / SAT' },
+  finalReport:  { es: 'Reporte final', en: 'Final report' },
+  recs:         { es: 'Recomendaciones', en: 'Recommendations' },
+  tags:         { es: 'Tags', en: 'Tags' },
+  description:  { es: 'Descripción', en: 'Description' },
+  maker:        { es: 'Fabricante / modelo', en: 'Make / model' },
+  catB:         { es: 'Punch Cat B (transferibles a Operaciones)', en: 'Cat B punch (transferable to Operations)' },
+  priority:     { es: 'Prioridad', en: 'Priority' },
+  target:       { es: 'Fecha objetivo', en: 'Target date' },
+  certificates: { es: 'Certificados', en: 'Certificates' },
+  issued:       { es: 'Emitido', en: 'Issued' },
+  annexes:      { es: 'Anexos incluidos en el ZIP', en: 'Annexes in the ZIP' },
+  omitted:      { es: 'Anexos no incluidos', en: 'Annexes not included' },
+  signature:    { es: 'Integridad y firma', en: 'Integrity and signature' },
+  dataHash:     { es: 'sha256 de handover.json', en: 'handover.json sha256' },
+  alg:          { es: 'Firma', en: 'Signature' },
+  keyId:        { es: 'Clave pública', en: 'Public key' },
+  verify:       { es: 'Verificar en', en: 'Verify at' },
+  verifyNote:   {
+    es: 'manifest.json lista el sha256 de cada archivo del ZIP (incluido este PDF) y manifest.sig es su firma Ed25519. Ver LEEME.txt.',
+    en: 'manifest.json lists the sha256 of every file in the ZIP (this PDF included) and manifest.sig is its Ed25519 signature. See LEEME.txt.',
+  },
+  legacyNote:   { es: 'Paquete v2: firmado con HMAC, verificable solo por CommUp.', en: 'v2 package: HMAC-signed, verifiable by CommUp only.' },
+  none:         { es: 'Sin registros.', en: 'No records.' },
+  page:         { es: 'Página', en: 'Page' },
+  yes:          { es: 'sí', en: 'yes' },
+  critical:     { es: 'crítico', en: 'critical' },
 }
 
-type TableCol = { w: number; label: string; align?: 'left' | 'right' }
-
-/**
- * StandardFonts.Helvetica uses WinAnsi encoding, which covers Latin-1 + a few
- * CP1252 extensions but rejects characters like → (U+2192), check marks, CJK.
- * Embedding a Unicode-capable font (via fontkit) is heavy for Workers, so we
- * map common non-WinAnsi glyphs to ASCII equivalents and fall back to '?' for
- * anything else. User-supplied strings (project names, descriptions) are
- * passed through this before drawing to avoid runtime encode failures.
- */
-const UNICODE_MAP: Record<string, string> = {
-  '→': '->',  // →
-  '←': '<-',  // ←
-  '↑': '^',   // ↑
-  '↓': 'v',   // ↓
-  '⇒': '=>',  // ⇒
-  '⇐': '<=',  // ⇐
-  '✓': 'OK',  // ✓
-  '✔': 'OK',  // ✔
-  '✗': 'X',   // ✗
-  '✘': 'X',   // ✘
-  ' ': ' ',   // non-breaking space
+export type HandoverPdfOptions = {
+  lang?: Lang
+  /** sha256 de handover.json (v3). */
+  dataSha256: string
+  keyId?: string | null
+  verifyUrl?: string | null
+  annexes?: string[]
+  omitted?: { path: string; reason: string }[]
+  /** Etiquetas del espacio `Startup` (etapas, capacidades); sin traductor se muestra el código. */
+  label?: (key: string) => string
 }
 
-function sanitize(s: string): string {
-  if (!s) return s
-  return s.replace(/[^\x00-\xFF]/g, (c) => UNICODE_MAP[c] ?? '?')
-}
-
-function truncateToWidth(rawText: string, font: PDFFont, size: number, maxWidth: number): string {
-  const text = sanitize(rawText)
-  if (font.widthOfTextAtSize(text, size) <= maxWidth) return text
-  const ellipsis = '…'
-  const ellipsisW = font.widthOfTextAtSize(ellipsis, size)
-  let lo = 0, hi = text.length
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1
-    const candidate = text.slice(0, mid)
-    if (font.widthOfTextAtSize(candidate, size) + ellipsisW <= maxWidth) lo = mid
-    else hi = mid - 1
-  }
-  return text.slice(0, lo) + ellipsis
-}
-
-function statusColors(status: string): { fg: RGB; bg: RGB } {
-  const s = status.toLowerCase()
-  if (s.includes('approv') || s.includes('issu') || s.includes('complet') || s.includes('closed'))
-    return { fg: COLOR.green, bg: COLOR.greenBg }
-  if (s.includes('progress')) return { fg: COLOR.blue, bg: COLOR.blueBg }
-  if (s.includes('reject') || s.includes('block') || s.includes('fail'))
-    return { fg: COLOR.red, bg: COLOR.redBg }
-  return { fg: COLOR.amber, bg: COLOR.amberBg }
-}
-
-class Renderer {
-  doc: PDFDocument
-  page!: PDFPage
-  fontRegular: PDFFont
-  fontBold: PDFFont
-  y: number = A4_H - MARGIN
-  pageNum: number = 0
-  totalPagesPlaceholder: { page: PDFPage; x: number; y: number }[] = []
-
-  constructor(
-    doc: PDFDocument,
-    fontRegular: PDFFont,
-    fontBold: PDFFont,
-    private projectName: string,
-    private schemaVersion: string,
-    private hashShort: string,
-  ) {
-    this.doc = doc
-    this.fontRegular = fontRegular
-    this.fontBold = fontBold
-    this.newPage()
-  }
-
-  newPage() {
-    this.page = this.doc.addPage([A4_W, A4_H])
-    this.y = A4_H - MARGIN
-    this.pageNum += 1
-    this.drawFooter()
-  }
-
-  drawFooter() {
-    const footerY = MARGIN
-    this.page.drawLine({
-      start: { x: MARGIN, y: footerY + FOOTER_H - 4 },
-      end:   { x: A4_W - MARGIN, y: footerY + FOOTER_H - 4 },
-      thickness: 0.5,
-      color: COLOR.borderLight,
-    })
-    const leftText  = truncateToWidth(
-      `CommUp Handover Package v${this.schemaVersion} · ${this.projectName}`,
-      this.fontRegular, 7, CONTENT_W / 2 - 20,
-    )
-    const rightText = sanitize(`sig:${this.hashShort}...`)
-    this.page.drawText(leftText, {
-      x: MARGIN, y: footerY + 6, size: 7, font: this.fontRegular, color: COLOR.empty,
-    })
-    const rightW = this.fontRegular.widthOfTextAtSize(rightText, 7)
-    this.page.drawText(rightText, {
-      x: A4_W - MARGIN - rightW, y: footerY + 6, size: 7, font: this.fontRegular, color: COLOR.empty,
-    })
-    this.totalPagesPlaceholder.push({ page: this.page, x: A4_W / 2 - 20, y: footerY + 6 })
-    this.page.drawText(`Page ${this.pageNum} /`, {
-      x: A4_W / 2 - 28, y: footerY + 6, size: 7, font: this.fontRegular, color: COLOR.empty,
-    })
-  }
-
-  finalizeFooter() {
-    const total = this.pageNum
-    for (const ph of this.totalPagesPlaceholder) {
-      ph.page.drawText(String(total), {
-        x: ph.x + 6, y: ph.y, size: 7, font: this.fontRegular, color: COLOR.empty,
-      })
-    }
-  }
-
-  ensureSpace(needed: number) {
-    if (this.y - needed < BOTTOM_LIMIT) this.newPage()
-  }
-
-  moveY(delta: number) {
-    this.y -= delta
-  }
-
-  title(text: string) {
-    this.ensureSpace(28)
-    this.page.drawText(sanitize(text), {
-      x: MARGIN, y: this.y - 20, size: 20, font: this.fontBold, color: COLOR.text,
-    })
-    this.moveY(24)
-  }
-
-  subtitle(text: string) {
-    this.ensureSpace(18)
-    this.page.drawText(sanitize(text), {
-      x: MARGIN, y: this.y - 11, size: 11, font: this.fontRegular, color: COLOR.muted,
-    })
-    this.moveY(18)
-  }
-
-  section(text: string) {
-    this.moveY(10)
-    this.ensureSpace(22)
-    this.page.drawText(sanitize(text), {
-      x: MARGIN, y: this.y - 13, size: 13, font: this.fontBold, color: COLOR.text,
-    })
-    this.moveY(16)
-    this.page.drawLine({
-      start: { x: MARGIN, y: this.y + 4 },
-      end:   { x: A4_W - MARGIN, y: this.y + 4 },
-      thickness: 0.5,
-      color: COLOR.border,
-    })
-    this.moveY(4)
-  }
-
-  kv(key: string, val: string) {
-    this.ensureSpace(12)
-    const keyX = MARGIN
-    const valX = MARGIN + 110
-    const maxValW = A4_W - MARGIN - valX
-    const truncVal = truncateToWidth(val, this.fontRegular, 9, maxValW)
-    this.page.drawText(sanitize(key), {
-      x: keyX, y: this.y - 9, size: 9, font: this.fontRegular, color: COLOR.muted,
-    })
-    this.page.drawText(truncVal, {
-      x: valX, y: this.y - 9, size: 9, font: this.fontRegular, color: COLOR.text,
-    })
-    this.moveY(12)
-  }
-
-  empty(text: string) {
-    this.ensureSpace(12)
-    this.page.drawText(sanitize(text), {
-      x: MARGIN, y: this.y - 8, size: 8, font: this.fontRegular, color: COLOR.empty,
-    })
-    this.moveY(12)
-  }
-
-  tableHeader(cols: TableCol[]) {
-    this.ensureSpace(16)
-    const rowH = 14
-    this.page.drawRectangle({
-      x: MARGIN, y: this.y - rowH, width: CONTENT_W, height: rowH,
-      color: COLOR.tableHeadBg,
-      borderColor: COLOR.borderLight, borderWidth: 0.5,
-    })
-    let x = MARGIN
-    for (const c of cols) {
-      const text = truncateToWidth(c.label, this.fontBold, 8, c.w - 8)
-      this.page.drawText(text, {
-        x: x + 4, y: this.y - rowH + 4, size: 8, font: this.fontBold, color: COLOR.text,
-      })
-      x += c.w
-    }
-    this.moveY(rowH)
-  }
-
-  tableRow(cols: TableCol[], values: string[], opts?: { statusColIndex?: number }) {
-    const rowH = 13
-    this.ensureSpace(rowH)
-    let x = MARGIN
-    for (let i = 0; i < cols.length; i++) {
-      const c = cols[i]
-      const raw = values[i] ?? ''
-      const isStatus = opts?.statusColIndex === i
-      const textColor = isStatus ? statusColors(raw).fg : COLOR.text
-      const text = truncateToWidth(raw, this.fontRegular, 8, c.w - 8)
-      this.page.drawText(text, {
-        x: x + 4, y: this.y - rowH + 4, size: 8, font: this.fontRegular, color: textColor,
-      })
-      x += c.w
-    }
-    this.page.drawLine({
-      start: { x: MARGIN, y: this.y - rowH },
-      end:   { x: A4_W - MARGIN, y: this.y - rowH },
-      thickness: 0.3,
-      color: COLOR.borderXlight,
-    })
-    this.moveY(rowH)
-  }
-}
-
-export async function renderHandoverPdf(
-  data: HandoverPackageData,
-  signatureHash: string,
-): Promise<Uint8Array> {
+export async function renderHandoverPdf(data: HandoverPackageData, opts: HandoverPdfOptions): Promise<Uint8Array> {
+  const L = opts.lang ?? 'es'
   const pkg = data.handover_package
-  const totalTags = pkg.systems.reduce((a, s) => a + s.tag_count, 0)
-  const totalItrs = pkg.systems.reduce((a, s) => a + s.itr_count, 0)
-  const totalCatA = pkg.systems.reduce((a, s) => a + s.punch_summary.cat_a_open, 0)
-  const totalCatB = pkg.systems.reduce((a, s) => a + s.punch_summary.cat_b_open, 0)
-  const hashShort = signatureHash.slice(0, 16)
+  const tz = pkg.project.timezone ?? 'UTC'
+  const at = (iso: string | null | undefined) => (iso ? `${dateTimeIn(iso, tz)} ${zoneLabel(tz, new Date(iso))}` : '—')
+  const day = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : '—')
+  const label = (key: string, fallback: string) => {
+    if (!opts.label) return fallback
+    try { const v = opts.label(key); return v && v !== key ? v : fallback } catch { return fallback }
+  }
+  const stage = (s: string) => label(`ops.stage.${s}`, s)
+  const cap = (c: string | null) => (c ? label(`capacity.${c}`, c) : '—')
+  const signer = (s: HandoverSigner | null | undefined) =>
+    s?.signed_at ? `${s.name ?? '—'}${s.company ? ` (${s.company})` : ''} · ${day(s.signed_at)}` : '—'
+  const short = (h: string | null | undefined) => (h ? h.slice(0, 12) : '—')
 
-  const doc = await PDFDocument.create()
-  doc.setTitle(`Handover Package — ${pkg.project.name}`)
-  doc.setAuthor('CommUp')
-  doc.setCreator(`CommUp Handover Exporter v${pkg.schema_version}`)
+  const r = await Renderer.create()
+  r.doc.setTitle(sanitize(`${T.title[L]} — ${pkg.project.code}`))
+  r.doc.setAuthor('CommUp')
+  r.doc.setCreator(`CommUp Handover v${pkg.schema_version}`)
+  r.setFooter(({ page, pageNum }) => {
+    page.drawLine({ start: { x: MARGIN, y: MARGIN + FOOTER_H - 4 }, end: { x: A4_W - MARGIN, y: MARGIN + FOOTER_H - 4 }, thickness: 0.5, color: COLOR.borderLight })
+    page.drawText(sanitize(`${pkg.project.code} · ${T.title[L]} v${pkg.schema_version} · sha256 ${opts.dataSha256.slice(0, 16)}`), { x: MARGIN, y: MARGIN + 6, size: 7, font: r.fontRegular, color: COLOR.empty })
+    const s = `${T.page[L]} ${pageNum} / `
+    const totalX = A4_W - MARGIN - 12
+    page.drawText(s, { x: totalX - r.fontRegular.widthOfTextAtSize(s, 7), y: MARGIN + 6, size: 7, font: r.fontRegular, color: COLOR.empty })
+    r.registerTotalPagesPlaceholder(page, totalX, MARGIN + 6, 7, COLOR.empty)
+  })
 
-  const fontRegular = await doc.embedFont(StandardFonts.Helvetica)
-  const fontBold    = await doc.embedFont(StandardFonts.HelveticaBold)
+  const table = (cols: TableCol[], rows: string[][]) => {
+    if (!rows.length) { r.empty(T.none[L]); return }
+    r.tableHeader(cols)
+    rows.forEach((row, i) => r.tableRow(cols, row, { size: 7.5, alternate: i % 2 === 1 }))
+  }
+  const sub = (text: string) => {
+    r.moveY(4)
+    r.ensureSpace(24)
+    r.drawText(text, { x: MARGIN, y: r.y - 9, size: 9, bold: true, color: COLOR.purple, maxWidth: CONTENT_W })
+    r.moveY(13)
+  }
+  const note = (text: string) => {
+    for (const l of wrapText(text, r.fontRegular, 7.5, CONTENT_W - 12)) {
+      r.ensureSpace(10)
+      r.drawText(l, { x: MARGIN + 12, y: r.y - 7.5, size: 7.5, color: COLOR.muted })
+      r.moveY(10)
+    }
+  }
 
-  const r = new Renderer(doc, fontRegular, fontBold, pkg.project.name, pkg.schema_version, hashShort)
+  // ── Portada ──
+  r.newPage()
+  r.topBar(COLOR.purple, 6)
+  r.moveY(8)
+  r.drawText('CommUp', { x: MARGIN, y: r.y - 14, size: 14, bold: true, color: COLOR.purple })
+  r.badge(`v${pkg.schema_version}`, { x: A4_W - MARGIN - 40, y: r.y - 14, fg: COLOR.purple, bg: COLOR.purpleBg, size: 9 })
+  r.moveY(22)
+  r.drawText(`${T.title[L]} — ${pkg.project.code}`, { x: MARGIN, y: r.y - 14, size: 15, bold: true, maxWidth: CONTENT_W })
+  r.moveY(20)
+  r.kv(T.project[L], `${pkg.project.name}${pkg.project.org_name ? ` · ${pkg.project.org_name}` : ''}`)
+  r.kv(T.client[L], pkg.project.client ?? '—')
+  r.kv(T.location[L], pkg.project.location ?? '—')
+  r.kv(T.generated[L], at(pkg.generated_at))
+  r.kv(T.systems[L], pkg.systems.map(s => s.code).join(', ') || '—')
+  r.moveY(6)
+  r.infoCardRow([
+    { label: T.systems[L], value: String(pkg.systems.length) },
+    { label: T.tags[L], value: String(pkg.systems.reduce((a, s) => a + s.tag_count, 0)) },
+    { label: T.itrApproved[L], value: `${pkg.systems.reduce((a, s) => a + s.itr_approved, 0)} / ${pkg.systems.reduce((a, s) => a + s.itr_count, 0)}` },
+    { label: 'Punch A / B', value: `${pkg.systems.reduce((a, s) => a + s.punch_summary.cat_a_open, 0)} / ${pkg.systems.reduce((a, s) => a + s.punch_summary.cat_b_open, 0)}` },
+    { label: T.certificates[L], value: String(pkg.certificates.length) },
+  ])
 
-  r.title('Handover Package')
-  r.subtitle(`Schema v${pkg.schema_version} · Generated ${pkg.generated_at}`)
+  // ── Por sistema ──
+  for (const sys of pkg.systems) {
+    r.newPage()
+    r.drawText(`${T.system[L]} ${sys.code} — ${sys.name}`, { x: MARGIN, y: r.y - 13, size: 13, bold: true, maxWidth: CONTENT_W })
+    r.moveY(18)
+    r.drawHLine(MARGIN, A4_W - MARGIN, r.y, 1, COLOR.text)
+    r.moveY(6)
+    if (sys.ownership) r.kv(T.stage[L], `${stage(sys.ownership.stage)} · ${at(sys.ownership.since)}`)
+    r.kv(T.progress[L], `${sys.tag_count} · ${sys.itr_approved} / ${sys.itr_count} ${T.itrApproved[L].toLowerCase()}`)
+    r.kv(T.punchOpen[L], `A ${sys.punch_summary.cat_a_open} · B ${sys.punch_summary.cat_b_open} · C ${sys.punch_summary.cat_c_open}`)
 
-  r.section('Project')
-  r.kv('Name',        pkg.project.name)
-  r.kv('Code',        pkg.project.code)
-  r.kv('Client',      pkg.project.client ?? '—')
-  r.kv('Location',    pkg.project.location ?? '—')
-  r.kv('Status',      pkg.project.status)
-  r.kv('Start / End', `${pkg.project.start_date ?? '—'} -> ${pkg.project.end_date ?? '—'}`)
-
-  r.section('Executive summary')
-  r.kv('Systems',          String(pkg.systems.length))
-  r.kv('Tags',             String(totalTags))
-  r.kv('ITRs',             String(totalItrs))
-  r.kv('Punch Cat A open', String(totalCatA))
-  r.kv('Punch Cat B open', `${totalCatB} (transferable)`)
-  r.kv('Certificates',     String(pkg.certificates.length))
-
-  r.section('Systems')
-  if (pkg.systems.length === 0) {
-    r.empty('No systems in scope.')
-  } else {
-    const tagCols: TableCol[] = [
-      { w: 90,  label: 'Tag' },
-      { w: 210, label: 'Description' },
-      { w: 75,  label: 'Manufacturer' },
-      { w: 70,  label: 'Model' },
-      { w: 78,  label: 'Status' },
-    ]
-    for (const sys of pkg.systems) {
-      r.ensureSpace(40)
-      r.page.drawText(sanitize(`${sys.code} — ${sys.name}`), {
-        x: MARGIN, y: r.y - 10, size: 11, font: r.fontBold, color: COLOR.text,
-      })
-      r.moveY(14)
-      r.kv('Tags / ITRs', `${sys.tag_count} tags · ${sys.itr_approved}/${sys.itr_count} ITRs approved`)
-      r.kv('Punch open',  `A:${sys.punch_summary.cat_a_open} · B:${sys.punch_summary.cat_b_open} · C:${sys.punch_summary.cat_c_open}`)
-      if (sys.tags.length > 0) {
-        r.tableHeader(tagCols)
-        for (const t of sys.tags) {
-          r.tableRow(tagCols, [
-            t.tag_number,
-            t.description ?? '',
-            t.manufacturer ?? '—',
-            t.model ?? '—',
-            t.status,
-          ], { statusColIndex: 4 })
-        }
+    if (sys.gates) {
+      r.accentSection(T.gates[L])
+      table(
+        [{ w: 110, label: T.gate[L] }, { w: 85, label: T.status[L] }, { w: 150, label: T.approvedBy[L] }, { w: 178.28, label: T.signatures[L] }],
+        sys.gates.map(g => [
+          `${g.code} ${g.name}`, g.status,
+          g.approval ? `${g.approval.approved_by ?? '—'}${g.approval.company ? ` (${g.approval.company})` : ''} · ${day(g.approval.approved_at)}` : '—',
+          (g.approval?.signatures ?? []).map(s => `${cap(s.capacity)}: ${s.name ?? '—'}`).join(' · ') || '—',
+        ]),
+      )
+      for (const g of sys.gates) {
+        const conds = Array.isArray(g.approval?.conditions) ? (g.approval!.conditions as unknown[]) : []
+        if (conds.length) note(`${g.code} · ${T.conditions[L]}: ${conds.map(c => (typeof c === 'string' ? c : (c as { text?: string })?.text ?? JSON.stringify(c))).join(' · ')}`)
+        for (const a of g.attestations) note(`${g.code} · ${T.attest[L]} ${a.label ?? a.criterion}: ${a.comment} — ${a.by ?? '—'} ${day(a.at)}`)
       }
-      r.moveY(6)
+    }
+
+    if (sys.pssr) {
+      r.accentSection(T.pssr[L])
+      table(
+        [{ w: 95, label: T.number[L] }, { w: 70, label: T.status[L] }, { w: 85, label: T.items[L] }, { w: 120, label: T.approvedBy[L] }, { w: 153.28, label: T.signatures[L] }],
+        sys.pssr.map(p => [
+          p.review_number, p.status, `${p.items.yes} / ${p.items.na} / ${p.items.no}`,
+          p.approved_by ? `${p.approved_by} · ${day(p.approved_at)}` : '—',
+          p.signatures.map(s => `${cap(s.capacity)}: ${s.name ?? '—'}`).join(' · ') || '—',
+        ]),
+      )
+    }
+
+    if (sys.procedures) {
+      r.accentSection(T.procedures[L])
+      table(
+        [{ w: 150, label: T.procedures[L] }, { w: 30, label: T.rev[L] }, { w: 110, label: T.approvedBy[L] }, { w: 110, label: T.fieldVerif[L] }, { w: 70, label: T.lastRun[L] }, { w: 53.28, label: 'sha256' }],
+        sys.procedures.map(p => [
+          `${p.number} ${p.title}`, p.revision ? `R${p.revision.rev}` : '—',
+          p.revision?.approved_by ? `${p.revision.approved_by} · ${day(p.revision.approved_at)}` : '—',
+          p.revision?.field_verified_by ? `${p.revision.field_verified_by} · ${day(p.revision.field_verified_at)}` : '—',
+          p.last_run ? `${p.last_run.number} · ${day(p.last_run.completed_at)}` : '—',
+          short(p.revision?.content_hash),
+        ]),
+      )
+      for (const p of sys.procedures) {
+        if (!p.last_run?.steps.length) continue
+        sub(`${p.number} · ${p.last_run.number} — ${p.last_run.started_by ?? '—'} ${at(p.last_run.started_at)} → ${p.last_run.completed_by ?? '—'} ${at(p.last_run.completed_at)}`)
+        table(
+          [{ w: 28, label: '#' }, { w: 170, label: T.step[L] }, { w: 70, label: T.expected[L] }, { w: 65, label: T.actual[L] }, { w: 95, label: T.doneBy[L] }, { w: 95.28, label: T.holdBy[L] }],
+          p.last_run.steps.map(s => [
+            String(s.ord), `${s.hold ? '[HOLD] ' : ''}${s.action}`, s.expected ?? '', s.actual ?? (s.status === 'na' ? 'N/A' : ''),
+            s.done_by ? `${s.done_by} ${day(s.done_at)}` : '—', s.released_by ? `${s.released_by} ${day(s.released_at)}` : (s.hold ? '—' : ''),
+          ]),
+        )
+        for (const s of p.last_run.steps) if (s.comment) note(`#${s.ord}: ${s.comment}`)
+      }
+    }
+
+    if (sys.lineups) {
+      r.accentSection(T.lineups[L])
+      if (!sys.lineups.length) r.empty(T.none[L])
+      for (const ls of sys.lineups) {
+        sub(`${ls.number} ${ls.title} — ${T.verifiedBy[L]} ${ls.verified_by ?? '—'} ${at(ls.verified_at)} · sha256 ${short(ls.content_hash)}`)
+        table(
+          [{ w: 28, label: '#' }, { w: 175, label: T.item[L] }, { w: 120, label: T.position[L] }, { w: 100, label: T.doneBy[L] }, { w: 100.28, label: T.verifiedBy[L] }],
+          ls.items.map(i => [
+            String(i.ord), `${i.tag ? `${i.tag} ` : ''}${i.label}${i.critical ? ` (${T.critical[L]})` : ''}`, `${i.required} / ${i.found ?? '—'}`,
+            i.set_by ? `${i.set_by} ${day(i.set_at)}` : '—', i.verified_by ? `${i.verified_by} ${day(i.verified_at)}` : '—',
+          ]),
+        )
+      }
+    }
+
+    if (sys.startup_events) {
+      r.accentSection(T.events[L])
+      table(
+        [{ w: 70, label: T.number[L] }, { w: 105, label: T.date[L] }, { w: 190, label: T.event[L] }, { w: 158.28, label: T.witness[L] }],
+        sys.startup_events.map(e => [
+          e.number, at(e.occurred_at), `${e.milestone ? `${label(`milestone.${e.milestone}`, e.milestone)}: ` : ''}${e.title}`,
+          e.witness_by ? `${cap(e.witness_capacity)}: ${e.witness_by} · ${day(e.witness_at)}` : (e.witness_capacity ? `${cap(e.witness_capacity)}: —` : '—'),
+        ]),
+      )
+      for (const e of sys.startup_events) {
+        if (e.params.length) note(`${e.number}: ${e.params.map(p => `${p.label} ${p.value ?? p.value_text ?? '—'}${p.unit ? ` ${p.unit}` : ''}`).join(' · ')}`)
+      }
+    }
+
+    if (sys.transfers) {
+      r.accentSection(T.transfers[L])
+      table(
+        [{ w: 70, label: T.number[L] }, { w: 130, label: T.stage[L] }, { w: 160, label: T.commissioning[L] }, { w: 163.28, label: T.operations[L] }],
+        sys.transfers.map(tr => [
+          tr.number, `${stage(tr.from_stage)} → ${stage(tr.to_stage)}${tr.is_reversal ? ' (rev.)' : ''}`, signer(tr.commissioning), signer(tr.operations),
+        ]),
+      )
+      for (const tr of sys.transfers) {
+        if (tr.exceptions?.length) note(`${tr.number} · ${T.exceptions[L]}: ${tr.exceptions.map(x => `${label(`ops.check.${x.key}`, x.key)} — ${x.justification}`).join(' · ')}`)
+        if (tr.content_hash) note(`${tr.number} · sha256 ${tr.content_hash}`)
+      }
+    }
+
+    if (sys.competencies) {
+      r.accentSection(T.competencies[L])
+      r.kv(T.perShift[L], String(sys.competencies.required_per_shift), { keyW: 170 })
+      table(
+        [{ w: 150, label: T.person[L] }, { w: 130, label: T.company[L] }, { w: 70, label: T.shift[L] }, { w: 60, label: T.level[L] }, { w: 113.28, label: T.expires[L] }],
+        sys.competencies.personnel.map(p => [p.name, p.company ?? '—', p.shift ?? '—', String(p.level), day(p.expires_at)]),
+      )
+    }
+
+    if (sys.spares) {
+      r.accentSection(T.spares[L])
+      table(
+        [{ w: 190, label: T.item[L] }, { w: 95, label: 'P/N' }, { w: 70, label: 'Tag' }, { w: 70, label: T.qty[L] }, { w: 98.28, label: T.status[L] }],
+        sys.spares.map(s => [`${s.item}${s.critical ? ` (${T.critical[L]})` : ''}`, s.part_number ?? '—', s.tag ?? '—', `${s.qty_required} / ${s.qty_available}`, `${s.status}${s.eta ? ` · ${s.eta}` : ''}`]),
+      )
+    }
+
+    if (sys.performance) {
+      r.accentSection(T.performance[L])
+      table(
+        [{ w: 150, label: T.test[L] }, { w: 40, label: T.rev[L] }, { w: 130, label: T.attempts[L] }, { w: 203.28, label: T.ptc[L] }],
+        sys.performance.map(p => [
+          `${p.number} ${p.title}`, p.revision ? `R${p.revision.rev}` : '—',
+          p.runs.map(x => `${x.number}: ${x.result ? label(`perf.result.${x.result}`, x.result) : x.status}`).join(' · ') || '—',
+          p.certificates.map(c => `${c.number} ${label(`perf.certStatus.${c.status}`, c.status)}`).join(' · ') || '—',
+        ]),
+      )
+      for (const p of sys.performance) for (const c of p.certificates) {
+        note(`${c.number} · ${T.commissioning[L]}: ${signer(c.commissioning)} · ${T.operations[L]}: ${signer(c.operations)} · ${T.clientSig[L]}: ${signer(c.client)}${c.content_hash ? ` · sha256 ${short(c.content_hash)}` : ''}`)
+      }
+    }
+
+    if (sys.documents) {
+      r.accentSection(T.documents[L])
+      table(
+        [{ w: 110, label: T.number[L] }, { w: 205, label: T.title2[L] }, { w: 40, label: T.rev[L] }, { w: 60, label: T.status[L] }, { w: 108.28, label: T.file[L] }],
+        sys.documents.map(d => [d.number, d.title, d.revision?.rev ?? '—', d.revision?.status ?? '—', d.revision?.file_name ?? (d.revision?.external_url ? 'URL' : '—')]),
+      )
+    }
+
+    if (sys.vendors) {
+      r.accentSection(T.vendors[L])
+      table(
+        [{ w: 70, label: T.number[L] }, { w: 120, label: T.company[L] }, { w: 70, label: T.status[L] }, { w: 130, label: T.fatSat[L] }, { w: 133.28, label: T.finalReport[L] }],
+        sys.vendors.map(v => [
+          v.number, v.company ?? '—', v.status,
+          v.activities.map(a => `${a.kind.toUpperCase()} ${a.result}${a.findings ? ` (${a.findings})` : ''}`).join(' · ') || '—',
+          v.final_report ? `${v.final_report.issued_by ?? '—'} · ${day(v.final_report.issued_at)}` : '—',
+        ]),
+      )
+      for (const v of sys.vendors) {
+        if (v.recommendations.length) note(`${v.number} · ${T.recs[L]}: ${v.recommendations.map(x => `#${x.seq} ${x.status}${x.moc_reference ? ` MOC ${x.moc_reference}` : ''}`).join(' · ')}`)
+      }
+    }
+
+    if (sys.tags.length) {
+      r.accentSection(T.tags[L])
+      table(
+        [{ w: 95, label: 'Tag' }, { w: 200, label: T.description[L] }, { w: 85, label: T.maker[L] }, { w: 70, label: 'S/N' }, { w: 73.28, label: T.status[L] }],
+        sys.tags.map(t => [t.tag_number, t.description ?? '', [t.manufacturer, t.model].filter(Boolean).join(' ') || '—', t.serial_number ?? '—', t.status]),
+      )
     }
   }
 
-  r.section('Punch items Cat B (transferable to Operations)')
-  if (pkg.punch_items.length === 0) {
-    r.empty('No Cat B punches in scope.')
+  // ── Punch Cat B y certificados ──
+  r.newPage()
+  r.accentSection(T.catB[L])
+  table(
+    [{ w: 80, label: T.number[L] }, { w: 255, label: T.description[L] }, { w: 60, label: T.priority[L] }, { w: 60, label: T.status[L] }, { w: 68.28, label: T.target[L] }],
+    pkg.punch_items.map(p => [p.punch_number, p.description ?? '', p.priority ?? '', p.status, p.target_date ?? '—']),
+  )
+  r.accentSection(T.certificates[L])
+  table(
+    [{ w: 100, label: T.number[L] }, { w: 170, label: T.title2[L] }, { w: 60, label: T.status[L] }, { w: 60, label: T.issued[L] }, { w: 133.28, label: T.signatures[L] }],
+    pkg.certificates.map(c => [c.certificate_number, c.title ?? '', c.status, c.issued_date ?? '—', (c.signatures ?? []).map(s => `${s.role}: ${s.name ?? '—'}`).join(' · ') || '—']),
+  )
+
+  // ── Anexos y firma ──
+  if (opts.annexes) {
+    r.accentSection(T.annexes[L])
+    if (!opts.annexes.length) r.empty(T.none[L])
+    for (const a of opts.annexes) note(a)
+  }
+  if (opts.omitted?.length) {
+    r.accentSection(T.omitted[L], COLOR.amber)
+    for (const o of opts.omitted) note(`${o.path} — ${o.reason}`)
+  }
+  r.accentSection(T.signature[L])
+  if (opts.keyId) {
+    r.kv(T.dataHash[L], opts.dataSha256, { keyW: 130, size: 8 })
+    r.kv(T.alg[L], 'Ed25519 (manifest.json → manifest.sig)', { keyW: 130, size: 8 })
+    r.kv(T.keyId[L], opts.keyId, { keyW: 130, size: 8 })
+    if (opts.verifyUrl) r.kv(T.verify[L], opts.verifyUrl, { keyW: 130, size: 8 })
+    r.moveY(2)
+    r.paragraph(T.verifyNote[L], { size: 8, color: COLOR.muted })
   } else {
-    const punchCols: TableCol[] = [
-      { w: 80,  label: 'Number' },
-      { w: 238, label: 'Description' },
-      { w: 60,  label: 'Priority' },
-      { w: 65,  label: 'Status' },
-      { w: 80,  label: 'Target date' },
-    ]
-    r.tableHeader(punchCols)
-    for (const p of pkg.punch_items) {
-      r.tableRow(punchCols, [
-        p.punch_number,
-        p.description ?? '',
-        p.priority ?? '',
-        p.status,
-        p.target_date ?? '—',
-      ], { statusColIndex: 3 })
-    }
+    r.kv('HMAC-SHA256', opts.dataSha256, { keyW: 130, size: 8 })
+    r.paragraph(T.legacyNote[L], { size: 8, color: COLOR.muted })
   }
 
-  r.section('Certificates')
-  if (pkg.certificates.length === 0) {
-    r.empty('No certificates in scope.')
-  } else {
-    const certCols: TableCol[] = [
-      { w: 100, label: 'Number' },
-      { w: 293, label: 'Title' },
-      { w: 60,  label: 'Status' },
-      { w: 70,  label: 'Issued' },
-    ]
-    r.tableHeader(certCols)
-    for (const c of pkg.certificates) {
-      r.tableRow(certCols, [
-        c.certificate_number,
-        c.title ?? '',
-        c.status,
-        c.issued_date ?? '—',
-      ], { statusColIndex: 2 })
-    }
-  }
-
-  r.section('Digital signature')
-  r.kv('Algorithm', 'HMAC-SHA256')
-  r.kv('Hash',      signatureHash)
-  r.moveY(4)
-  r.empty('Hash calculated over the companion JSON payload. Verify integrity by recomputing HMAC-SHA256 with the org’s handover signing secret.')
-
-  r.finalizeFooter()
-
-  return await doc.save()
+  r.finalizePagePlaceholders()
+  return await r.doc.save()
 }

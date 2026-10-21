@@ -1,7 +1,8 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { renderProcedurePdf } from '@/lib/pdf/procedure'
-import { PROCEDURE_SECTIONS, type ProcedureSection } from '@/lib/startup/catalog'
+import { loadProcedurePdf } from '@/lib/pdf/load'
+import { pdfResponse } from '@/lib/pdf/response'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,71 +14,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!ctx) return new Response('Unauthorized', { status: 401 })
 
   const [{ data: project }, { data: org }, locale, t] = await Promise.all([
-    ctx.supabase.from('projects').select('id, code, timezone').eq('id', id).eq('org_id', ctx.orgId).maybeSingle(),
+    ctx.supabase.from('projects').select('id').eq('id', id).eq('org_id', ctx.orgId).maybeSingle(),
     ctx.supabase.from('organizations').select('name').eq('id', ctx.orgId).single(),
     getLocale(),
     getTranslations('Startup'),
   ])
   if (!project) return new Response('Not found', { status: 404 })
-  const { data: proc } = await ctx.supabase.from('procedures').select('id, number, title, kind, current_revision_id, systems(code, name)').eq('id', procedureId).eq('project_id', id).maybeSingle()
-  if (!proc) return new Response('Not found', { status: 404 })
-  const targetRev = revId ?? proc.current_revision_id
-  const { data: rev } = targetRev
-    ? await ctx.supabase.from('procedure_revisions').select('*').eq('id', targetRev).eq('procedure_id', procedureId).maybeSingle()
-    : await ctx.supabase.from('procedure_revisions').select('*').eq('procedure_id', procedureId).order('rev', { ascending: false }).limit(1).maybeSingle()
-  if (!rev) return new Response('Not found', { status: 404 })
-  const { data: steps } = await ctx.supabase.from('procedure_steps')
-    .select('ord, action, responsible, expected_value, is_hold_point, hold_capacity, stop_criteria, tags(tag_number)').eq('revision_id', rev.id).order('ord')
-  // S13 (F-11): documentos referenciados por esta revisión.
-  const { data: refs } = await ctx.supabase.from('document_references')
-    .select('revalidation_reason, used:document_revisions!document_references_revision_id_fkey(rev), from:document_revisions!document_references_revalidated_from_fkey(rev), documents(number, title, current:document_revisions!documents_current_revision_fkey(rev))')
-    .eq('project_id', id).eq('procedure_revision_id', rev.id)
-  type DocRev = { rev: string } | null
-  const documentRefs = (refs ?? []).map(x => {
-    const d = x.documents as unknown as { number: string; title: string; current: DocRev } | null
-    return {
-      number: d?.number ?? '—', title: d?.title ?? '', used_rev: (x.used as unknown as DocRev)?.rev ?? '—', current_rev: d?.current?.rev ?? null,
-      revalidated_from: (x.from as unknown as DocRev)?.rev ?? null, revalidation_reason: x.revalidation_reason,
-    }
-  }).sort((a, b) => a.number.localeCompare(b.number))
-  const people = [rev.created_by, rev.approved_by, rev.field_verified_by].filter((x): x is string => !!x)
-  const { data: profiles } = people.length ? await ctx.supabase.from('profiles').select('id, full_name').in('id', people) : { data: [] }
-  const name = (u: string | null) => (u ? profiles?.find(p => p.id === u)?.full_name ?? null : null)
-  const sys = proc.systems as unknown as { code: string; name: string } | null
-
-  const bytes = await renderProcedurePdf({
-    timezone: project.timezone,
-    lang: locale === 'en' ? 'en' : 'es',
-    orgName: org?.name ?? 'CommUp',
-    projectCode: project.code,
-    number: proc.number,
-    title: proc.title,
-    kindLabel: t(`kind.${proc.kind}`),
-    system: sys ? `${sys.code} — ${sys.name}` : null,
-    rev: rev.rev,
-    statusLabel: t(`revStatus.${rev.status}`),
-    approved: rev.status === 'approved',
-    sectionLabels: Object.fromEntries(PROCEDURE_SECTIONS.map(k => [k, t(`section.${k}`)])) as Record<ProcedureSection, string>,
-    sections: (rev.sections ?? {}) as Record<string, string>,
-    steps: (steps ?? []).map(s => ({
-      ord: s.ord, action: s.action, responsible: s.responsible, expected: s.expected_value, tag: (s.tags as unknown as { tag_number: string } | null)?.tag_number ?? null,
-      hold: s.is_hold_point, capacityLabel: s.hold_capacity ? t(`capacity.${s.hold_capacity}`) : null, stop: s.stop_criteria,
-    })),
-    author: name(rev.created_by),
-    approvedBy: name(rev.approved_by),
-    approvedAt: rev.approved_at,
-    fieldVerifiedBy: name(rev.field_verified_by),
-    fieldVerifiedAt: rev.field_verified_at,
-    walkdownNote: rev.walkdown_note,
-    hash: rev.content_hash,
-    documentRefs,
-  })
-  return new Response(bytes as BodyInit, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${project.code}-${proc.number}-R${rev.rev}.pdf"`,
-      'Cache-Control': 'private, no-cache',
-    },
-  })
+  const pdf = await loadProcedurePdf(ctx.supabase, { projectId: id, procedureId, revId, orgName: org?.name ?? 'CommUp', lang: locale === 'en' ? 'en' : 'es', t })
+  if (!pdf) return new Response('Not found', { status: 404 })
+  return pdfResponse(await renderProcedurePdf(pdf.input), pdf.filename, 'inline')
 }

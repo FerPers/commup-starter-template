@@ -258,6 +258,7 @@ describe.skipIf(!enabled)('EXECUTE de funciones (A-19)', () => {
       ['document_is_controller', { p_role: 'owner' }],
       ['vendor_checklist_keys', { p_phase: 'fat' }],
       ['evaluate_itr_capture', { p_itr_id: ghost }],
+      ['verify_handover_package', { p_hash: '0'.repeat(64) }],
     ] as const) {
       const { error } = await anon.rpc(fn, args)
       expect(error?.code, fn).toBe('42501')
@@ -269,6 +270,7 @@ describe.skipIf(!enabled)('EXECUTE de funciones (A-19)', () => {
     for (const [fn, args] of [
       ['bump_push_subscription_failure', { p_sub_id: ghost }],
       ['itr_test_equipment_blocker', { p_itr_id: ghost }],
+      ['generate_handover_package', { p_project_id: ghost }],
     ] as const) {
       const { error } = await a.rpc(fn, args)
       expect(error?.code, fn).toBe('42501')
