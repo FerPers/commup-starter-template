@@ -1,0 +1,140 @@
+-- S20 — banco de carga reproducible (decisión de Luis 2026-10-20): org LOADTEST aparte en prod.
+-- Escala: 10 áreas · 300 sistemas · 1.500 subsistemas · 50.000 tags · ~60.000 ITR · 10.000 punch · 450 certificados.
+-- Meta: Control Tower, Mi trabajo y la lista de ITR con p95 < 1,5 s (ver bench.sql).
+--
+-- Uso:   supabase db query --linked -f scripts/loadtest/seed.sql      (≈ 1–3 min; idempotente: borra y vuelve a sembrar)
+-- Borrar: supabase db query --linked -f scripts/loadtest/teardown.sql
+--
+-- Miembros: owner = usuario de prueba demo-glp@commup.test (bench_user, para medir con RLS) y la cuenta de Luis como
+-- admin (para verlo en el navegador). Durante la siembra se apagan SOLO los triggers de eventos (domain_events → webhooks / workflows:
+-- serían 110k llamadas HTTP) y las guardas/derivados que exigen el flujo real (firmas, numeración, refresco de
+-- certificados); al terminar se vuelven a encender en la misma transacción.
+
+BEGIN;
+SET LOCAL statement_timeout = 0;
+
+-- Ids fijos del banco.
+CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
+  '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
+  '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
+  '41d8f81c-28f9-458c-af3f-b754795b2c52'::uuid AS bench_user;
+
+ALTER TABLE tags DISABLE TRIGGER trg_events_tags;
+ALTER TABLE systems DISABLE TRIGGER trg_events_systems;
+ALTER TABLE subsystems DISABLE TRIGGER trg_events_subsystems;
+ALTER TABLE certificates DISABLE TRIGGER trg_events_certificates;
+ALTER TABLE itrs DISABLE TRIGGER trg_events_itrs, DISABLE TRIGGER itrs_integrity, DISABLE TRIGGER itrs_derived_guard,
+  DISABLE TRIGGER itrs_number_before_insert, DISABLE TRIGGER itrs_auto_document_refs, DISABLE TRIGGER itrs_certificate_base;
+ALTER TABLE punches DISABLE TRIGGER trg_events_punches, DISABLE TRIGGER punches_guard, DISABLE TRIGGER punch_number_before_insert,
+  DISABLE TRIGGER punches_certificate_base;
+ALTER TABLE itr_assignments DISABLE TRIGGER itr_assignments_integrity, DISABLE TRIGGER itr_assignments_client_guard;
+
+-- Re-siembra limpia.
+DELETE FROM organizations WHERE id = (SELECT org_id FROM lt_ids);
+
+INSERT INTO organizations (id, name, slug) SELECT org_id, 'LOADTEST (banco de carga)', 'loadtest-bench' FROM lt_ids;
+INSERT INTO org_members (org_id, user_id, role, status) SELECT org_id, bench_user, 'owner', 'active' FROM lt_ids;
+-- Cuenta de Luis como admin, para ver el banco en el navegador (aparece en su selector de organización).
+INSERT INTO org_members (org_id, user_id, role, status)
+SELECT org_id, 'fc1593b4-5fc1-4eae-9fb0-b213ecae7366'::uuid, 'admin', 'active' FROM lt_ids
+WHERE EXISTS (SELECT 1 FROM auth.users WHERE id = 'fc1593b4-5fc1-4eae-9fb0-b213ecae7366');
+INSERT INTO projects (id, org_id, name, code) SELECT project_id, org_id, 'LOADTEST — Planta 50k', 'LT-50K' FROM lt_ids;
+
+-- Fases (el trigger siembra un gate por fase) y catálogos.
+INSERT INTO project_phases (org_id, code, name, order_index, certificate_name)
+SELECT org_id, c, n, o, cert FROM lt_ids, (VALUES ('A', 'Mechanical Completion', 1, 'MC'), ('B', 'Pre-Commissioning', 2, 'RFPC'),
+  ('C', 'Commissioning', 3, 'RFC'), ('SU', 'Start-Up', 4, 'RFSU')) v(c, n, o, cert);
+INSERT INTO disciplines (org_id, code, name)
+SELECT org_id, c, n FROM lt_ids, (VALUES ('INST', 'Instruments'), ('ELEC', 'Electrical'), ('MECH', 'Mechanical'), ('PIPE', 'Piping')) v(c, n);
+INSERT INTO equipment_types (org_id, code, name)
+SELECT org_id, c, n FROM lt_ids, (VALUES ('TX', 'Transmitter'), ('MTR', 'Motor'), ('PMP', 'Pump'), ('PL', 'Pipe line')) v(c, n);
+
+-- Plantillas: fase A por disciplina + fase B y C para instrumentos y eléctrico.
+INSERT INTO itr_templates (org_id, discipline_id, phase_id, code, title, is_active)
+SELECT i.org_id, d.id, ph.id, ph.code || '-' || d.code, 'LT ' || ph.name || ' ' || d.name, true
+FROM lt_ids i JOIN disciplines d ON d.org_id = i.org_id JOIN project_phases ph ON ph.org_id = i.org_id
+WHERE ph.code = 'A' OR (ph.code IN ('B', 'C') AND d.code IN ('INST', 'ELEC'));
+
+-- Jerarquía: 10 áreas × 30 sistemas × 5 subsistemas.
+INSERT INTO areas (project_id, code, name)
+SELECT project_id, 'A' || lpad(a::text, 2, '0'), 'Área ' || a FROM lt_ids, generate_series(1, 10) a;
+INSERT INTO systems (project_id, area_id, code, name)
+SELECT i.project_id, ar.id, ar.code || '-S' || lpad(s::text, 2, '0'), 'Sistema ' || ar.code || '-' || s
+FROM lt_ids i JOIN areas ar ON ar.project_id = i.project_id, generate_series(1, 30) s;
+INSERT INTO subsystems (project_id, system_id, code, name)
+SELECT i.project_id, sy.id, sy.code || '-SS' || ss, 'Subsistema ' || sy.code || '-' || ss
+FROM lt_ids i JOIN systems sy ON sy.project_id = i.project_id, generate_series(1, 5) ss;
+
+-- 50.000 tags (≈ 33 por subsistema); 3 % críticos de seguridad.
+INSERT INTO tags (project_id, subsystem_id, discipline_id, equipment_type_id, tag_number, description, criticality)
+SELECT i.project_id, a.subs[1 + (n - 1) % 1500], a.discs[1 + n % 4], a.ets[1 + n % 4], 'LT-' || lpad(n::text, 6, '0'), 'Tag de carga ' || n,
+       CASE WHEN n % 33 = 0 THEN 'safety' WHEN n % 11 = 0 THEN 'process' ELSE 'normal' END
+FROM lt_ids i
+CROSS JOIN LATERAL (SELECT
+  (SELECT array_agg(id ORDER BY code) FROM subsystems WHERE project_id = i.project_id) AS subs,
+  (SELECT array_agg(id ORDER BY code) FROM disciplines WHERE org_id = i.org_id) AS discs,
+  (SELECT array_agg(id ORDER BY code) FROM equipment_types WHERE org_id = i.org_id) AS ets) a
+CROSS JOIN generate_series(1, 50000) n;
+
+-- ITR: uno de fase A por tag; B y C para instrumentos y eléctrico (≈ 75k). Avance desigual por área:
+-- áreas 1–3 casi todo aprobado, 4–7 a medias, 8–10 empezando.
+INSERT INTO itrs (project_id, subsystem_id, tag_id, template_id, phase_id, itr_number, status, progress_pct, required_signatures, completed_date)
+SELECT t.project_id, t.subsystem_id, t.id, tp.id, tp.phase_id, tp.code || '/' || t.tag_number,
+       st.status::itr_status, CASE st.status WHEN 'approved' THEN 100 WHEN 'completed' THEN 100 WHEN 'in_progress' THEN 50 ELSE 0 END,
+       ARRAY['executor', 'supervisor'], CASE WHEN st.status IN ('approved', 'completed') THEN current_date - (abs(hashtext(t.tag_number)) % 120) END
+FROM lt_ids i
+JOIN tags t ON t.project_id = i.project_id
+JOIN subsystems sub ON sub.id = t.subsystem_id
+JOIN systems sy ON sy.id = sub.system_id
+JOIN areas ar ON ar.id = sy.area_id
+JOIN itr_templates tp ON tp.org_id = i.org_id AND tp.discipline_id = t.discipline_id
+JOIN project_phases ph ON ph.id = tp.phase_id
+CROSS JOIN LATERAL (SELECT CASE
+    WHEN ph.code = 'A' AND ar.code <= 'A03' THEN CASE WHEN abs(hashtext(t.tag_number)) % 50 = 0 THEN 'in_progress' ELSE 'approved' END
+    WHEN ph.code = 'A' AND ar.code <= 'A07' THEN (ARRAY['approved', 'approved', 'in_progress', 'not_started', 'completed'])[1 + abs(hashtext(t.tag_number)) % 5]
+    WHEN ph.code = 'A' THEN (ARRAY['not_started', 'not_started', 'in_progress'])[1 + abs(hashtext(t.tag_number)) % 3]
+    WHEN ar.code <= 'A03' THEN (ARRAY['approved', 'in_progress', 'not_started'])[1 + abs(hashtext(t.tag_number || ph.code)) % 3]
+    ELSE 'not_started' END AS status) st;
+
+-- 2.000 ITR pendientes asignados al usuario del banco (Mi trabajo a escala).
+INSERT INTO itr_assignments (itr_id, user_id, role)
+SELECT x.id, i.bench_user, 'executor'::signature_role FROM lt_ids i,
+  LATERAL (SELECT id FROM itrs WHERE project_id = i.project_id AND status IN ('not_started', 'in_progress') ORDER BY itr_number LIMIT 2000) x;
+
+-- 10.000 punch: 10 % A, 30 % B, 60 % C; 60 % cerrados.
+INSERT INTO punches (project_id, subsystem_id, tag_id, discipline_id, punch_number, category, description, raised_by, status, assigned_to)
+SELECT t.project_id, t.subsystem_id, t.id, t.discipline_id, 'P-' || lpad(n::text, 5, '0'),
+       (CASE WHEN n % 10 = 0 THEN 'A' WHEN n % 10 < 4 THEN 'B' ELSE 'C' END)::punch_category,
+       'Punch de carga ' || n, i.bench_user,
+       (CASE WHEN n % 5 < 3 THEN 'closed' WHEN n % 5 = 3 THEN 'in_progress' ELSE 'open' END)::punch_status,
+       CASE WHEN n % 20 = 0 THEN i.bench_user END
+FROM lt_ids i
+CROSS JOIN generate_series(1, 10000) n
+JOIN tags t ON t.project_id = i.project_id AND t.tag_number = 'LT-' || lpad(((n * 7) % 50000 + 1)::text, 6, '0');
+
+-- Certificados MC emitidos en los subsistemas de las áreas 1–3.
+INSERT INTO certificates (project_id, subsystem_id, phase_id, certificate_number, title, status, issued_date, issued_by)
+SELECT i.project_id, sub.id, ph.id, 'MC/' || sub.code, 'MC — ' || sub.code, 'issued', current_date - 10, i.bench_user
+FROM lt_ids i JOIN subsystems sub ON sub.project_id = i.project_id JOIN systems sy ON sy.id = sub.system_id
+JOIN areas ar ON ar.id = sy.area_id JOIN project_phases ph ON ph.org_id = i.org_id AND ph.code = 'A'
+WHERE ar.code <= 'A03';
+
+ALTER TABLE tags ENABLE TRIGGER trg_events_tags;
+ALTER TABLE systems ENABLE TRIGGER trg_events_systems;
+ALTER TABLE subsystems ENABLE TRIGGER trg_events_subsystems;
+ALTER TABLE certificates ENABLE TRIGGER trg_events_certificates;
+ALTER TABLE itrs ENABLE TRIGGER trg_events_itrs, ENABLE TRIGGER itrs_integrity, ENABLE TRIGGER itrs_derived_guard,
+  ENABLE TRIGGER itrs_number_before_insert, ENABLE TRIGGER itrs_auto_document_refs, ENABLE TRIGGER itrs_certificate_base;
+ALTER TABLE punches ENABLE TRIGGER trg_events_punches, ENABLE TRIGGER punches_guard, ENABLE TRIGGER punch_number_before_insert,
+  ENABLE TRIGGER punches_certificate_base;
+ALTER TABLE itr_assignments ENABLE TRIGGER itr_assignments_integrity, ENABLE TRIGGER itr_assignments_client_guard;
+
+ANALYZE tags; ANALYZE itrs; ANALYZE punches; ANALYZE subsystems; ANALYZE systems; ANALYZE itr_assignments; ANALYZE certificates;
+
+SELECT (SELECT count(*) FROM systems WHERE project_id = (SELECT project_id FROM lt_ids)) AS systems,
+       (SELECT count(*) FROM subsystems WHERE project_id = (SELECT project_id FROM lt_ids)) AS subsystems,
+       (SELECT count(*) FROM tags WHERE project_id = (SELECT project_id FROM lt_ids)) AS tags,
+       (SELECT count(*) FROM itrs WHERE project_id = (SELECT project_id FROM lt_ids)) AS itrs,
+       (SELECT count(*) FROM punches WHERE project_id = (SELECT project_id FROM lt_ids)) AS punches,
+       (SELECT count(*) FROM certificates WHERE project_id = (SELECT project_id FROM lt_ids)) AS certificates;
+COMMIT;
