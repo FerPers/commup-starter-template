@@ -2007,34 +2007,40 @@ export type Database = {
           actor_id: string | null
           aggregate_id: string
           aggregate_type: string
+          dispatched_at: string | null
           event_type: string
           id: string
           occurred_at: string
           org_id: string
           payload: Json
           project_id: string
+          schema_version: number
         }
         Insert: {
           actor_id?: string | null
           aggregate_id: string
           aggregate_type: string
+          dispatched_at?: string | null
           event_type: string
           id?: string
           occurred_at?: string
           org_id: string
           payload: Json
           project_id: string
+          schema_version?: number
         }
         Update: {
           actor_id?: string | null
           aggregate_id?: string
           aggregate_type?: string
+          dispatched_at?: string | null
           event_type?: string
           id?: string
           occurred_at?: string
           org_id?: string
           payload?: Json
           project_id?: string
+          schema_version?: number
         }
         Relationships: [
           {
@@ -7294,6 +7300,29 @@ export type Database = {
           },
         ]
       }
+      push_outbox: {
+        Row: {
+          event_id: string
+          queued_at: string
+        }
+        Insert: {
+          event_id: string
+          queued_at?: string
+        }
+        Update: {
+          event_id?: string
+          queued_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_outbox_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "domain_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           auth_secret: string
@@ -12208,6 +12237,36 @@ export type Database = {
         Returns: string
       }
       certificate_role_capacity: { Args: { p_role: string }; Returns: string }
+      claim_push_events: {
+        Args: { p_limit?: number }
+        Returns: {
+          aggregate_id: string
+          aggregate_type: string
+          event_type: string
+          id: string
+          occurred_at: string
+          org_id: string
+          payload: Json
+          project_id: string
+        }[]
+      }
+      claim_webhook_deliveries: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          delivery_id: string
+          enabled: boolean
+          endpoint_url: string
+          event_id: string
+          event_type: string
+          occurred_at: string
+          payload: Json
+          schema_version: number
+          secret: string
+          subscription_id: string
+        }[]
+      }
+      cleanup_event_retention: { Args: never; Returns: Json }
       cleanup_signal_samples_retention: { Args: never; Returns: number }
       clone_itr_template_from_catalog: {
         Args: {
@@ -12924,6 +12983,7 @@ export type Database = {
       org_document_policy: { Args: { p_org_id: string }; Returns: string }
       org_gate_policy: { Args: { p_org_id: string }; Returns: Json }
       org_last_active_owner: { Args: { p_member_id: string }; Returns: boolean }
+      outbox_dispatch: { Args: { p_limit?: number }; Returns: Json }
       ownership_checklist: {
         Args: { p_system_id: string; p_to_stage: string }
         Returns: Json
@@ -13044,6 +13104,7 @@ export type Database = {
           status: Database["public"]["Enums"]["punch_status"]
         }[]
       }
+      push_event_types: { Args: never; Returns: string[] }
       record_competency: {
         Args: {
           p_assessed_at?: string

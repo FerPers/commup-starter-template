@@ -1,7 +1,7 @@
 // ══════════════════════════════════════════════════════════════
 // Stage 11.2 — evaluate-workflow (Supabase Edge Function, Deno)
 // ══════════════════════════════════════════════════════════════
-// Triggered by pg_net on domain_events INSERT. Loads matching
+// S21: lo llama outbox_dispatch() (pg_cron, cada minuto) solo por los eventos con una regla activa. Loads matching
 // workflow_rules, evaluates condition_jsonlogic against payload,
 // executes action if matched, logs every attempt to
 // workflow_executions.
@@ -238,7 +238,8 @@ async function executeAction(
   event: DomainEvent,
 ): Promise<Record<string, unknown>> {
   const payload = rule.action_payload ?? {}
-  const eventNew = event.payload?.new as Record<string, unknown> | undefined
+  // S21 (I-08): los cambios de fila traen la fila en `new`; los eventos de negocio, los campos sueltos (`id`, …).
+  const eventNew = (event.payload?.new ?? event.payload) as Record<string, unknown> | undefined
 
   switch (rule.action_type) {
     case 'block_certificate': {

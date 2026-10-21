@@ -3,7 +3,7 @@
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, emitImportSummary } from '@/lib/supabase/admin'
 import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
 import { normalizeCode } from '@/lib/excel/normalize'
 import { detectEquipmentTypeCode, normalizeTypeKey } from '@/lib/equipment-types'
@@ -253,7 +253,8 @@ export const importTags = withAuthOnly(
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
     if (!access.ok) return { error: access.error }
 
-    const admin = createAdminClient()
+    // S21 (B-03): sin un evento por fila (50k tags = 50k eventos); un resumen al final.
+    const admin = createAdminClient({ bulk: 'tags' })
     const prep = await prepareTagImport(ctx, admin, projectId, rows, presentFromColumns(columns), true)
     if ('error' in prep) return { error: prep.error }
     const result: ImportResult = { imported: 0, updated: 0, skipped: prep.errors.length, errors: prep.errors, warnings: prep.warnings }
@@ -273,6 +274,12 @@ export const importTags = withAuthOnly(
       }
     }
 
+    if (result.imported + result.updated > 0) {
+      await emitImportSummary(admin, {
+        orgId: ctx.orgId, projectId, actorId: ctx.userId, kind: 'tags',
+        counts: { imported: result.imported, updated: result.updated, skipped: result.skipped },
+      })
+    }
     return { result }
   },
 )

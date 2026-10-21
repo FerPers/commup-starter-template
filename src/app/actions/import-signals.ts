@@ -3,7 +3,7 @@
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, emitImportSummary } from '@/lib/supabase/admin'
 import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
 import { normalizeCode, normalizePidRef, textOr } from '@/lib/excel/normalize'
 import { planSignal, signalPayloadColumns } from '@/lib/import/signal-merge'
@@ -68,7 +68,8 @@ export const importSignals = withAuthOnly(
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
     if (!access.ok) return { error: access.error }
 
-    const admin = createAdminClient()
+    // S21 (B-03): sin un evento por fila; un resumen al final.
+    const admin = createAdminClient({ bulk: 'signals' })
     const result: SignalImportResult = { imported: 0, updated: 0, tagsCreated: 0, loopsCreated: 0, skipped: 0, errors: [], warnings: [] }
 
     const { data: disciplinesData, error: discErr } = await admin
@@ -260,6 +261,13 @@ export const importSignals = withAuthOnly(
       }
     }
 
+    if (result.imported + result.updated + result.tagsCreated + result.loopsCreated > 0) {
+      await emitImportSummary(admin, {
+        orgId: ctx.orgId, projectId, actorId: ctx.userId, kind: 'signals',
+        counts: { imported: result.imported, updated: result.updated, tags_created: result.tagsCreated,
+                  loops_created: result.loopsCreated, skipped: result.skipped },
+      })
+    }
     return { result }
   },
 )

@@ -35,20 +35,30 @@ type Execution = {
 }
 
 // ── Static catalogs ──────────────────────────────────────────
+// S21 (I-08): catálogo v1 (entidad en singular) + eventos de negocio; las reglas viejas se migraron en 20261117120000.
 const TRIGGER_EVENTS: { value: string; label: string }[] = [
-  { value: 'punches.created',      label: 'Punch creado' },
-  { value: 'punches.updated',      label: 'Punch actualizado' },
-  { value: 'punches.deleted',      label: 'Punch eliminado' },
-  { value: 'itrs.created',         label: 'ITR creado' },
-  { value: 'itrs.updated',         label: 'ITR actualizado' },
-  { value: 'itrs.deleted',         label: 'ITR eliminado' },
-  { value: 'certificates.created', label: 'Certificado creado' },
-  { value: 'certificates.updated', label: 'Certificado actualizado' },
-  { value: 'systems.updated',      label: 'Sistema actualizado' },
-  { value: 'subsystems.updated',   label: 'Subsistema actualizado' },
-  { value: 'loops.updated',        label: 'Loop actualizado' },
+  { value: 'punch.created',        label: 'Punch creado' },
+  { value: 'punch.updated',        label: 'Punch actualizado' },
+  { value: 'punch.deleted',        label: 'Punch eliminado' },
+  { value: 'punch.assigned',       label: 'Punch asignado' },
+  { value: 'punch.closed',         label: 'Punch cerrado' },
+  { value: 'itr.created',          label: 'ITR creado' },
+  { value: 'itr.updated',          label: 'ITR actualizado' },
+  { value: 'itr.deleted',          label: 'ITR eliminado' },
+  { value: 'itr.completed',        label: 'ITR completado' },
+  { value: 'itr.approved',         label: 'ITR aprobado' },
+  { value: 'itr.rejected',         label: 'ITR rechazado' },
+  { value: 'certificate.created',  label: 'Certificado creado' },
+  { value: 'certificate.updated',  label: 'Certificado actualizado' },
+  { value: 'certificate.issued',   label: 'Certificado emitido' },
+  { value: 'gate.approved',        label: 'Gate aprobado' },
+  { value: 'gate.revoked',         label: 'Gate revocado' },
+  { value: 'transfer.completed',   label: 'Traspaso completado' },
+  { value: 'system.updated',       label: 'Sistema actualizado' },
+  { value: 'subsystem.updated',    label: 'Subsistema actualizado' },
+  { value: 'loop.updated',         label: 'Loop actualizado' },
   // S13 (F-31): «interlocks.updated» se quitó: la tabla interlocks se reemplazó por las matrices C&E (fase 4-D) y el evento ya no ocurre.
-  { value: 'signals.updated',      label: 'Signal actualizada' },
+  { value: 'signal.updated',       label: 'Signal actualizada' },
 ]
 
 const ACTION_TYPES: { value: WorkflowActionType; label: string; description: string }[] = [

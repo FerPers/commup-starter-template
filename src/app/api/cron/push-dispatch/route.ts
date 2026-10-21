@@ -6,22 +6,22 @@ import { sendWebPush } from '@/lib/push/web-push'
 /**
  * POST /api/cron/push-dispatch
  *
- * Despacha notificaciones push para los `domain_events` recientes
- * a las subscriptions cuyas topics matcheen.
+ * Despacha notificaciones push para los `domain_events` encolados en `push_outbox` a las subscriptions cuyas topics
+ * matcheen.
  *
  * Auth: Authorization: Bearer <CRON_SECRET>
  *
- * Mapping evento → topic:
- *   itr.returned          → itr_returned
- *   punch.created (cat A) → punch_cat_a
- *   punch.assigned        → punch_assigned
- *   certificate.ready     → cert_ready
+ * Mapping evento (catálogo v1, src/lib/constants/domain-events.ts) → topic:
+ *   itr.rejected / itr.returned → itr_returned
+ *   punch.created (cat A)       → punch_cat_a
+ *   punch.assigned              → punch_assigned
+ *   certificate.issued          → cert_ready
  *
- * Para topic `my_items_only`, sólo se notifica al user_id en payload.assignee_id
- * (o assigned_to / responsible_user_id, según el evento).
+ * Para topic `my_items_only`, sólo se notifica al user_id del responsable del evento.
  *
- * Cursor: tabla `push_dispatch_cursor (id=1, last_event_at)` para
- * no reprocesar. Si la tabla no existe, procesa los últimos 5 minutos.
+ * S21 (B-11): cola en la BD. `outbox_dispatch` (pg_cron, cada minuto) encola los tipos de PUSH_EVENT_TYPES y
+ * `claim_push_events` los saca al reclamarlos: un cron atrasado no pierde eventos y dos corridas solapadas no
+ * notifican dos veces. Antes: ventana fija de 5 min y `limit(500)`.
  */
 
 type DomainEvent = {
@@ -44,27 +44,36 @@ type PushSub = {
   topics: string[]
 }
 
+function str(v: unknown): string | null {
+  return typeof v === 'string' ? v : null
+}
+
 function eventToTopic(ev: DomainEvent): { topic: string; title: string; body: string; url: string; priority: 'high' | 'normal' | 'low'; assignee?: string | null } | null {
   const p = ev.payload as Record<string, unknown>
+  // Cambio de fila: la fila está en `new` (los eventos de la API v1 traen los campos sueltos).
+  const row = (p.new && typeof p.new === 'object' ? p.new : p) as Record<string, unknown>
   switch (ev.event_type) {
-    case 'itr.returned':
+    case 'itr.rejected':
+    case 'itr.returned': {
+      const tagId = str(p.tag_id)
       return {
         topic: 'itr_returned',
-        title: 'ITR devuelto',
-        body: typeof p.itr_number === 'string' ? `ITR ${p.itr_number} requiere correcciones` : 'Un ITR fue devuelto',
-        url: `/itrs/${ev.aggregate_id}`,
+        title: ev.event_type === 'itr.rejected' ? 'ITR rechazado' : 'ITR devuelto',
+        body: str(p.number) ? `ITR ${p.number} requiere correcciones` : 'Un ITR fue devuelto',
+        url: tagId ? `/projects/${ev.project_id}/tags/${tagId}/itrs/${ev.aggregate_id}` : `/projects/${ev.project_id}/itrs`,
         priority: 'high',
-        assignee: typeof p.submitted_by === 'string' ? p.submitted_by : null,
+        assignee: null,
       }
+    }
     case 'punch.created':
-      if (p.category === 'A') {
+      if (row.category === 'A') {
         return {
           topic: 'punch_cat_a',
           title: 'Punch Cat A creado',
-          body: typeof p.punch_number === 'string' ? `Punch ${p.punch_number} bloquea completion` : 'Punch crítico nuevo',
-          url: `/punch-list`,
+          body: str(row.punch_number) ? `Punch ${row.punch_number} bloquea completion` : 'Punch crítico nuevo',
+          url: `/projects/${ev.project_id}/punches`,
           priority: 'high',
-          assignee: typeof p.assigned_to === 'string' ? p.assigned_to : null,
+          assignee: str(row.assigned_to),
         }
       }
       return null
@@ -72,17 +81,17 @@ function eventToTopic(ev: DomainEvent): { topic: string; title: string; body: st
       return {
         topic: 'punch_assigned',
         title: 'Punch asignado',
-        body: typeof p.punch_number === 'string' ? `Punch ${p.punch_number} te fue asignado` : 'Tienes un punch asignado',
-        url: `/punch-list`,
+        body: str(p.number) ? `Punch ${p.number} te fue asignado` : 'Tienes un punch asignado',
+        url: `/projects/${ev.project_id}/punches`,
         priority: 'normal',
-        assignee: typeof p.assigned_to === 'string' ? p.assigned_to : null,
+        assignee: str(p.assigned_to),
       }
-    case 'certificate.ready':
+    case 'certificate.issued':
       return {
         topic: 'cert_ready',
-        title: 'Certificado listo',
-        body: typeof p.cert_type === 'string' ? `${p.cert_type} disponible para firma` : 'Un certificado está listo',
-        url: `/certificates`,
+        title: 'Certificado emitido',
+        body: str(p.number) ? `${p.number} emitido` : 'Se emitió un certificado',
+        url: `/projects/${ev.project_id}/certificates`,
         priority: 'normal',
         assignee: null,
       }
@@ -100,32 +109,33 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Cursor: últimos 5 minutos como ventana por defecto.
-  const since = new Date(Date.now() - 5 * 60 * 1000).toISOString()
-
-  const { data: events, error } = await admin
-    .from('domain_events')
-    .select('id, org_id, project_id, aggregate_type, aggregate_id, event_type, payload, occurred_at')
-    .gte('occurred_at', since)
-    .order('occurred_at', { ascending: true })
-    .limit(500)
-
+  const { data: events, error } = await admin.rpc('claim_push_events', { p_limit: 500 })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const evs = (events ?? []) as DomainEvent[]
+
+  // B-11: suscripciones de todas las orgs del lote en una consulta (antes, una por evento).
+  const orgIds = Array.from(new Set(evs.map(e => e.org_id)))
+  const { data: allSubs, error: subsErr } = orgIds.length === 0
+    ? { data: [], error: null }
+    : await admin
+        .from('push_subscriptions')
+        .select('id, user_id, org_id, endpoint, p256dh, auth_secret, topics')
+        .in('org_id', orgIds)
+        .eq('enabled', true)
+  if (subsErr) return NextResponse.json({ error: subsErr.message }, { status: 500 })
+  const subsByOrg = new Map<string, PushSub[]>()
+  for (const s of (allSubs ?? []) as (PushSub & { org_id: string })[]) {
+    subsByOrg.set(s.org_id, [...(subsByOrg.get(s.org_id) ?? []), s])
+  }
 
   let dispatched = 0
   let failed = 0
 
-  for (const ev of (events ?? []) as DomainEvent[]) {
+  for (const ev of evs) {
     const mapping = eventToTopic(ev)
     if (!mapping) continue
 
-    const { data: subs } = await admin
-      .from('push_subscriptions')
-      .select('id, user_id, endpoint, p256dh, auth_secret, topics')
-      .eq('org_id', ev.org_id)
-      .eq('enabled', true)
-      .contains('topics', [mapping.topic])
-    let targets = (subs ?? []) as PushSub[]
+    let targets = (subsByOrg.get(ev.org_id) ?? []).filter(s => s.topics.includes(mapping.topic))
 
     // Aplicar filtro `my_items_only` si la sub lo tiene activo
     if (mapping.assignee) {
@@ -174,8 +184,7 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    window_since: since,
-    events: events?.length ?? 0,
+    events: evs.length,
     dispatched,
     failed,
   })

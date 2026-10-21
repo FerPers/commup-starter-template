@@ -4,6 +4,7 @@ import type { Json } from '@/types/supabase.generated'
 import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
+import { AUDIT_ENTITY_TYPES } from '@/lib/constants/domain-events'
 
 type LogEntry = {
   id: string
@@ -17,10 +18,8 @@ type LogEntry = {
 
 type User = { id: string; full_name: string }
 
-const ENTITY_TYPES = [
-  'tags', 'itrs', 'punches', 'certificates',
-  'systems', 'subsystems', 'loops', 'ce_matrices', 'signals',
-]
+// S21 (I-08): nombres del catálogo v1 (singular); los eventos anteriores se renombraron en la migración.
+const ENTITY_TYPES = AUDIT_ENTITY_TYPES
 
 const ACTION_COLORS: Record<string, string> = {
   created: '#10b981',

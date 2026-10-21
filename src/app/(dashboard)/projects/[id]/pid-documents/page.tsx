@@ -76,16 +76,14 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
     }
   }
 
-  // Generate signed URLs for each document (60 min expiry)
+  // Generate signed URLs for each document (60 min expiry).
+  // S21 (F-26): una sola llamada para todos los planos (antes, un subrequest del Worker por plano).
   const docs = documents ?? []
-  const signedDocs = await Promise.all(
-    docs.map(async (doc) => {
-      const { data } = await supabase.storage
-        .from('pid-documents')
-        .createSignedUrl(doc.file_path, 3600)
-      return { ...doc, signed_url: data?.signedUrl ?? null }
-    })
-  )
+  const { data: signedList } = docs.length
+    ? await supabase.storage.from('pid-documents').createSignedUrls(docs.map(d => d.file_path), 3600)
+    : { data: [] as { path: string | null; signedUrl: string }[] }
+  const signedByPath = new Map((signedList ?? []).map(s => [s.path, s.signedUrl]))
+  const signedDocs = docs.map(doc => ({ ...doc, signed_url: signedByPath.get(doc.file_path) ?? null }))
 
   // P&IDs referenciados en tags pero sin documento subido (comparación normalizada)
   const uploadedNumbers = new Set(docs.map(d => normalizePidRef(d.drawing_number)))

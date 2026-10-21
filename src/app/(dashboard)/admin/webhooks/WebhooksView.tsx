@@ -127,8 +127,10 @@ export default function WebhooksView({
             Webhooks
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
-            Endpoints HTTPS que reciben eventos de dominio en tiempo real. Firmados con HMAC-SHA256 en{' '}
-            <code>X-CommUp-Signature</code>. Reintentos automáticos con backoff exponencial.
+            Endpoints HTTPS que reciben eventos de dominio (en menos de un minuto). Firmados con HMAC-SHA256 en{' '}
+            <code>X-CommUp-Signature</code> (<code>t=&lt;unix&gt;,v1=&lt;hex&gt;</code> sobre{' '}
+            <code>&lt;unix&gt;.&lt;body&gt;</code>); deduplica con <code>X-CommUp-Event-Id</code>. Reintentos
+            automáticos con backoff exponencial.
           </p>
         </div>
         <button onClick={() => { setCreating(true); setError(null) }} style={btnPrimary}>+ Nueva subscription</button>

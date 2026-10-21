@@ -2,26 +2,24 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // Stage 13.3 — webhook-dispatcher (Supabase Edge Function, Deno)
 //
-// Two execution modes:
-//   A) Called by a pg_net trigger on domain_events INSERT:
-//      POST { event_id: "<uuid>" }
-//      → Creates webhook_deliveries for matching subscriptions AND
-//        immediately dispatches the first attempt in parallel.
-//        Failed deliveries stay `pending` with next_retry_at set.
+// S21 (B-03/I-08): un solo modo. `outbox_dispatch()` (pg_cron, cada minuto) crea las entregas en la BD y llama
+// aquí solo si hay entregas vencidas: POST { mode: "retry" }. La función las reserva con
+// `claim_webhook_deliveries` (SKIP LOCKED + 5 min de reserva: dos invocaciones no repiten una entrega), las envía
+// de a CONCURRENCY y guarda el resultado. Antes, dos triggers llamaban por cada evento (entregas duplicadas) y el
+// reintento dependía de un pg_cron fuera del repo.
 //
-//   B) Called by a cron-like scheduler to retry pending deliveries:
-//      POST { mode: "retry" }
-//      → Fetches pending deliveries due for retry, dispatches them
-//
-// Outbound request format:
+// Outbound request format (v1):
 //   POST <endpoint_url>
-//   X-CommUp-Event:     <event_type>          e.g. punch.created
+//   X-CommUp-Event:     <event_type>          e.g. punch.closed (catálogo v1, src/lib/constants/domain-events.ts)
+//   X-CommUp-Event-Id:  <domain_event_id>     idempotencia: el mismo evento siempre trae el mismo id
 //   X-CommUp-Delivery:  <delivery_id>
-//   X-CommUp-Signature: sha256=<hmac>         HMAC-SHA256(secret, body)
+//   X-CommUp-Timestamp: <unix seconds>
+//   X-CommUp-Signature: t=<unix>,v1=<hex>     HMAC-SHA256(secret, "<unix>.<body>") — rechazar si |now − t| > 5 min
 //   Content-Type:       application/json
+//   Body: { id, event_id, event_type, schema_version, occurred_at, data }
 //
 // Retry schedule (exponential backoff):
-//   Attempt 1 → immediate
+//   Attempt 1 → al minuto siguiente del evento
 //   Attempt 2 → 1 min
 //   Attempt 3 → 5 min
 //   Attempt 4 → 30 min
@@ -95,6 +93,9 @@ async function assertPublicHttpsUrl(raw: string): Promise<void> {
   if (addrs.some(isPrivateIp)) throw new Error(`Host resuelve a una IP privada: ${host}`)
 }
 const MAX_ATTEMPTS      = 5
+const BATCH             = 100
+const CONCURRENCY       = 10
+const MAX_ROUNDS        = 5
 const DISPATCH_TIMEOUT  = 10_000   // 10 s per outbound request
 
 // Retry delays in seconds
@@ -102,56 +103,63 @@ const RETRY_DELAYS_SEC  = [0, 60, 300, 1800, 7200]
 
 // ── HMAC-SHA256 ───────────────────────────────────────────────────────────────
 
-async function hmacSha256(secret: string, payload: string): Promise<string> {
+async function hmacHex(secret: string, payload: string): Promise<string> {
   const enc = new TextEncoder()
   const key = await crypto.subtle.importKey(
     'raw', enc.encode(secret),
     { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
   )
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode(payload))
-  return 'sha256=' + Array.from(new Uint8Array(sig))
+  return Array.from(new Uint8Array(sig))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('')
 }
 
+type Claimed = {
+  delivery_id: string
+  subscription_id: string
+  attempts: number
+  endpoint_url: string
+  secret: string
+  enabled: boolean
+  event_id: string
+  event_type: string
+  payload: Record<string, unknown>
+  occurred_at: string
+  schema_version: number
+}
+
 // ── Dispatch a single delivery ────────────────────────────────────────────────
 
-async function dispatchDelivery(
-  supabase: ReturnType<typeof createClient>,
-  delivery: {
-    id: string
-    subscription_id: string
-    endpoint_url: string
-    secret: string
-    event_type: string
-    event_payload: Record<string, unknown>
-    occurred_at: string
-    attempts: number
-  },
-): Promise<{ success: boolean; code?: number; body?: string }> {
-  const bodyObj = {
-    id:         delivery.id,
-    event_type: delivery.event_type,
-    occurred_at: delivery.occurred_at,
-    data:       delivery.event_payload,
-  }
-  const bodyStr  = JSON.stringify(bodyObj)
-  const signature = await hmacSha256(delivery.secret, bodyStr)
+async function dispatchDelivery(d: Claimed): Promise<{ success: boolean; code?: number; body?: string }> {
+  const bodyStr = JSON.stringify({
+    id:             d.delivery_id,
+    event_id:       d.event_id,
+    event_type:     d.event_type,
+    schema_version: d.schema_version,
+    occurred_at:    d.occurred_at,
+    data:           d.payload,
+  })
+  // I-08: la firma cubre el timestamp (anti-replay) y el cuerpo, que trae el event_id (idempotencia).
+  const ts = Math.floor(Date.now() / 1000).toString()
+  const signature = `t=${ts},v1=${await hmacHex(d.secret, `${ts}.${bodyStr}`)}`
 
   const controller = new AbortController()
   const timeout    = setTimeout(() => controller.abort(), DISPATCH_TIMEOUT)
 
   try {
-    await assertPublicHttpsUrl(delivery.endpoint_url)
-    const res = await fetch(delivery.endpoint_url, {
+    await assertPublicHttpsUrl(d.endpoint_url)
+    const res = await fetch(d.endpoint_url, {
       method:  'POST',
       redirect: 'manual',
       headers: {
         'Content-Type':       'application/json',
-        'X-CommUp-Event':     delivery.event_type,
-        'X-CommUp-Delivery':  delivery.id,
+        'X-CommUp-Event':     d.event_type,
+        'X-CommUp-Event-Id':  d.event_id,
+        'X-CommUp-Delivery':  d.delivery_id,
+        'X-CommUp-Timestamp': ts,
         'X-CommUp-Signature': signature,
-        'User-Agent':         'CommUp-Webhooks/1.0',
+        'User-Agent':         'CommUp-Webhooks/1.1',
       },
       body:    bodyStr,
       signal:  controller.signal,
@@ -173,34 +181,21 @@ function nextRetryAt(attempts: number): string {
   return new Date(Date.now() + delaySec * 1000).toISOString()
 }
 
-// ── processDelivery: dispatch + persist result (used by Mode A and Mode B) ────
+// ── processDelivery: dispatch + persist result ────────────────────────────────
 
 type DeliveryOutcome = 'delivered' | 'failed' | 'abandoned'
 
 async function processDelivery(
   supabase: ReturnType<typeof createClient>,
-  args: {
-    deliveryId:     string
-    subscriptionId: string
-    endpointUrl:    string
-    secret:         string
-    eventType:      string
-    payload:        Record<string, unknown>
-    occurredAt:     string
-    currentAttempts: number
-  },
+  d: Claimed,
 ): Promise<DeliveryOutcome> {
-  const newAttempts = args.currentAttempts + 1
-  const result = await dispatchDelivery(supabase, {
-    id:              args.deliveryId,
-    subscription_id: args.subscriptionId,
-    endpoint_url:    args.endpointUrl,
-    secret:          args.secret,
-    event_type:      args.eventType,
-    event_payload:   args.payload,
-    occurred_at:     args.occurredAt,
-    attempts:        newAttempts,
-  })
+  if (!d.enabled) {
+    await supabase.from('webhook_deliveries').update({ status: 'abandoned' }).eq('id', d.delivery_id)
+    return 'abandoned'
+  }
+
+  const newAttempts = d.attempts + 1
+  const result = await dispatchDelivery(d)
 
   if (result.success) {
     await supabase.from('webhook_deliveries').update({
@@ -209,12 +204,12 @@ async function processDelivery(
       last_response_code: result.code,
       last_response_body: result.body,
       delivered_at:       new Date().toISOString(),
-    }).eq('id', args.deliveryId)
+    }).eq('id', d.delivery_id)
 
     await supabase.from('webhook_subscriptions').update({
       last_success_at: new Date().toISOString(),
       failure_count:   0,
-    }).eq('id', args.subscriptionId)
+    }).eq('id', d.subscription_id)
 
     return 'delivered'
   }
@@ -227,15 +222,15 @@ async function processDelivery(
     next_retry_at:      nextRetryAt(newAttempts),
     last_response_code: result.code,
     last_response_body: result.body,
-  }).eq('id', args.deliveryId)
+  }).eq('id', d.delivery_id)
 
-  await supabase.rpc('increment_webhook_failure_count', { sub_id: args.subscriptionId }).then(() => {})
+  await supabase.rpc('increment_webhook_failure_count', { sub_id: d.subscription_id }).then(() => {})
   await supabase.from('webhook_subscriptions').update({
     last_error_at: new Date().toISOString(),
-  }).eq('id', args.subscriptionId)
+  }).eq('id', d.subscription_id)
 
   if (status === 'abandoned') {
-    console.warn(`Delivery ${args.deliveryId} abandoned after ${newAttempts} attempts`)
+    console.warn(`Delivery ${d.delivery_id} abandoned after ${newAttempts} attempts`)
     return 'abandoned'
   }
   return 'failed'
@@ -254,146 +249,26 @@ Deno.serve(async (req: Request) => {
   const denied = await requireServiceCaller(req)
   if (denied) return denied
 
-  let body: { event_id?: string; mode?: string }
-  try {
-    body = await req.json()
-  } catch {
-    return new Response('Invalid JSON', { status: 400 })
-  }
-
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   })
 
-  // ── Mode A: new domain event → create deliveries ──────────────────────────
+  const results = { claimed: 0, delivered: 0, failed: 0, abandoned: 0 }
 
-  if (body.event_id) {
-    const { data: event, error: evErr } = await supabase
-      .from('domain_events')
-      .select('id, org_id, project_id, event_type, payload, occurred_at')
-      .eq('id', body.event_id)
-      .single()
-
-    if (evErr || !event) {
-      return new Response(JSON.stringify({ error: 'Event not found' }), { status: 404 })
+  // Hasta MAX_ROUNDS lotes por invocación; cada lote se reserva en la BD antes de enviarse.
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    const { data: claimed, error } = await supabase.rpc('claim_webhook_deliveries', { p_limit: BATCH })
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message, ...results }), { status: 500 })
     }
-
-    // Find matching enabled subscriptions (incl. endpoint/secret for inline dispatch)
-    const { data: subs } = await supabase
-      .from('webhook_subscriptions')
-      .select('id, event_types, project_id, endpoint_url, secret')
-      .eq('org_id', event.org_id)
-      .eq('enabled', true)
-
-    const matching = (subs ?? []).filter(sub => {
-      if (sub.project_id && sub.project_id !== event.project_id) return false
-      const types = sub.event_types as string[]
-      return types.includes('*') || types.includes(event.event_type)
-    })
-
-    if (matching.length === 0) {
-      return new Response(JSON.stringify({ created: 0, delivered: 0, failed: 0 }), { status: 200 })
+    const batch = (claimed ?? []) as Claimed[]
+    results.claimed += batch.length
+    for (let i = 0; i < batch.length; i += CONCURRENCY) {
+      const outcomes = await Promise.all(batch.slice(i, i + CONCURRENCY).map(d => processDelivery(supabase, d)))
+      for (const o of outcomes) results[o]++
     }
-
-    // Create pending deliveries, return their IDs
-    const { data: inserted, error: insErr } = await supabase
-      .from('webhook_deliveries')
-      .insert(
-        matching.map(sub => ({
-          subscription_id: sub.id,
-          domain_event_id: event.id,
-          status:          'pending',
-          attempts:        0,
-          next_retry_at:   new Date().toISOString(),
-        }))
-      )
-      .select('id, subscription_id')
-
-    if (insErr || !inserted) {
-      return new Response(JSON.stringify({ error: insErr?.message ?? 'insert failed' }), { status: 500 })
-    }
-
-    // Dispatch inline, in parallel — first attempt for each matching sub
-    const subMap = new Map(matching.map(s => [s.id, s]))
-    const outcomes = await Promise.all(
-      inserted.map(del => {
-        const sub = subMap.get(del.subscription_id)!
-        return processDelivery(supabase, {
-          deliveryId:      del.id,
-          subscriptionId:  del.subscription_id,
-          endpointUrl:     sub.endpoint_url,
-          secret:          sub.secret,
-          eventType:       event.event_type,
-          payload:         event.payload,
-          occurredAt:      event.occurred_at,
-          currentAttempts: 0,
-        })
-      })
-    )
-
-    const tally = outcomes.reduce<Record<DeliveryOutcome, number>>(
-      (acc, o) => { acc[o]++; return acc },
-      { delivered: 0, failed: 0, abandoned: 0 },
-    )
-
-    console.log(`Event ${event.id} (${event.event_type}): created=${inserted.length} ` +
-                `delivered=${tally.delivered} failed=${tally.failed} abandoned=${tally.abandoned}`)
-
-    return new Response(
-      JSON.stringify({ created: inserted.length, ...tally }),
-      { status: 200 },
-    )
+    if (batch.length < BATCH) break
   }
 
-  // ── Mode B: retry pending deliveries ─────────────────────────────────────
-
-  if (body.mode === 'retry' || !body.event_id) {
-    const now = new Date().toISOString()
-
-    // Fetch due pending deliveries (join subscription + event)
-    const { data: due, error: dueErr } = await supabase
-      .from('webhook_deliveries')
-      .select(`
-        id, subscription_id, attempts,
-        domain_event_id,
-        domain_events ( event_type, payload, occurred_at ),
-        webhook_subscriptions ( endpoint_url, secret, enabled )
-      `)
-      .eq('status', 'pending')
-      .lte('next_retry_at', now)
-      .limit(50)   // process up to 50 per invocation
-
-    if (dueErr) {
-      return new Response(JSON.stringify({ error: dueErr.message }), { status: 500 })
-    }
-
-    const results = { delivered: 0, failed: 0, abandoned: 0 }
-
-    for (const delivery of (due ?? [])) {
-      const sub   = delivery.webhook_subscriptions as { endpoint_url: string; secret: string; enabled: boolean }
-      const event = delivery.domain_events as { event_type: string; payload: Record<string, unknown>; occurred_at: string }
-
-      if (!sub?.enabled) {
-        await supabase.from('webhook_deliveries').update({ status: 'abandoned' }).eq('id', delivery.id)
-        results.abandoned++
-        continue
-      }
-
-      const outcome = await processDelivery(supabase, {
-        deliveryId:      delivery.id,
-        subscriptionId:  delivery.subscription_id,
-        endpointUrl:     sub.endpoint_url,
-        secret:          sub.secret,
-        eventType:       event.event_type,
-        payload:         event.payload,
-        occurredAt:      event.occurred_at,
-        currentAttempts: delivery.attempts,
-      })
-      results[outcome]++
-    }
-
-    return new Response(JSON.stringify(results), { status: 200 })
-  }
-
-  return new Response('Unknown mode', { status: 400 })
+  return new Response(JSON.stringify(results), { status: 200 })
 })

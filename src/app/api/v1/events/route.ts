@@ -7,8 +7,10 @@
  * Query params:
  *   project_id    required
  *   since         ISO timestamp — events after this date (default: 24h ago)
- *   aggregate_type  tag | itr | punch | certificate | preservation
- *   event_type    specific event (e.g. punch.created, itr.approved)
+ *   aggregate_type  tag | itr | punch | certificate | system | subsystem | signal | loop | gate | transfer | …
+ *   event_type    specific event (e.g. punch.created, itr.approved) — catálogo v1 en src/lib/constants/domain-events.ts
+ *
+ * S21 (I-08): nombres en singular (los eventos anteriores se renombraron) y `schema_version` en cada evento.
  *   limit         max 200
  */
 
@@ -45,7 +47,7 @@ export async function GET(req: NextRequest) {
 
   let query = admin
     .from('domain_events')
-    .select('id, aggregate_type, aggregate_id, event_type, payload, occurred_at')
+    .select('id, aggregate_type, aggregate_id, event_type, schema_version, payload, occurred_at')
     .eq('project_id', projectId)
     .eq('org_id', auth.orgId)
     .gte('occurred_at', since)
