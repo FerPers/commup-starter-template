@@ -567,6 +567,14 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | B-21 | Medio | Crons — N+1 y límites de subrequests del Worker | [B-datos-rendimiento.md:470](revision-2026-10-19/B-datos-rendimiento.md) |
 | B-23 | Medio | Latencia — Worker sin Smart Placement y cadenas de awaits secuenciales | [B-datos-rendimiento.md:511](revision-2026-10-19/B-datos-rendimiento.md) |
 
+**Estado S20 sesión 1 (2026-10-20; migración `20261115120000_readiness_scale_s20.sql` **aplicada en prod** con autorización de Luis). Decisión de Luis: banco = org LOADTEST aparte en prod (300 sistemas · 50k tags · 100k ITR · 10k punch), meta p95 < 1,5 s:**
+- Banco reproducible: `scripts/loadtest/seed.sql` / `bench.sql` (con RLS, como el usuario del banco; el archivo completo excede los 100 s de la API → medir una consulta por llamada) / `teardown.sql`.
+- B-04 🟡 `compute_project_readiness` 18,2 s → 0,1 s y `compute_project_progress` 0,76 s → 0,06 s: set-based, `SECURITY DEFINER` con una sola verificación de pertenencia; salida idéntica a la anterior (314/314). `compute_project_gates` 9,4 s → 3,0 s (sin RLS por consulta interna); bajar de 1,5 s → sesión 2 (D-07).
+- G-07 ✅ `src/lib/supabase/membership.ts`: `getUser` + una consulta de `org_members` por request (`cache()` de React) compartidas por `getActiveMembership`, `listMemberships` y `listInactiveMemberships` (antes 3 + 3 por navegación y por `router.refresh()`); `getMyWorkCounts` evita el doble `my_work_counts` de `/my-work` (layout + página). En una server action `cache()` no memoiza: el cambio de org (cookie) se ve en el render siguiente. `getClaims()` y `Suspense` de contadores no se hicieron.
+- B-23 ✅ `"placement": { "mode": "smart" }` en `wrangler.jsonc`; layout del dashboard: proyectos en paralelo con notificaciones, org, membresías, Mi trabajo, perfil e invitaciones (2 tandas en vez de 3 + 2 secuenciales); ejecución de ITR: 7 awaits en serie → 1 tanda + URL firmadas en lote (ya desde S06); un error de referencias documentales no tapa el 404 de un ITR ajeno. El RPC `itr_execution_bundle` no se hizo (medir primero con placement).
+- Medido con RLS: Mi trabajo 60 ms, lista de ITR 70–240 ms. Control Tower de LOADTEST ya no excede 8 s, pero los gates siguen en 3 s.
+- **Sesión 2:** D-07 (estado materializado `system_gate_status` + «sistema sucio» + recálculo), B-06, B-13 (si el badge sigue caro a escala), B-17, B-21, vista previa de S19 con 50k tags y re-bench.
+
 ## S21 — Bus de eventos (outbox)
 
 | ID | Sev. | Hallazgo | Anexo |

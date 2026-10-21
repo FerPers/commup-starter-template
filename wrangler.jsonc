@@ -12,6 +12,9 @@
 		"binding": "ASSETS",
 		"directory": ".open-next/assets"
 	},
+	// S20 (B-23): Smart Placement acerca el Worker a Supabase (una sola región) en vez de correr en el PoP del
+	// usuario: cada consulta en serie de una página deja de pagar el RTT LatAm ↔ región de la BD.
+	"placement": { "mode": "smart" },
 	"observability": {
 		"enabled": true
 	},

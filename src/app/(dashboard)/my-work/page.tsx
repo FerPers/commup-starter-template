@@ -6,7 +6,7 @@ import { canReleaseHold, signableCapacities, type HoldCapacity } from '@/lib/sta
 import { loadMyCapacitiesByProject } from '@/lib/capacities/server'
 import { fallbackCapacities } from '@/lib/constants/capacities'
 import { canSignCertificate, isPerformanceLead, type CertSigners } from '@/lib/performance/catalog'
-import { getActiveMembership } from '@/lib/supabase/membership'
+import { getActiveMembership, getMyWorkCounts } from '@/lib/supabase/membership'
 import { CATEGORY_CFG, ITR_STYLE, PUNCH_STYLE } from '@/components/dashboard/widgets/_shared'
 import {
   canSignCertificates, daysOverdue, dueState, parseCounts, seesPreservation, sortPunches, splitAssignments,
@@ -73,7 +73,7 @@ export default async function MyWorkPage() {
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
   const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }, { data: perfToDecide }, { data: perfCerts }] = await Promise.all([
-    supabase.rpc('my_work_counts', { p_org_id: orgId }),
+    getMyWorkCounts(orgId).then(data => ({ data })),
     // S09 (B-07): solo ITR no aprobados de los proyectos de la org, paginado (antes: TODAS mis asignaciones,
     // cortadas en 1000 → podían faltar las pendientes mientras el badge SQL contaba bien).
     projectIds.length === 0 ? Promise.resolve({ data: [] }) : fetchAllRowsFlagged(() => supabase

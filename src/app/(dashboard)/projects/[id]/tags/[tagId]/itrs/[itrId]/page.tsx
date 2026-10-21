@@ -24,59 +24,53 @@ export default async function ItrExecutionPage({
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
 
-  const { data: itr } = await supabase
-    .from('itrs')
-    .select(`
-      id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id, loop_id, ce_cause_id, source_rows, required_signatures,
-      loops(id, loop_number), ce_causes(id, code, description, ce_matrices(id, code)),
-      itr_templates(
-        id, code, title, version, requires_test_equipment,
-        itr_template_sections(
-          id, title, order_index,
-          itr_template_items(
-            id, item_number, description, description_es, item_type,
-            is_critical, is_required, requires_photo, requires_document, requires_measurement,
-            acceptance_min, acceptance_max, acceptance_text,
-            unit, options, option_outcomes, order_index,
-            condition_item_id, condition_value
+  // S20 (B-23): todo lo que solo depende de los ids de la ruta sale en paralelo con el ITR (antes, 7 awaits en serie,
+  // cada uno con el RTT a Supabase). Si el ITR no es del proyecto, notFound() descarta el resto.
+  const [
+    { data: itr },
+    { data: rawAttachments },
+    { data: members },
+    { data: equipmentUsed },
+    { data: equipmentOptions },
+    { data: suggestions },
+    docRefs,
+    locale,
+    projectToday,
+  ] = await Promise.all([
+    supabase
+      .from('itrs')
+      .select(`
+        id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id, loop_id, ce_cause_id, source_rows, required_signatures,
+        loops(id, loop_number), ce_causes(id, code, description, ce_matrices(id, code)),
+        itr_templates(
+          id, code, title, version, requires_test_equipment,
+          itr_template_sections(
+            id, title, order_index,
+            itr_template_items(
+              id, item_number, description, description_es, item_type,
+              is_critical, is_required, requires_photo, requires_document, requires_measurement,
+              acceptance_min, acceptance_max, acceptance_text,
+              unit, options, option_outcomes, order_index,
+              condition_item_id, condition_value
+            )
           )
-        )
-      ),
-      tags(id, tag_number, description, manufacturer, model, serial_number, datasheet_number, pid_drawing, range_min, range_max, eng_unit, revision, junction_box, disciplines(code, name, color)),
-      project_phases(code, name, color),
-      itr_assignments(id, user_id, role, profiles(full_name)),
-      itr_responses(id, item_id, value_text, value_numeric, value_bool, value_option, remarks, is_passed, responded_at),
-      itr_signatures(id, role, signed_at, user_id, signature_image, signer_company, profiles(full_name))
-    `)
-    .eq('id', itrId)
-    .eq('project_id', projectId)
-    .single()
-
-  if (!itr) notFound()
-
-  // Fetch existing attachments + generate signed URLs
-  const { data: rawAttachments } = await supabase
-    .from('itr_attachments')
-    .select('id, item_id, file_url, file_type, captured_at, uploaded_by')
-    .eq('itr_id', itrId)
-    .order('captured_at', { ascending: true })
-
-  // C-41 (S06): una sola llamada para todas las URL firmadas.
-  const attachmentPaths = (rawAttachments ?? []).map(att => att.file_url)
-  const { data: signedList } = attachmentPaths.length
-    ? await supabase.storage.from('itr-attachments').createSignedUrls(attachmentPaths, 3600)
-    : { data: [] as { path: string | null; signedUrl: string }[] }
-  const signedByPath = new Map((signedList ?? []).map(s => [s.path, s.signedUrl]))
-  const attachments = (rawAttachments ?? []).map(att => ({ ...att, signed_url: signedByPath.get(att.file_url) ?? null }))
-
-  const canEdit = ['owner', 'admin', 'architect', 'leader', 'inspector'].includes(membership.role)
-
-  const { data: members } = await supabase.from('org_members').select('user_id, role, profiles(full_name)').eq('org_id', ctx.orgId)
-  // S04 (C-01): los editores completan o cambian asignaciones de roles sin firmar.
-  const canAssign = ROLE_TIERS.editor.includes(membership.role)
-
-  // Fase 4-B: equipos de prueba usados (con su calibración al momento de uso) e inventario activo de la org.
-  const [{ data: equipmentUsed }, { data: equipmentOptions }] = await Promise.all([
+        ),
+        tags(id, tag_number, description, manufacturer, model, serial_number, datasheet_number, pid_drawing, range_min, range_max, eng_unit, revision, junction_box, disciplines(code, name, color)),
+        project_phases(code, name, color),
+        itr_assignments(id, user_id, role, profiles(full_name)),
+        itr_responses(id, item_id, value_text, value_numeric, value_bool, value_option, remarks, is_passed, responded_at),
+        itr_signatures(id, role, signed_at, user_id, signature_image, signer_company, profiles(full_name))
+      `)
+      .eq('id', itrId)
+      .eq('project_id', projectId)
+      .single(),
+    supabase
+      .from('itr_attachments')
+      .select('id, item_id, file_url, file_type, captured_at, uploaded_by')
+      .eq('itr_id', itrId)
+      .order('captured_at', { ascending: true }),
+    supabase.from('org_members').select('user_id, role, profiles(full_name)').eq('org_id', ctx.orgId),
+    // Fase 4-B: equipos de prueba usados (con su calibración al momento de uso) e inventario activo de la org.
     supabase.from('itr_test_equipment')
       .select('equipment_id, used_on, calibrated_on, calibration_due, certificate_number, snapshot')
       .eq('itr_id', itrId)
@@ -87,17 +81,33 @@ export default async function ItrExecutionPage({
       .eq('is_active', true)
       .order('code')
       .limit(1000),
+    supabase
+      .from('itr_suggestions')
+      .select('id, signal_tag, signal_value, signal_unit, sampled_at, message, suggested_at, expires_at, pre_filled_data')
+      .eq('itr_id', itrId)
+      .eq('status', 'pending')
+      .order('suggested_at', { ascending: false }),
+    // Un error aquí no debe ganarle al 404 de un ITR ajeno: se relanza después de comprobar el ITR.
+    loadDocumentRefs(supabase, projectId, 'itr', itrId).catch((e: unknown) => (e instanceof Error ? e : new Error(String(e)))),
+    getLocale(),
+    getProjectToday(supabase, projectId),
   ])
 
-  const { data: suggestions } = await supabase
-    .from('itr_suggestions')
-    .select('id, signal_tag, signal_value, signal_unit, sampled_at, message, suggested_at, expires_at, pre_filled_data')
-    .eq('itr_id', itrId)
-    .eq('status', 'pending')
-    .order('suggested_at', { ascending: false })
+  if (!itr) notFound()
+  if (docRefs instanceof Error) throw docRefs
 
-  const docRefs = await loadDocumentRefs(supabase, projectId, 'itr', itrId)
-  const locale = await getLocale()
+  // C-41 (S06): una sola llamada para todas las URL firmadas.
+  const attachmentPaths = (rawAttachments ?? []).map(att => att.file_url)
+  const { data: signedList } = attachmentPaths.length
+    ? await supabase.storage.from('itr-attachments').createSignedUrls(attachmentPaths, 3600)
+    : { data: [] as { path: string | null; signedUrl: string }[] }
+  const signedByPath = new Map((signedList ?? []).map(s => [s.path, s.signedUrl]))
+  const attachments = (rawAttachments ?? []).map(att => ({ ...att, signed_url: signedByPath.get(att.file_url) ?? null }))
+
+  const canEdit = ['owner', 'admin', 'architect', 'leader', 'inspector'].includes(membership.role)
+  // S04 (C-01): los editores completan o cambian asignaciones de roles sin firmar.
+  const canAssign = ROLE_TIERS.editor.includes(membership.role)
+
   const signed = ((itr.itr_signatures as unknown as unknown[] | null) ?? []).length > 0
 
   return (
@@ -131,7 +141,7 @@ export default async function ItrExecutionPage({
           <ResponseConflicts
             itrId={itr.id}
             userId={ctx.userId}
-            timezone={(await getProjectToday(supabase, projectId)).timezone}
+            timezone={projectToday.timezone}
             names={Object.fromEntries((members ?? []).map(m => [m.user_id, (m.profiles as { full_name: string } | null)?.full_name ?? '']))}
             labels={Object.fromEntries(((itr.itr_templates as { itr_template_sections?: { itr_template_items: { id: string; item_number: string | null; description: string; description_es: string | null }[] }[] } | null)?.itr_template_sections ?? [])
               .flatMap(sec => sec.itr_template_items)

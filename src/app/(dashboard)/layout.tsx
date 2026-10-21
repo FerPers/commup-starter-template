@@ -7,7 +7,7 @@ import MobileMenuButton from '@/components/layout/MobileMenuButton'
 import MobileTabBar from '@/components/layout/MobileTabBar'
 import { FIELD_ROLES } from '@/lib/constants/navigation'
 import { ToastProvider } from '@/components/ui'
-import { getActiveMembership, listInactiveMemberships, listMemberships } from '@/lib/supabase/membership'
+import { getActiveMembership, getMyWorkCounts, listInactiveMemberships, listMemberships } from '@/lib/supabase/membership'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import type { OrgMemberRole } from '@/types/database'
@@ -36,37 +36,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const supabase = ctx.supabase
 
-  const { data: orgProjects } = await supabase
-    .from('projects')
-    .select('id, name')
-    .eq('org_id', ctx.orgId)
-
-  const projectIds = (orgProjects ?? []).map(p => p.id)
-  const projectNames: Record<string, string> = Object.fromEntries(
-    (orgProjects ?? []).map(p => [p.id, p.name])
-  )
-
+  // S20 (B-23): lo que no depende de los proyectos sale en paralelo con ellos (cada await secuencial paga el RTT a Supabase).
   const [
-    { count: punchCount },
-    { count: preservationCount },
+    { data: orgProjects },
     { count: unreadNotificationsCount },
     { data: org },
     memberships,
-    { data: myWorkRaw },
+    myWorkRaw,
     { data: profile },
+    pendingInvitations,
   ] = await Promise.all([
-    projectIds.length === 0
-      ? Promise.resolve({ count: 0 })
-      : supabase
-          .from('punches')
-          .select('*', { count: 'exact', head: true })
-          .in('project_id', projectIds)
-          .eq('category', 'A')
-          .in('status', ['open', 'in_progress']),
-    // S09 (B-24): misma definición de «vencida» que Mi trabajo, dashboard y snapshot (sin tolerancia de 3 días)
-    fetchPreservationDueCounts(supabase, projectIds)
-      .then(rows => ({ count: rows.reduce((a, r) => a + r.overdue, 0) }))
-      .catch(() => ({ count: 0 })),
+    supabase.from('projects').select('id, name').eq('org_id', ctx.orgId),
     supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
@@ -79,11 +59,31 @@ export default async function DashboardLayout({ children }: { children: React.Re
       .eq('id', ctx.orgId)
       .maybeSingle(),
     listMemberships(),
-    // Sprint N: contadores personales para el badge de «Mi trabajo» (RLS del usuario)
-    supabase.rpc('my_work_counts', { p_org_id: ctx.orgId }),
+    // Sprint N: contadores personales para el badge de «Mi trabajo» (RLS del usuario; S20: una vez por request)
+    getMyWorkCounts(ctx.orgId),
     supabase.from('profiles').select('full_name').eq('id', ctx.userId).maybeSingle(),
+    listInactiveMemberships().then(ms => ms.filter(m => m.state === 'invited')),
   ])
-  const pendingInvitations = (await listInactiveMemberships()).filter(m => m.state === 'invited')
+
+  const projectIds = (orgProjects ?? []).map(p => p.id)
+  const projectNames: Record<string, string> = Object.fromEntries(
+    (orgProjects ?? []).map(p => [p.id, p.name])
+  )
+
+  const [{ count: punchCount }, { count: preservationCount }] = await Promise.all([
+    projectIds.length === 0
+      ? Promise.resolve({ count: 0 })
+      : supabase
+          .from('punches')
+          .select('*', { count: 'exact', head: true })
+          .in('project_id', projectIds)
+          .eq('category', 'A')
+          .in('status', ['open', 'in_progress']),
+    // S09 (B-24): misma definición de «vencida» que Mi trabajo, dashboard y snapshot (sin tolerancia de 3 días)
+    fetchPreservationDueCounts(supabase, projectIds)
+      .then(rows => ({ count: rows.reduce((a, r) => a + r.overdue, 0) }))
+      .catch(() => ({ count: 0 })),
+  ])
   const tAccess = await getTranslations('Access')
 
   const role = ctx.role as OrgMemberRole

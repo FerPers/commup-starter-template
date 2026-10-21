@@ -7,6 +7,7 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 | Archivo | Para qué |
 |---|---|
 | `compute_system_gates` / `compute_system_gates_upto` / `compute_project_gates` | Readiness por sistema × gate (Control Tower). `_upto` evalúa hasta un orden (proveedores de dependencias, S11) |
+| `compute_project_readiness` / `compute_project_progress` | Readiness y avance físico del proyecto, set-based con una sola verificación de pertenencia (S20; banco en `scripts/loadtest/`) |
 | `org_gate_policy` / `system_pssr_status` / `system_phase_level` / `startup_prerequisites` | Política de regresión (D13), PSSR único, nivel por fase con corte de punch, prerrequisitos de arranque (S11) |
 | `approve_system_gate` / `sign_system_gate` | Aprobación y multifirma de gates |
 | `my_work_counts` | Badge y colas de «Mi trabajo» |

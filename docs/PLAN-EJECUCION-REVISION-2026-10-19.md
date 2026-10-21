@@ -51,7 +51,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S17 | Certificados por RPC | S14 | D6, D15 | ✅ **Hecha** 2026-10-20 (migración 20261112120000 en prod, 12 comprobaciones con ROLLBACK). Decisiones de Luis: Cliente = `client_rep`, Autoridad = Operaciones, invalidación = bloqueado con motivo (se desbloquea solo), fase anterior obligatoria. Detalle en la cobertura |
 | S18 | Offline por usuario (2 sesiones) | S06 | — | ✅ **Hecha** 2026-10-20 (sesión 1 sin migración; sesión 2 migración 20261113120000 en prod). Decisiones de Luis: al salir «sincronizar o descartar»; capturas de antes con confirmación; conflicto de respuesta = decide el usuario; «preparar sin red» = mis ITR pendientes (hasta 30). E-27 en pasos de arranque → S25. Detalle en la cobertura |
 | S19 | Generación masiva de ITR | S05 | — | ✅ **Hecha** 2026-10-20 (migración 20261114120000 en prod, 9 comprobaciones con ROLLBACK). Decisión de Luis: responsables por disciplina en la vista previa (vacío = sin asignar). Detalle en la cobertura |
-| S20 | Readiness a escala (2 sesiones) | S09 | — | Pendiente |
+| S20 | Readiness a escala (2 sesiones) | S09 | — | 🟡 **Sesión 1 hecha** 2026-10-20 (migración 20261115120000 en prod; readiness 18,2 → 0,1 s, avance 0,76 → 0,06 s, gates 9,4 → 3,0 s; membresía cacheada y Smart Placement). Sesión 2: gates < 1,5 s (estado materializado), B-06, B-17, B-21. Detalle en la cobertura |
 | S21 | Bus de eventos (outbox) | S03 | — | Pendiente |
 | S22 | Avisos y colas | S04, S20, S21 | D16 | Pendiente |
 | S23 | Readiness v2 (pantallas) | S20 | — | Pendiente |
