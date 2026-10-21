@@ -91,6 +91,7 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
           <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{run.number}</h1>
           <Chip tone={STATUS_TONE[run.status] ?? 'muted'}>{t(`runStatus.${run.status}`)}</Chip>
           <span style={small}>{prog.closed}/{prog.total}</span>
+          <a href={`/projects/${project.id}/startup/runs/${run.id}/pdf`} target="_blank" rel="noopener" style={{ ...btn('outline'), marginLeft: 'auto', textDecoration: 'none' }} title="PDF">PDF</a>
         </div>
         <p style={{ margin: '4px 0 0', color: 'var(--text-strong)' }}>{run.title}</p>
         <p style={{ ...small, margin: '2px 0 0' }} suppressHydrationWarning>{run.system ?? '—'} · {t('run.startedBy', { who: who(run.startedBy), when: when(run.startedAt) })}</p>

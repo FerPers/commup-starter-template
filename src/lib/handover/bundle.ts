@@ -1,6 +1,7 @@
 /**
- * ZIP del paquete de handover (S24, D17): handover.json + índice PDF + anexos (PDF de procedimientos, reportes de
- * desempeño/PTC, PSSR, certificados, ITR y los archivos de los documentos vigentes), manifest.json con el sha256 de
+ * ZIP del paquete de handover (S24, D17): handover.json + índice PDF + anexos (PDF de procedimientos y de su
+ * última ejecución, line-ups verificados, eventos de arranque, reportes de desempeño/PTC, PSSR, certificados, ITR y
+ * los archivos de los documentos vigentes), manifest.json con el sha256 de
  * cada archivo y manifest.sig (Ed25519 sobre los bytes de manifest.json).
  *
  * Corre en línea en el Worker, un sistema por paquete: los anexos se generan en lotes chicos y con topes (cantidad
@@ -10,7 +11,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { zipSync, strToU8, type Zippable } from 'fflate'
 import type { Database } from '@/types/supabase.generated'
-import { loadCertificatePdf, loadItrPdf, loadPerformancePdf, loadProcedurePdf, loadPssrPdf } from '@/lib/pdf/load'
+import { loadCertificatePdf, loadEventPdf, loadItrPdf, loadLineupPdf, loadPerformancePdf, loadProcedurePdf, loadPssrPdf, loadRunPdf } from '@/lib/pdf/load'
+import { renderEventPdf, renderLineupPdf, renderRunPdf } from '@/lib/pdf/startup-records'
 import { renderProcedurePdf } from '@/lib/pdf/procedure'
 import { renderPerformancePdf } from '@/lib/pdf/performance-report'
 import { renderPssrPdf } from '@/lib/pdf/pssr'
@@ -84,6 +86,15 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
   const omittedUpfront: { path: string; reason: string }[] = []
   const fail = (what: string) => `${what}: no encontrado`
 
+  // Los eventos del JSON no traen su id: se resuelven por número (único por proyecto).
+  const eventNumbers = pkg.systems.flatMap(s => (s.startup_events ?? []).map(e => e.number))
+  const { data: eventRows } = eventNumbers.length
+    // bounded: los eventos del paquete (in() con sus números)
+    ? await db.from('startup_events').select('id, number').eq('project_id', projectId).in('number', eventNumbers)
+    : { data: [] }
+  const eventId = new Map((eventRows ?? []).map(e => [e.number, e.id]))
+  const startup = { projectId, orgName: x.orgName, lang, t }
+
   for (const sys of pkg.systems) {
     const dir = `anexos/${safeName(sys.code)}`
     for (const p of sys.procedures ?? []) {
@@ -91,6 +102,27 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
       tasks.push({ path: `${dir}/procedimientos/${safeName(`${p.number}-R${p.revision.rev}`)}.pdf`, run: async () => {
         const r = await loadProcedurePdf(db, { projectId, procedureId: p.procedure_id, revId: p.revision!.revision_id, orgName: x.orgName, lang, t })
         return r ? renderProcedurePdf(r.input) : fail(p.number)
+      } })
+      // S24b (E-22): registro ejecutado de la última ejecución completada.
+      const run = p.last_run
+      if (run) tasks.push({ path: `${dir}/procedimientos/${safeName(run.number)}.pdf`, run: async () => {
+        const r = await loadRunPdf(db, { ...startup, runId: run.run_id })
+        return r ? renderRunPdf(r.input) : fail(run.number)
+      } })
+    }
+    for (const ls of sys.lineups ?? []) {
+      tasks.push({ path: `${dir}/lineups/${safeName(ls.number)}.pdf`, run: async () => {
+        const r = await loadLineupPdf(db, { ...startup, sheetId: ls.sheet_id })
+        return r ? renderLineupPdf(r.input) : fail(ls.number)
+      } })
+    }
+    for (const ev of sys.startup_events ?? []) {
+      const id = eventId.get(ev.number)
+      const path = `${dir}/eventos/${safeName(ev.number)}.pdf`
+      if (!id) { omittedUpfront.push({ path, reason: fail(ev.number) }); continue }
+      tasks.push({ path, run: async () => {
+        const r = await loadEventPdf(db, { ...startup, eventId: id })
+        return r ? renderEventPdf(r.input) : fail(ev.number)
       } })
     }
     for (const test of sys.performance ?? []) {

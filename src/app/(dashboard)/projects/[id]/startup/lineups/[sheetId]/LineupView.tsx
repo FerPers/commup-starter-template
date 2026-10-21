@@ -101,6 +101,7 @@ export default function LineupView({ project, sheet, items: serverItems, registe
           <Chip tone={SHEET_TONE[sheet.status] ?? 'muted'}>{t(`sheetStatus.${sheet.status}`)}</Chip>
           {sheet.stale && <Chip tone="red">{t('lineup.stale')}</Chip>}
           <span style={small}>{prog.done}/{prog.total}</span>
+          <a href={`/projects/${project.id}/startup/lineups/${sheet.id}/pdf`} target="_blank" rel="noopener" style={{ ...btn('outline'), marginLeft: 'auto', textDecoration: 'none' }} title="PDF">PDF</a>
         </div>
         <p style={{ margin: '4px 0 0', color: 'var(--text-strong)' }}>{sheet.title}</p>
         <p style={{ ...small, margin: '2px 0 0' }}>

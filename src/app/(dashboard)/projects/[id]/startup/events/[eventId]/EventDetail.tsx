@@ -74,6 +74,7 @@ export default function EventDetail({ project, event: e, params, series, names, 
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, fontFamily: 'ui-monospace, monospace', color: 'var(--text-strong)' }}>{e.number}</h1>
           <Chip tone={e.kind === 'milestone' ? 'violet' : 'muted'}>{e.kind === 'milestone' ? t(`milestone.${e.milestone}`) : t(`category.${e.category}`)}</Chip>
           <Chip tone={EVENT_TONE[e.status]}>{t(`eventStatus.${e.status}`)}</Chip>
+          <a href={`${root}/events/${e.id}/pdf`} target="_blank" rel="noopener" style={{ ...btn('outline'), marginLeft: 'auto', textDecoration: 'none' }} title="PDF">PDF</a>
         </div>
         <p style={{ margin: '4px 0 0', color: 'var(--text-strong)', fontSize: 'var(--text-base)' }}>{e.title}</p>
         <p style={{ ...small, margin: '2px 0 0' }} suppressHydrationWarning>

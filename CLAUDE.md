@@ -188,6 +188,7 @@ Rules for every new page/query/action:
 - `generate_handover_package` (esquema 3.0, solo service_role) devuelve todo F1–F8 por sistema con firmas y hashes; `src/lib/handover/generate.ts` lo empaqueta (JSON + índice PDF + ZIP) vía `bundle.ts`: anexos con los mismos cargadores que las rutas PDF (`src/lib/pdf/load.ts`), topes `MAX_ITR_PDFS` / `MAX_DOCUMENT_BYTES`, lo omitido queda en el manifiesto.
 - Firma Ed25519 (`src/lib/handover/sign.ts`, secreto `HANDOVER_ED25519_PRIVATE_KEY` = PKCS#8 base64, en Wrangler y `.env.local`): `manifest.sig` firma los bytes de `manifest.json`. `signature_hash` = sha256 de handover.json = el hash de `/verify/<hash>` (página pública, RPC `verify_handover_package` solo service_role). Clave pública en `/api/v1/handover/public-key`. Rotar la clave = nuevo `key_id`; los paquetes viejos se verifican con la pública de su fecha.
 - Un PDF nuevo que deba ir al paquete: cargador en `load.ts` (lo usan la ruta y el ZIP) + tarea en `bundle.ts`.
+- Registros de arranque imprimibles (S24b, E-22): `src/lib/pdf/startup-records.ts` (ejecución, line-up, evento); lo pendiente sale en celdas vacías para llenar a mano.
 
 ## Miembros y acceso (S15)
 

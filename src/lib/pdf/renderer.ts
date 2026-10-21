@@ -397,6 +397,38 @@ export class Renderer {
     this.moveY(rowH)
   }
 
+  /**
+   * Fila con celdas de varias líneas y bordes (S24b): para registros que se imprimen y se llenan a mano.
+   * `minHeight` deja espacio para escribir en las celdas vacías. Cada celda puede traer color y negrita propios.
+   */
+  tableRowWrapped(cols: TableCol[], cells: Array<{ text: string; color?: Color; bold?: boolean } | string>, opts?: { size?: number; minHeight?: number; bg?: Color; repeatHeader?: boolean }) {
+    const size = opts?.size ?? 8
+    const lineH = size + 2.5
+    const pad = 3
+    const norm = cells.map(c => (typeof c === 'string' ? { text: c } : c))
+    const lines = cols.map((c, i) => wrapText(norm[i]?.text ?? '', norm[i]?.bold ? this.fontBold : this.fontRegular, size, c.w - pad * 2))
+    const rowH = Math.max(opts?.minHeight ?? 0, Math.max(1, ...lines.map(l => l.length)) * lineH + pad * 2)
+    if (this.y - rowH < BOTTOM_LIMIT) {
+      this.newPage()
+      if (opts?.repeatHeader) this.tableHeader(cols)
+    }
+    if (opts?.bg) this.drawRect({ x: MARGIN, y: this.y - rowH, width: CONTENT_W, height: rowH, color: opts.bg })
+    let x = MARGIN
+    cols.forEach((c, i) => {
+      lines[i].forEach((l, j) => {
+        this.page.drawText(l, {
+          x: x + pad, y: this.y - pad - size - j * lineH, size,
+          font: norm[i]?.bold ? this.fontBold : this.fontRegular, color: norm[i]?.color ?? COLOR.text,
+        })
+      })
+      this.drawVLine(x, this.y, this.y - rowH, 0.4, COLOR.border)
+      x += c.w
+    })
+    this.drawVLine(MARGIN + CONTENT_W, this.y, this.y - rowH, 0.4, COLOR.border)
+    this.drawHLine(MARGIN, MARGIN + CONTENT_W, this.y - rowH, 0.4, COLOR.border)
+    this.moveY(rowH)
+  }
+
   // ─── Info card grid ────────────────────────────────────────────────────────
 
   /**

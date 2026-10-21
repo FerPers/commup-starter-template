@@ -11,6 +11,7 @@ import type { PerformancePdfInput } from './performance-report'
 import type { PssrPdfData } from './pssr'
 import type { CertPdfData } from './certificate'
 import type { ItrDocumentRef, ItrPdfData, ItrTestEquipmentRef } from './itr'
+import type { EventPdfInput, LineupPdfInput, RunPdfInput } from './startup-records'
 import type { Evaluation } from '@/lib/performance/catalog'
 import { PROCEDURE_SECTIONS, type ProcedureSection } from '@/lib/startup/catalog'
 
@@ -352,6 +353,128 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
       document_refs: documentRefs,
       // snapshot es jsonb: la foto de calibración que copió el trigger al registrar el equipo.
       itr_test_equipment: (itr.itr_test_equipment ?? []).map(u => ({ ...u, snapshot: u.snapshot as ItrTestEquipmentRef['snapshot'] })),
+    },
+  }
+}
+
+// ── Registros de arranque (S24b, E-22) ──────────────────────────────────────
+
+type StartupCommon = { projectId: string; orgName: string; lang: Lang; t: T }
+
+/** Ejecución de un procedimiento con sus pasos, holds, paradas y los eventos que la citan. */
+export async function loadRunPdf(db: Db, x: StartupCommon & { runId: string }): Promise<{ input: RunPdfInput; filename: string } | null> {
+  const [{ data: project }, { data: run }] = await Promise.all([
+    db.from('projects').select('code, timezone').eq('id', x.projectId).maybeSingle(),
+    db.from('procedure_runs')
+      .select('*, procedures(number, title), procedure_revisions(rev, sections, content_hash), systems(code, name)')
+      .eq('id', x.runId).eq('project_id', x.projectId).maybeSingle(),
+  ])
+  if (!project || !run) return null
+  const [{ data: steps }, { data: events }] = await Promise.all([
+    db.from('procedure_run_steps')
+      .select('ord, status, actual_value, comment, done_by, done_at, released_by, released_at, procedure_steps(action, responsible, expected_value, is_hold_point, hold_capacity, stop_criteria, tags(tag_number))')
+      .eq('run_id', x.runId).order('ord'),
+    db.from('startup_events').select('number, occurred_at, title, kind, milestone, category')
+      .eq('run_id', x.runId).eq('project_id', x.projectId).neq('status', 'voided').order('occurred_at'),
+  ])
+  const name = await profileNames(db, [
+    run.started_by, run.completed_by, run.stopped_by, run.aborted_by,
+    ...(steps ?? []).flatMap(s => [s.done_by, s.released_by]),
+  ])
+  const proc = run.procedures as unknown as { number: string; title: string }
+  const rev = run.procedure_revisions as unknown as { rev: number; sections: Record<string, string> | null; content_hash: string | null }
+  const sys = run.systems as unknown as { code: string; name: string } | null
+  return {
+    filename: `${project.code}-${run.number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    input: {
+      lang: x.lang, timezone: project.timezone, orgName: x.orgName, projectCode: project.code, label: x.t,
+      number: run.number, status: run.status,
+      procedure: { number: proc.number, title: proc.title, rev: rev.rev, hash: rev.content_hash },
+      system: sys ? `${sys.code} — ${sys.name}` : null,
+      safety: rev.sections?.safety ?? null, stopCriteria: rev.sections?.stop_criteria ?? null,
+      startedBy: name(run.started_by), startedAt: run.started_at,
+      completedBy: name(run.completed_by), completedAt: run.completed_at,
+      stoppedBy: name(run.stopped_by), stoppedAt: run.stopped_at, stopReason: run.stop_reason,
+      abortedBy: name(run.aborted_by), abortedAt: run.aborted_at, abortReason: run.abort_reason,
+      steps: (steps ?? []).map(s => {
+        const st = s.procedure_steps as unknown as { action: string; responsible: string | null; expected_value: string | null; is_hold_point: boolean; hold_capacity: string | null; stop_criteria: string | null; tags: { tag_number: string } | null }
+        return {
+          ord: s.ord, action: st.action, tag: st.tags?.tag_number ?? null, responsible: st.responsible, expected: st.expected_value, stop: st.stop_criteria,
+          hold: st.is_hold_point, holdCapacity: st.hold_capacity, status: s.status, actual: s.actual_value, comment: s.comment,
+          doneBy: name(s.done_by), doneAt: s.done_at, releasedBy: name(s.released_by), releasedAt: s.released_at,
+        }
+      }),
+      events: (events ?? []).map(e => ({
+        number: e.number, occurredAt: e.occurred_at, title: e.title,
+        label: e.kind === 'milestone' && e.milestone ? x.t(`milestone.${e.milestone}`) : e.category ? x.t(`category.${e.category}`) : '',
+      })),
+    },
+  }
+}
+
+export async function loadLineupPdf(db: Db, x: StartupCommon & { sheetId: string }): Promise<{ input: LineupPdfInput; filename: string } | null> {
+  const [{ data: project }, { data: sheet }] = await Promise.all([
+    db.from('projects').select('code, timezone').eq('id', x.projectId).maybeSingle(),
+    db.from('lineup_sheets').select('*, systems(code, name), procedures(number, title)').eq('id', x.sheetId).eq('project_id', x.projectId).maybeSingle(),
+  ])
+  if (!project || !sheet) return null
+  const [{ data: items }, { data: stale }] = await Promise.all([
+    db.from('lineup_items')
+      .select('ord, label, required_position, required_note, is_critical, found_position, remarks, set_by, set_at, verified_by, verified_at, tags(tag_number, description)')
+      .eq('sheet_id', x.sheetId).order('ord'),
+    sheet.status === 'verified' ? db.rpc('lineup_is_stale', { p_sheet_id: x.sheetId }) : Promise.resolve({ data: false }),
+  ])
+  const name = await profileNames(db, [sheet.issued_by, sheet.verified_by, ...(items ?? []).flatMap(i => [i.set_by, i.verified_by])])
+  const sys = sheet.systems as unknown as { code: string; name: string } | null
+  const proc = sheet.procedures as unknown as { number: string; title: string } | null
+  return {
+    filename: `${project.code}-${sheet.number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    input: {
+      lang: x.lang, timezone: project.timezone, orgName: x.orgName, projectCode: project.code, label: x.t,
+      number: sheet.number, title: sheet.title, status: sheet.status, purpose: sheet.purpose,
+      system: sys ? `${sys.code} — ${sys.name}` : null, procedure: proc ? `${proc.number} — ${proc.title}` : null,
+      issuedBy: name(sheet.issued_by), issuedAt: sheet.issued_at, verifiedBy: name(sheet.verified_by), verifiedAt: sheet.verified_at,
+      hash: sheet.content_hash, stale: !!stale,
+      items: (items ?? []).map(i => {
+        const tag = i.tags as unknown as { tag_number: string; description: string | null } | null
+        return {
+          ord: i.ord, tag: tag?.tag_number ?? null, description: tag?.description ?? null, label: i.label ?? '',
+          required: i.required_position, requiredNote: i.required_note, critical: i.is_critical, found: i.found_position, remarks: i.remarks,
+          setBy: name(i.set_by), setAt: i.set_at, verifiedBy: name(i.verified_by), verifiedAt: i.verified_at,
+        }
+      }),
+    },
+  }
+}
+
+export async function loadEventPdf(db: Db, x: StartupCommon & { eventId: string }): Promise<{ input: EventPdfInput; filename: string } | null> {
+  const [{ data: project }, { data: ev }] = await Promise.all([
+    db.from('projects').select('code, timezone').eq('id', x.projectId).maybeSingle(),
+    db.from('startup_events').select('*, systems(code, name), procedure_runs(number)').eq('id', x.eventId).eq('project_id', x.projectId).maybeSingle(),
+  ])
+  if (!project || !ev) return null
+  const [{ data: params }, { data: tags }, name] = await Promise.all([
+    db.from('startup_event_params').select('label, value, value_text, unit, quality, sampled_at, offset_s, source').eq('event_id', x.eventId).order('created_at'),
+    db.from('startup_event_tags').select('tags(tag_number)').eq('event_id', x.eventId),
+    profileNames(db, [ev.recorded_by, ev.witness_by, ev.voided_by]),
+  ])
+  const sys = ev.systems as unknown as { code: string; name: string } | null
+  const run = ev.procedure_runs as unknown as { number: string } | null
+  return {
+    filename: `${project.code}-${ev.number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    input: {
+      lang: x.lang, timezone: project.timezone, orgName: x.orgName, projectCode: project.code, label: x.t,
+      number: ev.number, kind: ev.kind as 'milestone' | 'free', milestone: ev.milestone, category: ev.category, status: ev.status,
+      title: ev.title, description: ev.description, occurredAt: ev.occurred_at,
+      system: sys ? `${sys.code} — ${sys.name}` : null, run: run?.number ?? null,
+      tags: (tags ?? []).map(r => (r.tags as unknown as { tag_number: string } | null)?.tag_number).filter((v): v is string => !!v).sort(),
+      recordedBy: name(ev.recorded_by), recordedAt: ev.recorded_at,
+      witnessCapacity: ev.witness_capacity, witnessBy: name(ev.witness_by), witnessAt: ev.witness_at,
+      voidedBy: name(ev.voided_by), voidedAt: ev.voided_at, voidReason: ev.void_reason,
+      params: (params ?? []).map(p => ({
+        label: p.label, value: p.value === null ? null : Number(p.value), valueText: p.value_text, unit: p.unit, quality: p.quality,
+        sampledAt: p.sampled_at, offsetS: p.offset_s, source: p.source,
+      })),
     },
   }
 }
