@@ -22,11 +22,11 @@ export default async function SystemGatesPage({
 
   const { data: system } = await supabase
     .from('systems')
-    .select('id, code, name, project_id, areas(code, name), projects(id, code, name, org_id)')
+    .select('id, code, name, project_id, areas(code, name), projects(id, code, name, org_id, timezone)')
     .eq('id', systemId)
     .single()
 
-  const project = system?.projects as { id: string; code: string; name: string; org_id: string } | null | undefined
+  const project = system?.projects as { id: string; code: string; name: string; org_id: string; timezone: string | null } | null | undefined
   if (!system || !project || project.org_id !== ctx.orgId) notFound()
   const area = system.areas as { code: string; name: string } | null
 
@@ -100,7 +100,7 @@ export default async function SystemGatesPage({
       userId={ctx.userId}
       caps={await loadMyCapacities(ctx.supabase, project.id)}
       canEdit={EDITOR_ROLES.includes(ctx.role)}
-      project={{ id: project.id, code: project.code, name: project.name }}
+      project={{ id: project.id, code: project.code, name: project.name, timezone: project.timezone }}
       system={{ id: system.id, code: system.code, name: system.name, area: area ? `${area.code} — ${area.name}` : '' }}
       gates={(gates ?? []) as unknown as SystemGate[]}
       names={names}

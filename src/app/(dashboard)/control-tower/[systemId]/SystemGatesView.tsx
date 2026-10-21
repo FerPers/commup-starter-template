@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatInZone } from '@/lib/time/zone'
 import { MILESTONES, type OwnershipStage } from '@/lib/startup/catalog'
 import { StageChip } from '@/app/(dashboard)/projects/[id]/startup/operations/ownership-ui'
 import { Chip } from '@/app/(dashboard)/projects/[id]/daily/daily-ui'
@@ -49,7 +50,7 @@ type Props = {
   role: string
   userId: string
   canEdit: boolean
-  project: { id: string; code: string; name: string }
+  project: { id: string; code: string; name: string; timezone: string | null }
   system: { id: string; code: string; name: string; area: string }
   gates: SystemGate[]
   names: Record<string, string>
@@ -127,7 +128,9 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
 
   const base = { projectId: project.id, systemId: system.id }
   const who = (id: string | undefined) => (id ? names[id] : undefined) ?? t('unknownUser')
-  const when = (iso: string | undefined) => (iso ? new Date(iso).toLocaleString() : '')
+  // S22 (D-36): con la zona del proyecto y rotulada (antes toLocaleString + suppressHydrationWarning).
+  const locale = useLocale()
+  const when = (iso: string | undefined) => (iso ? formatInZone(iso, project.timezone, locale) : '')
 
   function run(fn: () => Promise<{ error?: string }>) {
     setError(null)
@@ -382,7 +385,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
         if (attId) {
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={small} suppressHydrationWarning>“{String(d.comment)}” — {who(d.attested_by as string)}, {when(d.attested_at as string)}</span>
+              <span style={small}>“{String(d.comment)}” — {who(d.attested_by as string)}, {when(d.attested_at as string)}</span>
               <div style={{ display: 'flex', gap: 14 }}>
                 <button type="button" style={{ ...linkStyle, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => openEvidence(String(d.file_path))}>{t('attest.view')}</button>
@@ -479,8 +482,8 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
             return (
               <div key={m} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: ev?.status === 'witnessed' ? 'var(--success-50)' : ev ? '#fffbeb' : 'transparent' }}>
                 <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>{t(`milestones.${m}`)}</div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }} suppressHydrationWarning>
-                  {ev ? <Link href={`/projects/${project.id}/startup/events/${ev.id}`} style={{ color: 'inherit' }}>{ev.status === 'witnessed' ? '✓ ' : '⏳ '}{new Date(ev.occurredAt).toLocaleDateString()}</Link> : '—'}
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>
+                  {ev ? <Link href={`/projects/${project.id}/startup/events/${ev.id}`} style={{ color: 'inherit' }}>{ev.status === 'witnessed' ? '✓ ' : '⏳ '}{formatInZone(ev.occurredAt, project.timezone, locale, false)}</Link> : '—'}
                 </div>
               </div>
             )
@@ -568,7 +571,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                     <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)', fontWeight: 600 }}>{t('signatures')}</span>
                     <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
                       {g.approval.signatures.map(sg => (
-                        <li key={sg.capacity} suppressHydrationWarning>
+                        <li key={sg.capacity}>
                           <strong style={{ color: 'var(--text-strong)' }}>{t(`capacity.${sg.capacity}`)}</strong>:{' '}
                           {t('signedBy', { name: sg.signer_company ? `${who(sg.user_id)} · ${sg.signer_company}` : who(sg.user_id), role: sg.user_role, date: when(sg.signed_at) })}
                           {sg.comments && <> — “{sg.comments}”</>}

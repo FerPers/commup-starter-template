@@ -188,5 +188,8 @@ AS $function$
         and ((pc.operations_signed_by is null and public.has_capacity(pc.project_id, 'operations'))
           or (pc.client_signed_by is null and public.has_capacity(pc.project_id, 'client_rep')))
     )
-  );
+  )
+  -- S22 (D-04/H-02): colas de readiness, misma fuente que la lista de Mi trabajo.
+  || (SELECT COALESCE(jsonb_object_agg(q.queue, q.n), '{}'::jsonb)
+      FROM (SELECT i.queue, COUNT(*) AS n FROM public.my_readiness_items(p_org_id) i GROUP BY i.queue) q);
 $function$;

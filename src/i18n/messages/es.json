@@ -2397,7 +2397,14 @@
       "milestones": "hitos por atestiguar",
       "transfers": "Traspasos por firmar",
       "performanceDecide": "Resultados de desempeño",
-      "performanceSign": "PTC por firmar"
+      "performanceSign": "PTC por firmar",
+      "gatesApprove": "gates por aprobar",
+      "gatesCosign": "gates por co-firmar",
+      "gatesRegressed": "gates en regresión",
+      "registersAuthorize": "registros por autorizar",
+      "registersVerify": "registros por verificar",
+      "dailyReports": "reportes diarios por emitir",
+      "tqAnswered": "TQ respondidas"
     },
     "queues": {
       "execute": "ITRs por ejecutar",
@@ -2417,7 +2424,14 @@
       "milestones": "Hitos de arranque por atestiguar",
       "transfers": "Traspasos de propiedad por firmar",
       "performanceDecide": "Pruebas de desempeño por decidir",
-      "performanceSign": "Certificados PTC por firmar"
+      "performanceSign": "Certificados PTC por firmar",
+      "gatesApprove": "Gates listos para aprobar",
+      "gatesCosign": "Gates por co-firmar",
+      "gatesRegressed": "Gates en regresión o por revisar",
+      "registersAuthorize": "Registros por autorizar",
+      "registersVerify": "Registros por verificar",
+      "dailyReports": "Reportes diarios por emitir",
+      "tqAnswered": "TQ respondidas por cerrar"
     },
     "empty": {
       "execute": "No tienes ITRs pendientes de ejecución.",
@@ -2437,7 +2451,14 @@
       "milestones": "No hay hitos esperando tu firma.",
       "transfers": "Nada por firmar.",
       "performanceDecide": "Nada por decidir.",
-      "performanceSign": "Nada por firmar."
+      "performanceSign": "Nada por firmar.",
+      "gatesApprove": "Ningún gate espera tu aprobación.",
+      "gatesCosign": "Ningún gate espera tu firma.",
+      "gatesRegressed": "Ningún gate aprobado en regresión.",
+      "registersAuthorize": "Ningún registro por autorizar.",
+      "registersVerify": "Ningún registro por verificar.",
+      "dailyReports": "No hay reportes en borrador.",
+      "tqAnswered": "No hay TQ respondidas por cerrar."
     },
     "due": {
       "overdue": "vence {date}",
@@ -2454,7 +2475,15 @@
       "receive": "Recibir",
       "release": "Liberar",
       "witness": "Atestiguar",
-      "decide": "Decidir"
+      "decide": "Decidir",
+      "approve": "Aprobar",
+      "cosign": "Co-firmar",
+      "review": "Revisar",
+      "authorize": "Autorizar",
+      "issue": "Emitir",
+      "close": "Cerrar",
+      "regressed": "En regresión",
+      "needsReview": "Condición nueva"
     },
     "punchStatus": {
       "open": "Abierto",
@@ -2468,6 +2497,12 @@
       "day": "Día",
       "night": "Noche",
       "other": "Turno"
+    },
+    "groups": {
+      "execute": "Ejecutar",
+      "verify": "Verificar",
+      "sign": "Firmar",
+      "decide": "Decidir"
     }
   },
   "MobileTabBar": {
@@ -5132,5 +5167,46 @@
     "seeAll": "Ver todos",
     "samePerson": "Cada rol de firma lo asume una persona distinta.",
     "error": "No se pudo calcular la vista previa."
+  },
+  "Inbox": {
+    "all": "Todas",
+    "unread": "Sin leer",
+    "allKinds": "Todos los tipos",
+    "emptyUnread": "No tienes notificaciones sin leer",
+    "empty": "No tienes notificaciones",
+    "loading": "Cargando…",
+    "loadMore": "Cargar más",
+    "markRead": "Marcar como leída",
+    "read": "Leída",
+    "kinds": {
+      "itr_signature_revoked": "Firma ITR revocada",
+      "itr_assignment_changed": "Asignación ITR",
+      "itr_bulk_assigned": "ITR asignados",
+      "certificate_revoked": "Certificado revocado",
+      "certificate_reopened": "Certificado reabierto",
+      "cert_issued": "Certificado emitido y firmado",
+      "cert_signature_requested": "Firma de certificado solicitada",
+      "punch_assigned": "Punch asignado",
+      "punch_cat_a": "Punch Cat A",
+      "preservation_overdue": "Preservación vencida",
+      "pssr_review_overdue": "PSSR vencido",
+      "pssr_submitted_for_approval": "PSSR enviado para aprobación",
+      "pssr_approved": "PSSR aprobado",
+      "pssr_rejected": "PSSR rechazado",
+      "constraint_overdue": "Restricción vencida",
+      "gate_cosign": "Gate por co-firmar",
+      "gate_ready": "Gate listo",
+      "gate_regressed": "Gate en regresión",
+      "transfer_to_sign": "Traspaso por firmar",
+      "ptc_to_sign": "PTC por firmar",
+      "hold_to_release": "Hold point",
+      "milestone_to_witness": "Hito por atestiguar",
+      "tq_answered": "TQ respondida",
+      "action_assigned": "Acción asignada",
+      "action_to_verify": "Acción por verificar",
+      "register_to_authorize": "Registro por autorizar",
+      "register_to_verify": "Registro por verificar"
+    },
+    "markAll": "Marcar todas"
   }
 }

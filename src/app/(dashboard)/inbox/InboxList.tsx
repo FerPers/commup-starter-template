@@ -2,6 +2,9 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { NOTIFICATION_KINDS } from '@/lib/notifications/topics'
+import { useLocalTime } from '@/lib/use-local-time'
 import { Check, Filter } from 'lucide-react'
 import {
   markNotificationRead,
@@ -10,29 +13,8 @@ import {
   type NotificationRow,
 } from '@/app/actions/notifications'
 
-const KIND_LABELS: Record<string, string> = {
-  itr_signature_revoked: 'Firma ITR revocada',
-  itr_assignment_changed: 'Asignación ITR',
-  certificate_revoked: 'Certificado revocado',
-  certificate_reopened: 'Certificado reabierto',
-  cert_issued: 'Certificado emitido y firmado',
-  punch_assigned: 'Punch asignado',
-  cert_signature_requested: 'Firma de certificado solicitada',
-  preservation_overdue: 'Preservación vencida',
-  pssr_review_overdue: 'PSSR vencido',
-  pssr_submitted_for_approval: 'PSSR enviado para aprobación',
-  pssr_approved: 'PSSR aprobado',
-  pssr_rejected: 'PSSR rechazado',
-  constraint_overdue: 'Restricción vencida',
-}
-
-const KIND_FILTER_OPTIONS = Object.entries(KIND_LABELS)
-
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-}
-
+// S22 (D-36): etiquetas traducidas y todos los tipos (también los de readiness); la hora en la zona del navegador
+// (useLocalTime) en vez de toLocale* sin zona.
 export default function InboxList({
   initialItems,
   initialHasMore,
@@ -43,6 +25,7 @@ export default function InboxList({
   totalCount: number
 }) {
   const router = useRouter()
+  const t = useTranslations('Inbox')
   const [items, setItems] = useState<NotificationRow[]>(initialItems)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
@@ -123,7 +106,7 @@ export default function InboxList({
               }}
             >
               <Filter size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-              Todas
+              {t('all')}
             </button>
             <button
               onClick={() => setFilter('unread')}
@@ -136,7 +119,7 @@ export default function InboxList({
                 cursor: 'pointer',
               }}
             >
-              Sin leer
+              {t('unread')}
             </button>
           </div>
           <select
@@ -153,9 +136,9 @@ export default function InboxList({
               cursor: 'pointer',
             }}
           >
-            <option value="">Todos los tipos</option>
-            {KIND_FILTER_OPTIONS.map(([k, label]) => (
-              <option key={k} value={k}>{label}</option>
+            <option value="">{t('allKinds')}</option>
+            {NOTIFICATION_KINDS.map(k => (
+              <option key={k} value={k}>{t(`kinds.${k}`)}</option>
             ))}
           </select>
           {unreadCount > 0 && (
@@ -176,7 +159,7 @@ export default function InboxList({
                 gap: 6,
               }}
             >
-              <Check size={14} /> Marcar todas
+              <Check size={14} /> {t('markAll')}
             </button>
           )}
         </div>
@@ -185,7 +168,7 @@ export default function InboxList({
       <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
         {filtered.length === 0 ? (
           <p style={{ padding: 48, textAlign: 'center', fontSize: 14, color: 'var(--text-muted)' }}>
-            {filter === 'unread' ? 'No tienes notificaciones sin leer' : 'No tienes notificaciones'}
+            {filter === 'unread' ? t('emptyUnread') : t('empty')}
           </p>
         ) : (
           filtered.map(n => (
@@ -216,7 +199,7 @@ export default function InboxList({
               cursor: isLoadingMore ? 'wait' : 'pointer',
             }}
           >
-            {isLoadingMore ? 'Cargando…' : 'Cargar más'}
+            {isLoadingMore ? t('loading') : t('loadMore')}
           </button>
         </div>
       )}
@@ -235,6 +218,8 @@ function InboxRow({
   onOpen: () => void
   onMarkRead: () => void
 }) {
+  const t = useTranslations('Inbox')
+  const when = useLocalTime()
   const [hover, setHover] = useState(false)
   const unread = !n.read_at
 
@@ -272,7 +257,7 @@ function InboxRow({
             <button
               onClick={e => { e.stopPropagation(); onMarkRead() }}
               disabled={isPending}
-              title="Marcar como leída"
+              title={t('markRead')}
               style={{
                 padding: '3px 8px',
                 border: '1px solid var(--border)',
@@ -287,7 +272,7 @@ function InboxRow({
                 gap: 4,
               }}
             >
-              <Check size={11} /> Leída
+              <Check size={11} /> {t('read')}
             </button>
           )}
           <span style={{
@@ -299,7 +284,7 @@ function InboxRow({
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
           }}>
-            {KIND_LABELS[n.kind] ?? n.kind}
+            {t.has(`kinds.${n.kind}`) ? t(`kinds.${n.kind}`) : n.kind}
           </span>
         </div>
       </div>
@@ -309,7 +294,7 @@ function InboxRow({
         </p>
       )}
       <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>
-        {formatDate(n.created_at)}
+        {when(n.created_at)}
       </span>
     </div>
   )

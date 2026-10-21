@@ -234,12 +234,9 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close()
   const data = event.notification.data || {}
-  let target = data.url || '/'
+  const target = data.url || '/'
 
   if (event.action === 'dismiss') return
-  if (event.action === 'complete' && data.type === 'ITR' && data.entity_id) {
-    target = `/itrs/${data.entity_id}/capture`
-  }
 
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
@@ -254,23 +251,12 @@ self.addEventListener('notificationclick', event => {
   })())
 })
 
+// S22 (G-22): solo «Abrir» y «Cerrar», con los textos que manda el servidor (antes había un «Completar» que solo
+// abría la URL y una rama a /itrs/<id>/capture, que no existe).
 function buildActions(payload) {
-  switch (payload.type) {
-    case 'ITR_RETURNED':
-      return [
-        { action: 'view', title: 'Ver ITR' },
-        { action: 'dismiss', title: 'Cerrar' },
-      ]
-    case 'PUNCH_ASSIGNED':
-    case 'PUNCH_CAT_A':
-      return [
-        { action: 'view', title: 'Ver Punch' },
-        { action: 'complete', title: 'Completar' },
-      ]
-    case 'CERT_READY':
-      return [{ action: 'view', title: 'Ver Certificado' }]
-    default:
-      return [{ action: 'view', title: 'Abrir' }]
-  }
+  const labels = payload.labels || {}
+  return [
+    { action: 'view', title: labels.open || 'Abrir' },
+    { action: 'dismiss', title: labels.dismiss || 'Cerrar' },
+  ]
 }
-

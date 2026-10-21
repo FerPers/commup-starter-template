@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Json } from '@/types/supabase.generated'
 import { isAllowedPushEndpoint } from '@/lib/push/endpoint'
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { DEFAULT_TOPICS } from '@/lib/notifications/topics'
 
 /**
  * POST /api/push/subscribe — registra/upsertea una PushSubscription para el usuario actual.
@@ -35,7 +36,8 @@ export async function POST(req: NextRequest) {
     p_endpoint: body.endpoint,
     p_p256dh: body.p256dh,
     p_auth_secret: body.auth,
-    p_topics: body.topics ?? ['itr_returned', 'punch_cat_a', 'cert_ready'],
+    // S22 (I-28): temas que existen (categorías de aviso), no eventos que nunca se emitían.
+    p_topics: body.topics ?? DEFAULT_TOPICS,
     p_device_info: body.device_info ?? {},
   })
 

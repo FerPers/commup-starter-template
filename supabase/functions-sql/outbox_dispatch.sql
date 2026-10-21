@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION public.outbox_dispatch(p_limit integer DEFAULT 5000)
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
 DECLARE
-  v_events integer; v_deliveries integer; v_push integer; v_wf uuid[]; v_due boolean;
+  v_events integer; v_deliveries integer; v_wf uuid[]; v_due boolean;
   v_key text; v_wf_url text; v_hook_url text; v_id uuid; v_calls integer := 0;
 BEGIN
   WITH ev AS MATERIALIZED (
@@ -24,18 +24,13 @@ BEGIN
      AND ('*' = ANY (s.event_types) OR ev.event_type = ANY (s.event_types))
     ON CONFLICT (subscription_id, domain_event_id) DO NOTHING
     RETURNING 1
-  ), po AS (
-    INSERT INTO push_outbox (event_id)
-    SELECT ev.id FROM ev WHERE ev.event_type = ANY (public.push_event_types())
-    ON CONFLICT (event_id) DO NOTHING
-    RETURNING 1
   ), up AS (
     UPDATE domain_events d SET dispatched_at = now() FROM ev WHERE d.id = ev.id RETURNING 1
   )
-  SELECT (SELECT COUNT(*) FROM up), (SELECT COUNT(*) FROM dl), (SELECT COUNT(*) FROM po),
+  SELECT (SELECT COUNT(*) FROM up), (SELECT COUNT(*) FROM dl),
          (SELECT array_agg(ev.id) FROM ev WHERE EXISTS (
             SELECT 1 FROM workflow_rules r WHERE r.org_id = ev.org_id AND r.enabled AND r.trigger_event = ev.event_type))
-    INTO v_events, v_deliveries, v_push, v_wf;
+    INTO v_events, v_deliveries, v_wf;
 
   SELECT EXISTS (SELECT 1 FROM webhook_deliveries w WHERE w.status = 'pending' AND w.next_retry_at <= now()) INTO v_due;
 
@@ -65,7 +60,7 @@ BEGIN
     END IF;
   END IF;
 
-  RETURN jsonb_build_object('events', v_events, 'deliveries', v_deliveries, 'push', v_push,
+  RETURN jsonb_build_object('events', v_events, 'deliveries', v_deliveries,
                             'workflow_events', cardinality(COALESCE(v_wf, '{}')), 'http_calls', v_calls);
 END;
 $function$;

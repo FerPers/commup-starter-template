@@ -2397,7 +2397,14 @@
       "milestones": "milestones to witness",
       "transfers": "Transfers to sign",
       "performanceDecide": "Performance results",
-      "performanceSign": "PTC to sign"
+      "performanceSign": "PTC to sign",
+      "gatesApprove": "gates to approve",
+      "gatesCosign": "gates to co-sign",
+      "gatesRegressed": "regressed gates",
+      "registersAuthorize": "registers to authorize",
+      "registersVerify": "registers to verify",
+      "dailyReports": "daily reports to issue",
+      "tqAnswered": "answered TQs"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2417,7 +2424,14 @@
       "milestones": "Start-up milestones to witness",
       "transfers": "Ownership transfers to sign",
       "performanceDecide": "Performance tests to decide",
-      "performanceSign": "PTC certificates to sign"
+      "performanceSign": "PTC certificates to sign",
+      "gatesApprove": "Gates ready to approve",
+      "gatesCosign": "Gates to co-sign",
+      "gatesRegressed": "Regressed gates or gates to review",
+      "registersAuthorize": "Registers to authorize",
+      "registersVerify": "Registers to verify",
+      "dailyReports": "Daily reports to issue",
+      "tqAnswered": "Answered TQs to close"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -2437,7 +2451,14 @@
       "milestones": "No milestones waiting for you.",
       "transfers": "Nothing to sign.",
       "performanceDecide": "Nothing to decide.",
-      "performanceSign": "Nothing to sign."
+      "performanceSign": "Nothing to sign.",
+      "gatesApprove": "No gate is waiting for your approval.",
+      "gatesCosign": "No gate is waiting for your signature.",
+      "gatesRegressed": "No approved gate has regressed.",
+      "registersAuthorize": "No registers to authorize.",
+      "registersVerify": "No registers to verify.",
+      "dailyReports": "No draft daily reports.",
+      "tqAnswered": "No answered TQs to close."
     },
     "due": {
       "overdue": "due {date}",
@@ -2454,7 +2475,15 @@
       "receive": "Receive",
       "release": "Release",
       "witness": "Witness",
-      "decide": "Decide"
+      "decide": "Decide",
+      "approve": "Approve",
+      "cosign": "Co-sign",
+      "review": "Review",
+      "authorize": "Authorize",
+      "issue": "Issue",
+      "close": "Close",
+      "regressed": "Regressed",
+      "needsReview": "New condition"
     },
     "punchStatus": {
       "open": "Open",
@@ -2468,6 +2497,12 @@
       "day": "Day",
       "night": "Night",
       "other": "Shift"
+    },
+    "groups": {
+      "execute": "Execute",
+      "verify": "Verify",
+      "sign": "Sign",
+      "decide": "Decide"
     }
   },
   "MobileTabBar": {
@@ -5132,5 +5167,46 @@
     "seeAll": "See all",
     "samePerson": "Each signing role must be a different person.",
     "error": "Could not compute the preview."
+  },
+  "Inbox": {
+    "all": "All",
+    "unread": "Unread",
+    "allKinds": "All types",
+    "emptyUnread": "You have no unread notifications",
+    "empty": "You have no notifications",
+    "loading": "Loading…",
+    "loadMore": "Load more",
+    "markRead": "Mark as read",
+    "read": "Read",
+    "kinds": {
+      "itr_signature_revoked": "ITR signature revoked",
+      "itr_assignment_changed": "ITR assignment",
+      "itr_bulk_assigned": "ITRs assigned",
+      "certificate_revoked": "Certificate revoked",
+      "certificate_reopened": "Certificate reopened",
+      "cert_issued": "Certificate issued and signed",
+      "cert_signature_requested": "Certificate signature requested",
+      "punch_assigned": "Punch assigned",
+      "punch_cat_a": "Cat A punch",
+      "preservation_overdue": "Preservation overdue",
+      "pssr_review_overdue": "PSSR overdue",
+      "pssr_submitted_for_approval": "PSSR submitted for approval",
+      "pssr_approved": "PSSR approved",
+      "pssr_rejected": "PSSR rejected",
+      "constraint_overdue": "Constraint overdue",
+      "gate_cosign": "Gate to co-sign",
+      "gate_ready": "Gate ready",
+      "gate_regressed": "Gate regressed",
+      "transfer_to_sign": "Transfer to sign",
+      "ptc_to_sign": "PTC to sign",
+      "hold_to_release": "Hold point",
+      "milestone_to_witness": "Milestone to witness",
+      "tq_answered": "TQ answered",
+      "action_assigned": "Action assigned",
+      "action_to_verify": "Action to verify",
+      "register_to_authorize": "Register to authorize",
+      "register_to_verify": "Register to verify"
+    },
+    "markAll": "Mark all"
   }
 }

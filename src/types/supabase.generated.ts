@@ -3902,6 +3902,29 @@ export type Database = {
           },
         ]
       }
+      notification_push_outbox: {
+        Row: {
+          notification_id: string
+          queued_at: string
+        }
+        Insert: {
+          notification_id: string
+          queued_at?: string
+        }
+        Update: {
+          notification_id?: string
+          queued_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_push_outbox_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: true
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -7296,29 +7319,6 @@ export type Database = {
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      push_outbox: {
-        Row: {
-          event_id: string
-          queued_at: string
-        }
-        Insert: {
-          event_id: string
-          queued_at?: string
-        }
-        Update: {
-          event_id?: string
-          queued_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_outbox_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: true
-            referencedRelation: "domain_events"
             referencedColumns: ["id"]
           },
         ]
@@ -12220,6 +12220,10 @@ export type Database = {
         Args: { p_capacity: string }
         Returns: string[]
       }
+      capacity_holders: {
+        Args: { p_capacity: string; p_project_id: string }
+        Returns: string[]
+      }
       certificate_blocker: {
         Args: {
           p_justified: string[]
@@ -12237,17 +12241,18 @@ export type Database = {
         Returns: string
       }
       certificate_role_capacity: { Args: { p_role: string }; Returns: string }
-      claim_push_events: {
+      claim_push_notifications: {
         Args: { p_limit?: number }
         Returns: {
-          aggregate_id: string
-          aggregate_type: string
-          event_type: string
+          body: string
+          created_at: string
           id: string
-          occurred_at: string
+          kind: string
+          link_url: string
           org_id: string
           payload: Json
-          project_id: string
+          recipient_user_id: string
+          title: string
         }[]
       }
       claim_webhook_deliveries: {
@@ -12704,6 +12709,14 @@ export type Database = {
           signature: string
         }[]
       }
+      gate_approvers: {
+        Args: { p_gate_id: string; p_project_id: string }
+        Returns: string[]
+      }
+      gate_cosigners: {
+        Args: { p_capacity: string; p_gate_id: string; p_project_id: string }
+        Returns: string[]
+      }
       gate_plan_context: {
         Args: { p_gate_id: string; p_system_id: string }
         Returns: Record<string, unknown>
@@ -12711,6 +12724,7 @@ export type Database = {
       gate_status_audit: { Args: { p_project_id: string }; Returns: Json }
       gate_status_compute: { Args: { p_system_id: string }; Returns: Json }
       gate_status_mark: { Args: { p_system_ids: string[] }; Returns: undefined }
+      gate_status_refresh_dirty: { Args: never; Returns: number }
       gate_status_systems: {
         Args: { p_rows: Json; p_table: string }
         Returns: string[]
@@ -12953,6 +12967,19 @@ export type Database = {
           designated: boolean
         }[]
       }
+      my_readiness_items: {
+        Args: { p_org_id: string }
+        Returns: {
+          entity_id: string
+          project_id: string
+          queue: string
+          ref: string
+          since: string
+          system_code: string
+          system_id: string
+          title: string
+        }[]
+      }
       my_work_counts: { Args: { p_org_id: string }; Returns: Json }
       new_performance_revision: {
         Args: { p_reason: string; p_test_id: string }
@@ -12969,6 +12996,19 @@ export type Database = {
       notify_constraints_overdue: { Args: never; Returns: Json }
       notify_preservation_overdue: { Args: never; Returns: Json }
       notify_pssr_reviews_overdue: { Args: never; Returns: Json }
+      notify_users: {
+        Args: {
+          p_body: string
+          p_dedupe_key?: string
+          p_kind: string
+          p_link: string
+          p_org_id: string
+          p_payload?: Json
+          p_title: string
+          p_users: string[]
+        }
+        Returns: number
+      }
       open_shift_handover: {
         Args: {
           p_project_id: string
@@ -13071,6 +13111,10 @@ export type Database = {
           status: Database["public"]["Enums"]["punch_status"]
         }[]
       }
+      project_role_members: {
+        Args: { p_project_id: string; p_roles: string[] }
+        Returns: string[]
+      }
       project_timezone: { Args: { p_project_id: string }; Returns: string }
       project_today: { Args: { p_project_id: string }; Returns: string }
       propose_vendor_recommendation: {
@@ -13104,7 +13148,6 @@ export type Database = {
           status: Database["public"]["Enums"]["punch_status"]
         }[]
       }
-      push_event_types: { Args: never; Returns: string[] }
       record_competency: {
         Args: {
           p_assessed_at?: string

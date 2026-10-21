@@ -128,10 +128,16 @@ Rules for every new page/query/action:
 
 ## Bus de eventos (S21)
 
-- `domain_events` es un **outbox**: los triggers solo insertan (`emit_domain_event` para cambios de fila + transiciones de estado; `emit_business_event` para gates y traspasos) y `outbox_dispatch()` (pg_cron `domain-events-outbox`, cada minuto) reparte: entregas de webhook, `push_outbox` y llamadas a `evaluate-workflow` solo si hay una regla activa. **Nunca agregar un `net.http_post` por fila.**
-- Catálogo v1 único en `src/lib/constants/domain-events.ts` (entidades en singular, eventos de negocio, `PUSH_EVENT_TYPES` = SQL `push_event_types()`); un evento nuevo va en la función SQL y en el catálogo (test de paridad).
+- `domain_events` es un **outbox**: los triggers solo insertan (`emit_domain_event` para cambios de fila + transiciones de estado; `emit_business_event` para gates y traspasos) y `outbox_dispatch()` (pg_cron `domain-events-outbox`, cada minuto) reparte: entregas de webhook y llamadas a `evaluate-workflow` solo si hay una regla activa. **Nunca agregar un `net.http_post` por fila.**
+- Catálogo v1 único en `src/lib/constants/domain-events.ts` (entidades en singular, eventos de negocio); un evento nuevo va en la función SQL y en el catálogo (test de paridad).
 - Importaciones masivas: `createAdminClient({ bulk: '<tipo>' })` (sin eventos por fila) + `emitImportSummary`. La cabecera solo vale con service role.
 - Webhooks firmados `X-CommUp-Signature: t=<unix>,v1=<hmac>` sobre `<unix>.<body>`; dedupe por `X-CommUp-Event-Id`. Retención diaria `cleanup_event_retention()` (eventos 365 días).
+
+## Avisos y colas (S22, D16)
+
+- **Una obligación nueva para otra persona = un aviso en `notifications`**, creado en SQL (`notify_obligation_trg` por tabla; `gate_status_transition_trg` para gate listo / en regresión) con `notify_users` (nunca al actor; dedupe 24 h por clave). Destinatarios con las mismas reglas que la RPC: `capacity_holders`, `project_role_members`, `gate_approvers`, `gate_cosigners`. Un tipo nuevo va en `src/lib/notifications/topics.ts` (tema de push + etiqueta `Inbox.kinds`, test de paridad).
+- Push = `notifications` → `notification_push_outbox` (solo con suscripción activa) → cron `/api/cron/push-dispatch` (`claim_push_notifications`), filtrado por los temas que eligió el usuario.
+- Colas de readiness de Mi trabajo en `my_readiness_items` (contador y lista de la misma fuente); el badge suma solo lo personal (`badgeTotal`). pg_cron `gate-status-refresh` mantiene al día el estado de gates.
 
 ## Readiness gates (hold points) — fase 1 del plan readiness
 

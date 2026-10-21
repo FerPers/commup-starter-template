@@ -53,7 +53,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S19 | Generación masiva de ITR | S05 | — | ✅ **Hecha** 2026-10-20 (migración 20261114120000 en prod, 9 comprobaciones con ROLLBACK). Decisión de Luis: responsables por disciplina en la vista previa (vacío = sin asignar). Detalle en la cobertura |
 | S20 | Readiness a escala (2 sesiones) | S09 | — | ✅ **Hecha** 2026-10-20 (migraciones 20261115120000, 20261116120000 y 20261116130000 en prod). LOADTEST con RLS: gates 9,4 s → 2 ms (estado materializado), readiness 18,2 s → 0,09 s, avance 0,76 → 0,05 s, Mi trabajo 0,19 s. B-17 revertido (rompía embeds de PostgREST) → pendiente. Detalle en la cobertura |
 | S21 | Bus de eventos (outbox) | S03 | — | ✅ **Hecha** 2026-10-20 (migración 20261117120000 en prod + webhook-dispatcher y evaluate-workflow desplegados). Outbox con pg_cron por minuto, 0 HTTP sin suscriptores, catálogo v1 en singular + eventos de negocio, push con cola, retención. Detalle en la cobertura |
-| S22 | Avisos y colas | S04, S20, S21 | D16 | Pendiente |
+| S22 | Avisos y colas | S04, S20, S21 | D16 | 🟡 **Hecha salvo el correo** 2026-10-20 (migración 20261119120000 en prod): colas de readiness en Mi trabajo, avisos por cada obligación nueva y por transiciones de gates, push desde la bandeja con temas por usuario, badge personal y chips agrupados. Falta el resumen diario por correo (D16): no hay proveedor de correo transaccional, decisión pendiente de Luis. Detalle en la cobertura |
 | S23 | Readiness v2 (pantallas) | S20 | — | Pendiente |
 | S24 | Paquete de handover v2 | S14 | D17 | Pendiente |
 | S25 | Correcciones de F6–F7 | S14 | — | Pendiente |

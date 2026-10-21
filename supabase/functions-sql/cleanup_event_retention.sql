@@ -19,7 +19,7 @@ BEGIN
     LIMIT 50000);
   GET DIAGNOSTICS v_events = ROW_COUNT;
 
-  DELETE FROM push_outbox WHERE queued_at < now() - interval '7 days';
+  DELETE FROM notification_push_outbox WHERE queued_at < now() - interval '7 days';
   GET DIAGNOSTICS v_push = ROW_COUNT;
 
   DELETE FROM notifications WHERE id IN (
@@ -35,7 +35,7 @@ BEGIN
     RAISE WARNING 'cleanup_event_retention: sin acceso a net._http_response';
   END;
 
-  RETURN jsonb_build_object('webhook_deliveries', v_deliveries, 'domain_events', v_events, 'push_outbox', v_push,
+  RETURN jsonb_build_object('webhook_deliveries', v_deliveries, 'domain_events', v_events, 'notification_push_outbox', v_push,
                             'notifications', v_notifs, 'http_responses', v_http);
 END;
 $function$;

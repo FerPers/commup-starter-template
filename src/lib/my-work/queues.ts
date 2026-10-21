@@ -38,13 +38,30 @@ export type MyWorkCounts = {
   performance_to_decide: number
   /** Certificados PTC pendientes de una firma que mi rol puede dar (fase 7). */
   performance_to_sign: number
+  /** S22 (D-04/H-02): colas de readiness (SQL my_readiness_items, la misma fuente que la lista). */
+  gates_to_approve: number
+  gates_to_cosign: number
+  gates_regressed: number
+  registers_to_authorize: number
+  registers_to_verify: number
+  daily_reports_to_issue: number
+  tq_answered: number
 }
 
 export const EMPTY_COUNTS: MyWorkCounts = {
   itrs_execute: 0, itrs_review: 0, punches: 0, plan_items: 0, signatures: 0, preservation_overdue: 0,
   punches_verify: 0, punches_review: 0, actions_mine: 0, actions_verify: 0, constraints_mine: 0, handovers_to_receive: 0, holds_to_release: 0, lineup_to_verify: 0, milestones_to_witness: 0, transfers_to_sign: 0,
   performance_to_decide: 0, performance_to_sign: 0,
+  gates_to_approve: 0, gates_to_cosign: 0, gates_regressed: 0, registers_to_authorize: 0, registers_to_verify: 0,
+  daily_reports_to_issue: 0, tq_answered: 0,
 }
+
+/** S22: colas que llegan de `my_readiness_items` (contador y filas). */
+export const READINESS_QUEUES = [
+  'gates_to_approve', 'gates_to_cosign', 'gates_regressed', 'registers_to_authorize', 'registers_to_verify',
+  'daily_reports_to_issue', 'tq_answered',
+] as const satisfies readonly (keyof MyWorkCounts)[]
+export type ReadinessQueue = typeof READINESS_QUEUES[number]
 
 const SIGNER_ROLES: readonly OrgMemberRole[] = tierRoles('privileged')
 const OVERSIGHT_ROLES: readonly OrgMemberRole[] = tierRoles('editor')
@@ -63,6 +80,9 @@ export function parseCounts(raw: unknown): MyWorkCounts {
     handovers_to_receive: n('handovers_to_receive'), holds_to_release: n('holds_to_release'), lineup_to_verify: n('lineup_to_verify'),
     milestones_to_witness: n('milestones_to_witness'), transfers_to_sign: n('transfers_to_sign'),
     performance_to_decide: n('performance_to_decide'), performance_to_sign: n('performance_to_sign'),
+    gates_to_approve: n('gates_to_approve'), gates_to_cosign: n('gates_to_cosign'), gates_regressed: n('gates_regressed'),
+    registers_to_authorize: n('registers_to_authorize'), registers_to_verify: n('registers_to_verify'),
+    daily_reports_to_issue: n('daily_reports_to_issue'), tq_answered: n('tq_answered'),
   }
 }
 
@@ -77,16 +97,45 @@ export function seesPreservation(role: OrgMemberRole): boolean {
 }
 
 /**
- * Total del badge del sidebar: solo lo que es personal o que ese rol debe atender. La revisión de
- * categoría es tarea del supervisor (cuenta); la verificación en campo la puede hacer cualquiera
- * distinto de quien resolvió, así que se muestra en su cola pero no infla el badge de todos (igual las
- * acciones por verificar). Mis acciones y mis restricciones sí cuentan: son personales.
+ * Total del badge del sidebar y del encabezado de Mi trabajo (un solo cálculo, D-23): solo lo que es personal o que
+ * ese rol debe atender. La revisión de categoría es tarea del supervisor (cuenta); lo que cualquiera de la org puede
+ * tomar (verificar un punch o una acción, recibir un relevo, autorizar o verificar un registro, aprobar un gate que
+ * cumple) se muestra en su cola pero no infla el badge de todos. Co-firmar un gate y cerrar una TQ respondida sí son
+ * personales.
  */
 export function badgeTotal(c: MyWorkCounts, role: OrgMemberRole): number {
   return c.itrs_execute + c.itrs_review + c.punches + c.plan_items + (canSignCertificates(role) ? c.signatures : 0)
     + (seesPreservation(role) ? c.punches_review : 0) + c.actions_mine + c.constraints_mine
-    + (role !== 'client' ? c.handovers_to_receive : 0) + c.holds_to_release + c.milestones_to_witness + c.transfers_to_sign
-    + c.performance_to_decide + c.performance_to_sign
+    + c.holds_to_release + c.milestones_to_witness + c.transfers_to_sign
+    + c.performance_to_decide + c.performance_to_sign + c.gates_to_cosign + c.tq_answered
+}
+
+export type ChipGroup = 'execute' | 'verify' | 'sign' | 'decide'
+
+/** S22 (D-23): los contadores agrupados por tipo de tarea (antes, 18 chips sueltos). */
+export const CHIP_GROUPS: { group: ChipGroup; keys: (keyof MyWorkCounts)[] }[] = [
+  { group: 'execute', keys: ['itrs_execute', 'punches', 'plan_items', 'actions_mine', 'constraints_mine', 'preservation_overdue'] },
+  { group: 'verify', keys: ['itrs_review', 'punches_verify', 'punches_review', 'actions_verify', 'lineup_to_verify', 'registers_to_verify', 'handovers_to_receive', 'tq_answered'] },
+  { group: 'sign', keys: ['signatures', 'gates_to_cosign', 'transfers_to_sign', 'performance_to_sign', 'milestones_to_witness', 'holds_to_release'] },
+  { group: 'decide', keys: ['gates_to_approve', 'gates_regressed', 'registers_to_authorize', 'daily_reports_to_issue', 'performance_to_decide'] },
+]
+
+/** Siempre visibles (aunque estén en 0); el resto aparece solo con algo pendiente. */
+const ALWAYS_SHOWN = new Set<keyof MyWorkCounts>(['itrs_execute', 'itrs_review', 'punches', 'plan_items', 'punches_verify', 'actions_mine', 'constraints_mine'])
+
+/** ¿Este contador aplica al rol y se muestra? (mismas reglas que las colas de la página). */
+export function chipVisible(key: keyof MyWorkCounts, c: MyWorkCounts, role: OrgMemberRole): boolean {
+  if (key === 'signatures' && !canSignCertificates(role)) return false
+  if ((key === 'preservation_overdue' || key === 'punches_review') && !seesPreservation(role)) return false
+  if ((key === 'actions_verify' || key === 'handovers_to_receive' || key === 'registers_to_verify') && role === 'client') return false
+  return ALWAYS_SHOWN.has(key) || c[key] > 0
+}
+
+/** Grupos con sus contadores visibles (los grupos vacíos no aparecen). */
+export function chipGroups(c: MyWorkCounts, role: OrgMemberRole): { group: ChipGroup; chips: { key: keyof MyWorkCounts; n: number }[] }[] {
+  return CHIP_GROUPS
+    .map(g => ({ group: g.group, chips: g.keys.filter(k => chipVisible(k, c, role)).map(k => ({ key: k, n: c[k] })) }))
+    .filter(g => g.chips.length > 0)
 }
 
 export type DueState = 'overdue' | 'today' | 'future' | null

@@ -14,15 +14,11 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Bell, BellOff } from 'lucide-react';
+import { DEFAULT_TOPICS, type NotificationTopic } from '@/lib/notifications/topics';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
-export type NotificationTopic =
-  | 'itr_returned'
-  | 'punch_assigned'
-  | 'punch_cat_a'
-  | 'cert_ready'
-  | 'system_alerts'
-  | 'my_items_only';
+// S22 (I-09, D16): temas = categorías de aviso; el push sale de la bandeja de cada persona.
+export type { NotificationTopic };
 
 export interface PushSubscriptionRecord {
   id?: string;
@@ -65,9 +61,7 @@ export function usePushNotifications(userId: string) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [topics, setTopics] = useState<NotificationTopic[]>([
-    'itr_returned', 'punch_cat_a', 'cert_ready',
-  ]);
+  const [topics, setTopics] = useState<NotificationTopic[]>(DEFAULT_TOPICS);
 
   useEffect(() => {
     setPermission(Notification.permission);
@@ -238,41 +232,41 @@ export function usePushNotifications(userId: string) {
 
 // ─── Topic Configuration ──────────────────────────────────────────────────
 const TOPIC_CONFIG: Record<NotificationTopic, { label: string; icon: string; description: string; priority: 'high' | 'normal' | 'low' }> = {
-  itr_returned: {
-    label: 'ITR Devuelto',
-    icon: '↩️',
-    description: 'Cuando un ITR que enviaste es devuelto para corrección',
+  assignments: {
+    label: 'Asignaciones',
+    icon: '🔧',
+    description: 'Te asignan un ITR, un punch o una acción',
+    priority: 'normal',
+  },
+  signatures: {
+    label: 'Firmas',
+    icon: '✍️',
+    description: 'Un gate, traspaso, certificado o PSSR espera tu firma',
     priority: 'high',
   },
-  punch_assigned: {
-    label: 'Punch Asignado',
-    icon: '🔧',
-    description: 'Cuando te asignan un nuevo punch item',
+  field: {
+    label: 'Campo',
+    icon: '⏸️',
+    description: 'Hold points por liberar, hitos por atestiguar, registros y acciones por verificar, TQ respondidas',
+    priority: 'high',
+  },
+  readiness: {
+    label: 'Readiness',
+    icon: '🚦',
+    description: 'Un gate quedó listo o en regresión; certificados y PSSR emitidos o revocados',
+    priority: 'normal',
+  },
+  overdue: {
+    label: 'Vencidos',
+    icon: '⏰',
+    description: 'Preservación, restricciones y PSSR vencidos',
     priority: 'normal',
   },
   punch_cat_a: {
-    label: 'Punch Cat A',
+    label: 'Punch Cat A (todo el equipo)',
     icon: '🚨',
-    description: 'Punches categoría A (bloquean completions)',
+    description: 'Cada punch categoría A nuevo, aunque no sea tuyo (líderes y superiores)',
     priority: 'high',
-  },
-  cert_ready: {
-    label: 'Certificado Listo',
-    icon: '📄',
-    description: 'Cuando un certificado está disponible para firma',
-    priority: 'normal',
-  },
-  system_alerts: {
-    label: 'Alertas del Sistema',
-    icon: '⚙️',
-    description: 'Mantenimiento, cambios importantes, actualizaciones',
-    priority: 'low',
-  },
-  my_items_only: {
-    label: 'Solo mis items',
-    icon: '👤',
-    description: 'Filtrar notificaciones solo para items asignados a mí',
-    priority: 'normal',
   },
 };
 

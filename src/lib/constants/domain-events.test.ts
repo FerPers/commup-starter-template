@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { AUDIT_ENTITY_TYPES, DOMAIN_EVENT_TYPES, PUSH_EVENT_TYPES } from './domain-events'
+import { AUDIT_ENTITY_TYPES, DOMAIN_EVENT_TYPES } from './domain-events'
 
 const SQL_DIR = join(__dirname, '../../../supabase/functions-sql')
 const sql = (name: string) => readFileSync(join(SQL_DIR, `${name}.sql`), 'utf8')
@@ -12,12 +12,8 @@ const eventLiterals = (body: string) =>
 
 describe('catálogo v1 de domain_events (S21, I-08)', () => {
   it('cada evento de negocio que emite la BD está en el catálogo', () => {
-    const emitted = [...eventLiterals(sql('emit_domain_event')), ...eventLiterals(sql('emit_business_event'))]
+    const emitted = ['emit_domain_event', 'emit_business_event', 'gate_status_transition_trg'].flatMap(f => eventLiterals(sql(f)))
     expect(emitted.length).toBeGreaterThan(10)
     for (const e of emitted) expect(DOMAIN_EVENT_TYPES).toContain(e)
-  })
-
-  it('PUSH_EVENT_TYPES = SQL push_event_types()', () => {
-    expect([...eventLiterals(sql('push_event_types'))].sort()).toEqual([...PUSH_EVENT_TYPES].sort())
   })
 })

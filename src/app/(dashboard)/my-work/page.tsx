@@ -9,8 +9,8 @@ import { canSignCertificate, isPerformanceLead, type CertSigners } from '@/lib/p
 import { getActiveMembership, getMyWorkCounts } from '@/lib/supabase/membership'
 import { CATEGORY_CFG, ITR_STYLE, PUNCH_STYLE } from '@/components/dashboard/widgets/_shared'
 import {
-  canSignCertificates, daysOverdue, dueState, parseCounts, seesPreservation, sortPunches, splitAssignments,
-  type AssignmentRow, type DueState,
+  badgeTotal, canSignCertificates, chipGroups, daysOverdue, dueState, parseCounts, seesPreservation, sortPunches, splitAssignments,
+  type AssignmentRow, type DueState, type MyWorkCounts, type ReadinessQueue,
 } from '@/lib/my-work/queues'
 import { greetingName } from '@/lib/utils'
 import type { OrgMemberRole } from '@/types/database'
@@ -22,6 +22,32 @@ export const dynamic = 'force-dynamic'
 
 /** Máximo de filas por cola en pantalla; el resto se ve en la lista del módulo. */
 const QUEUE_LIMIT = 20
+
+/** Etiqueta (chips/queues/empty) de cada contador. */
+const CHIP_LABEL: Record<keyof MyWorkCounts, string> = {
+  itrs_execute: 'execute', itrs_review: 'review', punches: 'punches', plan_items: 'plan', signatures: 'signatures',
+  preservation_overdue: 'preservation', punches_verify: 'punchesVerify', punches_review: 'punchesReview', actions_mine: 'actions',
+  actions_verify: 'actionsVerify', constraints_mine: 'constraints', handovers_to_receive: 'handovers', holds_to_release: 'holds',
+  lineup_to_verify: 'lineup', milestones_to_witness: 'milestones', transfers_to_sign: 'transfers',
+  performance_to_decide: 'performanceDecide', performance_to_sign: 'performanceSign',
+  gates_to_approve: 'gatesApprove', gates_to_cosign: 'gatesCosign', gates_regressed: 'gatesRegressed',
+  registers_to_authorize: 'registersAuthorize', registers_to_verify: 'registersVerify', daily_reports_to_issue: 'dailyReports',
+  tq_answered: 'tqAnswered',
+}
+
+const GROUP_TONE = { execute: 'warning', verify: 'info', sign: 'warning', decide: 'danger' } as const
+
+type ReadinessRow = { project_id: string; entity_id: string; system_id: string | null }
+/** S22: cómo se muestra cada cola de readiness (orden = orden en la página). */
+const READINESS_SECTIONS: { queue: ReadinessQueue; due: string; tone: Tone; stripe: string; href: (r: ReadinessRow) => string; more: (r?: ReadinessRow) => string }[] = [
+  { queue: 'gates_to_cosign', due: 'cosign', tone: 'warning', stripe: '#047857', href: r => `/control-tower/${r.system_id}`, more: () => '/control-tower' },
+  { queue: 'gates_to_approve', due: 'approve', tone: 'success', stripe: '#047857', href: r => `/control-tower/${r.system_id}`, more: () => '/control-tower' },
+  { queue: 'gates_regressed', due: 'review', tone: 'danger', stripe: 'var(--danger-500)', href: r => `/control-tower/${r.system_id}`, more: () => '/control-tower' },
+  { queue: 'registers_to_authorize', due: 'authorize', tone: 'warning', stripe: '#b45309', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
+  { queue: 'registers_to_verify', due: 'verify', tone: 'info', stripe: '#7c3aed', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
+  { queue: 'daily_reports_to_issue', due: 'issue', tone: 'warning', stripe: 'var(--primary-500)', href: r => `/projects/${r.project_id}/daily/reports/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/daily/reports` : '/projects') },
+  { queue: 'tq_answered', due: 'close', tone: 'info', stripe: '#1d4ed8', href: r => `/projects/${r.project_id}/daily/tq/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/daily?tab=tq` : '/projects') },
+]
 
 type PunchRow = {
   id: string; punch_number: string; category: 'A' | 'B' | 'C'; description: string; status: string
@@ -72,7 +98,7 @@ export default async function MyWorkPage() {
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }, { data: perfToDecide }, { data: perfCerts }] = await Promise.all([
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }, { data: perfToDecide }, { data: perfCerts }, { data: readinessRaw }] = await Promise.all([
     getMyWorkCounts(orgId).then(data => ({ data })),
     // S09 (B-07): solo ITR no aprobados de los proyectos de la org, paginado (antes: TODAS mis asignaciones,
     // cortadas en 1000 → podían faltar las pendientes mientras el badge SQL contaba bien).
@@ -217,6 +243,8 @@ export default async function MyWorkPage() {
       .in('project_id', projectIds)
       .order('created_at', { ascending: true })
       .limit(50),
+    // S22 (D-04/H-02): colas de readiness, la misma función SQL que cuenta my_work_counts.
+    supabase.rpc('my_readiness_items', { p_org_id: orgId }),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -249,7 +277,8 @@ export default async function MyWorkPage() {
     procedure_runs: { number: string; status: string } | null; projects: { code: string } | null
   }[]).filter(h => {
     const cap = h.procedure_steps?.hold_capacity as HoldCapacity | undefined
-    return !!cap && canReleaseHold(capsOf(h.project_id), cap, userId, null)
+    // D-23: misma regla que my_work_counts (solo ejecuciones detenidas en el hold o paradas).
+    return !!cap && ['at_hold', 'stopped'].includes(h.procedure_runs?.status ?? '') && canReleaseHold(capsOf(h.project_id), cap, userId, null)
   })
   const lineupRows = ((lineupItems ?? []) as unknown as {
     id: string; label: string | null; sheet_id: string; project_id: string; tags: { tag_number: string } | null
@@ -279,9 +308,13 @@ export default async function MyWorkPage() {
     ...actionRows.map(a => a.project_id),
     ...constraintRows.map(c => c.project_id),
   ].filter(Boolean))
-  const personalTotal = counts.itrs_execute + counts.itrs_review + counts.punches + counts.plan_items + (signer ? counts.signatures : 0)
-    + counts.actions_mine + counts.constraints_mine + (role !== 'client' ? counts.handovers_to_receive : 0) + counts.holds_to_release + counts.milestones_to_witness + counts.transfers_to_sign
-    + counts.performance_to_decide + counts.performance_to_sign
+  // D-23: el mismo total que el badge del sidebar.
+  const personalTotal = badgeTotal(counts, role)
+  type ReadinessItem = { queue: ReadinessQueue; project_id: string; entity_id: string; ref: string | null; title: string | null; system_id: string | null; system_code: string | null; since: string | null }
+  const readiness = (readinessRaw ?? []) as ReadinessItem[]
+  const projectCode = new Map((projects ?? []).map(p => [p.id, p.code]))
+  const readinessOf = (q: ReadinessQueue) => readiness.filter(r => r.queue === q)
+    .sort((a, b) => (a.since ?? '').localeCompare(b.since ?? ''))
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
@@ -310,26 +343,16 @@ export default async function MyWorkPage() {
         </p>
       </header>
 
-      {/* Contadores */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 22 }}>
-        <Chip n={counts.itrs_execute} label={t('chips.execute')} tone={counts.itrs_execute > 0 ? 'danger' : 'neutral'} />
-        <Chip n={counts.itrs_review} label={t('chips.review')} tone={counts.itrs_review > 0 ? 'info' : 'neutral'} />
-        <Chip n={counts.punches} label={t('chips.punches')} tone={counts.punches > 0 ? 'warning' : 'neutral'} />
-        <Chip n={counts.plan_items} label={t('chips.plan')} tone="neutral" />
-        {signer && <Chip n={counts.signatures} label={t('chips.signatures')} tone={counts.signatures > 0 ? 'info' : 'neutral'} />}
-        {oversight && <Chip n={counts.preservation_overdue} label={t('chips.preservation')} tone={counts.preservation_overdue > 0 ? 'danger' : 'neutral'} />}
-        <Chip n={counts.punches_verify} label={t('chips.punchesVerify')} tone={counts.punches_verify > 0 ? 'info' : 'neutral'} />
-        {oversight && <Chip n={counts.punches_review} label={t('chips.punchesReview')} tone={counts.punches_review > 0 ? 'warning' : 'neutral'} />}
-        <Chip n={counts.actions_mine} label={t('chips.actions')} tone={counts.actions_mine > 0 ? 'warning' : 'neutral'} />
-        {role !== 'client' && <Chip n={counts.actions_verify} label={t('chips.actionsVerify')} tone={counts.actions_verify > 0 ? 'info' : 'neutral'} />}
-        <Chip n={counts.constraints_mine} label={t('chips.constraints')} tone={counts.constraints_mine > 0 ? 'danger' : 'neutral'} />
-        {role !== 'client' && <Chip n={counts.handovers_to_receive} label={t('chips.handovers')} tone={counts.handovers_to_receive > 0 ? 'info' : 'neutral'} />}
-        {counts.holds_to_release > 0 && <Chip n={counts.holds_to_release} label={t('chips.holds')} tone="warning" />}
-        {counts.lineup_to_verify > 0 && <Chip n={counts.lineup_to_verify} label={t('chips.lineup')} tone="info" />}
-        {counts.milestones_to_witness > 0 && <Chip n={counts.milestones_to_witness} label={t('chips.milestones')} tone="warning" />}
-        {counts.transfers_to_sign > 0 && <Chip n={counts.transfers_to_sign} label={t('chips.transfers')} tone="warning" />}
-        {counts.performance_to_decide > 0 && <Chip n={counts.performance_to_decide} label={t('chips.performanceDecide')} tone="warning" />}
-        {counts.performance_to_sign > 0 && <Chip n={counts.performance_to_sign} label={t('chips.performanceSign')} tone="warning" />}
+      {/* Contadores, agrupados por tipo de tarea (S22, D-23) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
+        {chipGroups(counts, role).map(g => (
+          <div key={g.group} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 72, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t(`groups.${g.group}`)}</span>
+            {g.chips.map(c => (
+              <Chip key={c.key} n={c.n} label={t(`chips.${CHIP_LABEL[c.key]}`)} tone={c.n > 0 ? GROUP_TONE[g.group] : 'neutral'} />
+            ))}
+          </div>
+        ))}
       </div>
 
       {/* S18 (C-09): descargar mis ITR pendientes para trabajar sin red */}
@@ -466,6 +489,23 @@ export default async function MyWorkPage() {
             ))}
           </Queue>
         )}
+
+        {/* S22 (D-04/H-02): colas de readiness (gates, registros, reportes diarios, TQ) */}
+        {READINESS_SECTIONS.filter(sec => counts[sec.queue] > 0).map(sec => {
+          const rows = readinessOf(sec.queue)
+          return (
+            <Queue key={sec.queue} title={t(`queues.${CHIP_LABEL[sec.queue]}`)} count={Math.min(rows.length, QUEUE_LIMIT)} total={counts[sec.queue]}
+              emptyText={t(`empty.${CHIP_LABEL[sec.queue]}`)} moreHref={sec.more(rows[0])} moreLabel={t('viewAll', { count: counts[sec.queue] })} limit={QUEUE_LIMIT}>
+              {rows.slice(0, QUEUE_LIMIT).map(r => (
+                <Row key={`${r.entity_id}:${r.system_id ?? ''}`} href={sec.href(r)} stripe={sec.stripe}
+                  code={r.system_code ? `${r.system_code}${sec.queue.startsWith('gates_') && r.ref ? ` · ${r.ref}` : ''}` : (r.ref ?? '')}
+                  what={sec.queue.startsWith('gates_') ? '' : `${r.system_code && r.ref ? `${r.ref} · ` : ''}${r.title ?? ''}`}
+                  project={projectCode.get(r.project_id)}
+                  right={<Pill tone={sec.tone}>{t(`due.${sec.queue === 'gates_regressed' ? (r.title === 'regressed' ? 'regressed' : 'needsReview') : sec.due}`)}</Pill>} />
+              ))}
+            </Queue>
+          )
+        })}
 
         {/* Traspasos de propiedad por firmar (fase 6, sesión 3) */}
         {counts.transfers_to_sign > 0 && (

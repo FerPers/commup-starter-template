@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  badgeTotal, canSignCertificates, daysOverdue, dueState, parseCounts, seesPreservation,
+  badgeTotal, canSignCertificates, chipGroups, daysOverdue, dueState, parseCounts, seesPreservation,
   isMyTurnToSign, sortPunches, splitAssignments, EMPTY_COUNTS, type AssignmentRow,
 } from './queues'
 import { homeForRole } from '@/lib/constants/navigation'
@@ -55,10 +55,27 @@ describe('parseCounts / badgeTotal', () => {
     expect(parseCounts({ actions_mine: '2', actions_verify: 4, constraints_mine: 1 })).toMatchObject({ actions_mine: 2, actions_verify: 4, constraints_mine: 1 })
   })
 
-  it('fase 5 (relevo): los relevos por recibir suman al badge salvo para client', () => {
+  it('S22 (D-23): los relevos por recibir (de toda la org) no inflan el badge', () => {
     const c = { ...EMPTY_COUNTS, handovers_to_receive: 2 }
-    expect(badgeTotal(c, 'inspector')).toBe(2)
+    expect(badgeTotal(c, 'inspector')).toBe(0)
     expect(badgeTotal(c, 'client')).toBe(0)
+  })
+
+  it('S22: co-firmar un gate y cerrar una TQ suman; aprobar, autorizar o verificar no', () => {
+    const c = { ...EMPTY_COUNTS, gates_to_cosign: 2, tq_answered: 1, gates_to_approve: 5, gates_regressed: 1,
+      registers_to_authorize: 3, registers_to_verify: 4, daily_reports_to_issue: 1 }
+    expect(badgeTotal(c, 'leader')).toBe(3)
+    expect(parseCounts({ gates_to_cosign: '2', daily_reports_to_issue: 1 })).toMatchObject({ gates_to_cosign: 2, daily_reports_to_issue: 1 })
+  })
+
+  it('S22: chips agrupados; sin pendientes solo quedan los fijos y nada de otro rol', () => {
+    const empty = chipGroups(EMPTY_COUNTS, 'inspector')
+    expect(empty.map(g => g.group)).toEqual(['execute', 'verify'])
+    expect(empty.flatMap(g => g.chips.map(x => x.key))).not.toContain('signatures')
+    const leader = chipGroups({ ...EMPTY_COUNTS, gates_to_approve: 2, signatures: 3 }, 'leader')
+    expect(leader.find(g => g.group === 'decide')?.chips).toEqual([{ key: 'gates_to_approve', n: 2 }])
+    expect(leader.find(g => g.group === 'sign')).toBeUndefined()  // un líder no firma certificados de completación
+    expect(chipGroups({ ...EMPTY_COUNTS, registers_to_verify: 1 }, 'client').flatMap(g => g.chips.map(x => x.key))).not.toContain('registers_to_verify')
   })
 
   it('fase 6: los hold points por liberar suman; las filas de line-up por verificar no', () => {
