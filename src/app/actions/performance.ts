@@ -290,7 +290,7 @@ export const recordPerformanceResult = withAuth(
     revalidate(input.projectId, `runs/${input.runId}`)
     revalidatePath(`/projects/${input.projectId}/daily`)
     revalidatePath('/my-work')
-    revalidatePath('/control-tower', 'layout')
+    revalidatePath('/projects/[id]', 'layout')
     return { actionId: (data as string | null) ?? null }
   },
 )
@@ -304,7 +304,7 @@ async function ownedCertificate(db: SupabaseClient, id: string, projectId: strin
 function revalidateCertificate(projectId: string, runId: string) {
   revalidate(projectId, `runs/${runId}`)
   revalidatePath('/my-work')
-  revalidatePath('/control-tower', 'layout')
+  revalidatePath('/projects/[id]', 'layout')
 }
 
 /** Emite el PTC de un intento aceptado; quien emite firma como Comisionamiento. */

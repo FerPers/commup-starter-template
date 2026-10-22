@@ -16,8 +16,8 @@ const systemGuards = [
 ]
 
 function revalidate(projectId: string, systemId: string) {
-  revalidatePath('/control-tower')
-  revalidatePath(`/control-tower/${systemId}`)
+  revalidatePath(`/projects/${projectId}/readiness`)
+  revalidatePath(`/projects/${projectId}/systems/${systemId}`)
   revalidatePath(`/projects/${projectId}`)
 }
 

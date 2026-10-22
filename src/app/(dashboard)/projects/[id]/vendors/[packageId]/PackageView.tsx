@@ -207,7 +207,7 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
             <div style={label}>{t('f.mobGate')}</div>
             <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)' }}>
               {pkg.mobGateId
-                ? <Link href={`/control-tower/${pkg.mobSystemId}`} style={linkStyle}>{sysCode(pkg.mobSystemId)} · {gates.find(g => g.id === pkg.mobGateId)?.code ?? '—'}</Link>
+                ? <Link href={`/projects/${project.id}/systems/${pkg.mobSystemId}`} style={linkStyle}>{sysCode(pkg.mobSystemId)} · {gates.find(g => g.id === pkg.mobGateId)?.code ?? '—'}</Link>
                 : t('f.noMobGate')}
               {pkg.plannedMobilization && <> · {t('plannedOn', { date: pkg.plannedMobilization })}</>}
             </p>

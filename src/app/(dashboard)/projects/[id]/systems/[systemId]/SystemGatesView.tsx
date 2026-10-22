@@ -3,18 +3,12 @@
 import Link from 'next/link'
 import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatInZone } from '@/lib/time/zone'
 import { Modal } from '@/components/ui'
 import { approveImpact, revokeImpact, type ProvidedDependency } from '@/lib/readiness/impact'
 import { isDone, nextGate } from '@/lib/readiness/matrix'
-import { MILESTONES, type OwnershipStage } from '@/lib/startup/catalog'
-import { StageChip } from '@/app/(dashboard)/projects/[id]/startup/operations/ownership-ui'
-import { Chip } from '@/app/(dashboard)/projects/[id]/daily/daily-ui'
-import { CERT_TONE, RESULT_TONE, type CertificateStatus, type PerfResult, type PerfRunStatus } from '@/lib/performance/catalog'
-import { PACKAGE_TONE, type PackageStatus } from '@/lib/vendors/catalog'
-import GatePlanPanel, { type GatePlan, type GatePlanEvent, type GateProgress } from './GatePlanPanel'
 import { createClient } from '@/lib/supabase/client'
 import type { DependencyCriterionDetail } from '@/lib/systems/dependencies'
 import {
@@ -30,21 +24,12 @@ import {
   canApprove,
   canRevoke,
   evidencePath,
-  isApproved,
   missingSignatures,
   signableCapacities,
   type Criterion,
   type GateStatus,
   type SystemGate,
 } from '@/lib/readiness/gates'
-
-export type SystemPerformance = {
-  id: string
-  number: string
-  title: string
-  lastRun: { status: PerfRunStatus; result: PerfResult | null } | null
-  certificate: { number: string; status: CertificateStatus } | null
-}
 
 type Props = {
   /** S14 (D14): capacidades del usuario en el proyecto (firmantes designados o respaldo por rol). */
@@ -58,30 +43,9 @@ type Props = {
   gates: SystemGate[]
   names: Record<string, string>
   phaseCodes: Record<string, string>
-  dependsOn: { id: string; code: string }[]
-  enables: { id: string; code: string }[]
   provides: ProvidedDependency[]
-  /** Planificación (fase 5, sesión 2): avance ponderado por gate y forecast/compromiso. */
-  planning: {
-    progress: Record<string, GateProgress>
-    weightedPct: number
-    plans: Record<string, GatePlan>
-    events: (GatePlanEvent & { gate_id: string })[]
-    canCommit: boolean
-  }
-  /** Hitos de arranque vigentes del sistema (fase 6, sesión 2). */
-  milestones: { id: string; milestone: string; occurredAt: string; status: string }[]
-  /** Etapa de propiedad del sistema (fase 6, sesión 3). */
-  ownership: { stage: OwnershipStage; pendingTransferId: string | null }
-  /** Pruebas de desempeño de las que el sistema es principal (fase 7). */
-  performance: SystemPerformance[]
-  /** Paquetes de vendor que abarcan el sistema (fase 8; no afectan los gates, §15.13). */
-  vendors: { id: string; number: string; title: string; status: PackageStatus; company: string }[]
-  /** Gestión diaria del sistema (fase 5): restricciones no cerradas y acciones vivas. */
-  daily: {
-    constraints: { id: string; number: string; title: string; status: string; escalation_level: number; need_date: string; gate: string | null }[]
-    actions: { id: string; number: string; title: string; status: string; priority: string; due_date: string | null; owner_id: string | null }[]
-  }
+  /** N2a: gate pedido en `?gate=` (desde la matriz de Readiness): queda abierto y a la vista. */
+  focusGateId?: string | null
 }
 
 const RESULT_STYLE: Record<string, { icon: string; color: string }> = {
@@ -118,10 +82,8 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
   )
 }
 
-export default function SystemGatesView({ orgId, role, userId, caps, canEdit, project, system, gates, names, phaseCodes, dependsOn, enables, provides, planning, milestones, ownership, performance, vendors, daily }: Props) {
+export default function SystemGatesView({ orgId, role, userId, caps, canEdit, project, system, gates, names, phaseCodes, provides, focusGateId }: Props) {
   const t = useTranslations('Gates')
-  const ts = useTranslations('Startup')
-  const tv = useTranslations('Vendors')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -144,6 +106,10 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
       else router.refresh()
     })
   }
+
+  useEffect(() => {
+    if (focusGateId) document.getElementById(`gate-${focusGateId}`)?.scrollIntoView({ block: 'start' })
+  }, [focusGateId])
 
   // S23 (D-25): aprobar y revocar pasan por un diálogo que muestra qué se firma y qué cambia aguas abajo.
   const [confirm, setConfirm] = useState<{ kind: 'approve' | 'revoke'; gate: SystemGate } | null>(null)
@@ -216,7 +182,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
             <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
               {deps.map(x => (
                 <li key={x.dependency_id}>
-                  <Link style={linkStyle} href={`/control-tower/${x.system_id}`}>{x.system_code}</Link>
+                  <Link style={linkStyle} href={`/projects/${project.id}/systems/${x.system_id}?tab=gates`}>{x.system_code}</Link>
                   {x.system_name && x.system_name !== x.system_code && ` ${x.system_name}`}
                   {' · '}
                   <span style={{ color: x.ok ? 'var(--success-700)' : 'var(--danger-700)' }}>
@@ -437,104 +403,8 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
   }
 
   return (
-    <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <Link href={`/control-tower?projectId=${project.id}`} style={linkStyle}>← {t('back')}</Link>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 2px' }}>
-          {system.code}{system.name && system.name !== system.code ? ` — ${system.name}` : ''}
-        </h1>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', margin: '4px 0' }}>
-          <StageChip stage={ownership.stage} />
-          <Link href={ownership.pendingTransferId ? `/projects/${project.id}/startup/transfers/${ownership.pendingTransferId}` : `/projects/${project.id}/startup/operations`} style={linkStyle}>
-            {ownership.pendingTransferId ? t('ownership.pending') : t('ownership.link')}
-          </Link>
-          {performance.map(pt => (
-            <Link key={pt.id} href={`/projects/${project.id}/startup/performance/${pt.id}`} title={pt.title}
-              style={{ display: 'inline-flex', gap: 4, alignItems: 'center', textDecoration: 'none' }}>
-              {pt.lastRun?.result
-                ? <Chip tone={RESULT_TONE[pt.lastRun.result]}>{pt.number} · {ts(`perf.result.${pt.lastRun.result}`)}</Chip>
-                : <Chip tone="muted">{pt.number} · {pt.lastRun ? ts(`perf.runStatus.${pt.lastRun.status}`) : t('performance.noRun')}</Chip>}
-              {pt.certificate && <Chip tone={CERT_TONE[pt.certificate.status]}>{pt.certificate.number} · {ts(`perf.certStatus.${pt.certificate.status}`)}</Chip>}
-            </Link>
-          ))}
-          {vendors.map(v => (
-            <Link key={v.id} href={`/projects/${project.id}/vendors/${v.id}`} title={v.title} style={{ textDecoration: 'none' }}>
-              <Chip tone={PACKAGE_TONE[v.status]}>{v.number} · {v.company} · {tv(`status.${v.status}`)}</Chip>
-            </Link>
-          ))}
-        </div>
-        <p style={{ ...small, margin: 0 }}>
-          {project.code} · {project.name}{system.area ? ` · ${system.area}` : ''}
-          {' · '}<Link href={`/projects/${project.id}/systems/${system.id}`} style={linkStyle}>{t('systemFile')}</Link>
-        </p>
-        <p style={{ ...small, margin: '6px 0 0' }}>
-          <strong style={{ color: 'var(--text-strong)' }}>{t('plan.header', {
-            pct: (planning.weightedPct * 100).toFixed(1),
-            approved: gates.filter(g => isApproved(g.status) && g.status !== 'regressed').length,
-            total: gates.length,
-          })}</strong>
-          {' · '}<Link href={`/projects/${project.id}/daily/lookahead`} style={linkStyle}>{t('plan.lookahead')}</Link>
-        </p>
-        {(dependsOn.length > 0 || enables.length > 0) && (
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8, ...small }}>
-            {([['dependsOn', dependsOn], ['enables', enables]] as const).map(([key, list]) => list.length > 0 && (
-              <span key={key}>
-                <strong style={{ color: 'var(--text-strong)' }}>{t(key)}:</strong>{' '}
-                {list.map((s, i) => (
-                  <span key={s.id}>{i > 0 && ', '}<Link href={`/control-tower/${s.id}`} style={linkStyle}>{s.code}</Link></span>
-                ))}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <p style={{ ...small, margin: 0, lineHeight: 1.5 }}>{t('intro')}</p>
-
-      <section style={{ ...card, padding: 12 }} aria-label={t('milestones.title')}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-          <strong style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{t('milestones.title')}</strong>
-          <Link href={`/projects/${project.id}/startup/events?system=${system.id}`} style={linkStyle}>{t('milestones.link')}</Link>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 6 }}>
-          {MILESTONES.map(m => {
-            const ev = milestones.find(x => x.milestone === m)
-            return (
-              <div key={m} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: ev?.status === 'witnessed' ? 'var(--success-50)' : ev ? '#fffbeb' : 'transparent' }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>{t(`milestones.${m}`)}</div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>
-                  {ev ? <Link href={`/projects/${project.id}/startup/events/${ev.id}`} style={{ color: 'inherit' }}>{ev.status === 'witnessed' ? '✓ ' : '⏳ '}{formatInZone(ev.occurredAt, project.timezone, locale, false)}</Link> : '—'}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
-
-      {(daily.constraints.length > 0 || daily.actions.length > 0) && (
-        <section style={card} aria-labelledby="system-daily">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-            <h2 id="system-daily" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('daily.title')}</h2>
-            <Link href={`/projects/${project.id}/daily`} style={linkStyle}>{t('daily.link')}</Link>
-          </div>
-          <ul style={{ margin: '10px 0 0', paddingLeft: 18, ...small, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {daily.constraints.map(c => (
-              <li key={c.id}>
-                <Link href={`/projects/${project.id}/daily/constraint/${c.id}`} style={{ ...linkStyle, fontWeight: 700 }}>{c.number}</Link> {c.title}
-                {' · '}<span style={{ fontWeight: 600, color: c.escalation_level >= 4 && c.status === 'open' ? 'var(--danger-700)' : undefined }}>{t('crit.constraintLevel', { n: c.escalation_level })}</span>
-                {c.gate ? ` · ${c.gate}` : ''}{' · '}{c.need_date}
-              </li>
-            ))}
-            {daily.actions.slice(0, 10).map(a => (
-              <li key={a.id}>
-                <Link href={`/projects/${project.id}/daily/action/${a.id}`} style={{ ...linkStyle, fontWeight: 700 }}>{a.number}</Link> {a.title}
-                {' · '}{who(a.owner_id ?? undefined)}{a.due_date ? ` · ${a.due_date}` : ''}
-              </li>
-            ))}
-            {daily.actions.length > 10 && <li>{t('andMore', { count: daily.actions.length - 10 })}</li>}
-          </ul>
-        </section>
-      )}
 
       {error && (
         <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>
@@ -549,7 +419,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
         const approvable = canApprove(g, role) && (!caps.commissioning.designated || caps.commissioning.allowed)
         const mustCondition = g.status === 'ready_with_conditions'
         return (
-          <section key={g.gate_id} style={{ ...card, borderLeft: `4px solid ${GATE_STATUS_STYLE[g.status].border}` }} aria-label={g.gate_code}>
+          <section key={g.gate_id} id={`gate-${g.gate_id}`} style={{ ...card, borderLeft: `4px solid ${GATE_STATUS_STYLE[g.status].border}`, scrollMarginTop: 72 }} aria-label={g.gate_code}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-strong)' }}>{g.gate_code}</div>
@@ -559,15 +429,8 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
             </div>
 
             {/* S23 (D-19): los gates ya aprobados se colapsan; queda abierto el siguiente que pide trabajo */}
-            <details open={!isDone(g.status) || g.gate_id === nextGateId} style={{ marginTop: 8 }}>
+            <details open={!isDone(g.status) || g.gate_id === nextGateId || g.gate_id === focusGateId} style={{ marginTop: 8 }}>
             <summary style={{ ...small, cursor: 'pointer', fontWeight: 600 }}>{t('criteriaSummary', { pass: g.criteria.filter(c => c.result === 'pass').length, total: g.criteria.length })}</summary>
-            <GatePlanPanel
-              projectId={project.id} systemId={system.id} gateId={g.gate_id}
-              progress={planning.progress[g.gate_id]} plan={planning.plans[g.gate_id]}
-              events={planning.events.filter(e => e.gate_id === g.gate_id)} names={names}
-              canEdit={role !== 'client'} canCommit={planning.canCommit}
-              settled={isApproved(g.status) && g.status !== 'regressed'}
-            />
 
             <ul style={{ listStyle: 'none', margin: '16px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
               {g.criteria.map((c, i) => {

@@ -181,7 +181,7 @@ export const applySystemSuggestions = withAuth(
       payload: { systems_updated: result.systemsUpdated, dependencies_created: result.dependenciesCreated, errors: result.errors.length },
     })
     revalidatePath(`/projects/${input.projectId}/systems`)
-    revalidatePath('/control-tower')
+    revalidatePath('/projects/[id]/readiness', 'page')
     return result
   },
 )

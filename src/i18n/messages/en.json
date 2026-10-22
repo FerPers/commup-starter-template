@@ -90,7 +90,8 @@
       "punchList": "Punch List",
       "preservation": "Preservation",
       "workPlans": "Work plans",
-      "controlTower": "Readiness",
+      "controlTower": "Readiness by project",
+      "readiness": "Readiness",
       "certificates": "Certificates",
       "kpis": "KPIs",
       "itrTemplates": "ITR templates",
@@ -2012,7 +2013,11 @@
       "sortCode": "By code",
       "sortCommitment": "By commitment",
       "search": "Search system",
-      "changed": "Changed in 24 h"
+      "changed": "Changed in 24 h",
+      "nextGate": "Next gate",
+      "allGates": "All gates",
+      "nextIs": "Next: {gate}",
+      "blocked": "Blocked only"
     },
     "rowState": {
       "regressed": "Regressed",
@@ -2030,7 +2035,20 @@
     "conditionsOpen": "{count, plural, one {# open condition} other {# open conditions}}",
     "export": "Excel",
     "showing": "{shown} of {total} systems",
-    "itrsWeighing": "{count} ITRs"
+    "itrsWeighing": "{count} ITRs",
+    "portfolio": {
+      "title": "Readiness by project",
+      "subtitle": "Current approved gates and next-gate status of each system, by project",
+      "empty": "No projects",
+      "open": "Open readiness →",
+      "col": {
+        "project": "Project",
+        "systems": "Systems",
+        "readiness": "Readiness",
+        "physical": "Progress",
+        "next": "Next gate by status"
+      }
+    }
   },
   "DataQuality": {
     "title": "Data quality",
@@ -3110,6 +3128,37 @@
       "applying": "Applying…",
       "done": "Done: {systems} systems updated and {dependencies} dependencies created.",
       "notePrefix": "AI:"
+    },
+    "file": {
+      "backReadiness": "Readiness",
+      "backSystems": "Systems",
+      "allApproved": "All gates approved",
+      "weighted": "Weighted progress",
+      "itrs": "over {count} ITRs",
+      "gates": "Gates approved",
+      "attention": "{count} to review",
+      "commitment": "{gate} commitment",
+      "forecast": "forecast {date}",
+      "tabsLabel": "System sections",
+      "tab": {
+        "gates": "Gates",
+        "plan": "Progress and plan",
+        "deps": "Dependencies",
+        "startup": "Start-up",
+        "transfer": "Handover",
+        "vendors": "Vendors and performance",
+        "data": "System data"
+      },
+      "planIntro": "Forecast and commitment per gate (changing a commitment requires a reason; leader+), with the weighted progress of its phase.",
+      "noDaily": "No open constraints or actions on this system.",
+      "procedures": "Procedures and runs",
+      "lineups": "Line-up sheets",
+      "currentStage": "Current stage:",
+      "noTransfers": "No handovers yet.",
+      "vendors": "Vendor packages",
+      "noVendors": "No vendor package covers this system.",
+      "performance": "Performance tests",
+      "noPerformance": "This system is not the primary system of any performance test."
     }
   },
   "Registers": {

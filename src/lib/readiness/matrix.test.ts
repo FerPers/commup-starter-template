@@ -46,6 +46,9 @@ describe('matriz de Control Tower (S23)', () => {
     expect(filterMatrix(rows, parseMatrixFilters({ committed: '3' }), ctx)).toEqual([])
     expect(filterMatrix(rows, parseMatrixFilters({ changed: '1' }), ctx).map(r => r.system_code)).toEqual(['S4'])
     expect(filterMatrix(rows, parseMatrixFilters({ q: 's1' }), ctx).map(r => r.system_code)).toEqual(['S1'])
+    expect(filterMatrix(rows, parseMatrixFilters({ blocked: '1' }), ctx).map(r => r.system_code)).toEqual(['S3', 'S2'])
+    const two = [row('T1', [g('MC', 1, 'approved'), g('RFC', 2, 'not_ready')]), row('T2', [g('MC', 1, 'not_ready'), g('RFC', 2, 'not_ready')])]
+    expect(filterMatrix(two, parseMatrixFilters({ gate: 'RFC' }), ctx).map(r => r.system_code)).toEqual(['T1'])
     expect(parseMatrixFilters({ state: 'bogus', committed: '-4', sort: 'x' })).toMatchObject({ state: undefined, committedDays: undefined, sort: 'risk' })
   })
 

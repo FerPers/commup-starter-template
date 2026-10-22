@@ -60,6 +60,10 @@ export type MatrixFilters = {
   committedDays?: number
   /** Solo sistemas que cambiaron en las últimas 24 h (reunión diaria). */
   changed?: boolean
+  /** N2a: solo sistemas cuyo siguiente gate es este código (fila del Resumen por fases). */
+  gate?: string
+  /** N2a: solo los que no avanzan (siguiente gate bloqueado o en regresión). */
+  blocked?: boolean
   sort?: 'risk' | 'code' | 'commitment'
 }
 
@@ -74,6 +78,8 @@ export function parseMatrixFilters(sp: Record<string, string | undefined>): Matr
     q: sp.q?.trim() ? sp.q.trim() : undefined,
     committedDays: Number.isInteger(days) && days > 0 && days <= 365 ? days : undefined,
     changed: sp.changed === '1',
+    gate: sp.gate?.trim() ? sp.gate.trim() : undefined,
+    blocked: sp.blocked === '1',
     sort: sp.sort === 'code' || sp.sort === 'commitment' ? sp.sort : 'risk',
   }
 }
@@ -98,6 +104,8 @@ export function filterMatrix<T extends MatrixRow>(rows: readonly T[], f: MatrixF
     if (f.state && rowState(r.gates) !== f.state) return false
     if (q && !`${r.system_code} ${r.system_name}`.toLowerCase().includes(q)) return false
     if (f.changed && !ctx.changedIds.has(r.system_id)) return false
+    if (f.gate && nextGate(r.gates)?.code !== f.gate) return false
+    if (f.blocked && !['blocked', 'regressed'].includes(rowState(r.gates))) return false
     if (limit) {
       const c = commitOf(r)
       if (!c || c > limit) return false

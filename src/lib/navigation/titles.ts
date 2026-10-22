@@ -4,7 +4,8 @@
  * Desempeño (PTC) es una pestaña del hub de Arranque: su h1 es el del hub.
  */
 export const NAV_TITLE_KEYS: Record<string, string> = {
-  controlTower: 'ControlTower.title',
+  readiness: 'ControlTower.title',
+  controlTower: 'ControlTower.portfolio.title',
   opsPunches: 'OpsPunches.title',
   handover: 'AdminHandover.title',
   config: 'Config.title',

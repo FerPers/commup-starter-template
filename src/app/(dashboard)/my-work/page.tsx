@@ -39,9 +39,9 @@ const CHIP_LABEL: Record<keyof MyWorkCounts, string> = {
 type ReadinessRow = { project_id: string; entity_id: string; system_id: string | null }
 /** S22: cómo se muestra cada cola de readiness (orden = orden en la página). */
 const READINESS_SECTIONS: { queue: ReadinessQueue; due: string; tone: Tone; stripe: string; href: (r: ReadinessRow) => string; more: (r?: ReadinessRow) => string }[] = [
-  { queue: 'gates_to_cosign', due: 'cosign', tone: 'warning', stripe: '#047857', href: r => `/control-tower/${r.system_id}`, more: () => '/control-tower' },
-  { queue: 'gates_to_approve', due: 'approve', tone: 'success', stripe: '#047857', href: r => `/control-tower/${r.system_id}`, more: () => '/control-tower' },
-  { queue: 'gates_regressed', due: 'review', tone: 'danger', stripe: 'var(--danger-500)', href: r => `/control-tower/${r.system_id}`, more: () => '/control-tower' },
+  { queue: 'gates_to_cosign', due: 'cosign', tone: 'warning', stripe: '#047857', href: r => `/projects/${r.project_id}/systems/${r.system_id}`, more: r => (r ? `/projects/${r.project_id}/readiness?state=signing` : '/control-tower') },
+  { queue: 'gates_to_approve', due: 'approve', tone: 'success', stripe: '#047857', href: r => `/projects/${r.project_id}/systems/${r.system_id}?gate=${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/readiness?state=ready` : '/control-tower') },
+  { queue: 'gates_regressed', due: 'review', tone: 'danger', stripe: 'var(--danger-500)', href: r => `/projects/${r.project_id}/systems/${r.system_id}?gate=${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/readiness?state=regressed` : '/control-tower') },
   { queue: 'registers_to_authorize', due: 'authorize', tone: 'warning', stripe: '#b45309', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
   { queue: 'registers_to_verify', due: 'verify', tone: 'info', stripe: '#7c3aed', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
   { queue: 'daily_reports_to_issue', due: 'issue', tone: 'warning', stripe: 'var(--primary-500)', href: r => `/projects/${r.project_id}/daily/reports/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/daily/reports` : '/projects') },

@@ -21,6 +21,11 @@ describe('migas de pan (N0, H-06)', () => {
     expect(c[2].href).toBe(`/projects/${P}/punches`)
   })
 
+  it('Readiness y la ficha de sistema viven dentro del proyecto (N2a)', () => {
+    expect(labels(`/projects/${P}/readiness`)).toEqual(['nav:projects', P, 'nav:readiness'])
+    expect(labels(`/projects/${P}/systems/${I}`)).toEqual(['nav:projects', P, 'nav:systems', 'entity:system'])
+  })
+
   it('colecciones sin página no son miga (nunca un enlace a 404)', () => {
     expect(labels(`/projects/${P}/startup/runs/${I}`)).toEqual(['nav:projects', P, 'nav:startup', 'entity:run'])
     expect(labels(`/projects/${P}/startup/performance/runs/${I}`)).toEqual(['nav:projects', P, 'nav:startup', 'nav:performance', 'entity:attempt'])

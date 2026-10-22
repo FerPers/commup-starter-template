@@ -27,8 +27,8 @@ const systemGuards = [
 function revalidate(projectId: string, systemId?: string) {
   revalidatePath(`/projects/${projectId}/systems`)
   if (systemId) revalidatePath(`/projects/${projectId}/systems/${systemId}`)
-  revalidatePath('/control-tower')
-  if (systemId) revalidatePath(`/control-tower/${systemId}`)
+  revalidatePath(`/projects/${projectId}/readiness`)
+  if (systemId) revalidatePath(`/projects/${projectId}/systems/${systemId}`)
 }
 
 /** Errores de Postgres → mensaje para el usuario (los de nuestros triggers ya vienen en español). */

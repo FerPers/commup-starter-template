@@ -2,292 +2,99 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
-import { Card, Button, Select, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
-import { GATE_STATUS_STYLE, type MatrixGate } from '@/lib/readiness/gates'
-import { blockerCount, filterMatrix, nextGate, parseMatrixFilters, readinessSummary, rowState, type RowState } from '@/lib/readiness/matrix'
-import { loadMatrix, type MatrixData } from '@/lib/readiness/matrix-server'
-import RememberProject from './RememberProject'
+import { Card, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
+import type { MatrixGate } from '@/lib/readiness/gates'
+import { readinessSummary, rowState, type RowState } from '@/lib/readiness/matrix'
 
-// Estado del hold point por sistema (fase 1): aprobado / listo / no listo / regresión.
-// ⛓ = bloqueado por un sistema del que depende (fase 2).
-function GateBadge({ gate, label, title, href, blocked }: { gate: MatrixGate; label: string; title: string; href: string; blocked?: boolean }) {
-  const st = GATE_STATUS_STYLE[gate.status]
-  return (
-    <Link href={href} title={title} style={{
-      display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none',
-      padding: '3px 9px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600,
-      background: st.bg, color: st.fg, border: `1.5px solid ${st.border}`,
-    }}>
-      <span style={{ fontSize: 10 }} aria-hidden="true">{st.icon}</span>
-      {label}
-      {blocked && <span aria-hidden="true" style={{ fontSize: 10 }}>⛓</span>}
-    </Link>
-  )
-}
+// N2a (decisión de Luis 2026-10-21): Readiness vive dentro del proyecto (/projects/[id]/readiness).
+// /control-tower queda como vista de portafolio: una fila por proyecto con su readiness, que abre el proyecto.
+// Enlaces viejos con ?projectId= siguen funcionando (redirigen con los mismos filtros).
 
-function Bar({ pct }: { pct: number }) {
-  const color = pct >= 100
-    ? 'var(--success-500)'
-    : pct >= 70 ? 'var(--primary-500)'
-    : pct >= 30 ? 'var(--warning-500)'
-    : 'var(--danger-500)'
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 6, background: 'var(--gray-100)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }}>
-        <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', background: color, transition: 'width .3s' }} />
-      </div>
-      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', minWidth: 42, textAlign: 'right' }}>
-        {pct.toFixed(1)}%
-      </span>
-    </div>
-  )
-}
-
+const ROW_STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
 const STATE_TONE: Record<RowState, string> = {
   regressed: 'var(--danger-700)', blocked: 'var(--danger-500)', signing: '#1d4ed8', ready: 'var(--success-700)', done: 'var(--success-500)',
 }
-const ROW_STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
 
-export default async function ControlTowerPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | undefined>>
-}) {
+export default async function ReadinessPortfolioPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
-  const supabase = ctx.supabase
-  const orgId = ctx.orgId
-
-  const [t, tg] = await Promise.all([getTranslations('ControlTower'), getTranslations('Gates')])
-
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('id, code, name')
-    .eq('org_id', orgId)
-    .order('code')
-
   const params = await searchParams
-  // S23 (H-12): el proyecto de la URL; si no viene, el último visitado (RememberProject) o el primero.
-  const projectId = (params.projectId && projects?.some(p => p.id === params.projectId) ? params.projectId : null) ?? projects?.[0]?.id ?? null
-  const filters = parseMatrixFilters(params)
-
-  let data: MatrixData | null = null
-  if (projectId) data = await loadMatrix(supabase, projectId, orgId)
-  const rows = data?.rows ?? []
-  const shown = data ? filterMatrix(rows, filters, {
-    commitment: (s, g) => data!.commitments.get(`${s}:${g}`) ?? null,
-    changedIds: data.changedIds,
-    today: data.today,
-  }) : []
-
-  // D-18: dos números canónicos — avance físico ponderado (ITR aprobados × peso de gate) y readiness (gates
-  // aprobados vigentes / total), con la misma definición que KPIs.
-  const weightedVals = [...(data?.weighted.values() ?? [])]
-  const weightedItrs = weightedVals.reduce((sum, w) => sum + w.itrs, 0)
-  const projectWeighted = weightedItrs > 0 ? weightedVals.reduce((sum, w) => sum + w.pct * w.itrs, 0) / weightedItrs : 0
-  const readiness = readinessSummary(rows.map(r => r.gates))
-  const punchTotals = [...(data?.punches.values() ?? [])].reduce((acc, p) => ({ a: acc.a + p.a, b: acc.b + p.b }), { a: 0, b: 0 })
-
-  // Por gate: sistemas aprobados y, aparte, los que ya están listos para aprobar o esperan firmas.
-  const gateDefs = rows[0]?.gates ?? []
-  const byGate = gateDefs.map(g => {
-    const statuses = rows.map(r => r.gates.find(x => x.gate_id === g.gate_id)?.status)
-    return {
-      code: g.code,
-      approved: statuses.filter(st => st === 'approved' || st === 'approved_with_conditions').length,
-      toApprove: statuses.filter(st => st === 'ready' || st === 'ready_with_conditions').length,
-      toSign: statuses.filter(st => st === 'pending_signatures').length,
-    }
-  })
-  const areas = [...new Map(rows.map(r => [r.area_code, r.area_name])).entries()].sort((a, b) => a[0].localeCompare(b[0]))
-
-  const blockerText = (g: MatrixGate): string => {
-    if (g.status === 'pending_signatures') return t('next.signing')
-    if (g.status === 'ready' || g.status === 'ready_with_conditions') return t('next.ready')
-    if (!g.blocker) return t(`gateStatus.${g.status}`)
-    const label = g.blocker.label ?? tg(`kind.${g.blocker.kind}`)
-    const n = blockerCount(g.blocker)
-    return n ? t('next.blockerCount', { label, count: n }) : label
+  if (params.projectId) {
+    const rest = new URLSearchParams(Object.entries(params).filter(([k, v]) => k !== 'projectId' && !!v) as [string, string][])
+    const qs = rest.toString()
+    redirect(`/projects/${encodeURIComponent(params.projectId)}/readiness${qs ? `?${qs}` : ''}`)
   }
-  const query = new URLSearchParams(Object.entries({ ...params, projectId: projectId ?? '' }).filter(([, v]) => !!v) as [string, string][])
+
+  const { supabase, orgId } = ctx
+  const t = await getTranslations('ControlTower')
+  // bounded: proyectos de la org (decenas)
+  const { data: projects } = await supabase.from('projects').select('id, code, name').eq('org_id', orgId).order('code').limit(200)
+
+  // Gates materializados (S20): compute_project_gates lee el estado guardado; un llamado por proyecto.
+  const summaries = await Promise.all((projects ?? []).map(async p => {
+    const [gates, progress] = await Promise.all([
+      supabase.rpc('compute_project_gates', { p_project_id: p.id }),
+      supabase.rpc('compute_project_progress', { p_project_id: p.id }),
+    ])
+    const rows = (gates.data ?? []).map(r => (r.gates ?? []) as unknown as MatrixGate[])
+    const counts = Object.fromEntries(ROW_STATES.map(s => [s, 0])) as Record<RowState, number>
+    for (const g of rows) counts[rowState(g)]++
+    const prog = progress.data ?? []
+    const itrs = prog.reduce((n, x) => n + x.itr_total, 0)
+    const weighted = itrs > 0 ? prog.reduce((n, x) => n + Number(x.weighted_pct) * x.itr_total, 0) / itrs : 0
+    return { ...p, systems: rows.length, readiness: readinessSummary(rows), counts, weighted }
+  }))
 
   return (
-    <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto' }}>
-      {projectId && <RememberProject projectId={projectId} fromUrl={!!params.projectId} />}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
-        <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', margin: '4px 0 0' }}>{t('subtitle')}</p>
+    <div style={{ padding: 'clamp(12px, 4vw, 32px)', maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('portfolio.title')}</h1>
+        <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', margin: '4px 0 0' }}>{t('portfolio.subtitle')}</p>
       </div>
-
-      {/* Proyecto y filtros (S23, D-19): todo en la URL, se puede guardar como enlace */}
-      {projects && projects.length > 0 && (
-        <Card padding="sm" style={{ marginBottom: 16 }}>
-          <form method="get" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <label htmlFor="ct-project" style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-600)' }}>{t('project')}</label>
-            <Select id="ct-project" name="projectId" defaultValue={projectId ?? ''} fullWidth={false} style={{ maxWidth: 300 }}>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
-              ))}
-            </Select>
-            <Select name="area" defaultValue={filters.area ?? ''} fullWidth={false} aria-label={t('filter.area')}>
-              <option value="">{t('filter.allAreas')}</option>
-              {areas.map(([code, name]) => <option key={code} value={code}>{code} — {name}</option>)}
-            </Select>
-            <Select name="state" defaultValue={filters.state ?? ''} fullWidth={false} aria-label={t('filter.state')}>
-              <option value="">{t('filter.allStates')}</option>
-              {ROW_STATES.map(s => <option key={s} value={s}>{t(`rowState.${s}`)}</option>)}
-            </Select>
-            <Select name="committed" defaultValue={filters.committedDays ? String(filters.committedDays) : ''} fullWidth={false} aria-label={t('filter.committed')}>
-              <option value="">{t('filter.anyCommitment')}</option>
-              {[7, 30, 90].map(d => <option key={d} value={d}>{t('filter.committedIn', { days: d })}</option>)}
-            </Select>
-            <Select name="sort" defaultValue={filters.sort ?? 'risk'} fullWidth={false} aria-label={t('filter.sort')}>
-              <option value="risk">{t('filter.sortRisk')}</option>
-              <option value="code">{t('filter.sortCode')}</option>
-              <option value="commitment">{t('filter.sortCommitment')}</option>
-            </Select>
-            <input name="q" defaultValue={filters.q ?? ''} placeholder={t('filter.search')} aria-label={t('filter.search')}
-              style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', background: 'var(--card-bg)', color: 'var(--text-strong)', width: 160 }} />
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--gray-600)' }}>
-              <input type="checkbox" name="changed" value="1" defaultChecked={filters.changed} />
-              {t('filter.changed')}
-            </label>
-            <Button type="submit">{t('load')}</Button>
-            {projectId && (
-              <a href={`/control-tower/export?${query.toString()}`} style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600)' }}>
-                ↓ {t('export')}
-              </a>
-            )}
-          </form>
-        </Card>
-      )}
-
-      {/* KPI row */}
-      {rows.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
-          <Card padding="md">
-            <div style={kpiLabel}>{t('kpi.systems')}</div>
-            <div style={{ ...kpiValue, color: 'var(--text-strong)' }}>{rows.length}</div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.physical', { pct: (projectWeighted * 100).toFixed(1) })}</div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{t('kpi.readiness', { done: readiness.done, total: readiness.total, pct: (readiness.pct * 100).toFixed(1) })}</div>
-          </Card>
-          <Card padding="md" style={{ gridColumn: 'span 2' }}>
-            <div style={kpiLabel}>{t('kpi.approvedByGate')}</div>
-            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginTop: 4 }}>
-              {byGate.map(g => (
-                <div key={g.code}>
-                  <div style={{ ...kpiValue, marginTop: 0, color: g.approved === rows.length ? 'var(--success-500)' : 'var(--text-strong)' }}>
-                    {g.approved}/{rows.length}
-                  </div>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>
-                    {g.code}{g.toApprove > 0 && <span style={{ color: 'var(--success-700)' }}> · {t('kpi.toApprove', { count: g.toApprove })}</span>}
-                    {g.toSign > 0 && <span style={{ color: '#1d4ed8' }}> · {t('kpi.toSign', { count: g.toSign })}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 6 }}>
-              {data?.catBLimit == null ? t('kpi.catBNoLimit') : t('kpi.catBLimit', { limit: data.catBLimit })}
-            </div>
-          </Card>
-          <Card padding="md">
-            <div style={kpiLabel}>{t('kpi.punchesOpen')}</div>
-            <div style={{ ...kpiValue, color: 'var(--danger-500)' }}>
-              {punchTotals.a}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> A</span>
-              {' · '}
-              {punchTotals.b}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> B</span>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Systems table */}
-      {rows.length === 0 ? (
-        <Card padding="lg" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-          {projectId ? t('empty') : t('selectProject')}
-        </Card>
+      {summaries.length === 0 ? (
+        <Card padding="lg" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{t('portfolio.empty')}</Card>
       ) : (
         <TableWrapper>
-          <div style={{ padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-            {t('showing', { shown: shown.length, total: rows.length })}
-          </div>
           <div style={{ overflowX: 'auto' }}>
-            <Table aria-label={t('title')}>
+            <Table aria-label={t('portfolio.title')}>
               <THead>
                 <TR>
-                  <TH style={{ position: 'sticky', left: 0, background: 'var(--gray-50)', zIndex: 2, minWidth: 140 }}>{t('col.area')}</TH>
-                  <TH style={{ minWidth: 160 }}>{t('col.system')}</TH>
-                  <TH style={{ width: 180 }}>{t('col.physical')}</TH>
-                  <TH style={{ width: 64, textAlign: 'center' }}>{t('col.punchA')}</TH>
-                  <TH style={{ width: 64, textAlign: 'center' }}>{t('col.punchB')}</TH>
-                  <TH style={{ width: 240 }}>{t('col.gates')}</TH>
-                  <TH style={{ minWidth: 260 }}>{t('col.next')}</TH>
+                  <TH style={{ minWidth: 200 }}>{t('portfolio.col.project')}</TH>
+                  <TH style={{ width: 90, textAlign: 'right' }}>{t('portfolio.col.systems')}</TH>
+                  <TH style={{ width: 170 }}>{t('portfolio.col.readiness')}</TH>
+                  <TH style={{ width: 120 }}>{t('portfolio.col.physical')}</TH>
+                  <TH style={{ minWidth: 300 }}>{t('portfolio.col.next')}</TH>
+                  <TH style={{ width: 150 }} />
                 </TR>
               </THead>
               <TBody>
-                {shown.map(r => {
-                  const info = data!.sysInfo.get(r.system_id)
-                  const w = data!.weighted.get(r.system_id)
-                  const p = data!.punches.get(r.system_id) ?? { a: 0, b: 0 }
-                  const next = nextGate(r.gates)
-                  const state = rowState(r.gates)
-                  const commit = next ? data!.commitments.get(`${r.system_id}:${next.gate_id}`) : undefined
-                  const blockedBy = next ? data!.blocks.get(`${r.system_id}:${next.gate_id}`) : undefined
-                  const conditions = r.gates.reduce((n, g) => n + (g.approval?.id ? (data!.openConditions.get(g.approval.id) ?? 0) : 0), 0)
-                  const parts = [info?.system_type && t(`systemType.${info.system_type}`), info?.priority && `P${info.priority}`].filter(Boolean)
-                  return (
-                    <TR key={r.system_id}>
-                      <TD style={{ position: 'sticky', left: 0, background: 'var(--card-bg)', zIndex: 1 }}>
-                        <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{r.area_code}</div>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.area_name}</div>
-                      </TD>
-                      <TD>
-                        <Link href={`/control-tower/${r.system_id}`} style={{ fontWeight: 600, color: 'var(--text-strong)', textDecoration: 'none' }}>{r.system_code}</Link>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.system_name}</div>
-                        {parts.length > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-500)', marginTop: 2 }}>{parts.join(' · ')}</div>}
-                      </TD>
-                      <TD>
-                        <Bar pct={(w?.pct ?? 0) * 100} />
-                        <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>{t('itrsWeighing', { count: w?.itrs ?? 0 })}</div>
-                      </TD>
-                      <TD style={{ textAlign: 'center', color: p.a > 0 ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: 600 }}>{p.a}</TD>
-                      <TD style={{ textAlign: 'center', color: p.b > 0 ? 'var(--warning-500)' : 'var(--gray-400)', fontWeight: 600 }}>{p.b}</TD>
-                      <TD>
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          {r.gates.map(g => {
-                            const by = data!.blocks.get(`${r.system_id}:${g.gate_id}`)
-                            const title = t('gateTitle', { name: g.name, status: t(`gateStatus.${g.status}`), failing: g.failing })
-                            return (
-                              <GateBadge key={g.gate_id} gate={g} label={g.code} href={`/control-tower/${r.system_id}`} blocked={!!by}
-                                title={by ? `${title}\n${t('blockedBy', { systems: by.join(', ') })}` : title} />
-                            )
-                          })}
-                        </div>
-                      </TD>
-                      <TD style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-                        {next ? (
-                          <>
-                            <div>
-                              <strong style={{ color: STATE_TONE[state] }}>{next.code}</strong>
-                              {' · '}{blockedBy ? t('blockedBy', { systems: blockedBy.join(', ') }) : blockerText(next)}
-                            </div>
-                            {(!!commit || conditions > 0) && (
-                              <div style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
-                                {commit && <span style={{ color: commit < data!.today ? 'var(--danger-600)' : 'var(--text-muted)' }}>{t('committedOn', { date: commit })}</span>}
-                                {commit && conditions > 0 && ' · '}
-                                {conditions > 0 && <span style={{ color: '#b45309' }}>{t('conditionsOpen', { count: conditions })}</span>}
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <span style={{ color: 'var(--success-500)', fontWeight: 600 }}>
-                            {t('noBlockers')}{conditions > 0 && <span style={{ color: '#b45309', fontWeight: 500 }}> · {t('conditionsOpen', { count: conditions })}</span>}
-                          </span>
-                        )}
-                      </TD>
-                    </TR>
-                  )
-                })}
+                {summaries.map(p => (
+                  <TR key={p.id}>
+                    <TD>
+                      <Link href={`/projects/${p.id}/readiness`} style={{ fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none' }}>{p.code}</Link>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{p.name}</div>
+                    </TD>
+                    <TD style={{ textAlign: 'right', fontWeight: 600 }}>{p.systems}</TD>
+                    <TD>
+                      <div style={{ fontWeight: 700, color: 'var(--text-strong)' }}>{p.readiness.done}/{p.readiness.total}</div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{(p.readiness.pct * 100).toFixed(1)} %</div>
+                    </TD>
+                    <TD style={{ fontWeight: 600 }}>{(p.weighted * 100).toFixed(1)} %</TD>
+                    <TD>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: 'var(--text-sm)' }}>
+                        {ROW_STATES.filter(s => p.counts[s] > 0).map(s => (
+                          <Link key={s} href={`/projects/${p.id}/readiness?state=${s}`} style={{ color: STATE_TONE[s], fontWeight: 600, textDecoration: 'none' }}>
+                            {t(`rowState.${s}`)} {p.counts[s]}
+                          </Link>
+                        ))}
+                        {p.systems === 0 && <span style={{ color: 'var(--text-muted)' }}>{t('empty')}</span>}
+                      </div>
+                    </TD>
+                    <TD style={{ textAlign: 'right' }}>
+                      <Link href={`/projects/${p.id}/readiness`} style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600)', textDecoration: 'none' }}>{t('portfolio.open')}</Link>
+                    </TD>
+                  </TR>
+                ))}
               </TBody>
             </Table>
           </div>
@@ -295,12 +102,4 @@ export default async function ControlTowerPage({
       )}
     </div>
   )
-}
-
-const kpiLabel: React.CSSProperties = {
-  fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)',
-  textTransform: 'uppercase', letterSpacing: '.05em',
-}
-const kpiValue: React.CSSProperties = {
-  fontSize: 28, fontWeight: 700, marginTop: 4,
 }

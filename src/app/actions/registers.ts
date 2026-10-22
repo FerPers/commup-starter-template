@@ -32,7 +32,7 @@ type TagRef = { tag_id: string; role: 'subject' | 'line' | 'gauge' }
 function revalidate(projectId: string, itemId?: string) {
   revalidatePath(`/projects/${projectId}/registers`)
   if (itemId) revalidatePath(`/projects/${projectId}/registers/${itemId}`)
-  revalidatePath('/control-tower')
+  revalidatePath('/projects/[id]/readiness', 'page')
 }
 
 async function loadItem(db: SupabaseClient, projectId: string, itemId: string) {
@@ -161,7 +161,7 @@ export const configureRegisterType = withAuth(
     })
     if (error) return { error: error.message }
     revalidatePath('/admin/registers')
-    revalidatePath('/control-tower')
+    revalidatePath('/projects/[id]/readiness', 'page')
     return {}
   },
 )

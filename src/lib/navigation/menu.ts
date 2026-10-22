@@ -45,7 +45,7 @@ export const PERSONAL_ITEMS: readonly MenuItemDef[] = [
 /** Arriba del proyecto, fuera de las fases. */
 export const PROJECT_TOP: readonly MenuItemDef[] = [
   { key: 'overview', href: '/projects/{p}', labelKey: 'projectOverview', audience: ALL, exact: true },
-  { key: 'readiness', href: '/control-tower?projectId={p}', labelKey: 'controlTower', audience: ['lead', 'plan', 'mgmt', 'client'] },
+  { key: 'readiness', href: '/projects/{p}/readiness', labelKey: 'readiness', audience: ['lead', 'plan', 'mgmt', 'client'] },
 ]
 
 /** Ítems del proyecto por fase (orden = orden en el menú). */
@@ -82,6 +82,7 @@ export const PROJECT_ITEMS: readonly MenuItemDef[] = [
 export const PORTFOLIO_ITEMS: readonly MenuItemDef[] = [
   { key: 'projects', href: '/projects', labelKey: 'projects', audience: ['mgmt'] },
   { key: 'dashboard', href: '/dashboard', labelKey: 'dashboard', audience: ['plan', 'mgmt'] },
+  { key: 'controlTower', href: '/control-tower', labelKey: 'controlTower', audience: ['mgmt'] },
   { key: 'opsPunches', href: '/ops/punches', labelKey: 'opsPunches', audience: ['mgmt'] },
   { key: 'handover', href: '/admin/handover', labelKey: 'handover', tier: 'privileged', audience: ['mgmt'] },
   { key: 'allItrs', href: '/itrs', labelKey: 'allItrs', audience: [] },

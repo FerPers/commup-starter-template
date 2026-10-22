@@ -46,7 +46,7 @@ function revalidate(projectId: string, kind?: MgmtKind, id?: string) {
   revalidatePath(`/projects/${projectId}/daily`)
   if (kind && id) revalidatePath(`/projects/${projectId}/daily/${kind}/${id}`)
   revalidatePath('/my-work')
-  revalidatePath('/control-tower', 'layout')
+  revalidatePath('/projects/[id]', 'layout')
 }
 
 /** El registro existe y es del proyecto indicado (RLS ya limita a la org del usuario). */

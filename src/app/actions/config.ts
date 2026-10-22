@@ -369,7 +369,7 @@ export const saveCatBLimit = withAuthOnly(
     const { error } = await ctx.supabase.from('organizations').update({ settings: next }).eq('id', ctx.orgId)
     if (error) return { error: error.message }
     revalidatePath('/admin/config')
-    revalidatePath('/control-tower')
+    revalidatePath('/projects/[id]/readiness', 'page')
     return {}
   },
 )

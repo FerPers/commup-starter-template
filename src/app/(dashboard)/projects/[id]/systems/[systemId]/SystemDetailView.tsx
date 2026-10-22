@@ -15,7 +15,6 @@ import {
   type DependencyKind,
   type SystemType,
 } from '@/lib/systems/dependencies'
-import { TypeChip } from '../system-ui'
 
 export type DependencyRow = {
   id: string
@@ -57,13 +56,14 @@ type Props = {
   gates: Gate[]
   events: BoundaryEvent[]
   canEdit: boolean
+  /** N2a: pestaña de la ficha única que se pinta (Datos del sistema o Dependencias). */
+  section: 'data' | 'deps'
 }
 
 const card: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }
 const small: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }
 const h2: React.CSSProperties = { fontSize: 17, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 12px' }
 const label: React.CSSProperties = { fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }
-const linkStyle: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }
 const input: React.CSSProperties = {
   width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8,
   fontSize: 'var(--text-sm)', background: 'var(--card-bg)', color: 'var(--text-strong)', boxSizing: 'border-box',
@@ -75,7 +75,7 @@ const btn = (variant: 'primary' | 'outline' | 'danger'): React.CSSProperties => 
   color: variant === 'outline' ? 'var(--text-strong)' : '#fff',
 })
 
-export default function SystemDetailView({ project, system, dependsOn, enables, otherSystems, gates, events, canEdit }: Props) {
+export default function SystemDetailView({ project, system, dependsOn, enables, otherSystems, gates, events, canEdit, section }: Props) {
   const t = useTranslations('Systems')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -159,26 +159,12 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
   }
 
   return (
-    <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <Link href={`/projects/${project.id}/systems`} style={linkStyle}>← {t('detail.back')}</Link>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
-          <div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', margin: 0, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              {system.code}{system.name !== system.code && <span style={{ fontWeight: 500 }}>— {system.name}</span>}
-              {system.system_type && <TypeChip type={system.system_type} label={t(`type.${system.system_type}`)} />}
-              {system.priority && <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-muted)' }}>P{system.priority}</span>}
-            </h1>
-            <p style={{ ...small, margin: '4px 0 0' }}>
-              {project.code} · {project.name}{system.area ? ` · ${system.area}` : ''} · {t('detail.scope', { subsystems: system.subsystems, tags: system.tags })}
-            </p>
-          </div>
-          <Link href={`/control-tower/${system.id}`} style={{ ...btn('outline'), textDecoration: 'none' }}>{t('detail.openGates')}</Link>
-        </div>
-      </div>
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {error && <div ref={alertRef} role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
       {saved && <div role="status" style={{ padding: '10px 14px', background: 'var(--success-50)', border: '1px solid #a7f3d0', borderRadius: 8, color: 'var(--success-700)', fontSize: 'var(--text-sm)' }}>{saved}</div>}
+
+      {section === 'data' && <>
+      <p style={{ ...small, margin: 0 }}>{t('detail.scope', { subsystems: system.subsystems, tags: system.tags })}</p>
 
       {/* Atributos */}
       <section style={card} aria-labelledby="sys-attrs">
@@ -246,6 +232,9 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
         )}
       </section>
 
+      </>}
+
+      {section === 'deps' && <>
       {/* Depende de */}
       <section style={card} aria-labelledby="sys-deps">
         <h2 id="sys-deps" style={h2}>{t('detail.dependsOn')}</h2>
@@ -308,6 +297,7 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
         <p style={{ ...small, margin: '0 0 12px' }}>{t('detail.enablesHelp')}</p>
         <DependencyList rows={enables} projectId={project.id} canRemove={false} pending={isPending} emptyText={t('detail.noEnables')} direction="enables" />
       </section>
+      </>}
     </div>
   )
 }

@@ -194,7 +194,7 @@ export const moveTagSubsystem = withAuth(
     revalidatePath(`/projects/${input.projectId}/tags`)
     revalidatePath(`/projects/${input.projectId}/itrs`)
     revalidatePath(`/projects/${input.projectId}/punches`)
-    revalidatePath('/control-tower')
+    revalidatePath('/projects/[id]/readiness', 'page')
     return { itrsMoved: res.itrs_moved, punchesMoved: res.punches_moved }
   },
 )

@@ -22,7 +22,7 @@ function revalidate(projectId: string, path?: string) {
   revalidatePath(base(projectId))
   if (path) revalidatePath(`${base(projectId)}/${path}`)
   revalidatePath('/my-work')
-  revalidatePath('/control-tower', 'layout')
+  revalidatePath('/projects/[id]', 'layout')
 }
 
 async function owned(db: SupabaseClient, table: 'procedures' | 'procedure_revisions' | 'procedure_runs' | 'lineup_sheets' | 'lineup_items', id: string, projectId: string) {

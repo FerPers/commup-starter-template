@@ -90,7 +90,8 @@
       "punchList": "Punch List",
       "preservation": "Preservación",
       "workPlans": "Planes de trabajo",
-      "controlTower": "Readiness",
+      "controlTower": "Readiness por proyecto",
+      "readiness": "Readiness",
       "certificates": "Certificados",
       "kpis": "KPIs",
       "itrTemplates": "Plantillas ITR",
@@ -2012,7 +2013,11 @@
       "sortCode": "Por código",
       "sortCommitment": "Por compromiso",
       "search": "Buscar sistema",
-      "changed": "Cambió en 24 h"
+      "changed": "Cambió en 24 h",
+      "nextGate": "Siguiente gate",
+      "allGates": "Todos los gates",
+      "nextIs": "Siguiente: {gate}",
+      "blocked": "Solo con bloqueo"
     },
     "rowState": {
       "regressed": "En regresión",
@@ -2030,7 +2035,20 @@
     "conditionsOpen": "{count, plural, one {# condición abierta} other {# condiciones abiertas}}",
     "export": "Excel",
     "showing": "{shown} de {total} sistemas",
-    "itrsWeighing": "{count} ITR"
+    "itrsWeighing": "{count} ITR",
+    "portfolio": {
+      "title": "Readiness por proyecto",
+      "subtitle": "Gates aprobados vigentes y estado del siguiente gate de cada sistema, por proyecto",
+      "empty": "No hay proyectos",
+      "open": "Abrir readiness →",
+      "col": {
+        "project": "Proyecto",
+        "systems": "Sistemas",
+        "readiness": "Readiness",
+        "physical": "Avance",
+        "next": "Siguiente gate por estado"
+      }
+    }
   },
   "DataQuality": {
     "title": "Calidad de datos",
@@ -3110,6 +3128,37 @@
       "applying": "Aplicando…",
       "done": "Listo: {systems} sistemas actualizados y {dependencies} dependencias creadas.",
       "notePrefix": "IA:"
+    },
+    "file": {
+      "backReadiness": "Readiness",
+      "backSystems": "Sistemas",
+      "allApproved": "Todos los gates aprobados",
+      "weighted": "Avance ponderado",
+      "itrs": "sobre {count} ITR",
+      "gates": "Gates aprobados",
+      "attention": "{count, plural, one {# por revisar} other {# por revisar}}",
+      "commitment": "Compromiso {gate}",
+      "forecast": "forecast {date}",
+      "tabsLabel": "Secciones del sistema",
+      "tab": {
+        "gates": "Gates",
+        "plan": "Avance y plan",
+        "deps": "Dependencias",
+        "startup": "Arranque",
+        "transfer": "Traspaso",
+        "vendors": "Vendors y desempeño",
+        "data": "Datos del sistema"
+      },
+      "planIntro": "Forecast y compromiso por gate (cambiar un compromiso pide motivo; líder+), con el avance ponderado de su fase.",
+      "noDaily": "Sin restricciones ni acciones abiertas en este sistema.",
+      "procedures": "Procedimientos y ejecuciones",
+      "lineups": "Hojas de line-up",
+      "currentStage": "Etapa actual:",
+      "noTransfers": "Sin traspasos todavía.",
+      "vendors": "Paquetes de vendor",
+      "noVendors": "Ningún paquete de vendor abarca este sistema.",
+      "performance": "Pruebas de desempeño",
+      "noPerformance": "El sistema no es principal de ninguna prueba de desempeño."
     }
   },
   "Registers": {

@@ -22,7 +22,7 @@ const date = (v: string | null | undefined) => (v && DATE.test(v) ? v : (null as
 function revalidate(projectId: string, packageId?: string) {
   revalidatePath(`/projects/${projectId}/vendors`)
   if (packageId) revalidatePath(`/projects/${projectId}/vendors/${packageId}`)
-  revalidatePath('/control-tower', 'layout')
+  revalidatePath('/projects/[id]', 'layout')
 }
 
 type Db = SupabaseClient<Database>

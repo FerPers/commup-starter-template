@@ -66,7 +66,7 @@ export default async function DailyDetailPage({ params }: { params: Promise<{ id
       const { data } = await supabase.from('system_gate_approvals').select('system_id, systems(code), readiness_gates(code)').eq('id', item.source_id).maybeSingle()
       const sys = data?.systems as { code: string } | null
       const gate = data?.readiness_gates as { code: string } | null
-      if (data) origin = { label: `${sys?.code ?? ''} · ${gate?.code ?? ''}`, href: `/control-tower/${data.system_id}` }
+      if (data) origin = { label: `${sys?.code ?? ''} · ${gate?.code ?? ''}`, href: `/projects/${id}/systems/${data.system_id}` }
     }
     return <ActionDetail {...common} item={item} origin={origin} />
   }

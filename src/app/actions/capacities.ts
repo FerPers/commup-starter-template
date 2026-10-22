@@ -15,7 +15,7 @@ function revalidate(projectId: string) {
   revalidatePath(`/projects/${projectId}/signatories`)
   revalidatePath(`/projects/${projectId}`, 'layout')
   revalidatePath('/my-work')
-  revalidatePath('/control-tower', 'layout')
+  revalidatePath('/projects/[id]', 'layout')
 }
 
 export const assignProjectCapacity = withAuth(

@@ -16,8 +16,8 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/
 
 function revalidate(projectId: string, systemId?: string) {
   revalidatePath(`/projects/${projectId}/daily`)
-  revalidatePath('/control-tower')
-  if (systemId) revalidatePath(`/control-tower/${systemId}`)
+  revalidatePath(`/projects/${projectId}/readiness`)
+  if (systemId) revalidatePath(`/projects/${projectId}/systems/${systemId}`)
 }
 
 type DateInput = { projectId: string; systemId: string; gateId: string; date: string | null; reason?: string }
@@ -108,7 +108,7 @@ export const setGateWeights = withAuthOnly(
     })
     if (error) return { error: error.message }
     revalidatePath('/admin/gates')
-    revalidatePath('/control-tower', 'layout')
+    revalidatePath('/projects/[id]', 'layout')
     return {}
   },
 )

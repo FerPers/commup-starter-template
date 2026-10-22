@@ -16,7 +16,7 @@ function revalidate(projectId: string, eventId?: string) {
   revalidatePath(`/projects/${projectId}/startup`)
   if (eventId) revalidatePath(`/projects/${projectId}/startup/events/${eventId}`)
   revalidatePath('/my-work')
-  revalidatePath('/control-tower', 'layout')
+  revalidatePath('/projects/[id]', 'layout')
 }
 
 async function owned(db: SupabaseClient, id: string, projectId: string) {

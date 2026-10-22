@@ -91,7 +91,7 @@ export default function SystemsView({ project, systems, edges, canEdit }: Props)
             <p style={{ ...small, margin: '4px 0 0' }}>{t('subtitle')}</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <Link href={`/control-tower?projectId=${project.id}`} style={{ ...tab(false), textDecoration: 'none' }}>{t('openControlTower')}</Link>
+            <Link href={`/projects/${project.id}/readiness`} style={{ ...tab(false), textDecoration: 'none' }}>{t('openControlTower')}</Link>
             {canEdit && systems.length > 0 && <button type="button" style={tab(false)} onClick={() => setSuggesting(true)}>✨ {t('ai.button')}</button>}
             {canEdit && <button type="button" style={tab(true)} onClick={() => setImporting(true)}>{t('import.button')}</button>}
           </div>

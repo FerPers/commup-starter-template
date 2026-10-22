@@ -21,7 +21,7 @@ function revalidate(projectId: string, transferId?: string) {
   revalidatePath(`/projects/${projectId}/startup/operations`)
   if (transferId) revalidatePath(`/projects/${projectId}/startup/transfers/${transferId}`)
   revalidatePath('/my-work')
-  revalidatePath('/control-tower', 'layout')
+  revalidatePath('/projects/[id]', 'layout')
 }
 
 async function transferOf(db: SupabaseClient, id: string, projectId: string) {

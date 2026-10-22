@@ -70,7 +70,7 @@ export default function LookaheadView({ project, initialWindow, initialEdit, cel
       if (!inWindow(date, end)) continue
       out.push({
         kind: 'gate', id: `${c.systemId}:${c.gateId}`, ref: c.gateCode, title: c.gateName, systemId: c.systemId, systemCode: c.systemCode,
-        date, basis, status: c.status, href: `/control-tower/${c.systemId}`,
+        date, basis, status: c.status, href: `${base}/systems/${c.systemId}?tab=plan`,
         gapDays: gateGap(c.forecast, c.commitment), atRisk: gateAtRisk(c.status, date, end), detail: c.blocker,
       })
     }
@@ -168,7 +168,7 @@ export default function LookaheadView({ project, initialWindow, initialEdit, cel
               <section key={g.systemId ?? 'none'} style={{ ...card, padding: 0, overflow: 'hidden' }}>
                 <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' }}>
                   {g.systemId ? (
-                    <Link href={`/control-tower/${g.systemId}`} style={{ fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{g.systemCode}</Link>
+                    <Link href={`${base}/systems/${g.systemId}?tab=plan`} style={{ fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{g.systemCode}</Link>
                   ) : <strong>{t('lookahead.noSystem')}</strong>}
                   {p && <span style={small}>{t('lookahead.systemProgress', { pct: pct(p.weightedPct), approved: p.gatesApproved, total: p.gatesTotal })}</span>}
                 </div>

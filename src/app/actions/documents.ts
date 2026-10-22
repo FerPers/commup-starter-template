@@ -20,7 +20,7 @@ const opt = (v: string | null | undefined) => ((v ?? '') === '' ? null : v) as u
 function revalidateDocs(projectId: string, documentId?: string) {
   revalidatePath(`/projects/${projectId}/documents`)
   if (documentId) revalidatePath(`/projects/${projectId}/documents/${documentId}`)
-  revalidatePath('/control-tower', 'layout')
+  revalidatePath('/projects/[id]', 'layout')
 }
 
 // ── Empresas ────────────────────────────────────────────────────────────

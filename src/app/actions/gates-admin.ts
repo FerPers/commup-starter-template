@@ -19,7 +19,7 @@ type Result = { error?: string }
 
 function revalidate() {
   revalidatePath('/admin/gates')
-  revalidatePath('/control-tower')
+  revalidatePath('/projects/[id]/readiness', 'page')
 }
 
 function cleanCode(code: string): string {
