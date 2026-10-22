@@ -1,5 +1,5 @@
 -- S20 — borra el banco de carga LOADTEST (org, proyecto y todo lo que cuelga por cascada).
--- Uso: supabase db query --linked -f scripts/loadtest/teardown.sql  (o pegarlo en el SQL Editor de Supabase)
+-- Uso: node scripts/loadtest/run.mjs scripts/loadtest/teardown.sql [--db-url <url-rama>]  (o psql; nunca prod, ver seed.sql)
 --
 -- 2026-10-22: el borrado en cascada choca con los guards de BORRADO que llegaron después de S20 (plantillas
 -- asignadas congeladas, último owner de la org, auditoría y borrado lógico de criterios de liberación, log de

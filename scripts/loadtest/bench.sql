@@ -2,7 +2,10 @@
 -- RLS (SET ROLE authenticated + claims). 5 corridas por consulta; informa mín / mediana / máx en ms (con 5 muestras el
 -- máx es la cota del p95). No escribe nada (ROLLBACK al final). Las funciones que devuelven un solo valor van
 -- dentro de length(): con count(*) Postgres no las evalúa (S20 sesión 2: my_work_counts salía en 0 ms).
--- Uso: supabase db query --linked -o table -f scripts/loadtest/bench.sql
+-- Contra la misma BD donde se sembró (ver la advertencia de seed.sql: no en prod).
+-- Uso: node scripts/loadtest/run.mjs scripts/loadtest/bench.sql   (un bloque `-- @@chunk` por petición: la API corta a
+-- los ~2 min; en psql o el SQL Editor corre entero)
+-- @@chunk S20
 BEGIN;
 SET LOCAL statement_timeout = 0;
 CREATE TEMP TABLE _bench (label text, run int, ms numeric);
@@ -30,15 +33,99 @@ BEGIN
     -- S20 sesión 2 (B-06): políticas set-based en tablas hijas
     ('rls.punch_attachments', 'SELECT count(*) FROM punch_attachments'),
     ('rls.work_plan_items', 'SELECT count(*) FROM work_plan_items'),
-    ('itr_generation_summary', format('SELECT length(public.itr_generation_summary(%L, (SELECT array_agg(id) FROM project_phases WHERE org_id = %L))::text)', v_proj, v_org)),
-    -- R2b: registro «Requisitos ITR» (totales + página 1 del proyecto, filtro «faltan», un subsistema) y su Excel
+    ('itr_generation_summary', format('SELECT length(public.itr_generation_summary(%L, (SELECT array_agg(id) FROM project_phases WHERE org_id = %L))::text)', v_proj, v_org))
+  ) v(label, sql) LOOP
+    FOR i IN 1..5 LOOP
+      t0 := clock_timestamp();
+      EXECUTE q.sql INTO v_dummy;
+      INSERT INTO _bench VALUES (q.label, i, round(extract(epoch FROM clock_timestamp() - t0)::numeric * 1000, 1));
+    END LOOP;
+  END LOOP;
+  EXECUTE 'RESET ROLE';
+END $b$;
+SELECT label, min(ms) AS min_ms, percentile_cont(0.5) WITHIN GROUP (ORDER BY ms) AS median_ms, max(ms) AS max_ms
+FROM _bench GROUP BY label ORDER BY max(ms) DESC;
+ROLLBACK;
+
+-- @@chunk R2b registro
+BEGIN;
+SET LOCAL statement_timeout = 0;
+CREATE TEMP TABLE _bench (label text, run int, ms numeric);
+GRANT ALL ON _bench TO authenticated;
+DO $b$
+DECLARE
+  v_user uuid := '41d8f81c-28f9-458c-af3f-b754795b2c52';
+  v_org uuid := '10ad7e57-0000-4000-8000-000000000001';
+  v_proj uuid := '10ad7e57-0000-4000-8000-000000000002';
+  t0 timestamptz; i int; q record; v_dummy bigint;
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_user, 'role', 'authenticated')::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  FOR q IN SELECT * FROM (VALUES
+    -- R2b: registro «Requisitos ITR» (totales + página 1 del proyecto, filtro «faltan», un subsistema) y ficha del tag
     ('requirements.summary', format('SELECT length(public.tag_requirements_summary(%L)::text)', v_proj)),
     ('requirements.page_all', format('SELECT length(public.tag_requirements_page(%L)::text)', v_proj)),
     ('requirements.page_missing', format('SELECT length(public.tag_requirements_page(%L, ''missing'')::text)', v_proj)),
     ('requirements.page_subsystem', format('SELECT length(public.tag_requirements_page(%L, ''all'', NULL, NULL, (SELECT id FROM subsystems WHERE project_id = %L ORDER BY code LIMIT 1))::text)', v_proj, v_proj)),
-    ('requirements.tag', format('SELECT count(*) FROM public.tag_itr_requirements(%L, ARRAY[(SELECT id FROM tags WHERE project_id = %L AND tag_number = ''LT-000097'')])', v_proj, v_proj)),
+    ('requirements.tag', format('SELECT count(*) FROM public.tag_itr_requirements(%L, ARRAY[(SELECT id FROM tags WHERE project_id = %L AND tag_number = ''LT-000097'')])', v_proj, v_proj))
+  ) v(label, sql) LOOP
+    FOR i IN 1..5 LOOP
+      t0 := clock_timestamp();
+      EXECUTE q.sql INTO v_dummy;
+      INSERT INTO _bench VALUES (q.label, i, round(extract(epoch FROM clock_timestamp() - t0)::numeric * 1000, 1));
+    END LOOP;
+  END LOOP;
+  EXECUTE 'RESET ROLE';
+END $b$;
+SELECT label, min(ms) AS min_ms, percentile_cont(0.5) WITHIN GROUP (ORDER BY ms) AS median_ms, max(ms) AS max_ms
+FROM _bench GROUP BY label ORDER BY max(ms) DESC;
+ROLLBACK;
+
+-- @@chunk R2b Excel nodo
+BEGIN;
+SET LOCAL statement_timeout = 0;
+CREATE TEMP TABLE _bench (label text, run int, ms numeric);
+GRANT ALL ON _bench TO authenticated;
+DO $b$
+DECLARE
+  v_user uuid := '41d8f81c-28f9-458c-af3f-b754795b2c52';
+  v_org uuid := '10ad7e57-0000-4000-8000-000000000001';
+  v_proj uuid := '10ad7e57-0000-4000-8000-000000000002';
+  t0 timestamptz; i int; q record; v_dummy bigint;
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_user, 'role', 'authenticated')::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  FOR q IN SELECT * FROM (VALUES
     ('requirements.export_system', format('SELECT length(public.tag_requirements_export(%L, NULL, (SELECT id FROM systems WHERE project_id = %L ORDER BY code LIMIT 1))::text)', v_proj, v_proj)),
-    ('requirements.export_area', format('SELECT length(public.tag_requirements_export(%L, (SELECT id FROM areas WHERE project_id = %L ORDER BY code LIMIT 1))::text)', v_proj, v_proj)),
+    ('requirements.export_area', format('SELECT length(public.tag_requirements_export(%L, (SELECT id FROM areas WHERE project_id = %L ORDER BY code LIMIT 1))::text)', v_proj, v_proj))
+  ) v(label, sql) LOOP
+    FOR i IN 1..5 LOOP
+      t0 := clock_timestamp();
+      EXECUTE q.sql INTO v_dummy;
+      INSERT INTO _bench VALUES (q.label, i, round(extract(epoch FROM clock_timestamp() - t0)::numeric * 1000, 1));
+    END LOOP;
+  END LOOP;
+  EXECUTE 'RESET ROLE';
+END $b$;
+SELECT label, min(ms) AS min_ms, percentile_cont(0.5) WITHIN GROUP (ORDER BY ms) AS median_ms, max(ms) AS max_ms
+FROM _bench GROUP BY label ORDER BY max(ms) DESC;
+ROLLBACK;
+
+-- @@chunk R2b Excel proyecto
+BEGIN;
+SET LOCAL statement_timeout = 0;
+CREATE TEMP TABLE _bench (label text, run int, ms numeric);
+GRANT ALL ON _bench TO authenticated;
+DO $b$
+DECLARE
+  v_user uuid := '41d8f81c-28f9-458c-af3f-b754795b2c52';
+  v_org uuid := '10ad7e57-0000-4000-8000-000000000001';
+  v_proj uuid := '10ad7e57-0000-4000-8000-000000000002';
+  t0 timestamptz; i int; q record; v_dummy bigint;
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_user, 'role', 'authenticated')::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  FOR q IN SELECT * FROM (VALUES
     ('requirements.export_project', format('SELECT length(public.tag_requirements_export(%L)::text)', v_proj))
   ) v(label, sql) LOOP
     FOR i IN 1..5 LOOP
