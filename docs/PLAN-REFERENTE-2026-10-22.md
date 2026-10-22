@@ -113,6 +113,8 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
 
 ### R — Requisitos ITR por tag con IA (5 sesiones)
 
+> **Insumo (2026-10-22):** [`R-INSUMOS-MATRIZ-CERTIFICACION-2026-10-22.md`](R-INSUMOS-MATRIZ-CERTIFICACION-2026-10-22.md) — la matriz de certificación y la tabla de formatos que Luis usaba. Ajustes: proponer **cadenas A→B→C por tipo**, objetivo del requisito = tag **o paquete de prueba** (luego estructura civil), **cantidad requerida**, **código del cliente** por plantilla, Excel del registro con las vistas de la matriz, importar una matriz histórica con mapeo de códigos por IA.
+
 **Principio:** el requisito base se **calcula** (matriz aceptada del tipo del tag, filtrada por las disciplinas del proyecto). Solo se **guardan las excepciones**: agregar o excluir un código, propuestas por la IA o a mano y decididas por una persona. Así no hay 200 mil filas que mantener sincronizadas.
 - La identidad de la plantilla es su `template_code` (las revisiones cambian el id).
 - El alcance del proyecto filtra por la **disciplina de la plantilla**, no la del tag: una bomba mecánica lleva el ITR eléctrico de su motor.
