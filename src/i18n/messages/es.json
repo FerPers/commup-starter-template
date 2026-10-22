@@ -5752,6 +5752,8 @@
       "commitment": "Compromiso",
       "forecast": "Pronóstico",
       "itrs": "{pct} % de {total} ITR aprobados",
+      "noItrs": "Sin ITR",
+      "noItrsLong": "Sin ITR de esta fase",
       "overdue": "Vencida",
       "legend": "Leyenda",
       "legendMid": "≥ 50 %",

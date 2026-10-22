@@ -62,7 +62,7 @@ export default async function SkylinePage({ params, searchParams }: {
             <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)' }}>{t('skyline.gate')}</span>
             <nav aria-label={t('skyline.gate')} style={group}>
               {gateList.map(g => (
-                <Link key={g.gateId} href={href({ gate: g.gateId })} title={g.name} aria-current={g.gateId === gateId ? 'true' : undefined} style={segBtn(g.gateId === gateId)}>{g.code}</Link>
+                <Link key={g.gateId} href={href({ gate: g.gateId })} title={g.name} aria-label={`${g.code} · ${g.name}`} aria-current={g.gateId === gateId ? 'true' : undefined} style={segBtn(g.gateId === gateId)}>{g.code}</Link>
               ))}
             </nav>
             <nav aria-label={t('skyline.scale')} style={group}>
@@ -89,7 +89,7 @@ export default async function SkylinePage({ params, searchParams }: {
           )}
 
           <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--card-bg)' }}>
-            <div style={{ minWidth: p.scale === 'week' ? 960 : 640, padding: '12px 12px 0' }}>
+            <div style={{ minWidth: p.scale === 'week' ? 1080 : 640, padding: '12px 12px 0' }}>
               {(sky.before.length > 0 || sky.after.length > 0) && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: 8 }}>
                   <span>{sky.before.length > 0 && <Link href={href({ from: shiftFrom(today, p.scale, p.from, -1) })}>{t('skyline.before', { count: sky.before.length })}</Link>}</span>
@@ -100,7 +100,7 @@ export default async function SkylinePage({ params, searchParams }: {
                 {sky.stacks.map((stack, i) => (
                   <div key={sky.columns[i].start} style={{
                     display: 'flex', flexDirection: 'column-reverse', gap: 6, height: '100%', justifyContent: 'flex-start', paddingBottom: 4,
-                    background: sky.columns[i].isCurrent ? 'var(--primary-50)' : undefined, borderRadius: '6px 6px 0 0',
+                    background: sky.columns[i].isCurrent ? 'color-mix(in srgb, var(--primary-500) 14%, transparent)' : undefined, borderRadius: '6px 6px 0 0',
                   }}>
                     {stack.map(b => <Box key={b.systemId} b={b} href={boxHref(b)} t={t} />)}
                   </div>
@@ -110,7 +110,7 @@ export default async function SkylinePage({ params, searchParams }: {
                 {sky.columns.map(c => (
                   <div key={c.start} aria-current={c.isCurrent ? 'date' : undefined} style={{
                     padding: '6px 0 10px', textAlign: 'center', fontSize: 'var(--text-xs)',
-                    fontWeight: c.isCurrent ? 700 : 400, color: c.isCurrent ? 'var(--primary-700)' : 'var(--text-muted)',
+                    fontWeight: c.isCurrent ? 700 : 400, color: c.isCurrent ? 'var(--primary)' : 'var(--text-muted)',
                   }}>{label(c.start)}</div>
                 ))}
               </div>
@@ -135,7 +135,8 @@ export default async function SkylinePage({ params, searchParams }: {
 
 const TONE: Record<SkylineTone, React.CSSProperties> = {
   approved: { background: 'var(--success-700)', color: '#ffffff', border: '1px solid var(--success-700)' },
-  mid: { background: 'var(--warning-300)', color: 'var(--warning-900)', border: '1px solid var(--warning-300)' },
+  // Fondos 50–200: el tema contraste oscurece solo 300–900 (texto), así que el fondo claro + texto 800/900 lee en los tres.
+  mid: { background: 'var(--warning-200)', color: 'var(--warning-900)', border: '1px solid var(--warning-400)' },
   low: { background: 'var(--danger-50)', color: 'var(--danger-800)', border: '1px solid var(--danger-200)' },
 }
 
@@ -151,11 +152,12 @@ function boxStyle(tone: SkylineTone, forecast: boolean, overdue: boolean): React
 
 function Box({ b, href, t }: { b: SkylineBox; href: string; t: T }) {
   const pct = Math.round(b.pct * 100)
-  const state = b.tone === 'approved' ? t('skyline.approved') : t('skyline.pct', { pct })
+  // Sin ITR en la fase el 0 % no dice nada: se escribe «Sin ITR» (sigue contando como < 50 %).
+  const state = b.tone === 'approved' ? t('skyline.approved') : b.itrTotal === 0 ? t('skyline.noItrs') : t('skyline.pct', { pct })
   const title = [
     `${b.systemCode} — ${b.systemName}`,
     `${t(b.basis === 'commitment' ? 'skyline.commitment' : 'skyline.forecast')}: ${b.date}`,
-    b.tone === 'approved' ? t('skyline.approved') : t('skyline.itrs', { pct, total: b.itrTotal }),
+    b.tone === 'approved' ? t('skyline.approved') : b.itrTotal === 0 ? t('skyline.noItrsLong') : t('skyline.itrs', { pct, total: b.itrTotal }),
     b.overdue ? t('skyline.overdue') : null,
   ].filter(Boolean).join(' · ')
   return (

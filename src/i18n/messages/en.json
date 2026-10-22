@@ -5752,6 +5752,8 @@
       "commitment": "Commitment",
       "forecast": "Forecast",
       "itrs": "{pct}% of {total} ITRs approved",
+      "noItrs": "No ITRs",
+      "noItrsLong": "No ITRs in this phase",
       "overdue": "Overdue",
       "legend": "Legend",
       "legendMid": "≥ 50%",
