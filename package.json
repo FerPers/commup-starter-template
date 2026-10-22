@@ -65,6 +65,7 @@
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
 		"start": "next start",
 		"typecheck": "tsc --noEmit",
+		"help:build": "node scripts/docs/build-help.mjs",
 		"prepare": "husky",
 		"test": "vitest run",
 		"test:watch": "vitest"

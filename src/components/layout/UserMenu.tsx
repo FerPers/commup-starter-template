@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { Bell, BookOpen, Check, ChevronDown, LogOut } from 'lucide-react'
+import { Bell, BookOpen, Check, ChevronDown, CircleHelp, LogOut } from 'lucide-react'
+import { helpSectionFor } from '@/lib/help/routes'
 import { switchOrg } from '@/app/actions/org'
 import { NAV_STORAGE } from '@/lib/constants/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -66,6 +67,7 @@ export default function UserMenu({
   roleLabels: Record<string, string>
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const t = useTranslations('Topbar.menu')
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -250,16 +252,17 @@ export default function UserMenu({
           </Link>
 
           <Divider />
-          <a
-            href="/guia"
-            target="_blank"
-            rel="noopener noreferrer"
-            role="menuitem"
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6, fontSize: 13, color: 'var(--text-strong)', textDecoration: 'none' }}
-          >
+          {/* N3b: ayuda generada del manual por rol; «de esta página» abre la sección de la pantalla actual */}
+          <Link href={`/ayuda?s=${encodeURIComponent(helpSectionFor(pathname, activeRole))}`} role="menuitem" onClick={() => setOpen(false)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6, fontSize: 13, color: 'var(--text-strong)', textDecoration: 'none' }}>
+            <CircleHelp size={15} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />
+            {t('pageHelp')}
+          </Link>
+          <Link href="/ayuda" role="menuitem" onClick={() => setOpen(false)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6, fontSize: 13, color: 'var(--text-strong)', textDecoration: 'none' }}>
             <BookOpen size={15} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />
             {t('guide')}
-          </a>
+          </Link>
           <button
             type="button"
             role="menuitem"

@@ -4,12 +4,13 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 import { MGMT_KINDS, type MgmtKind } from '@/lib/daily/catalog'
 import { loadOptions } from '../options'
 import NewDailyForm, { type SourceRef } from './NewDailyForm'
+import { loadTagContext } from '@/lib/create/tag-context'
 
 // Alta de acción / restricción / TQ / decisión. `source` + `sourceId` vinculan la acción o la decisión
 // con la restricción o el TQ de origen; `supersedes` reemplaza una decisión vigente.
 export default async function NewDailyPage({ params, searchParams }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ kind?: string; source?: string; sourceId?: string; supersedes?: string; systemId?: string }>
+  searchParams: Promise<{ kind?: string; source?: string; sourceId?: string; supersedes?: string; systemId?: string; tag?: string }>
 }) {
   const { id } = await params
   const sp = await searchParams
@@ -37,7 +38,11 @@ export default async function NewDailyPage({ params, searchParams }: {
         .eq('id', sp.supersedes).eq('project_id', id).eq('status', 'active').maybeSingle()
     : { data: null }
 
-  const { members, systems, gates, disciplines } = await loadOptions(supabase, ctx.orgId, id)
+  // N3b: ＋ Crear desde la ficha de un tag precarga su sistema (y en un TQ, el tag).
+  const [{ members, systems, gates, disciplines }, tag] = await Promise.all([
+    loadOptions(supabase, ctx.orgId, id),
+    loadTagContext(supabase, id, sp.tag),
+  ])
   const options = { members, systems, gates, disciplines }
 
   return (
@@ -48,7 +53,8 @@ export default async function NewDailyPage({ params, searchParams }: {
       userId={ctx.userId}
       source={source}
       supersedes={supersedes}
-      initialSystemId={(options.systems.some(s => s.id === sp.systemId) ? sp.systemId : source?.systemId) ?? ''}
+      initialSystemId={(options.systems.some(s => s.id === sp.systemId) ? sp.systemId : source?.systemId ?? tag?.systemId) ?? ''}
+      initialTag={tag ? { tag_id: tag.id, tag_number: tag.tagNumber } : null}
     />
   )
 }

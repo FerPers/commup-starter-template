@@ -516,3 +516,43 @@ body.drawer-locked { overflow: hidden; }
   .cmdk-panel { width: 100vw !important; max-height: 100dvh !important; height: 100dvh; border-radius: 0 !important; }
   .cmdk-footer { display: none !important; }
 }
+
+/* ==========================================================================
+   ＋ Crear (N3b)
+   ========================================================================== */
+.create-option:hover, .create-option:focus-visible { background: var(--gray-50); }
+@media (max-width: 1023px) {
+  .create-trigger-wrap.is-tabbar { display: none; }
+}
+@media (max-width: 639px) {
+  .create-trigger { width: 40px; justify-content: center; padding: 0 !important; }
+  .create-trigger-label { display: none; }
+}
+
+/* ==========================================================================
+   Ayuda (N3b): /ayuda en la app y /guia pública, desde el manual por rol
+   ========================================================================== */
+.help-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 24px; align-items: start; }
+.help-index { position: sticky; top: 72px; max-height: calc(100vh - 96px); overflow-y: auto; }
+@media (max-width: 899px) {
+  .help-layout { grid-template-columns: minmax(0, 1fr); }
+  .help-index { position: static; max-height: none; }
+}
+.help-content { font-size: 14px; line-height: 1.65; color: var(--text-strong); }
+.help-content p { margin: 0 0 10px; }
+.help-content h3, .help-content h4, .help-content h5 { font-size: 15px; margin: 16px 0 8px; }
+.help-content ul, .help-content ol { margin: 0 0 10px; padding-left: 22px; }
+.help-content ul { list-style-type: disc; }
+.help-content ol { list-style-type: decimal; }
+.help-content li ul { list-style-type: circle; margin: 2px 0 4px; }
+.help-content li { margin: 3px 0; }
+.help-content a { color: var(--primary-600); }
+.help-content code { font-size: 12px; padding: 1px 5px; border-radius: 4px; background: var(--gray-50); border: 1px solid var(--border); }
+.help-content blockquote { margin: 0 0 12px; padding: 8px 14px; border-radius: 8px; background: var(--gray-50); border: 1px solid var(--border); }
+.help-content hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.help-content .help-table { overflow-x: auto; margin: 0 0 12px; }
+.help-content table { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+.help-content th, .help-content td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+.help-content th { background: var(--gray-50); font-weight: 600; }
+/* La guía pública es siempre clara (como la landing), aunque el navegador tenga el tema oscuro de la app. */
+.help-public { --text-strong: #0B1D3A; --text-muted: #64707C; --border: #E9EDF1; --gray-50: #F6F8FA; --primary-600: #c2410c; --card-bg: #FFFFFF; }

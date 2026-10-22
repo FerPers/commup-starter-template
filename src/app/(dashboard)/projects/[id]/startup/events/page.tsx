@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { EventCategory, Milestone, StartupEventStatus } from '@/lib/startup/catalog'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import EventsView from './EventsView'
+import { loadTagContext } from '@/lib/create/tag-context'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 
@@ -10,7 +11,7 @@ import PartialNote from '@/components/ui/PartialNote'
 // eventos con foto IIoT y línea de tiempo.
 export default async function StartupEventsPage({ params, searchParams }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ system?: string }>
+  searchParams: Promise<{ system?: string; tag?: string; new?: string }>
 }) {
   const { id } = await params
   const sp = await searchParams
@@ -23,7 +24,7 @@ export default async function StartupEventsPage({ params, searchParams }: {
 
   // S09 (E-20): PostgREST corta en 1000 filas. La bitácora (de ella sale la franja de hitos vigentes por sistema)
   // y el catálogo de señales se paginan completos; los intentos de procedimiento son un selector de recientes (200).
-  const [{ data: systems }, eventsRes, { data: runs }, signalsRes, { data: members }] = await Promise.all([
+  const [{ data: systems }, eventsRes, { data: runs }, signalsRes, { data: members }, tag] = await Promise.all([
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     fetchAllRowsFlagged(() => supabase.from('startup_events')
       .select('id, number, system_id, kind, milestone, category, occurred_at, title, status, recorded_by, witness_by, witness_at, witness_capacity, startup_event_params(id)')
@@ -32,6 +33,7 @@ export default async function StartupEventsPage({ params, searchParams }: {
     fetchAllRowsFlagged(() => supabase.from('signals').select('id, signal_tag, signal_type, eng_unit, tags!inner(project_id, subsystems(system_id))')
       .eq('tags.project_id', id).order('signal_tag')),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
+    loadTagContext(supabase, id, sp.tag),
   ])
   const events = eventsRes.rows
   const signals = signalsRes.rows
@@ -50,7 +52,9 @@ export default async function StartupEventsPage({ params, searchParams }: {
     <EventsView
       project={project}
       systems={systems ?? []}
-      initialSystemId={(systems ?? []).some(s => s.id === sp.system) ? sp.system! : ''}
+      initialSystemId={(systems ?? []).find(s => s.id === (sp.system ?? tag?.systemId))?.id ?? ''}
+      initialOpen={sp.new === '1'}
+      initialTag={tag ? { tag_id: tag.id, tag_number: tag.tagNumber } : null}
       events={events.map(e => ({
         id: e.id, number: e.number, systemId: e.system_id, kind: e.kind as 'milestone' | 'free',
         milestone: e.milestone as Milestone | null, category: e.category as EventCategory | null, occurredAt: e.occurred_at,

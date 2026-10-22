@@ -4,6 +4,8 @@ import Breadcrumbs from './Breadcrumbs'
 import UserMenu from './UserMenu'
 import NotificationsBell from './NotificationsBell'
 import CommandPalette from './CommandPalette'
+import CreateMenu from './CreateMenu'
+import { FIELD_ROLES } from '@/lib/constants/navigation'
 
 type Membership = {
   orgId: string
@@ -56,6 +58,15 @@ export default async function Topbar({ role, orgName, activeOrgId, memberships, 
 
       {/* N3a: buscar cualquier cosa (⌘K) */}
       {role && <CommandPalette />}
+
+      {/* N3b: ＋ Crear con el contexto de la pantalla (en el teléfono de campo, el ＋ de la barra inferior) */}
+      {role && (
+        <CreateMenu
+          role={role}
+          projects={Object.entries(projectNames).map(([id, name]) => ({ id, name }))}
+          hideOnTabbar={FIELD_ROLES.includes(role)}
+        />
+      )}
 
       {role && (
         <NotificationsBell

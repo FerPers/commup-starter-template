@@ -140,7 +140,7 @@
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
-    "guide": "Guía de arranque",
+    "guide": "Ayuda",
     "logout": "Cerrar sesión",
     "platform": "Completions & Commissioning",
     "theme": {
@@ -148,7 +148,8 @@
       "dark": "Oscuro",
       "switchToLight": "Cambiar a modo claro",
       "switchToDark": "Cambiar a modo oscuro"
-    }
+    },
+    "pageHelp": "Ayuda de esta página"
   },
   "Topbar": {
     "role": {
@@ -191,7 +192,8 @@
       "preview": "Vista previa",
       "translations": "Traducciones",
       "backup": "Respaldo",
-      "matrix": "Matriz ITR"
+      "matrix": "Matriz ITR",
+      "help": "Ayuda"
     },
     "entity": {
       "tag": "Tag",
@@ -565,7 +567,14 @@
       "labelTargetDate": "Fecha objetivo",
       "submit": "Crear punch",
       "submitting": "Creando…",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "back": "Volver",
+      "backToList": "Punch list",
+      "pageHelp": "Un punch es una deficiencia de un tag: la categoría dice si bloquea (A), se transfiere con excepción (B) o es menor (C).",
+      "changeTag": "Cambiar tag",
+      "failed": "No se pudo crear el punch",
+      "returnsBack": "Al crear vuelves a donde estabas, con el punch nuevo a la vista.",
+      "opensPunch": "Al crear se abre la página del punch nuevo."
     },
     "clientSummary": {
       "intro": "Punch abiertos por categoría. Elige una para ver el detalle.",
@@ -2721,7 +2730,8 @@
     "menu": "Menú",
     "pending": "{count} pendientes",
     "syncPending": "{count, plural, =1 {# pendiente de sincronizar} other {# pendientes de sincronizar}}",
-    "offline": "Sin red · {count, plural, =1 {# pendiente} other {# pendientes}}"
+    "offline": "Sin red · {count, plural, =1 {# pendiente} other {# pendientes}}",
+    "create": "Crear"
   },
   "Gates": {
     "back": "Volver a Readiness",
@@ -5793,6 +5803,55 @@
       "vendor": "Paquetes de vendor",
       "report": "Reportes diarios",
       "handover": "Relevos de turno"
+    }
+  },
+  "Create": {
+    "button": "Crear",
+    "open": "Crear…",
+    "title": "Crear",
+    "close": "Cerrar",
+    "preloaded": "SE PRECARGA",
+    "createIn": "Crear en",
+    "thisTag": "tag de esta ficha",
+    "thisSystem": "sistema de esta ficha",
+    "tagHint": "El tag se elige en el formulario (búsqueda o escáner).",
+    "noProjects": "Aún no hay proyectos donde crear.",
+    "kind": {
+      "punch": "Punch",
+      "action": "Acción",
+      "constraint": "Restricción",
+      "tq": "TQ",
+      "event": "Evento de arranque",
+      "register": "Registro de campo"
+    },
+    "hint": {
+      "punch": "Deficiencia en un tag (Cat A · B · C)",
+      "action": "ACC con responsable, fecha y evidencia",
+      "constraint": "RES que frena un sistema o un gate",
+      "tq": "Consulta técnica a ingeniería o al cliente",
+      "event": "Hito o evento en la bitácora de arranque",
+      "register": "Ciega, bypass, prueba u otro registro controlado"
+    }
+  },
+  "Help": {
+    "title": "Ayuda",
+    "subtitle": "Manual por rol y por fase · versión {version} · aplica a la navegación de hoy",
+    "index": "Índice de la ayuda",
+    "search": "Buscar en la ayuda",
+    "searchPlaceholder": "p. ej. firmar ITR, gate, line-up…",
+    "noResults": "Sin resultados.",
+    "yourRole": "Tu rol · {role}",
+    "yourRoleNav": "Secciones de tu rol",
+    "manual": "Manual",
+    "manualNav": "Capítulos del manual",
+    "pageHelpHint": "¿Esta página no responde tu duda? Desde cualquier pantalla, menú de usuario › «Ayuda de esta página» abre la sección que le corresponde.",
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Architect",
+      "leader": "Leader",
+      "inspector": "Inspector",
+      "client": "Client"
     }
   }
 }

@@ -9,7 +9,7 @@ import { ESCALATION_LEVELS, todayIso, type MgmtKind } from '@/lib/daily/catalog'
 import { Alert, Field, btn, card, input, linkStyle, small } from '../daily-ui'
 import {
   ActionFields, ConstraintFields, DecisionFields, TqFields,
-  emptyAction, emptyConstraint, emptyDecision, emptyTq, type DecisionForm, type Options,
+  emptyAction, emptyConstraint, emptyDecision, emptyTq, type DecisionForm, type Options, type TqForm,
 } from '../forms'
 
 export type SourceRef = { kind: 'constraint' | 'tq'; id: string; number: string; title: string; systemId: string | null }
@@ -22,9 +22,10 @@ type Props = {
   source: SourceRef | null
   supersedes: { id: string; number: string; title: string; decision: string; context: string | null; rationale: string | null; system_id: string | null } | null
   initialSystemId: string
+  initialTag?: { tag_id: string; tag_number: string } | null
 }
 
-export default function NewDailyForm({ project, kind, opts, userId, source, supersedes, initialSystemId }: Props) {
+export default function NewDailyForm({ project, kind, opts, userId, source, supersedes, initialSystemId, initialTag }: Props) {
   const t = useTranslations('Daily')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -35,7 +36,7 @@ export default function NewDailyForm({ project, kind, opts, userId, source, supe
   const [action, setAction] = useState(() => ({ ...emptyAction(me), systemId: initialSystemId }))
   const [constraint, setConstraint] = useState(() => ({ ...emptyConstraint(me), systemId: initialSystemId }))
   const [level, setLevel] = useState(1)
-  const [tq, setTq] = useState(() => ({ ...emptyTq(), systemId: initialSystemId }))
+  const [tq, setTq] = useState<TqForm>(() => ({ ...emptyTq(), systemId: initialSystemId, tags: initialTag ? [{ ...initialTag, role: 'subject' as const }] : [] }))
   const [decision, setDecision] = useState<DecisionForm>(() => ({
     ...emptyDecision(me, today),
     systemId: supersedes?.system_id ?? initialSystemId,

@@ -6,15 +6,11 @@ import { useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { createPunch } from '@/app/actions/punches'
-import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
-import type { PunchImpact } from '@/lib/punches/category-guide'
 import { punchDisplayStatus } from '@/lib/punches/verification'
 import { bulkDeletePunches, bulkUpdatePunchStatus } from '@/app/actions/bulk'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
-import { searchProjectTags, type TagSearchHit } from '@/app/actions/tag-search'
 import type { PunchSummary } from '@/lib/list/punch-query'
 import { canRaisePunch } from '@/lib/constants/punch-roles'
 import { ROLE_TIERS } from '@/lib/constants/roles'
@@ -22,7 +18,6 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 const EDITOR_ROLES = ROLE_TIERS.editor
 
 type OrgMember = { user_id: string; profiles: { full_name: string } | null }
-type TagOption = TagSearchHit
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -100,7 +95,6 @@ export default function PunchListView({
     return () => clearTimeout(handle)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe disparar cuando cambia lo que escribe el usuario
   }, [search])
-  const [showCreate, setShowCreate] = useState(false)
 
   // ── Bulk selection ───────────────────────────────────────────────────
   const [selected, setSelected]      = useState<Set<string>>(new Set())
@@ -175,8 +169,6 @@ export default function PunchListView({
     })
   }
 
-  function refresh() { router.refresh() }
-
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 28px) clamp(12px, 4vw, 32px)', maxWidth: '1200px' }}>
 
@@ -225,16 +217,16 @@ export default function PunchListView({
             {tGuide('procedure')}
           </a>
           {canCreate && (
-            <button
-              onClick={() => setShowCreate(true)}
+            <Link
+              href={`/projects/${projectId}/punches/new`}
               style={{
                 padding: '7px 14px', background: 'var(--primary-500)', border: '1px solid var(--primary-500)',
                 borderRadius: '8px', fontSize: '13px', color: '#fff',
-                whiteSpace: 'nowrap', fontWeight: 600, cursor: 'pointer',
+                whiteSpace: 'nowrap', fontWeight: 600, textDecoration: 'none',
               }}
             >
               {t('create.button')}
-            </button>
+            </Link>
           )}
         </div>
       </div>
@@ -454,15 +446,6 @@ export default function PunchListView({
 
       <Pagination page={page} total={total} pageSize={pageSize} onPage={p => url.set({ page: p }, { resetPage: false })} disabled={url.isPending} />
 
-      {/* Create modal */}
-      {showCreate && (
-        <CreatePunchModal
-          projectId={projectId}
-          orgMembers={orgMembers}
-          onClose={() => setShowCreate(false)}
-          onCreated={() => { setShowCreate(false); refresh() }}
-        />
-      )}
     </div>
   )
 }
@@ -470,217 +453,4 @@ export default function PunchListView({
 const selStyle: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
   fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
-}
-
-// ── Create Punch Modal ────────────────────────────────────────────────────
-
-function CreatePunchModal({
-  projectId,
-  orgMembers,
-  onClose,
-  onCreated,
-}: {
-  projectId: string
-  orgMembers: OrgMember[]
-  onClose: () => void
-  onCreated: () => void
-}) {
-  const t = useTranslations('PunchList')
-  const tGuide = useTranslations('PunchGuide')
-  const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
-
-  const [tagSearch, setTagSearch] = useState('')
-  const [tagId, setTagId] = useState<string>('')
-  const [tagOpen, setTagOpen] = useState(false)
-  const [category, setCategory] = useState<'A' | 'B' | 'C'>('B')
-  const [impact, setImpact] = useState<PunchImpact | null>(null)
-  const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState<'critical' | 'major' | 'minor'>('major')
-  const [assignedTo, setAssignedTo] = useState('')
-  const [targetDate, setTargetDate] = useState('')
-
-  // Sprint E: los tags se buscan en servidor (máx. 50) en vez de cargar todo el proyecto
-  const [tagMatches, setTagMatches] = useState<TagOption[]>([])
-  const [selectedTag, setSelectedTag] = useState<TagOption | null>(null)
-  useEffect(() => {
-    let cancelled = false
-    const handle = setTimeout(async () => {
-      const res = await searchProjectTags({ projectId, q: tagSearch })
-      if (!cancelled && res.tags) setTagMatches(res.tags)
-    }, 250)
-    return () => { cancelled = true; clearTimeout(handle) }
-  }, [tagSearch, projectId])
-
-  const canSubmit = !!tagId && !!description.trim() && !!impact && !isPending
-
-  function handleSubmit() {
-    setError(null)
-    if (!tagId) { setError(t('create.tagRequired')); return }
-    if (!impact) { setError(tGuide('impactRequired')); return }
-    if (!description.trim()) { setError(t('create.descriptionRequired')); return }
-    startTransition(async () => {
-      const res = await createPunch({
-        projectId,
-        tagId,
-        category,
-        impact,
-        description: description.trim(),
-        assignedTo: assignedTo || null,
-        targetDate: targetDate || null,
-        priority,
-      })
-      if (res.error) { setError(res.error); return }
-      onCreated()
-    })
-  }
-
-  return (
-    <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('create.modalTitle')}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#94a3b8', cursor: 'pointer' }}>✕</button>
-        </div>
-
-        {/* Tag picker */}
-        <div style={{ marginBottom: '16px', position: 'relative' }}>
-          <label style={createLabelStyle}>{t('create.labelTag')}</label>
-          {selectedTag ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--gray-50)' }}>
-              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: selectedTag.disciplines?.color ?? 'var(--text-strong)' }}>{selectedTag.tag_number}</span>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedTag.description}</span>
-              <button onClick={() => { setTagId(''); setSelectedTag(null); setTagSearch(''); setTagOpen(true) }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '13px' }}>✕</button>
-            </div>
-          ) : (
-            <>
-              <input
-                type="text"
-                value={tagSearch}
-                onChange={e => { setTagSearch(e.target.value); setTagOpen(true) }}
-                onFocus={() => setTagOpen(true)}
-                placeholder={t('create.tagPlaceholder')}
-                style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', boxSizing: 'border-box' }}
-              />
-              {tagOpen && tagMatches.length > 0 && (
-                <div style={{ position: 'absolute', zIndex: 10, left: 0, right: 0, marginTop: '4px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', maxHeight: '220px', overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
-                  {tagMatches.map(tg => (
-                    <div
-                      key={tg.id}
-                      onClick={() => { setTagId(tg.id); setSelectedTag(tg); setTagOpen(false) }}
-                      style={{ padding: '8px 11px', cursor: 'pointer', borderBottom: '1px solid var(--gray-50)' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--gray-50)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-                    >
-                      <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: tg.disciplines?.color ?? 'var(--text-strong)' }}>{tg.tag_number}</span>
-                      <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '8px' }}>{tg.description}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Category */}
-        <div style={{ marginBottom: '16px' }}>
-          <label style={createLabelStyle}>{t('create.labelCategory')}</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {(['A', 'B', 'C'] as const).map(c => {
-              const cfg = CATEGORY_CFG[c]
-              const active = category === c
-              return (
-                <button
-                  key={c}
-                  onClick={() => setCategory(c)}
-                  style={{
-                    flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
-                    background: active ? cfg.bg : 'var(--card-bg)',
-                    color: active ? cfg.color : 'var(--text-muted)',
-                    border: `1px solid ${active ? cfg.color + '60' : 'var(--border)'}`,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {cfg.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Impacto obligatorio + guía de categorización (fase 4) */}
-        <div style={{ marginBottom: '16px' }}>
-          <PunchImpactAndGuide impact={impact} onImpact={setImpact} category={category} onCategory={setCategory} disciplineCode={selectedTag?.disciplines?.code ?? null} />
-        </div>
-
-        {/* Description */}
-        <div style={{ marginBottom: '16px' }}>
-          <label style={createLabelStyle}>{t('create.labelDescription')}</label>
-          <textarea
-            rows={3}
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            placeholder={t('create.descriptionPlaceholder')}
-            style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
-          />
-        </div>
-
-        {/* Priority + Target date */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={createLabelStyle}>{t('create.labelPriority')}</label>
-            <select value={priority} onChange={e => setPriority(e.target.value as 'critical' | 'major' | 'minor')} style={{ ...selStyle, width: '100%' }}>
-              <option value="critical">{t('create.priority.critical')}</option>
-              <option value="major">{t('create.priority.major')}</option>
-              <option value="minor">{t('create.priority.minor')}</option>
-            </select>
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={createLabelStyle}>{t('create.labelTargetDate')}</label>
-            <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} style={{ ...selStyle, width: '100%', boxSizing: 'border-box' }} />
-          </div>
-        </div>
-
-        {/* Assignee */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={createLabelStyle}>{t('create.labelAssignee')}</label>
-          <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} style={{ ...selStyle, width: '100%' }}>
-            <option value="">{t('create.assigneePlaceholder')}</option>
-            {orgMembers.map(m => (
-              <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name ?? m.user_id}</option>
-            ))}
-          </select>
-        </div>
-
-        {error && (
-          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', marginBottom: '12px' }}>{error}</p>
-        )}
-
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={isPending} style={{ padding: '9px 16px', background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-            {t('create.cancel')}
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            style={{
-              padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none',
-              background: canSubmit ? 'var(--primary-500)' : 'var(--gray-100)',
-              color: canSubmit ? '#fff' : 'var(--gray-400)',
-              cursor: canSubmit ? 'pointer' : 'default',
-            }}
-          >
-            {isPending ? t('create.submitting') : t('create.submit')}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const createLabelStyle: React.CSSProperties = {
-  fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px',
 }

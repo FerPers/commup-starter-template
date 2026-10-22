@@ -8,7 +8,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import TagItrTab from './TagItrTab'
-import TagPunchTab, { type TagPunch, type OrgMemberForPunch } from './TagPunchTab'
+import TagPunchTab, { type TagPunch } from './TagPunchTab'
 import TagPreservationTab, { type PreservationPlanRow, type PreservationProcedureOption } from './TagPreservationTab'
 import TagPhotosTab from './TagPhotosTab'
 import TagOverviewTab from './TagOverviewTab'
@@ -374,9 +374,7 @@ export default function TagDetail({
                 punches={tagPunches}
                 projectId={projectId}
                 tagId={tag.id}
-                orgMembers={orgMembers as OrgMemberForPunch[]}
                 currentUserRole={currentUserRole}
-                disciplineCode={d?.code ?? null}
               />
             )}
             {activeTab === 'photos'       && <TagPhotosTab photos={tagPhotos} />}

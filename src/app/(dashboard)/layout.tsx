@@ -92,7 +92,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <DashboardShell
         sidebar={<Sidebar notifCounts={notifCounts} role={role} projectNames={projectNames} />}
         tabbar={FIELD_ROLES.includes(role)
-          ? <MobileTabBar counts={{ myWork: notifCounts.myWork, inbox: notifCounts.inbox }} />
+          ? <MobileTabBar counts={{ myWork: notifCounts.myWork }} role={role} projects={(orgProjects ?? []).map(p => ({ id: p.id, name: p.name }))} />
           : null}
         topbar={
           <Topbar

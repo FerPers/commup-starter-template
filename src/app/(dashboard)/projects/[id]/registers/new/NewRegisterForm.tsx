@@ -17,9 +17,11 @@ type Props = {
   initialSystemId: string
   /** Registro al que quedará vinculado el nuevo (ej. una ciega creada desde su test pack). */
   linkTo: { id: string; number: string } | null
+  /** N3b: tag de la ficha desde la que se abrió ＋ Crear. */
+  initialTag?: { tag_id: string; tag_number: string } | null
 }
 
-export default function NewRegisterForm({ project, kinds, initialKind, systems, initialSystemId, linkTo }: Props) {
+export default function NewRegisterForm({ project, kinds, initialKind, systems, initialSystemId, linkTo, initialTag }: Props) {
   const t = useTranslations('Registers')
   const router = useRouter()
   const [kind, setKind] = useState(initialKind)
@@ -27,7 +29,7 @@ export default function NewRegisterForm({ project, kinds, initialKind, systems, 
   const [description, setDescription] = useState('')
   const [systemId, setSystemId] = useState(initialSystemId)
   const [data, setData] = useState<Record<string, unknown>>({})
-  const [tags, setTags] = useState<TagValue[]>([])
+  const [tags, setTags] = useState<TagValue[]>(() => initialTag ? [{ ...initialTag, role: 'subject' }] : [])
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 

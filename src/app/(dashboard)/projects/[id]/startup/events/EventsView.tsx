@@ -33,10 +33,13 @@ function localNow() {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
 }
 
-export default function EventsView({ project, systems, initialSystemId, events, runs, signals, names, canRecord }: {
+export default function EventsView({ project, systems, initialSystemId, initialOpen, initialTag, events, runs, signals, names, canRecord }: {
   project: { id: string; code: string; name: string }
   systems: { id: string; code: string; name: string }[]
   initialSystemId: string
+  /** N3b: ＋ Crear abre el formulario de una vez (`?new=1`), con el tag de la ficha de origen. */
+  initialOpen?: boolean
+  initialTag?: { tag_id: string; tag_number: string } | null
   events: Ev[]
   runs: { id: string; number: string; system_id: string | null; status: string }[]
   signals: Sig[]
@@ -52,7 +55,7 @@ export default function EventsView({ project, systems, initialSystemId, events, 
   const [form, setForm] = useState({
     systemId: initialSystemId, kind: 'milestone' as 'milestone' | 'free', code: 'first_rotation' as string, occurredAt: '', title: '', description: '', runId: '', backdateReason: '',
   })
-  const [tags, setTags] = useState<{ tag_id: string; tag_number: string; role: 'subject' }[]>([])
+  const [tags, setTags] = useState<{ tag_id: string; tag_number: string; role: 'subject' }[]>(() => initialTag ? [{ ...initialTag, role: 'subject' }] : [])
   const [sigIds, setSigIds] = useState<string[]>([])
   const [manual, setManual] = useState<{ label: string; value: string; unit: string }[]>([])
   const [prereq, setPrereq] = useState<Prereq | null>(null)
@@ -86,6 +89,11 @@ export default function EventsView({ project, systems, initialSystemId, events, 
     setOpen(true); setError(null)
     setForm(f => ({ ...f, occurredAt: f.occurredAt || localNow(), systemId: f.systemId || filter }))
   }
+  // La hora local solo existe en el navegador: por eso el formulario se abre después de montar y no en el SSR.
+  useEffect(() => {
+    if (initialOpen && canRecord) openForm()
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al montar
+  }, [])
   function setCode(kind: 'milestone' | 'free', code: string) {
     setForm(f => ({ ...f, kind, code, title: f.title || '' }))
   }

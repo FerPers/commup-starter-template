@@ -140,7 +140,7 @@
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
-    "guide": "Getting started guide",
+    "guide": "Help",
     "logout": "Sign out",
     "platform": "Completions & Commissioning",
     "theme": {
@@ -148,7 +148,8 @@
       "dark": "Dark",
       "switchToLight": "Switch to light mode",
       "switchToDark": "Switch to dark mode"
-    }
+    },
+    "pageHelp": "Help for this page"
   },
   "Topbar": {
     "role": {
@@ -191,7 +192,8 @@
       "preview": "Preview",
       "translations": "Translations",
       "backup": "Backup",
-      "matrix": "ITR matrix"
+      "matrix": "ITR matrix",
+      "help": "Help"
     },
     "entity": {
       "tag": "Tag",
@@ -565,7 +567,14 @@
       "labelTargetDate": "Target date",
       "submit": "Create punch",
       "submitting": "Creating…",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "back": "Back",
+      "backToList": "Punch list",
+      "pageHelp": "A punch is a deficiency on a tag: the category says whether it blocks (A), transfers with an exception (B) or is minor (C).",
+      "changeTag": "Change tag",
+      "failed": "The punch could not be created",
+      "returnsBack": "After creating you go back to where you were, with the new punch in view.",
+      "opensPunch": "After creating, the new punch page opens."
     },
     "clientSummary": {
       "intro": "Open punch items by category. Pick one to see the detail.",
@@ -2721,7 +2730,8 @@
     "menu": "Menu",
     "pending": "{count} pending",
     "syncPending": "{count, plural, =1 {# pending sync} other {# pending sync}}",
-    "offline": "Offline · {count, plural, =1 {# pending} other {# pending}}"
+    "offline": "Offline · {count, plural, =1 {# pending} other {# pending}}",
+    "create": "Create"
   },
   "Gates": {
     "back": "Back to Readiness",
@@ -5793,6 +5803,55 @@
       "vendor": "Vendor packages",
       "report": "Daily reports",
       "handover": "Shift handovers"
+    }
+  },
+  "Create": {
+    "button": "Create",
+    "open": "Create…",
+    "title": "Create",
+    "close": "Close",
+    "preloaded": "PRELOADED",
+    "createIn": "Create in",
+    "thisTag": "this tag",
+    "thisSystem": "this system",
+    "tagHint": "The tag is picked in the form (search or scanner).",
+    "noProjects": "There are no projects to create in yet.",
+    "kind": {
+      "punch": "Punch",
+      "action": "Action",
+      "constraint": "Constraint",
+      "tq": "TQ",
+      "event": "Start-up event",
+      "register": "Field register"
+    },
+    "hint": {
+      "punch": "Deficiency on a tag (Cat A · B · C)",
+      "action": "ACC with owner, due date and evidence",
+      "constraint": "RES holding a system or a gate",
+      "tq": "Technical query to engineering or the client",
+      "event": "Milestone or event in the start-up log",
+      "register": "Blind, bypass, test or other controlled register"
+    }
+  },
+  "Help": {
+    "title": "Help",
+    "subtitle": "Manual by role and phase (in Spanish) · version {version} · matches today’s navigation",
+    "index": "Help index",
+    "search": "Search help",
+    "searchPlaceholder": "e.g. firmar ITR, gate, line-up…",
+    "noResults": "No results.",
+    "yourRole": "Your role · {role}",
+    "yourRoleNav": "Sections for your role",
+    "manual": "Manual",
+    "manualNav": "Manual chapters",
+    "pageHelpHint": "Didn’t find your answer? From any screen, user menu › “Help for this page” opens the matching section.",
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "architect": "Architect",
+      "leader": "Leader",
+      "inspector": "Inspector",
+      "client": "Client"
     }
   }
 }

@@ -2,13 +2,14 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { REGISTER_KINDS, type RegisterKind } from '@/lib/registers/catalog'
 import NewRegisterForm from './NewRegisterForm'
+import { loadTagContext } from '@/lib/create/tag-context'
 
 export default async function NewRegisterPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ kind?: string; systemId?: string; linkTo?: string }>
+  searchParams: Promise<{ kind?: string; systemId?: string; linkTo?: string; tag?: string }>
 }) {
   const { id } = await params
   const sp = await searchParams
@@ -21,14 +22,15 @@ export default async function NewRegisterPage({
   if (!project) notFound()
 
   await supabase.rpc('ensure_register_types', { p_org_id: ctx.orgId })
-  const [{ data: types }, { data: systems }, { data: linkTo }] = await Promise.all([
+  const [{ data: types }, { data: systems }, { data: linkTo }, tag] = await Promise.all([
     supabase.from('register_types').select('kind, is_active').eq('org_id', ctx.orgId),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     sp.linkTo
       ? supabase.from('register_items').select('id, number, system_id').eq('id', sp.linkTo).eq('project_id', id).maybeSingle()
       : Promise.resolve({ data: null }),
+    loadTagContext(supabase, id, sp.tag),
   ])
-  const systemId = sp.systemId ?? linkTo?.system_id ?? undefined
+  const systemId = sp.systemId ?? linkTo?.system_id ?? tag?.systemId ?? undefined
   const active = (types ?? []).filter(t => t.is_active).map(t => t.kind as RegisterKind)
   const initialKind = REGISTER_KINDS.includes(sp.kind as RegisterKind) && active.includes(sp.kind as RegisterKind)
     ? (sp.kind as RegisterKind) : active[0]
@@ -42,6 +44,7 @@ export default async function NewRegisterPage({
       systems={systems ?? []}
       initialSystemId={(systems ?? []).some(s => s.id === systemId) ? systemId! : ''}
       linkTo={linkTo ? { id: linkTo.id, number: linkTo.number } : null}
+      initialTag={tag ? { tag_id: tag.id, tag_number: tag.tagNumber } : null}
     />
   )
 }

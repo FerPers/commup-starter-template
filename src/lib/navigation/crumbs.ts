@@ -16,7 +16,7 @@ export function isIdSegment(s: string): boolean {
 const TOP: Record<string, string> = {
   dashboard: 'nav:dashboard', projects: 'nav:projects', itrs: 'nav:allItrs', 'punch-list': 'nav:allPunches', preservation: 'nav:preservation',
   'work-plans': 'nav:allWorkPlans', 'control-tower': 'nav:controlTower', kpis: 'nav:kpis', certificates: 'nav:allCertificates', scan: 'nav:scan',
-  'my-work': 'nav:myWork', inbox: 'nav:inbox', home: 'nav:myWork', ops: 'nav:opsPunches', tag_360: 'entity:tag', r: 'entity:register',
+  'my-work': 'nav:myWork', inbox: 'nav:inbox', home: 'nav:myWork', ayuda: 'sub:help', ops: 'nav:opsPunches', tag_360: 'entity:tag', r: 'entity:register',
 }
 
 const ADMIN: Record<string, string> = {
