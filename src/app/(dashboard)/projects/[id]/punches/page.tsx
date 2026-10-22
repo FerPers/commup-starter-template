@@ -3,10 +3,11 @@ import { redirect, notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 import PunchListView from './PunchListView'
+import ClientPunchSummary from './ClientPunchSummary'
 import { fetchPunchPage, fetchPunchSummary, PUNCH_SORT_KEYS } from '@/lib/list/punch-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
 
-type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; system?: string; q?: string }
+type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; system?: string; q?: string; view?: string }
 
 export default async function PunchListPage({
   params,
@@ -28,6 +29,17 @@ export default async function PunchListPage({
   const dir = parseDir(sp.dir, sort === 'created_at' ? 'desc' : 'asc')
   const filters = { cat: sp.cat, status: sp.status, disc: sp.disc, system: sp.system, q: sp.q }
   const scope = { orgId: ctx.orgId, projectId }
+
+  // N1: el cliente entra por el resumen por categoría; elegir una (o «ver todos») abre la lista.
+  const anyFilter = [sp.cat, sp.status, sp.disc, sp.system, sp.q, sp.page].some(Boolean) || sp.view === 'list'
+  if (ctx.role === 'client' && !anyFilter) {
+    const [{ data: proj }, summary] = await Promise.all([
+      supabase.from('projects').select('id, name').eq('id', projectId).eq('org_id', ctx.orgId).single(),
+      fetchPunchSummary(supabase, scope),
+    ])
+    if (!proj) notFound()
+    return <ClientPunchSummary projectId={projectId} projectName={proj.name} summary={summary} />
+  }
 
   const [
     { data: project },

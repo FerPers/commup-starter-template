@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { BookOpen, Check, ChevronDown, LogOut } from 'lucide-react'
+import Link from 'next/link'
+import { Bell, BookOpen, Check, ChevronDown, LogOut } from 'lucide-react'
 import { switchOrg } from '@/app/actions/org'
 import { NAV_STORAGE } from '@/lib/constants/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -241,6 +242,12 @@ export default function UserMenu({
           <SectionLabel>{t('preferences')}</SectionLabel>
           <PrefRow label={t('language')}><LocaleSwitcher variant="light" /></PrefRow>
           <PrefRow label={t('theme')}><ThemeToggle variant="light" /></PrefRow>
+          {/* N1: las preferencias de aviso viven aquí (antes, entrada del sidebar) */}
+          <Link href="/admin/notifications" role="menuitem" onClick={() => setOpen(false)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6, fontSize: 13, color: 'var(--text-strong)', textDecoration: 'none' }}>
+            <Bell size={15} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />
+            {t('notificationPrefs')}
+          </Link>
 
           <Divider />
           <a

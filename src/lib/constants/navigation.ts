@@ -16,4 +16,10 @@ export function homeForRole(role: string | null | undefined): '/my-work' | '/das
 export const NAV_STORAGE = {
   lastProject: 'commup:nav:lastProject',
   adminOpen: 'commup:nav:adminOpen',
+  /** N1: últimos proyectos abiertos (ids, más reciente primero) para el selector. */
+  recentProjects: 'commup:nav:recentProjects',
+  /** N1: «Más…» abierto o cerrado (decisión: se recuerda). */
+  moreOpen: 'commup:nav:moreOpen',
+  /** N1: prefijo (sessionStorage) de la fase de más actividad por proyecto, para no recalcularla en cada página. */
+  activePhase: 'commup:nav:activePhase:',
 } as const

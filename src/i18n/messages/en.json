@@ -59,7 +59,25 @@
       "admin": "Administration",
       "engineering": "Engineering",
       "planning": "Views & planning",
-      "lastProject": "Last project"
+      "lastProject": "Last project",
+      "phase_prep": "Preparation",
+      "phase_mc": "Completion (MC)",
+      "phase_com": "Pre-com / Commissioning",
+      "phase_su": "Start-up & performance",
+      "phase_mgmt": "Management",
+      "more": "More…",
+      "portfolio": "Portfolio",
+      "adminOrg": "Organization",
+      "adminTemplates": "Templates",
+      "adminResources": "Resources",
+      "adminIntegration": "Integration",
+      "adminControl": "Control",
+      "switchProject": "Switch project",
+      "searchProject": "Search by code or name",
+      "recent": "Recent",
+      "allProjects": "All",
+      "seeAllProjects": "See all projects →",
+      "pickProject": "Pick a project"
     },
     "nav": {
       "dashboard": "Overview",
@@ -112,7 +130,10 @@
       "vendors": "Vendors",
       "signatories": "Signatories",
       "systems": "Systems",
-      "performance": "Performance (PTC)"
+      "performance": "Performance (PTC)",
+      "operations": "Operations & transfer",
+      "allPreservation": "All preservation",
+      "orgKpis": "Organization KPIs"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -143,7 +164,8 @@
       "language": "Language",
       "theme": "Theme",
       "guide": "Getting started guide",
-      "logout": "Sign out"
+      "logout": "Sign out",
+      "notificationPrefs": "Notification preferences"
     }
   },
   "Breadcrumbs": {
@@ -519,6 +541,13 @@
       "submit": "Create punch",
       "submitting": "Creating…",
       "cancel": "Cancel"
+    },
+    "clientSummary": {
+      "intro": "Open punch items by category. Pick one to see the detail.",
+      "open": "open or in progress",
+      "seeDetail": "See detail →",
+      "closed": "{n} closed of {total} in total",
+      "seeAll": "See the full list"
     }
   },
   "Preservation": {
@@ -2478,7 +2507,7 @@
     },
     "chips": {
       "execute": "ITRs to execute",
-      "review": "ITRs to review",
+      "review": "ITRs to sign",
       "punches": "assigned punches",
       "plan": "today's plan",
       "signatures": "pending signatures",
@@ -2505,7 +2534,7 @@
     },
     "queues": {
       "execute": "ITRs to execute",
-      "review": "ITRs to review or sign",
+      "review": "ITRs to sign",
       "punches": "Assigned punches",
       "plan": "Today's work plan",
       "signatures": "Certificates to sign",
@@ -2600,6 +2629,15 @@
       "verify": "Verify",
       "sign": "Sign",
       "decide": "Decide"
+    },
+    "board": {
+      "all": "All",
+      "upToDate": "All clear ✓",
+      "upToDateHere": "All clear ✓ — nothing is waiting on you here.",
+      "noPending": "Nothing pending:",
+      "seeAllN": "See all {n} →",
+      "project": "Project",
+      "allProjects": "All projects"
     }
   },
   "MobileTabBar": {

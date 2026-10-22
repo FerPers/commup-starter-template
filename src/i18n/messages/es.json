@@ -59,7 +59,25 @@
       "admin": "Administración",
       "engineering": "Ingeniería",
       "planning": "Vistas y planificación",
-      "lastProject": "Último proyecto"
+      "lastProject": "Último proyecto",
+      "phase_prep": "Preparación",
+      "phase_mc": "Completamiento (MC)",
+      "phase_com": "Pre-com / Comisionamiento",
+      "phase_su": "Arranque y desempeño",
+      "phase_mgmt": "Gestión",
+      "more": "Más…",
+      "portfolio": "Portafolio",
+      "adminOrg": "Organización",
+      "adminTemplates": "Plantillas",
+      "adminResources": "Recursos",
+      "adminIntegration": "Integración",
+      "adminControl": "Control",
+      "switchProject": "Cambiar de proyecto",
+      "searchProject": "Buscar por código o nombre",
+      "recent": "Recientes",
+      "allProjects": "Todos",
+      "seeAllProjects": "Ver todos los proyectos →",
+      "pickProject": "Elige un proyecto"
     },
     "nav": {
       "dashboard": "Panorama",
@@ -112,7 +130,10 @@
       "vendors": "Proveedores",
       "signatories": "Firmantes",
       "systems": "Sistemas",
-      "performance": "Desempeño (PTC)"
+      "performance": "Desempeño (PTC)",
+      "operations": "Operación y traspaso",
+      "allPreservation": "Toda la preservación",
+      "orgKpis": "KPIs de la organización"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -143,7 +164,8 @@
       "language": "Idioma",
       "theme": "Tema",
       "guide": "Guía de arranque",
-      "logout": "Cerrar sesión"
+      "logout": "Cerrar sesión",
+      "notificationPrefs": "Preferencias de notificación"
     }
   },
   "Breadcrumbs": {
@@ -519,6 +541,13 @@
       "submit": "Crear punch",
       "submitting": "Creando…",
       "cancel": "Cancelar"
+    },
+    "clientSummary": {
+      "intro": "Punch abiertos por categoría. Elige una para ver el detalle.",
+      "open": "abiertos o en curso",
+      "seeDetail": "Ver detalle →",
+      "closed": "{n} cerrados de {total} en total",
+      "seeAll": "Ver la lista completa"
     }
   },
   "Preservation": {
@@ -2478,7 +2507,7 @@
     },
     "chips": {
       "execute": "ITRs por ejecutar",
-      "review": "ITRs por revisar",
+      "review": "ITR por firmar",
       "punches": "punches asignados",
       "plan": "plan de hoy",
       "signatures": "firmas pendientes",
@@ -2505,7 +2534,7 @@
     },
     "queues": {
       "execute": "ITRs por ejecutar",
-      "review": "ITRs por revisar o firmar",
+      "review": "ITR por firmar",
       "punches": "Punches asignados",
       "plan": "Plan de trabajo de hoy",
       "signatures": "Certificados por firmar",
@@ -2600,6 +2629,15 @@
       "verify": "Verificar",
       "sign": "Firmar",
       "decide": "Decidir"
+    },
+    "board": {
+      "all": "Todo",
+      "upToDate": "Al día ✓",
+      "upToDateHere": "Al día ✓ — nada espera tu acción aquí.",
+      "noPending": "Sin pendientes:",
+      "seeAllN": "Ver los {n} →",
+      "project": "Proyecto",
+      "allProjects": "Todos los proyectos"
     }
   },
   "MobileTabBar": {

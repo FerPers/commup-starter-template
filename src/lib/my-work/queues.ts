@@ -112,26 +112,39 @@ export function badgeTotal(c: MyWorkCounts, role: OrgMemberRole): number {
 
 export type ChipGroup = 'execute' | 'verify' | 'sign' | 'decide'
 
-/** S22 (D-23): los contadores agrupados por tipo de tarea (antes, 18 chips sueltos). */
+/**
+ * Colas agrupadas por tipo de tarea (S22, D-23; N1 = columnas de Mi trabajo, orden = orden en pantalla).
+ * N1 (decisión de Luis 2026-10-21): «ITR por firmar» va en Firmar y la revisión de categoría de punch en Decidir.
+ */
 export const CHIP_GROUPS: { group: ChipGroup; keys: (keyof MyWorkCounts)[] }[] = [
-  { group: 'execute', keys: ['itrs_execute', 'punches', 'plan_items', 'actions_mine', 'constraints_mine', 'preservation_overdue'] },
-  { group: 'verify', keys: ['itrs_review', 'punches_verify', 'punches_review', 'actions_verify', 'lineup_to_verify', 'registers_to_verify', 'handovers_to_receive', 'tq_answered'] },
-  { group: 'sign', keys: ['signatures', 'gates_to_cosign', 'transfers_to_sign', 'performance_to_sign', 'milestones_to_witness', 'holds_to_release'] },
-  { group: 'decide', keys: ['gates_to_approve', 'gates_regressed', 'registers_to_authorize', 'daily_reports_to_issue', 'performance_to_decide'] },
+  { group: 'execute', keys: ['itrs_execute', 'punches', 'actions_mine', 'plan_items', 'preservation_overdue', 'constraints_mine'] },
+  { group: 'verify', keys: ['punches_verify', 'actions_verify', 'lineup_to_verify', 'handovers_to_receive', 'registers_to_verify', 'tq_answered'] },
+  { group: 'sign', keys: ['itrs_review', 'gates_to_cosign', 'holds_to_release', 'milestones_to_witness', 'transfers_to_sign', 'performance_to_sign', 'signatures'] },
+  { group: 'decide', keys: ['gates_to_approve', 'gates_regressed', 'performance_to_decide', 'daily_reports_to_issue', 'registers_to_authorize', 'punches_review'] },
 ]
 
-/** Siempre visibles (aunque estén en 0); el resto aparece solo con algo pendiente. */
-const ALWAYS_SHOWN = new Set<keyof MyWorkCounts>(['itrs_execute', 'itrs_review', 'punches', 'plan_items', 'punches_verify', 'actions_mine', 'constraints_mine'])
+/** Colas que el cliente no atiende (si alguna trae algo, se muestra igual: nunca se esconde un pendiente). */
+const NOT_CLIENT = new Set<keyof MyWorkCounts>([
+  'itrs_execute', 'plan_items', 'lineup_to_verify', 'holds_to_release', 'gates_to_approve', 'gates_regressed',
+  'performance_to_decide', 'daily_reports_to_issue', 'registers_to_authorize', 'actions_verify', 'handovers_to_receive', 'registers_to_verify',
+])
 
-/** ¿Este contador aplica al rol y se muestra? (mismas reglas que las colas de la página). */
-export function chipVisible(key: keyof MyWorkCounts, c: MyWorkCounts, role: OrgMemberRole): boolean {
-  if (key === 'signatures' && !canSignCertificates(role)) return false
-  if ((key === 'preservation_overdue' || key === 'punches_review') && !seesPreservation(role)) return false
-  if ((key === 'actions_verify' || key === 'handovers_to_receive' || key === 'registers_to_verify') && role === 'client') return false
-  return ALWAYS_SHOWN.has(key) || c[key] > 0
+/** ¿La cola es del rol? (aunque esté en 0). Mismas reglas de rol que las consultas de la página. */
+export function queueApplies(key: keyof MyWorkCounts, role: OrgMemberRole): boolean {
+  if (key === 'signatures') return canSignCertificates(role)
+  if (key === 'preservation_overdue' || key === 'punches_review' || key === 'performance_to_decide') return seesPreservation(role)
+  if (role === 'client') return !NOT_CLIENT.has(key)
+  return true
 }
 
-/** Grupos con sus contadores visibles (los grupos vacíos no aparecen). */
+/**
+ * ¿Se muestra la cola? N1: las del rol se ven aunque estén en 0 (en gris); una cola ajena al rol solo si trae algo.
+ */
+export function chipVisible(key: keyof MyWorkCounts, c: MyWorkCounts, role: OrgMemberRole): boolean {
+  return c[key] > 0 || queueApplies(key, role)
+}
+
+/** Grupos con sus colas visibles (los grupos vacíos no aparecen). */
 export function chipGroups(c: MyWorkCounts, role: OrgMemberRole): { group: ChipGroup; chips: { key: keyof MyWorkCounts; n: number }[] }[] {
   return CHIP_GROUPS
     .map(g => ({ group: g.group, chips: g.keys.filter(k => chipVisible(k, c, role)).map(k => ({ key: k, n: c[k] })) }))

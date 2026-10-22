@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -9,28 +9,17 @@ import {
   LayoutDashboard, FolderKanban, FileCheck2, ClipboardList, ShieldCheck,
   Settings, Users, ScanLine, ClipboardCheck, Flag, Wrench, CalendarDays,
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
-  Bell, Database, History, Tag, Activity, Boxes, FolderTree,
-  RotateCw, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
+  Database, History, Tag, Activity, Boxes, FolderTree,
+  RotateCw, ListChecks, GitBranch, Zap, FileImage, Upload,
   ChevronDown, ChevronRight, Milestone, Gauge, Network, CalendarCheck, Power, FileText, Building2, Truck, UserCheck,
   type LucideIcon,
 } from 'lucide-react'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 import { NAV_STORAGE } from '@/lib/constants/navigation'
-import { tierRoles } from '@/lib/constants/roles'
 import type { OrgMemberRole } from '@/types/database'
-
-/**
- * Sidebar (Sprint N, 2026-09-04): tres bloques — Mi trabajo · Proyecto · Organización —
- * más Administración colapsable. Mismos permisos que antes: ocultar aquí es UX,
- * la seguridad real vive en cada page.tsx.
- */
-
-// Copia client-safe de los tiers de src/lib/auth/permissions.ts (ese módulo
-// arrastra código de servidor).
-// S14 (I-15): niveles de la fuente única (src/lib/constants/roles.ts).
-const ADMIN_ROLES: readonly OrgMemberRole[] = tierRoles('admin')
-const PRIVILEGED_ROLES: readonly OrgMemberRole[] = tierRoles('privileged')
-const EDITOR_ROLES: readonly OrgMemberRole[] = tierRoles('editor')
+import { buildMenu, type MenuLink, type Phase } from '@/lib/navigation/menu'
+import { getActivePhase } from '@/app/actions/navigation'
+import ProjectSwitcher, { rememberRecentProject } from './ProjectSwitcher'
 
 /**
  * Pie del sidebar: solo el estado de sincronización, y solo cuando importa
@@ -92,7 +81,7 @@ function SidebarFooter() {
 export interface NotifCounts {
   /** Pendientes personales (ITRs, punches, plan, firmas) — badge de «Mi trabajo» */
   myWork?: number
-  /** Notificaciones sin leer — badge de «Bandeja» */
+  /** Notificaciones sin leer — badge de la campana */
   inbox?: number
   /** Planes de preservación vencidos */
   preservation?: number
@@ -100,151 +89,44 @@ export interface NotifCounts {
 
 type BadgeKey = keyof NotifCounts
 
-interface NavItem {
-  href: string
-  labelKey: string
-  icon: LucideIcon
-  /** Roles que ven el ítem; omitido = visible para todos */
-  roles?: readonly OrgMemberRole[]
-  badge?: BadgeKey
-  /** Badge discreto (gris) en vez de rojo: informa, no alarma */
-  softBadge?: boolean
-  /** Solo coincide con la ruta exacta (para «Resumen» del proyecto) */
-  exact?: boolean
-  /** Subrutas que tienen su propio ítem (no activan este) */
-  notUnder?: string[]
+/** Ícono de cada entrada (por clave del modelo en src/lib/navigation/menu.ts). */
+const ICONS: Record<string, LucideIcon> = {
+  myWork: ListChecks, scan: ScanLine, overview: LayoutDashboard, readiness: Radar, systems: Network, tags: Tag, explorer: FolderTree,
+  twin: Boxes, documents: FileText, pidDocuments: FileImage, vendors: Truck, signatories: UserCheck, import: Upload, itrs: ClipboardCheck,
+  punches: Flag, preservation: Wrench, registers: ClipboardList, signals: Activity, loops: GitBranch, ceMatrices: Zap, certificates: Award,
+  pssr: ShieldCheck, startup: Power, performance: Gauge, operations: Anchor, daily: CalendarCheck, workPlans: CalendarDays, kpis: TrendingUp,
+  projects: FolderKanban, dashboard: LayoutDashboard, opsPunches: Anchor, handover: PackageCheck, allItrs: ClipboardCheck, allPunches: Flag,
+  allCertificates: Award, globalPreservation: Wrench, allWorkPlans: CalendarDays, orgKpis: TrendingUp, users: Users, companies: Building2,
+  config: Settings, gates: Milestone, itrTemplates: FileCheck2, preservationTemplates: ClipboardList, pssrTemplates: ShieldCheck,
+  registerTypes: ClipboardList, testEquipment: Gauge, workflows: Workflow, apiKeys: Key, webhooks: Webhook, dataQuality: Database, auditLog: History,
 }
 
-interface NavGroup {
-  groupKey: string
-  items: NavItem[]
-}
-
-// ── Bloque 1 · Mi trabajo ───────────────────────────────────────────────────
-const PERSONAL_ITEMS: NavItem[] = [
-  { href: '/my-work',             labelKey: 'myWork',        icon: ListChecks, badge: 'myWork' },
-  { href: '/inbox',               labelKey: 'inbox',         icon: Inbox,      badge: 'inbox', softBadge: true },
-  { href: '/scan',                labelKey: 'scan',          icon: ScanLine },
-  { href: '/admin/notifications', labelKey: 'notifications', icon: Bell },
-]
-
-// ── Bloque 2 · Proyecto (contextual) ────────────────────────────────────────
-type ProjectSection = { headerKey?: string; items: NavItem[] }
-
-function projectSections(projectId: string): ProjectSection[] {
-  const p = `/projects/${projectId}`
-  return [
-    {
-      items: [
-        { href: p,                    labelKey: 'projectOverview', icon: LayoutDashboard, exact: true },
-        // N0 (H-11): la sistematización es el primer paso del readiness.
-        { href: `${p}/systems`,       labelKey: 'systems',         icon: Network },
-        { href: `${p}/tags`,          labelKey: 'tags',            icon: Tag },
-        { href: `${p}/itrs`,          labelKey: 'itrs',            icon: ClipboardCheck },
-        { href: `${p}/punches`,       labelKey: 'punchList',       icon: Flag },
-        { href: `${p}/registers`,     labelKey: 'registers',       icon: ClipboardList },
-        { href: `${p}/daily`,         labelKey: 'daily',           icon: CalendarCheck },
-        { href: `${p}/startup`,       labelKey: 'startup',         icon: Power, notUnder: [`${p}/startup/performance`] },
-        { href: `${p}/startup/performance`, labelKey: 'performance', icon: Gauge },
-        { href: `${p}/documents`,     labelKey: 'documents',       icon: FileText },
-        { href: `${p}/vendors`,       labelKey: 'vendors',         icon: Truck },
-        { href: `${p}/signatories`,   labelKey: 'signatories',     icon: UserCheck },
-        { href: `${p}/certificates`,  labelKey: 'certificates',    icon: Award },
-        { href: `${p}/kpis`,          labelKey: 'kpis',            icon: TrendingUp },
-      ],
-    },
-    {
-      headerKey: 'engineering',
-      items: [
-        { href: `${p}/signals`,       labelKey: 'signals',         icon: Activity },
-        { href: `${p}/loops`,         labelKey: 'loops',           icon: GitBranch },
-        { href: `${p}/ce-matrices`,   labelKey: 'ceMatrices',      icon: Zap },
-        { href: `${p}/pid-documents`, labelKey: 'pidDocuments',    icon: FileImage },
-      ],
-    },
-    {
-      headerKey: 'planning',
-      items: [
-        { href: `${p}/explorer`,      labelKey: 'explorer',        icon: FolderTree },
-        { href: `${p}/twin`,          labelKey: 'twin',            icon: Boxes },
-        { href: `${p}/work-plans`,    labelKey: 'workPlans',       icon: CalendarDays },
-        { href: `${p}/pssr`,          labelKey: 'pssr',            icon: ShieldCheck },
-        // I-15: la página y la acción de importar exigen PRIVILEGED; el menú lo mostraba también a líderes.
-        { href: `${p}/import`,        labelKey: 'import',          icon: Upload, roles: PRIVILEGED_ROLES },
-      ],
-    },
-  ]
-}
-
-// ── Bloque 3 · Organización ─────────────────────────────────────────────────
-const ORG_GROUP: NavGroup = {
-  groupKey: 'organization',
-  items: [
-    { href: '/dashboard',     labelKey: 'dashboard',       icon: LayoutDashboard },
-    { href: '/projects',      labelKey: 'projects',        icon: FolderKanban },
-    { href: '/control-tower', labelKey: 'controlTower',    icon: Radar },
-    { href: '/kpis',          labelKey: 'kpis',            icon: TrendingUp },
-    { href: '/itrs',          labelKey: 'allItrs',         icon: ClipboardCheck },
-    { href: '/punch-list',    labelKey: 'allPunches',      icon: Flag },
-    { href: '/certificates',  labelKey: 'allCertificates', icon: Award },
-    { href: '/preservation',  labelKey: 'preservation',    icon: Wrench,        badge: 'preservation' },
-    { href: '/work-plans',    labelKey: 'allWorkPlans',    icon: CalendarDays },
-    { href: '/ops/punches',   labelKey: 'opsPunches',      icon: Anchor },
-    { href: '/admin/handover', labelKey: 'handover',       icon: PackageCheck,  roles: PRIVILEGED_ROLES },
-  ],
-}
-
-// ── Bloque 4 · Administración (colapsable) ──────────────────────────────────
-const ADMIN_GROUP: NavGroup = {
-  groupKey: 'admin',
-  items: [
-    { href: '/admin/templates',              labelKey: 'itrTemplates',          icon: FileCheck2,    roles: EDITOR_ROLES },
-    { href: '/admin/templates/preservation', labelKey: 'preservationTemplates', icon: ClipboardList, roles: EDITOR_ROLES },
-    { href: '/admin/templates/pssr',         labelKey: 'pssrTemplates',         icon: ShieldCheck,   roles: EDITOR_ROLES },
-    { href: '/admin/config',                 labelKey: 'config',                icon: Settings,      roles: ADMIN_ROLES },
-    { href: '/admin/gates',                  labelKey: 'gates',                 icon: Milestone,     roles: ADMIN_ROLES },
-    { href: '/admin/registers',              labelKey: 'registerTypes',         icon: ClipboardList, roles: PRIVILEGED_ROLES },
-    { href: '/admin/test-equipment',         labelKey: 'testEquipment',         icon: Gauge,         roles: EDITOR_ROLES },
-    { href: '/admin/users',                  labelKey: 'users',                 icon: Users,         roles: ADMIN_ROLES },
-    { href: '/admin/companies',              labelKey: 'companies',             icon: Building2,     roles: EDITOR_ROLES },
-    { href: '/admin/workflows',              labelKey: 'workflows',             icon: Workflow,      roles: PRIVILEGED_ROLES },
-    { href: '/admin/api-keys',               labelKey: 'apiKeys',               icon: Key,           roles: PRIVILEGED_ROLES },
-    { href: '/admin/webhooks',               labelKey: 'webhooks',              icon: Webhook,       roles: PRIVILEGED_ROLES },
-    { href: '/admin/data-quality',           labelKey: 'dataQuality',           icon: Database,      roles: PRIVILEGED_ROLES },
-    { href: '/admin/audit',                  labelKey: 'auditLog',              icon: History,       roles: ADMIN_ROLES },
-  ],
-}
-
-function visibleFor(items: NavItem[], role?: OrgMemberRole): NavItem[] {
-  // Sin rol conocido se muestra todo (comportamiento previo); con rol, solo lo permitido.
-  return role ? items.filter(item => !item.roles || item.roles.includes(role)) : items
-}
-
-function isActive(pathname: string, item: NavItem): boolean {
+function isActive(pathname: string, item: MenuLink): boolean {
   const href = item.href.split('?')[0]
   if (item.exact) return pathname === href
-  // «Templates ITR» (/admin/templates) no debe activarse en /admin/templates/pssr
-  if (item.href === '/admin/templates') {
-    return pathname === item.href || (pathname.startsWith(item.href + '/') && !/^\/admin\/templates\/(preservation|pssr)/.test(pathname))
-  }
   if (item.notUnder?.some(n => pathname === n || pathname.startsWith(n + '/'))) return false
   return pathname === href || pathname.startsWith(href + '/')
 }
 
-function readStorage(key: string): string | null {
-  try { return window.localStorage.getItem(key) } catch { return null }
+function readStorage(key: string, session = false): string | null {
+  try { return (session ? window.sessionStorage : window.localStorage).getItem(key) } catch { return null }
 }
-function writeStorage(key: string, value: string) {
-  try { window.localStorage.setItem(key, value) } catch { /* modo privado / sin storage: se ignora */ }
+function writeStorage(key: string, value: string, session = false) {
+  try { (session ? window.sessionStorage : window.localStorage).setItem(key, value) } catch { /* modo privado / sin storage: se ignora */ }
 }
 
+/**
+ * Menú por fase y rol (N1). Qué se ve lo decide `buildMenu` (src/lib/navigation/menu.ts): permiso = guard de la
+ * página (test de paridad) y audiencia del rol; lo que el rol puede ver pero no usa a diario va a «Más…».
+ * Ocultar aquí es UX: la seguridad real vive en cada page.tsx.
+ */
 export default function Sidebar({
   notifCounts, isOpen = false, role, projectNames = {},
 }: {
   notifCounts?: NotifCounts
   isOpen?: boolean
   role?: OrgMemberRole
-  /** id → nombre de los proyectos de la org (para «Último proyecto») */
+  /** id → nombre de los proyectos de la org (selector y «último proyecto») */
   projectNames?: Record<string, string>
 }) {
   const pathname = usePathname()
@@ -252,42 +134,61 @@ export default function Sidebar({
   const mounted = useMounted()
 
   const projectMatch = pathname.match(/\/projects\/([^/]+)/)
-  const currentProjectId = projectMatch ? projectMatch[1] : null
+  const currentProjectId = projectMatch && projectNames[projectMatch[1]] ? projectMatch[1] : null
 
   // «Último proyecto»: recordado en localStorage; solo se ofrece si sigue siendo de la org activa.
   const [lastProjectId, setLastProjectId] = useState<string | null>(null)
   useEffect(() => {
     if (currentProjectId) {
       writeStorage(NAV_STORAGE.lastProject, currentProjectId)
+      rememberRecentProject(currentProjectId)
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza el estado con la ruta actual; sin esto el grupo de proyecto no cambia al navegar entre proyectos
       setLastProjectId(currentProjectId)
     } else {
       setLastProjectId(readStorage(NAV_STORAGE.lastProject))
     }
   }, [currentProjectId])
-
-  // Administración colapsada por defecto; la preferencia se recuerda por navegador.
-  const [adminOpen, setAdminOpen] = useState(false)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- lee la preferencia tras montar (localStorage no existe en SSR)
-    setAdminOpen(readStorage(NAV_STORAGE.adminOpen) === '1')
-  }, [])
-  const inAdmin = ADMIN_GROUP.items.some(item => isActive(pathname, item))
-  function toggleAdmin() {
-    const next = !adminOpen
-    setAdminOpen(next)
-    writeStorage(NAV_STORAGE.adminOpen, next ? '1' : '0')
-  }
-
   const projectId = currentProjectId ?? (mounted && lastProjectId && projectNames[lastProjectId] ? lastProjectId : null)
-  const projectLabel = projectId ? (projectNames[projectId] ?? t('groups.project')) : null
-  const projectHeader = currentProjectId ? t('groups.project') : t('groups.lastProject')
 
-  // S23 (H-12): Control Tower abre el proyecto en el que estás (o el último), no el primero por código.
-  const orgItems = visibleFor(ORG_GROUP.items, role).map(item =>
-    item.href === '/control-tower' && projectId ? { ...item, href: `/control-tower?projectId=${projectId}` } : item)
-  const adminItems = visibleFor(ADMIN_GROUP.items, role)
+  const menu = useMemo(() => buildMenu(role ?? 'inspector', projectId), [role, projectId])
   const tNav = (k: string) => t(`nav.${k}`)
+
+  // Administración y «Más…»: plegados; se recuerda si quedaron abiertos. Se abren solos si estás dentro.
+  const [adminOpen, setAdminOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lee las preferencias tras montar (localStorage no existe en SSR)
+    setAdminOpen(readStorage(NAV_STORAGE.adminOpen) === '1')
+    setMoreOpen(readStorage(NAV_STORAGE.moreOpen) === '1')
+  }, [])
+  const adminLinks = menu.admin.flatMap(g => g.items)
+  const inAdmin = adminLinks.some(item => isActive(pathname, item))
+  const inMore = menu.more.some(item => isActive(pathname, item))
+  const toggle = (key: string, value: boolean, set: (v: boolean) => void) => { set(value); writeStorage(key, value ? '1' : '0') }
+
+  // Owner/admin: fases plegables; abierta la de más actividad del proyecto (una consulta por proyecto y sesión).
+  const [openPhases, setOpenPhases] = useState<Set<Phase>>(new Set())
+  useEffect(() => {
+    if (!projectId || menu.phases.length === 0) return
+    const cacheKey = NAV_STORAGE.activePhase + projectId
+    const cached = readStorage(cacheKey, true) as Phase | null
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- abre la fase guardada en la sesión al cambiar de proyecto
+    if (cached) { setOpenPhases(new Set([cached])); return }
+    let alive = true
+    getActivePhase({ projectId }).then(res => {
+      if (!alive || !('phase' in res) || !res.phase) return
+      writeStorage(cacheKey, res.phase, true)
+      setOpenPhases(new Set([res.phase]))
+    }).catch(() => { /* sin red: quedan plegadas */ })
+    return () => { alive = false }
+  }, [projectId, menu.phases.length])
+  const togglePhase = (p: Phase) => setOpenPhases(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n })
+
+  const link = (item: MenuLink, opts?: { accent?: boolean; compact?: boolean }) => (
+    <SidebarLink key={item.key} href={item.href} label={tNav(item.labelKey)} Icon={ICONS[item.key] ?? LayoutDashboard}
+      active={isActive(pathname, item)} badge={item.badge ? notifCounts?.[item.badge as BadgeKey] : undefined}
+      accent={opts?.accent} compact={opts?.compact} />
+  )
 
   return (
     <aside
@@ -321,118 +222,83 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
         {/* 1 · Mi trabajo */}
         <div className="nav-group" style={{ marginBottom: 4 }}>
           <GroupHeader>{t('groups.myWork')}</GroupHeader>
-          {visibleFor(PERSONAL_ITEMS, role).map(item => (
-            <SidebarLink
-              key={item.href}
-              href={item.href}
-              label={tNav(item.labelKey)}
-              Icon={item.icon}
-              active={isActive(pathname, item)}
-              badge={item.badge ? notifCounts?.[item.badge] : undefined}
-              softBadge={item.softBadge}
-            />
-          ))}
+          {menu.personal.map(item => link(item))}
         </div>
 
         <Divider />
 
-        {/* 2 · Proyecto (actual o último visitado) */}
-        {projectId && (
+        {/* 2 · Proyecto: selector + entradas del rol (o fases plegables para owner/admin) */}
+        <div className="nav-group" style={{ marginBottom: 4 }}>
+          <GroupHeader><span style={{ color: 'var(--brand-orange)' }}>{currentProjectId || !projectId ? t('groups.project') : t('groups.lastProject')}</span></GroupHeader>
+          <ProjectSwitcher currentId={projectId} projectNames={projectNames} />
+          {menu.project.map(item => link(item, { accent: true }))}
+          {menu.phases.map(({ phase, items }) => {
+            const open = openPhases.has(phase) || items.some(i => isActive(pathname, i))
+            return (
+              <div key={phase}>
+                <FoldButton open={open} onClick={() => togglePhase(phase)} label={t(`groups.phase_${phase}`)} count={items.length} />
+                {open && items.map(item => link(item, { accent: true, compact: true }))}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* 3 · Portafolio */}
+        {menu.portfolio.length > 0 && (
           <>
-            <div className="nav-group" style={{ marginBottom: 4 }}>
-              <GroupHeader>
-                <span style={{ color: 'var(--brand-orange)' }}>{projectHeader}</span>
-                {projectLabel && (
-                  <span title={projectLabel} style={{ marginLeft: 6, textTransform: 'none', letterSpacing: 0, fontWeight: 500, color: '#a5b4cf', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    · {projectLabel}
-                  </span>
-                )}
-              </GroupHeader>
-              {projectSections(projectId).map((section, idx) => {
-                const items = visibleFor(section.items, role)
-                if (items.length === 0) return null
-                return (
-                  <div key={section.headerKey ?? idx}>
-                    {section.headerKey && <SubHeader>{t(`groups.${section.headerKey}`)}</SubHeader>}
-                    {items.map(item => (
-                      <SidebarLink
-                        key={item.href}
-                        href={item.href}
-                        label={tNav(item.labelKey)}
-                        Icon={item.icon}
-                        active={isActive(pathname, item)}
-                        accent
-                        compact={!!section.headerKey}
-                      />
-                    ))}
-                  </div>
-                )
-              })}
-            </div>
             <Divider />
+            <div className="nav-group" style={{ marginBottom: 4 }}>
+              <GroupHeader>{t('groups.portfolio')}</GroupHeader>
+              {menu.portfolio.map(item => link(item))}
+            </div>
           </>
         )}
 
-        {/* 3 · Organización */}
-        {orgItems.length > 0 && (
+        {/* 4 · Más… (lo que el rol puede ver pero no usa a diario) */}
+        {menu.more.length > 0 && (
           <div className="nav-group" style={{ marginBottom: 4 }}>
-            <GroupHeader>{t('groups.organization')}</GroupHeader>
-            {orgItems.map(item => (
-              <SidebarLink
-                key={item.href}
-                href={item.href}
-                label={tNav(item.labelKey)}
-                Icon={item.icon}
-                active={isActive(pathname, item)}
-                badge={item.badge ? notifCounts?.[item.badge] : undefined}
-              />
-            ))}
+            <FoldButton open={moreOpen || inMore} onClick={() => toggle(NAV_STORAGE.moreOpen, !moreOpen, setMoreOpen)} label={t('groups.more')} count={menu.more.length} header />
+            {(moreOpen || inMore) && menu.more.map(item => link(item, { compact: true }))}
           </div>
         )}
 
-        {/* 4 · Administración (colapsable; abierta si estás dentro) */}
-        {adminItems.length > 0 && (
+        {/* 5 · Administración (plegada por grupos) */}
+        {menu.admin.length > 0 && (
           <div className="nav-group" style={{ marginBottom: 4 }}>
-            <button
-              type="button"
-              onClick={toggleAdmin}
-              aria-expanded={adminOpen || inAdmin}
-              aria-controls="sidebar-admin-group"
-              style={{
-                width: '100%', background: 'transparent', border: 'none', cursor: 'pointer',
-                padding: '8px 20px 4px', display: 'flex', alignItems: 'center', gap: 6,
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-                color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left',
-              }}
-            >
-              <span style={{ flex: 1 }}>{t('groups.admin')}</span>
-              {(adminOpen || inAdmin)
-                ? <ChevronDown size={12} aria-hidden="true" />
-                : <ChevronRight size={12} aria-hidden="true" />}
-            </button>
-            <div id="sidebar-admin-group" hidden={!(adminOpen || inAdmin)}>
-              {adminItems.map(item => (
-                <SidebarLink
-                  key={item.href}
-                  href={item.href}
-                  label={tNav(item.labelKey)}
-                  Icon={item.icon}
-                  active={isActive(pathname, item)}
-                  badge={item.badge ? notifCounts?.[item.badge] : undefined}
-                />
-              ))}
-            </div>
+            <FoldButton open={adminOpen || inAdmin} onClick={() => toggle(NAV_STORAGE.adminOpen, !adminOpen, setAdminOpen)} label={t('groups.admin')} count={adminLinks.length} header />
+            {(adminOpen || inAdmin) && menu.admin.map(g => (
+              <div key={g.key}>
+                <SubHeader>{t(`groups.${g.key}`)}</SubHeader>
+                {g.items.map(item => link(item, { compact: true }))}
+              </div>
+            ))}
           </div>
         )}
       </nav>
 
       <SidebarFooter />
     </aside>
+  )
+}
+
+/** Encabezado plegable (fases, «Más…», Administración). */
+function FoldButton({ open, onClick, label, count, header }: { open: boolean; onClick: () => void; label: string; count: number; header?: boolean }) {
+  return (
+    <button type="button" onClick={onClick} aria-expanded={open}
+      style={{
+        width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+        padding: header ? '8px 20px 4px' : '7px 20px', display: 'flex', alignItems: 'center', gap: 6,
+        fontSize: header ? 10 : 'var(--text-sm)', fontWeight: header ? 700 : 600, letterSpacing: header ? '0.08em' : 0,
+        textTransform: header ? 'uppercase' : 'none', color: open ? '#e2e8f0' : '#94a3b8',
+      }}>
+      {open ? <ChevronDown size={12} aria-hidden="true" /> : <ChevronRight size={12} aria-hidden="true" />}
+      <span style={{ flex: 1 }}>{label}</span>
+      {!open && <span style={{ fontSize: 'var(--text-xs)', fontWeight: 500, color: '#64748b' }}>{count}</span>}
+    </button>
   )
 }
 
