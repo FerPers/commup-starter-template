@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { denyAccess } from '@/lib/auth/denied'
 import { ADMIN_ROLES, EDITOR_ROLES } from '@/lib/auth/permissions'
 import TestEquipmentAdmin, { type EquipmentRow } from './TestEquipmentAdmin'
 
@@ -7,7 +8,7 @@ import TestEquipmentAdmin, { type EquipmentRow } from './TestEquipmentAdmin'
 export default async function AdminTestEquipmentPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
-  if (!EDITOR_ROLES.includes(ctx.role)) redirect('/dashboard')
+  if (!EDITOR_ROLES.includes(ctx.role)) denyAccess('editor')
 
   const { data: companies } = await ctx.supabase.from('companies').select('name').eq('org_id', ctx.orgId).eq('is_active', true).order('name')
   const { data } = await ctx.supabase

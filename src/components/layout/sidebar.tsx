@@ -11,7 +11,7 @@ import {
   Radar, TrendingUp, Award, PackageCheck, Anchor, Workflow, Key, Webhook,
   Bell, Database, History, Tag, Activity, Boxes, FolderTree,
   RotateCw, ListChecks, Inbox, GitBranch, Zap, FileImage, Upload,
-  ChevronDown, ChevronRight, Milestone, Gauge, CalendarCheck, Power, FileText, Building2, Truck, UserCheck,
+  ChevronDown, ChevronRight, Milestone, Gauge, Network, CalendarCheck, Power, FileText, Building2, Truck, UserCheck,
   type LucideIcon,
 } from 'lucide-react'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
@@ -94,11 +94,8 @@ export interface NotifCounts {
   myWork?: number
   /** Notificaciones sin leer — badge de «Bandeja» */
   inbox?: number
-  punches?: number
+  /** Planes de preservación vencidos */
   preservation?: number
-  certsPending?: number
-  blockers?: number
-  dataQuality?: number
 }
 
 type BadgeKey = keyof NotifCounts
@@ -114,6 +111,8 @@ interface NavItem {
   softBadge?: boolean
   /** Solo coincide con la ruta exacta (para «Resumen» del proyecto) */
   exact?: boolean
+  /** Subrutas que tienen su propio ítem (no activan este) */
+  notUnder?: string[]
 }
 
 interface NavGroup {
@@ -138,12 +137,15 @@ function projectSections(projectId: string): ProjectSection[] {
     {
       items: [
         { href: p,                    labelKey: 'projectOverview', icon: LayoutDashboard, exact: true },
+        // N0 (H-11): la sistematización es el primer paso del readiness.
+        { href: `${p}/systems`,       labelKey: 'systems',         icon: Network },
         { href: `${p}/tags`,          labelKey: 'tags',            icon: Tag },
         { href: `${p}/itrs`,          labelKey: 'itrs',            icon: ClipboardCheck },
         { href: `${p}/punches`,       labelKey: 'punchList',       icon: Flag },
         { href: `${p}/registers`,     labelKey: 'registers',       icon: ClipboardList },
         { href: `${p}/daily`,         labelKey: 'daily',           icon: CalendarCheck },
-        { href: `${p}/startup`,       labelKey: 'startup',         icon: Power },
+        { href: `${p}/startup`,       labelKey: 'startup',         icon: Power, notUnder: [`${p}/startup/performance`] },
+        { href: `${p}/startup/performance`, labelKey: 'performance', icon: Gauge },
         { href: `${p}/documents`,     labelKey: 'documents',       icon: FileText },
         { href: `${p}/vendors`,       labelKey: 'vendors',         icon: Truck },
         { href: `${p}/signatories`,   labelKey: 'signatories',     icon: UserCheck },
@@ -180,11 +182,11 @@ const ORG_GROUP: NavGroup = {
   items: [
     { href: '/dashboard',     labelKey: 'dashboard',       icon: LayoutDashboard },
     { href: '/projects',      labelKey: 'projects',        icon: FolderKanban },
-    { href: '/control-tower', labelKey: 'controlTower',    icon: Radar,         badge: 'blockers' },
+    { href: '/control-tower', labelKey: 'controlTower',    icon: Radar },
     { href: '/kpis',          labelKey: 'kpis',            icon: TrendingUp },
     { href: '/itrs',          labelKey: 'allItrs',         icon: ClipboardCheck },
     { href: '/punch-list',    labelKey: 'allPunches',      icon: Flag },
-    { href: '/certificates',  labelKey: 'allCertificates', icon: Award,         badge: 'certsPending' },
+    { href: '/certificates',  labelKey: 'allCertificates', icon: Award },
     { href: '/preservation',  labelKey: 'preservation',    icon: Wrench,        badge: 'preservation' },
     { href: '/work-plans',    labelKey: 'allWorkPlans',    icon: CalendarDays },
     { href: '/ops/punches',   labelKey: 'opsPunches',      icon: Anchor },
@@ -225,6 +227,7 @@ function isActive(pathname: string, item: NavItem): boolean {
   if (item.href === '/admin/templates') {
     return pathname === item.href || (pathname.startsWith(item.href + '/') && !/^\/admin\/templates\/(preservation|pssr)/.test(pathname))
   }
+  if (item.notUnder?.some(n => pathname === n || pathname.startsWith(n + '/'))) return false
   return pathname === href || pathname.startsWith(href + '/')
 }
 

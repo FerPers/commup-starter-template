@@ -1,76 +1,26 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevronRight, Home } from 'lucide-react'
-
-interface Crumb {
-  label: string
-  href?: string
-}
-
-const TOP_LEVEL_LABELS: Record<string, string> = {
-  dashboard: 'dashboard',
-  projects: 'projects',
-  itrs: 'itrs',
-  'punch-list': 'punchList',
-  preservation: 'preservation',
-  'work-plans': 'workPlans',
-  'control-tower': 'controlTower',
-  kpis: 'kpis',
-  certificates: 'certificates',
-  scan: 'scan',
-  'my-work': 'myWork',
-  inbox: 'inbox',
-  home: 'dashboard',
-}
-
-const ADMIN_LABELS: Record<string, string> = {
-  templates: 'itrTemplates',
-  config: 'config',
-  users: 'users',
-  workflows: 'workflows',
-  'api-keys': 'apiKeys',
-  webhooks: 'webhooks',
-  notifications: 'notifications',
-  'data-quality': 'dataQuality',
-  audit: 'auditLog',
-  handover: 'handover',
-}
-
-const PROJECT_SUBLABELS: Record<string, string> = {
-  tags: 'tags',
-  itrs: 'itrs',
-  punches: 'punchList',
-  certificates: 'certificates',
-  signals: 'signals',
-  twin: 'twin',
-  explorer: 'explorer',
-  'work-plans': 'workPlans',
-  pssr: 'pssr',
-  kpis: 'kpis',
-  loops: 'loops',
-  'ce-matrices': 'ceMatrices',
-  'pid-documents': 'pidDocuments',
-}
+import { buildCrumbs } from '@/lib/navigation/crumbs'
 
 export default function Breadcrumbs({ projectNames }: { projectNames: Record<string, string> }) {
   const pathname = usePathname()
   const t = useTranslations('Sidebar.nav')
   const tBc = useTranslations('Breadcrumbs')
 
-  const segments = pathname.split('/').filter(Boolean)
-  const projectMatch = pathname.match(/\/projects\/([^/]+)/)
-  const projectId = projectMatch ? projectMatch[1] : null
-  const projectName = projectId ? (projectNames[projectId] ?? null) : null
-
-  const crumbs = buildCrumbs({
-    segments,
-    projectId,
-    projectName,
-    t: (k) => safeT(t, k, k),
-    tProjects: () => safeT(t, 'projects', 'Projects'),
-  })
+  const tSub = useTranslations('Breadcrumbs.sub')
+  const tEnt = useTranslations('Breadcrumbs.entity')
+  // N0 (H-06): migas desde la ruta completa, con las etiquetas del menú (miga = menú = título).
+  const crumbs = buildCrumbs(pathname).map(c => ({
+    href: c.href,
+    label: c.projectName ? (projectNames[c.label] ?? '…')
+      : c.label.startsWith('nav:') ? safeT(t, c.label.slice(4), '…')
+      : c.label.startsWith('entity:') ? safeT(tEnt, c.label.slice(7), '…')
+      : safeT(tSub, c.label.slice(4), '…'),
+  }))
 
   return (
     <nav
@@ -109,7 +59,7 @@ export default function Breadcrumbs({ projectNames }: { projectNames: Record<str
                 />
               )}
               {c.href && !isLast ? (
-                <a
+                <Link
                   href={c.href}
                   style={{
                     color: 'var(--text-muted)',
@@ -126,7 +76,7 @@ export default function Breadcrumbs({ projectNames }: { projectNames: Record<str
                 >
                   {i === 0 && <Home size={14} aria-hidden="true" />}
                   {c.label}
-                </a>
+                </Link>
               ) : (
                 <span
                   aria-current={isLast ? 'page' : undefined}
@@ -161,55 +111,4 @@ function safeT(t: (k: string) => string, key: string, fallback: string): string 
   } catch {
     return fallback
   }
-}
-
-function buildCrumbs({
-  segments,
-  projectId,
-  projectName,
-  t,
-  tProjects,
-}: {
-  segments: string[]
-  projectId: string | null
-  projectName: string | null
-  t: (k: string) => string
-  tProjects: () => string
-}): Crumb[] {
-  if (segments.length === 0) return []
-
-  const first = segments[0]
-
-  // /projects/{id}/...
-  if (first === 'projects' && projectId) {
-    const out: Crumb[] = [
-      { label: tProjects(), href: '/projects' },
-      {
-        label: projectName ?? '…',
-        href: `/projects/${projectId}`,
-      },
-    ]
-    const sub = segments[2]
-    if (sub) {
-      const subKey = PROJECT_SUBLABELS[sub]
-      out.push({ label: subKey ? t(subKey) : titleize(sub) })
-    }
-    return out
-  }
-
-  // /admin/...
-  if (first === 'admin') {
-    const sub = segments[1]
-    if (!sub) return [{ label: 'Admin' }]
-    const key = ADMIN_LABELS[sub]
-    return [{ label: key ? t(key) : titleize(sub) }]
-  }
-
-  // /dashboard, /itrs, /punch-list, etc.
-  const key = TOP_LEVEL_LABELS[first]
-  return [{ label: key ? t(key) : titleize(first) }]
-}
-
-function titleize(s: string): string {
-  return s.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }

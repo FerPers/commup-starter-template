@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { BookOpen, Check, ChevronDown, LogOut } from 'lucide-react'
 import { switchOrg } from '@/app/actions/org'
+import { NAV_STORAGE } from '@/lib/constants/navigation'
 import { createClient } from '@/lib/supabase/client'
 import LocaleSwitcher from '@/components/LocaleSwitcher'
 import ThemeToggle from '@/components/ThemeToggle'
@@ -100,6 +101,9 @@ export default function UserMenu({
         return
       }
       setOpen(false)
+      // N0 (H-14): la URL actual es de la otra org (daría 404) y el rol puede cambiar: al inicio del nuevo rol.
+      try { localStorage.removeItem(NAV_STORAGE.lastProject) } catch { /* sin almacenamiento */ }
+      router.push('/home')
       router.refresh()
     })
   }

@@ -82,6 +82,7 @@ src/app/
 | `src/types/database.ts` | Hand-maintained TS interfaces for DB tables (goal: generate from schema) |
 | `src/lib/utils.ts` | `cn()`, `formatPercent()`, `formatDate()`, `detectItrPhase()` |
 | `src/lib/constants/status-colors.ts` | Shared status palettes (ITR + punch) |
+| `src/lib/navigation/crumbs.ts` / `titles.ts` | N0: migas desde la ruta (etiquetas del menú, colecciones sin página no se enlazan) y glosario menú = h1 (test de paridad). Rebotes por rol con `denyAccess(tier)` (`src/lib/auth/denied.ts`), nunca `redirect('/dashboard')` |
 | `src/components/layout/sidebar.tsx` | Sidebar in 3 blocks (Mi trabajo · Proyecto · Organización) + collapsible Administración. Uses `next/link`; role filtering is UX only. Project block shows the current project or the last visited one (localStorage) |
 | `src/lib/constants/navigation.ts` + `src/lib/my-work/queues.ts` | `homeForRole()` and the pure queue logic behind `/my-work` (badge total via SQL `my_work_counts(p_org_id)`, SECURITY INVOKER) |
 | `supabase/migrations/00000000000000_baseline.sql` | Canonical Postgres schema (pg_dump of prod 2026-05-15). See `supabase/README.md` for migration workflow |

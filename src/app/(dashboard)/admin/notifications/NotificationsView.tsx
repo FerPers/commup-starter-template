@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import dynamic from 'next/dynamic'
 import { Bell } from 'lucide-react'
 import type { Json } from '@/types/supabase.generated'
@@ -32,12 +34,14 @@ export default function NotificationsView({
   userId: string
   subscriptions: Sub[]
 }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = useTranslations('Sidebar.nav')
   return (
     <div style={{ padding: '32px', maxWidth: '720px' }}>
       <header style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-strong)', margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Bell size={22} aria-hidden="true" />
-          Notificaciones
+          {tNav('notifications')}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', margin: '4px 0 0' }}>
           Gestiona notificaciones push de campo: ITRs devueltos, punches Cat A, certificados listos.

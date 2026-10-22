@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { useState, useTransition } from 'react'
 import { createApiKey, revokeApiKey } from '@/app/actions/api-keys'
 import { API_SCOPES, type ApiScope } from '@/lib/constants/api-scopes'
@@ -50,6 +52,8 @@ function keyStatus(k: ApiKey): { label: string; color: string; bg: string } {
 }
 
 export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = useTranslations('Sidebar.nav')
   const [keys, setKeys] = useState<ApiKey[]>(initialKeys)
   const [creating, setCreating] = useState(false)
   const [justCreated, setJustCreated] = useState<{ token: string; name: string; scopes: string[] } | null>(null)
@@ -71,7 +75,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-            API Keys
+            {tNav('apiKeys')}
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
             Credenciales para la{' '}

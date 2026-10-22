@@ -24,6 +24,8 @@ export default function InboxList({
   initialHasMore: boolean
   totalCount: number
 }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = useTranslations('Sidebar.nav')
   const router = useRouter()
   const t = useTranslations('Inbox')
   const [items, setItems] = useState<NotificationRow[]>(initialItems)
@@ -84,7 +86,7 @@ export default function InboxList({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: 'var(--text-strong)' }}>
-            Inbox
+            {tNav('inbox')}
           </h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
             {items.length < totalCount

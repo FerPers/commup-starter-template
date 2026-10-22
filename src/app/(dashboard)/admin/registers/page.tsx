@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { denyAccess } from '@/lib/auth/denied'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { REGISTER_KINDS, type RegisterKind } from '@/lib/registers/catalog'
 import RegisterTypesAdmin from './RegisterTypesAdmin'
@@ -8,7 +9,7 @@ import RegisterTypesAdmin from './RegisterTypesAdmin'
 export default async function AdminRegistersPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
-  if (!PRIVILEGED_ROLES.includes(ctx.role)) redirect('/dashboard')
+  if (!PRIVILEGED_ROLES.includes(ctx.role)) denyAccess('privileged')
   const supabase = ctx.supabase
 
   await supabase.rpc('ensure_register_types', { p_org_id: ctx.orgId })

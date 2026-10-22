@@ -11,7 +11,9 @@ export const exportPunchList = withAuth(
     input: { projectId?: string; filters: PunchListFilters },
   ): Promise<{ error?: string; rows?: PunchListRow[] }> => {
     try {
-      const rows = await fetchPunchRowsAll(ctx.supabase, { orgId: ctx.orgId, projectId: input.projectId }, input.filters)
+      // N0 (H-19): «me» = la persona en sesión (el resto de ids se ignora: solo se exporta lo propio o todo).
+      const filters = { ...input.filters, assigned: input.filters.assigned === 'me' ? ctx.userId : undefined }
+      const rows = await fetchPunchRowsAll(ctx.supabase, { orgId: ctx.orgId, projectId: input.projectId }, filters)
       return { rows }
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Error al exportar' }

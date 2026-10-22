@@ -14,6 +14,8 @@ export default async function TwinPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = await getTranslations('Sidebar.nav')
   const { id } = await params
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
@@ -65,7 +67,7 @@ export default async function TwinPage({
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Diamond size={20} color="var(--primary-500)" aria-hidden="true" />
-              Digital Twin — {project.code}
+              {tNav('twin')}
             </h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
               Vista 360° por tag · Sistema › Subsistema › Asset card · Semáforo al cargar la página

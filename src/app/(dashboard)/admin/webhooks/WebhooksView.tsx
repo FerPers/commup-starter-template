@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { useState, useTransition, useMemo } from 'react'
 import {
   createWebhookSubscription,
@@ -77,6 +79,8 @@ export default function WebhooksView({
   projects: Project[]
   deliveries: Delivery[]
 }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = useTranslations('Sidebar.nav')
   const [subs, setSubs] = useState<Sub[]>(initialSubs)
   const [creating, setCreating] = useState(false)
   const [justCreated, setJustCreated] = useState<{ secret: string; name: string } | null>(null)
@@ -124,7 +128,7 @@ export default function WebhooksView({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-            Webhooks
+            {tNav('webhooks')}
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
             Endpoints HTTPS que reciben eventos de dominio (en menos de un minuto). Firmados con HMAC-SHA256 en{' '}

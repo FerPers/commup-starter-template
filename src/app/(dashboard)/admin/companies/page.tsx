@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { denyAccess } from '@/lib/auth/denied'
 import { ADMIN_ROLES, EDITOR_ROLES } from '@/lib/auth/permissions'
 import type { CompanyKind } from '@/lib/documents/catalog'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
@@ -10,7 +11,7 @@ import CompaniesAdmin, { type CompanyRow } from './CompaniesAdmin'
 export default async function AdminCompaniesPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
-  if (!EDITOR_ROLES.includes(ctx.role)) redirect('/dashboard')
+  if (!EDITOR_ROLES.includes(ctx.role)) denyAccess('editor')
 
   // S09 (F-07): PostgREST corta en 1000 filas aunque se pida .limit(10000); para contar por empresa se pagina
   // con .range() (solo dos columnas por fila).

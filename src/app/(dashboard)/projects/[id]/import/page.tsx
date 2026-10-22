@@ -1,3 +1,4 @@
+import { denyAccess } from '@/lib/auth/denied'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import ImportWizard from './ImportWizard'
@@ -17,7 +18,7 @@ export default async function ImportPage({
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
-  if (!ROLE_TIERS.privileged.includes(membership.role)) redirect(`/projects/${id}`)
+  if (!ROLE_TIERS.privileged.includes(membership.role)) denyAccess('privileged')
 
   const [{ data: project }, { data: disciplines }] = await Promise.all([
     supabase

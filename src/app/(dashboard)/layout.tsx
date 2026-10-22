@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import HeldCaptures from '@/components/offline/HeldCaptures'
+import DeniedNotice from '@/components/layout/DeniedNotice'
 import Sidebar from '@/components/layout/sidebar'
 import Topbar from '@/components/layout/Topbar'
 import DashboardShell from '@/components/layout/DashboardShell'
@@ -70,26 +72,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     (orgProjects ?? []).map(p => [p.id, p.name])
   )
 
-  const [{ count: punchCount }, { count: preservationCount }] = await Promise.all([
-    projectIds.length === 0
-      ? Promise.resolve({ count: 0 })
-      : supabase
-          .from('punches')
-          .select('*', { count: 'exact', head: true })
-          .in('project_id', projectIds)
-          .eq('category', 'A')
-          .in('status', ['open', 'in_progress']),
-    // S09 (B-24): misma definición de «vencida» que Mi trabajo, dashboard y snapshot (sin tolerancia de 3 días)
-    fetchPreservationDueCounts(supabase, projectIds)
-      .then(rows => ({ count: rows.reduce((a, r) => a + r.overdue, 0) }))
-      .catch(() => ({ count: 0 })),
-  ])
+  // N0 (H-16): solo los conteos que algún badge muestra (el de punch Cat A no lo usaba nadie).
+  // S09 (B-24): misma definición de «vencida» que Mi trabajo, dashboard y snapshot (sin tolerancia de 3 días)
+  const preservationCount = await fetchPreservationDueCounts(supabase, projectIds)
+    .then(rows => rows.reduce((a, r) => a + r.overdue, 0))
+    .catch(() => 0)
   const tAccess = await getTranslations('Access')
 
   const role = ctx.role as OrgMemberRole
   const notifCounts = {
-    punches: punchCount ?? 0,
-    preservation: preservationCount ?? 0,
+    preservation: preservationCount,
     myWork: badgeTotal(parseCounts(myWorkRaw), role),
     inbox: unreadNotificationsCount ?? 0,
   }
@@ -119,6 +111,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         }
       >
         <HeldCaptures userId={ctx.userId} />
+        <Suspense fallback={null}><DeniedNotice role={role} /></Suspense>
         {pendingInvitations.length > 0 && (
           <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontSize: 13 }}>
             {tAccess('banner', { n: pendingInvitations.length, org: pendingInvitations[0].orgName })}{' '}

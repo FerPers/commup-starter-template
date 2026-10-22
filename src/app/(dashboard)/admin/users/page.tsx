@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { denyAccess } from '@/lib/auth/denied'
 import UsersView from './UsersView'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
@@ -14,7 +15,7 @@ export default async function AdminUsersPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
-  if (!ROLE_TIERS.admin.includes(ctx.role)) redirect('/dashboard')
+  if (!ROLE_TIERS.admin.includes(ctx.role)) denyAccess('admin')
 
   const orgId = ctx.orgId
 

@@ -719,6 +719,21 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | H-23 | Bajo | Accesos denegados silenciosos | [H-navegacion.md:346](revision-2026-10-19/H-navegacion.md) |
 | H-24 | Bajo | Info · Rutas legacy o resolvers | [H-navegacion.md:352](revision-2026-10-19/H-navegacion.md) |
 
+**Estado N0 (2026-10-21, sin migración):**
+- H-01 / G-21 ✅ `/` y set-password van a `/home` (inicio por rol); manifest con `start_url: /home`, atajos Mi trabajo y Escanear, sin `share_target`/`protocol_handlers` (no existían).
+- H-04 ✅ Borrado `src/app/admin/page.tsx` (prototipo con el nombre del fundador): `/admin` da la 404 propia.
+- H-05 / G-04 ✅ `(dashboard)/not-found.tsx` (dentro del shell, «Ir a Mi trabajo» / «Proyectos»), `(dashboard)/error.tsx` (reintento + referencia), `loading.tsx` en `(dashboard)` y `projects/[id]`, y `app/not-found.tsx` para rutas inexistentes.
+- H-07 ✅ (ya en S14/I-15) «Importar» solo para privilegiados.
+- H-11 ✅ «Sistemas» y «Desempeño (PTC)» en el bloque del proyecto (`notUnder` evita dos ítems activos en Arranque).
+- H-12 ✅ (ya en S23) Control Tower abre el proyecto actual.
+- H-06 ✅ Migas desde `src/lib/navigation/crumbs.ts` (función pura con tests): ruta completa hasta la entidad (Tag › ITR, Arranque › Desempeño › Intento…), etiquetas del menú, sin `titleize`, colecciones sin página no se enlazan, `next/link`. Las entidades muestran su tipo («Tag», «ITR»); el nombre real (resolvers) queda para N1.
+- H-23 ✅ `denyAccess(tier)` (`src/lib/auth/denied.ts`) en las páginas de admin e importación: `/home?denied=<nivel>` → inicio del rol con aviso «necesitas el rol X (tienes Y)» (`DeniedNotice`).
+- H-16 ✅ Fuera los badges `blockers`/`certsPending`/`dataQuality` (nunca se calculaban) y la consulta de punch Cat A del layout.
+- H-13 ✅ Glosario de la propuesta §9 aplicado a menú y títulos: Panorama, Readiness, Post-handover, Paquetes de entrega, Registros de campo / Tipos de registro, Plantillas ITR / de preservación / PSSR, Preferencias de notificación, Relevo de turno, Traspaso de custodia, Lazos de control, Proveedores, Automatizaciones, Claves de API, Completions & Commissioning. Menú = h1 con test de paridad (`src/lib/navigation/titles.ts`); «Control Tower/Torre de Control» fuera de la app en español (la landing no se tocó). Las fusiones del glosario (Tags y equipos, Señales y lazos, Documentos + visor P&ID) quedan para N2.
+- H-19 ✅ «Ver todos» de Mi trabajo: ITR → `/itrs?assignee=me`, punch → `/punch-list?assigned=me` (filtro nuevo en la lista global y su exportación, chip «Asignados a mí»).
+- #12 ✅ (ya estaba) el dashboard muestra todas las fases de la org.
+- H-22 / H-24: no se movieron rutas (`/admin/notifications`, `/admin/handover`, `/tag_360`): va con N1–N2.
+
 ## N1 — Navegación N1
 
 | ID | Sev. | Hallazgo | Anexo |

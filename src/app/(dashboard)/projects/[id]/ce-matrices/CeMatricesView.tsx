@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
@@ -27,6 +29,8 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
   systems: { id: string; code: string; name: string }[]
   canEdit: boolean
 }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = useTranslations('Sidebar.nav')
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ code: '', title: '', systemId: '', revision: '', sourceDocument: '' })
@@ -51,7 +55,7 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
         <div>
           <Link href={`/projects/${project.id}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {project.name}</Link>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', margin: '12px 0 4px' }}>Matrices causa-efecto</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', margin: '12px 0 4px' }}>{tNav('ceMatrices')}</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0, maxWidth: '720px' }}>
             Lógica de paro y enclavamientos (SIS/ESD/PSD): cada causa con los efectos que dispara. Cada causa se prueba con su propio ITR, y el cruce probado queda como evidencia.
           </p>

@@ -62,7 +62,7 @@
       "lastProject": "Último proyecto"
     },
     "nav": {
-      "dashboard": "Dashboard",
+      "dashboard": "Panorama",
       "projects": "Proyectos",
       "projectOverview": "Resumen",
       "tags": "Tags",
@@ -71,29 +71,29 @@
       "itrs": "ITRs",
       "punchList": "Punch List",
       "preservation": "Preservación",
-      "workPlans": "Planes de Trabajo",
-      "controlTower": "Control Tower",
+      "workPlans": "Planes de trabajo",
+      "controlTower": "Readiness",
       "certificates": "Certificados",
       "kpis": "KPIs",
-      "itrTemplates": "Templates ITR",
-      "preservationTemplates": "Templates Preserv.",
-      "pssrTemplates": "Templates PSSR",
+      "itrTemplates": "Plantillas ITR",
+      "preservationTemplates": "Plantillas de preservación",
+      "pssrTemplates": "Plantillas PSSR",
       "users": "Usuarios",
       "config": "Configuración",
-      "workflows": "Workflows",
-      "apiKeys": "API Keys",
+      "workflows": "Automatizaciones",
+      "apiKeys": "Claves de API",
       "webhooks": "Webhooks",
-      "notifications": "Notificaciones",
-      "auditLog": "Log de Auditoría",
-      "twin": "Digital Twin",
+      "notifications": "Preferencias de notificación",
+      "auditLog": "Registro de auditoría",
+      "twin": "Gemelo digital",
       "explorer": "Explorador",
       "pssr": "PSSR",
-      "dataQuality": "Calidad de Datos",
-      "handover": "Handover",
-      "opsPunches": "Tracking de Ops",
-      "loops": "Loops",
+      "dataQuality": "Calidad de datos",
+      "handover": "Paquetes de entrega",
+      "opsPunches": "Post-handover",
+      "loops": "Lazos de control",
       "ceMatrices": "Matrices C&E",
-      "pidDocuments": "P&IDs",
+      "pidDocuments": "P&ID",
       "myWork": "Mi trabajo",
       "inbox": "Bandeja",
       "import": "Importar",
@@ -102,21 +102,23 @@
       "allCertificates": "Todos los certificados",
       "allWorkPlans": "Todos los planes",
       "gates": "Gates (hold points)",
-      "registers": "Registros",
+      "registers": "Registros de campo",
       "daily": "Gestión diaria",
       "startup": "Arranque",
-      "registerTypes": "Registros controlados",
+      "registerTypes": "Tipos de registro",
       "testEquipment": "Equipos de prueba",
       "documents": "Documentos",
       "companies": "Empresas",
-      "vendors": "Vendors",
-      "signatories": "Firmantes"
+      "vendors": "Proveedores",
+      "signatories": "Firmantes",
+      "systems": "Sistemas",
+      "performance": "Desempeño (PTC)"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
     "guide": "Guía de arranque",
     "logout": "Cerrar sesión",
-    "platform": "CMS Platform",
+    "platform": "Completions & Commissioning",
     "theme": {
       "light": "Claro",
       "dark": "Oscuro",
@@ -145,7 +147,55 @@
     }
   },
   "Breadcrumbs": {
-    "label": "Migas de pan"
+    "label": "Migas de pan",
+    "sub": {
+      "admin": "Administración",
+      "detail": "Detalle",
+      "importSignals": "Importar señales",
+      "operations": "Operaciones",
+      "events": "Bitácora",
+      "lookahead": "Look-ahead",
+      "handovers": "Relevos de turno",
+      "reports": "Reportes diarios",
+      "new": "Nuevo",
+      "generate": "Generar",
+      "report": "Reporte",
+      "testPacks": "Test packs",
+      "import": "Importar",
+      "viewer": "Visor",
+      "preview": "Vista previa",
+      "translations": "Traducciones",
+      "backup": "Respaldo",
+      "matrix": "Matriz ITR"
+    },
+    "entity": {
+      "tag": "Tag",
+      "itr": "ITR",
+      "system": "Sistema",
+      "run": "Ejecución",
+      "attempt": "Intento",
+      "lineup": "Hoja de line-up",
+      "procedure": "Procedimiento",
+      "transfer": "Traspaso de custodia",
+      "event": "Evento",
+      "test": "Prueba",
+      "document": "Documento",
+      "package": "Paquete",
+      "pssr": "Revisión PSSR",
+      "certificate": "Certificado",
+      "register": "Registro",
+      "report": "Reporte",
+      "handover": "Relevo de turno",
+      "matrix": "Matriz",
+      "pid": "P&ID",
+      "plan": "Plan",
+      "template": "Plantilla",
+      "action": "Acción",
+      "constraint": "Restricción",
+      "tq": "TQ",
+      "decision": "Decisión",
+      "detail": "Detalle"
+    }
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -387,7 +437,8 @@
       "allSystems": "Todos los sistemas",
       "clear": "Limpiar",
       "count": "{filtered} de {total} punches",
-      "selectAll": "Seleccionar {count} punches"
+      "selectAll": "Seleccionar {count} punches",
+      "assignedToMe": "Asignados a mí"
     },
     "bulk": {
       "selected": "{count, plural, one {# punch seleccionado} other {# punches seleccionados}}",
@@ -544,7 +595,7 @@
     },
     "empty": "No hay certificados que coincidan con los filtros.",
     "view": {
-      "title": "Certificados de Completación",
+      "title": "Certificados",
       "subtitle": "MC · RFPC · RFC · RFSU por subsistema",
       "backLink": "← {projectName}",
       "summary": {
@@ -695,7 +746,7 @@
     }
   },
   "WorkPlans": {
-    "title": "Planes de Trabajo",
+    "title": "Planes de trabajo",
     "subtitle": "Todos los proyectos de la organización",
     "subtitleProject": "Planes de trabajo de este proyecto",
     "newPlan": "+ Nuevo plan",
@@ -989,7 +1040,7 @@
     }
   },
   "Config": {
-    "title": "Configuración de Organización",
+    "title": "Configuración",
     "subtitle": "Fases, disciplinas y parámetros globales",
     "phases": {
       "title": "Fases del Proyecto",
@@ -1064,7 +1115,7 @@
     }
   },
   "AuditLog": {
-    "title": "Log de Auditoría",
+    "title": "Registro de auditoría",
     "subtitle": "{total} eventos",
     "cols": {
       "date": "Fecha",
@@ -1752,7 +1803,7 @@
     }
   },
   "Signals": {
-    "title": "Lista de Señales (I&C)",
+    "title": "Señales",
     "subtitle": "{count} señales en este proyecto",
     "importBtn": "Importar señales",
     "all": "Todas",
@@ -1794,7 +1845,7 @@
       "approved": "Aprobado"
     },
     "loops": {
-      "title": "Loops de Control",
+      "title": "Lazos de control",
       "subtitle": "{count} loops en este proyecto",
       "searchPlaceholder": "Buscar por número de loop o descripción…",
       "emptyTitle": "Sin loops definidos",
@@ -1830,7 +1881,7 @@
     }
   },
   "ControlTower": {
-    "title": "Torre de Control",
+    "title": "Readiness",
     "subtitle": "Preparación de sistemas para hitos de completion",
     "project": "Proyecto",
     "load": "Cargar",
@@ -1927,7 +1978,7 @@
     "itrsWeighing": "{count} ITR"
   },
   "DataQuality": {
-    "title": "Calidad de Datos & Cuellos de Botella",
+    "title": "Calidad de datos",
     "subtitle": "Detección de inconsistencias, datos huérfanos y puntos críticos de progreso.",
     "total": "Issues totales",
     "severity": {
@@ -1985,7 +2036,7 @@
     "reject": "Descartar"
   },
   "OpsPunches": {
-    "title": "Tracking de Punches en Operaciones",
+    "title": "Post-handover",
     "subtitle": "Punches Cat B transferidos a Operaciones tras MC — ownership, deadlines y auditoría.",
     "filter": {
       "project": "Proyecto",
@@ -2039,7 +2090,7 @@
     }
   },
   "AdminHandover": {
-    "title": "Paquetes de Handover",
+    "title": "Paquetes de entrega",
     "subtitle": "Exportá el libro de vida digital del proyecto: JSON + índice PDF + ZIP con los anexos (procedimientos, PTC, PSSR, certificados, ITR y documentos), firmado con Ed25519 y verificable por la operadora.",
     "generator": {
       "title": "Generar nuevo paquete",
@@ -2072,7 +2123,7 @@
     }
   },
   "PSSR": {
-    "pageTitle": "Pre-Startup Safety Review",
+    "pageTitle": "PSSR",
     "pageSubtitle": "Revisión de seguridad previa al arranque — {projectName}",
     "backToProject": "← {projectName}",
     "backToList": "← PSSR · {projectName}",
@@ -2441,7 +2492,7 @@
       "holds": "hold points por liberar",
       "lineup": "válvulas por verificar",
       "milestones": "hitos por atestiguar",
-      "transfers": "Traspasos por firmar",
+      "transfers": "Traspasos de custodia por firmar",
       "performanceDecide": "Resultados de desempeño",
       "performanceSign": "PTC por firmar",
       "gatesApprove": "gates por aprobar",
@@ -2468,7 +2519,7 @@
       "holds": "Hold points por liberar",
       "lineup": "Line-up: válvulas críticas por verificar",
       "milestones": "Hitos de arranque por atestiguar",
-      "transfers": "Traspasos de propiedad por firmar",
+      "transfers": "Traspasos de custodia por firmar",
       "performanceDecide": "Pruebas de desempeño por decidir",
       "performanceSign": "Certificados PTC por firmar",
       "gatesApprove": "Gates listos para aprobar",
@@ -2562,7 +2613,7 @@
     "offline": "Sin red · {count, plural, =1 {# pendiente} other {# pendientes}}"
   },
   "Gates": {
-    "back": "Volver a Control Tower",
+    "back": "Volver a Readiness",
     "intro": "Cada gate es un hold point: se calcula con sus criterios y, cuando está listo, alguien con autoridad lo aprueba. La aprobación congela la evidencia del momento. Si después deja de cumplir (p. ej. se reabre un ITR), se marca «en regresión» sin revocarse solo, y frena al gate siguiente. Un punch levantado después de aprobar no regresa el gate: frena el siguiente.",
     "noGates": "La organización no tiene gates activos. Configúralos en Administración → Gates.",
     "unknownUser": "usuario",
@@ -2815,14 +2866,14 @@
     "requiresLineup": "Exige line-up verificado (antes de arrancar)",
     "requiresPerformance": "Exige prueba de desempeño aceptada (sistemas con prueba)",
     "transferPolicy": {
-      "title": "Traspasos de propiedad: faltas que no se pueden dispensar",
+      "title": "Traspasos de custodia: faltas que no se pueden dispensar",
       "hint": "Marcadas: si faltan, el traspaso no se puede pedir con una justificación. Sin marcar: se pueden justificar y cada firmante reconoce la excepción."
     }
   },
   "Systems": {
     "title": "Sistemas",
     "subtitle": "Sistematización del proyecto: tipo, prioridad, límites de batería y dependencias entre sistemas.",
-    "openControlTower": "Ver en Control Tower",
+    "openControlTower": "Ver en Readiness",
     "kpi": {
       "systems": "Sistemas",
       "typed": "Con tipo asignado",
@@ -2902,7 +2953,7 @@
     "detail": {
       "back": "Sistemas del proyecto",
       "scope": "{subsystems} subsistemas · {tags} tags",
-      "openGates": "Ver gates en Control Tower",
+      "openGates": "Ver gates en Readiness",
       "attributes": "Atributos",
       "name": "Nombre",
       "typeHelp": "Utility: aire de instrumentos, potencia, N₂, agua de enfriamiento… Suelen ser habilitantes y comisionarse primero. Seguridad: tea, sistemas de alivio, contra incendio, ESD.",
@@ -2998,7 +3049,7 @@
     }
   },
   "Registers": {
-    "title": "Registros controlados",
+    "title": "Registros de campo",
     "subtitle": "Estado temporal de la planta: instalaciones temporales, ciegas, reinstalación, bypass, energización y test packs. Cada registro abierto puede bloquear un gate.",
     "new": "Nuevo registro",
     "kpi": {
@@ -3212,7 +3263,7 @@
       "newBlind": "Nueva ciega para este pack"
     },
     "admin": {
-      "title": "Registros controlados",
+      "title": "Tipos de registro",
       "subtitle": "Activa los tipos que usa tu organización y elige qué gate bloquea cada uno mientras tenga registros abiertos en un sistema.",
       "active": "Activo",
       "blocks": "Bloquea el gate",
@@ -3440,7 +3491,7 @@
       "decisions": "Decisiones",
       "lookahead": "Look-ahead",
       "reports": "Reporte",
-      "handovers": "Relevo"
+      "handovers": "Relevo de turno"
     },
     "kpi": {
       "actionsOpen": "Abiertas",
@@ -4468,7 +4519,7 @@
       "titlePlaceholder": "Ej.: Capacidad del compresor C-103",
       "primarySystem": "Sistema principal",
       "primary": "principal",
-      "primaryHint": "El sistema principal es el que se ve en Control Tower y alimenta el gate. La frontera puede incluir más sistemas.",
+      "primaryHint": "El sistema principal es el que se ve en Readiness y alimenta el gate. La frontera puede incluir más sistemas.",
       "empty": "Aún no hay pruebas de desempeño.",
       "col": {
         "number": "N.º",
@@ -4758,7 +4809,7 @@
     }
   },
   "Documents": {
-    "title": "Registro de documentos",
+    "title": "Documentos",
     "subtitle": "revisiones controladas por número, estado y sistema",
     "new": "Nuevo documento",
     "create": "Crear documento",
@@ -4930,7 +4981,7 @@
     }
   },
   "Vendors": {
-    "title": "Paquetes de vendor",
+    "title": "Proveedores",
     "subtitle": "alcance, interfaces, movilización, FAT/SAT, reportes y desmovilización",
     "new": "Nuevo paquete",
     "create": "Crear paquete",
@@ -5191,7 +5242,7 @@
     "lastProject": "último proyecto visitado"
   },
   "Signatories": {
-    "title": "Firmantes designados",
+    "title": "Firmantes",
     "subtitle": "quién firma por Comisionamiento, Operaciones, HSE y el Cliente",
     "help": "Con personas designadas para una capacidad, firman solo ellas (con cualquier rol: un supervisor de la operadora con rol inspector puede liberar los hold points de Operaciones). Sin designados rige el rol de la persona y se avisa. Aplica a gates, hold points, testigos de hitos, traspasos, PTC y la firma Cliente del ITR.",
     "cap": {
@@ -5381,5 +5432,24 @@
     "cancel": "Cancelar",
     "choices": "Elige uno o escribe el motivo",
     "minChars": "{n} caracteres o más"
+  },
+  "Errors": {
+    "notFoundTitle": "No existe o no tienes acceso",
+    "notFoundBody": "El elemento no existe, se eliminó o pertenece a otra organización o proyecto en el que no estás.",
+    "pageMissing": "Esta página no existe.",
+    "goMyWork": "Ir a Mi trabajo",
+    "goProjects": "Proyectos",
+    "goHome": "Ir al inicio",
+    "errorTitle": "Algo salió mal",
+    "errorBody": "No se pudo cargar esta página. Reintenta; si sigue fallando, avísanos con la referencia.",
+    "errorRef": "Referencia: {ref}",
+    "retry": "Reintentar",
+    "deniedNeeds": "No tienes acceso a esa página: necesitas el rol {needs} (tienes {role}).",
+    "dismiss": "Cerrar",
+    "tier": {
+      "admin": "Owner o Admin",
+      "privileged": "Owner, Admin o Arquitecto",
+      "editor": "Líder o superior"
+    }
   }
 }

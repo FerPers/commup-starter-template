@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import TagsView from './TagsView'
@@ -14,6 +15,8 @@ export default async function TagsPage({
   params: Promise<{ id: string }>
   searchParams: Promise<Search>
 }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = await getTranslations('Sidebar.nav')
   const { id } = await params
   const sp = await searchParams
 
@@ -102,7 +105,7 @@ export default async function TagsPage({
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>
-              Tags / Equipos
+              {tNav('tags')}
             </h1>
             <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
               {tagCount === 0 ? 'Sin tags importados' : `${tagCount} tags importados`}

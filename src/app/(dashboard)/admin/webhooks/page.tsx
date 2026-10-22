@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { denyAccess } from '@/lib/auth/denied'
 import WebhooksView from './WebhooksView'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
@@ -8,7 +9,7 @@ export default async function AdminWebhooksPage() {
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
-  if (!ROLE_TIERS.privileged.includes(membership.role)) redirect('/dashboard')
+  if (!ROLE_TIERS.privileged.includes(membership.role)) denyAccess('privileged')
 
   const [{ data: subs }, { data: projects }] = await Promise.all([
     supabase

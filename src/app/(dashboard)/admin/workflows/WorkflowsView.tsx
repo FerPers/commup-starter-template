@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import type { Json, Enums } from '@/types/supabase.generated'
 import { useState, useTransition, useMemo } from 'react'
 import {
@@ -145,6 +147,8 @@ export default function WorkflowsView({
   rules: Rule[]
   recentExecutions: Execution[]
 }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = useTranslations('Sidebar.nav')
   const [rules, setRules] = useState<Rule[]>(initialRules)
   const [editingRule, setEditingRule] = useState<Rule | null>(null)
   const [creating, setCreating] = useState(false)
@@ -189,7 +193,7 @@ export default function WorkflowsView({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-            Workflow Engine
+            {tNav('workflows')}
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
             Reglas declarativas que reaccionan a eventos de dominio. Evaluadas por <code>evaluate-workflow</code>.

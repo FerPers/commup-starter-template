@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import { normalizePidRef } from '@/lib/excel/normalize'
@@ -13,6 +14,8 @@ type TagPidRow = {
 const PAGE = 1000 // PostgREST limita a 1000 filas por respuesta; paginamos
 
 export default async function PidDocumentsPage({ params }: { params: Promise<{ id: string }> }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = await getTranslations('Sidebar.nav')
   const { id } = await params
 
   const ctx = await getActiveMembership()
@@ -103,7 +106,7 @@ export default async function PidDocumentsPage({ params }: { params: Promise<{ i
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>
-              Documentos P&ID
+              {tNav('pidDocuments')}
             </h1>
             <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
               {project.name} · {docs.length === 0 ? 'Sin documentos subidos' : `${docs.length} PDF${docs.length !== 1 ? 's' : ''} subido${docs.length !== 1 ? 's' : ''}`}

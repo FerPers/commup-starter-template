@@ -1,9 +1,12 @@
+import { getTranslations } from 'next-intl/server'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import PreservationProceduresView from './PreservationProceduresView'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function PreservationProceduresPage() {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = await getTranslations('Sidebar.nav')
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
@@ -33,7 +36,7 @@ export default async function PreservationProceduresPage() {
     <div style={{ padding: '32px' }}>
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>
-          Procedimientos de Preservación
+          {tNav('preservationTemplates')}
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
           Check sheets de preservación — define frecuencias, ítems de verificación y criterios de medición

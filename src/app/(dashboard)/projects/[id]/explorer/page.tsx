@@ -9,6 +9,8 @@ import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 
 export default async function ExplorerPage({ params }: { params: Promise<{ id: string }> }) {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = await getTranslations('Sidebar.nav')
   const { id } = await params
 
   const ctx = await getActiveMembership()
@@ -67,7 +69,7 @@ export default async function ExplorerPage({ params }: { params: Promise<{ id: s
           ← {project.name}
         </Link>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-          Explorador de Sistema
+          {tNav('explorer')}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
           Árbol jerárquico Área › Sistema › Subsistema

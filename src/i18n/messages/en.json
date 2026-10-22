@@ -62,7 +62,7 @@
       "lastProject": "Last project"
     },
     "nav": {
-      "dashboard": "Dashboard",
+      "dashboard": "Overview",
       "projects": "Projects",
       "projectOverview": "Overview",
       "tags": "Tags",
@@ -71,27 +71,27 @@
       "itrs": "ITRs",
       "punchList": "Punch List",
       "preservation": "Preservation",
-      "workPlans": "Work Plans",
-      "controlTower": "Control Tower",
+      "workPlans": "Work plans",
+      "controlTower": "Readiness",
       "certificates": "Certificates",
       "kpis": "KPIs",
-      "itrTemplates": "ITR Templates",
-      "preservationTemplates": "Preserv. Templates",
-      "pssrTemplates": "PSSR Templates",
+      "itrTemplates": "ITR templates",
+      "preservationTemplates": "Preservation templates",
+      "pssrTemplates": "PSSR templates",
       "users": "Users",
       "config": "Configuration",
-      "workflows": "Workflows",
-      "apiKeys": "API Keys",
+      "workflows": "Automations",
+      "apiKeys": "API keys",
       "webhooks": "Webhooks",
-      "notifications": "Notifications",
-      "auditLog": "Audit Log",
-      "twin": "Digital Twin",
+      "notifications": "Notification preferences",
+      "auditLog": "Audit log",
+      "twin": "Digital twin",
       "explorer": "Explorer",
       "pssr": "PSSR",
-      "dataQuality": "Data Quality",
-      "handover": "Handover",
-      "opsPunches": "Ops Punch Tracking",
-      "loops": "Loops",
+      "dataQuality": "Data quality",
+      "handover": "Handover packages",
+      "opsPunches": "Post-handover",
+      "loops": "Control loops",
       "ceMatrices": "C&E matrices",
       "pidDocuments": "P&IDs",
       "myWork": "My work",
@@ -102,21 +102,23 @@
       "allCertificates": "All certificates",
       "allWorkPlans": "All work plans",
       "gates": "Gates (hold points)",
-      "registers": "Registers",
+      "registers": "Field registers",
       "daily": "Daily management",
       "startup": "Start-up",
-      "registerTypes": "Controlled registers",
+      "registerTypes": "Register types",
       "testEquipment": "Test equipment",
       "documents": "Documents",
       "companies": "Companies",
       "vendors": "Vendors",
-      "signatories": "Signatories"
+      "signatories": "Signatories",
+      "systems": "Systems",
+      "performance": "Performance (PTC)"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
     "guide": "Getting started guide",
     "logout": "Sign out",
-    "platform": "CMS Platform",
+    "platform": "Completions & Commissioning",
     "theme": {
       "light": "Light",
       "dark": "Dark",
@@ -145,7 +147,55 @@
     }
   },
   "Breadcrumbs": {
-    "label": "Breadcrumbs"
+    "label": "Breadcrumbs",
+    "sub": {
+      "admin": "Administration",
+      "detail": "Detail",
+      "importSignals": "Import signals",
+      "operations": "Operations",
+      "events": "Log",
+      "lookahead": "Look-ahead",
+      "handovers": "Shift handovers",
+      "reports": "Daily reports",
+      "new": "New",
+      "generate": "Generate",
+      "report": "Report",
+      "testPacks": "Test packs",
+      "import": "Import",
+      "viewer": "Viewer",
+      "preview": "Preview",
+      "translations": "Translations",
+      "backup": "Backup",
+      "matrix": "ITR matrix"
+    },
+    "entity": {
+      "tag": "Tag",
+      "itr": "ITR",
+      "system": "System",
+      "run": "Run",
+      "attempt": "Attempt",
+      "lineup": "Line-up sheet",
+      "procedure": "Procedure",
+      "transfer": "Custody transfer",
+      "event": "Event",
+      "test": "Test",
+      "document": "Document",
+      "package": "Package",
+      "pssr": "PSSR review",
+      "certificate": "Certificate",
+      "register": "Register",
+      "report": "Report",
+      "handover": "Shift handover",
+      "matrix": "Matrix",
+      "pid": "P&ID",
+      "plan": "Plan",
+      "template": "Template",
+      "action": "Action",
+      "constraint": "Constraint",
+      "tq": "TQ",
+      "decision": "Decision",
+      "detail": "Detail"
+    }
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -387,7 +437,8 @@
       "allSystems": "All systems",
       "clear": "Clear",
       "count": "{filtered} of {total} punches",
-      "selectAll": "Select {count} punches"
+      "selectAll": "Select {count} punches",
+      "assignedToMe": "Assigned to me"
     },
     "bulk": {
       "selected": "{count, plural, one {# punch selected} other {# punches selected}}",
@@ -544,7 +595,7 @@
     },
     "empty": "No certificates match the current filters.",
     "view": {
-      "title": "Completion Certificates",
+      "title": "Certificates",
       "subtitle": "MC · RFPC · RFC · RFSU by subsystem",
       "backLink": "← {projectName}",
       "summary": {
@@ -695,7 +746,7 @@
     }
   },
   "WorkPlans": {
-    "title": "Work Plans",
+    "title": "Work plans",
     "subtitle": "All organization projects",
     "subtitleProject": "Work plans for this project",
     "newPlan": "+ New plan",
@@ -989,7 +1040,7 @@
     }
   },
   "Config": {
-    "title": "Organization Configuration",
+    "title": "Configuration",
     "subtitle": "Phases, disciplines and global parameters",
     "phases": {
       "title": "Project Phases",
@@ -1064,7 +1115,7 @@
     }
   },
   "AuditLog": {
-    "title": "Audit Log",
+    "title": "Audit log",
     "subtitle": "{total} events",
     "cols": {
       "date": "Date",
@@ -1752,7 +1803,7 @@
     }
   },
   "Signals": {
-    "title": "Signal List (I&C)",
+    "title": "Signals",
     "subtitle": "{count} signals in this project",
     "importBtn": "Import signals",
     "all": "All",
@@ -1794,7 +1845,7 @@
       "approved": "Approved"
     },
     "loops": {
-      "title": "Control Loops",
+      "title": "Control loops",
       "subtitle": "{count} loops in this project",
       "searchPlaceholder": "Search by loop number or description…",
       "emptyTitle": "No loops defined yet",
@@ -1830,7 +1881,7 @@
     }
   },
   "ControlTower": {
-    "title": "Control Tower",
+    "title": "Readiness",
     "subtitle": "System readiness for completion milestones",
     "project": "Project",
     "load": "Load",
@@ -1927,7 +1978,7 @@
     "itrsWeighing": "{count} ITRs"
   },
   "DataQuality": {
-    "title": "Data Quality & Bottlenecks",
+    "title": "Data quality",
     "subtitle": "Detect inconsistencies, orphan records and critical progress choke points.",
     "total": "Total issues",
     "severity": {
@@ -1985,7 +2036,7 @@
     "reject": "Dismiss"
   },
   "OpsPunches": {
-    "title": "Operations Punch Tracking",
+    "title": "Post-handover",
     "subtitle": "Cat B punches transferred to Operations post-MC — ownership, deadlines, and audit trail.",
     "filter": {
       "project": "Project",
@@ -2039,7 +2090,7 @@
     }
   },
   "AdminHandover": {
-    "title": "Handover Packages",
+    "title": "Handover packages",
     "subtitle": "Export the project's digital life book: JSON + PDF index + ZIP with annexes (procedures, PTC, PSSR, certificates, ITRs and documents), Ed25519-signed and verifiable by the operator.",
     "generator": {
       "title": "Generate new package",
@@ -2072,7 +2123,7 @@
     }
   },
   "PSSR": {
-    "pageTitle": "Pre-Startup Safety Review",
+    "pageTitle": "PSSR",
     "pageSubtitle": "Safety review before start-up — {projectName}",
     "backToProject": "← {projectName}",
     "backToList": "← PSSR · {projectName}",
@@ -2562,7 +2613,7 @@
     "offline": "Offline · {count, plural, =1 {# pending} other {# pending}}"
   },
   "Gates": {
-    "back": "Back to Control Tower",
+    "back": "Back to Readiness",
     "intro": "Each gate is a hold point: it is computed from its criteria and, once ready, someone with authority approves it. Approval freezes the evidence at that moment. If it later stops complying (e.g. an ITR is reopened), it is flagged as regressed instead of being revoked automatically, and it holds the next gate. A punch raised after approval does not regress the gate: it holds the next one.",
     "noGates": "The organization has no active gates. Configure them in Admin → Gates.",
     "unknownUser": "user",
@@ -2822,7 +2873,7 @@
   "Systems": {
     "title": "Systems",
     "subtitle": "Project systemization: type, priority, battery limits and dependencies between systems.",
-    "openControlTower": "Open in Control Tower",
+    "openControlTower": "Open in Readiness",
     "kpi": {
       "systems": "Systems",
       "typed": "With type",
@@ -2902,7 +2953,7 @@
     "detail": {
       "back": "Project systems",
       "scope": "{subsystems} subsystems · {tags} tags",
-      "openGates": "Open gates in Control Tower",
+      "openGates": "Open gates in Readiness",
       "attributes": "Attributes",
       "name": "Name",
       "typeHelp": "Utility: instrument air, power, N₂, cooling water… Usually enabling and commissioned first. Safety: flare, relief systems, fire fighting, ESD.",
@@ -2998,7 +3049,7 @@
     }
   },
   "Registers": {
-    "title": "Controlled registers",
+    "title": "Field registers",
     "subtitle": "Temporary plant state: temporary installations, blinds, reinstatement, bypasses, energization and test packs. Each open register can block a gate.",
     "new": "New register",
     "kpi": {
@@ -3215,7 +3266,7 @@
       "newBlind": "New blind for this pack"
     },
     "admin": {
-      "title": "Controlled registers",
+      "title": "Register types",
       "subtitle": "Enable the types your organization uses and choose which gate each one blocks while it has open registers in a system.",
       "active": "Active",
       "blocks": "Blocks gate",
@@ -3443,7 +3494,7 @@
       "decisions": "Decisions",
       "lookahead": "Look-ahead",
       "reports": "Report",
-      "handovers": "Handover"
+      "handovers": "Shift handover"
     },
     "kpi": {
       "actionsOpen": "Open",
@@ -4468,7 +4519,7 @@
       "titlePlaceholder": "E.g. C-103 compressor capacity",
       "primarySystem": "Primary system",
       "primary": "primary",
-      "primaryHint": "The primary system is the one shown in Control Tower and feeding the gate. The boundary may include more systems.",
+      "primaryHint": "The primary system is the one shown in Readiness and feeding the gate. The boundary may include more systems.",
       "empty": "No performance tests yet.",
       "col": {
         "number": "No.",
@@ -4758,7 +4809,7 @@
     }
   },
   "Documents": {
-    "title": "Document register",
+    "title": "Documents",
     "subtitle": "controlled revisions by number, status and system",
     "new": "New document",
     "create": "Create document",
@@ -4930,7 +4981,7 @@
     }
   },
   "Vendors": {
-    "title": "Vendor packages",
+    "title": "Vendors",
     "subtitle": "scope, interfaces, mobilization, FAT/SAT, reports and demobilization",
     "new": "New package",
     "create": "Create package",
@@ -5191,7 +5242,7 @@
     "lastProject": "last visited project"
   },
   "Signatories": {
-    "title": "Designated signatories",
+    "title": "Signatories",
     "subtitle": "who signs for Commissioning, Operations, HSE and the Client",
     "help": "When people are designated for a capacity, only they sign (with any role: an operator supervisor with the inspector role can release Operations hold points). Without designations the person's role applies and a warning is shown. Applies to gates, hold points, milestone witnesses, transfers, PTCs and the ITR client signature.",
     "cap": {
@@ -5381,5 +5432,24 @@
     "cancel": "Cancel",
     "choices": "Pick one or write the reason",
     "minChars": "{n}+ characters"
+  },
+  "Errors": {
+    "notFoundTitle": "Not found or no access",
+    "notFoundBody": "The item does not exist, was deleted or belongs to another organization or project you are not in.",
+    "pageMissing": "This page does not exist.",
+    "goMyWork": "Go to My work",
+    "goProjects": "Projects",
+    "goHome": "Go to start",
+    "errorTitle": "Something went wrong",
+    "errorBody": "This page could not be loaded. Try again; if it keeps failing, send us the reference.",
+    "errorRef": "Reference: {ref}",
+    "retry": "Retry",
+    "deniedNeeds": "You cannot open that page: it needs {needs} (you are {role}).",
+    "dismiss": "Dismiss",
+    "tier": {
+      "admin": "Owner or Admin",
+      "privileged": "Owner, Admin or Architect",
+      "editor": "Leader or above"
+    }
   }
 }

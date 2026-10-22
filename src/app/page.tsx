@@ -40,10 +40,10 @@ import LandingFooter from '@/components/landing/LandingFooter'
 export default async function RootPage() {
   // Check barato de sesión: solo presencia de la cookie de Supabase, sin llamada
   // de red a Auth por cada visita anónima. La validación real la hace el layout
-  // del dashboard; una cookie stale solo provoca un rebote /dashboard → /login.
+  // del dashboard; una cookie stale solo provoca un rebote /home → /login. N0 (H-01): /home envía a cada rol a su inicio.
   const cookieStore = await cookies()
   const hasSession = cookieStore.getAll().some(c => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
-  if (hasSession) redirect('/dashboard')
+  if (hasSession) redirect('/home')
 
   const t = await getTranslations('Landing')
 

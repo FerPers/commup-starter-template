@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { denyAccess } from '@/lib/auth/denied'
 import AuditLogView from './AuditLogView'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
@@ -12,7 +13,7 @@ export default async function AuditLogPage({
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
-  if (!ROLE_TIERS.admin.includes(membership.role)) redirect('/dashboard')
+  if (!ROLE_TIERS.admin.includes(membership.role)) denyAccess('admin')
 
   const orgId = membership.org_id
   const params = await searchParams

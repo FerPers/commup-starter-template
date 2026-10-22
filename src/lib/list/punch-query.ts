@@ -8,7 +8,9 @@ type Client = SupabaseClient<Database>
 export const PUNCH_SORT_KEYS = ['created_at', 'punch_number', 'category', 'status', 'priority', 'target_date', 'tag_number'] as const
 export type PunchSortKey = typeof PUNCH_SORT_KEYS[number]
 
-export type PunchListFilters = { cat?: string; status?: string; disc?: string; system?: string; q?: string; project?: string }
+export type PunchListFilters = { cat?: string; status?: string; disc?: string; system?: string; q?: string; project?: string
+  /** N0 (H-19): punch asignados a esta persona (id ya resuelto; «me» lo traduce la página). */
+  assigned?: string }
 
 /** Fila plana de punch_list_v */
 export type PunchListRow = {
@@ -73,6 +75,7 @@ function applyFilters<Q extends FilterQ>(
   if (f.status && STATUSES.includes(f.status)) q = q.eq('status', f.status) as Q
   if (f.disc) q = q.eq('discipline_code', f.disc) as Q
   if (f.system) q = q.eq('system_code', f.system) as Q
+  if (f.assigned && /^[0-9a-f-]{36}$/i.test(f.assigned)) q = q.eq('assigned_to', f.assigned) as Q
   const search = normalizeSearch(f.q)
   if (search) {
     const like = `%${search}%`

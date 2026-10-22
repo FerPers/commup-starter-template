@@ -6,7 +6,7 @@ import PunchListGlobal from './PunchListGlobal'
 import { fetchPunchPage, fetchPunchSummary, PUNCH_SORT_KEYS } from '@/lib/list/punch-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
 
-type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; q?: string; project?: string }
+type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; q?: string; project?: string; assigned?: string }
 
 export default async function GlobalPunchListPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams
@@ -17,7 +17,8 @@ export default async function GlobalPunchListPage({ searchParams }: { searchPara
   const page = parsePage(sp.page)
   const sort = parseSort(sp.sort, PUNCH_SORT_KEYS, 'created_at')
   const dir = parseDir(sp.dir, sort === 'created_at' ? 'desc' : 'asc')
-  const filters = { cat: sp.cat, status: sp.status, disc: sp.disc, q: sp.q, project: sp.project }
+  // N0 (H-19): «Ver todos» de Mi trabajo llega con assigned=me.
+  const filters = { cat: sp.cat, status: sp.status, disc: sp.disc, q: sp.q, project: sp.project, assigned: sp.assigned === 'me' ? ctx.userId : undefined }
   const scope = { orgId: ctx.orgId }
 
   const [{ data: projects }, pageRes, summary, { data: disciplines }, { data: orgMembers }] = await Promise.all([
@@ -74,7 +75,7 @@ export default async function GlobalPunchListPage({ searchParams }: { searchPara
         page={page}
         pageSize={LIST_PAGE_SIZE}
         summary={summary}
-        filters={{ project: sp.project ?? '', cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', q: sp.q ?? '' }}
+        filters={{ project: sp.project ?? '', cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', q: sp.q ?? '', assigned: sp.assigned === 'me' ? 'me' : '' }}
         disciplines={disciplines ?? []}
         orgMembers={orgMembers ?? []}
       />

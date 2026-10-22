@@ -8,6 +8,7 @@
  * - Vibración haptica en scan exitoso
  */
 
+import { useTranslations } from 'next-intl'
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseRegisterQr } from '@/lib/registers/qr';
@@ -233,6 +234,8 @@ function useQRScan(
 
 // ─── Componente Principal ──────────────────────────────────────────────────
 export default function QRNFCScanner() {
+  // N0 (H-13): título = etiqueta del menú.
+  const tNav = useTranslations('Sidebar.nav')
   const router = useRouter();
   const QR_CONTAINER_ID = 'commup-qr-container';
 
@@ -328,7 +331,7 @@ export default function QRNFCScanner() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, margin: 0 }}>Escanear Tag</h1>
+        <h1 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, margin: 0 }}>{tNav('scan')}</h1>
         <button
           onClick={() => setShowHistory(!showHistory)}
           style={{ padding: 8, borderRadius: 'var(--radius-md)', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', transition: 'background 0.15s', position: 'relative' }}

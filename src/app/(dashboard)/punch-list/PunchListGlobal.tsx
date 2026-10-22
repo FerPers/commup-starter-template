@@ -86,7 +86,7 @@ export default function PunchListGlobal({
   page: number
   pageSize: number
   summary: PunchSummary
-  filters: { project: string; cat: string; status: string; disc: string; q: string }
+  filters: { project: string; cat: string; status: string; disc: string; q: string; assigned: string }
 }) {
   const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
   const t  = useTranslations('PunchList')
@@ -129,7 +129,7 @@ export default function PunchListGlobal({
   const closedCnt = summary.closed
 
   const filtered = punches
-  const hasFilters = filters.project || filters.cat || filters.status || filters.disc || filters.q
+  const hasFilters = filters.project || filters.cat || filters.status || filters.disc || filters.q || filters.assigned
   const paginated = punches
 
   // Indeterminate state on select-all checkbox
@@ -183,7 +183,7 @@ export default function PunchListGlobal({
 
   function exportCsv() {
     startExport(async () => {
-      const res = await exportPunchList({ filters: { project: filters.project, cat: filters.cat, status: filters.status, disc: filters.disc, q: filters.q } })
+      const res = await exportPunchList({ filters: { project: filters.project, cat: filters.cat, status: filters.status, disc: filters.disc, q: filters.q, assigned: filters.assigned } })
       if (res.error || !res.rows) { setBulkError(res.error ?? 'Export error'); return }
       const headers = [
         t('exportHeaders.project'), t('exportHeaders.punch'), t('exportHeaders.category'),
@@ -280,11 +280,12 @@ export default function PunchListGlobal({
           <option value="">{t('filters.allDisciplines')}</option>
           {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
         </Select>
+        {filters.assigned === 'me' && <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, padding: '4px 10px', borderRadius: 999, background: 'var(--primary-50, #eef2ff)', color: 'var(--primary-700, #4338ca)' }}>{t('filters.assignedToMe')}</span>}
         {hasFilters && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => { setSearch(''); url.clear(['project', 'cat', 'status', 'disc', 'q']) }}
+            onClick={() => { setSearch(''); url.clear(['project', 'cat', 'status', 'disc', 'q', 'assigned']) }}
           >
             {tc('clearFilters')}
           </Button>

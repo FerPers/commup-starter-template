@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
+import { denyAccess } from '@/lib/auth/denied'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import GatesAdminView from './GatesAdminView'
 import GateWeightsCard from './GateWeightsCard'
@@ -10,7 +11,7 @@ import { transferNonDispensable } from '@/lib/startup/catalog'
 export default async function AdminGatesPage() {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
-  if (!ADMIN_ROLES.includes(ctx.role)) redirect('/dashboard')
+  if (!ADMIN_ROLES.includes(ctx.role)) denyAccess('admin')
   const supabase = ctx.supabase
 
   const [{ data: gates }, { data: criteria }, { data: phases }, { data: org }] = await Promise.all([

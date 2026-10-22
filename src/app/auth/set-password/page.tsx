@@ -50,7 +50,8 @@ export default function SetPasswordPage() {
       setLoading(false)
       return
     }
-    router.push('/dashboard')
+    // N0 (H-01): el inicio depende del rol (inspector/líder → Mi trabajo).
+    router.push('/home')
     router.refresh()
   }
 

@@ -361,7 +361,7 @@ export default async function MyWorkPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* ITRs por ejecutar */}
-        <Queue title={t('queues.execute')} count={queues.execute.length} total={counts.itrs_execute} emptyText={t('empty.execute')} moreHref="/itrs" moreLabel={t('viewAll', { count: counts.itrs_execute })} limit={QUEUE_LIMIT}>
+        <Queue title={t('queues.execute')} count={queues.execute.length} total={counts.itrs_execute} emptyText={t('empty.execute')} moreHref="/itrs?assignee=me" moreLabel={t('viewAll', { count: counts.itrs_execute })} limit={QUEUE_LIMIT}>
           {queues.execute.slice(0, QUEUE_LIMIT).map(a => {
             const itr = a.itrs!
             const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
@@ -399,7 +399,7 @@ export default async function MyWorkPage() {
         </Queue>
 
         {/* Punches asignados */}
-        <Queue title={t('queues.punches')} count={myPunches.length} total={counts.punches} emptyText={t('empty.punches')} moreHref="/punch-list" moreLabel={t('viewAll', { count: counts.punches })} limit={QUEUE_LIMIT}>
+        <Queue title={t('queues.punches')} count={myPunches.length} total={counts.punches} emptyText={t('empty.punches')} moreHref="/punch-list?assigned=me" moreLabel={t('viewAll', { count: counts.punches })} limit={QUEUE_LIMIT}>
           {myPunches.slice(0, QUEUE_LIMIT).map(p => {
             const cat = CATEGORY_CFG[p.category]
             const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
