@@ -65,7 +65,7 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
 - La contraseña fija de `scripts/demo-data/create_demo_user.mjs:32` pasa a una variable de entorno.
 - La línea 289 de la cobertura, que dice que LOADTEST ya no existe.
 
-**LOADTEST:**
+**LOADTEST:** ✅ datos borrados de prod el 2026-10-22 (`teardown.sql` corregido: lista explícita de triggers ON DELETE y proyectos antes que la org).
 - Se corre `scripts/loadtest/teardown.sql` en una hora tranquila: bloquea escrituras unos segundos y borra unas 160 mil filas. Antes de correrlo **te pido el OK en el momento**.
 - CLAUDE.md queda diciendo que el banco se crea y se borra a demanda.
 - TestSprite también está conectado como servidor MCP en tu Claude. Quitarlo es tu configuración, no la del repo.

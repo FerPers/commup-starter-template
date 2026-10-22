@@ -56,6 +56,9 @@ ALTER TABLE public.system_gate_signatures DISABLE TRIGGER system_gate_signatures
 ALTER TABLE public.systems DISABLE TRIGGER trg_events_systems;
 ALTER TABLE public.tags DISABLE TRIGGER tags_frozen_boundary_log, DISABLE TRIGGER tags_gate_dirty_del, DISABLE TRIGGER trg_events_tags;
 
+-- Primero los proyectos (arrastran tags, ITR, punch…) y después la org: borrando solo la org, la cascada
+-- puede llegar a `disciplines` antes que a `punches` y la FK punches_discipline_id_fkey lo rechaza.
+DELETE FROM public.projects WHERE org_id = '10ad7e57-0000-4000-8000-000000000001';
 DELETE FROM public.organizations WHERE id = '10ad7e57-0000-4000-8000-000000000001';
 
 ALTER TABLE public.ce_causes ENABLE TRIGGER ce_causes_guard_delete;

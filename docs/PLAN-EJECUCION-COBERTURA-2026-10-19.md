@@ -286,7 +286,7 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 - F-29 ✅ As-Built/Final del registro sobre documentos ligados a sistemas (`n / ligados`), igual que el KPI; «superadas» del registro rotulado «incl. ITR abiertos»; /kpis ya decía «snapshot diario».
 - Regla de CI ✅ `src/lib/list/unbounded-from.test.ts`: lecturas de proyecto/org/persona sin `.limit/.range/.single/head`, fuera de `fetchAllRows` y sin `// bounded:`, o con `.limit(N>1000)`; baseline por archivo×tabla (60 lecturas en 50 claves, desde 127) que solo puede bajar.
 - Tests: `fetch-all.test.ts` (encontró que una fila de más en la última página se colaba), `unbounded-from.test.ts`, `tests/db/kpi-truth.test.ts` (agregados = `count(*)` bajo RLS; snapshot y escritura directa denegados).
-- **Listo cuando** (LOADTEST 50k): el proyecto LOADTEST ya no existe en prod; la igualdad con `count(*)` se verificó en DEMO dentro de la transacción de prueba y queda como test de BD. Verificación en el navegador pendiente de sesión (el panel quedó en /login).
+- **Listo cuando** (LOADTEST 50k, banco del 2026-09-03; el de S20 se creó el 2026-10-20 y se borró de prod el 2026-10-22, ver `scripts/loadtest/`): el proyecto LOADTEST de entonces ya no existía en prod; la igualdad con `count(*)` se verificó en DEMO dentro de la transacción de prueba y queda como test de BD. Verificación en el navegador pendiente de sesión (el panel quedó en /login).
 
 ## S10 — Reporte diario y zona horaria
 
