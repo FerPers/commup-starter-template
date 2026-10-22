@@ -34,7 +34,7 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
           <table aria-label={t('readiness.title')} style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
             <thead>
               <tr style={{ background: 'var(--gray-50)' }}>
-                <th style={{ ...th, textAlign: 'left' }}>{t('readiness.col.project')}</th>
+                <th style={{ ...th, textAlign: 'left', minWidth: 180 }}>{t('readiness.col.project')}</th>
                 <th style={th}>{t('readiness.col.readiness')}</th>
                 <th style={th}>{t('readiness.col.physical')}</th>
                 <th style={th}>{t('readiness.col.blocked')}</th>
@@ -48,7 +48,7 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
               {projects.map(p => (
                 <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
                   <td style={{ ...td, textAlign: 'left' }}>
-                    <Link href={`/projects/${p.id}`} style={{ color: 'var(--text-strong)', textDecoration: 'none' }}>{p.code}</Link>
+                    <Link href={`/projects/${p.id}`} style={{ color: 'var(--text-strong)', textDecoration: 'none', whiteSpace: 'nowrap' }}>{p.code}</Link>
                     <div style={{ fontSize: 'var(--text-xs)', fontWeight: 400, color: 'var(--text-muted)' }}>{p.name}</div>
                   </td>
                   {p.systems === 0 ? (
