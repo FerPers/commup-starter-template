@@ -607,7 +607,8 @@
         "reviewed": "revisó la categoría",
         "reassigned": "lo reasignó a {to}"
       }
-    }
+    },
+    "noResultsEmptyOrg": "Sin punches registrados en la organización"
   },
   "Preservation": {
     "title": "Preservación",

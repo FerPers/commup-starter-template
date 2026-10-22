@@ -11,7 +11,9 @@ import { bulkDeletePunches, bulkUpdatePunchStatus } from '@/app/actions/bulk'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
-import type { PunchSummary } from '@/lib/list/punch-query'
+import type { PunchListRow, PunchSummary } from '@/lib/list/punch-query'
+import { browserToday } from '@/lib/time/zone'
+import { punchFiltersQuery } from '@/lib/list/punch-filters'
 import { canRaisePunch } from '@/lib/constants/punch-roles'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
@@ -21,42 +23,19 @@ type OrgMember = { user_id: string; profiles: { full_name: string } | null }
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-type Punch = {
-  id: string
-  punch_number: string
-  category: 'A' | 'B' | 'C'
-  description: string
-  status: 'open' | 'in_progress' | 'closed' | 'cancelled'
-  priority: 'critical' | 'major' | 'minor'
-  target_date: string | null
-  closed_date: string | null
-  created_at: string
-  itr_id: string | null
-  assigned_to: string | null
-  raised_by: string | null
-  raised_by_profile: { full_name: string } | null
-  assigned_to_profile: { full_name: string } | null
-  resolved_at: string | null
-  resolved_by: string | null
-  resolved_by_name: string | null
-  impact: string | null
-  startup_disposition: string | null
-  category_reviewed_at: string | null
-  tags: { id: string; tag_number: string; description: string; disciplines: { code: string; name: string; color: string } } | null
-  subsystems: { id: string; code: string; name: string; systems: { code: string; name: string } } | null
-}
-
-type Phase      = { id: string; code: string; name: string; color: string }
+type Project    = { id: string; name: string; code: string }
 type Discipline = { id: string; code: string; name: string; color: string }
 type System     = { id: string; code: string; name: string }
 
 // ── Main component ──────────────────────────────────────────────────────
 
+// G-14: una sola lista para el proyecto y para «Todos los proyectos» (`projects` presente = alcance org: columna y
+// filtro de proyecto, Excel de la org; sin PDF ni alta, que son del proyecto). Filas = punch_list_v tal cual.
 export default function PunchListView({
   projectId,
   projectName,
+  projects,
   punches,
-  phases: _phases,
   disciplines,
   systems,
   orgMembers,
@@ -69,8 +48,8 @@ export default function PunchListView({
 }: {
   projectId: string
   projectName: string
-  punches: Punch[]
-  phases: Phase[]
+  projects?: Project[]
+  punches: PunchListRow[]
   disciplines: Discipline[]
   systems: System[]
   orgMembers: OrgMember[]
@@ -79,8 +58,9 @@ export default function PunchListView({
   page: number
   pageSize: number
   summary: PunchSummary
-  filters: { cat: string; status: string; disc: string; system: string; q: string }
+  filters: { cat: string; status: string; disc: string; system: string; q: string; project?: string; assigned?: string }
 }) {
+  const allScope = projects !== undefined
   const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
   const t = useTranslations('PunchList')
   const tGuide = useTranslations('PunchGuide')
@@ -120,7 +100,8 @@ export default function PunchListView({
 
   const filtered = punches
 
-  const hasFilters = !!(filters.q || filters.cat || filters.status || filters.disc || filters.system)
+  const hasFilters = [filters.q, filters.cat, filters.status, filters.disc, filters.system, filters.project, filters.assigned].some(Boolean)
+  const today = browserToday()
 
   const filteredIds = useMemo(() => new Set(filtered.map(p => p.id)), [filtered])
   const allFilteredSelected = filtered.length > 0 && filtered.every(p => selected.has(p.id))
@@ -174,16 +155,16 @@ export default function PunchListView({
 
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '6px' }}>
-        <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
+        <Link href={`/projects/${projectId}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
           {t('backLink', { projectName })}
-        </a>
+        </Link>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '13px', color: '#94a3b8' }}>{t('filters.count', { filtered: total, total: summary.total })}</span>
           <a
-            href={`/projects/${projectId}/punches/export`}
+            href={(allScope ? '/punch-list/export' : `/projects/${projectId}/punches/export`) + punchFiltersQuery(filters)}
             style={{
               padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
               borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
@@ -192,17 +173,19 @@ export default function PunchListView({
           >
             {t('exportExcel')}
           </a>
-          <a
-            href={`/projects/${projectId}/punches/pdf`}
-            target="_blank"
-            style={{
-              padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
-              borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
-              textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
-            }}
-          >
-            {t('exportPdf')}
-          </a>
+          {!allScope && (
+            <a
+              href={`/projects/${projectId}/punches/pdf`}
+              target="_blank"
+              style={{
+                padding: '7px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+                borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+                textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
+              }}
+            >
+              {t('exportPdf')}
+            </a>
+          )}
           <a
             href="/punch-list/procedure"
             target="_blank"
@@ -216,7 +199,7 @@ export default function PunchListView({
           >
             {tGuide('procedure')}
           </a>
-          {canCreate && (
+          {canCreate && !allScope && (
             <Link
               href={`/projects/${projectId}/punches/new`}
               style={{
@@ -308,6 +291,13 @@ export default function PunchListView({
           style={{ flex: '1 1 220px', minWidth: '180px', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px' }}
         />
 
+        {allScope && (
+          <select value={filters.project ?? ''} onChange={e => url.set({ project: e.target.value })} style={selStyle} aria-label={tc('allProjects')}>
+            <option value="">{tc('allProjects')}</option>
+            {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+          </select>
+        )}
+
         <select value={filters.cat} onChange={e => url.set({ cat: e.target.value })} style={selStyle}>
           <option value="">{t('filters.allCategories')}</option>
           <option value="A">{t('catLabels.A')}</option>
@@ -336,9 +326,13 @@ export default function PunchListView({
           </select>
         )}
 
+        {filters.assigned === 'me' && (
+          <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: 999, background: 'var(--primary-50, #eef2ff)', color: 'var(--primary-700, #4338ca)' }}>{t('filters.assignedToMe')}</span>
+        )}
+
         {hasFilters && (
           <button
-            onClick={() => { setSearch(''); url.clear(['q', 'cat', 'status', 'disc', 'system']) }}
+            onClick={() => { setSearch(''); url.clear(['q', 'cat', 'status', 'disc', 'system', 'project', 'assigned']) }}
             style={{ padding: '8px 12px', background: 'var(--gray-100)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('filters.clear')}
@@ -350,12 +344,12 @@ export default function PunchListView({
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
           <div style={{ fontSize: '28px', marginBottom: '10px' }}>⚑</div>
-          <p style={{ fontSize: '14px' }}>{hasFilters ? t('noResultsFiltered') : t('noResultsEmpty')}</p>
+          <p style={{ fontSize: '14px' }}>{hasFilters ? t('noResultsFiltered') : allScope ? t('noResultsEmptyOrg') : t('noResultsEmpty')}</p>
         </div>
       ) : (
         <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflowX: 'auto' }}>
           {/* C-29: en el teléfono la tabla se desplaza en horizontal en vez de aplastarse */}
-          <table style={{ width: '100%', minWidth: '820px', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', minWidth: allScope ? '900px' : '820px', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--gray-50)' }}>
                 <th style={{ padding: '10px 14px', width: '36px', borderBottom: '1px solid var(--border)' }}>
@@ -366,7 +360,7 @@ export default function PunchListView({
                     style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
                   />
                 </th>
-                {[t('table.colPunch'), t('table.colTag'), t('table.colCat'), t('table.colDesc'), t('table.colStatus'), t('table.colAssigned'), t('table.colDue')].map(h => (
+                {[...(allScope ? [t('table.colProject')] : []), t('table.colPunch'), t('table.colTag'), t('table.colCat'), t('table.colDesc'), t('table.colStatus'), t('table.colAssigned'), t('table.colDue')].map(h => (
                   <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>
                     {h}
                   </th>
@@ -379,10 +373,11 @@ export default function PunchListView({
                 const displayStatus = punchDisplayStatus(punch)
                 const stColors = STATUS_COLORS[displayStatus] ?? STATUS_COLORS.open
                 const isChecked = selected.has(punch.id)
+                const overdue = !!(punch.target_date && punch.target_date < today && punch.status !== 'closed' && punch.status !== 'cancelled')
                 return (
                   <tr
                     key={punch.id}
-                    onClick={() => router.push(`/projects/${projectId}/punches/${punch.id}`)}
+                    onClick={() => router.push(`/projects/${punch.project_id}/punches/${punch.id}`)}
                     style={{ borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', transition: 'background 0.1s', background: isChecked ? '#eff6ff' : 'transparent' }}
                     onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = 'var(--gray-50)' }}
                     onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = isChecked ? '#eff6ff' : 'transparent' }}
@@ -396,17 +391,29 @@ export default function PunchListView({
                         style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
                       />
                     </td>
+                    {allScope && (
+                      <td style={{ padding: '12px 14px' }}>
+                        <Link
+                          href={`/projects/${punch.project_id}/punches`}
+                          onClick={e => e.stopPropagation()}
+                          title={punch.project_name}
+                          style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
+                          {punch.project_code}
+                        </Link>
+                      </td>
+                    )}
                     <td style={{ padding: '12px 14px', fontSize: '12px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {/* N1b: el número es el enlace a la página del punch (clic medio, compartir) */}
-                      <Link href={`/projects/${projectId}/punches/${punch.id}`} onClick={e => e.stopPropagation()} style={{ color: 'inherit', textDecoration: 'none' }}>
+                      <Link href={`/projects/${punch.project_id}/punches/${punch.id}`} onClick={e => e.stopPropagation()} style={{ color: 'inherit', textDecoration: 'none' }}>
                         {punch.punch_number}
                       </Link>
                     </td>
                     <td style={{ padding: '12px 14px' }}>
-                      {punch.tags ? (
+                      {punch.tag_id ? (
                         <div>
-                          <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: punch.tags.disciplines.color }}>{punch.tags.tag_number}</span>
-                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '1px' }}>{punch.tags.disciplines.code}</div>
+                          <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: punch.discipline_color ?? '#64748b' }}>{punch.tag_number}</span>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '1px' }}>{punch.discipline_code}</div>
                         </div>
                       ) : (
                         <span style={{ fontSize: '12px', color: '#94a3b8' }}>—</span>
@@ -431,10 +438,11 @@ export default function PunchListView({
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                      <PersonName name={punch.assigned_to_profile?.full_name} inactive={isInactiveMember(punch.assigned_to, memberIds)} fallback={<span style={{ color: '#cbd5e1' }}>{t('noAssignee')}</span>} />
+                      <PersonName name={punch.assigned_to_name} inactive={isInactiveMember(punch.assigned_to, memberIds)} fallback={<span style={{ color: '#cbd5e1' }}>{t('noAssignee')}</span>} />
                     </td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: punch.target_date ? 'var(--text-muted)' : '#cbd5e1', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 14px', fontSize: '12px', color: overdue ? 'var(--danger-500)' : punch.target_date ? 'var(--text-muted)' : '#cbd5e1', fontWeight: overdue ? 600 : 400, whiteSpace: 'nowrap' }}>
                       {punch.target_date ?? '—'}
+                      {overdue && <span style={{ display: 'block', fontSize: '10px' }}>{t('overdue')}</span>}
                     </td>
                   </tr>
                 )

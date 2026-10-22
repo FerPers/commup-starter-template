@@ -1,15 +1,16 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
-import PunchListGlobal from './PunchListGlobal'
+import PunchListView from '../projects/[id]/punches/PunchListView'
 import { fetchPunchPage, fetchPunchSummary, PUNCH_SORT_KEYS } from '@/lib/list/punch-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
 
 export type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; q?: string; project?: string; assigned?: string }
 
 // N2c: «Todos los proyectos» de la lista del proyecto (`?scope=all`); antes era la página global.
-export default async function AllPunches({ sp }: { sp: Search }) {
+// G-14: misma vista que el proyecto, con alcance org; `projectId` = proyecto del contexto (volver).
+export default async function AllPunches({ projectId, sp }: { projectId: string; sp: Search }) {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
@@ -29,54 +30,26 @@ export default async function AllPunches({ sp }: { sp: Search }) {
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId).order('role'),
   ])
 
-  const punches = pageRes.rows.map(r => ({
-    id: r.id,
-    punch_number: r.punch_number,
-    category: r.category,
-    description: r.description,
-    status: r.status,
-    resolved_at: r.resolved_at,
-    priority: r.priority,
-    target_date: r.target_date,
-    closed_date: r.closed_date,
-    created_at: r.created_at,
-    itr_id: r.itr_id,
-    project_id: r.project_id,
-    assigned_to: r.assigned_to,
-    raised_by: r.raised_by,
-    raised_by_profile: r.raised_by_name ? { full_name: r.raised_by_name } : null,
-    assigned_to_profile: r.assigned_to_name ? { full_name: r.assigned_to_name } : null,
-    projects: { id: r.project_id, name: r.project_name, code: r.project_code },
-    tags: r.tag_id
-      ? {
-          id: r.tag_id,
-          tag_number: r.tag_number ?? '',
-          description: r.tag_description ?? '',
-          disciplines: { code: r.discipline_code ?? '', name: r.discipline_name ?? '', color: r.discipline_color ?? '#64748b' },
-        }
-      : null,
-    subsystems: {
-      id: r.subsystem_id,
-      code: r.subsystem_code ?? '',
-      name: r.subsystem_name ?? '',
-      systems: { code: r.system_code ?? '', name: r.system_name ?? '' },
-    },
-  }))
+  const context = (projects ?? []).find(p => p.id === projectId)
+  if (!context) notFound()
 
   const tc = await getTranslations('Common')
   return (
     <>
       {pageRes.searchCapped && <PartialNote>{tc('searchPartial')}</PartialNote>}
-      <PunchListGlobal
-        currentUserRole={ctx.role}
+      <PunchListView
+        projectId={projectId}
+        projectName={context.name}
         projects={projects ?? []}
-        punches={punches}
+        currentUserRole={ctx.role}
+        punches={pageRes.rows}
         total={pageRes.total}
         page={page}
         pageSize={LIST_PAGE_SIZE}
         summary={summary}
-        filters={{ project: sp.project ?? '', cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', q: sp.q ?? '', assigned: sp.assigned === 'me' ? 'me' : '' }}
+        filters={{ project: sp.project ?? '', cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', system: '', q: sp.q ?? '', assigned: sp.assigned === 'me' ? 'me' : '' }}
         disciplines={disciplines ?? []}
+        systems={[]}
         orgMembers={orgMembers ?? []}
       />
     </>

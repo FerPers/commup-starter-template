@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { browserToday } from '@/lib/time/zone'
@@ -14,6 +15,7 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────
 
+type Project    = { id: string; name: string; code: string }
 type Discipline = { id: string; code: string; name: string; color: string }
 type OrgMember  = { user_id: string; role: string; profiles: { full_name: string } | null }
 
@@ -38,6 +40,7 @@ type WorkPlan = {
   status: 'draft' | 'published' | 'in_progress' | 'completed'
   notes: string | null
   project_id: string
+  projects?: { id: string; name: string; code: string } | null
   disciplines: { id: string; code: string; name: string; color: string } | null
   leader: { full_name: string } | null
   work_plan_items: WpItem[]
@@ -63,8 +66,11 @@ const PAGE_SIZE = 50
 
 // ── Component ─────────────────────────────────────────────────────────
 
+// G-14: una sola vista para el proyecto y para «Todos los proyectos» (`projects` presente = alcance org:
+// columna y filtro de proyecto, y el alta pide proyecto, por defecto el del contexto).
 export default function WorkPlansView({
   projectId,
+  projects,
   disciplines,
   orgMembers,
   workPlans,
@@ -72,6 +78,7 @@ export default function WorkPlansView({
   currentUserId: _currentUserId,
 }: {
   projectId: string
+  projects?: Project[]
   disciplines: Discipline[]
   orgMembers: OrgMember[]
   workPlans: WorkPlan[]
@@ -83,7 +90,10 @@ export default function WorkPlansView({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
+  const allScope = projects !== undefined
+
   // Filters
+  const [filterProject, setFilterProject] = useState('')
   const [filterDisc, setFilterDisc]     = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterDate, setFilterDate]     = useState('')
@@ -94,6 +104,7 @@ export default function WorkPlansView({
 
   // Create plan modal
   const [showCreate, setShowCreate]             = useState(false)
+  const [createProject, setCreateProject]       = useState(projectId)
   const [createDisc, setCreateDisc]             = useState('')
   const [createDate, setCreateDate]             = useState(browserToday())
   const [createNotes, setCreateNotes]           = useState('')
@@ -128,12 +139,13 @@ export default function WorkPlansView({
 
   const filtered = useMemo(() => {
     return workPlans.filter(p => {
+      if (filterProject && p.project_id !== filterProject) return false
       if (filterDisc && p.disciplines?.id !== filterDisc) return false
       if (filterStatus && p.status !== filterStatus) return false
       if (filterDate && p.plan_date !== filterDate) return false
       return true
     })
-  }, [workPlans, filterDisc, filterStatus, filterDate])
+  }, [workPlans, filterProject, filterDisc, filterStatus, filterDate])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -144,23 +156,24 @@ export default function WorkPlansView({
     return c
   }, [workPlans])
 
-  const hasFilters = filterDisc || filterStatus || filterDate
+  const hasFilters = filterProject || filterDisc || filterStatus || filterDate
+  const gridCols = allScope ? '100px 90px 1fr 1fr 120px 110px 100px 32px' : '90px 1fr 1fr 120px 110px 100px 32px'
 
   // ── Actions ───────────────────────────────────────────────────────
 
   function handleCreate() {
-    if (!createDisc || !createDate) return
+    if (!createProject || !createDisc || !createDate) return
     setCreateError(null)
     startCreateTransition(async () => {
       const res = await createWorkPlan({
-        projectId,
+        projectId: createProject,
         disciplineId: createDisc,
         planDate: createDate,
         notes: createNotes || undefined,
       })
       if (res.error) { setCreateError(res.error); return }
       setShowCreate(false)
-      setCreateDisc(''); setCreateNotes('')
+      setCreateProject(projectId); setCreateDisc(''); setCreateNotes('')
       setCreateDate(browserToday())
       router.refresh()
     })
@@ -236,7 +249,7 @@ export default function WorkPlansView({
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <div>
             <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{t('subtitleProject')}</p>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{allScope ? t('subtitle') : t('subtitleProject')}</p>
           </div>
           {canEdit && (
             <button
@@ -269,6 +282,16 @@ export default function WorkPlansView({
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        {allScope && (
+          <select
+            value={filterProject}
+            onChange={e => { setFilterProject(e.target.value); setPage(1) }}
+            style={selStyle}
+          >
+            <option value="">{t('filters.allProjects')}</option>
+            {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+          </select>
+        )}
         <select
           value={filterDisc}
           onChange={e => { setFilterDisc(e.target.value); setPage(1) }}
@@ -285,7 +308,7 @@ export default function WorkPlansView({
         />
         {hasFilters && (
           <button
-            onClick={() => { setFilterDisc(''); setFilterStatus(''); setFilterDate(''); setPage(1) }}
+            onClick={() => { setFilterProject(''); setFilterDisc(''); setFilterStatus(''); setFilterDate(''); setPage(1) }}
             style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {tC('clearFilters')}
@@ -307,7 +330,8 @@ export default function WorkPlansView({
         <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
 
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 1fr 120px 110px 100px 32px', gap: '10px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '10px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {allScope && <span>{t('table.colProject')}</span>}
             <span>{t('table.colDate')}</span>
             <span>{t('table.colDiscipline')}</span>
             <span>{t('table.colLeader')}</span>
@@ -329,7 +353,7 @@ export default function WorkPlansView({
                 {/* Plan row */}
                 <div
                   style={{
-                    display: 'grid', gridTemplateColumns: '90px 1fr 1fr 120px 110px 100px 32px',
+                    display: 'grid', gridTemplateColumns: gridCols,
                     gap: '10px', padding: '12px 16px', borderBottom: isExp ? 'none' : '1px solid var(--gray-100)',
                     alignItems: 'center', cursor: 'pointer',
                     background: isExp ? 'var(--gray-50)' : 'var(--card-bg)',
@@ -337,6 +361,21 @@ export default function WorkPlansView({
                   }}
                   onClick={() => toggleExpand(plan.id)}
                 >
+                  {allScope && (
+                    <div>
+                      {plan.projects && (
+                        <Link
+                          href={`/projects/${plan.projects.id}/work-plans`}
+                          onClick={e => e.stopPropagation()}
+                          style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          title={plan.projects.name}
+                        >
+                          {plan.projects.code}
+                        </Link>
+                      )}
+                    </div>
+                  )}
+
                   {/* Fecha */}
                   <div style={{ fontSize: '12px', color: 'var(--gray-700)', fontFamily: 'ui-monospace, monospace' }}>
                     {plan.plan_date}
@@ -445,14 +484,14 @@ export default function WorkPlansView({
                               style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 90px 28px', gap: '10px', padding: '8px 10px', background: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--border)', alignItems: 'center' }}
                             >
                               <div>
-                                {itr ? (
-                                  <a
-                                    href={itr.tags ? `/projects/${projectId}/tags/${itr.tags.id}/itrs/${itr.id}` : '#'}
+                                {itr?.tags ? (
+                                  <Link
+                                    href={`/projects/${plan.project_id}/tags/${itr.tags.id}/itrs/${itr.id}`}
                                     style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
                                   >
                                     {itr.itr_number}
-                                  </a>
-                                ) : <span style={{ fontSize: '12px', color: '#94a3b8' }}>—</span>}
+                                  </Link>
+                                ) : <span style={{ fontSize: '12px', color: itr ? '#3b82f6' : '#94a3b8', fontWeight: itr ? 600 : 400, fontFamily: 'ui-monospace, monospace' }}>{itr?.itr_number ?? '—'}</span>}
                               </div>
                               <div>
                                 {itr?.tags && (
@@ -510,6 +549,15 @@ export default function WorkPlansView({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {allScope && (
+                <div>
+                  <label style={labelStyle}>{t('createModal.project')}</label>
+                  <select value={createProject} onChange={e => setCreateProject(e.target.value)} style={inputStyle}>
+                    <option value="">{t('createModal.projectPh')}</option>
+                    {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+                  </select>
+                </div>
+              )}
               <div>
                 <label style={labelStyle}>{t('createModal.discipline')}</label>
                 <select value={createDisc} onChange={e => setCreateDisc(e.target.value)} style={inputStyle}>
@@ -549,8 +597,8 @@ export default function WorkPlansView({
                 </button>
                 <button
                   onClick={handleCreate}
-                  disabled={!createDisc || !createDate || createPending}
-                  style={{ padding: '9px 20px', background: !createDisc || !createDate || createPending ? '#93c5fd' : '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !createDisc || !createDate || createPending ? 'not-allowed' : 'pointer' }}
+                  disabled={!createProject || !createDisc || !createDate || createPending}
+                  style={{ padding: '9px 20px', background: !createProject || !createDisc || !createDate || createPending ? '#93c5fd' : '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !createProject || !createDisc || !createDate || createPending ? 'not-allowed' : 'pointer' }}
                 >
                   {createPending ? t('createModal.creating') : t('createModal.create')}
                 </button>

@@ -30,7 +30,7 @@ export default async function ProjectWorkPlansPage({
       <div style={{ padding: 'clamp(12px, 4vw, 32px)' }}>
         <PlanningHub projectId={projectId} current="workPlans" />
         <ScopeToggle projectId={projectId} list="work-plans" all bare />
-        <AllWorkPlans />
+        <AllWorkPlans projectId={projectId} />
       </div>
     )
   }

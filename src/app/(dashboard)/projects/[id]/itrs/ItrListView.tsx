@@ -3,6 +3,7 @@
 import { PersonName } from '@/components/ui'
 import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
 import { useEffect, useMemo, useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { bulkRescheduleItrs } from '@/app/actions/bulk'
@@ -21,6 +22,7 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
+type Project    = { id: string; name: string; code: string }
 type Phase      = { id: string; code: string; name: string; color: string; order_index: number }
 type Discipline = { code: string; name: string; color: string }
 type OrgUser    = { user_id: string; full_name: string }
@@ -32,10 +34,13 @@ const ITR_STATUS_KEYS = ['not_started', 'in_progress', 'completed', 'approved', 
 // ── Component ─────────────────────────────────────────────────────────
 // Sprint E: la página, los filtros y el orden viven en la URL; el servidor
 // devuelve solo la página visible (50 filas) y los conteos por estado en SQL.
+// G-14: una sola lista para el proyecto y para «Todos los proyectos» (`projects` presente = alcance org: columna y
+// filtro de proyecto; asignar, agregar a plan, generar y test pack son del proyecto).
 
 export default function ItrListView({
   projectId,
   projectName,
+  projects,
   rows,
   total,
   page,
@@ -52,12 +57,13 @@ export default function ItrListView({
 }: {
   projectId: string
   projectName: string
+  projects?: Project[]
   rows: ItrListRow[]
   total: number
   page: number
   pageSize: number
   counts: ItrStatusCounts
-  filters: { status: string; phase: string; disc: string; q: string; system: string; subsystem: string; area: string; assignee: string }
+  filters: { status: string; phase: string; disc: string; q: string; system: string; subsystem: string; area: string; assignee: string; project?: string }
   /** S19 (C-30): jerarquía del proyecto para filtrar. */
   scopes?: {
     systems: { id: string; code: string; name: string; area_id: string | null }[]
@@ -72,6 +78,8 @@ export default function ItrListView({
   userRole?: string
 }) {
   const t = useTranslations('ItrList')
+  const tc = useTranslations('Common')
+  const allScope = projects !== undefined
   const canEdit = EDITOR_ROLES.includes(userRole)
   const memberIds = useMemo(() => memberIdSet(users), [users])
   const router = useRouter()
@@ -96,7 +104,9 @@ export default function ItrListView({
   const [isExporting, startExport] = useTransition()
   function exportCsv() {
     startExport(async () => {
-      const res = await exportItrList({ projectId, filters: { ...filters, project: projectId } })
+      const res = allScope
+        ? await exportItrList({ filters: { status: filters.status, phase: filters.phase, disc: filters.disc, q: filters.q, project: filters.project, assignee: filters.assignee } })
+        : await exportItrList({ projectId, filters: { ...filters, project: projectId } })
       if (res.error || !res.rows) { setBulkError(res.error ?? 'Export error'); return }
       downloadCsv(buildItrCsv(res.rows, k => t(k as Parameters<typeof t>[0])), `itrs_${browserToday()}.csv`)
     })
@@ -113,7 +123,9 @@ export default function ItrListView({
   const allPageSelected = rows.length > 0 && selectedCount === rows.length
 
   const totalAll = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts])
-  const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.q || filters.system || filters.subsystem || filters.area || filters.assignee)
+  const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.q || filters.system || filters.subsystem || filters.area || filters.assignee || filters.project)
+  const cols = allScope ? '36px 90px 1fr 1fr 140px 90px 80px 90px 60px' : '36px 1fr 1fr 140px 90px 80px 90px 60px'
+  const minW = allScope ? '850px' : '760px'
   const visibleSystems = filters.area ? scopes.systems.filter(s => s.area_id === filters.area) : scopes.systems
   const visibleSubsystems = filters.system ? scopes.subsystems.filter(s => s.system_id === filters.system) : scopes.subsystems
 
@@ -172,13 +184,13 @@ export default function ItrListView({
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px' }}>
         <div>
-          <a href={`/projects/${projectId}`} style={{ fontSize: '12px', color: 'var(--gray-400)', textDecoration: 'none' }}>
+          <Link href={`/projects/${projectId}`} style={{ fontSize: '12px', color: 'var(--gray-400)', textDecoration: 'none' }}>
             ← {projectName}
-          </a>
+          </Link>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>ITRs</h1>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        {canEdit && (
+        {canEdit && !allScope && (
           <a href={`/projects/${projectId}/itrs/generate`} style={{
             padding: '9px 14px', background: 'var(--primary-500)', border: '1px solid var(--primary-500)',
             borderRadius: '8px', fontSize: '13px', color: '#fff', textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 600,
@@ -194,17 +206,19 @@ export default function ItrListView({
           }}>
           {isExporting ? '…' : '↓ CSV'}
         </button>
-        <a
-          href={`/projects/${projectId}/reports/itr-test-pack/pdf`}
-          target="_blank"
-          style={{
-            padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
-            borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
-            textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
-          }}
-        >
-          {t('testPackPdf')}
-        </a>
+        {!allScope && (
+          <a
+            href={`/projects/${projectId}/reports/itr-test-pack/pdf`}
+            target="_blank"
+            style={{
+              padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+              borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+              textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 500,
+            }}
+          >
+            {t('testPackPdf')}
+          </a>
+        )}
         </div>
       </div>
 
@@ -269,7 +283,7 @@ export default function ItrListView({
             </>
           )}
 
-          {canEdit && users.length > 0 && (
+          {canEdit && !allScope && users.length > 0 && (
             <>
               <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
               <select
@@ -298,7 +312,7 @@ export default function ItrListView({
             </>
           )}
 
-          {canEdit && (
+          {canEdit && !allScope && (
             <>
               <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
               <button
@@ -337,6 +351,12 @@ export default function ItrListView({
           aria-label={t('filters.search')}
           style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', width: '220px', fontFamily: 'inherit' }}
         />
+        {allScope && (
+          <select value={filters.project ?? ''} onChange={e => url.set({ project: e.target.value })} style={selStyle} aria-label={tc('allProjects')}>
+            <option value="">{tc('allProjects')}</option>
+            {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+          </select>
+        )}
         <select value={filters.phase} onChange={e => url.set({ phase: e.target.value })} style={selStyle}>
           <option value="">{t('filters.allPhases')}</option>
           {phases.map(p => <option key={p.id} value={p.code}>{p.code} — {p.name}</option>)}
@@ -351,14 +371,18 @@ export default function ItrListView({
             {scopes.areas.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
           </select>
         )}
-        <select value={filters.system} onChange={e => url.set({ system: e.target.value, subsystem: '' })} style={selStyle} aria-label={t('filters.allSystems')}>
-          <option value="">{t('filters.allSystems')}</option>
-          {visibleSystems.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
-        </select>
-        <select value={filters.subsystem} onChange={e => url.set({ subsystem: e.target.value })} style={selStyle} aria-label={t('filters.allSubsystems')}>
-          <option value="">{t('filters.allSubsystems')}</option>
-          {visibleSubsystems.map(s => <option key={s.id} value={s.id}>{s.code}</option>)}
-        </select>
+        {!allScope && (
+          <>
+            <select value={filters.system} onChange={e => url.set({ system: e.target.value, subsystem: '' })} style={selStyle} aria-label={t('filters.allSystems')}>
+              <option value="">{t('filters.allSystems')}</option>
+              {visibleSystems.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
+            </select>
+            <select value={filters.subsystem} onChange={e => url.set({ subsystem: e.target.value })} style={selStyle} aria-label={t('filters.allSubsystems')}>
+              <option value="">{t('filters.allSubsystems')}</option>
+              {visibleSubsystems.map(s => <option key={s.id} value={s.id}>{s.code}</option>)}
+            </select>
+          </>
+        )}
         <select value={filters.assignee} onChange={e => url.set({ assignee: e.target.value })} style={selStyle} aria-label={t('filters.anyAssignee')}>
           <option value="">{t('filters.anyAssignee')}</option>
           <option value="me">{t('filters.mine')}</option>
@@ -367,10 +391,10 @@ export default function ItrListView({
         </select>
         {hasFilters && (
           <button
-            onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'q', 'system', 'subsystem', 'area', 'assignee']) }}
+            onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'q', 'system', 'subsystem', 'area', 'assignee', 'project']) }}
             style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
-            {t('filters.allPhases').replace('All ', '')} ×
+            {tc('clear')} ×
           </button>
         )}
         <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: 'auto', opacity: busy ? 0.5 : 1 }}>
@@ -402,7 +426,7 @@ export default function ItrListView({
       ) : (
         <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflowX: 'auto', opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', minWidth: '760px', gap: '4px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: cols, minWidth: minW, gap: '4px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
             <input
               type="checkbox"
               checked={allPageSelected}
@@ -410,6 +434,7 @@ export default function ItrListView({
               title={t('filters.selectPage', { count: rows.length })}
               style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
             />
+            {allScope && <span style={thStyle}>{t('table.colProject')}</span>}
             <SortHeader label={t('table.colItr')} sortKey="itr_number" current={sort} dir={dir} onSort={toggleSort} />
             <SortHeader label={t('table.colTemplate')} sortKey="template_title" current={sort} dir={dir} onSort={toggleSort} />
             <span style={thStyle}>{t('table.colInspector')}</span>
@@ -429,7 +454,7 @@ export default function ItrListView({
               <div
                 key={itr.id}
                 style={{
-                  display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', minWidth: '760px', gap: '4px',
+                  display: 'grid', gridTemplateColumns: cols, minWidth: minW, gap: '4px',
                   padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center',
                   background: isChecked ? '#eff6ff' : 'transparent',
                   transition: 'background 0.1s',
@@ -445,19 +470,30 @@ export default function ItrListView({
                   style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
                 />
 
+                {allScope && (
+                  <Link href={`/projects/${itr.project_id}/itrs`} title={itr.project_name}
+                    style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', justifySelf: 'start', maxWidth: '84px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {itr.project_code}
+                  </Link>
+                )}
+
                 {/* ITR + Tag */}
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {itr.phase_code && (
                       <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: `${itr.phase_color ?? '#64748b'}18`, color: itr.phase_color ?? '#64748b' }}>{itr.phase_code}</span>
                     )}
-                    <a
-                      href={itr.tag_id ? `/projects/${projectId}/tags/${itr.tag_id}/itrs/${itr.id}` : '#'}
-                      onClick={e => e.stopPropagation()}
-                      style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
-                    >
-                      {itr.itr_number}
-                    </a>
+                    {itr.tag_id ? (
+                      <Link
+                        href={`/projects/${itr.project_id}/tags/${itr.tag_id}/itrs/${itr.id}`}
+                        onClick={e => e.stopPropagation()}
+                        style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
+                      >
+                        {itr.itr_number}
+                      </Link>
+                    ) : (
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
+                    )}
                   </div>
                   {itr.tag_number && (
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>

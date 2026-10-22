@@ -29,7 +29,7 @@ export default async function ProjectItrsPage({
   if (isScopeAll(sp.scope)) {
     const { data: inOrg } = await supabase.from('projects').select('id').eq('id', projectId).eq('org_id', ctx.orgId).maybeSingle()
     if (!inOrg) notFound()
-    return <><ScopeToggle projectId={projectId} list="itrs" all /><AllItrs sp={sp} /></>
+    return <><ScopeToggle projectId={projectId} list="itrs" all /><AllItrs projectId={projectId} sp={sp} /></>
   }
 
   // Paginación/orden/filtros viven en la URL (Sprint E): el servidor devuelve una página.

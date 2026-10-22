@@ -29,7 +29,7 @@ export default async function PunchListPage({
   if (isScopeAll(sp.scope)) {
     const { data: inOrg } = await supabase.from('projects').select('id').eq('id', projectId).eq('org_id', ctx.orgId).maybeSingle()
     if (!inOrg) notFound()
-    return <><ScopeToggle projectId={projectId} list="punches" all /><AllPunches sp={sp} /></>
+    return <><ScopeToggle projectId={projectId} list="punches" all /><AllPunches projectId={projectId} sp={sp} /></>
   }
 
   // Sprint E: página/filtros en la URL; el servidor devuelve 50 filas + conteos en SQL.
@@ -54,7 +54,6 @@ export default async function PunchListPage({
     { data: project },
     pageRes,
     summary,
-    { data: phases },
     { data: disciplines },
     { data: systems },
     { data: orgMembers },
@@ -62,7 +61,6 @@ export default async function PunchListPage({
     supabase.from('projects').select('id, name').eq('id', projectId).eq('org_id', ctx.orgId).single(),
     fetchPunchPage(supabase, scope, { filters, page, sort, dir }),
     fetchPunchSummary(supabase, scope),
-    supabase.from('project_phases').select('id, code, name, color').eq('org_id', ctx.orgId).order('order_index'),
     supabase.from('disciplines').select('id, code, name, color').eq('org_id', ctx.orgId).order('code'),
     supabase.from('systems').select('id, code, name').eq('project_id', projectId).order('code'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId).order('role'),
@@ -70,42 +68,6 @@ export default async function PunchListPage({
 
   if (!project) notFound()
 
-  const punches = pageRes.rows.map(r => ({
-    id: r.id,
-    punch_number: r.punch_number,
-    category: r.category,
-    description: r.description,
-    status: r.status,
-    priority: r.priority,
-    target_date: r.target_date,
-    closed_date: r.closed_date,
-    created_at: r.created_at,
-    itr_id: r.itr_id,
-    assigned_to: r.assigned_to,
-    raised_by: r.raised_by,
-    raised_by_profile: r.raised_by_name ? { full_name: r.raised_by_name } : null,
-    resolved_at: r.resolved_at,
-    resolved_by: r.resolved_by,
-    resolved_by_name: r.resolved_by_name,
-    impact: r.impact,
-    startup_disposition: r.startup_disposition,
-    category_reviewed_at: r.category_reviewed_at,
-    assigned_to_profile: r.assigned_to_name ? { full_name: r.assigned_to_name } : null,
-    tags: r.tag_id
-      ? {
-          id: r.tag_id,
-          tag_number: r.tag_number ?? '',
-          description: r.tag_description ?? '',
-          disciplines: { code: r.discipline_code ?? '', name: r.discipline_name ?? '', color: r.discipline_color ?? '#64748b' },
-        }
-      : null,
-    subsystems: {
-      id: r.subsystem_id,
-      code: r.subsystem_code ?? '',
-      name: r.subsystem_name ?? '',
-      systems: { code: r.system_code ?? '', name: r.system_name ?? '' },
-    },
-  }))
 
   const tc = await getTranslations('Common')
   return (
@@ -116,13 +78,12 @@ export default async function PunchListPage({
         projectId={projectId}
         projectName={project.name}
         currentUserRole={ctx.role}
-        punches={punches}
+        punches={pageRes.rows}
         total={pageRes.total}
         page={page}
         pageSize={LIST_PAGE_SIZE}
         summary={summary}
         filters={{ cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', system: sp.system ?? '', q: sp.q ?? '' }}
-        phases={phases ?? []}
         disciplines={disciplines ?? []}
         systems={systems ?? []}
         orgMembers={orgMembers ?? []}

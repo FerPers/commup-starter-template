@@ -1,14 +1,15 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
-import WorkPlansGlobal from './WorkPlansGlobal'
+import WorkPlansView from '../projects/[id]/work-plans/WorkPlansView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
 
 // N2c: «Todos los proyectos» de la lista del proyecto (`?scope=all`); antes era la página global.
-export default async function AllWorkPlans() {
+// G-14: misma vista que el proyecto, con alcance org; `projectId` = proyecto del contexto (alta por defecto).
+export default async function AllWorkPlans({ projectId }: { projectId: string }) {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
@@ -20,7 +21,7 @@ export default async function AllWorkPlans() {
   // Fetch all projects for this org
   const { data: projects } = await supabase
     .from('projects')
-    .select('id, name, code, status')
+    .select('id, name, code')
     .eq('org_id', orgId)
     .order('name')
 
@@ -68,7 +69,8 @@ export default async function AllWorkPlans() {
     {truncated && (
       <PartialNote>{tl('listPartial')}</PartialNote>
     )}
-    <WorkPlansGlobal
+    <WorkPlansView
+      projectId={projectId}
       projects={projects ?? []}
       disciplines={disciplines ?? []}
       orgMembers={members ?? []}
