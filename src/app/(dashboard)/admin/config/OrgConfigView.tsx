@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   createPhase, updatePhase, deletePhase,
   createDiscipline, updateDiscipline, deleteDiscipline,
-  seedEquipmentTypes, createEquipmentType, updateEquipmentType, deleteEquipmentType,
+  seedEquipmentTypes, createEquipmentType, updateEquipmentType, deleteEquipmentType, setEquipmentTypeLineupFlags,
   updateOrgProfile, uploadOrgLogo, setOrgTemplateCatalog, saveOrgGlossary, saveCatBLimit,
 } from '@/app/actions/config'
 import { DEFAULT_ITR_GLOSSARY } from '@/lib/constants/itr-glossary'
@@ -14,7 +14,7 @@ import { EQUIPMENT_CATEGORIES } from '@/lib/equipment-types'
 type Org = { id: string; name: string; logo_url: string | null }
 type Phase = { id: string; code: string; name: string; color: string; order_index: number; certificate_name: string | null; itr_client_signature: boolean }
 type Discipline = { id: string; code: string; name: string; color: string }
-type EquipmentType = { id: string; code: string; name: string; category: string | null }
+type EquipmentType = { id: string; code: string; name: string; category: string | null; lineup_candidate: boolean; critical_valve: boolean }
 type Project = { id: string; name: string }
 
 const PRESET_COLORS = [
@@ -169,9 +169,11 @@ function DisciplineRow({ disc, onSave, onDelete, isPending }: {
 
 // ── Equipment type row ─────────────────────────────────────────────────────
 
-function EquipmentTypeRow({ eqt, onSave, onDelete, isPending }: {
+function EquipmentTypeRow({ eqt, onSave, onDelete, onFlags, isPending }: {
   eqt: EquipmentType
   onSave: (data: { code: string; name: string; category: string }) => void
+  /** S25b (E-29): flags de line-up (candidata y válvula crítica). */
+  onFlags: (flags: { lineupCandidate: boolean; criticalValve: boolean }) => void
   onDelete: () => void
   isPending: boolean
 }) {
@@ -191,6 +193,16 @@ function EquipmentTypeRow({ eqt, onSave, onDelete, isPending }: {
           {eqt.code}
         </span>
         <span style={{ fontSize: '13px', color: 'var(--text-strong)', flex: 1 }}>{eqt.name}</span>
+        <label style={{ display: 'inline-flex', gap: 4, alignItems: 'center', fontSize: '12px', color: 'var(--text-muted)' }} title={t('equipmentTypes.lineupHint')}>
+          <input type="checkbox" checked={eqt.lineup_candidate} disabled={isPending}
+            onChange={e => onFlags({ lineupCandidate: e.target.checked, criticalValve: e.target.checked && eqt.critical_valve })} />
+          {t('equipmentTypes.lineup')}
+        </label>
+        <label style={{ display: 'inline-flex', gap: 4, alignItems: 'center', fontSize: '12px', color: 'var(--text-muted)' }} title={t('equipmentTypes.criticalHint')}>
+          <input type="checkbox" checked={eqt.critical_valve} disabled={isPending || !eqt.lineup_candidate}
+            onChange={e => onFlags({ lineupCandidate: eqt.lineup_candidate, criticalValve: e.target.checked })} />
+          {t('equipmentTypes.critical')}
+        </label>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={() => setEditing(true)} disabled={isPending} style={btnOutline}>{t('equipmentTypes.edit')}</button>
           <button onClick={onDelete} disabled={isPending} style={btnDanger}>{t('equipmentTypes.delete')}</button>
@@ -717,6 +729,7 @@ export default function OrgConfigView({
                       isPending={isPending}
                       onSave={data => act(() => updateEquipmentType({ equipmentTypeId: eqt.id, ...data }))}
                       onDelete={() => act(() => deleteEquipmentType(eqt.id))}
+                      onFlags={f => act(() => setEquipmentTypeLineupFlags({ equipmentTypeId: eqt.id, ...f }))}
                     />
                   ))}
                 </div>

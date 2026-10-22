@@ -1049,7 +1049,11 @@
       "cancel": "Cancelar",
       "edit": "Editar",
       "delete": "Eliminar",
-      "empty": "No hay tipos de equipo. Carga el catálogo estándar o agrega el primero."
+      "empty": "No hay tipos de equipo. Carga el catálogo estándar o agrega el primero.",
+      "lineup": "Line-up",
+      "lineupHint": "Sus tags entran a un line-up generado",
+      "critical": "Crítica",
+      "criticalHint": "Válvula crítica: exige verificación independiente en el line-up"
     },
     "export": {
       "title": "Exportar Datos",
@@ -4069,7 +4073,11 @@
       "runs": "Ejecuciones",
       "startRun": "Iniciar ejecución",
       "needsApproval": "Para ejecutar, el procedimiento necesita una revisión aprobada.",
-      "noRuns": "Sin ejecuciones."
+      "noRuns": "Sin ejecuciones.",
+      "returnTitle": "Devolver al autor",
+      "warnNotFieldVerified": "• La revisión no está verificada en campo (walkdown).",
+      "warnNoLineup": "• No hay un line-up verificado vinculado a este procedimiento.",
+      "startAnyway": "¿Iniciar la ejecución de todos modos?"
     },
     "step": {
       "action": "Acción",
@@ -4084,7 +4092,11 @@
       "none": "Sin pasos todavía.",
       "up": "Subir",
       "down": "Bajar",
-      "remove": "Quitar"
+      "remove": "Quitar",
+      "range": "Rango esperado",
+      "min": "Mín.",
+      "max": "Máx.",
+      "unit": "Unidad"
     },
     "run": {
       "startedBy": "iniciada por {who} el {when}",
@@ -4123,7 +4135,18 @@
         "hold_released": "Hold liberado",
         "completed": "Completada",
         "aborted": "Abortada"
-      }
+      },
+      "stepN": "Paso {n}",
+      "stopTitle": "Detener la ejecución",
+      "stopReason": "Criterio de parada que se cumplió",
+      "oorTitle": "Valor fuera de rango",
+      "oorMessage": "El valor {value} está fuera del rango esperado ({range}).",
+      "oorContinue": "Registrar y continuar",
+      "oorReason": "Por qué es seguro continuar",
+      "oorStopComment": "Fuera del rango esperado ({range}); se detiene la ejecución",
+      "oorShort": "fuera de rango",
+      "oorInline": "Fuera del rango esperado ({range})",
+      "superseded": "Esta ejecución sigue la R{rev}, pero ya está aprobada la R{current}. Revisa si los cambios afectan los pasos que faltan."
     },
     "lineup": {
       "stale": "Posiblemente desactualizada",
@@ -4145,7 +4168,28 @@
       "verify": "Verificar",
       "otherVerifies": "La verifica otra persona.",
       "complete": "Completar line-up",
-      "progressHelp": "Faltan {pending} pendientes, {misaligned} desalineadas y {toVerify} críticas por verificar."
+      "progressHelp": "Faltan {pending} pendientes, {misaligned} desalineadas y {toVerify} críticas por verificar.",
+      "filters": "Filtros",
+      "search": "Buscar tag, válvula o P&ID",
+      "filter": {
+        "all": "Todas",
+        "pending": "Pendientes",
+        "misaligned": "Desalineadas",
+        "to_verify": "Por verificar",
+        "critical": "Críticas abiertas",
+        "done": "Listas"
+      },
+      "byPid": "Agrupar por P&ID",
+      "noPid": "Sin P&ID",
+      "noMatch": "Ninguna fila coincide con el filtro.",
+      "asFound": "Encontrada",
+      "left": "Dejada",
+      "lock": "Candado",
+      "seal": "Sello",
+      "detail": "Detalle…",
+      "remarks": "Observaciones",
+      "remarksHint": "Ej.: encontrada abierta, cerrada por mí; vástago dañado",
+      "lockRequired": "LO/LC: indica el n.º de candado o de sello."
     },
     "offline": {
       "offline": "Sin conexión: lo que registres queda guardado en este dispositivo y se sincroniza al volver la red.",
@@ -5332,5 +5376,10 @@
       "sig_bad": "firma NO válida: el manifiesto fue modificado",
       "sig_unavailable": "verifíquelo con OpenSSL y la clave pública de su fecha"
     }
+  },
+  "AskDialog": {
+    "cancel": "Cancelar",
+    "choices": "Elige uno o escribe el motivo",
+    "minChars": "{n} caracteres o más"
   }
 }

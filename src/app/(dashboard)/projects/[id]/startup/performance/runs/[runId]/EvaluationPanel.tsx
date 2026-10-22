@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -33,6 +34,8 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
   userId?: string
 }) {
   const t = useTranslations('Startup')
+  // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
+  const { dialog, ask } = useAskDialog()
   const localTime = useLocalTime()  // S10 (E-15b)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -62,6 +65,7 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
 
   return (
     <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <h2 style={sectionTitle}>{t('perf.eval.title')}</h2>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -193,7 +197,7 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
             <input style={{ ...input, width: 360 }} value={reason} maxLength={2000} onChange={ev => setReason(ev.target.value)} />
           </Field>
           <button type="button" style={btn('primary', isPending || pendingAck || (reasonNeeded && reason.trim().length < 3))} disabled={isPending || pendingAck || (reasonNeeded && reason.trim().length < 3)}
-            onClick={() => { if (window.confirm(t('perf.eval.confirm'))) record() }}>{t('perf.eval.record')}</button>
+            onClick={async () => { if ((await ask({ title: t('perf.eval.record'), message: t('perf.eval.confirm'), confirmLabel: t('perf.eval.record') })) !== null) record() }}>{t('perf.eval.record')}</button>
           {(result === 'failed' || result === 'accepted_with_deviation') && <span style={small}>{t('perf.eval.actionHint')}</span>}
         </div>
       ) : (

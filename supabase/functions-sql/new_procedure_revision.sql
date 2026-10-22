@@ -21,8 +21,10 @@ BEGIN
   INSERT INTO procedure_revisions (procedure_id, org_id, project_id, rev, sections, change_reason, created_by)
   VALUES (p.id, p.org_id, p.project_id, (SELECT MAX(rev) + 1 FROM procedure_revisions WHERE procedure_id = p.id), v_cur.sections, v_reason, auth.uid())
   RETURNING id INTO v_id;
-  INSERT INTO procedure_steps (revision_id, project_id, ord, action, responsible, expected_value, tag_id, is_hold_point, hold_capacity, stop_criteria)
-  SELECT v_id, project_id, ord, action, responsible, expected_value, tag_id, is_hold_point, hold_capacity, stop_criteria
+  INSERT INTO procedure_steps (revision_id, project_id, ord, action, responsible, expected_value, tag_id, is_hold_point, hold_capacity, stop_criteria,
+                               expected_min, expected_max, expected_unit)
+  SELECT v_id, project_id, ord, action, responsible, expected_value, tag_id, is_hold_point, hold_capacity, stop_criteria,
+         expected_min, expected_max, expected_unit
   FROM procedure_steps WHERE revision_id = v_cur.id;
   -- S13 (F-12): la nueva revisión hereda las referencias a documentos, llevadas a la revisión vigente de cada uno
   -- (si cambió, el panel lo muestra como actualizado y el envío/aprobación lo valida igual).

@@ -1049,7 +1049,11 @@
       "cancel": "Cancel",
       "edit": "Edit",
       "delete": "Delete",
-      "empty": "No equipment types yet. Load the standard catalog or add the first one."
+      "empty": "No equipment types yet. Load the standard catalog or add the first one.",
+      "lineup": "Line-up",
+      "lineupHint": "Its tags are included in a generated line-up",
+      "critical": "Critical",
+      "criticalHint": "Critical valve: requires independent verification in the line-up"
     },
     "export": {
       "title": "Data Export",
@@ -4069,7 +4073,11 @@
       "runs": "Runs",
       "startRun": "Start run",
       "needsApproval": "The procedure needs an approved revision before it can be run.",
-      "noRuns": "No runs."
+      "noRuns": "No runs.",
+      "returnTitle": "Return to the author",
+      "warnNotFieldVerified": "• The revision has not been field verified (walkdown).",
+      "warnNoLineup": "• There is no verified line-up linked to this procedure.",
+      "startAnyway": "Start the run anyway?"
     },
     "step": {
       "action": "Action",
@@ -4084,7 +4092,11 @@
       "none": "No steps yet.",
       "up": "Move up",
       "down": "Move down",
-      "remove": "Remove"
+      "remove": "Remove",
+      "range": "Expected range",
+      "min": "Min",
+      "max": "Max",
+      "unit": "Unit"
     },
     "run": {
       "startedBy": "started by {who} on {when}",
@@ -4123,7 +4135,18 @@
         "hold_released": "Hold released",
         "completed": "Completed",
         "aborted": "Aborted"
-      }
+      },
+      "stepN": "Step {n}",
+      "stopTitle": "Stop the run",
+      "stopReason": "Stop criterion that was met",
+      "oorTitle": "Value out of range",
+      "oorMessage": "The value {value} is outside the expected range ({range}).",
+      "oorContinue": "Record and continue",
+      "oorReason": "Why it is safe to continue",
+      "oorStopComment": "Outside the expected range ({range}); the run is stopped",
+      "oorShort": "out of range",
+      "oorInline": "Outside the expected range ({range})",
+      "superseded": "This run follows R{rev}, but R{current} is already approved. Check whether the changes affect the remaining steps."
     },
     "lineup": {
       "stale": "Possibly out of date",
@@ -4145,7 +4168,28 @@
       "verify": "Verify",
       "otherVerifies": "Someone else verifies it.",
       "complete": "Complete line-up",
-      "progressHelp": "{pending} pending, {misaligned} misaligned and {toVerify} critical to verify."
+      "progressHelp": "{pending} pending, {misaligned} misaligned and {toVerify} critical to verify.",
+      "filters": "Filters",
+      "search": "Search tag, valve or P&ID",
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "misaligned": "Misaligned",
+        "to_verify": "To verify",
+        "critical": "Open critical",
+        "done": "Done"
+      },
+      "byPid": "Group by P&ID",
+      "noPid": "No P&ID",
+      "noMatch": "No row matches the filter.",
+      "asFound": "As found",
+      "left": "As left",
+      "lock": "Lock",
+      "seal": "Seal",
+      "detail": "Details…",
+      "remarks": "Remarks",
+      "remarksHint": "E.g. found open, closed by me; damaged stem",
+      "lockRequired": "LO/LC: enter the lock or seal number."
     },
     "offline": {
       "offline": "Offline: what you record is saved on this device and syncs when the network is back.",
@@ -5332,5 +5376,10 @@
       "sig_bad": "INVALID signature: the manifest was modified",
       "sig_unavailable": "verify it with OpenSSL and the public key of its date"
     }
+  },
+  "AskDialog": {
+    "cancel": "Cancel",
+    "choices": "Pick one or write the reason",
+    "minChars": "{n}+ characters"
   }
 }

@@ -13,7 +13,7 @@ import type { CertPdfData } from './certificate'
 import type { ItrDocumentRef, ItrPdfData, ItrTestEquipmentRef } from './itr'
 import type { EventPdfInput, LineupPdfInput, RunPdfInput } from './startup-records'
 import type { Evaluation } from '@/lib/performance/catalog'
-import { PROCEDURE_SECTIONS, type ProcedureSection } from '@/lib/startup/catalog'
+import { PROCEDURE_SECTIONS, rangeLabel, type ProcedureSection } from '@/lib/startup/catalog'
 
 type Db = SupabaseClient<Database>
 /** Traductor del espacio `Startup` (next-intl). */
@@ -375,7 +375,7 @@ export async function loadRunPdf(db: Db, x: StartupCommon & { runId: string }): 
   if (!project || !run) return null
   const [{ data: steps }, { data: events }, { data: timeline }] = await Promise.all([
     db.from('procedure_run_steps')
-      .select('step_id, ord, status, actual_value, comment, done_by, done_at, released_by, released_at, release_comment, procedure_steps(action, responsible, expected_value, is_hold_point, hold_capacity, stop_criteria, tags(tag_number))')
+      .select('step_id, ord, status, actual_value, comment, done_by, done_at, released_by, released_at, release_comment, out_of_range, procedure_steps(action, responsible, expected_value, expected_min, expected_max, expected_unit, is_hold_point, hold_capacity, stop_criteria, tags(tag_number))')
       .eq('run_id', x.runId).order('ord'),
     db.from('startup_events').select('number, occurred_at, title, kind, milestone, category')
       .eq('run_id', x.runId).eq('project_id', x.projectId).neq('status', 'voided').order('occurred_at'),
@@ -402,9 +402,14 @@ export async function loadRunPdf(db: Db, x: StartupCommon & { runId: string }): 
       stoppedBy: name(run.stopped_by), stoppedAt: run.stopped_at, stopReason: run.stop_reason,
       abortedBy: name(run.aborted_by), abortedAt: run.aborted_at, abortReason: run.abort_reason,
       steps: (steps ?? []).map(s => {
-        const st = s.procedure_steps as unknown as { action: string; responsible: string | null; expected_value: string | null; is_hold_point: boolean; hold_capacity: string | null; stop_criteria: string | null; tags: { tag_number: string } | null }
+        const st = s.procedure_steps as unknown as {
+          action: string; responsible: string | null; expected_value: string | null; expected_min: number | null; expected_max: number | null; expected_unit: string | null
+          is_hold_point: boolean; hold_capacity: string | null; stop_criteria: string | null; tags: { tag_number: string } | null
+        }
         return {
           ord: s.ord, action: st.action, tag: st.tags?.tag_number ?? null, responsible: st.responsible, expected: st.expected_value, stop: st.stop_criteria,
+          range: rangeLabel(st.expected_min === null ? null : Number(st.expected_min), st.expected_max === null ? null : Number(st.expected_max), st.expected_unit) || null,
+          outOfRange: s.out_of_range,
           hold: st.is_hold_point, holdCapacity: st.hold_capacity, status: s.status, actual: s.actual_value, comment: s.comment,
           doneBy: name(s.done_by), doneAt: s.done_at, releasedBy: name(s.released_by), releasedAt: s.released_at, releaseComment: s.release_comment,
         }
@@ -431,7 +436,7 @@ export async function loadLineupPdf(db: Db, x: StartupCommon & { sheetId: string
   if (!project || !sheet) return null
   const [{ data: items }, { data: stale }] = await Promise.all([
     db.from('lineup_items')
-      .select('ord, label, required_position, required_note, is_critical, found_position, remarks, set_by, set_at, verified_by, verified_at, tags(tag_number, description)')
+      .select('ord, label, required_position, required_note, is_critical, found_position, as_found_position, lock_number, seal_number, remarks, set_by, set_at, verified_by, verified_at, tags(tag_number, description)')
       .eq('sheet_id', x.sheetId).order('ord'),
     sheet.status === 'verified' ? db.rpc('lineup_is_stale', { p_sheet_id: x.sheetId }) : Promise.resolve({ data: false }),
   ])
@@ -451,6 +456,7 @@ export async function loadLineupPdf(db: Db, x: StartupCommon & { sheetId: string
         return {
           ord: i.ord, tag: tag?.tag_number ?? null, description: tag?.description ?? null, label: i.label ?? '',
           required: i.required_position, requiredNote: i.required_note, critical: i.is_critical, found: i.found_position, remarks: i.remarks,
+          asFound: i.as_found_position, lock: i.lock_number, seal: i.seal_number,
           setBy: name(i.set_by), setAt: i.set_at, verifiedBy: name(i.verified_by), verifiedAt: i.verified_at,
         }
       }),

@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { completeRunStep, releaseHoldPoint, transitionProcedureRun } from '@/app/actions/startup'
 import type { MyCapacities } from '@/lib/constants/capacities'
-import { canReleaseHold, nextRunStep, runProgress, type HoldCapacity, type RunStepStatus } from '@/lib/startup/catalog'
+import { canReleaseHold, checkRange, nextRunStep, rangeLabel, runProgress, stopChoices, textOrNull, type HoldCapacity, type RunStepStatus } from '@/lib/startup/catalog'
+import { ASK_ALTERNATIVE, useAskDialog } from '@/components/ui/AskDialog'
 import { networkActionsAllowed, overlayRun, type StartupEntry } from '@/lib/sync/startup-outbox-utils'
 import { Alert, Chip, btn, card, input, small } from '../../../daily/daily-ui'
 import { SyncBanner, SyncTray, useStartupOutbox } from '../../OfflineSync'
@@ -17,11 +18,15 @@ type Step = {
   stepId: string; ord: number; status: RunStepStatus; actual: string | null; comment: string | null
   doneBy: string | null; doneAt: string | null; releasedBy: string | null; releasedAt: string | null; releaseComment: string | null
   action: string; responsible: string | null; expected: string | null; isHold: boolean; capacity: HoldCapacity; stopCriteria: string | null; tag: string | null
+  /** S25b (E-23) */
+  expectedMin: number | null; expectedMax: number | null; expectedUnit: string | null; outOfRange: boolean
 }
 type Run = {
   id: string; number: string; status: string; procedureId: string; procedureNumber: string; title: string; rev: number
   safety: string | null; stopCriteria: string | null; system: string | null; stopReason: string | null; abortReason: string | null
   startedBy: string | null; startedAt: string; completedAt: string | null
+  /** S25b (E-32): la revisión de la ejecución fue reemplazada por otra aprobada (número de la vigente). */
+  supersededBy: number | null
 }
 const STATUS_TONE: Record<string, 'blue' | 'amber' | 'red' | 'green' | 'struck'> = { in_progress: 'blue', at_hold: 'amber', stopped: 'red', completed: 'green', aborted: 'struck' }
 const STEP_TONE: Record<RunStepStatus, 'muted' | 'green' | 'amber' | 'violet'> = { pending: 'muted', done: 'green', at_hold: 'amber', released: 'green', na: 'violet' }
@@ -70,7 +75,50 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
       router.refresh()
     })
   }
-  const askThen = (msg: string, fn: (c: string) => Promise<{ error?: string }>) => { const c = window.prompt(msg); if (c?.trim()) act(() => fn(c)) }
+  // S25b (E-34): diálogos propios en vez de window.prompt (criterios de parada a mano, texto largo, sin cierres por error).
+  const { dialog, ask } = useAskDialog()
+  const askThen = async (title: string, label: string, confirmLabel: string, fn: (c: string) => Promise<{ error?: string }>, danger = false) => {
+    const c = await ask({ title, confirmLabel, danger, input: { label, minLength: 3 } })
+    if (c) act(() => fn(c))
+  }
+  const choices = stopChoices(serverRun.stopCriteria, serverSteps, ord => t('run.stepN', { n: ord }))
+  async function stopRun(prefill?: string) {
+    const c = await ask({
+      title: t('run.stopTitle'), message: t('run.stopPrompt'), confirmLabel: `⛔ ${t('run.stop')}`, danger: true, choices,
+      input: { label: t('run.stopReason'), minLength: 3, initial: prefill },
+    })
+    if (c) capture({ kind: 'run_stop', ...ids, comment: c }, () => transitionProcedureRun({ ...ids, to: 'stopped', comment: c }))
+  }
+  /** S25b (E-23): fuera del rango esperado se pide por qué se continúa, o se detiene con el criterio prellenado. */
+  async function completeStep(s: NonNullable<typeof next>) {
+    const value = actual.trim()
+    const op = { kind: 'run_step' as const, ...ids, stepId: s.stepId, ord: s.ord, isHold: s.isHold, na: false, actual: value || null }
+    if (checkRange(value, s.expectedMin, s.expectedMax) === 'out') {
+      const range = rangeLabel(s.expectedMin, s.expectedMax, s.expectedUnit)
+      const r = await ask({
+        title: t('run.oorTitle'), confirmLabel: t('run.oorContinue'), alternative: `⛔ ${t('run.stop')}`,
+        message: [t('run.oorMessage', { value, range }), s.stopCriteria && t('run.stopIf', { c: s.stopCriteria })].filter(Boolean).join('\n'),
+        input: { label: t('run.oorReason'), minLength: 3, initial: note.trim() },
+      })
+      if (r === null) return
+      if (r === ASK_ALTERNATIVE) {
+        // Se registra el valor (queda marcado fuera de rango) y se detiene con el criterio del paso.
+        const comment = t('run.oorStopComment', { range })
+        const reason = `${t('run.stepN', { n: s.ord })}: ${textOrNull(s.stopCriteria) ?? t('run.oorShort')} (${value})`
+        setError(null)
+        startTransition(async () => {
+          const a = await outbox.capture({ ...op, comment }, () => completeRunStep({ ...ids, stepId: s.stepId, actual: value, comment }), outbox.entries.length > 0)
+          if ('error' in a) { setError(a.error); return }
+          setActual(''); setNote('')
+          await stopRun(reason)
+        })
+        return
+      }
+      capture({ ...op, comment: r }, () => completeRunStep({ ...ids, stepId: s.stepId, actual: value, comment: r }))
+      return
+    }
+    capture({ ...op, comment: note.trim() || null }, () => completeRunStep({ ...ids, stepId: s.stepId, actual, comment: note }))
+  }
   /** Paso o «Detener»: en línea si se puede; si no, queda en el dispositivo (se envía en orden al volver la red). */
   function capture(op: Parameters<typeof outbox.capture>[0], send: () => Promise<{ error?: string }>) {
     setError(null)
@@ -101,6 +149,9 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
         <p style={{ ...small, margin: '2px 0 0' }} suppressHydrationWarning>{run.system ?? '—'} · {t('run.startedBy', { who: who(run.startedBy), when: when(run.startedAt) })}</p>
       </div>
 
+      {dialog}
+      {/* S25b (E-32): la ejecución sigue una revisión que ya fue reemplazada */}
+      {serverRun.supersededBy !== null && live && <Alert kind="warn">{t('run.superseded', { rev: serverRun.rev, current: serverRun.supersededBy })}</Alert>}
       <SyncBanner isOffline={outbox.isOffline} count={outbox.sendable} syncing={outbox.syncing} onSync={() => void outbox.sync()} />
       {error && <Alert kind="error">{error}</Alert>}
       <SyncTray entries={outbox.entries} isOffline={outbox.isOffline} describe={stepLabel} onChanged={() => void outbox.sync()} />
@@ -117,7 +168,7 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
         <Alert kind="error">
           {t('run.stopped', { reason: run.stopReason ?? '' })}
           {LEADERS.includes(role) && <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}><button type="button" style={btn('primary', isPending || !netOk)} disabled={isPending || !netOk}
-            onClick={() => askThen(t('run.resumePrompt'), c => transitionProcedureRun({ ...ids, to: 'in_progress', comment: c }))}>{t('run.resume')}</button>{!netOk && <span style={small}>{netHint}</span>}</div>}
+            onClick={() => askThen(t('run.resume'), t('run.resumePrompt'), t('run.resume'), c => transitionProcedureRun({ ...ids, to: 'in_progress', comment: c }))}>{t('run.resume')}</button>{!netOk && <span style={small}>{netHint}</span>}</div>}
         </Alert>
       )}
       {run.status === 'aborted' && <Alert kind="warn">{t('run.aborted', { reason: run.abortReason ?? '' })}</Alert>}
@@ -148,17 +199,18 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
             {next.tag && <span>🏷 {next.tag}</span>}
             {next.responsible && <span>👤 {next.responsible}</span>}
             {next.expected && <span>🎯 {next.expected}</span>}
+            {(next.expectedMin !== null || next.expectedMax !== null) && <span>📏 {rangeLabel(next.expectedMin, next.expectedMax, next.expectedUnit)}</span>}
           </div>
           {next.stopCriteria && <div style={{ ...small, color: 'var(--danger-700)', fontWeight: 600 }}>⛔ {t('run.stopIf', { c: next.stopCriteria })}</div>}
           {next.isHold && <div style={{ ...small, color: '#b45309', fontWeight: 600 }}>⏸ {t('run.isHold', { who: t(`capacity.${next.capacity}`) })}</div>}
-          <input style={input} placeholder={next.expected ? t('run.actualFor', { e: next.expected }) : t('run.actual')} value={actual} onChange={e => setActual(e.target.value)} />
+          <input style={{ ...input, ...(checkRange(actual, next.expectedMin, next.expectedMax) === 'out' ? { borderColor: 'var(--danger-500)', color: 'var(--danger-700)' } : {}) }}
+            inputMode={next.expectedMin !== null || next.expectedMax !== null ? 'decimal' : undefined}
+            placeholder={next.expected ? t('run.actualFor', { e: next.expected }) : t('run.actual')} value={actual} onChange={e => setActual(e.target.value)} />
+          {checkRange(actual, next.expectedMin, next.expectedMax) === 'out' && <span style={{ ...small, color: 'var(--danger-700)', fontWeight: 600 }}>{t('run.oorInline', { range: rangeLabel(next.expectedMin, next.expectedMax, next.expectedUnit) })}</span>}
           <input style={input} placeholder={t('run.comment')} value={note} onChange={e => setNote(e.target.value)} />
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button type="button" style={big(true, isPending)} disabled={isPending}
-              onClick={() => capture(
-                { kind: 'run_step', ...ids, stepId: next.stepId, ord: next.ord, isHold: next.isHold, na: false, actual: actual.trim() || null, comment: note.trim() || null },
-                () => completeRunStep({ ...ids, stepId: next.stepId, actual, comment: note }),
-              )}>✓ {next.isHold ? t('run.doneHold') : t('run.done')}</button>
+              onClick={() => void completeStep(next)}>✓ {next.isHold ? t('run.doneHold') : t('run.done')}</button>
             {!next.isHold && <button type="button" style={big(false, isPending || note.trim().length < 3)} disabled={isPending || note.trim().length < 3}
               onClick={() => capture(
                 { kind: 'run_step', ...ids, stepId: next.stepId, ord: next.ord, isHold: false, na: true, actual: null, comment: note.trim() },
@@ -177,10 +229,7 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
 
       {live && !isClient && run.status !== 'stopped' && (
         <button type="button" style={{ ...big(false, isPending), color: '#fff', background: 'var(--danger-500)', border: 'none' }} disabled={isPending}
-          onClick={() => {
-            const c = window.prompt(t('run.stopPrompt'))
-            if (c?.trim()) capture({ kind: 'run_stop', ...ids, comment: c.trim() }, () => transitionProcedureRun({ ...ids, to: 'stopped', comment: c }))
-          }}>⛔ {t('run.stop')}</button>
+          onClick={() => void stopRun()}>⛔ {t('run.stop')}</button>
       )}
 
       <section style={{ ...card, padding: 0 }}>
@@ -192,7 +241,9 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{s.isHold ? '⏸ ' : ''}{s.action}</div>
                 {s.status !== 'pending' && (
                   <div style={{ ...small, fontSize: 'var(--text-xs)' }} suppressHydrationWarning>
-                    {who(s.doneBy)} · {when(s.doneAt)}{s.actual ? ` · ${s.actual}` : ''}{s.comment ? ` — ${s.comment}` : ''}
+                    {who(s.doneBy)} · {when(s.doneAt)}{s.actual ? ` · ${s.actual}` : ''}
+                    {s.outOfRange && <strong style={{ color: 'var(--danger-700)' }}> · {t('run.oorShort')}</strong>}
+                    {s.comment ? ` — ${s.comment}` : ''}
                     {s.releasedAt && ` · ${t('run.releasedBy', { who: who(s.releasedBy), when: when(s.releasedAt) })}`}
                     {s.releaseComment && ` — ${s.releaseComment}`}
                   </div>
@@ -226,7 +277,7 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
 
       {live && LEADERS.includes(role) && (
         <button type="button" style={{ ...btn('outline', !netOk), color: 'var(--danger-700)', alignSelf: 'flex-start' }} disabled={isPending || !netOk} title={netOk ? undefined : netHint}
-          onClick={() => askThen(t('run.abortPrompt'), c => transitionProcedureRun({ ...ids, to: 'aborted', comment: c }))}>{t('run.abort')}</button>
+          onClick={() => askThen(t('run.abort'), t('run.abortPrompt'), t('run.abort'), c => transitionProcedureRun({ ...ids, to: 'aborted', comment: c }), true)}>{t('run.abort')}</button>
       )}
     </div>
   )

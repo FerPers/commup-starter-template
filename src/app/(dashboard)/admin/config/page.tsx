@@ -36,7 +36,7 @@ export default async function AdminConfigPage() {
       .order('name'),
     supabase
       .from('equipment_types')
-      .select('id, code, name, category')
+      .select('id, code, name, category, lineup_candidate, critical_valve')
       .eq('org_id', orgId)
       .order('category')
       .order('code'),

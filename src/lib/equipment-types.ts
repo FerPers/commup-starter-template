@@ -92,3 +92,13 @@ export function detectEquipmentTypeCode(tagNumber: string): string | null {
 export function normalizeTypeKey(value: string): string {
   return value.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim()
 }
+
+/** S25b (E-29): válvulas de corte / seguridad que el line-up marca como críticas por defecto (= backfill SQL). */
+export const CRITICAL_VALVE_CODES = ['ESDV', 'XV', 'SDV', 'BDV', 'PSV', 'HV-ESD'] as const
+
+/** Flags de line-up por defecto para un tipo nuevo o sembrado; luego se ajustan en /admin/config. */
+export function defaultLineupFlags(code: string, category: string | null | undefined): { lineup_candidate: boolean; critical_valve: boolean } {
+  const critical = (CRITICAL_VALVE_CODES as readonly string[]).includes(code.trim().toUpperCase())
+  const cat = (category ?? '').toLowerCase()
+  return { lineup_candidate: critical || cat.startsWith('válvula') || cat.startsWith('valvula') || cat.startsWith('valve'), critical_valve: critical }
+}

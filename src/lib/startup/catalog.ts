@@ -48,6 +48,10 @@ export type StepDraft = {
   is_hold_point: boolean
   hold_capacity: HoldCapacity
   stop_criteria: string
+  /** S25b (E-23): rango esperado opcional (texto del formulario; la BD acepta coma decimal). */
+  expected_min?: string
+  expected_max?: string
+  expected_unit?: string
 }
 
 export function emptyStep(): StepDraft {
@@ -200,4 +204,66 @@ export const BACKDATE_DAYS = 7
 export function needsBackdateReason(occurredAt: string, now: Date = new Date()): boolean {
   const t = Date.parse(occurredAt)
   return Number.isFinite(t) && t < now.getTime() - BACKDATE_DAYS * 86_400_000
+}
+
+// ── S25b (E-23): rango esperado de un paso ──────────────────────────────────
+
+/** Valor numérico de un texto de campo («11,8», « 12 »); null si no es un número. */
+export function parseFieldNumber(v: string | null | undefined): number | null {
+  const s = (v ?? '').trim()
+  return /^-?[0-9]+([.,][0-9]+)?$/.test(s) ? Number(s.replace(',', '.')) : null
+}
+
+/** Igual que complete_run_step: fuera de rango solo si hay rango y el valor es numérico. */
+export function checkRange(actual: string | null | undefined, min: number | null, max: number | null): 'in' | 'out' | 'na' {
+  if (min === null && max === null) return 'na'
+  const n = parseFieldNumber(actual)
+  if (n === null) return 'na'
+  return (min !== null && n < min) || (max !== null && n > max) ? 'out' : 'in'
+}
+
+export function rangeLabel(min: number | null, max: number | null, unit: string | null): string {
+  const u = unit ? ` ${unit}` : ''
+  if (min !== null && max !== null) return `${min}–${max}${u}`
+  if (min !== null) return `≥ ${min}${u}`
+  if (max !== null) return `≤ ${max}${u}`
+  return ''
+}
+
+/** Opciones de «Detener»: los criterios de parada de la revisión (una por línea) y los de cada paso. */
+export function stopChoices(revisionCriteria: string | null, steps: { ord: number; stopCriteria: string | null }[], stepLabel: (ord: number) => string): string[] {
+  const rev = (revisionCriteria ?? '').split('\n').map(l => l.replace(/^[-•*\s]+/, '').trim()).filter(Boolean)
+  const perStep = steps.filter(s => s.stopCriteria?.trim()).map(s => `${stepLabel(s.ord)}: ${s.stopCriteria!.trim()}`)
+  return [...new Set([...rev, ...perStep])].slice(0, 30)
+}
+
+// ── S25b (E-21): line-up en campo ───────────────────────────────────────────
+
+/** LO/LC exigen n.º de candado o de sello (= SQL set_lineup_item). */
+export function needsLockOrSeal(left: ValvePosition | null | undefined): boolean {
+  return left === 'locked_open' || left === 'locked_closed'
+}
+
+export const LINEUP_FILTERS = ['all', 'pending', 'misaligned', 'to_verify', 'critical', 'done'] as const
+export type LineupFilter = (typeof LINEUP_FILTERS)[number]
+
+/** Filtro y búsqueda de filas de una hoja larga (tag, etiqueta, descripción o P&ID). */
+export function filterLineupItems<T extends LineupItemState & { is_critical: boolean; tag_number?: string | null; label?: string; description?: string | null; pid?: string | null }>(
+  items: T[], filter: LineupFilter, query: string,
+): T[] {
+  const q = query.trim().toLowerCase()
+  return items.filter(i => {
+    const st = lineupItemState(i)
+    const okFilter = filter === 'all' || (filter === 'pending' && st === 'pending') || (filter === 'misaligned' && st === 'misaligned')
+      || (filter === 'to_verify' && st === 'to_verify') || (filter === 'critical' && i.is_critical && st !== 'verified')
+      || (filter === 'done' && (st === 'verified' || st === 'aligned'))
+    const okQuery = !q || [i.tag_number, i.label, i.description, i.pid].some(v => v?.toLowerCase().includes(q))
+    return okFilter && okQuery
+  })
+}
+
+/** Texto recortado o null si queda vacío (campos opcionales de campo). */
+export function textOrNull(v: string | null | undefined): string | null {
+  const s = (v ?? '').trim()
+  return s.length > 0 ? s : null
 }

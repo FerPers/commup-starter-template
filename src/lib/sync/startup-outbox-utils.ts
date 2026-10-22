@@ -18,6 +18,8 @@ export type StartupOp =
   | { kind: 'run_stop'; projectId: string; runId: string; comment: string }
   | {
       kind: 'lineup_set'; projectId: string; sheetId: string; itemId: string; found: ValvePosition; remarks: string | null
+      /** S25b (E-21): como se encontró, candado y sello (opcionales; capturas anteriores no los traen). */
+      asFound?: ValvePosition | null; lockNumber?: string | null; sealNumber?: string | null
       /** set_at / verified_at de la fila tal como los vio el dispositivo (string original de PostgREST, con microsegundos). */
       expectedSetAt: string | null; expectedVerifiedAt: string | null
       /** «Aplicar la mía» tras un conflicto: se envía sin compare-and-set. */
@@ -127,6 +129,7 @@ export function overlayRun<S extends RunStepLike>(
 
 type LineupItemLike = {
   id: string; found_position: ValvePosition | null; remarks: string | null
+  as_found_position?: ValvePosition | null; lock_number?: string | null; seal_number?: string | null
   set_by: string | null; set_at: string | null; verified_by: string | null; verified_at: string | null
 }
 
@@ -138,7 +141,7 @@ export function overlayLineup<I extends LineupItemLike>(items: readonly I[], all
     const e = byItem.get(i.id)
     if (!e) return { ...i }
     if (e.state !== 'pending') return { ...i, sync: 'conflict' as const }
-    return { ...i, found_position: e.found, remarks: e.remarks, set_by: userId, set_at: e.capturedAt, verified_by: null, verified_at: null, sync: 'pending' as const }
+    return { ...i, found_position: e.found, remarks: e.remarks, as_found_position: e.asFound ?? null, lock_number: e.lockNumber ?? null, seal_number: e.sealNumber ?? null, set_by: userId, set_at: e.capturedAt, verified_by: null, verified_at: null, sync: 'pending' as const }
   })
 }
 

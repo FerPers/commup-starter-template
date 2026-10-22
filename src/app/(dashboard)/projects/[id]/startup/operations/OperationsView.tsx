@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import {
   deleteCriticalSpare, getOwnershipChecklist, recordCompetency, requestOwnershipTransfer, setCompetencyTarget, upsertCriticalSpare, upsertOpsPerson,
   voidCompetencyRecord,
@@ -60,6 +61,8 @@ export default function OperationsView({ project, initialView, systems, transfer
   userId: string
 }) {
   const t = useTranslations('Startup')
+  // S25b (E-34): diálogo propio en vez de window.confirm.
+  const { dialog, ask } = useAskDialog()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -118,6 +121,7 @@ export default function OperationsView({ project, initialView, systems, transfer
 
   return (
     <div style={{ padding: 32, maxWidth: 1300, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <Link href={`/projects/${project.id}`} style={linkStyle}>← {project.code} · {project.name}</Link>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>{t('title')}</h1>
@@ -476,7 +480,7 @@ export default function OperationsView({ project, initialView, systems, transfer
                               spareId: s.id, systemId: s.system_id, item: s.item, kind: s.kind, partNumber: s.part_number ?? '', isCritical: s.is_critical,
                               qtyRequired: String(s.qty_required), qtyAvailable: String(s.qty_available), status: s.status, eta: s.eta ?? '', notes: s.notes ?? '',
                             })}>{t('ops.edit')}</button>
-                            <button type="button" style={btn('outline')} onClick={() => { if (confirm(t('ops.confirmDelete'))) run(() => deleteCriticalSpare({ projectId: project.id, spareId: s.id })) }}>{t('ops.delete')}</button>
+                            <button type="button" style={btn('outline')} onClick={async () => { if ((await ask({ title: t('ops.delete'), message: t('ops.confirmDelete'), confirmLabel: t('ops.delete'), danger: true })) !== null) run(() => deleteCriticalSpare({ projectId: project.id, spareId: s.id })) }}>{t('ops.delete')}</button>
                           </>
                         )}
                       </td>

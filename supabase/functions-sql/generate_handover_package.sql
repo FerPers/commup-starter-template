@@ -141,7 +141,8 @@ BEGIN
                      'completed_by', public.profile_full_name(ru.completed_by), 'completed_at', ru.completed_at,
                      'steps', COALESCE((
                        SELECT jsonb_agg(jsonb_build_object('ord', rs.ord, 'action', ps.action, 'expected', ps.expected_value,
-                                'actual', rs.actual_value, 'status', rs.status, 'comment', rs.comment,
+                                'expected_min', ps.expected_min, 'expected_max', ps.expected_max, 'expected_unit', ps.expected_unit,
+                                'actual', rs.actual_value, 'out_of_range', rs.out_of_range, 'status', rs.status, 'comment', rs.comment,
                                 'hold', ps.is_hold_point, 'done_by', public.profile_full_name(rs.done_by), 'done_at', rs.done_at,
                                 'released_by', public.profile_full_name(rs.released_by), 'released_at', rs.released_at,
                                 'release_role', rs.release_role, 'release_comment', rs.release_comment) ORDER BY rs.ord)
@@ -164,7 +165,8 @@ BEGIN
           'verified_by', public.profile_full_name(ls.verified_by), 'verified_at', ls.verified_at, 'content_hash', ls.content_hash,
           'items', COALESCE((
             SELECT jsonb_agg(jsonb_build_object('ord', li.ord, 'tag', t.tag_number, 'label', li.label,
-                     'required', li.required_position, 'found', li.found_position, 'critical', li.is_critical, 'remarks', li.remarks,
+                     'required', li.required_position, 'found', li.found_position, 'as_found', li.as_found_position,
+                     'lock_number', li.lock_number, 'seal_number', li.seal_number, 'critical', li.is_critical, 'remarks', li.remarks,
                      'set_by', public.profile_full_name(li.set_by), 'set_at', li.set_at,
                      'verified_by', public.profile_full_name(li.verified_by), 'verified_at', li.verified_at) ORDER BY li.ord)
             FROM lineup_items li LEFT JOIN tags t ON t.id = li.tag_id WHERE li.sheet_id = ls.id), '[]'::jsonb)

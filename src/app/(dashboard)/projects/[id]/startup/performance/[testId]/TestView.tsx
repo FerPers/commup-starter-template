@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -44,6 +45,8 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
   names: Record<string, string>; userId: string; role: string
 }) {
   const t = useTranslations('Startup')
+  // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
+  const { dialog, ask } = useAskDialog()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -79,7 +82,10 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
       router.refresh()
     })
   }
-  const ask = (msg: string, fn: (text: string) => void) => { const v = window.prompt(msg); if (v?.trim()) fn(v.trim()) }
+  const askText = async (title: string, label: string, fn: (text: string) => void) => {
+    const v = await ask({ title, confirmLabel: title, input: { label, minLength: 3 } })
+    if (v) fn(v)
+  }
 
   const setVar = (i: number, patch: Partial<VariableDraft>) => setDraft(d => ({ ...d, variables: d.variables.map((v, j) => (j === i ? { ...v, ...patch } : v)) }))
   const setCrit = (i: number, patch: Partial<CriterionDraft>) => setDraft(d => ({ ...d, criteria: d.criteria.map((c, j) => (j === i ? { ...c, ...patch } : c)) }))
@@ -100,6 +106,7 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
 
   return (
     <div style={{ padding: '24px 16px', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {dialog}
       <div>
         <Link href={root} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {t('tab.performance')} · {project.code}</Link>
         {editingHead ? (
@@ -129,8 +136,8 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
               {/* S11 (E-14): una prueba que ya no aplica se retira (deja de bloquear el gate), con motivo */}
               {lead && test.status !== 'withdrawn' && !liveRun && (
                 <button type="button" style={{ ...btn('outline'), padding: '3px 10px', color: 'var(--danger-700)' }} disabled={isPending}
-                  onClick={() => {
-                    const r = window.prompt(t('perf.withdrawPrompt'))
+                  onClick={async () => {
+                    const r = await ask({ title: t('perf.withdraw'), confirmLabel: t('perf.withdraw'), danger: true, input: { label: t('perf.withdrawPrompt') } })
                     if (r !== null) act(() => withdrawPerformanceTest({ ...ids, reason: r }))
                   }}>{t('perf.withdraw')}</button>
               )}
@@ -182,16 +189,16 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
                   ? <button type="button" style={btn('primary', isPending)} disabled={isPending} onClick={() => act(() => transitionPerformanceRevision({ ...ids, revisionId: shown.id, to: 'approved' }))}>✓ {t('perf.approve')}</button>
                   : <span style={{ ...small, color: '#b45309', alignSelf: 'center' }}>{t('perf.approveOther')}</span>}
                 <button type="button" style={btn('outline', isPending)} disabled={isPending}
-                  onClick={() => ask(t('perf.returnPrompt'), c => act(() => transitionPerformanceRevision({ ...ids, revisionId: shown.id, to: 'draft', comment: c })))}>{t('perf.return')}</button>
+                  onClick={() => void askText(t('perf.return'), t('perf.returnPrompt'), c => act(() => transitionPerformanceRevision({ ...ids, revisionId: shown.id, to: 'draft', comment: c })))}>{t('perf.return')}</button>
               </>
             )}
             {shown.status === 'approved' && !openRev && (
               <button type="button" style={btn('outline', isPending)} disabled={isPending}
-                onClick={() => ask(t('perf.newRevPrompt'), r => act(() => newPerformanceRevision({ ...ids, reason: r }), () => router.push(`${root}/${test.id}`)))}>+ {t('perf.newRev')}</button>
+                onClick={() => void askText(t('perf.newRev'), t('perf.newRevPrompt'), r => act(() => newPerformanceRevision({ ...ids, reason: r }), () => router.push(`${root}/${test.id}`)))}>+ {t('perf.newRev')}</button>
             )}
             {neverApproved && runs.length === 0 && (userId === test.createdBy || ROLE_TIERS.admin.includes(role)) && (
               <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} disabled={isPending}
-                onClick={() => { if (window.confirm(t('perf.deleteConfirm'))) act(() => deletePerformanceTest(ids), () => router.push(root)) }}>{t('perf.delete')}</button>
+                onClick={async () => { if ((await ask({ title: t('perf.delete'), message: t('perf.deleteConfirm'), confirmLabel: t('perf.delete'), danger: true })) !== null) act(() => deletePerformanceTest(ids), () => router.push(root)) }}>{t('perf.delete')}</button>
             )}
           </div>
         )}

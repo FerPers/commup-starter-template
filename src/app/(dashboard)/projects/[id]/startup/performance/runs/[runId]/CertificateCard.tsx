@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { issuePerformanceCertificate, revokePerformanceCertificate, signPerformanceCertificate } from '@/app/actions/performance'
@@ -34,6 +35,8 @@ export default function CertificateCard({ projectId, run, certificate, names, us
   caps: MyCapacities
 }) {
   const t = useTranslations('Startup')
+  // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
+  const { dialog, ask } = useAskDialog()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -63,6 +66,7 @@ export default function CertificateCard({ projectId, run, certificate, names, us
 
   return (
     <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <h2 style={sectionTitle}>{t('perf.cert.title')}</h2>
         <a href={pdfHref} target="_blank" rel="noreferrer" style={{ ...btn('outline'), textDecoration: 'none' }}>{t('perf.cert.pdf')}</a>
@@ -72,7 +76,7 @@ export default function CertificateCard({ projectId, run, certificate, names, us
         certifiable
           ? (lead
               ? <div><button type="button" style={btn('primary', isPending)} disabled={isPending}
-                  onClick={() => { if (window.confirm(t('perf.cert.issueConfirm'))) act(() => issuePerformanceCertificate({ projectId, runId: run.id })) }}>{t('perf.cert.issue')}</button></div>
+                  onClick={async () => { if ((await ask({ title: t('perf.cert.issue'), message: t('perf.cert.issueConfirm'), confirmLabel: t('perf.cert.issue') })) !== null) act(() => issuePerformanceCertificate({ projectId, runId: run.id })) }}>{t('perf.cert.issue')}</button></div>
               : <span style={small}>{t('perf.cert.leadIssues')}</span>)
           : <span style={small}>{t('perf.cert.notCertifiable')}</span>
       )}
@@ -92,7 +96,7 @@ export default function CertificateCard({ projectId, run, certificate, names, us
                   ? <div style={{ ...small, marginTop: 4 }} suppressHydrationWarning>✓ {who(s.by)}{s.company ? ` · ${s.company}` : ''}<br />{when(s.at)}</div>
                   : s.cap !== 'commissioning' && canSignCertificate(certificate, s.cap, caps, userId)
                     ? <button type="button" style={{ ...btn('primary', isPending), marginTop: 6 }} disabled={isPending}
-                        onClick={() => { if (window.confirm(t('perf.cert.signConfirm'))) act(() => signPerformanceCertificate({ projectId, certificateId: certificate.id, capacity: s.cap as 'operations' | 'client' })) }}>
+                        onClick={async () => { if ((await ask({ title: t('perf.cert.sign'), message: t('perf.cert.signConfirm'), confirmLabel: t('perf.cert.sign') })) !== null) act(() => signPerformanceCertificate({ projectId, certificateId: certificate.id, capacity: s.cap as 'operations' | 'client' })) }}>
                         {t('perf.cert.sign')}
                       </button>
                     : <div style={{ ...small, marginTop: 4 }}>{certificate.status === 'pending_signatures' ? t(s.cap === 'client' ? 'perf.cert.waitClient' : 'perf.cert.waitOps') : '—'}</div>}
@@ -105,7 +109,7 @@ export default function CertificateCard({ projectId, run, certificate, names, us
           {lead && (certificate.status === 'pending_signatures' || certificate.status === 'accepted') && (
             <div>
               <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} disabled={isPending}
-                onClick={() => { const r = window.prompt(t('perf.cert.revokePrompt')); if (r?.trim()) act(() => revokePerformanceCertificate({ projectId, certificateId: certificate.id, reason: r.trim() })) }}>
+                onClick={async () => { const r = await ask({ title: t('perf.cert.revoke'), confirmLabel: t('perf.cert.revoke'), danger: true, input: { label: t('perf.cert.revokePrompt'), minLength: 3 } }); if (r) act(() => revokePerformanceCertificate({ projectId, certificateId: certificate.id, reason: r })) }}>
                 {t('perf.cert.revoke')}
               </button>
             </div>

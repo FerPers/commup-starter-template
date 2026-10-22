@@ -59,6 +59,7 @@ async function sendEntry(e: StartupEntry): Promise<StartupSendResult> {
   }
   const res = await setLineupItem({
     projectId: e.projectId, sheetId: e.sheetId, itemId: e.itemId, found: e.found, remarks: e.remarks ?? undefined,
+    asFound: e.asFound ?? null, lockNumber: e.lockNumber ?? null, sealNumber: e.sealNumber ?? null,
     capturedAt: e.capturedAt, check: !e.force, expectedSetAt: e.expectedSetAt, expectedVerifiedAt: e.expectedVerifiedAt,
   })
   if (res.error) return { error: res.error, conflict: res.conflict ?? null }

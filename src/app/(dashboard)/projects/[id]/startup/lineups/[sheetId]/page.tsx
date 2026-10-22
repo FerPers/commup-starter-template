@@ -18,7 +18,7 @@ export default async function LineupPage({ params }: { params: Promise<{ id: str
 
   const [{ data: items }, { data: members }, { data: subs }, { data: stale }] = await Promise.all([
     supabase.from('lineup_items')
-      .select('id, ord, tag_id, label, required_position, required_note, is_critical, found_position, remarks, set_by, set_at, verified_by, verified_at, tags(tag_number, description)')
+      .select('id, ord, tag_id, label, required_position, required_note, is_critical, found_position, as_found_position, lock_number, seal_number, remarks, set_by, set_at, verified_by, verified_at, tags(tag_number, description, pid_drawing)')
       .eq('sheet_id', sheetId).order('ord'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
     supabase.from('subsystems').select('id').eq('system_id', sheet.system_id),
@@ -55,11 +55,12 @@ export default async function LineupPage({ params }: { params: Promise<{ id: str
         issuedAt: sheet.issued_at, hash: sheet.content_hash, stale: !!stale, createdBy: sheet.created_by,
       }}
       items={(items ?? []).map(i => {
-        const tag = i.tags as unknown as { tag_number: string; description: string | null } | null
+        const tag = i.tags as unknown as { tag_number: string; description: string | null; pid_drawing: string | null } | null
         return {
           id: i.id, ord: i.ord, tag_id: i.tag_id, tag_number: tag?.tag_number ?? null, description: tag?.description ?? null, label: i.label ?? '',
           required_position: i.required_position as ValvePosition | null, required_note: i.required_note ?? '', is_critical: i.is_critical,
           found_position: i.found_position as ValvePosition | null, remarks: i.remarks, set_by: i.set_by, set_at: i.set_at, verified_by: i.verified_by, verified_at: i.verified_at,
+          as_found_position: i.as_found_position as ValvePosition | null, lock_number: i.lock_number, seal_number: i.seal_number, pid: tag?.pid_drawing ?? null,
         }
       })}
       registers={[...regs.values()].sort((a, b) => a.number.localeCompare(b.number))}

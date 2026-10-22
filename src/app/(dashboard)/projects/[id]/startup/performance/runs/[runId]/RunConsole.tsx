@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import type { MyCapacities } from '@/lib/constants/capacities'
 import { useState, useSyncExternalStore, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -63,6 +64,8 @@ export default function RunConsole({ project, test, run, rev, variables, points,
   names: Record<string, string>; userId: string; role: string; caps: MyCapacities
 }) {
   const t = useTranslations('Startup')
+  // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
+  const { dialog, ask } = useAskDialog()
   const router = useRouter()
   const now = useSyncExternalStore(subscribe, snapshot, serverSnapshot)
   const [isPending, startTransition] = useTransition()
@@ -110,6 +113,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
 
   return (
     <div style={{ padding: '24px 16px', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {dialog}
       <div>
         <Link href={`${root}/${test.id}`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {test.number} · {test.title}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
@@ -169,9 +173,9 @@ export default function RunConsole({ project, test, run, rev, variables, points,
             {run.status === 'stabilizing' && <button type="button" style={btn('primary', isPending)} disabled={isPending}
               onClick={() => act(() => advancePerformanceRun({ ...ids, to: 'formal', at: localToIso(at), comment: note }), () => { setAt(''); setNote('') })}>▶ {t('perf.startFormal')}</button>}
             {run.status === 'formal' && <button type="button" style={btn('primary', isPending)} disabled={isPending}
-              onClick={() => { if (window.confirm(t('perf.closeConfirm'))) act(() => closePerformanceRun({ ...ids, at: localToIso(at), reason: note }), res => { setAt(''); setNote(''); setNotice(t('perf.frozenRows', { n: res.rows ?? 0 })) }) }}>■ {t('perf.close')}</button>}
+              onClick={async () => { if ((await ask({ title: t('perf.close'), message: t('perf.closeConfirm'), confirmLabel: t('perf.close') })) !== null) act(() => closePerformanceRun({ ...ids, at: localToIso(at), reason: note }), res => { setAt(''); setNote(''); setNotice(t('perf.frozenRows', { n: res.rows ?? 0 })) }) }}>■ {t('perf.close')}</button>}
             <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} disabled={isPending}
-              onClick={() => { const r = window.prompt(t('perf.abortPrompt')); if (r?.trim()) act(() => abortPerformanceRun({ ...ids, reason: r.trim() })) }}>{t('perf.abort')}</button>
+              onClick={async () => { const r = await ask({ title: t('perf.abort'), confirmLabel: t('perf.abort'), danger: true, input: { label: t('perf.abortPrompt'), minLength: 3 } }); if (r) act(() => abortPerformanceRun({ ...ids, reason: r })) }}>{t('perf.abort')}</button>
           </div>
         )}
         {(run.status === 'closed' || run.status === 'evaluated') && (
@@ -244,7 +248,10 @@ export default function RunConsole({ project, test, run, rev, variables, points,
                         onClick={() => act(() => endPerformanceDisturbance({ ...ids, disturbanceId: d.id }))}>{t('perf.dist.end')}</button>}
                       {lead && (run.status === 'formal' || run.status === 'closed') && (
                         <button type="button" style={{ ...btn('outline'), padding: '4px 8px', marginLeft: 4 }} disabled={isPending}
-                          onClick={() => { const r = window.prompt(t(d.excluded ? 'perf.dist.includePrompt' : 'perf.dist.excludePrompt')); if (r?.trim()) act(() => setPerformanceDisturbanceExclusion({ ...ids, disturbanceId: d.id, excluded: !d.excluded, reason: r.trim() })) }}>
+                          onClick={async () => {
+                            const r = await ask({ title: t(d.excluded ? 'perf.dist.include' : 'perf.dist.exclude'), confirmLabel: t(d.excluded ? 'perf.dist.include' : 'perf.dist.exclude'), input: { label: t(d.excluded ? 'perf.dist.includePrompt' : 'perf.dist.excludePrompt'), minLength: 3 } })
+                            if (r) act(() => setPerformanceDisturbanceExclusion({ ...ids, disturbanceId: d.id, excluded: !d.excluded, reason: r }))
+                          }}>
                           {t(d.excluded ? 'perf.dist.include' : 'perf.dist.exclude')}
                         </button>
                       )}

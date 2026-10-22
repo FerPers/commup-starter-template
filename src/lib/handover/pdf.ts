@@ -246,7 +246,7 @@ export async function renderHandoverPdf(data: HandoverPackageData, opts: Handove
         table(
           [{ w: 28, label: '#' }, { w: 170, label: T.step[L] }, { w: 70, label: T.expected[L] }, { w: 65, label: T.actual[L] }, { w: 95, label: T.doneBy[L] }, { w: 95.28, label: T.holdBy[L] }],
           p.last_run.steps.map(s => [
-            String(s.ord), `${s.hold ? '[HOLD] ' : ''}${s.action}`, s.expected ?? '', s.actual ?? (s.status === 'na' ? 'N/A' : ''),
+            String(s.ord), `${s.hold ? '[HOLD] ' : ''}${s.action}`, s.expected ?? '', `${s.actual ?? (s.status === 'na' ? 'N/A' : '')}${s.out_of_range ? ' (!)' : ''}`,
             s.done_by ? `${s.done_by} ${day(s.done_at)}` : '—', s.released_by ? `${s.released_by} ${day(s.released_at)}` : (s.hold ? '—' : ''),
           ]),
         )
@@ -266,7 +266,7 @@ export async function renderHandoverPdf(data: HandoverPackageData, opts: Handove
         table(
           [{ w: 28, label: '#' }, { w: 175, label: T.item[L] }, { w: 120, label: T.position[L] }, { w: 100, label: T.doneBy[L] }, { w: 100.28, label: T.verifiedBy[L] }],
           ls.items.map(i => [
-            String(i.ord), `${i.tag ? `${i.tag} ` : ''}${i.label}${i.critical ? ` (${T.critical[L]})` : ''}`, `${i.required} / ${i.found ?? '—'}`,
+            String(i.ord), `${i.tag ? `${i.tag} ` : ''}${i.label}${i.critical ? ` (${T.critical[L]})` : ''}`, `${i.required} / ${i.as_found ? `${i.as_found} → ` : ''}${i.found ?? '—'}${i.lock_number ? ` · ${i.lock_number}` : ''}${i.seal_number ? ` · ${i.seal_number}` : ''}`,
             i.set_by ? `${i.set_by} ${day(i.set_at)}` : '—', i.verified_by ? `${i.verified_by} ${day(i.verified_at)}` : '—',
           ]),
         )

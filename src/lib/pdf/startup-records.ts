@@ -47,7 +47,10 @@ const T = {
   purpose:     { es: 'Propósito', en: 'Purpose' },
   item:        { es: 'Válvula / ítem', en: 'Valve / item' },
   required:    { es: 'Requerida', en: 'Required' },
-  found:       { es: 'Encontrada', en: 'Found' },
+  found:       { es: 'Encontrada → dejada', en: 'As found → as left' },
+  lock:        { es: 'Candado', en: 'Lock' },
+  seal:        { es: 'Sello', en: 'Seal' },
+  outOfRange:  { es: 'FUERA DE RANGO', en: 'OUT OF RANGE' },
   setBy:       { es: 'Puso / hora', en: 'Set by / time' },
   verifiedBy:  { es: 'Verificó / hora', en: 'Verified by / time' },
   critical:    { es: 'CRÍTICA — verificación independiente', en: 'CRITICAL — independent verification' },
@@ -143,6 +146,8 @@ export type RunPdfInput = Common & {
   abortReason: string | null
   steps: {
     ord: number; action: string; tag: string | null; responsible: string | null; expected: string | null; stop: string | null
+    /** S25b (E-23) */
+    range?: string | null; outOfRange?: boolean
     hold: boolean; holdCapacity: string | null; status: string; actual: string | null; comment: string | null
     doneBy: string | null; doneAt: string | null; releasedBy: string | null; releasedAt: string | null; releaseComment?: string | null
   }[]
@@ -187,8 +192,9 @@ export async function renderRunPdf(x: RunPdfInput): Promise<Uint8Array> {
     r.tableRowWrapped(cols, [
       { text: String(s.ord), bold: true },
       { text: stepText, color: s.hold ? COLOR.amber : COLOR.text },
-      s.expected ?? '',
-      { text: s.status === 'na' ? 'N/A' : s.actual ?? (done ? '' : blank), bold: true },
+      [s.expected, s.range].filter(Boolean).join('\n'),
+      s.outOfRange ? { text: `${s.actual ?? ''}\n${T.outOfRange[L]}`, bold: true, color: COLOR.red }
+        : { text: s.status === 'na' ? 'N/A' : s.actual ?? (done ? '' : blank), bold: true },
       done ? `${s.doneBy ?? '—'}\n${at(s.doneAt)}` : blank,
       s.hold ? (s.releasedBy ? `${s.releasedBy}\n${at(s.releasedAt)}${s.releaseComment ? `\n${T.releaseNote[L]}: ${s.releaseComment}` : ''}` : blank) : '',
     ], { repeatHeader: true, minHeight: done ? 0 : 26, bg: s.status === 'pending' ? undefined : s.hold ? COLOR.amberBg : undefined })
@@ -230,7 +236,10 @@ export type LineupPdfInput = Common & {
   stale: boolean
   items: {
     ord: number; tag: string | null; description: string | null; label: string; required: string | null; requiredNote: string | null
-    critical: boolean; found: string | null; remarks: string | null; setBy: string | null; setAt: string | null; verifiedBy: string | null; verifiedAt: string | null
+    critical: boolean; found: string | null; remarks: string | null
+    /** S25b (E-21) */
+    asFound?: string | null; lock?: string | null; seal?: string | null
+    setBy: string | null; setAt: string | null; verifiedBy: string | null; verifiedAt: string | null
   }[]
 }
 
@@ -268,7 +277,13 @@ export async function renderLineupPdf(x: LineupPdfInput): Promise<Uint8Array> {
       { text: String(i.ord), bold: true },
       { text: item, color: i.critical ? COLOR.red : COLOR.text },
       i.required ? { text: x.label(`position.${i.required}`), bold: true } : blank,
-      i.found ? { text: x.label(`position.${i.found}`), bold: true, color: mismatch ? COLOR.red : COLOR.green } : blank,
+      i.found ? {
+        text: [
+          `${i.asFound ? `${x.label(`position.${i.asFound}`)} → ` : ''}${x.label(`position.${i.found}`)}`,
+          i.lock && `${T.lock[L]} ${i.lock}`, i.seal && `${T.seal[L]} ${i.seal}`,
+        ].filter(Boolean).join('\n'),
+        bold: true, color: mismatch ? COLOR.red : COLOR.green,
+      } : blank,
       i.setBy ? `${i.setBy}\n${at(i.setAt)}` : blank,
       i.critical ? (i.verifiedBy ? `${i.verifiedBy}\n${at(i.verifiedAt)}` : blank) : '',
     ], { repeatHeader: true, minHeight: i.found ? 0 : 24 })

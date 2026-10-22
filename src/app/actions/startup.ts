@@ -84,6 +84,9 @@ export const saveProcedureRevision = withAuth(
       is_hold_point: !!s.is_hold_point,
       hold_capacity: HOLD_CAPACITIES.includes(s.hold_capacity) ? s.hold_capacity : DEFAULT_HOLD_CAPACITY,
       stop_criteria: s.stop_criteria?.trim().slice(0, 2000) ?? '',
+      expected_min: s.expected_min?.trim().slice(0, 30) ?? '',
+      expected_max: s.expected_max?.trim().slice(0, 30) ?? '',
+      expected_unit: s.expected_unit?.trim().slice(0, 30) ?? '',
     }))
     const { error } = await ctx.supabase.rpc('save_procedure_revision', {
       p_revision_id: input.revisionId, p_sections: sections as Json, p_steps: steps as Json,
@@ -274,15 +277,20 @@ export const setLineupItem = withAuth(
     ctx,
     input: {
       projectId: string; sheetId: string; itemId: string; found: ValvePosition; remarks?: string
+      /** S25b (E-21): como se encontró (opcional), candado y sello (uno obligatorio si queda LO/LC). */
+      asFound?: ValvePosition | null; lockNumber?: string | null; sealNumber?: string | null
       capturedAt?: string; check?: boolean; expectedSetAt?: string | null; expectedVerifiedAt?: string | null
     },
   ): Promise<{ status?: 'applied' | 'redundant'; error?: string; conflict?: LineupRemote }> => {
     if (!VALVE_POSITIONS.includes(input.found)) return { error: 'Posición no válida' }
+    if (input.asFound && !VALVE_POSITIONS.includes(input.asFound)) return { error: 'Posición encontrada no válida' }
     if (!(await owned(ctx.supabase, 'lineup_items', input.itemId, input.projectId))) return { error: 'Fila no encontrada' }
     const { data, error } = await ctx.supabase.rpc('set_lineup_item', {
       p_item_id: input.itemId, p_found: input.found, p_remarks: input.remarks?.trim() ? input.remarks.trim().slice(0, 1000) : undefined,
       p_captured_at: capturedParam(input.capturedAt), p_check_expected: !!input.check,
       p_expected_set_at: input.expectedSetAt ?? undefined, p_expected_verified_at: input.expectedVerifiedAt ?? undefined,
+      p_as_found: input.asFound ?? undefined, p_lock_number: input.lockNumber?.trim() ? input.lockNumber.trim().slice(0, 60) : undefined,
+      p_seal_number: input.sealNumber?.trim() ? input.sealNumber.trim().slice(0, 60) : undefined,
     })
     if (error) {
       if (error.code !== 'CU409') return { error: error.message }

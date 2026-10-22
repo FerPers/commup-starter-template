@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { fallbackCapacities } from '@/lib/constants/capacities'
 import {
-  canReleaseHold, currentLevel, DEFAULT_HOLD_CAPACITY, DEFAULT_NON_DISPENSABLE, emptyStep, isBlockingGap, lineupItemState, lineupProgress, needsBackdateReason, nextRunStep, PROCEDURE_SECTIONS, runProgress, TRANSFER_CHECK_KEYS, transferNonDispensable,
+  canReleaseHold, checkRange, currentLevel, DEFAULT_HOLD_CAPACITY, DEFAULT_NON_DISPENSABLE, emptyStep, filterLineupItems, isBlockingGap, lineupItemState, lineupProgress, needsBackdateReason, needsLockOrSeal, nextRunStep, parseFieldNumber, PROCEDURE_SECTIONS, rangeLabel, runProgress, stopChoices, textOrNull, TRANSFER_CHECK_KEYS, transferNonDispensable,
 } from './catalog'
 
 describe('arranque — procedimientos', () => {
@@ -126,5 +126,45 @@ describe('S25a: reglas de gobernanza de arranque', () => {
   it('hold point por defecto = SQL', () => {
     expect(DEFAULT_HOLD_CAPACITY).toBe('commissioning')
     expect(emptyStep().hold_capacity).toBe(DEFAULT_HOLD_CAPACITY)
+  })
+})
+
+describe('S25b: UX de campo', () => {
+  it('rango esperado igual que complete_run_step (coma decimal, solo números)', () => {
+    expect(checkRange('15', 11, 12)).toBe('out')
+    expect(checkRange('11,8', 11, 12)).toBe('in')
+    expect(checkRange('abierta', 11, 12)).toBe('na')
+    expect(checkRange('10', 11, null)).toBe('out')
+    expect(checkRange('99', null, null)).toBe('na')
+    expect(readFileSync('supabase/functions-sql/complete_run_step.sql', 'utf8')).toContain("'^-?[0-9]+([.,][0-9]+)?$'")
+    expect(parseFieldNumber(' -3,5 ')).toBe(-3.5)
+  })
+
+  it('etiqueta de rango y criterios de parada', () => {
+    expect(rangeLabel(11, 12, 'barg')).toBe('11–12 barg')
+    expect(rangeLabel(null, 5, null)).toBe('≤ 5')
+    expect(stopChoices('- Vibración > 7 mm/s\n\nFuga visible', [{ ord: 3, stopCriteria: 'Fuga visible' }, { ord: 4, stopCriteria: null }], n => `Paso ${n}`))
+      .toEqual(['Vibración > 7 mm/s', 'Fuga visible', 'Paso 3: Fuga visible'])
+  })
+
+  it('LO/LC exigen candado o sello (= set_lineup_item)', () => {
+    expect(needsLockOrSeal('locked_open')).toBe(true)
+    expect(needsLockOrSeal('open')).toBe(false)
+    expect(readFileSync('supabase/functions-sql/set_lineup_item.sql', 'utf8')).toContain("p_found IN ('locked_open', 'locked_closed')")
+    expect(textOrNull('  ')).toBeNull()
+    expect(textOrNull(' C-12 ')).toBe('C-12')
+  })
+
+  it('filtros de una hoja larga', () => {
+    const base = { required_position: 'open' as const, verified_at: null, description: null, pid: null }
+    const items = [
+      { ...base, tag_number: 'XV-101', label: '', is_critical: true, found_position: null, set_at: null },
+      { ...base, tag_number: 'HV-200', label: '', is_critical: false, found_position: 'closed' as const, set_at: 'x', pid: 'PID-002' },
+      { ...base, tag_number: 'XV-102', label: '', is_critical: true, found_position: 'open' as const, set_at: 'x' },
+    ]
+    expect(filterLineupItems(items, 'pending', '').map(i => i.tag_number)).toEqual(['XV-101'])
+    expect(filterLineupItems(items, 'misaligned', '').map(i => i.tag_number)).toEqual(['HV-200'])
+    expect(filterLineupItems(items, 'critical', '').map(i => i.tag_number)).toEqual(['XV-101', 'XV-102'])
+    expect(filterLineupItems(items, 'all', 'pid-002').map(i => i.tag_number)).toEqual(['HV-200'])
   })
 })

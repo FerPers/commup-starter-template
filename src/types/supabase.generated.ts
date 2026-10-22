@@ -2146,21 +2146,27 @@ export type Database = {
         Row: {
           category: string | null
           code: string
+          critical_valve: boolean
           id: string
+          lineup_candidate: boolean
           name: string
           org_id: string
         }
         Insert: {
           category?: string | null
           code: string
+          critical_valve?: boolean
           id?: string
+          lineup_candidate?: boolean
           name: string
           org_id: string
         }
         Update: {
           category?: string | null
           code?: string
+          critical_valve?: boolean
           id?: string
+          lineup_candidate?: boolean
           name?: string
           org_id?: string
         }
@@ -3414,15 +3420,18 @@ export type Database = {
       }
       lineup_items: {
         Row: {
+          as_found_position: string | null
           found_position: string | null
           id: string
           is_critical: boolean
           label: string | null
+          lock_number: string | null
           ord: number
           project_id: string
           remarks: string | null
           required_note: string | null
           required_position: string | null
+          seal_number: string | null
           set_at: string | null
           set_by: string | null
           sheet_id: string
@@ -3432,15 +3441,18 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          as_found_position?: string | null
           found_position?: string | null
           id?: string
           is_critical?: boolean
           label?: string | null
+          lock_number?: string | null
           ord: number
           project_id: string
           remarks?: string | null
           required_note?: string | null
           required_position?: string | null
+          seal_number?: string | null
           set_at?: string | null
           set_by?: string | null
           sheet_id: string
@@ -3450,15 +3462,18 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          as_found_position?: string | null
           found_position?: string | null
           id?: string
           is_critical?: boolean
           label?: string | null
+          lock_number?: string | null
           ord?: number
           project_id?: string
           remarks?: string | null
           required_note?: string | null
           required_position?: string | null
+          seal_number?: string | null
           set_at?: string | null
           set_by?: string | null
           sheet_id?: string
@@ -5918,6 +5933,7 @@ export type Database = {
           done_at: string | null
           done_by: string | null
           ord: number
+          out_of_range: boolean
           project_id: string
           release_comment: string | null
           release_role: string | null
@@ -5934,6 +5950,7 @@ export type Database = {
           done_at?: string | null
           done_by?: string | null
           ord: number
+          out_of_range?: boolean
           project_id: string
           release_comment?: string | null
           release_role?: string | null
@@ -5950,6 +5967,7 @@ export type Database = {
           done_at?: string | null
           done_by?: string | null
           ord?: number
+          out_of_range?: boolean
           project_id?: string
           release_comment?: string | null
           release_role?: string | null
@@ -6116,6 +6134,9 @@ export type Database = {
       procedure_steps: {
         Row: {
           action: string
+          expected_max: number | null
+          expected_min: number | null
+          expected_unit: string | null
           expected_value: string | null
           hold_capacity: string | null
           id: string
@@ -6129,6 +6150,9 @@ export type Database = {
         }
         Insert: {
           action: string
+          expected_max?: number | null
+          expected_min?: number | null
+          expected_unit?: string | null
           expected_value?: string | null
           hold_capacity?: string | null
           id?: string
@@ -6142,6 +6166,9 @@ export type Database = {
         }
         Update: {
           action?: string
+          expected_max?: number | null
+          expected_min?: number | null
+          expected_unit?: string | null
           expected_value?: string | null
           hold_capacity?: string | null
           id?: string
@@ -13614,13 +13641,16 @@ export type Database = {
       }
       set_lineup_item: {
         Args: {
+          p_as_found?: string
           p_captured_at?: string
           p_check_expected?: boolean
           p_expected_set_at?: string
           p_expected_verified_at?: string
           p_found: string
           p_item_id: string
+          p_lock_number?: string
           p_remarks?: string
+          p_seal_number?: string
         }
         Returns: string
       }

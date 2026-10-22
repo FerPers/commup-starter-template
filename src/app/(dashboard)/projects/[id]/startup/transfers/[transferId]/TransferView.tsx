@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -33,6 +34,8 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
   canEdit: boolean
 }) {
   const t = useTranslations('Startup')
+  // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
+  const { dialog, ask } = useAskDialog()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -72,6 +75,7 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
 
   return (
     <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <Link href={`/projects/${project.id}/startup/operations`} style={linkStyle}>← {t('tab.operations')} · {project.code}</Link>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
@@ -126,7 +130,7 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
             </div>
             {!s.by && canSign.includes(s.cap) && (
               <button type="button" style={btn('primary', isPending || !allAcked)} disabled={isPending || !allAcked} title={allAcked ? undefined : t('ops.ackFirst')}
-                onClick={() => { if (confirm(t('ops.confirmSign', { capacity: t(`capacity.${s.cap}`) }))) run(
+                onClick={async () => { if ((await ask({ title: t('ops.sign'), message: t('ops.confirmSign', { capacity: t(`capacity.${s.cap}`) }), confirmLabel: t('ops.sign') })) !== null) run(
                   () => signOwnershipTransfer({ projectId: project.id, transferId: tr.id, capacity: s.cap, acknowledged: [...ack] }),
                   res => { if (res.handoverError) setWarn(t('ops.handoverFailed', { error: res.handoverError })) },
                 ) }}>{t('ops.sign')}</button>

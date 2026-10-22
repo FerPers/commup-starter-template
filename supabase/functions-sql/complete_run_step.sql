@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION public.complete_run_step(p_run_id uuid, p_step_id uui
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 DECLARE r procedure_runs%ROWTYPE; rs procedure_run_steps%ROWTYPE; st procedure_steps%ROWTYPE; v_role text; v_to text;
-        v_comment text := public.mgmt_text(p_comment, 2000); v_floor timestamptz; v_at timestamptz;
+        v_comment text := public.mgmt_text(p_comment, 2000); v_floor timestamptz; v_at timestamptz; v_num numeric; v_oor boolean := false;
 BEGIN
   SELECT * INTO r FROM procedure_runs WHERE id = p_run_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Ejecución no encontrada' USING ERRCODE = 'P0002'; END IF;
@@ -26,13 +26,22 @@ BEGIN
     IF st.is_hold_point THEN RAISE EXCEPTION 'Un hold point no puede marcarse N/A' USING ERRCODE = 'P0001'; END IF;
     IF v_comment IS NULL OR length(v_comment) < 3 THEN RAISE EXCEPTION 'Indica por qué el paso no aplica' USING ERRCODE = '22023'; END IF;
     v_to := 'na';
-  ELSIF st.is_hold_point THEN v_to := 'at_hold';
-  ELSE v_to := 'done';
+  ELSE
+    -- S25 (E-23): con rango esperado, un valor numérico fuera de rango exige explicarlo (y queda marcado).
+    IF (st.expected_min IS NOT NULL OR st.expected_max IS NOT NULL) AND btrim(COALESCE(p_actual, '')) ~ '^-?[0-9]+([.,][0-9]+)?$' THEN
+      v_num := replace(btrim(p_actual), ',', '.')::numeric;
+      v_oor := (st.expected_min IS NOT NULL AND v_num < st.expected_min) OR (st.expected_max IS NOT NULL AND v_num > st.expected_max);
+      IF v_oor AND (v_comment IS NULL OR length(v_comment) < 3) THEN
+        RAISE EXCEPTION 'El valor % está fuera del rango esperado: explica por qué se continúa (o detén la ejecución)', btrim(p_actual) USING ERRCODE = '22023';
+      END IF;
+    END IF;
+    v_to := CASE WHEN st.is_hold_point THEN 'at_hold' ELSE 'done' END;
   END IF;
   SELECT GREATEST(r.started_at, MAX(GREATEST(done_at, COALESCE(released_at, done_at)))) INTO v_floor
     FROM procedure_run_steps WHERE run_id = p_run_id AND ord < rs.ord;
   v_at := public.startup_field_time(p_captured_at, COALESCE(v_floor, r.started_at));
   UPDATE procedure_run_steps SET status = v_to, actual_value = public.mgmt_text(p_actual, 500), comment = v_comment, done_by = auth.uid(), done_at = v_at,
+         out_of_range = v_oor,
          synced_at = CASE WHEN p_captured_at IS NULL THEN NULL ELSE now() END
    WHERE run_id = p_run_id AND step_id = p_step_id;
   UPDATE procedure_runs SET status = CASE WHEN v_to = 'at_hold' THEN 'at_hold' ELSE status END, updated_at = now() WHERE id = p_run_id;

@@ -86,6 +86,8 @@ export type HandoverRunStep = {
   release_role: string | null
   /** S25 (E-09) */
   release_comment?: string | null
+  /** S25b (E-23) */
+  expected_min?: number | null; expected_max?: number | null; expected_unit?: string | null; out_of_range?: boolean
 }
 
 export type HandoverProcedure = {
@@ -130,6 +132,8 @@ export type HandoverLineup = {
   content_hash: string | null
   items: {
     ord: number; tag: string | null; label: string; required: string; found: string | null; critical: boolean; remarks: string | null
+    /** S25b (E-21) */
+    as_found?: string | null; lock_number?: string | null; seal_number?: string | null
     set_by: string | null; set_at: string | null; verified_by: string | null; verified_at: string | null
   }[]
 }

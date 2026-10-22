@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -35,6 +36,8 @@ export default function EventDetail({ project, event: e, params, series, names, 
   caps: MyCapacities
 }) {
   const t = useTranslations('Startup')
+  // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
+  const { dialog, ask } = useAskDialog()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -56,9 +59,9 @@ export default function EventDetail({ project, event: e, params, series, names, 
       router.refresh()
     })
   }
-  function doVoid() {
-    const reason = window.prompt(t('events.voidPrompt'))
-    if (reason?.trim()) act(() => voidStartupEvent({ ...ids, reason }))
+  async function doVoid() {
+    const reason = await ask({ title: t('events.void'), confirmLabel: t('events.void'), danger: true, input: { label: t('events.voidPrompt'), minLength: 10 } })
+    if (reason) act(() => voidStartupEvent({ ...ids, reason }))
   }
 
   const fmtVal = (p: Param) => (p.value !== null ? p.value.toLocaleString(undefined, { maximumFractionDigits: 3 }) : p.value_text ?? '—')
@@ -69,6 +72,7 @@ export default function EventDetail({ project, event: e, params, series, names, 
 
   return (
     <div style={{ padding: '24px 16px', maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {dialog}
       <div>
         <Link href={`${root}/events`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {t('tab.events')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import {
   deleteProcedureDraft, fieldVerifyProcedure, newProcedureRevision, saveProcedureRevision, startProcedureRun,
   transitionProcedureRevision, updateProcedure,
@@ -28,7 +29,7 @@ const REV_TONE: Record<string, 'muted' | 'blue' | 'green' | 'struck'> = { draft:
 const RUN_TONE: Record<string, 'amber' | 'red' | 'green' | 'struck' | 'blue'> = { in_progress: 'blue', at_hold: 'amber', stopped: 'red', completed: 'green', aborted: 'struck' }
 const LEADERS = ROLE_TIERS.editor
 
-export default function ProcedureEditor({ project, procedure, revisions, revision, steps: initialSteps, runs, systems, names, userId, role, documentsSlot }: {
+export default function ProcedureEditor({ project, procedure, revisions, revision, steps: initialSteps, runs, systems, names, userId, role, documentsSlot, verifiedLineups = 0 }: {
   project: { id: string; code: string; name: string }
   procedure: { id: string; number: string; title: string; kind: string; systemId: string | null; currentRevisionId: string | null }
   revisions: { id: string; rev: number; status: string }[]
@@ -41,6 +42,8 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
   role: string
   /** Fase 8: documentos referenciados por la revisión (bloquea enviar/aprobar con una revisión superada). */
   documentsSlot?: React.ReactNode
+  /** S25b (E-32): line-ups verificados vigentes vinculados a este procedimiento. */
+  verifiedLineups?: number
 }) {
   const t = useTranslations('Startup')
   const router = useRouter()
@@ -53,6 +56,8 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
   const [reason, setReason] = useState(revision.changeReason ?? '')
   const [open, setOpen] = useState<Set<string>>(new Set(['purpose', 'safety', 'sequence']))
   const [runSystem, setRunSystem] = useState(procedure.systemId ?? '')
+  // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
+  const { dialog, ask } = useAskDialog()
 
   const isClient = role === 'client'
   const editable = revision.status === 'draft' && !isClient
@@ -81,27 +86,29 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
     return saveContent()
   }
   function submit() { run(async () => { const s = await saveAll(); if (s.error) return s; return transitionProcedureRevision({ ...ids, to: 'in_review' }) }) }
-  function giveBack() {
-    const c = window.prompt(t('editor.returnPrompt'))
-    if (!c?.trim()) return
-    run(() => transitionProcedureRevision({ ...ids, to: 'draft', comment: c }))
+  async function giveBack() {
+    const c = await ask({ title: t('editor.returnTitle'), confirmLabel: t('editor.return'), input: { label: t('editor.returnPrompt'), minLength: 3 } })
+    if (c) run(() => transitionProcedureRevision({ ...ids, to: 'draft', comment: c }))
   }
-  function approve() { if (window.confirm(t('editor.approveConfirm'))) run(() => transitionProcedureRevision({ ...ids, to: 'approved' })) }
-  function fieldVerify() {
-    const note = window.prompt(t('editor.walkdownPrompt'))
-    if (!note?.trim()) return
-    run(() => fieldVerifyProcedure({ ...ids, note }))
+  async function approve() {
+    if ((await ask({ title: t('editor.approve'), message: t('editor.approveConfirm'), confirmLabel: t('editor.approve') })) !== null) run(() => transitionProcedureRevision({ ...ids, to: 'approved' }))
   }
-  function newRev() {
-    const r = window.prompt(t('editor.newRevPrompt'))
-    if (!r?.trim()) return
-    run(() => newProcedureRevision({ projectId: project.id, procedureId: procedure.id, reason: r }), res => router.push(`${root}/procedures/${procedure.id}?rev=${res.id}`))
+  async function fieldVerify() {
+    const note = await ask({ title: t('editor.fieldVerify'), confirmLabel: t('editor.fieldVerify'), input: { label: t('editor.walkdownPrompt'), minLength: 3 } })
+    if (note) run(() => fieldVerifyProcedure({ ...ids, note }))
   }
-  function startRun() {
+  async function newRev() {
+    const r = await ask({ title: t('editor.newRev'), confirmLabel: t('editor.newRev'), input: { label: t('editor.newRevPrompt'), minLength: 3 } })
+    if (r) run(() => newProcedureRevision({ projectId: project.id, procedureId: procedure.id, reason: r }), res => router.push(`${root}/procedures/${procedure.id}?rev=${res.id}`))
+  }
+  /** S25b (E-32): avisa antes de ejecutar sin verificación en campo o sin line-up verificado vinculado. */
+  async function startRun() {
+    const warnings = [!revision.fieldVerifiedAt && t('editor.warnNotFieldVerified'), verifiedLineups === 0 && t('editor.warnNoLineup')].filter(Boolean) as string[]
+    if (warnings.length && (await ask({ title: t('editor.startRun'), message: `${warnings.join('\n')}\n\n${t('editor.startAnyway')}`, confirmLabel: t('editor.startRun') })) === null) return
     run(() => startProcedureRun({ projectId: project.id, procedureId: procedure.id, systemId: runSystem || null }), res => router.push(`${root}/runs/${res.id}`))
   }
-  function remove() {
-    if (!window.confirm(t('editor.deleteConfirm'))) return
+  async function remove() {
+    if ((await ask({ title: t('editor.delete'), message: t('editor.deleteConfirm'), confirmLabel: t('editor.delete'), danger: true })) === null) return
     run(() => deleteProcedureDraft({ projectId: project.id, procedureId: procedure.id }), () => router.push(root))
   }
 
@@ -115,6 +122,7 @@ export default function ProcedureEditor({ project, procedure, revisions, revisio
 
   return (
     <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <Link href={root} style={linkStyle}>← {t('title')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
@@ -251,6 +259,13 @@ function StepsEditor({ projectId, steps, editable, setStep, move, add, remove }:
           <div style={grid}>
             <Field text={t('step.responsible')}><input style={input} value={s.responsible} disabled={!editable} onChange={e => setStep(i, { responsible: e.target.value })} /></Field>
             <Field text={t('step.expected')}><input style={input} value={s.expected_value} disabled={!editable} onChange={e => setStep(i, { expected_value: e.target.value })} /></Field>
+            <Field text={t('step.range')}>
+              <span style={{ display: 'flex', gap: 6 }}>
+                <input style={{ ...input, width: 80 }} inputMode="decimal" aria-label={t('step.min')} placeholder={t('step.min')} value={s.expected_min ?? ''} disabled={!editable} onChange={e => setStep(i, { expected_min: e.target.value })} />
+                <input style={{ ...input, width: 80 }} inputMode="decimal" aria-label={t('step.max')} placeholder={t('step.max')} value={s.expected_max ?? ''} disabled={!editable} onChange={e => setStep(i, { expected_max: e.target.value })} />
+                <input style={{ ...input, width: 80 }} aria-label={t('step.unit')} placeholder={t('step.unit')} value={s.expected_unit ?? ''} disabled={!editable} onChange={e => setStep(i, { expected_unit: e.target.value })} />
+              </span>
+            </Field>
             <Field text={t('step.stop')}><input style={input} value={s.stop_criteria} disabled={!editable} placeholder={t('step.stopHint')} onChange={e => setStep(i, { stop_criteria: e.target.value })} /></Field>
           </div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>

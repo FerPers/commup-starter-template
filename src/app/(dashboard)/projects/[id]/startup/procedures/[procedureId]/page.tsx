@@ -23,11 +23,13 @@ export default async function ProcedurePage({ params, searchParams }: {
   const { data: proc } = await supabase.from('procedures').select('*').eq('id', procedureId).eq('project_id', id).maybeSingle()
   if (!proc) notFound()
 
-  const [{ data: revisions }, { data: runs }, { data: systems }, { data: members }] = await Promise.all([
+  const [{ data: revisions }, { data: runs }, { data: systems }, { data: members }, { count: verifiedLineups }] = await Promise.all([
     supabase.from('procedure_revisions').select('*').eq('procedure_id', procedureId).order('rev', { ascending: false }),
     supabase.from('procedure_runs').select('id, number, status, started_at, completed_at, system_id, systems(code)').eq('procedure_id', procedureId).order('seq', { ascending: false }),
     supabase.from('systems').select('id, code, name').eq('project_id', id).order('code'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
+    // S25b (E-32): line-ups verificados vigentes de este procedimiento (aviso al iniciar una ejecución).
+    supabase.from('lineup_sheets').select('id', { count: 'exact', head: true }).eq('procedure_id', procedureId).eq('status', 'verified'),
   ])
   const revs = revisions ?? []
   const selected = revs.find(r => r.id === sp.rev)
@@ -36,7 +38,7 @@ export default async function ProcedurePage({ params, searchParams }: {
     ?? revs[0]
   if (!selected) notFound()
   const { data: steps } = await supabase.from('procedure_steps')
-    .select('id, ord, action, responsible, expected_value, tag_id, is_hold_point, hold_capacity, stop_criteria, tags(tag_number)')
+    .select('id, ord, action, responsible, expected_value, expected_min, expected_max, expected_unit, tag_id, is_hold_point, hold_capacity, stop_criteria, tags(tag_number)')
     .eq('revision_id', selected.id).order('ord')
   const docRefs = await loadDocumentRefs(supabase, id, 'procedure_revision', selected.id)
   const names: Record<string, string> = {}
@@ -58,6 +60,7 @@ export default async function ProcedurePage({ params, searchParams }: {
       }}
       steps={(steps ?? []).map(s => ({
         action: s.action, responsible: s.responsible ?? '', expected_value: s.expected_value ?? '', tag_id: s.tag_id,
+        expected_min: s.expected_min === null ? '' : String(s.expected_min), expected_max: s.expected_max === null ? '' : String(s.expected_max), expected_unit: s.expected_unit ?? '',
         tag_number: (s.tags as unknown as { tag_number: string } | null)?.tag_number ?? null,
         is_hold_point: s.is_hold_point, hold_capacity: (s.hold_capacity ?? 'operations') as HoldCapacity, stop_criteria: s.stop_criteria ?? '',
       }))}
@@ -66,6 +69,7 @@ export default async function ProcedurePage({ params, searchParams }: {
       names={names}
       userId={ctx.userId}
       role={ctx.role}
+      verifiedLineups={verifiedLineups ?? 0}
       documentsSlot={
         <DocumentReferences projectId={id} kind="procedure_revision" targetId={selected.id} refs={docRefs.refs} options={docRefs.options}
           locked={selected.status !== 'draft'} canEdit={ctx.role !== 'client'} canRevalidate={isDocumentController(ctx.role)} />

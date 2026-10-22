@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { currentUserId as sessionUserId } from '@/lib/sync/owner'
 import { sendableBy } from '@/lib/sync/ownership'
 import { useRouter } from 'next/navigation'
@@ -97,6 +98,8 @@ export function SyncTray({ entries, isOffline, describe, conflictDetail, onChang
   onChanged: () => void
 }) {
   const t = useTranslations('Startup.offline')
+  // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
+  const { dialog, ask } = useAskDialog()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const issues = entries.filter(e => e.state !== 'pending' || isHeld(e, entries))
@@ -118,6 +121,7 @@ export function SyncTray({ entries, isOffline, describe, conflictDetail, onChang
 
   return (
     <section style={{ ...card, borderColor: '#fecaca', background: 'var(--danger-50)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {dialog}
       <strong style={{ color: 'var(--danger-700)' }}>⚠ {t('trayTitle', { n: issues.length })}</strong>
       <span style={small}>{t('trayHelp')}</span>
       {error && <span style={{ ...small, color: 'var(--danger-700)' }}>{error}</span>}
@@ -137,7 +141,7 @@ export function SyncTray({ entries, isOffline, describe, conflictDetail, onChang
                 <button type="button" style={{ ...btn('primary', busy || isOffline), padding: '8px 12px' }} disabled={busy || isOffline}
                   onClick={() => run(() => retryStartupEntry(e))}>{e.state === 'conflict' ? t('applyMine') : t('retry')}</button>
                 <button type="button" style={{ ...btn('outline', busy || isOffline), padding: '8px 12px', color: 'var(--danger-700)' }} disabled={busy || isOffline}
-                  onClick={() => { if (window.confirm(t('discardConfirm'))) void run(() => discardStartupEntry(e)) }}>{t('discard')}</button>
+                  onClick={async () => { if ((await ask({ title: t('discard'), message: t('discardConfirm'), confirmLabel: t('discard'), danger: true })) !== null) void run(() => discardStartupEntry(e)) }}>{t('discard')}</button>
               </div>
             )}
           </div>

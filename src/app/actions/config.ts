@@ -2,7 +2,7 @@
 
 import { ADMIN_ROLES, OWNER_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
-import { EQUIPMENT_TYPE_DEFAULTS } from '@/lib/equipment-types'
+import { EQUIPMENT_TYPE_DEFAULTS, defaultLineupFlags } from '@/lib/equipment-types'
 import { revalidatePath } from 'next/cache'
 import { CAT_B_LIMIT_SETTING } from '@/lib/certificates/eligibility'
 
@@ -199,7 +199,7 @@ export const seedEquipmentTypes = withAuthOnly(
     const have = new Set((existing ?? []).map(e => e.code.toUpperCase()))
     const rows = EQUIPMENT_TYPE_DEFAULTS
       .filter(t => !have.has(t.code))
-      .map(t => ({ org_id: ctx.orgId, code: t.code, name: t.name, category: t.category }))
+      .map(t => ({ org_id: ctx.orgId, code: t.code, name: t.name, category: t.category, ...defaultLineupFlags(t.code, t.category) }))
     if (rows.length === 0) return { created: 0 }
     const { error } = await ctx.supabase.from('equipment_types').insert(rows)
     if (error) return { error: error.message }
@@ -219,6 +219,7 @@ export const createEquipmentType = withAuth(
       code: input.code.trim().toUpperCase(),
       name: input.name.trim(),
       category: input.category.trim() || null,
+      ...defaultLineupFlags(input.code, input.category),
     })
     if (error) return { error: error.message }
     revalidatePath('/admin/config')
@@ -403,5 +404,20 @@ export const uploadOrgLogo = withAuthOnly(
     const { data } = ctx.supabase.storage.from('org-assets').getPublicUrl(path)
     // misma ruta al reemplazar el logo: el parámetro evita que el navegador muestre el anterior
     return { url: `${data.publicUrl}?v=${Date.now()}` }
+  },
+)
+
+/** S25b (E-29): qué tipos de equipo entran a un line-up generado y cuáles son válvulas críticas. */
+export const setEquipmentTypeLineupFlags = withAuth(
+  { role: ADMIN_ROLES },
+  async (ctx, input: { equipmentTypeId: string; lineupCandidate: boolean; criticalValve: boolean }): Promise<{ error?: string }> => {
+    const { error } = await ctx.supabase
+      .from('equipment_types')
+      .update({ lineup_candidate: input.lineupCandidate, critical_valve: input.lineupCandidate && input.criticalValve })
+      .eq('id', input.equipmentTypeId)
+      .eq('org_id', ctx.orgId)
+    if (error) return { error: error.message }
+    revalidatePath('/admin/config')
+    return {}
   },
 )
