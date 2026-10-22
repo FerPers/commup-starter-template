@@ -681,6 +681,18 @@ Totales: 11 críticos · 70 altos · 131 medios · 81 bajos = 293.
 | E-34 | Bajo | UX de acciones críticas con `window.prompt`/`confirm` — en una PWA móvil o con guantes, `prompt` no permite elegir el criterio de parada definido, se cierra por error | [E-arranque-operacion.md:297](revision-2026-10-19/E-arranque-operacion.md) |
 | E-36 | Bajo | Inconsistencias menores | [E-arranque-operacion.md:310](revision-2026-10-19/E-arranque-operacion.md) |
 
+**Estado S25a (2026-10-21; migración `20261122120000_startup_governance_s25a.sql` —escenarios con usuarios reales del DEMO en una transacción revertida— **aplicada en prod** con autorización de Luis):**
+- E-09 ✅ `procedure_run_steps.release_comment`: quien libera el hold escribe aparte; el comentario del ejecutor queda intacto (UI, PDF de ejecución, handover).
+- E-10 ✅ `procedure_run_events` (inicio, cada parada con hora de campo, reanudación con quién/cuándo, hold liberado, completada, abortada) con backfill de lo que quedaba; línea de tiempo en `RunView`, en el PDF de la ejecución y en el handover. Probado: dos paradas y una reanudación quedan las tres.
+- E-11 ✅ `system_staffing`: turnos esperados = personal activo del proyecto (un turno sin nadie competente cuenta 0); sin turnos cargados, un solo grupo.
+- E-12 ✅ `void_competency_record` (líder+ o quien registró, motivo ≥ 10); nivel vigente sin anuladas (SQL y TS); ficha sin usuario con el nombre de quien evalúa = autoevaluación (`person_name_key`); la UI deja evaluar al entrenador de nivel 4 del sistema como la BD; historial por celda con «Anular».
+- E-13 ✅ Pide el traspaso un líder+. `organizations.settings.transfer_policy.non_dispensable` (por defecto `no_open_cat_a`, `startup_gate`; `org_transfer_non_dispensable` = `transferNonDispensable`, claves `ownership_check_keys` = `TRANSFER_CHECK_KEYS`, test de paridad) configurable en `/admin/gates`; la solicitud y la 2.ª firma rechazan esas faltas. Cada firmante marca cada excepción (`sign_ownership_transfer(…, p_acknowledged)`; `commissioning_ack`/`operations_ack` entran al hash y al handover).
+- E-16 ✅ Primer arranque / primer HC: gate y PSSR aprobados antes de la hora del hito. Operación estable y on-spec: después de un primer arranque atestiguado. Más de 7 días atrás: líder+ con motivo (`startup_events.backdate_reason`, visible en la ficha, su PDF y el handover).
+- E-17 ✅ `performance_freeze_run` hace upsert sin borrar (re-congelar tras la purga conserva lo congelado).
+- E-19 ✅ `performance_evaluate_core(run, ignore_exclusions)` + `performance_compute_evaluation` agrega `without_exclusions`, `exclusions` y `exclusions_change_result`. Si cambian el sugerido, `record_performance_result` exige `acknowledge_performance_exclusions` del representante del cliente (capacidad `client_rep`, nunca quien excluyó); cambiar una exclusión borra el reconocimiento. Panel de evaluación y PDF de desempeño/PTC muestran ambos resultados y los reconocimientos. Probado con PTT-0001/R2: con exclusión «accepted», sin ella «failed» → bloquea hasta reconocer.
+- E-36 ✅ `verify_lineup_item` sin rol client; coma decimal en parámetros manuales del evento; `update_procedure` con tipo NULL conserva el actual; capacidad por defecto del hold = `commissioning` en TS y SQL (`DEFAULT_HOLD_CAPACITY`).
+- Pendiente S25b: E-21, E-23, E-29, E-32, E-34.
+
 ## N0 — Navegación N0 (arreglos rápidos)
 
 | ID | Sev. | Hallazgo | Anexo |

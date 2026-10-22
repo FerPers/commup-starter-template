@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { recordPerformanceResult } from '@/app/actions/performance'
+import { acknowledgePerformanceExclusions, recordPerformanceResult } from '@/app/actions/performance'
 import {
-  OUTCOME_TONE, PERF_RESULTS, RESULT_TONE, criterionText, needsResultReason,
+  OUTCOME_TONE, PERF_RESULTS, RESULT_TONE, criterionText, exclusionsPendingAck, needsResultReason,
   type Evaluation, type PerfResult,
 } from '@/lib/performance/catalog'
 import { Alert, Chip, Field, btn, card, input, label, small } from '../../../../daily/daily-ui'
@@ -20,7 +20,7 @@ const td: React.CSSProperties = { padding: '6px 8px', borderBottom: '1px solid v
 const sectionTitle: React.CSSProperties = { fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }
 const fmt = (n: number | null | undefined, d = 3) => (n === null || n === undefined ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: d }))
 
-export default function EvaluationPanel({ projectId, run, evaluation, evaluationError, action, names, canLead }: {
+export default function EvaluationPanel({ projectId, run, evaluation, evaluationError, action, names, canLead, canAckExclusions = false, userId }: {
   projectId: string
   run: { id: string; status: string; result: PerfResult | null; result_reason: string | null; result_by: string | null; result_at: string | null; evaluation_hash: string | null }
   evaluation: Evaluation | null
@@ -28,6 +28,9 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
   action: { id: string; number: string; status: string } | null
   names: Record<string, string>
   canLead: boolean
+  /** S25 (E-19): representante del cliente (capacidad client_rep). */
+  canAckExclusions?: boolean
+  userId?: string
 }) {
   const t = useTranslations('Startup')
   const localTime = useLocalTime()  // S10 (E-15b)
@@ -44,6 +47,9 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
   const frozen = run.status === 'evaluated'
   const unitOf = (k: string) => e.variables.find(v => v.key === k)?.unit ?? null
   const reasonNeeded = needsResultReason(result, e.suggested)
+  const pendingAck = !frozen && exclusionsPendingAck(e)
+  const unacked = (e.exclusions ?? []).filter(x => !x.client_ack_by)
+  const canAckNow = canAckExclusions && run.status === 'closed' && unacked.length > 0 && !unacked.some(x => x.excluded_by === userId)
 
   function record() {
     setError(null)
@@ -70,6 +76,39 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
       </p>
       {e.reasons.length > 0 && (
         <Alert kind="warn">{t('perf.eval.reasonsLead')} {e.reasons.map(r => t(`perf.reason.${r}`)).join(' · ')}</Alert>
+      )}
+
+      {/* S25 (E-19): qué cambian las exclusiones; el cliente las reconoce si cambian el sugerido */}
+      {e.without_exclusions && (
+        <div style={{ border: `1px solid ${e.exclusions_change_result ? '#fde68a' : 'var(--border)'}`, background: e.exclusions_change_result ? '#fffbeb' : undefined, borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ ...small, fontWeight: 700 }}>{t('perf.excl.withoutTitle')}</span>
+            <Chip tone={RESULT_TONE[e.without_exclusions.suggested]}>{t(`perf.result.${e.without_exclusions.suggested}`)}</Chip>
+            <span style={small}>· {t('perf.excl.withTitle')}</span>
+            <Chip tone={RESULT_TONE[e.suggested]}>{t(`perf.result.${e.suggested}`)}</Chip>
+          </div>
+          <ul style={{ ...small, margin: 0, paddingLeft: 18 }}>
+            {(e.exclusions ?? []).map(x => (
+              <li key={x.id}>
+                {localTime(x.started_at)} → {x.ended_at ? localTime(x.ended_at) : '…'} · {t(`perf.distKind.${x.kind}`)} · {x.reason ?? ''} ({who(x.excluded_by)})
+                {' — '}{x.client_ack_by ? t('perf.excl.acked', { who: who(x.client_ack_by), when: localTime(x.client_ack_at) }) : t('perf.excl.notAcked')}
+              </li>
+            ))}
+          </ul>
+          {pendingAck && <span style={{ ...small, color: '#b45309', fontWeight: 600 }}>{t('perf.excl.needsAck')}</span>}
+          {canAckNow && (
+            <div>
+              <button type="button" style={btn('primary', isPending)} disabled={isPending}
+                onClick={() => {
+                  setError(null)
+                  startTransition(async () => {
+                    const res = await acknowledgePerformanceExclusions({ projectId, runId: run.id })
+                    if (res.error) setError(res.error); else router.refresh()
+                  })
+                }}>{t('perf.excl.ack')}</button>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Criterios */}
@@ -153,7 +192,7 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
           <Field text={reasonNeeded ? t('perf.eval.reasonRequired') : t('perf.eval.reasonOptional')}>
             <input style={{ ...input, width: 360 }} value={reason} maxLength={2000} onChange={ev => setReason(ev.target.value)} />
           </Field>
-          <button type="button" style={btn('primary', isPending || (reasonNeeded && reason.trim().length < 3))} disabled={isPending || (reasonNeeded && reason.trim().length < 3)}
+          <button type="button" style={btn('primary', isPending || pendingAck || (reasonNeeded && reason.trim().length < 3))} disabled={isPending || pendingAck || (reasonNeeded && reason.trim().length < 3)}
             onClick={() => { if (window.confirm(t('perf.eval.confirm'))) record() }}>{t('perf.eval.record')}</button>
           {(result === 'failed' || result === 'accepted_with_deviation') && <span style={small}>{t('perf.eval.actionHint')}</span>}
         </div>

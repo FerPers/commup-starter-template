@@ -63,6 +63,15 @@ export type Evaluation = {
   reasons: InconclusiveReason[]
   suggested: Exclude<PerfResult, 'repeat'>
   result?: PerfResult; result_reason?: string | null; result_by?: string; result_at?: string
+  /** S25 (E-19): exclusiones vigentes, el resultado sin ellas y si cambian el sugerido (solo con exclusiones). */
+  exclusions?: { id: string; kind: string; started_at: string; ended_at: string | null; reason: string | null; excluded_by: string | null; client_ack_by: string | null; client_ack_at: string | null }[]
+  without_exclusions?: { suggested: Exclude<PerfResult, 'repeat'>; valid_min: number; reasons: InconclusiveReason[]; criteria: { ord: number; value: number | null; outcome: CriterionOutcome }[] }
+  exclusions_change_result?: boolean
+}
+
+/** S25 (E-19): el resultado no se registra hasta que el cliente reconozca exclusiones que cambian el sugerido. */
+export function exclusionsPendingAck(e: Pick<Evaluation, 'exclusions' | 'exclusions_change_result'>): boolean {
+  return !!e.exclusions_change_result && (e.exclusions ?? []).some(x => !x.client_ack_by)
 }
 
 export const RESULT_TONE: Record<PerfResult, 'green' | 'amber' | 'red' | 'muted' | 'violet'> = {

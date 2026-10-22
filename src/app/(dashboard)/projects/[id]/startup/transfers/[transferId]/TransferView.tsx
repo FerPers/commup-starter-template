@@ -18,6 +18,7 @@ type Transfer = {
   commissioning_signed_by: string | null; commissioning_signed_at: string | null; operations_signed_by: string | null; operations_signed_at: string | null
   completed_at: string | null; cancelled_by: string | null; cancelled_at: string | null; cancel_reason: string | null
   handover_package_id: string | null; content_hash: string | null
+  commissioning_ack: string[] | null; operations_ack: string[] | null
 }
 type Pkg = { id: string; version: string; status: string; generated_at: string | null; signature_hash: string | null; zip_path: string | null } | null
 
@@ -38,6 +39,9 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
   const [warn, setWarn] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState(false)
   const [reason, setReason] = useState('')
+  // S25 (E-13): cada firmante reconoce, una por una, las excepciones justificadas.
+  const [ack, setAck] = useState<Set<string>>(new Set())
+  const allAcked = tr.exceptions.every(e => ack.has(e.key))
   const who = (id: string | null) => (id ? names[id] : undefined) ?? '—'
   const localTime = useLocalTime()  // S10 (E-15b): hora local con su zona, no la UTC del servidor
   const when = (iso: string | null) => localTime(iso)
@@ -60,10 +64,11 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
     })
   }
 
-  const signatures: { cap: 'commissioning' | 'operations'; by: string | null; at: string | null }[] = [
-    { cap: 'commissioning', by: tr.commissioning_signed_by, at: tr.commissioning_signed_at },
-    { cap: 'operations', by: tr.operations_signed_by, at: tr.operations_signed_at },
+  const signatures: { cap: 'commissioning' | 'operations'; by: string | null; at: string | null; ack: string[] | null }[] = [
+    { cap: 'commissioning', by: tr.commissioning_signed_by, at: tr.commissioning_signed_at, ack: tr.commissioning_ack },
+    { cap: 'operations', by: tr.operations_signed_by, at: tr.operations_signed_at, ack: tr.operations_ack },
   ]
+  const mustAck = tr.status === 'pending_signatures' && tr.exceptions.length > 0 && signatures.some(s => !s.by && canSign.includes(s.cap))
 
   return (
     <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -100,16 +105,29 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
 
       <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h2 style={{ margin: 0, fontSize: 16 }}>{t('ops.signatures')}</h2>
+        {mustAck && (
+          <fieldset style={{ border: '1px solid #fde68a', background: '#fffbeb', borderRadius: 8, padding: '10px 12px', margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <legend style={{ ...small, fontWeight: 700, color: '#b45309', padding: '0 4px' }}>{t('ops.ackTitle')}</legend>
+            {tr.exceptions.map(e => (
+              <label key={e.key} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 'var(--text-sm)' }}>
+                <input type="checkbox" checked={ack.has(e.key)} disabled={isPending} style={{ marginTop: 3 }}
+                  onChange={ev => setAck(prev => { const n = new Set(prev); if (ev.target.checked) n.add(e.key); else n.delete(e.key); return n })} />
+                <span><strong>{t(`ops.check.${e.key}`)}</strong> — {e.justification}</span>
+              </label>
+            ))}
+          </fieldset>
+        )}
         {signatures.map(s => (
           <div key={s.cap} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '8px 0', borderTop: '1px solid var(--border)' }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{t(`capacity.${s.cap}`)}</div>
               <div suppressHydrationWarning style={small}>{s.by ? `${who(s.by)} · ${when(s.at)}` : t('ops.awaitingSignature')}</div>
+              {s.by && !!s.ack?.length && <div style={{ ...small, color: '#b45309' }}>{t('ops.acked', { n: s.ack.length })}</div>}
             </div>
             {!s.by && canSign.includes(s.cap) && (
-              <button type="button" style={btn('primary', isPending)} disabled={isPending}
+              <button type="button" style={btn('primary', isPending || !allAcked)} disabled={isPending || !allAcked} title={allAcked ? undefined : t('ops.ackFirst')}
                 onClick={() => { if (confirm(t('ops.confirmSign', { capacity: t(`capacity.${s.cap}`) }))) run(
-                  () => signOwnershipTransfer({ projectId: project.id, transferId: tr.id, capacity: s.cap }),
+                  () => signOwnershipTransfer({ projectId: project.id, transferId: tr.id, capacity: s.cap, acknowledged: [...ack] }),
                   res => { if (res.handoverError) setWarn(t('ops.handoverFailed', { error: res.handoverError })) },
                 ) }}>{t('ops.sign')}</button>
             )}

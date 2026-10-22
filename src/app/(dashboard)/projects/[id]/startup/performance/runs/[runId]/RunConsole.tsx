@@ -184,7 +184,8 @@ export default function RunConsole({ project, test, run, rev, variables, points,
       </section>
 
       {(run.status === 'closed' || run.status === 'evaluated') && (
-        <EvaluationPanel projectId={project.id} run={run} evaluation={evaluation} evaluationError={evaluationError} action={action} names={names} canLead={lead} />
+        <EvaluationPanel projectId={project.id} run={run} evaluation={evaluation} evaluationError={evaluationError} action={action} names={names} canLead={lead}
+          canAckExclusions={caps.client_rep.allowed} userId={userId} />
       )}
       <CertificateCard projectId={project.id} run={run} certificate={certificate} names={names} userId={userId} role={role} caps={caps} />
 

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { getStartupPrerequisites, recordStartupEvent } from '@/app/actions/startup-events'
 import {
-  EVENT_CATEGORIES, GATED_MILESTONES, MILESTONES, milestoneCapacity,
+  BACKDATE_DAYS, EVENT_CATEGORIES, GATED_MILESTONES, MILESTONES, milestoneCapacity, needsBackdateReason,
   type EventCategory, type Milestone, type StartupEventStatus,
 } from '@/lib/startup/catalog'
 import { TagPicker } from '../../registers/RegisterFields'
@@ -50,7 +50,7 @@ export default function EventsView({ project, systems, initialSystemId, events, 
   const [filter, setFilter] = useState(initialSystemId)
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({
-    systemId: initialSystemId, kind: 'milestone' as 'milestone' | 'free', code: 'first_rotation' as string, occurredAt: '', title: '', description: '', runId: '',
+    systemId: initialSystemId, kind: 'milestone' as 'milestone' | 'free', code: 'first_rotation' as string, occurredAt: '', title: '', description: '', runId: '', backdateReason: '',
   })
   const [tags, setTags] = useState<{ tag_id: string; tag_number: string; role: 'subject' }[]>([])
   const [sigIds, setSigIds] = useState<string[]>([])
@@ -68,6 +68,9 @@ export default function EventsView({ project, systems, initialSystemId, events, 
   const timeline = events.filter(e => !filter || e.systemId === filter)
   const sysSignals = signals.filter(s => s.systemId === form.systemId)
   const gated = form.kind === 'milestone' && GATED_MILESTONES.includes(form.code as Milestone)
+  // S25 (E-16): más de 7 días atrás lo registra un líder+ con motivo.
+  const backdated = !!form.occurredAt && needsBackdateReason(new Date(form.occurredAt).toISOString())
+  const backdateMissing = backdated && form.backdateReason.trim().length < 10
   const blocked = gated && !!prereq && !(prereq.gate_ok && prereq.pssr_ok)
   const already = form.kind === 'milestone' && !!form.systemId && !!milestoneOf(form.systemId, form.code as Milestone)
 
@@ -94,6 +97,7 @@ export default function EventsView({ project, systems, initialSystemId, events, 
         occurredAt: new Date(form.occurredAt).toISOString(),
         title: form.title.trim() || (form.kind === 'milestone' ? t(`milestone.${form.code}`) : t(`category.${form.code}`)),
         description: form.description, tagIds: tags.map(x => x.tag_id), runId: form.runId || null, signalIds: sigIds,
+        backdateReason: backdated ? form.backdateReason : undefined,
         manual: manual.filter(m => m.label.trim() && m.value.trim()),
       })
       if (res.error || !res.id) { setError(res.error ?? t('error')); return }
@@ -140,6 +144,11 @@ export default function EventsView({ project, systems, initialSystemId, events, 
             </Field>
             <Field text={t('events.occurredAt')} required><input type="datetime-local" style={input} value={form.occurredAt} max={localNow()} onChange={e => setForm({ ...form, occurredAt: e.target.value })} /></Field>
             <Field text={t('field.title')}><input style={input} value={form.title} maxLength={200} placeholder={form.kind === 'milestone' ? t(`milestone.${form.code}`) : t(`category.${form.code}`)} onChange={e => setForm({ ...form, title: e.target.value })} /></Field>
+            {backdated && (
+              <Field text={t('events.backdateReason', { days: BACKDATE_DAYS })} wide required>
+                <textarea rows={2} style={input} value={form.backdateReason} placeholder={t('events.backdateHint')} onChange={e => setForm({ ...form, backdateReason: e.target.value })} />
+              </Field>
+            )}
             <Field text={t('events.description')} wide><textarea rows={2} style={input} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></Field>
             <Field text={t('events.run')}>
               <select style={input} value={form.runId} onChange={e => setForm({ ...form, runId: e.target.value })}>
@@ -194,8 +203,8 @@ export default function EventsView({ project, systems, initialSystemId, events, 
             <TagPicker projectId={project.id} kind="temporary" value={tags} onChange={v => setTags(v.map(x => ({ tag_id: x.tag_id, tag_number: x.tag_number, role: 'subject' as const })))} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" style={btn('primary', isPending || !form.systemId || !form.occurredAt || blocked || already)}
-              disabled={isPending || !form.systemId || !form.occurredAt || blocked || already} onClick={submit}>{t('events.save')}</button>
+            <button type="button" style={btn('primary', isPending || !form.systemId || !form.occurredAt || blocked || already || backdateMissing)}
+              disabled={isPending || !form.systemId || !form.occurredAt || blocked || already || backdateMissing} onClick={submit}>{t('events.save')}</button>
             <button type="button" style={btn('outline')} onClick={() => setOpen(false)}>{t('events.cancel')}</button>
           </div>
         </section>

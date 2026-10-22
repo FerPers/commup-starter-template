@@ -15,7 +15,7 @@ export default async function OwnershipTransferPage({ params }: { params: Promis
   const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
   const { data: tr } = await supabase.from('ownership_transfers')
-    .select('id, number, system_id, from_stage, to_stage, is_reversal, reason, status, checklist, exceptions, requested_by, requested_at, commissioning_signed_by, commissioning_signed_at, operations_signed_by, operations_signed_at, completed_at, cancelled_by, cancelled_at, cancel_reason, handover_package_id, content_hash, systems(code, name)')
+    .select('id, number, system_id, from_stage, to_stage, is_reversal, reason, status, checklist, exceptions, requested_by, requested_at, commissioning_signed_by, commissioning_signed_at, operations_signed_by, operations_signed_at, completed_at, cancelled_by, cancelled_at, cancel_reason, handover_package_id, content_hash, commissioning_ack, operations_ack, systems(code, name)')
     .eq('id', transferId).eq('project_id', id).maybeSingle()
   if (!tr) notFound()
 

@@ -56,6 +56,8 @@ const T = {
   operations:   { es: 'Operaciones', en: 'Operations' },
   clientSig:    { es: 'Cliente', en: 'Client' },
   exceptions:   { es: 'Excepciones justificadas', en: 'Justified exceptions' },
+  acked:        { es: 'Excepciones reconocidas', en: 'Exceptions acknowledged' },
+  backdated:    { es: 'Registrado con atraso', en: 'Recorded late' },
   competencies: { es: 'Competencias del personal de operaciones', en: 'Operations staff competencies' },
   perShift:     { es: 'Personas por turno exigidas', en: 'Required per shift' },
   person:       { es: 'Persona', en: 'Person' },
@@ -248,7 +250,11 @@ export async function renderHandoverPdf(data: HandoverPackageData, opts: Handove
             s.done_by ? `${s.done_by} ${day(s.done_at)}` : '—', s.released_by ? `${s.released_by} ${day(s.released_at)}` : (s.hold ? '—' : ''),
           ]),
         )
-        for (const s of p.last_run.steps) if (s.comment) note(`#${s.ord}: ${s.comment}`)
+        for (const s of p.last_run.steps) {
+          if (s.comment) note(`#${s.ord}: ${s.comment}`)
+          if (s.release_comment) note(`#${s.ord} · ${T.holdBy[L]}: ${s.release_comment}`)
+        }
+        for (const ev of p.last_run.timeline ?? []) if (ev.kind !== 'started' && ev.kind !== 'completed') note(`${at(ev.at)} · ${label(`run.event.${ev.kind}`, ev.kind)} · ${ev.by ?? '—'}${ev.comment ? ` — ${ev.comment}` : ''}`)
       }
     }
 
@@ -277,6 +283,7 @@ export async function renderHandoverPdf(data: HandoverPackageData, opts: Handove
         ]),
       )
       for (const e of sys.startup_events) {
+        if (e.backdate_reason) note(`${e.number} · ${T.backdated[L]}: ${e.backdate_reason}`)
         if (e.params.length) note(`${e.number}: ${e.params.map(p => `${p.label} ${p.value ?? p.value_text ?? '—'}${p.unit ? ` ${p.unit}` : ''}`).join(' · ')}`)
       }
     }
@@ -291,6 +298,7 @@ export async function renderHandoverPdf(data: HandoverPackageData, opts: Handove
       )
       for (const tr of sys.transfers) {
         if (tr.exceptions?.length) note(`${tr.number} · ${T.exceptions[L]}: ${tr.exceptions.map(x => `${label(`ops.check.${x.key}`, x.key)} — ${x.justification}`).join(' · ')}`)
+        if (tr.commissioning_ack?.length || tr.operations_ack?.length) note(`${tr.number} · ${T.acked[L]}: ${T.commissioning[L]} ${tr.commissioning_ack?.length ?? 0} · ${T.operations[L]} ${tr.operations_ack?.length ?? 0}`)
         if (tr.content_hash) note(`${tr.number} · sha256 ${tr.content_hash}`)
       }
     }

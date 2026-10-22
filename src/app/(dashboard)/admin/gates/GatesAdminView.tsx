@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
+import { TRANSFER_CHECK_KEYS } from '@/lib/startup/catalog'
 import {
   addCatalogGate,
   addGateCriterion,
@@ -14,6 +15,7 @@ import {
   updateGate,
   updateGateCriterion,
   updateGatePolicy,
+  updateTransferPolicy,
 } from '@/app/actions/gates-admin'
 import { COSIGN_CAPACITIES, CONFIGURABLE_CRITERIA, type GatePolicy } from '@/lib/readiness/gates'
 import { GATE_APPROVAL_ROLES, READINESS_GATE_CATALOG } from '@/lib/constants/readiness-gates'
@@ -50,8 +52,13 @@ const btn = (primary = false): React.CSSProperties => ({
 })
 const linkBtn: React.CSSProperties = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }
 
-export default function GatesAdminView({ gates, criteria, phases, weights, policy }: { gates: Gate[]; criteria: Crit[]; phases: Phase[]; weights?: React.ReactNode; policy: GatePolicy }) {
+export default function GatesAdminView({ gates, criteria, phases, weights, policy, nonDispensable }: {
+  gates: Gate[]; criteria: Crit[]; phases: Phase[]; weights?: React.ReactNode; policy: GatePolicy
+  /** S25 (E-13): ítems del checklist de traspaso que no se pueden dispensar. */
+  nonDispensable: string[]
+}) {
   const t = useTranslations('GatesAdmin')
+  const ts = useTranslations('Startup')
   const tg = useTranslations('Gates')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -122,6 +129,21 @@ export default function GatesAdminView({ gates, criteria, phases, weights, polic
               onChange={e => act(() => updateGatePolicy({ cat_a_regresses_approved: e.target.checked }))} />
             {t('policy.catA')}
           </label>
+        </div>
+      </section>
+
+      {/* S25 (E-13): traspasos de propiedad — faltas que no se pueden justificar */}
+      <section style={card} aria-label={t('transferPolicy.title')}>
+        <div style={{ fontWeight: 700, color: 'var(--text-strong)', marginBottom: 6 }}>{t('transferPolicy.title')}</div>
+        <p style={{ ...small, margin: '0 0 10px' }}>{t('transferPolicy.hint')}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 8 }}>
+          {TRANSFER_CHECK_KEYS.map(k => (
+            <label key={k} style={{ ...small, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={nonDispensable.includes(k)} disabled={isPending}
+                onChange={e => act(() => updateTransferPolicy(e.target.checked ? [...nonDispensable, k] : nonDispensable.filter(x => x !== k)))} />
+              {ts(`ops.check.${k}`)}
+            </label>
+          ))}
         </div>
       </section>
 

@@ -6,7 +6,7 @@ import { withAuth } from '@/lib/auth/withAuth'
 import type { Json } from '@/types/supabase.generated'
 import type { LineupRemote } from '@/lib/sync/startup-outbox-utils'
 import {
-  HOLD_CAPACITIES, LINEUP_PURPOSES, PROCEDURE_KINDS, PROCEDURE_SECTIONS, VALVE_POSITIONS,
+  DEFAULT_HOLD_CAPACITY, HOLD_CAPACITIES, LINEUP_PURPOSES, PROCEDURE_KINDS, PROCEDURE_SECTIONS, VALVE_POSITIONS,
   type LineupPurpose, type ProcedureKind, type ProcedureSection, type StepDraft, type ValvePosition,
 } from '@/lib/startup/catalog'
 
@@ -82,7 +82,7 @@ export const saveProcedureRevision = withAuth(
       expected_value: s.expected_value?.trim().slice(0, 500) ?? '',
       tag_id: s.tag_id ?? null,
       is_hold_point: !!s.is_hold_point,
-      hold_capacity: HOLD_CAPACITIES.includes(s.hold_capacity) ? s.hold_capacity : 'operations',
+      hold_capacity: HOLD_CAPACITIES.includes(s.hold_capacity) ? s.hold_capacity : DEFAULT_HOLD_CAPACITY,
       stop_criteria: s.stop_criteria?.trim().slice(0, 2000) ?? '',
     }))
     const { error } = await ctx.supabase.rpc('save_procedure_revision', {

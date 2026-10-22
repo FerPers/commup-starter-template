@@ -84,6 +84,8 @@ export type HandoverRunStep = {
   released_by: string | null
   released_at: string | null
   release_role: string | null
+  /** S25 (E-09) */
+  release_comment?: string | null
 }
 
 export type HandoverProcedure = {
@@ -111,6 +113,8 @@ export type HandoverProcedure = {
     completed_by: string | null
     completed_at: string | null
     steps: HandoverRunStep[]
+    /** S25 (E-10): paradas, reanudaciones y holds liberados. */
+    timeline?: { kind: string; by: string | null; at: string; comment: string | null }[]
   } | null
 }
 
@@ -141,6 +145,8 @@ export type HandoverStartupEvent = {
   status: string
   recorded_by: string | null
   witness_capacity: string | null
+  /** S25 (E-16) */
+  backdate_reason?: string | null
   witness_by: string | null
   witness_at: string | null
   params: { label: string; value: number | null; value_text: string | null; unit: string | null; quality: number | null; sampled_at: string | null; source: string }[]
@@ -158,6 +164,9 @@ export type HandoverTransfer = {
   requested_at: string
   commissioning: HandoverSigner
   operations: HandoverSigner
+  /** S25 (E-13): excepciones que reconoció cada firmante. */
+  commissioning_ack?: string[] | null
+  operations_ack?: string[] | null
   completed_at: string | null
   content_hash: string | null
 }

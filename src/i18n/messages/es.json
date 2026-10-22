@@ -2809,7 +2809,11 @@
       "invalid": "Los pesos deben estar entre 0 y 1000."
     },
     "requiresLineup": "Exige line-up verificado (antes de arrancar)",
-    "requiresPerformance": "Exige prueba de desempeño aceptada (sistemas con prueba)"
+    "requiresPerformance": "Exige prueba de desempeño aceptada (sistemas con prueba)",
+    "transferPolicy": {
+      "title": "Traspasos de propiedad: faltas que no se pueden dispensar",
+      "hint": "Marcadas: si faltan, el traspaso no se puede pedir con una justificación. Sin marcar: se pueden justificar y cada firmante reconoce la excepción."
+    }
   },
   "Systems": {
     "title": "Sistemas",
@@ -4110,7 +4114,16 @@
       "abort": "Abortar ejecución",
       "abortPrompt": "Motivo para abortar:",
       "releasedBy": "liberó {who} el {when}",
-      "holdDesignated": "Lo libera una persona designada como {who} en el proyecto."
+      "holdDesignated": "Lo libera una persona designada como {who} en el proyecto.",
+      "timeline": "Línea de tiempo",
+      "event": {
+        "started": "Inició",
+        "stopped": "Detenida",
+        "resumed": "Reanudada",
+        "hold_released": "Hold liberado",
+        "completed": "Completada",
+        "aborted": "Abortada"
+      }
     },
     "lineup": {
       "stale": "Posiblemente desactualizada",
@@ -4242,7 +4255,10 @@
       },
       "noParams": "Sin parámetros.",
       "window": "−30/+30 min",
-      "noSeries": "Sin muestras en la ventana."
+      "noSeries": "Sin muestras en la ventana.",
+      "backdateReason": "Motivo: el evento es de hace más de {days} días",
+      "backdateHint": "Por qué se registra ahora (solo líderes o superiores)",
+      "backdated": "Registrado con atraso: {reason}"
     },
     "ops": {
       "subtitle": "Etapa de propiedad de cada sistema (Comisionamiento → Shadowing → Operación conjunta → Operaciones), traspasos firmados, competencias del personal de operaciones y repuestos críticos.",
@@ -4386,7 +4402,16 @@
       "cancelReason": "Motivo de la cancelación",
       "confirmCancel": "Cancelar traspaso",
       "downloadZip": "Descargar ZIP",
-      "verifyHandover": "Verificar firma"
+      "verifyHandover": "Verificar firma",
+      "ackTitle": "Reconoce cada excepción antes de firmar",
+      "acked": "Reconoció {n} excepción(es)",
+      "ackFirst": "Marca cada excepción para poder firmar",
+      "blockingGaps": "No se puede pedir el traspaso: la organización no permite dispensar {items}.",
+      "nonDispensable": "No dispensable: hay que cumplirlo antes de pedir el traspaso",
+      "recordLine": "Nivel {level} · {date} · {by}",
+      "voided": "Anulado",
+      "void": "Anular",
+      "voidReason": "Motivo de la anulación (10 caracteres o más)"
     },
     "perf": {
       "withdraw": "Retirar prueba",
@@ -4677,6 +4702,14 @@
         "accepted": "Aceptado",
         "revoked": "Revocado",
         "superseded": "Reemplazado"
+      },
+      "excl": {
+        "withoutTitle": "Sin exclusiones",
+        "withTitle": "con exclusiones",
+        "acked": "reconoció {who} · {when}",
+        "notAcked": "sin reconocer por el cliente",
+        "needsAck": "Las exclusiones cambian el resultado sugerido: el representante del cliente debe reconocerlas antes de registrar el resultado.",
+        "ack": "Reconocer exclusiones (representante del cliente)"
       }
     }
   },

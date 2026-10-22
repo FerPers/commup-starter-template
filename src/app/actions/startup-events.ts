@@ -36,6 +36,8 @@ export type RecordEventInput = {
   runId?: string | null
   signalIds?: string[]
   manual?: { label: string; value: string; unit?: string }[]
+  /** S25 (E-16): obligatorio si el evento es de hace más de 7 días (solo líder+). */
+  backdateReason?: string
 }
 
 export const recordStartupEvent = withAuth(
@@ -59,6 +61,7 @@ export const recordStartupEvent = withAuth(
       p_run_id: (input.runId ?? '') === '' ? undefined : input.runId!,
       p_signal_ids: input.signalIds?.length ? input.signalIds.slice(0, 50) : undefined,
       p_manual: manual.length ? (manual as Json) : undefined,
+      p_backdate_reason: input.backdateReason?.trim() ? input.backdateReason.trim().slice(0, 2000) : undefined,
     })
     if (error) return { error: error.message }
     revalidate(input.projectId)

@@ -2809,7 +2809,11 @@
       "invalid": "Weights must be between 0 and 1000."
     },
     "requiresLineup": "Requires a verified line-up (before start-up)",
-    "requiresPerformance": "Requires accepted performance test (systems with a test)"
+    "requiresPerformance": "Requires accepted performance test (systems with a test)",
+    "transferPolicy": {
+      "title": "Ownership transfers: gaps that cannot be waived",
+      "hint": "Ticked: if missing, the transfer cannot be requested with a justification. Unticked: they can be justified and each signer acknowledges the exception."
+    }
   },
   "Systems": {
     "title": "Systems",
@@ -4110,7 +4114,16 @@
       "abort": "Abort run",
       "abortPrompt": "Reason for aborting:",
       "releasedBy": "released by {who} on {when}",
-      "holdDesignated": "Released by a person designated as {who} in the project."
+      "holdDesignated": "Released by a person designated as {who} in the project.",
+      "timeline": "Timeline",
+      "event": {
+        "started": "Started",
+        "stopped": "Stopped",
+        "resumed": "Resumed",
+        "hold_released": "Hold released",
+        "completed": "Completed",
+        "aborted": "Aborted"
+      }
     },
     "lineup": {
       "stale": "Possibly out of date",
@@ -4242,7 +4255,10 @@
       },
       "noParams": "No parameters.",
       "window": "−30/+30 min",
-      "noSeries": "No samples in the window."
+      "noSeries": "No samples in the window.",
+      "backdateReason": "Reason: the event is more than {days} days old",
+      "backdateHint": "Why it is being recorded now (leaders and above only)",
+      "backdated": "Recorded late: {reason}"
     },
     "ops": {
       "subtitle": "Ownership stage of each system (Commissioning → Shadowing → Joint operation → Operations), signed transfers, operations staff competency and critical spares.",
@@ -4386,7 +4402,16 @@
       "cancelReason": "Cancellation reason",
       "confirmCancel": "Cancel transfer",
       "downloadZip": "Download ZIP",
-      "verifyHandover": "Verify signature"
+      "verifyHandover": "Verify signature",
+      "ackTitle": "Acknowledge each exception before signing",
+      "acked": "Acknowledged {n} exception(s)",
+      "ackFirst": "Tick every exception to sign",
+      "blockingGaps": "The transfer cannot be requested: the organization does not allow waiving {items}.",
+      "nonDispensable": "Not waivable: must be met before requesting the transfer",
+      "recordLine": "Level {level} · {date} · {by}",
+      "voided": "Voided",
+      "void": "Void",
+      "voidReason": "Reason for voiding (10+ characters)"
     },
     "perf": {
       "withdraw": "Withdraw test",
@@ -4677,6 +4702,14 @@
         "accepted": "Accepted",
         "revoked": "Revoked",
         "superseded": "Superseded"
+      },
+      "excl": {
+        "withoutTitle": "Without exclusions",
+        "withTitle": "with exclusions",
+        "acked": "acknowledged by {who} · {when}",
+        "notAcked": "not acknowledged by the client",
+        "needsAck": "The exclusions change the suggested result: the client representative must acknowledge them before the result is recorded.",
+        "ack": "Acknowledge exclusions (client representative)"
       }
     }
   },

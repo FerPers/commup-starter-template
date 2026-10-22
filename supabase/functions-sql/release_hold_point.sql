@@ -20,9 +20,11 @@ BEGIN
   END IF;
   IF auth.uid() = rs.done_by THEN RAISE EXCEPTION 'Libera el hold point una persona distinta de quien ejecutó el paso' USING ERRCODE = '42501'; END IF;
   IF r.status NOT IN ('at_hold', 'stopped') THEN RAISE EXCEPTION 'La ejecución no está detenida en un hold point' USING ERRCODE = 'P0001'; END IF;
+  -- S25 (E-09): el comentario de quien libera va aparte; el de quien ejecutó el paso no se toca.
   UPDATE procedure_run_steps SET status = 'released', released_by = auth.uid(), released_at = now(), release_role = st.hold_capacity,
-         comment = COALESCE(public.mgmt_text(p_comment, 2000), comment)
+         release_comment = public.mgmt_text(p_comment, 2000)
    WHERE run_id = p_run_id AND step_id = p_step_id;
+  PERFORM public.log_procedure_run_event(r, 'hold_released', p_step_id, public.mgmt_text(p_comment, 2000), NULL);
   UPDATE procedure_runs SET status = CASE WHEN status = 'at_hold' THEN 'in_progress' ELSE status END, updated_at = now() WHERE id = p_run_id;
 END;
 $function$;

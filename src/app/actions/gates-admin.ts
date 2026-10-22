@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, TablesUpdate } from '@/types/supabase.generated'
 import { checkPhaseAccess } from '@/lib/auth/access'
 import { COSIGN_CAPACITIES, CONFIGURABLE_CRITERIA, gatePolicy, type GatePolicy } from '@/lib/readiness/gates'
+import { TRANSFER_CHECK_KEYS, transferNonDispensable } from '@/lib/startup/catalog'
 import { logActivity } from '@/lib/log-activity'
 import { GATE_APPROVAL_ROLES, READINESS_GATE_CATALOG } from '@/lib/constants/readiness-gates'
 
@@ -189,6 +190,26 @@ export const updateGatePolicy = withAuthOnly(
     if (error) return { error: error.message }
     await logActivity(ctx.supabase, {
       orgId: ctx.orgId, userId: ctx.userId, action: 'gate_policy.updated', entityType: 'organization', entityId: ctx.orgId,
+      payload: { before, after: next },
+    })
+    revalidate()
+    return {}
+  },
+)
+
+/** S25 (E-13): ítems del checklist de traspaso que no se pueden dispensar (`organizations.settings.transfer_policy`). */
+export const updateTransferPolicy = withAuthOnly(
+  { role: ADMIN_ROLES },
+  async (ctx, nonDispensable: string[]): Promise<Result> => {
+    const { data: org, error: fetchErr } = await ctx.supabase.from('organizations').select('settings').eq('id', ctx.orgId).single()
+    if (fetchErr) return { error: fetchErr.message }
+    const settings = (org?.settings as Record<string, unknown> | null) ?? {}
+    const before = transferNonDispensable(settings)
+    const next = TRANSFER_CHECK_KEYS.filter(k => nonDispensable.includes(k))
+    const { error } = await ctx.supabase.from('organizations').update({ settings: { ...settings, transfer_policy: { non_dispensable: next } } }).eq('id', ctx.orgId)
+    if (error) return { error: error.message }
+    await logActivity(ctx.supabase, {
+      orgId: ctx.orgId, userId: ctx.userId, action: 'transfer_policy.updated', entityType: 'organization', entityId: ctx.orgId,
       payload: { before, after: next },
     })
     revalidate()

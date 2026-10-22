@@ -50,7 +50,7 @@ export default async function StartupEventPage({ params }: { params: Promise<{ i
         occurredAt: ev.occurred_at, title: ev.title, description: ev.description, status: ev.status as StartupEventStatus,
         system: sys ? `${sys.code} — ${sys.name}` : '—', systemId: ev.system_id, run,
         recordedBy: ev.recorded_by, recordedAt: ev.recorded_at, witnessCapacity: ev.witness_capacity, witnessBy: ev.witness_by, witnessAt: ev.witness_at,
-        voidedBy: ev.voided_by, voidedAt: ev.voided_at, voidReason: ev.void_reason,
+        voidedBy: ev.voided_by, voidedAt: ev.voided_at, voidReason: ev.void_reason, backdateReason: ev.backdate_reason,
         tags: (tags ?? []).map(x => (x.tags as unknown as { tag_number: string } | null)?.tag_number).filter((x): x is string => !!x),
       }}
       params={(paramsRows ?? []).map(p => ({ ...p, value: p.value === null ? null : Number(p.value) }))}

@@ -4,6 +4,7 @@ import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import GatesAdminView from './GatesAdminView'
 import GateWeightsCard from './GateWeightsCard'
 import { gatePolicy } from '@/lib/readiness/gates'
+import { transferNonDispensable } from '@/lib/startup/catalog'
 
 // Configuración de gates / hold points de la org (fase 1 plan readiness).
 export default async function AdminGatesPage() {
@@ -39,6 +40,7 @@ export default async function AdminGatesPage() {
       criteria={(criteria ?? []).map(c => ({ ...c, label: (c.params as { label?: string } | null)?.label ?? null }))}
       phases={phases ?? []}
       policy={gatePolicy(org?.settings)}
+      nonDispensable={transferNonDispensable(org?.settings)}
       weights={<GateWeightsCard gates={(gates ?? []).map(g => ({ ...g, weight: g.weight === null ? null : Number(g.weight) }))} />}
     />
   )

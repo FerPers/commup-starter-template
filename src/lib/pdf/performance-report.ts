@@ -28,7 +28,7 @@ export type PerformancePdfInput = {
   procedure: string | null
   variables: { key: string; label: string; source: string; ref: string; unit: string | null; every: number | null }[]
   evaluation: Evaluation
-  disturbances: { start: string; end: string | null; kind: string; description: string; excluded: boolean; reason: string | null; by: string | null }[]
+  disturbances: { start: string; end: string | null; kind: string; description: string; excluded: boolean; reason: string | null; by: string | null; ackBy?: string | null; ackAt?: string | null }[]
   series: { key: string; unit: string | null; points: { t: number; v: number }[] }[]
   action: string | null
   certificate: { number: string; status: string; hash: string | null; signatures: { capacity: string; name: string | null; at: string | null }[] } | null
@@ -66,6 +66,8 @@ const T = {
   draft: { es: 'BORRADOR — resultado no registrado', en: 'DRAFT — result not recorded' }, page: { es: 'Página', en: 'Page' },
   noDist: { es: 'Sin perturbaciones registradas.', en: 'No disturbances recorded.' }, noPairs: { es: 'Sin pares definidos.', en: 'No pairs defined.' },
   excluded: { es: 'Excluida', en: 'Excluded' }, included: { es: 'Incluida', en: 'Included' }, every: { es: 'cada', en: 'every' },
+  ackBy: { es: 'reconoció', en: 'acknowledged by' }, noAck: { es: 'sin reconocer por el cliente', en: 'not acknowledged by the client' },
+  withoutExcl: { es: 'Sugerido sin exclusiones', en: 'Suggested without exclusions' }, exclChange: { es: 'las exclusiones cambian el resultado', en: 'exclusions change the result' },
   col: {
     key: { es: 'Clave', en: 'Key' }, desc: { es: 'Descripción', en: 'Description' }, source: { es: 'Origen', en: 'Source' },
     ref: { es: 'Señal / fórmula', en: 'Signal / formula' }, unit: { es: 'Unidad', en: 'Unit' }, criterion: { es: 'Criterio', en: 'Criterion' },
@@ -146,6 +148,8 @@ export async function renderPerformancePdf(x: PerformancePdfInput): Promise<Uint
   r.kv(T.primary[L], x.primarySystem)
   r.kv(T.project[L], `${x.orgName} / ${x.projectCode}`)
   r.kv(T.suggested[L], x.labels.result(e.suggested))
+  // S25 (E-19): con exclusiones, también el resultado sin ellas.
+  if (e.without_exclusions) r.kv(T.withoutExcl[L], `${x.labels.result(e.without_exclusions.suggested)}${e.exclusions_change_result ? ` (${T.exclChange[L]})` : ''}`)
   r.kv(T.result[L], result ? x.labels.result(result) : T.draft[L])
 
   // 2–4. Objetivo, frontera, condiciones
@@ -189,7 +193,7 @@ export async function renderPerformancePdf(x: PerformancePdfInput): Promise<Uint
   section(8)
   if (!x.disturbances.length) para(T.noDist[L], 9, COLOR.muted)
   else table([{ label: T.col.window[L], frac: 0.28 }, { label: T.col.kind[L], frac: 0.16 }, { label: T.col.desc[L], frac: 0.36 }, { label: T.col.calc[L], frac: 0.2 }],
-    x.disturbances.map(d => [`${dt(d.start)} -> ${d.end ? timeIn(d.end, tz) : '...'}`, x.labels.distKind(d.kind), `${d.description}${d.reason ? ` (${d.reason})` : ''}`, d.excluded ? T.excluded[L] : T.included[L]]))
+    x.disturbances.map(d => [`${dt(d.start)} -> ${d.end ? timeIn(d.end, tz) : '...'}`, x.labels.distKind(d.kind), `${d.description}${d.reason ? ` (${d.reason})` : ''}`, d.excluded ? `${T.excluded[L]} · ${d.ackBy ? `${T.ackBy[L]} ${d.ackBy}` : T.noAck[L]}` : T.included[L]]))
 
   // 10. Validación de datos + gráficos
   r.ensureSpace(90)

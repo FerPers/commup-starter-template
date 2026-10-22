@@ -2,7 +2,7 @@ import { fallbackCapacities } from '@/lib/constants/capacities'
 import { describe, expect, it } from 'vitest'
 import {
   PERFORMANCE_SECTIONS, checkContent, checkCriterion, checkVariables, criterionText, emptyCriterion, emptyVariable,
-  canSignCertificate, findCycle, runClock, toPayload, type ContentDraft,
+  canSignCertificate, exclusionsPendingAck, findCycle, runClock, toPayload, type ContentDraft,
 } from './catalog'
 
 const v = (key: string, source: 'signal' | 'manual' | 'derived', a = '', b = '') =>
@@ -76,5 +76,15 @@ describe('firmas del certificado PTC', () => {
     expect(canSignCertificate(c, 'client', fallbackCapacities('client'), 'c')).toBe(true)
     expect(canSignCertificate({ ...c, operations_signed_by: 'c' }, 'client', fallbackCapacities('client'), 'c')).toBe(false)
     expect(canSignCertificate({ ...c, status: 'accepted' }, 'client', fallbackCapacities('client'), 'd')).toBe(false)
+  })
+})
+
+describe('S25 (E-19): exclusiones que cambian el resultado', () => {
+  const x = (ack: string | null) => ({ id: '1', kind: 'trip', started_at: '', ended_at: null, reason: 'r', excluded_by: 'a', client_ack_by: ack, client_ack_at: null })
+  it('pide reconocimiento solo si cambian el sugerido y falta alguno', () => {
+    expect(exclusionsPendingAck({ exclusions: [x(null)], exclusions_change_result: true })).toBe(true)
+    expect(exclusionsPendingAck({ exclusions: [x('c')], exclusions_change_result: true })).toBe(false)
+    expect(exclusionsPendingAck({ exclusions: [x(null)], exclusions_change_result: false })).toBe(false)
+    expect(exclusionsPendingAck({})).toBe(false)
   })
 })

@@ -1188,6 +1188,9 @@ export type Database = {
           person_id: string
           project_id: string
           system_id: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
           assessed_at?: string
@@ -1202,6 +1205,9 @@ export type Database = {
           person_id: string
           project_id: string
           system_id: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
           assessed_at?: string
@@ -1216,6 +1222,9 @@ export type Database = {
           person_id?: string
           project_id?: string
           system_id?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {
@@ -4177,6 +4186,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           checklist: Json
+          commissioning_ack: string[] | null
           commissioning_company: string | null
           commissioning_signed_at: string | null
           commissioning_signed_by: string | null
@@ -4188,6 +4198,7 @@ export type Database = {
           id: string
           is_reversal: boolean
           number: string
+          operations_ack: string[] | null
           operations_company: string | null
           operations_signed_at: string | null
           operations_signed_by: string | null
@@ -4206,6 +4217,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           checklist?: Json
+          commissioning_ack?: string[] | null
           commissioning_company?: string | null
           commissioning_signed_at?: string | null
           commissioning_signed_by?: string | null
@@ -4217,6 +4229,7 @@ export type Database = {
           id?: string
           is_reversal?: boolean
           number: string
+          operations_ack?: string[] | null
           operations_company?: string | null
           operations_signed_at?: string | null
           operations_signed_by?: string | null
@@ -4235,6 +4248,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           checklist?: Json
+          commissioning_ack?: string[] | null
           commissioning_company?: string | null
           commissioning_signed_at?: string | null
           commissioning_signed_by?: string | null
@@ -4246,6 +4260,7 @@ export type Database = {
           id?: string
           is_reversal?: boolean
           number?: string
+          operations_ack?: string[] | null
           operations_company?: string | null
           operations_signed_at?: string | null
           operations_signed_by?: string | null
@@ -4520,6 +4535,8 @@ export type Database = {
       }
       performance_disturbances: {
         Row: {
+          client_ack_at: string | null
+          client_ack_by: string | null
           description: string
           ended_at: string | null
           excluded: boolean
@@ -4535,6 +4552,8 @@ export type Database = {
           started_at: string
         }
         Insert: {
+          client_ack_at?: string | null
+          client_ack_by?: string | null
           description: string
           ended_at?: string | null
           excluded?: boolean
@@ -4550,6 +4569,8 @@ export type Database = {
           started_at: string
         }
         Update: {
+          client_ack_at?: string | null
+          client_ack_by?: string | null
           description?: string
           ended_at?: string | null
           excluded?: boolean
@@ -5819,6 +5840,77 @@ export type Database = {
           },
         ]
       }
+      procedure_run_events: {
+        Row: {
+          backfilled: boolean
+          comment: string | null
+          field_at: string | null
+          id: string
+          kind: string
+          org_id: string
+          project_id: string
+          recorded_at: string
+          run_id: string
+          step_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          backfilled?: boolean
+          comment?: string | null
+          field_at?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          project_id: string
+          recorded_at?: string
+          run_id: string
+          step_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          backfilled?: boolean
+          comment?: string | null
+          field_at?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          project_id?: string
+          recorded_at?: string
+          run_id?: string
+          step_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_run_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_run_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_run_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedure_run_events_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "procedure_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       procedure_run_steps: {
         Row: {
           actual_value: string | null
@@ -5827,6 +5919,7 @@ export type Database = {
           done_by: string | null
           ord: number
           project_id: string
+          release_comment: string | null
           release_role: string | null
           released_at: string | null
           released_by: string | null
@@ -5842,6 +5935,7 @@ export type Database = {
           done_by?: string | null
           ord: number
           project_id: string
+          release_comment?: string | null
           release_role?: string | null
           released_at?: string | null
           released_by?: string | null
@@ -5857,6 +5951,7 @@ export type Database = {
           done_by?: string | null
           ord?: number
           project_id?: string
+          release_comment?: string | null
           release_role?: string | null
           released_at?: string | null
           released_by?: string | null
@@ -8460,6 +8555,7 @@ export type Database = {
       }
       startup_events: {
         Row: {
+          backdate_reason: string | null
           category: string | null
           description: string | null
           id: string
@@ -8484,6 +8580,7 @@ export type Database = {
           witness_capacity: string | null
         }
         Insert: {
+          backdate_reason?: string | null
           category?: string | null
           description?: string | null
           id?: string
@@ -8508,6 +8605,7 @@ export type Database = {
           witness_capacity?: string | null
         }
         Update: {
+          backdate_reason?: string | null
           category?: string | null
           description?: string | null
           id?: string
@@ -12042,6 +12140,10 @@ export type Database = {
         Args: { p_comment?: string; p_handover_id: string }
         Returns: string
       }
+      acknowledge_performance_exclusions: {
+        Args: { p_run_id: string }
+        Returns: number
+      }
       activate_itr_template_revision: {
         Args: { p_template_id: string }
         Returns: Json
@@ -12914,6 +13016,16 @@ export type Database = {
           template_id: string
         }[]
       }
+      log_procedure_run_event: {
+        Args: {
+          p_comment: string
+          p_field_at: string
+          p_kind: string
+          p_step_id: string
+          r: Database["public"]["Tables"]["procedure_runs"]["Row"]
+        }
+        Returns: undefined
+      }
       log_sync_conflict: {
         Args: {
           p_entity_id: string
@@ -13043,7 +13155,12 @@ export type Database = {
       org_document_policy: { Args: { p_org_id: string }; Returns: string }
       org_gate_policy: { Args: { p_org_id: string }; Returns: Json }
       org_last_active_owner: { Args: { p_member_id: string }; Returns: boolean }
+      org_transfer_non_dispensable: {
+        Args: { p_org_id: string }
+        Returns: string[]
+      }
       outbox_dispatch: { Args: { p_limit?: number }; Returns: Json }
+      ownership_check_keys: { Args: never; Returns: string[] }
       ownership_checklist: {
         Args: { p_system_id: string; p_to_stage: string }
         Returns: Json
@@ -13055,6 +13172,10 @@ export type Database = {
       }
       performance_compute_evaluation: {
         Args: { p_run_id: string }
+        Returns: Json
+      }
+      performance_evaluate_core: {
+        Args: { p_ignore_exclusions: boolean; p_run_id: string }
         Returns: Json
       }
       performance_freeze_run: { Args: { p_run_id: string }; Returns: number }
@@ -13071,6 +13192,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      person_name_key: { Args: { p_name: string }; Returns: string }
       person_system_level: {
         Args: { p_person_id: string; p_system_id: string }
         Returns: number
@@ -13216,6 +13338,7 @@ export type Database = {
       }
       record_startup_event: {
         Args: {
+          p_backdate_reason?: string
           p_code: string
           p_description?: string
           p_kind: string
@@ -13556,7 +13679,11 @@ export type Database = {
         Returns: Json
       }
       sign_ownership_transfer: {
-        Args: { p_capacity: string; p_transfer_id: string }
+        Args: {
+          p_acknowledged?: string[]
+          p_capacity: string
+          p_transfer_id: string
+        }
         Returns: string
       }
       sign_performance_certificate: {
@@ -13914,6 +14041,10 @@ export type Database = {
       verify_lineup_item: { Args: { p_item_id: string }; Returns: undefined }
       verify_punch: {
         Args: { p_accept: boolean; p_comment?: string; p_punch_id: string }
+        Returns: undefined
+      }
+      void_competency_record: {
+        Args: { p_reason: string; p_record_id: string }
         Returns: undefined
       }
       void_document_revision: {

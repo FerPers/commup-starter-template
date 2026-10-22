@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
   deleteCriticalSpare, getOwnershipChecklist, recordCompetency, requestOwnershipTransfer, setCompetencyTarget, upsertCriticalSpare, upsertOpsPerson,
+  voidCompetencyRecord,
 } from '@/app/actions/ops-readiness'
 import { COMPETENCY_LEVELS, EVIDENCE_KINDS, SPARE_STATUSES, nextStage, previousStages, type EvidenceKind, type OwnershipStage, type SpareStatus } from '@/lib/startup/catalog'
 import { Alert, Chip, Field, MemberSelect, SystemSelect, btn, card, grid, input, linkStyle, small, type Member } from '../../daily/daily-ui'
@@ -20,6 +21,8 @@ type Spare = {
   qty_required: number; qty_available: number; status: SpareStatus; eta: string | null; notes: string | null
 }
 type Cell = { level: number; last: number; expired: boolean; expiresAt: string | null }
+/** S25 (E-12): historial de una celda (persona × sistema), con las anuladas. */
+export type CompetencyRecordRow = { id: string; level: number; assessed_at: string; expires_at: string | null; assessed_by: string | null; voided: boolean; void_reason: string | null }
 
 const th: React.CSSProperties = {
   textAlign: 'left', padding: '8px 10px', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)',
@@ -32,7 +35,8 @@ const SPARE_TONE: Record<SpareStatus, 'green' | 'amber' | 'red'> = { available: 
 const emptyPerson = { personId: '', fullName: '', company: '', position: '', shift: '', userId: '', active: true }
 const emptySpare = { spareId: '', systemId: '', item: '', kind: 'spare' as 'spare' | 'special_tool', partNumber: '', isCritical: true, qtyRequired: '1', qtyAvailable: '0', status: 'not_available' as SpareStatus, eta: '', notes: '' }
 
-export default function OperationsView({ project, initialView, systems, transfers, people, levels, spares, members, canEdit, canAssess, companies = [] }: {
+export default function OperationsView({ project, initialView, systems, transfers, people, levels, spares, members, canEdit, canAssess, companies = [],
+  canRequest, trainerSystems, nonDispensable, history, userId }: {
   project: { id: string; code: string; name: string }
   /** Fase 8: empresas del catálogo (sugeridas; el texto que coincide se enlaza en la BD). */
   companies?: string[]
@@ -44,7 +48,16 @@ export default function OperationsView({ project, initialView, systems, transfer
   spares: Spare[]
   members: Member[]
   canEdit: boolean
+  /** Líder o superior: evalúa en cualquier sistema y fija el objetivo por turno. */
   canAssess: boolean
+  /** S25 (E-13): pide traspasos un líder o superior. */
+  canRequest: boolean
+  /** S25 (E-12): sistemas donde el usuario es entrenador (nivel 4 en su ficha vinculada); la BD también lo deja evaluar. */
+  trainerSystems: string[]
+  /** S25 (E-13): ítems del checklist que la org no deja dispensar. */
+  nonDispensable: string[]
+  history: Record<string, CompetencyRecordRow[]>
+  userId: string
 }) {
   const t = useTranslations('Startup')
   const router = useRouter()
@@ -61,6 +74,8 @@ export default function OperationsView({ project, initialView, systems, transfer
   const [check, setCheck] = useState<CheckItem[] | null>(null)
   const [just, setJust] = useState<Record<string, string>>({})
   // Competencia
+  const [voiding, setVoiding] = useState<{ id: string; reason: string } | null>(null)
+  const assessable = (systemId: string) => canAssess || trainerSystems.includes(systemId)
   const [assess, setAssess] = useState<{ personId: string; systemId: string; level: string; evidenceKind: EvidenceKind; evidence: string; assessedAt: string; expiresAt: string } | null>(null)
   // Personal y repuestos
   const [person, setPerson] = useState<typeof emptyPerson | null>(null)
@@ -94,7 +109,9 @@ export default function OperationsView({ project, initialView, systems, transfer
   const reqSys = req ? systems.find(s => s.id === req.systemId) : undefined
   const isReversal = !!reqSys && !!req?.toStage && previousStages(reqSys.stage).includes(req.toStage)
   const missing = (check ?? []).filter(c => !c.ok)
-  const reqReady = !!req?.toStage && (isReversal ? req.reason.trim().length >= 10 : check !== null && missing.every(m => (just[m.key] ?? '').trim().length >= 10))
+  const blocking = missing.filter(m => nonDispensable.includes(m.key))
+  const reqReady = !!req?.toStage && (isReversal ? req.reason.trim().length >= 10
+    : check !== null && blocking.length === 0 && missing.every(m => (just[m.key] ?? '').trim().length >= 10))
 
   const activePeople = people.filter(p => p.active)
   const tabs: View[] = ['systems', 'competency', 'personnel', 'spares']
@@ -149,7 +166,7 @@ export default function OperationsView({ project, initialView, systems, transfer
                       </td>
                       <td style={td}>{pend ? <Link href={`${root}/transfers/${pend.id}`} style={linkStyle}>{pend.number} → {t(`ops.stage.${pend.to_stage}`)}</Link> : '—'}</td>
                       <td style={{ ...td, textAlign: 'right' }}>
-                        {canEdit && !pend && <button type="button" style={btn('outline')} onClick={() => openRequest(s)}>{t('ops.request')}</button>}
+                        {canRequest && !pend && <button type="button" style={btn('outline')} onClick={() => openRequest(s)}>{t('ops.request')}</button>}
                       </td>
                     </tr>
                   )
@@ -182,7 +199,10 @@ export default function OperationsView({ project, initialView, systems, transfer
               ) : req.toStage && (
                 check === null ? <p style={small}>{t('ops.loading')}</p> : (
                   <>
-                    <Checklist items={check} renderException={key => (
+                    {blocking.length > 0 && <Alert kind="error">{t('ops.blockingGaps', { items: blocking.map(b => t(`ops.check.${b.key}`)).join(', ') })}</Alert>}
+                    <Checklist items={check} renderException={key => nonDispensable.includes(key) ? (
+                      <div style={{ ...small, marginTop: 4, color: 'var(--danger-700)', fontWeight: 600 }}>{t('ops.nonDispensable')}</div>
+                    ) : (
                       <textarea rows={2} style={{ ...input, marginTop: 6 }} aria-label={t('ops.justify')} placeholder={t('ops.justifyPlaceholder')}
                         value={just[key] ?? ''} onChange={e => setJust({ ...just, [key]: e.target.value })} />
                     )} />
@@ -260,11 +280,11 @@ export default function OperationsView({ project, initialView, systems, transfer
                         const col = c && !c.expired ? LEVEL_COLOR[c.level] : LEVEL_COLOR[0]
                         return (
                           <td key={s.id} style={{ ...td, textAlign: 'center', padding: 4 }}>
-                            <button type="button" disabled={!canAssess}
+                            <button type="button" disabled={!assessable(s.id)}
                               title={c?.expired ? t('ops.expiredOn', { date: c.expiresAt ?? '' }) : c?.expiresAt ? t('ops.expiresOn', { date: c.expiresAt }) : undefined}
                               aria-label={`${p.full_name} · ${s.code}: ${shown ?? '—'}`}
                               onClick={() => setAssess({ personId: p.id, systemId: s.id, level: String(c?.level ?? 1), evidenceKind: 'ojt', evidence: '', assessedAt: '', expiresAt: '' })}
-                              style={{ width: 36, height: 28, borderRadius: 4, border: '1px solid var(--border)', fontWeight: 700, cursor: canAssess ? 'pointer' : 'default',
+                              style={{ width: 36, height: 28, borderRadius: 4, border: '1px solid var(--border)', fontWeight: 700, cursor: assessable(s.id) ? 'pointer' : 'default',
                                 background: col.bg, color: col.fg, textDecoration: c?.expired ? 'line-through' : undefined }}>
                               {shown ?? '·'}
                             </button>
@@ -301,6 +321,31 @@ export default function OperationsView({ project, initialView, systems, transfer
                 <Field text={t('ops.expiresAt')}><input type="date" style={input} value={assess.expiresAt} onChange={e => setAssess({ ...assess, expiresAt: e.target.value })} /></Field>
                 <Field text={t('ops.evidenceText')} wide><textarea rows={2} style={input} value={assess.evidence} onChange={e => setAssess({ ...assess, evidence: e.target.value })} /></Field>
               </div>
+              {(history[`${assess.personId}:${assess.systemId}`] ?? []).length > 0 && (
+                <div>
+                  <div style={{ ...small, fontWeight: 700, marginBottom: 4 }}>{t('ops.history')}</div>
+                  <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {history[`${assess.personId}:${assess.systemId}`].map(h => (
+                      <li key={h.id} style={{ ...small, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', textDecoration: h.voided ? 'line-through' : undefined }}>
+                        <span>{t('ops.recordLine', { level: h.level, date: h.assessed_at, by: members.find(m => m.id === h.assessed_by)?.name ?? '—' })}</span>
+                        {h.voided && <span style={{ textDecoration: 'none' }}>· {t('ops.voided')}: {h.void_reason}</span>}
+                        {!h.voided && (canAssess || h.assessed_by === userId) && voiding?.id !== h.id && (
+                          <button type="button" style={{ ...btn('outline'), padding: '2px 8px' }} onClick={() => setVoiding({ id: h.id, reason: '' })}>{t('ops.void')}</button>
+                        )}
+                        {voiding?.id === h.id && (
+                          <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            <input style={{ ...input, width: 260 }} aria-label={t('ops.voidReason')} placeholder={t('ops.voidReason')} value={voiding.reason}
+                              onChange={e => setVoiding({ id: h.id, reason: e.target.value })} />
+                            <button type="button" style={btn('primary', isPending || voiding.reason.trim().length < 10)} disabled={isPending || voiding.reason.trim().length < 10}
+                              onClick={() => run(() => voidCompetencyRecord({ projectId: project.id, recordId: h.id, reason: voiding.reason }), () => { setVoiding(null); setOk(t('saved')) })}>{t('ops.void')}</button>
+                            <button type="button" style={btn('outline')} onClick={() => setVoiding(null)}>{t('ops.close')}</button>
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" style={btn('primary', isPending)} disabled={isPending}
                   onClick={() => run(() => recordCompetency({

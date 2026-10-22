@@ -24,6 +24,8 @@ export type RunStepStatus = 'pending' | 'done' | 'at_hold' | 'released' | 'na'
 
 export const HOLD_CAPACITIES = ['commissioning', 'operations', 'hse'] as const
 export type HoldCapacity = (typeof HOLD_CAPACITIES)[number]
+/** S25 (E-36): capacidad por defecto de un hold point (= SQL procedure_write_content). */
+export const DEFAULT_HOLD_CAPACITY: HoldCapacity = 'commissioning'
 
 /** Roles de respaldo por capacidad cuando el proyecto no tiene designados (= SQL hold_release_roles / capacity_fallback_roles). */
 export const HOLD_RELEASE_ROLES: Record<HoldCapacity, readonly string[]> = {
@@ -49,7 +51,7 @@ export type StepDraft = {
 }
 
 export function emptyStep(): StepDraft {
-  return { action: '', responsible: '', expected_value: '', tag_id: null, tag_number: null, is_hold_point: false, hold_capacity: 'operations', stop_criteria: '' }
+  return { action: '', responsible: '', expected_value: '', tag_id: null, tag_number: null, is_hold_point: false, hold_capacity: DEFAULT_HOLD_CAPACITY, stop_criteria: '' }
 }
 
 /** Siguiente paso ejecutable (el primero pendiente cuyos anteriores están cerrados), o null. */
@@ -148,9 +150,9 @@ export function previousStages(s: OwnershipStage): OwnershipStage[] {
   return OWNERSHIP_STAGES.slice(0, OWNERSHIP_STAGES.indexOf(s))
 }
 
-/** Nivel vigente (= SQL person_system_level): última evaluación; vencida = 0; sin registros = 0. */
-export function currentLevel(records: { level: number; assessed_at: string; created_at: string; expires_at: string | null }[], today: string): number {
-  const last = [...records].sort((a, b) => b.assessed_at.localeCompare(a.assessed_at) || b.created_at.localeCompare(a.created_at))[0]
+/** Nivel vigente (= SQL person_system_level): última evaluación no anulada; vencida = 0; sin registros = 0. */
+export function currentLevel(records: { level: number; assessed_at: string; created_at: string; expires_at: string | null; voided_at?: string | null }[], today: string): number {
+  const last = records.filter(r => !r.voided_at).sort((a, b) => b.assessed_at.localeCompare(a.assessed_at) || b.created_at.localeCompare(a.created_at))[0]
   if (!last) return 0
   return last.expires_at && last.expires_at < today ? 0 : last.level
 }
@@ -165,4 +167,37 @@ export function signableCapacities(
   if (!t.commissioning_signed_by && can(caps, 'commissioning')) out.push('commissioning')
   if (!t.operations_signed_by && can(caps, 'operations')) out.push('operations')
   return out
+}
+
+// ── S25 (E-13): política de traspasos ────────────────────────────────────────
+
+/** Claves del checklist de traspaso (= SQL ownership_check_keys(), test de paridad). */
+export const TRANSFER_CHECK_KEYS = [
+  'startup_procedure', 'staff_level_1', 'staff_level_2', 'staff_level_3', 'lineup_verified', 'startup_gate',
+  'first_startup_witnessed', 'no_open_cat_a', 'critical_spares',
+] as const
+export type TransferCheckKey = (typeof TRANSFER_CHECK_KEYS)[number]
+export const DEFAULT_NON_DISPENSABLE: readonly TransferCheckKey[] = ['no_open_cat_a', 'startup_gate']
+
+/** Ítems que la org no deja dispensar (= SQL org_transfer_non_dispensable). Sin configurar: Cat A y gate de arranque. */
+export function transferNonDispensable(settings: unknown): TransferCheckKey[] {
+  const p = (settings && typeof settings === 'object' ? (settings as Record<string, unknown>).transfer_policy : null) as Record<string, unknown> | null
+  const raw = p?.non_dispensable
+  if (!Array.isArray(raw)) return [...DEFAULT_NON_DISPENSABLE]
+  return TRANSFER_CHECK_KEYS.filter(k => raw.includes(k))
+}
+
+/** Falta que no se puede justificar en el traspaso. */
+export function isBlockingGap(item: ChecklistItem, nonDispensable: readonly string[]): boolean {
+  return !item.ok && nonDispensable.includes(item.key)
+}
+
+// ── S25 (E-16): eventos con fecha atrasada ──────────────────────────────────
+
+/** Más días atrás que esto exige líder+ y motivo (= SQL record_startup_event). */
+export const BACKDATE_DAYS = 7
+
+export function needsBackdateReason(occurredAt: string, now: Date = new Date()): boolean {
+  const t = Date.parse(occurredAt)
+  return Number.isFinite(t) && t < now.getTime() - BACKDATE_DAYS * 86_400_000
 }

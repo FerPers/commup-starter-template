@@ -15,7 +15,7 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 
 type Step = {
   stepId: string; ord: number; status: RunStepStatus; actual: string | null; comment: string | null
-  doneBy: string | null; doneAt: string | null; releasedBy: string | null; releasedAt: string | null
+  doneBy: string | null; doneAt: string | null; releasedBy: string | null; releasedAt: string | null; releaseComment: string | null
   action: string; responsible: string | null; expected: string | null; isHold: boolean; capacity: HoldCapacity; stopCriteria: string | null; tag: string | null
 }
 type Run = {
@@ -28,10 +28,14 @@ const STEP_TONE: Record<RunStepStatus, 'muted' | 'green' | 'amber' | 'violet'> =
 const LEADERS = ROLE_TIERS.editor
 const big = (primary: boolean, disabled = false): React.CSSProperties => ({ ...btn(primary ? 'primary' : 'outline', disabled), padding: '12px 18px', fontSize: 'var(--text-base)' })
 
-export default function RunView({ project, run: serverRun, steps: serverSteps, names, userId, role, caps }: {
+/** S25 (E-10): línea de tiempo de la ejecución (cada parada, reanudación y hold liberado). */
+export type RunTimelineEntry = { id: string; kind: 'started' | 'stopped' | 'resumed' | 'hold_released' | 'completed' | 'aborted'; userId: string | null; at: string; comment: string | null; stepOrd: number | null }
+
+export default function RunView({ project, run: serverRun, steps: serverSteps, names, userId, role, caps, timeline }: {
   project: { id: string; code: string; name: string }; run: Run; steps: Step[]; names: Record<string, string>; userId: string; role: string
   /** S14 (D14): capacidades del usuario en el proyecto (designado o respaldo por rol). */
   caps: MyCapacities
+  timeline: RunTimelineEntry[]
 }) {
   const t = useTranslations('Startup')
   const tOff = useTranslations('Startup.offline')
@@ -190,6 +194,7 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
                   <div style={{ ...small, fontSize: 'var(--text-xs)' }} suppressHydrationWarning>
                     {who(s.doneBy)} · {when(s.doneAt)}{s.actual ? ` · ${s.actual}` : ''}{s.comment ? ` — ${s.comment}` : ''}
                     {s.releasedAt && ` · ${t('run.releasedBy', { who: who(s.releasedBy), when: when(s.releasedAt) })}`}
+                    {s.releaseComment && ` — ${s.releaseComment}`}
                   </div>
                 )}
               </div>
@@ -201,6 +206,23 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
           ))}
         </ol>
       </section>
+
+      {timeline.length > 0 && (
+        <section style={card} aria-label={t('run.timeline')}>
+          <h2 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('run.timeline')}</h2>
+          <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {timeline.map(e => (
+              <li key={e.id} style={{ ...small, display: 'flex', gap: 8 }} suppressHydrationWarning>
+                <span style={{ minWidth: 150 }}>{when(e.at)}</span>
+                <span style={{ color: e.kind === 'stopped' || e.kind === 'aborted' ? 'var(--danger-700)' : 'var(--text-strong)', fontWeight: 600 }}>
+                  {t(`run.event.${e.kind}`)}{e.stepOrd !== null ? ` #${e.stepOrd}` : ''}
+                </span>
+                <span>{who(e.userId)}{e.comment ? ` — ${e.comment}` : ''}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {live && LEADERS.includes(role) && (
         <button type="button" style={{ ...btn('outline', !netOk), color: 'var(--danger-700)', alignSelf: 'flex-start' }} disabled={isPending || !netOk} title={netOk ? undefined : netHint}

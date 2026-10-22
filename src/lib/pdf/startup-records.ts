@@ -37,6 +37,8 @@ const T = {
   holdBy:      { es: 'Hold liberado por', en: 'Hold released by' },
   comment:     { es: 'Comentario', en: 'Comment' },
   events:      { es: 'Eventos registrados en la ejecución', en: 'Events logged during the run' },
+  timeline:    { es: 'Línea de tiempo', en: 'Timeline' },
+  releaseNote: { es: 'Al liberar', en: 'On release' },
   safety:      { es: 'Seguridad', en: 'Safety' },
   stopCrit:    { es: 'Criterios de parada', en: 'Stop criteria' },
   signoff:     { es: 'Firmas en papel (si se ejecutó sin tablet)', en: 'Paper sign-off (if run without a tablet)' },
@@ -66,6 +68,7 @@ const T = {
   sample:      { es: 'Muestra', en: 'Sample' },
   source:      { es: 'Fuente', en: 'Source' },
   voided:      { es: 'ANULADO', en: 'VOIDED' },
+  backdate:    { es: 'Registrado con atraso', en: 'Recorded late' },
   none:        { es: 'Sin registros.', en: 'No records.' },
   page:        { es: 'Página', en: 'Page' },
   printed:     { es: 'Impreso', en: 'Printed' },
@@ -141,8 +144,10 @@ export type RunPdfInput = Common & {
   steps: {
     ord: number; action: string; tag: string | null; responsible: string | null; expected: string | null; stop: string | null
     hold: boolean; holdCapacity: string | null; status: string; actual: string | null; comment: string | null
-    doneBy: string | null; doneAt: string | null; releasedBy: string | null; releasedAt: string | null
+    doneBy: string | null; doneAt: string | null; releasedBy: string | null; releasedAt: string | null; releaseComment?: string | null
   }[]
+  /** S25 (E-10): paradas, reanudaciones y holds liberados, en orden. `label` ya traducido. */
+  timeline?: { at: string; label: string; by: string | null; comment: string | null }[]
   events: { number: string; occurredAt: string; title: string; label: string }[]
 }
 
@@ -185,8 +190,13 @@ export async function renderRunPdf(x: RunPdfInput): Promise<Uint8Array> {
       s.expected ?? '',
       { text: s.status === 'na' ? 'N/A' : s.actual ?? (done ? '' : blank), bold: true },
       done ? `${s.doneBy ?? '—'}\n${at(s.doneAt)}` : blank,
-      s.hold ? (s.releasedBy ? `${s.releasedBy}\n${at(s.releasedAt)}` : blank) : '',
+      s.hold ? (s.releasedBy ? `${s.releasedBy}\n${at(s.releasedAt)}${s.releaseComment ? `\n${T.releaseNote[L]}: ${s.releaseComment}` : ''}` : blank) : '',
     ], { repeatHeader: true, minHeight: done ? 0 : 26, bg: s.status === 'pending' ? undefined : s.hold ? COLOR.amberBg : undefined })
+  }
+
+  if (x.timeline?.length) {
+    r.accentSection(T.timeline[L])
+    for (const e of x.timeline) r.kv(at(e.at), `${e.label} · ${e.by ?? '—'}${e.comment ? ` — ${e.comment}` : ''}`, { keyW: 120 })
   }
 
   if (x.events.length) {
@@ -295,6 +305,8 @@ export type EventPdfInput = Common & {
   voidedBy: string | null
   voidedAt: string | null
   voidReason: string | null
+  /** S25 (E-16): motivo de registrar un evento de hace más de 7 días. */
+  backdateReason?: string | null
   params: { label: string; value: number | null; valueText: string | null; unit: string | null; quality: number | null; sampledAt: string | null; offsetS: number | null; source: string }[]
 }
 
@@ -318,6 +330,7 @@ export async function renderEventPdf(x: EventPdfInput): Promise<Uint8Array> {
   if (x.witnessCapacity) {
     r.kv(`${T.witness[L]} (${x.label(`capacity.${x.witnessCapacity}`)})`, x.witnessBy ? `${x.witnessBy}  ${at(x.witnessAt)}` : T.pending[L], { keyW: 150 })
   }
+  if (x.backdateReason) r.kv(T.backdate[L], x.backdateReason, { keyW: 150 })
   if (x.run) r.kv(T.run2[L], x.run)
   if (x.tags.length) r.kv(T.tags[L], x.tags.join(', '))
   if (x.description?.trim()) { r.accentSection(T.description[L]); r.paragraph(x.description, { size: 9 }) }

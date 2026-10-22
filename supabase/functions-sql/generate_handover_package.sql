@@ -7,6 +7,7 @@ CREATE OR REPLACE FUNCTION public.generate_handover_package(p_project_id uuid, p
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 -- S24 (D17, E-05/F-22): paquete de handover v3 — todo F1–F8 por sistema, con firmas (nombre + empresa congelada) y hashes.
+-- S25: comentario de liberación de holds, línea de tiempo de la ejecución, competencias sin anuladas y reconocimientos del traspaso.
 DECLARE
   v_org_id  uuid;
   v_scope   uuid[];
@@ -143,9 +144,13 @@ BEGIN
                                 'actual', rs.actual_value, 'status', rs.status, 'comment', rs.comment,
                                 'hold', ps.is_hold_point, 'done_by', public.profile_full_name(rs.done_by), 'done_at', rs.done_at,
                                 'released_by', public.profile_full_name(rs.released_by), 'released_at', rs.released_at,
-                                'release_role', rs.release_role) ORDER BY rs.ord)
+                                'release_role', rs.release_role, 'release_comment', rs.release_comment) ORDER BY rs.ord)
                        FROM procedure_run_steps rs JOIN procedure_steps ps ON ps.id = rs.step_id
-                       WHERE rs.run_id = ru.id), '[]'::jsonb))
+                       WHERE rs.run_id = ru.id), '[]'::jsonb),
+                     'timeline', COALESCE((
+                       SELECT jsonb_agg(jsonb_build_object('kind', ev.kind, 'by', public.profile_full_name(ev.user_id),
+                                'at', COALESCE(ev.field_at, ev.recorded_at), 'comment', ev.comment) ORDER BY COALESCE(ev.field_at, ev.recorded_at))
+                       FROM procedure_run_events ev WHERE ev.run_id = ru.id), '[]'::jsonb))
             FROM procedure_runs ru WHERE ru.procedure_id = pr.id AND ru.status = 'completed'
             ORDER BY ru.completed_at DESC LIMIT 1)
         ) ORDER BY pr.number)
@@ -171,7 +176,7 @@ BEGIN
         SELECT jsonb_agg(jsonb_build_object(
           'number', ev.number, 'kind', ev.kind, 'milestone', ev.milestone, 'category', ev.category, 'occurred_at', ev.occurred_at,
           'title', ev.title, 'description', ev.description, 'status', ev.status,
-          'recorded_by', public.profile_full_name(ev.recorded_by), 'witness_capacity', ev.witness_capacity,
+          'recorded_by', public.profile_full_name(ev.recorded_by), 'witness_capacity', ev.witness_capacity, 'backdate_reason', ev.backdate_reason,
           'witness_by', public.profile_full_name(ev.witness_by), 'witness_at', ev.witness_at,
           'params', COALESCE((
             SELECT jsonb_agg(jsonb_build_object('label', pa.label, 'value', pa.value, 'value_text', pa.value_text, 'unit', pa.unit,
@@ -190,6 +195,7 @@ BEGIN
                              'company', tr.commissioning_company, 'signed_at', tr.commissioning_signed_at),
           'operations', jsonb_build_object('name', public.profile_full_name(tr.operations_signed_by),
                              'company', tr.operations_company, 'signed_at', tr.operations_signed_at),
+          'commissioning_ack', to_jsonb(tr.commissioning_ack), 'operations_ack', to_jsonb(tr.operations_ack),
           'completed_at', tr.completed_at, 'content_hash', tr.content_hash
         ) ORDER BY tr.seq)
         FROM ownership_transfers tr WHERE tr.system_id = s.id AND tr.status = 'completed'), '[]'::jsonb),
@@ -200,13 +206,13 @@ BEGIN
         'personnel', COALESCE((
           SELECT jsonb_agg(jsonb_build_object('name', op.full_name, 'company', op.company, 'position', op.position, 'shift', op.shift,
                    'level', public.person_system_level(op.id, s.id),
-                   'assessed_at', (SELECT max(cr.assessed_at) FROM competency_records cr WHERE cr.person_id = op.id AND cr.system_id = s.id),
-                   'expires_at', (SELECT cr.expires_at FROM competency_records cr WHERE cr.person_id = op.id AND cr.system_id = s.id
+                   'assessed_at', (SELECT max(cr.assessed_at) FROM competency_records cr WHERE cr.person_id = op.id AND cr.system_id = s.id AND cr.voided_at IS NULL),
+                   'expires_at', (SELECT cr.expires_at FROM competency_records cr WHERE cr.person_id = op.id AND cr.system_id = s.id AND cr.voided_at IS NULL
                                   ORDER BY cr.assessed_at DESC, cr.created_at DESC LIMIT 1)
                  ) ORDER BY op.shift NULLS LAST, op.full_name)
           FROM ops_personnel op
           WHERE op.project_id = p_project_id AND op.active
-            AND EXISTS (SELECT 1 FROM competency_records cr WHERE cr.person_id = op.id AND cr.system_id = s.id)), '[]'::jsonb)),
+            AND EXISTS (SELECT 1 FROM competency_records cr WHERE cr.person_id = op.id AND cr.system_id = s.id AND cr.voided_at IS NULL)), '[]'::jsonb)),
 
       'spares', COALESCE((
         SELECT jsonb_agg(jsonb_build_object('kind', cs.kind, 'item', cs.item, 'part_number', cs.part_number, 'tag', t.tag_number,

@@ -56,7 +56,7 @@ Una sesión de las de este plan dura unas 3–4 horas de trabajo.
 | S22 | Avisos y colas | S04, S20, S21 | D16 | 🟡 **Hecha salvo el correo** 2026-10-20 (migración 20261119120000 en prod): colas de readiness en Mi trabajo, avisos por cada obligación nueva y por transiciones de gates, push desde la bandeja con temas por usuario, badge personal y chips agrupados. Falta el resumen diario por correo (D16): no hay proveedor de correo transaccional, decisión pendiente de Luis. Detalle en la cobertura |
 | S23 | Readiness v2 (pantallas) | S20 | — | ✅ **Hecha** 2026-10-20 (migración 20261120120000 en prod): Control Tower desde el motor de gates (siguiente gate y qué lo frena), un solo readiness en todas las pantallas, filtros en la URL, Excel, diálogo con impacto al aprobar/revocar, condiciones = acciones ACC, look-ahead con bloqueo y ventana diaria, registros validados en la RPC con aviso de vencidos. Detalle en la cobertura |
 | S24 | Paquete de handover v2 (2 sesiones) | S14 | D17 | ✅ **Hecha** 2026-10-21 (migración 20261121120000 en prod). S24a: RPC esquema 3.0 con todo F1–F8 por sistema y firmas, ZIP con anexos PDF reales, manifest.json firmado con Ed25519 y verificable con OpenSSL, página pública `/verify/<hash>`. S24b: PDF de ejecución de procedimiento, hoja de line-up y ficha de evento (con celdas en blanco para llenar a mano), también como anexos del ZIP. Detalle en la cobertura |
-| S25 | Correcciones de F6–F7 | S14 | — | Pendiente |
+| S25 | Correcciones de F6–F7 (2 sesiones) | S14 | — | 🟡 **S25a hecha** 2026-10-21 (migración 20261122120000 en prod): auditoría y gobernanza — comentario de liberación aparte, línea de tiempo de la ejecución, turnos del roster, competencias anulables, traspaso con ítems no dispensables por org y reconocimiento por firmante, orden y fecha de hitos, re-congelado sin borrar, exclusiones reconocidas por el cliente. Falta S25b (UX de campo: E-21, E-23, E-29, E-32, E-34). Detalle en la cobertura |
 | N0 | Navegación: arreglos rápidos | S01 | D18 | Pendiente — **puede ir en paralelo** en su propio worktree |
 | N1 | Navegación: Mi trabajo y menú por fase y rol | S14, S22 | D18 | Pendiente |
 | N2 | Navegación: Readiness y fusiones | N1, S23 | D18 | Pendiente |
@@ -261,6 +261,7 @@ Formato: **Objetivo** · **Hallazgos** · **Archivos clave** (puntos de partida;
 - **Archivos clave:** `generate_handover_package`, `src/app/actions/ops-readiness.ts`, `src/lib/handover/types.ts`, `src/lib/pdf/procedure.ts`, `performance-report.ts`.
 
 #### S25 — Correcciones de F6–F7 · M
+- **Decisiones de Luis (2026-10-21):** dos sesiones (S25a auditoría y gobernanza; S25b UX de campo); E-13 ítems no dispensables configurables por org (por defecto Cat A y gate de arranque); E-19 las exclusiones que cambian el resultado las reconoce el representante del cliente; E-16 tope de 7 días hacia atrás sin motivo.
 - **Hallazgos:** E-09, E-10, E-11, E-12, E-13 (justificaciones de relleno en el traspaso), E-16, E-17, E-19 (exclusiones sin reconocimiento), E-21, E-23 (valor fuera de rango en un paso). De paso: E-29, E-32, E-34, E-36.
 - **Archivos clave:** `20261018090000_startup_offline.sql`, `RunView.tsx`, `LineupView.tsx`, `TransferView.tsx`.
 

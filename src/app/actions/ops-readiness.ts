@@ -69,6 +69,19 @@ export const recordCompetency = withAuth(
   },
 )
 
+/** S25 (E-12): anula un registro de competencia erróneo (líder+ o quien lo registró), con motivo. */
+export const voidCompetencyRecord = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; recordId: string; reason: string }): Promise<{ error?: string }> => {
+    const { data: rec } = await ctx.supabase.from('competency_records').select('id').eq('id', input.recordId).eq('project_id', input.projectId).maybeSingle()
+    if (!rec) return { error: 'Registro no encontrado' }
+    const { error } = await ctx.supabase.rpc('void_competency_record', { p_record_id: input.recordId, p_reason: input.reason.trim().slice(0, 2000) })
+    if (error) return { error: error.message }
+    revalidate(input.projectId)
+    return {}
+  },
+)
+
 export const setCompetencyTarget = withAuth(
   { guards: [...projectGuard, systemGuard] },
   async (ctx, input: { projectId: string; systemId: string; required: number }): Promise<{ error?: string }> => {
@@ -149,10 +162,16 @@ async function generateForTransfer(orgId: string, projectId: string, transferId:
 
 export const signOwnershipTransfer = withAuth(
   { guards: projectGuard },
-  async (ctx, input: { projectId: string; transferId: string; capacity: 'commissioning' | 'operations' }): Promise<{ status?: string; handoverError?: string; error?: string }> => {
+  async (
+    ctx,
+    /** S25 (E-13): `acknowledged` = claves de las excepciones que el firmante reconoció una por una. */
+    input: { projectId: string; transferId: string; capacity: 'commissioning' | 'operations'; acknowledged: string[] },
+  ): Promise<{ status?: string; handoverError?: string; error?: string }> => {
     const tr = await transferOf(ctx.supabase, input.transferId, input.projectId)
     if (!tr) return { error: 'Traspaso no encontrado' }
-    const { data, error } = await ctx.supabase.rpc('sign_ownership_transfer', { p_transfer_id: input.transferId, p_capacity: input.capacity })
+    const { data, error } = await ctx.supabase.rpc('sign_ownership_transfer', {
+      p_transfer_id: input.transferId, p_capacity: input.capacity, p_acknowledged: input.acknowledged.slice(0, 20).map(k => k.slice(0, 60)),
+    })
     if (error) return { error: error.message }
     let handoverError: string | undefined
     if (data === 'completed') {

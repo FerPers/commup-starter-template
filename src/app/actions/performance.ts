@@ -224,6 +224,18 @@ export const setPerformanceDisturbanceExclusion = withAuth(
   },
 )
 
+/** S25 (E-19): el representante del cliente reconoce las exclusiones de un intento cerrado. */
+export const acknowledgePerformanceExclusions = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; runId: string }): Promise<{ error?: string }> => {
+    if (!(await owned(ctx.supabase, 'performance_runs', input.runId, input.projectId))) return { error: 'Intento no encontrado' }
+    const { error } = await ctx.supabase.rpc('acknowledge_performance_exclusions', { p_run_id: input.runId })
+    if (error) return { error: error.message }
+    revalidate(input.projectId, `runs/${input.runId}`)
+    return {}
+  },
+)
+
 export const addPerformanceManualReading = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; runId: string; variableId: string; at: string; value: string }): Promise<{ error?: string }> => {

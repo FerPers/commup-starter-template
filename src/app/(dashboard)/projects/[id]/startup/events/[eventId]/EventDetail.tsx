@@ -22,6 +22,7 @@ type Event = {
   occurredAt: string; title: string; description: string | null; status: StartupEventStatus; system: string; systemId: string
   run: { id: string; number: string } | null; recordedBy: string | null; recordedAt: string; witnessCapacity: string | null
   witnessBy: string | null; witnessAt: string | null; voidedBy: string | null; voidedAt: string | null; voidReason: string | null; tags: string[]
+  backdateReason: string | null
 }
 const LEADERS = ROLE_TIERS.editor
 const th: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', background: 'var(--gray-50)' }
@@ -83,6 +84,7 @@ export default function EventDetail({ project, event: e, params, series, names, 
           {e.tags.length > 0 && ` · ${e.tags.join(', ')}`}
         </p>
         {e.description && <p style={{ ...small, margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>{e.description}</p>}
+        {e.backdateReason && <p style={{ ...small, margin: '6px 0 0', color: '#b45309' }}>{t('events.backdated', { reason: e.backdateReason })}</p>}
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}
