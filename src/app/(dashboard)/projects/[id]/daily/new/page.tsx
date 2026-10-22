@@ -16,7 +16,8 @@ export default async function NewDailyPage({ params, searchParams }: {
   const sp = await searchParams
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
-  if (ctx.role === 'client') redirect(`/projects/${id}/daily`)
+  // N3b: el cliente solo levanta TQ (create_tq lo permite; el resto de las altas, no).
+  if (ctx.role === 'client' && sp.kind !== 'tq') redirect(`/projects/${id}/daily?tab=tqs`)
   const supabase = ctx.supabase
 
   const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()

@@ -94,7 +94,7 @@ CommUp es la plataforma para gestionar el **completamiento y el comisionamiento*
 
 ### 2.5 Consejos de navegación
 - **Buscar cualquier cosa:** **Buscar (⌘K)** o Ctrl+K y escribe un tag, ITR, punch, sistema o código (TQ-0042, ACC-0003, PRC-0001, VND-0002…). Dentro de un proyecto busca en «Este proyecto» o en «Todos». Un número exacto sale primero: Enter lo abre. Con la caja vacía ves lo último que abriste en ese dispositivo.
-- **Crear sin navegar:** **＋ Crear** → Punch, Acción, Restricción, TQ, Evento de arranque o Registro de campo. Se precargan el proyecto y, si estás en la ficha de un tag o de un sistema, ese tag o sistema.
+- **Crear sin navegar:** **＋ Crear** → Punch, Acción, Restricción, TQ, Evento de arranque o Registro de campo (el inspector ve Punch, Registro y Evento; el cliente, TQ). Se precargan el proyecto y, si estás en la ficha de un tag o de un sistema, ese tag o sistema.
 - **Cambiar de proyecto:** selector «Cambiar de proyecto» en el encabezado del bloque Proyecto.
 - **Un tag:** escanea su QR, búscalo con ⌘K, o *Tags y equipos* (modos Lista · Árbol · Tarjetas).
 - **Dónde está cada sistema:** Proyecto › **Readiness** → fila del sistema → su **ficha** (pestañas Gates · Avance y plan · Dependencias · Arranque · Traspaso · Vendors y desempeño · Datos del sistema). Varios proyectos: *Readiness por proyecto*.
@@ -287,13 +287,14 @@ Todo lo del admin, y además: borrar proyectos, elegir el catálogo de plantilla
 - **Consultar** el avance de los proyectos de la organización (Readiness, KPIs, certificados, PSSR, documentos, punch por categoría).
 - **Firmar ITR** como cliente donde la fase lo exige y estás asignado.
 - **Verificar punch en campo** (resueltos por otra persona).
+- **Levantar TQ** (**＋ Crear › TQ** o *Gestión diaria › TQ › + Nuevo TQ*) y gestionar las tuyas: editar, emitir, reemitir si la respuesta no basta, cerrar o borrar el borrador.
 - **Responder TQ** dirigidas a ti (*Gestión diaria › TQ*), con adjuntos.
 - **Firmar certificados** como Cliente (Representante del cliente).
 - **Co-firmar gates** como Operaciones o HSE si te designaron (o si no hay designados): Mi trabajo › «Gates por co-firmar» → ficha del sistema › «Firmar como…».
 - **Liberar hold points** de Operaciones/HSE y **atestiguar hitos** de Operaciones si tienes esa capacidad.
 - **Firmar traspasos** como Operaciones y el **PTC** como Operaciones o como **Cliente**. Mi trabajo › «Certificados PTC por firmar» y «Traspasos de custodia por firmar».
 
-**No puedes:** ejecutar ITR ni pasos de procedimiento, registrar eventos, crear acciones, restricciones o TQ, verificar filas de line-up.
+**No puedes:** ejecutar ITR ni pasos de procedimiento, registrar eventos, crear acciones o restricciones, cancelar TQ, verificar filas de line-up.
 
 ---
 
@@ -395,7 +396,7 @@ Todo lo del admin, y además: borrar proyectos, elegir el catálogo de plantilla
 *Proyecto › Gestión diaria* — pestañas Acciones · Restricciones · TQ · Decisiones, con enlaces a Look-ahead (en Planificación), Reportes y Relevo. Altas también desde **＋ Crear**.
 - **Acciones (ACC):** dueño, fecha, prioridad, método de verificación (campo, documento, prueba, revisión). Abierta → en curso → **hecha** (con nota y evidencia, salvo «revisión») → **verificada por otra persona** (o rechazada con motivo). Nacen también de restricciones, TQ, PSSR («No»), condiciones de gates, vendors y desempeño.
 - **Restricciones (RES):** sistema, responsable, fecha requerida, impacto, plan de recuperación y gate afectado. Escalamiento 1–4 con motivo (1 equipo · 2 gerente de comisionamiento · 3 gerente de proyecto · 4 cliente/sponsor). Abierta → resuelta → cerrada. Las vencidas reciben aviso diario.
-- **TQ:** borrador → emitida → respondida (el cliente puede responder; se marca «cambio de diseño» y n.º de MOC) → cerrada, o reemitida.
+- **TQ:** borrador → emitida → respondida (se marca «cambio de diseño» y n.º de MOC) → cerrada, o reemitida. El cliente también las levanta y gestiona las suyas, y puede responder cualquiera; cancelar es de líder+.
 - **Decisiones (DEC):** contexto, decisión, fundamento, quién decidió, asistentes. Inmutables: para corregir se reemplazan.
 - **Exportar** a Excel: *Gestión diaria › Exportar*.
 
@@ -571,7 +572,8 @@ Todo queda en una **bandeja de salida** del dispositivo y se envía al volver la
 | Aprobar gate (Comisionamiento) | ✓ | ✓ | ✓ | ◐ | ✗ | ✗ |
 | Co-firmar gate (Operaciones / HSE) | ◐ | ◐ | ◐ | ◐ | ◐ | ◐ |
 | Registros: proponer, retirar / autorizar, cancelar | ✓/✓ | ✓/✓ | ✓/✓ | ✓/✓ | ✓/✗ | ✗/✗ |
-| Acciones, restricciones, TQ | ✓ | ✓ | ✓ | ✓ | ✓ | Responder TQ |
+| Acciones y restricciones | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ |
+| Levantar y responder TQ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Registrar decisiones | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ |
 | Emitir reporte diario | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ |
 | Relevo de turno | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ |

@@ -8,12 +8,13 @@ import { hasTier } from '@/lib/constants/roles'
 export const CREATE_KINDS = ['punch', 'action', 'constraint', 'tq', 'event', 'register'] as const
 export type CreateKind = (typeof CREATE_KINDS)[number]
 
-/** Lo de campo (inspector) y todo para líder+. El cliente no crea nada (las RPC de alta lo rechazan, TQ incluido). */
+/** Lo de campo (inspector) y todo para líder+. El cliente (la operadora) solo levanta TQ (decisión de Luis 2026-10-22). */
 const FIELD_KINDS: readonly CreateKind[] = ['punch', 'register', 'event']
 
 export function createKindsFor(role: string | null | undefined): CreateKind[] {
   if (hasTier('editor', role)) return [...CREATE_KINDS]
   if (role === 'inspector') return [...FIELD_KINDS]
+  if (role === 'client') return ['tq']
   return []
 }
 

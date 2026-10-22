@@ -70,6 +70,7 @@ export default async function DailyPage({ params, searchParams }: {
       names={names}
       userId={ctx.userId}
       canCreate={ctx.role !== 'client'}
+      canCreateTq
       canDecide={ROLE_TIERS.editor.includes(ctx.role)}
     />
     </>

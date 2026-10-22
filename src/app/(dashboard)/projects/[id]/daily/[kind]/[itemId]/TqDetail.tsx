@@ -33,7 +33,9 @@ export default function TqDetail({ project, opts, names, userId, role, events, a
   const [mocRef, setMocRef] = useState('')
 
   const isClient = role === 'client'
-  const editable = (status === 'draft' || status === 'issued') && !isClient
+  // N3b: el cliente gestiona los TQ que levantó (editar, emitir, reemitir, cerrar, borrar el borrador); cancelar, líder+.
+  const manages = !isClient || item.raised_by === userId
+  const editable = (status === 'draft' || status === 'issued') && manages
   const live = status === 'draft' || status === 'issued' || status === 'answered'
   const base = { projectId: project.id, tqId: item.id }
 
@@ -110,7 +112,7 @@ export default function TqDetail({ project, opts, names, userId, role, events, a
         </section>
       )}
 
-      {!isClient && live && (
+      {manages && live && (
         <section style={card} aria-labelledby="tq-lifecycle">
           <h2 id="tq-lifecycle" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 8px' }}>{t('detail.lifecycle')}</h2>
           {status === 'answered' && <textarea rows={2} style={{ ...input, maxWidth: 640, marginBottom: 8 }} value={comment} onChange={e => setComment(e.target.value)} placeholder={t('tq.reissuePlaceholder')} />}

@@ -5,8 +5,8 @@ const P = 'abc47484-59d3-4f51-8966-7fb4f1174ba8'
 const T = '11111111-2222-4333-8444-555555555555'
 
 describe('＋ Crear (N3b)', () => {
-  it('opciones por rol: cliente nada, inspector lo de campo, líder+ todo', () => {
-    expect(createKindsFor('client')).toEqual([])
+  it('opciones por rol: cliente solo TQ, inspector lo de campo, líder+ todo', () => {
+    expect(createKindsFor('client')).toEqual(['tq'])
     expect(createKindsFor('inspector')).toEqual(['punch', 'register', 'event'])
     expect(createKindsFor('leader')).toHaveLength(6)
     expect(createKindsFor(null)).toEqual([])
