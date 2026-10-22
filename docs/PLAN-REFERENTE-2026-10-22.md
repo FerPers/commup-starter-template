@@ -124,7 +124,7 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
   - Backfill: todos los proyectos quedan con todas las disciplinas de su org, así que no cambia nada.
   - Selector de disciplinas al crear y al editar el proyecto (y en el asistente).
   - La generación filtra por el alcance.
-- **R2. Registro de requisitos** (el primer valor real, sin costo de IA):
+- **R2. Registro de requisitos** (el primer valor real, sin costo de IA): partido en dos sesiones. ✅ **R2a hecho 2026-10-22** (migración `20261201120000`): motor, excepciones, registro con árbol/filtros/paginación, panel del tag, Calidad de datos. **R2b pendiente:** Excel de 3 hojas (reporte gerencial · resumen sistema × subsistema × disciplina × etapa · detalle), código del cliente por plantilla (proyecto con defecto de la org) y bench a 50k tags (`tag_requirements_summary` y página, p95 < 1,5 s) con LOADTEST recreado a demanda.
   - Funciones canónicas `tag_itr_requirements` y `tag_requirements_summary`; tabla `tag_itr_overrides` (agregar/excluir, a mano).
   - Página **«Requisitos ITR»** (`/projects/[id]/itrs/requirements`):
     - árbol Área › Sistema › Subsistema con contadores;

@@ -201,7 +201,8 @@
       "constraints": "Restricciones",
       "tqs": "TQ",
       "decisions": "Decisiones",
-      "lineups": "Line-ups"
+      "lineups": "Line-ups",
+      "requirements": "Requisitos ITR"
     },
     "entity": {
       "tag": "Tag",
@@ -471,7 +472,8 @@
       "signS": "Firm.S",
       "signC": "Firm.C"
     },
-    "generate": "Generar ITR"
+    "generate": "Generar ITR",
+    "requirements": "Requisitos ITR"
   },
   "PunchList": {
     "title": "Punch",
@@ -2111,7 +2113,8 @@
       "date_logic": "Lógica de fechas",
       "system_completeness": "Completitud de sistemas",
       "pid_coverage": "Cobertura del P&ID",
-      "discipline_scope": "Alcance de disciplinas"
+      "discipline_scope": "Alcance de disciplinas",
+      "requirements_outside": "Fuera de requisitos"
     },
     "reason": {
       "punch_a_open": "Punches Cat A abiertos",
@@ -6230,5 +6233,91 @@
     "bellUnread": "Avisos: {count} sin leer",
     "deltaNoHistory": "Sin historial de 7 días aún",
     "deltaVs7d": "vs hace 7 días"
+  },
+  "ItrRequirements": {
+    "back": "ITR",
+    "title": "Requisitos ITR",
+    "subtitle": "Qué ITR debe tener cada tag de {project}: la matriz aceptada de su tipo, dentro del alcance de disciplinas, más las excepciones decididas por una persona.",
+    "scope": "Alcance del proyecto",
+    "generate": "Generar los que faltan ({count})",
+    "proposed": "{count, plural, one {# regla de la matriz está por revisar y todavía no cuenta.} other {# reglas de la matriz están por revisar y todavía no cuentan.}}",
+    "proposedHint": "Al aceptarlas, sus ITR aparecen aquí como requisitos.",
+    "proposedLink": "Revisar la matriz ›",
+    "stat": {
+      "required": "Requeridos",
+      "generated": "Generados",
+      "approved": "Aprobados",
+      "missing": "Faltan por generar",
+      "tagsNoType": "Tags sin tipo",
+      "excluded": "Excluidos"
+    },
+    "tree": "Jerarquía",
+    "treeHead": "ÁREA › SISTEMA › SUBSISTEMA · FALTAN",
+    "allProject": "Todo el proyecto",
+    "filter": {
+      "all": "Todos",
+      "missing": "Faltan",
+      "notype": "Sin tipo",
+      "norule": "Sin regla",
+      "excluded": "Excluidos",
+      "outside": "Fuera de requisitos"
+    },
+    "search": "Buscar tag…",
+    "legend": "Leyenda",
+    "empty": "Ningún tag con este filtro.",
+    "col": {
+      "tag": "Tag",
+      "type": "Tipo",
+      "description": "Descripción",
+      "requirements": "ITR requeridos"
+    },
+    "state": {
+      "missing": "Falta",
+      "generated": "Generado",
+      "in_progress": "En ejecución",
+      "approved": "Aprobado",
+      "excluded": "Excluido",
+      "outside": "Fuera de requisitos"
+    },
+    "origin": {
+      "matrix": "Matriz",
+      "manual": "Manual",
+      "ai": "IA"
+    },
+    "phase": "Fase {phase}",
+    "note": {
+      "noType": "Sin tipo de equipo · asignar ›",
+      "noRule": "Sin regla aceptada en la matriz ›"
+    },
+    "pageInfo": "{shown} de {total} tags en {node}",
+    "pageOf": "Página {page} de {pages}",
+    "prev": "Anterior",
+    "next": "Siguiente"
+  },
+  "TagRequirements": {
+    "title": "ITR requeridos",
+    "counts": "{required} requeridos · {approved} aprobados · {generated} generados · {missing} faltan",
+    "add": "＋ Agregar código",
+    "addLabel": "Plantilla del alcance",
+    "addPick": "Elige una plantilla…",
+    "addConfirm": "Agregar",
+    "addHint": "Solo plantillas de disciplinas del alcance del proyecto.",
+    "generate": "Generar los que faltan ({count})",
+    "working": "Trabajando…",
+    "none": "Este tag no tiene requisitos: su tipo de equipo no tiene reglas aceptadas en la matriz (o no tiene tipo).",
+    "phase": "Fase {phase}",
+    "gap": "Falta el eslabón {phases}",
+    "restore": "Restaurar",
+    "remove": "Quitar",
+    "exclude": "Excluir",
+    "excludeConfirm": "Excluir",
+    "cancel": "Cancelar",
+    "reason": "Motivo (mínimo {min} caracteres)",
+    "error": {
+      "reason_required": "Escribe el motivo de la exclusión (mínimo 10 caracteres).",
+      "out_of_scope": "Esa plantilla es de una disciplina fuera del alcance del proyecto.",
+      "template_not_found": "No hay una plantilla activa con ese código.",
+      "invalid_override": "Acción no válida."
+    }
   }
 }

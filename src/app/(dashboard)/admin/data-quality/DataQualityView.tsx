@@ -38,6 +38,8 @@ const CATEGORIES = [
   'pid_coverage',
   // R1: ITR de una disciplina fuera del alcance del proyecto.
   'discipline_scope',
+  // R2a: ITR que los requisitos del tag no piden (excluido o sin regla).
+  'requirements_outside',
 ] as const
 
 export default function DataQualityView({

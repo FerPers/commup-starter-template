@@ -201,7 +201,8 @@
       "constraints": "Constraints",
       "tqs": "TQs",
       "decisions": "Decisions",
-      "lineups": "Line-ups"
+      "lineups": "Line-ups",
+      "requirements": "ITR requirements"
     },
     "entity": {
       "tag": "Tag",
@@ -471,7 +472,8 @@
       "signS": "Sign.S",
       "signC": "Sign.C"
     },
-    "generate": "Generate ITRs"
+    "generate": "Generate ITRs",
+    "requirements": "ITR requirements"
   },
   "PunchList": {
     "title": "Punch",
@@ -2111,7 +2113,8 @@
       "date_logic": "Date logic",
       "system_completeness": "System completeness",
       "pid_coverage": "P&ID coverage",
-      "discipline_scope": "Discipline scope"
+      "discipline_scope": "Discipline scope",
+      "requirements_outside": "Outside requirements"
     },
     "reason": {
       "punch_a_open": "Open Cat A punches",
@@ -6230,5 +6233,91 @@
     "bellUnread": "Notifications: {count} unread",
     "deltaNoHistory": "No 7-day history yet",
     "deltaVs7d": "vs 7 days ago"
+  },
+  "ItrRequirements": {
+    "back": "ITRs",
+    "title": "ITR requirements",
+    "subtitle": "Which ITRs each tag of {project} must have: the accepted matrix for its type, within the discipline scope, plus the exceptions decided by a person.",
+    "scope": "Project scope",
+    "generate": "Generate the missing ones ({count})",
+    "proposed": "{count, plural, one {# matrix rule is pending review and does not count yet.} other {# matrix rules are pending review and do not count yet.}}",
+    "proposedHint": "Once accepted, their ITRs show up here as requirements.",
+    "proposedLink": "Review the matrix ›",
+    "stat": {
+      "required": "Required",
+      "generated": "Generated",
+      "approved": "Approved",
+      "missing": "Not generated",
+      "tagsNoType": "Tags without type",
+      "excluded": "Excluded"
+    },
+    "tree": "Hierarchy",
+    "treeHead": "AREA › SYSTEM › SUBSYSTEM · MISSING",
+    "allProject": "Whole project",
+    "filter": {
+      "all": "All",
+      "missing": "Missing",
+      "notype": "No type",
+      "norule": "No rule",
+      "excluded": "Excluded",
+      "outside": "Outside requirements"
+    },
+    "search": "Search tag…",
+    "legend": "Legend",
+    "empty": "No tag matches this filter.",
+    "col": {
+      "tag": "Tag",
+      "type": "Type",
+      "description": "Description",
+      "requirements": "Required ITRs"
+    },
+    "state": {
+      "missing": "Missing",
+      "generated": "Generated",
+      "in_progress": "In progress",
+      "approved": "Approved",
+      "excluded": "Excluded",
+      "outside": "Outside requirements"
+    },
+    "origin": {
+      "matrix": "Matrix",
+      "manual": "Manual",
+      "ai": "AI"
+    },
+    "phase": "Phase {phase}",
+    "note": {
+      "noType": "No equipment type · assign ›",
+      "noRule": "No accepted rule in the matrix ›"
+    },
+    "pageInfo": "{shown} of {total} tags in {node}",
+    "pageOf": "Page {page} of {pages}",
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "TagRequirements": {
+    "title": "Required ITRs",
+    "counts": "{required} required · {approved} approved · {generated} generated · {missing} missing",
+    "add": "＋ Add code",
+    "addLabel": "Template in scope",
+    "addPick": "Pick a template…",
+    "addConfirm": "Add",
+    "addHint": "Only templates of disciplines in the project scope.",
+    "generate": "Generate the missing ones ({count})",
+    "working": "Working…",
+    "none": "This tag has no requirements: its equipment type has no accepted rules in the matrix (or it has no type).",
+    "phase": "Phase {phase}",
+    "gap": "Missing link {phases}",
+    "restore": "Restore",
+    "remove": "Remove",
+    "exclude": "Exclude",
+    "excludeConfirm": "Exclude",
+    "cancel": "Cancel",
+    "reason": "Reason (at least {min} characters)",
+    "error": {
+      "reason_required": "Write the exclusion reason (at least 10 characters).",
+      "out_of_scope": "That template belongs to a discipline outside the project scope.",
+      "template_not_found": "There is no active template with that code.",
+      "invalid_override": "Invalid action."
+    }
   }
 }

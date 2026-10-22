@@ -5,6 +5,8 @@ import { fetchConsolidatedTagPhotos } from '@/lib/tag-photos'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import TagDetail from './TagDetail'
+import TagRequirementsPanel, { type TagReq } from './TagRequirementsPanel'
+import type { ReqState, ReqOrigin } from '@/lib/itr/requirements'
 import { loadPidDrawings } from '@/lib/documents/pid'
 import { normalizePidRef } from '@/lib/excel/normalize'
 import { parseTagTab } from './tag-detail-shared'
@@ -193,6 +195,27 @@ export default async function TagDetailPage({
     }
   }
 
+  // R2a: requisitos del tag (matriz aceptada + alcance + excepciones) y lo necesario para la cadena y «Agregar».
+  const [reqRes, { data: phases }, { data: scopeDiscs }] = await Promise.all([
+    supabase.rpc('tag_itr_requirements', { p_project_id: projectId, p_tag_ids: [tagId] }),
+    supabase.from('project_phases').select('id, code').eq('org_id', membership.org_id).order('order_index'),
+    // bounded: disciplinas del alcance (decenas)
+    supabase.from('project_disciplines').select('discipline_id, disciplines(name)').eq('project_id', projectId),
+  ])
+  const discName = new Map((scopeDiscs ?? []).map(d => [d.discipline_id, (d.disciplines as unknown as { name: string } | null)?.name ?? '—']))
+  const phaseCode = new Map((phases ?? []).map(p => [p.id, p.code]))
+  const { data: scopeTpls } = discName.size
+    ? await supabase.from('itr_templates').select('code, title, title_es').eq('org_id', membership.org_id).eq('is_active', true)
+        .in('discipline_id', [...discName.keys()]).order('code').limit(1000)
+    : { data: [] as { code: string; title: string; title_es: string | null }[] }
+  const titleEs = new Map((scopeTpls ?? []).filter(x => x.title_es?.trim()).map(x => [x.code, x.title_es as string]))
+  const tagReqs: TagReq[] = (reqRes.data ?? []).map(r => ({
+    code: r.template_code, title: titleEs.get(r.template_code) ?? r.template_title, state: r.state as ReqState, origin: r.origin as ReqOrigin | null,
+    itr_id: r.itr_id, phase: r.phase_id ? phaseCode.get(r.phase_id) ?? null : null, reason: r.reason,
+    discipline: r.discipline_id ? discName.get(r.discipline_id) ?? '—' : '—',
+  }))
+  const scopeTemplates = [...new Map((scopeTpls ?? []).map(x => [x.code, { code: x.code, title: x.title_es?.trim() ? x.title_es : x.title }])).values()]
+
   // S14 (I-25): con representantes del cliente designados, la firma Cliente del ITR va solo a ellos.
   const { data: clientReps } = await supabase.from('project_capacities').select('user_id')
     .eq('project_id', projectId).eq('capacity', 'client_rep').is('revoked_at', null).limit(200)
@@ -223,6 +246,18 @@ export default async function TagDetailPage({
       preservationProcedures={preservationProcedures ?? []}
       tagPhotos={tagPhotos}
       initialTab={initialTab}
+      requirementsSlot={
+        <TagRequirementsPanel
+          projectId={projectId}
+          tagId={tag.id}
+          reqs={tagReqs}
+          phaseCodes={(phases ?? []).map(p => p.code)}
+          phaseIds={(phases ?? []).map(p => p.id)}
+          scopeTemplates={scopeTemplates}
+          canEdit={EDITOR_ROLES.includes(membership.role)}
+          hasSubsystem={!!tag.subsystems?.id}
+        />
+      }
     />
     </>
   )

@@ -46,6 +46,7 @@ export default function TagDetail({
   preservationProcedures,
   tagPhotos,
   initialTab = 'overview',
+  requirementsSlot,
 }: {
   tag: Tag
   projectId: string
@@ -70,6 +71,8 @@ export default function TagDetail({
   tagPhotos: ConsolidatedTagPhoto[]
   /** N1b: pestaña pedida en `?tab=`. */
   initialTab?: TagTab
+  /** R2a: panel «ITR requeridos» (lo arma la página en el servidor) arriba de la pestaña ITR. */
+  requirementsSlot?: React.ReactNode
 }) {
   const t = useTranslations('Tags')
   const [activeTab, setActiveTabState] = useState<Tab>(initialTab)
@@ -356,6 +359,7 @@ export default function TagDetail({
               />
             )}
             {activeTab === 'overview'     && <TagOverviewTab tag={tag} area={area} sys={sys} sub={sub} pidSignedUrl={pidSignedUrl} projectId={projectId} canEdit={canEdit} />}
+            {activeTab === 'itrs'         && requirementsSlot}
             {activeTab === 'itrs'         && (
               <TagItrTab
                 projectId={projectId}

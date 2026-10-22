@@ -9902,6 +9902,81 @@ export type Database = {
           },
         ]
       }
+      tag_itr_overrides: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          project_id: string
+          reason: string | null
+          source: string
+          tag_id: string
+          template_code: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          project_id: string
+          reason?: string | null
+          source?: string
+          tag_id: string
+          template_code: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          project_id?: string
+          reason?: string | null
+          source?: string
+          tag_id?: string
+          template_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_itr_overrides_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_itr_overrides_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_itr_overrides_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "tag_itr_overrides_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_itr_overrides_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string
@@ -13086,6 +13161,7 @@ export type Database = {
         Returns: {
           discipline_id: string
           equipment_type_id: string
+          origin: string
           outcome: string
           phase_id: string
           subsystem_id: string
@@ -13824,6 +13900,15 @@ export type Database = {
         }
         Returns: Json
       }
+      set_tag_itr_override: {
+        Args: {
+          p_action: string
+          p_reason?: string
+          p_tag_id: string
+          p_template_code: string
+        }
+        Returns: undefined
+      }
       set_vendor_checklist_item: {
         Args: {
           p_done: boolean
@@ -13974,6 +14059,43 @@ export type Database = {
           discipline_name: string
           n: number
         }[]
+      }
+      tag_itr_requirements: {
+        Args: {
+          p_project_id: string
+          p_subsystem_ids?: string[]
+          p_system_ids?: string[]
+          p_tag_ids?: string[]
+        }
+        Returns: {
+          discipline_id: string
+          itr_id: string
+          itr_status: string
+          origin: string
+          phase_id: string
+          reason: string
+          state: string
+          tag_id: string
+          template_code: string
+          template_title: string
+        }[]
+      }
+      tag_requirements_page: {
+        Args: {
+          p_area_id?: string
+          p_filter?: string
+          p_limit?: number
+          p_offset?: number
+          p_project_id: string
+          p_q?: string
+          p_subsystem_id?: string
+          p_system_id?: string
+        }
+        Returns: Json
+      }
+      tag_requirements_summary: {
+        Args: { p_project_id: string }
+        Returns: Json
       }
       tag_subsystem_move_preview: {
         Args: { p_subsystem_id: string; p_tag_id: string }

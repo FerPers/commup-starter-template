@@ -190,6 +190,15 @@ export default function ItrListView({
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>ITRs</h1>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {/* R2a: registro de requisitos por tag (lo que debe existir, no solo lo que existe). */}
+        {!allScope && (
+          <Link href={`/projects/${projectId}/itrs/requirements`} style={{
+            padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: '8px', fontSize: '13px', color: 'var(--text-strong)', textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 600,
+          }}>
+            {t('requirements')}
+          </Link>
+        )}
         {canEdit && !allScope && (
           <a href={`/projects/${projectId}/itrs/generate`} style={{
             padding: '9px 14px', background: 'var(--primary-500)', border: '1px solid var(--primary-500)',

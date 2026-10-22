@@ -8,6 +8,8 @@ export type GenerationScope = {
   phaseIds: string[]
   systemIds?: string[] | null
   subsystemIds?: string[] | null
+  /** R2a: generar solo los requisitos de estos tags (panel «ITR requeridos» de la ficha del tag). */
+  tagIds?: string[] | null
 }
 
 export type GenerationRole = 'executor' | 'supervisor' | 'client'
@@ -25,6 +27,8 @@ export type GenerationSummary = {
   no_rule: number
   /** R1: pares tag × plantilla de una disciplina fuera del alcance del proyecto (no se generan). */
   out_of_scope: number
+  /** R2a: pares excluidos a mano del tag (no se generan). */
+  excluded: number
   by_discipline: { discipline_id: string | null; code: string | null; name: string | null; create: number; roles: GenerationRole[] | null }[]
   by_template: { code: string; title: string; create: number; exists: number }[]
   samples: { no_equipment_type: string[]; no_rule: string[]; no_subsystem: string[]; out_of_scope: string[] }

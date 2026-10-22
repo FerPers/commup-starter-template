@@ -17,6 +17,7 @@ function rpcScope(input: GenerationScope) {
     p_phase_ids: scopeIds(input.phaseIds) ?? [],
     p_system_ids: scopeIds(input.systemIds) ?? undefined,
     p_subsystem_ids: scopeIds(input.subsystemIds) ?? undefined,
+    p_tag_ids: scopeIds(input.tagIds) ?? undefined,
   }
 }
 
@@ -60,7 +61,10 @@ export const runItrGenerationBatch = withAuth(
       if (notifErr) console.error('[notifications.insert itr_bulk_assigned]', notifErr)
     }
 
-    if (res.created > 0) revalidatePath(`/projects/${input.projectId}/itrs`)
+    if (res.created > 0) {
+      revalidatePath(`/projects/${input.projectId}/itrs`)
+      for (const tagId of scopeIds(input.tagIds) ?? []) revalidatePath(`/projects/${input.projectId}/tags/${tagId}`)
+    }
     return { created: res.created, remaining: res.remaining }
   },
 )

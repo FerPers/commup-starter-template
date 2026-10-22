@@ -19,6 +19,7 @@ BEGIN
     'no_equipment_type', (SELECT count(*) FROM c WHERE outcome = 'no_equipment_type'),
     'no_rule', (SELECT count(*) FROM c WHERE outcome = 'no_rule'),
     'out_of_scope', (SELECT count(*) FROM c WHERE outcome = 'out_of_scope'),
+    'excluded', (SELECT count(*) FROM c WHERE outcome = 'excluded'),
     'by_discipline', COALESCE((
       SELECT jsonb_agg(jsonb_build_object('discipline_id', x.discipline_id, 'code', d.code, 'name', d.name,
                                           'create', x.n, 'roles', x.roles) ORDER BY d.code NULLS LAST)
