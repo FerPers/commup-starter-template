@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { completeSetup, createProject } from '@/app/actions/setup'
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -55,6 +56,7 @@ interface Discipline {
 
 export default function SetupWizard({ isNewProject }: { isNewProject: boolean }) {
   const router = useRouter()
+  const t = useTranslations('Setup')
 
   const [step, setStep] = useState(isNewProject ? 2 : 1)
   const [loading, setLoading] = useState(false)
@@ -124,8 +126,8 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         }
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error desconocido al procesar la solicitud'
-      setError(`${msg} — revisa la consola del navegador o el log del servidor para más detalles`)
+      const msg = e instanceof Error ? e.message : t('unknownError')
+      setError(t('errorDetail', { msg }))
       setLoading(false)
     }
   }
@@ -133,8 +135,8 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
   // ── Progress bar ───────────────────────────────────────────
 
   const steps = isNewProject
-    ? ['Proyecto']
-    : ['Organización', 'Proyecto', 'Fases', 'Disciplinas']
+    ? [t('steps.project')]
+    : [t('steps.org'), t('steps.project'), t('steps.phases'), t('steps.disciplines')]
 
   const canNext1 = userFullName.trim().length > 2 && orgName.trim().length > 2 && orgSlug.trim().length > 2
   const canNext2 = projName.trim().length > 2 && projCode.trim().length > 0
@@ -159,10 +161,10 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
           </svg>
         </div>
         <h1 style={{ color: 'white', fontSize: '24px', fontWeight: 700, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
-          {isNewProject ? 'Nuevo proyecto' : 'Configuración inicial'}
+          {isNewProject ? t('newProjectTitle') : t('title')}
         </h1>
         <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
-          {isNewProject ? 'Agrega un nuevo proyecto a tu organización' : 'Configura tu organización y primer proyecto'}
+          {isNewProject ? t('newProjectSubtitle') : t('subtitle')}
         </p>
       </div>
 
@@ -208,22 +210,22 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         {/* ── Step 1: Organization ── */}
         {step === 1 && (
           <div>
-            <h2 style={stepTitleStyle}>Tu cuenta y organización</h2>
-            <p style={stepDescStyle}>Tu nombre aparecerá en firmas digitales, certificados y reportes PDF.</p>
+            <h2 style={stepTitleStyle}>{t('org.title')}</h2>
+            <p style={stepDescStyle}>{t('org.desc')}</p>
 
-            <label style={labelStyle}>Tu nombre y apellido *</label>
+            <label style={labelStyle}>{t('org.fullName')}</label>
             <input
               style={inputStyle}
-              placeholder="Ej: Luis Fernando Perdomo"
+              placeholder={t('org.fullNamePh')}
               value={userFullName}
               onChange={e => setUserFullName(e.target.value)}
               autoComplete="name"
             />
 
-            <label style={labelStyle}>Nombre de la organización *</label>
+            <label style={labelStyle}>{t('org.name')}</label>
             <input
               style={inputStyle}
-              placeholder="Ej: Tecna Ingeniería"
+              placeholder={t('org.namePh')}
               value={orgName}
               onChange={e => {
                 setOrgName(e.target.value)
@@ -231,7 +233,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
               }}
             />
 
-            <label style={labelStyle}>Identificador (slug) *</label>
+            <label style={labelStyle}>{t('org.slug')}</label>
             <input
               style={{ ...inputStyle, fontFamily: 'monospace', fontSize: '13px' }}
               placeholder="tecna-ingenieria"
@@ -239,7 +241,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
               onChange={e => setOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
             />
             <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-              Solo letras minúsculas, números y guiones. Se usa en URLs.
+              {t('org.slugHint')}
             </p>
           </div>
         )}
@@ -247,50 +249,50 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         {/* ── Step 2: Project ── */}
         {step === 2 && (
           <div>
-            <h2 style={stepTitleStyle}>Primer proyecto</h2>
-            <p style={stepDescStyle}>Define los datos básicos del proyecto de commissioning.</p>
+            <h2 style={stepTitleStyle}>{isNewProject ? t('project.titleNew') : t('project.title')}</h2>
+            <p style={stepDescStyle}>{t('project.desc')}</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>Nombre del proyecto *</label>
-                <input style={inputStyle} placeholder="Ej: Planta GLP - Fase 2" value={projName} onChange={e => setProjName(e.target.value)} />
+                <label style={labelStyle}>{t('project.name')}</label>
+                <input style={inputStyle} placeholder={t('project.namePh')} value={projName} onChange={e => setProjName(e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>Código *</label>
+                <label style={labelStyle}>{t('project.code')}</label>
                 <input style={{ ...inputStyle, textTransform: 'uppercase' }} placeholder="GLP-P2" value={projCode} onChange={e => setProjCode(e.target.value)} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>Ubicación</label>
-                <input style={inputStyle} placeholder="Ej: Maracaibo, Venezuela" value={projLocation} onChange={e => setProjLocation(e.target.value)} />
+                <label style={labelStyle}>{t('project.location')}</label>
+                <input style={inputStyle} placeholder={t('project.locationPh')} value={projLocation} onChange={e => setProjLocation(e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>Cliente</label>
-                <input style={inputStyle} placeholder="Ej: PDVSA Gas" value={projClient} onChange={e => setProjClient(e.target.value)} />
+                <label style={labelStyle}>{t('project.client')}</label>
+                <input style={inputStyle} placeholder={t('project.clientPh')} value={projClient} onChange={e => setProjClient(e.target.value)} />
               </div>
             </div>
 
             {/* País / Región: jerarquía corporativa (País → Región → Campo). El proyecto es el Campo. */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>País</label>
-                <input style={inputStyle} placeholder="Ej: Colombia" value={projCountry} onChange={e => setProjCountry(e.target.value)} />
+                <label style={labelStyle}>{t('project.country')}</label>
+                <input style={inputStyle} placeholder={t('project.countryPh')} value={projCountry} onChange={e => setProjCountry(e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>Región / Eje</label>
-                <input style={inputStyle} placeholder="Ej: Llanos" value={projRegion} onChange={e => setProjRegion(e.target.value)} />
+                <label style={labelStyle}>{t('project.region')}</label>
+                <input style={inputStyle} placeholder={t('project.regionPh')} value={projRegion} onChange={e => setProjRegion(e.target.value)} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>Fecha de inicio</label>
+                <label style={labelStyle}>{t('project.start')}</label>
                 <input style={inputStyle} type="date" value={projStart} onChange={e => setProjStart(e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>Fecha objetivo</label>
+                <label style={labelStyle}>{t('project.end')}</label>
                 <input style={inputStyle} type="date" value={projEnd} onChange={e => setProjEnd(e.target.value)} />
               </div>
             </div>
@@ -302,20 +304,20 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <h2 style={stepTitleStyle}>Fases del proyecto</h2>
-                <p style={stepDescStyle}>Las fases definen el ciclo de completamiento. Puedes editarlas o agregar las tuyas.</p>
+                <h2 style={stepTitleStyle}>{t('phases.title')}</h2>
+                <p style={stepDescStyle}>{t('phases.desc')}</p>
               </div>
               <button
                 onClick={() => setPhases(DEFAULT_PHASES)}
                 style={{ fontSize: '12px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', flexShrink: 0, marginTop: '2px' }}
               >
-                ↺ Restaurar
+                ↺ {t('phases.reset')}
               </button>
             </div>
 
             {/* Column headers */}
             <div style={{ display: 'grid', gridTemplateColumns: '32px 40px 1fr 90px 36px 56px', gap: '6px', padding: '0 4px', marginBottom: '4px' }}>
-              {['', 'Cód', 'Nombre', 'Certificado', 'Color', ''].map((h, i) => (
+              {['', t('phases.col.code'), t('phases.col.name'), t('phases.col.certificate'), t('phases.col.color'), ''].map((h, i) => (
                 <span key={i} style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{h}</span>
               ))}
             </div>
@@ -340,24 +342,24 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
                     value={phase.code}
                     onChange={e => updatePhase(i, 'code', e.target.value)}
                   />
-                  <input style={inputSmall} value={phase.name} onChange={e => updatePhase(i, 'name', e.target.value)} placeholder="Nombre de fase" />
-                  <input style={inputSmall} value={phase.certificate_name} onChange={e => updatePhase(i, 'certificate_name', e.target.value)} placeholder="Certificado" />
+                  <input style={inputSmall} value={phase.name} onChange={e => updatePhase(i, 'name', e.target.value)} placeholder={t('phases.namePh')} />
+                  <input style={inputSmall} value={phase.certificate_name} onChange={e => updatePhase(i, 'certificate_name', e.target.value)} placeholder={t('phases.col.certificate')} />
                   <input type="color" value={phase.color} onChange={e => updatePhase(i, 'color', e.target.value)}
                     style={{ width: '32px', height: '30px', border: 'none', borderRadius: '6px', cursor: 'pointer', padding: 0 }} />
-                  <button onClick={() => removePhase(i)} aria-label="Eliminar fase" style={removeBtn} title="Eliminar">×</button>
+                  <button onClick={() => removePhase(i)} aria-label={t('phases.remove')} style={removeBtn} title={t('phases.remove')}>×</button>
                 </div>
               ))}
             </div>
 
-            <button onClick={addPhase} style={addRowBtn}>+ Agregar fase</button>
+            <button onClick={addPhase} style={addRowBtn}>{t('phases.add')}</button>
           </div>
         )}
 
         {/* ── Step 4: Disciplines ── */}
         {step === 4 && (
           <div>
-            <h2 style={stepTitleStyle}>Disciplinas</h2>
-            <p style={stepDescStyle}>Selecciona las disciplinas que aplican a este proyecto. Se usan para clasificar ITRs, tags y planes de trabajo.</p>
+            <h2 style={stepTitleStyle}>{t('disciplines.title')}</h2>
+            <p style={stepDescStyle}>{t('disciplines.desc')}</p>
 
             {/* Catalog grid — toggle selection */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
@@ -390,7 +392,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
                       <div style={{ fontSize: '13px', fontWeight: 600, color: selected ? '#0f172a' : '#475569' }}>
                         {disc.code}
                         <span style={{ marginLeft: '6px', fontSize: '10px', color: '#94a3b8', fontWeight: 400 }}>
-                          {disc.phases.map(p => `Fase ${p}`).join(' · ')}
+                          {disc.phases.map(p => t('disciplines.phase', { p })).join(' · ')}
                         </span>
                       </div>
                       <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px' }}>{disc.name}</div>
@@ -404,7 +406,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
             {/* Custom disciplines */}
             {customDiscs.length > 0 && (
               <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 4px' }}>Disciplinas personalizadas</p>
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 4px' }}>{t('disciplines.custom')}</p>
                 {customDiscs.map((disc, i) => (
                   <div key={i} style={{
                     display: 'grid', gridTemplateColumns: '80px 1fr 36px 28px',
@@ -413,20 +415,20 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
                     borderRadius: '8px', border: '1px solid #e2e8f0',
                   }}>
                     <input style={{ ...inputSmall, fontWeight: 700, textTransform: 'uppercase' }}
-                      value={disc.code} onChange={e => updateDisc(i, 'code', e.target.value)} placeholder="COD" />
-                    <input style={inputSmall} value={disc.name} onChange={e => updateDisc(i, 'name', e.target.value)} placeholder="Nombre" />
+                      value={disc.code} onChange={e => updateDisc(i, 'code', e.target.value)} placeholder={t('disciplines.codePh')} />
+                    <input style={inputSmall} value={disc.name} onChange={e => updateDisc(i, 'name', e.target.value)} placeholder={t('phases.col.name')} />
                     <input type="color" value={disc.color} onChange={e => updateDisc(i, 'color', e.target.value)}
                       style={{ width: '32px', height: '32px', border: 'none', borderRadius: '6px', cursor: 'pointer', padding: 0 }} />
-                    <button onClick={() => removeDisc(i)} aria-label="Eliminar disciplina" style={removeBtn}>×</button>
+                    <button onClick={() => removeDisc(i)} aria-label={t('disciplines.remove')} style={removeBtn}>×</button>
                   </div>
                 ))}
               </div>
             )}
 
-            <button onClick={addDisc} style={addRowBtn}>+ Agregar disciplina personalizada</button>
+            <button onClick={addDisc} style={addRowBtn}>{t('disciplines.add')}</button>
 
             <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>
-              {disciplines.length} disciplina{disciplines.length !== 1 ? 's' : ''} seleccionada{disciplines.length !== 1 ? 's' : ''}
+              {t('disciplines.selected', { count: disciplines.length })}
             </p>
           </div>
         )}
@@ -434,7 +436,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
         {/* ── Navigation ── */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '28px', gap: '12px' }}>
           {step > (isNewProject ? 2 : 1) ? (
-            <button onClick={() => setStep(s => s - 1)} style={btnSecondary}>← Anterior</button>
+            <button onClick={() => setStep(s => s - 1)} style={btnSecondary}>← {t('back')}</button>
           ) : <div />}
 
           {!isLastStep ? (
@@ -443,7 +445,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
               disabled={(step === 1 && !canNext1) || (step === 2 && !canNext2)}
               style={(step === 1 && !canNext1) || (step === 2 && !canNext2) ? btnDisabled : btnPrimary}
             >
-              Siguiente →
+              {t('next')} →
             </button>
           ) : (
             <button
@@ -451,7 +453,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
               disabled={loading || !canNext2}
               style={loading || !canNext2 ? btnDisabled : btnSuccess}
             >
-              {loading ? 'Creando...' : isNewProject ? '✓ Crear proyecto' : '✓ Completar configuración'}
+              {loading ? t('creating') : isNewProject ? `✓ ${t('createProject')}` : `✓ ${t('finish')}`}
             </button>
           )}
         </div>

@@ -59,6 +59,10 @@ describe('menú por fase y rol (N1)', () => {
     expect(buildMenu('leader', P).project[0].href).toBe(`/projects/${P}`)
   })
 
+  it('Portafolio unificado (V1): ninguna entrada lleva a /control-tower', () => {
+    expect(ALL_ITEMS.filter(i => i.href.startsWith('/control-tower')).map(i => i.key)).toEqual([])
+  })
+
   it('las etiquetas existen en es y en', () => {
     for (const loc of ['es', 'en']) {
       const m = JSON.parse(readFileSync(`src/i18n/messages/${loc}.json`, 'utf8'))

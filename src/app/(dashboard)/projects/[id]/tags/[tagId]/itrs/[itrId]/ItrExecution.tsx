@@ -346,9 +346,9 @@ export default function ItrExecution({
             {(itr.loops ?? itr.ce_causes) && (
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
                 {itr.loops
-                  ? <>Loop check del lazo <a href={`/projects/${projectId}/loops`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{itr.loops.loop_number}</a></>
-                  : <>Prueba de la causa <a href={`/projects/${projectId}/ce-matrices/${itr.ce_causes!.ce_matrices?.id ?? ''}`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{itr.ce_causes!.ce_matrices?.code} · {itr.ce_causes!.code}</a> — {itr.ce_causes!.description}</>}
-                {' '}· filas tomadas al generar el ITR ({sourceRows?.length ?? 0})
+                  ? t.rich('header.loopSource', { a: chunks => <a href={`/projects/${projectId}/loops`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{chunks}</a>, loop: itr.loops.loop_number })
+                  : t.rich('header.causeSource', { a: chunks => <a href={`/projects/${projectId}/ce-matrices/${itr.ce_causes!.ce_matrices?.id ?? ''}`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{chunks}</a>, matrix: itr.ce_causes!.ce_matrices?.code ?? '', cause: itr.ce_causes!.code, description: itr.ce_causes!.description ?? '' })}
+                {' '}· {t('header.sourceRows', { count: sourceRows?.length ?? 0 })}
               </div>
             )}
             {template && (
@@ -363,7 +363,7 @@ export default function ItrExecution({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <div
               role="group"
-              aria-label="Idioma de los ítems"
+              aria-label={t('header.itemLanguage')}
               style={{ display: 'inline-flex', padding: '2px', borderRadius: '8px', background: 'var(--gray-50)', border: '1px solid var(--border)' }}
             >
               {(['es', 'en'] as const).map(l => (
@@ -384,7 +384,7 @@ export default function ItrExecution({
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em',
                   }}
-                  title={l === 'es' ? 'Mostrar ítems en español' : 'Show items in English'}
+                  title={t(l === 'es' ? 'header.itemsEs' : 'header.itemsEn')}
                 >
                   {l}
                 </button>
@@ -513,7 +513,7 @@ export default function ItrExecution({
             <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-700)', margin: 0, flex: 1 }}>
               {queuedNotice === 'punch' ? `⚑ ${t('punchModal.queued')}` : `✍ ${t('sync.signatureQueued')}`}
             </p>
-            <button onClick={() => setQueuedNotice(null)} aria-label="×" style={{ background: 'transparent', border: 'none', color: 'var(--warning-700)', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>×</button>
+            <button onClick={() => setQueuedNotice(null)} aria-label={t('header.dismiss')} style={{ background: 'transparent', border: 'none', color: 'var(--warning-700)', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>×</button>
           </div>
         )}
 

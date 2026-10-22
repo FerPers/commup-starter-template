@@ -5,7 +5,7 @@
  */
 export const NAV_TITLE_KEYS: Record<string, string> = {
   readiness: 'ControlTower.title',
-  controlTower: 'ControlTower.portfolio.title',
+  dashboard: 'Dashboard.title',
   opsPunches: 'OpsPunches.title',
   handover: 'AdminHandover.title',
   config: 'Config.title',

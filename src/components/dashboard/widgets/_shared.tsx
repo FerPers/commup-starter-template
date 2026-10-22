@@ -1,4 +1,5 @@
 import type { ReactNode, CSSProperties } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card } from '@/components/ui'
 
 export const ITR_STYLE: Record<string, { color: string; bg: string }> = {
@@ -60,9 +61,10 @@ export function TaskSection({ title, count, children, emptyText, style }: {
 export type KpiDelta = { value: number | null; goodWhenUp: boolean }
 
 function DeltaChip({ delta }: { delta: KpiDelta }) {
+  const t = useTranslations('A11y')
   if (delta.value === null) {
     return (
-      <span title="Sin historial de 7 días aún" style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-400)', background: 'var(--gray-100)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>—</span>
+      <span title={t('deltaNoHistory')} style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-400)', background: 'var(--gray-100)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>—</span>
     )
   }
   const up = delta.value > 0
@@ -74,7 +76,7 @@ function DeltaChip({ delta }: { delta: KpiDelta }) {
   const num = Math.abs(delta.value)
   const txt = Number.isInteger(num) ? String(num) : num.toFixed(1)
   return (
-    <span title="vs hace 7 días" style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color, background: bg, padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
+    <span title={t('deltaVs7d')} style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color, background: bg, padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
       {arrow} {up ? '+' : flat ? '' : '-'}{txt}
     </span>
   )

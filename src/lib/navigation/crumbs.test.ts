@@ -34,7 +34,7 @@ describe('migas de pan (N0, H-06)', () => {
 
   it('admin, Control Tower y secciones nuevas en español (sin titleize)', () => {
     expect(labels('/admin/test-equipment')).toEqual(['sub:admin', 'nav:testEquipment'])
-    expect(labels(`/control-tower/${I}`)).toEqual(['nav:controlTower', 'entity:system'])
+    expect(labels(`/control-tower/${I}`)).toEqual(['nav:dashboard', 'entity:system'])
     expect(labels(`/projects/${P}/vendors`)).toEqual(['nav:projects', P, 'nav:vendors'])
     expect(labels(`/projects/${P}/planning/lookahead`)).toEqual(['nav:projects', P, 'nav:planning', 'sub:lookahead'])
   })

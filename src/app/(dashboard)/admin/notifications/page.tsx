@@ -1,8 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 import NotificationsView from './NotificationsView'
 
-export const metadata = { title: 'Notificaciones — CommUp' }
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations('Sidebar.nav'))('notifications') }
+}
 
 export default async function NotificationsPage() {
   const supabase = await createClient()

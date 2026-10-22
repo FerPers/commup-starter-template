@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -34,6 +35,7 @@ export function Modal({
   children,
   style,
 }: ModalProps) {
+  const t = useTranslations('A11y');
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
@@ -127,7 +129,7 @@ export function Modal({
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t('close')}
                 style={{
                   background: 'transparent',
                   border: 'none',
