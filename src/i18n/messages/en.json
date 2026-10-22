@@ -80,18 +80,17 @@
       "pickProject": "Pick a project"
     },
     "nav": {
-      "dashboard": "Overview",
+      "dashboard": "Portfolio",
       "projects": "Projects",
-      "projectOverview": "Overview",
+      "projectOverview": "Project overview",
       "tags": "Tags and equipment",
       "signals": "Signals",
       "scan": "Scan QR/NFC",
       "itrs": "ITRs",
-      "punchList": "Punch List",
+      "punchList": "Punch",
       "preservation": "Preservation",
       "workPlans": "Work plans",
-      "controlTower": "Readiness by project",
-      "readiness": "Readiness",
+      "readiness": "System readiness",
       "certificates": "Certificates",
       "kpis": "KPIs",
       "itrTemplates": "ITR templates",
@@ -120,7 +119,7 @@
       "allPunches": "All punches",
       "allCertificates": "All certificates",
       "allWorkPlans": "All work plans",
-      "gates": "Gates (hold points)",
+      "gates": "Milestones & criteria",
       "registers": "Field registers",
       "daily": "Daily management",
       "startup": "Start-up",
@@ -148,6 +147,10 @@
       "dark": "Dark",
       "contrast": "Contrast",
       "label": "Theme"
+    },
+    "a11y": {
+      "primaryNav": "Primary navigation",
+      "pending": "{count} pending"
     }
   },
   "Topbar": {
@@ -230,7 +233,7 @@
     }
   },
   "Dashboard": {
-    "title": "Dashboard",
+    "title": "Portfolio",
     "subtitle": "General completion status overview",
     "hello": "Hello, {name}",
     "itrStatus": {
@@ -248,7 +251,7 @@
       "resolved": "Resolved · to verify"
     },
     "kpi": {
-      "punchesOpen": "Open Punch List",
+      "punchesOpen": "Open punches",
       "punchesOpenSub": "Cat A: {catA} · Cat B: {catB}",
       "preservation": "Preservation — next 7 days",
       "preservationOverdue": "{overdue} overdue · {upcoming} upcoming",
@@ -340,7 +343,7 @@
       },
       "readiness": {
         "title": "Readiness by project",
-        "desc": "Approved gates, systems not moving, signatures, level-4 constraints and commitments coming due"
+        "desc": "Approved milestones, systems not moving, signatures, level-4 constraints and commitments coming due"
       }
     },
     "customizer": {
@@ -349,7 +352,7 @@
       "description": "Show, hide and reorder widgets to fit your needs. Your settings are saved on your profile.",
       "save": "Save",
       "cancel": "Cancel",
-      "saved": "Dashboard updated",
+      "saved": "Portfolio updated",
       "saveError": "Could not save",
       "reset": "Layout restored to default",
       "resetDefaults": "Reset to defaults",
@@ -361,20 +364,20 @@
       "allHidden": "All widgets are hidden. Open Customize to show at least one."
     },
     "readiness": {
-      "title": "Readiness",
-      "subtitle": "By project, sorted by risk",
-      "viewAll": "View all →",
-      "empty": "No project has systems yet.",
-      "more": "and {count} more projects in the portfolio",
+      "title": "Readiness by project",
+      "subtitle": "Every project, sorted by risk",
+      "empty": "The organization has no projects yet.",
       "col": {
         "project": "Project",
-        "readiness": "Gates",
+        "readiness": "Milestones",
         "blocked": "Not moving",
         "toApprove": "To approve",
         "toSign": "To sign",
         "n4": "L4 constraints",
-        "due": "Commitments ≤ 7 d"
-      }
+        "due": "Commitments ≤ 7 d",
+        "physical": "Physical progress"
+      },
+      "noSystems": "No systems yet"
     }
   },
   "Common": {
@@ -469,7 +472,7 @@
     "generate": "Generate ITRs"
   },
   "PunchList": {
-    "title": "Punch List",
+    "title": "Punch",
     "punchStatus": {
       "open": "Open",
       "in_progress": "In progress",
@@ -994,24 +997,24 @@
       "footerPunchB": "{count} Punch B open"
     },
     "readiness": {
-      "title": "Readiness and daily management",
+      "title": "System readiness and daily management",
       "lookahead": "View look-ahead →",
       "asOf": "KPIs as of {date} (daily snapshot).",
       "noSnapshot": "No daily-management snapshot yet: taken nightly or with “Take snapshot”.",
-      "later": "All readiness-plan KPIs are active.",
+      "later": "All system-readiness and daily-management KPIs are active.",
       "weighted": "Weighted physical progress",
-      "weightedHint": "Live · approved ITRs per gate × weight",
-      "readiness": "Readiness",
-      "readinessHint": "Approved gates / gates with a phase (live)",
+      "weightedHint": "Live · approved ITRs per milestone × weight",
+      "readiness": "System readiness",
+      "readinessHint": "Approved milestones / milestones with a phase (live)",
       "commitments": "Commitment compliance",
-      "commitmentsHint": "Gates fully signed on time · {n} commitments due in 30 days",
+      "commitmentsHint": "Milestones fully signed on time · {n} commitments due in 30 days",
       "tq": "TQs answered on time",
       "tqHint": "{closed} closed in 30 d · {days} d average · {open} open",
       "actions": "Actions on time",
       "actionsHint": "{open} open · {overdue} overdue · {verify} to verify",
       "constraints": "Open constraints",
       "constraintsHint": "L1 {l1} · L2 {l2} · L3 {l3} · L4 {l4} · average age {age} d",
-      "curve": "S-curve — weighted physical progress (dashed: plan from gate commitments)",
+      "curve": "S-curve — weighted physical progress (dashed: plan from milestone commitments)",
       "plan": "Plan (commitments)",
       "curveEmpty": "The curve appears from the second daily snapshot.",
       "startup": "First start-up success",
@@ -1390,7 +1393,14 @@
       "tagLabel": "Tag:",
       "inspectorLabel": "Inspector:",
       "dateLabel": "Date:",
-      "progress": "Progress"
+      "progress": "Progress",
+      "loopSource": "Loop check for loop <a>{loop}</a>",
+      "causeSource": "Test of cause <a>{matrix} · {cause}</a> — {description}",
+      "sourceRows": "rows taken when the ITR was generated ({count})",
+      "itemLanguage": "Item language",
+      "itemsEs": "Show items in Spanish",
+      "itemsEn": "Show items in English",
+      "dismiss": "Dismiss notice"
     },
     "criticalBlocked": "{count, plural, one {⚠ # critical item out of criterion — signature blocked} other {⚠ # critical items out of criterion — signature blocked}}",
     "footer": {
@@ -1587,7 +1597,7 @@
       "tabs": {
         "overview": "Overview",
         "itrs": "ITRs",
-        "punches": "Punch List",
+        "punches": "Punch",
         "photos": "Photos",
         "docs": "Documents",
         "preservation": "Preservation"
@@ -1660,7 +1670,7 @@
       "deleting": "Deleting…",
       "confirmDelete": "Confirm deletion",
       "fieldCriticality": "Criticality",
-      "criticalityHint": "Critical tags block the gate even when progress is high. A SIL rating suggests \"Safety\"."
+      "criticalityHint": "Critical tags block the milestone even when progress is high. A SIL rating suggests \"Safety\"."
     },
     "docs": {
       "sectionTitle": "P&ID Documents",
@@ -1875,7 +1885,7 @@
     "labelRemarks": "Observations / Notes",
     "placeholderRemarks": "Technician notes, conditions found, actions taken…",
     "raisePunchLabel": "A NOK raises a punch",
-    "raisePunchDesc": "It is created in this tag’s Punch List, linked to this record. Choose its category.",
+    "raisePunchDesc": "It is created as a punch on this tag, linked to this record. Choose its category.",
     "punchCategoryLabel": "Punch category:",
     "punchCatA": "Blocker",
     "punchCatB": "Transferable",
@@ -1982,12 +1992,12 @@
     }
   },
   "ControlTower": {
-    "title": "Readiness",
-    "subtitle": "System readiness for completion milestones",
+    "title": "System readiness",
+    "subtitle": "Which systems are ready for each milestone and what holds them",
     "project": "Project",
     "load": "Load",
     "empty": "No systems found for this project",
-    "selectProject": "Select a project to view readiness",
+    "selectProject": "Select a project to view system readiness",
     "approved": "approved",
     "noBlockers": "Ready",
     "kpi": {
@@ -1996,12 +2006,12 @@
       "punchesOpen": "Open Punches",
       "catBLimit": "Open Cat B limit per subsystem: {limit}",
       "catBNoLimit": "No limit on open Cat B per subsystem",
-      "approvedByGate": "Systems approved per gate",
+      "approvedByGate": "Systems approved per milestone",
       "toApprove": "{count} to approve",
       "toSign": "{count} to sign",
-      "weighted": "Weighted progress by gate: {pct} %",
+      "weighted": "Weighted progress by milestone: {pct} %",
       "physical": "Weighted physical progress: {pct} %",
-      "readiness": "Readiness: {done}/{total} gates approved ({pct} %)"
+      "readiness": "{done}/{total} milestones approved ({pct} %)"
     },
     "col": {
       "area": "Area",
@@ -2010,10 +2020,10 @@
       "punchA": "Cat A",
       "punchB": "Cat B",
       "punchC": "Cat C",
-      "gates": "Gates",
+      "gates": "Milestones",
       "topBlocker": "Top Blocker",
       "physical": "Physical progress",
-      "next": "Next gate · what holds it",
+      "next": "Next milestone · what holds it",
       "nextState": "State",
       "blocker": "Blocker",
       "commitment": "Commitment",
@@ -2024,7 +2034,7 @@
       "noSubsystems": "System has no subsystems",
       "noItrs": "No ITRs defined for this system",
       "itrsIncomplete": "{pending} ITR(s) pending approval",
-      "punchesA": "{count} Cat A punch(es) open — block every gate",
+      "punchesA": "{count} Cat A punch(es) open — block every milestone",
       "punchesBOverLimit": "{count} subsystem(s) exceed the limit of {limit} open Cat B",
       "punchesB": "{count} Cat B punch(es) open — require justification at issuance"
     },
@@ -2059,8 +2069,8 @@
       "sortCommitment": "By commitment",
       "search": "Search system",
       "changed": "Changed in 24 h",
-      "nextGate": "Next gate",
-      "allGates": "All gates",
+      "nextGate": "Next milestone",
+      "allGates": "All milestones",
       "nextIs": "Next: {gate}",
       "blocked": "Blocked only"
     },
@@ -2080,22 +2090,7 @@
     "conditionsOpen": "{count, plural, one {# open condition} other {# open conditions}}",
     "export": "Excel",
     "showing": "{shown} of {total} systems",
-    "itrsWeighing": "{count} ITRs",
-    "portfolio": {
-      "title": "Readiness by project",
-      "subtitle": "Current approved gates and next-gate status of each system, by project",
-      "empty": "No projects",
-      "open": "Open readiness →",
-      "col": {
-        "project": "Project",
-        "systems": "Systems",
-        "readiness": "Readiness",
-        "physical": "Progress",
-        "next": "Next gate by status",
-        "constraintsN4": "Level-4 constraints",
-        "commitmentsSoon": "Commitments ≤ 7 days"
-      }
-    }
+    "itrsWeighing": "{count} ITRs"
   },
   "DataQuality": {
     "title": "Data quality",
@@ -2615,9 +2610,9 @@
       "transfers": "Transfers to sign",
       "performanceDecide": "Performance results",
       "performanceSign": "PTC to sign",
-      "gatesApprove": "gates to approve",
-      "gatesCosign": "gates to co-sign",
-      "gatesRegressed": "regressed gates",
+      "gatesApprove": "milestones to approve",
+      "gatesCosign": "milestones to co-sign",
+      "gatesRegressed": "regressed milestones",
       "registersAuthorize": "registers to authorize",
       "registersVerify": "registers to verify",
       "dailyReports": "daily reports to issue",
@@ -2642,9 +2637,9 @@
       "transfers": "Ownership transfers to sign",
       "performanceDecide": "Performance tests to decide",
       "performanceSign": "PTC certificates to sign",
-      "gatesApprove": "Gates ready to approve",
-      "gatesCosign": "Gates to co-sign",
-      "gatesRegressed": "Regressed gates or gates to review",
+      "gatesApprove": "Milestones ready to approve",
+      "gatesCosign": "Milestones to co-sign",
+      "gatesRegressed": "Regressed milestones or milestones to review",
       "registersAuthorize": "Registers to authorize",
       "registersVerify": "Registers to verify",
       "dailyReports": "Daily reports to issue",
@@ -2669,9 +2664,9 @@
       "transfers": "Nothing to sign.",
       "performanceDecide": "Nothing to decide.",
       "performanceSign": "Nothing to sign.",
-      "gatesApprove": "No gate is waiting for your approval.",
-      "gatesCosign": "No gate is waiting for your signature.",
-      "gatesRegressed": "No approved gate has regressed.",
+      "gatesApprove": "No milestone is waiting for your approval.",
+      "gatesCosign": "No milestone is waiting for your signature.",
+      "gatesRegressed": "No approved milestone has regressed.",
       "registersAuthorize": "No registers to authorize.",
       "registersVerify": "No registers to verify.",
       "dailyReports": "No draft daily reports.",
@@ -2743,11 +2738,11 @@
     "create": "Create"
   },
   "Gates": {
-    "back": "Back to Readiness",
-    "intro": "Each gate is a hold point: it is computed from its criteria and, once ready, someone with authority approves it. Approval freezes the evidence at that moment. If it later stops complying (e.g. an ITR is reopened), it is flagged as regressed instead of being revoked automatically, and it holds the next gate. A punch raised after approval does not regress the gate: it holds the next one.",
-    "noGates": "The organization has no active gates. Configure them in Admin → Gates.",
+    "back": "Back to System readiness",
+    "intro": "Each milestone is a checkpoint: it is computed from its criteria and, once ready, someone with authority approves it. Approval freezes the evidence at that moment. If it later stops complying (e.g. an ITR is reopened), it is flagged as regressed instead of being revoked automatically, and it holds the next milestone. A punch raised after approval does not regress the milestone: it holds the next one.",
+    "noGates": "The organization has no active milestones. Configure them in Admin → Milestones & criteria.",
     "unknownUser": "user",
-    "revokePrompt": "Reason for revoking the {gate} approval:",
+    "revokePrompt": "Reason for revoking the approval of milestone {gate}:",
     "evidenceError": "Could not open the attachment",
     "attestMissing": "The attestation needs a comment and an attached file",
     "andMore": "…and {count} more",
@@ -2760,7 +2755,7 @@
     "conditionsOptional": "Approval conditions (optional), one per line",
     "conditionsPlaceholder": "E.g.: Cat B P-0123 and P-0124 closed before RFC",
     "notesPlaceholder": "Notes (optional)",
-    "approve": "Approve {gate}",
+    "approve": "Approve milestone {gate}",
     "notReadyHint": "It cannot be approved until the criteria in red are met.",
     "noAuthority": "Ready to approve. Roles that can approve: {roles}.",
     "status": {
@@ -2779,7 +2774,7 @@
       "fail": "not met"
     },
     "kind": {
-      "previous_gate": "Previous gate approved",
+      "previous_gate": "Previous milestone approved",
       "dependencies_ready": "Systems it depends on",
       "itr_phase_approved": "Phase ITRs approved",
       "certificates_issued": "Certificates issued in every subsystem",
@@ -2787,21 +2782,21 @@
       "critical_tags_ready": "Critical tags complete",
       "manual_attestation": "Attestation with evidence",
       "registers_clear": "Controlled registers closed",
-      "constraints_clear": "Gate constraints closed",
+      "constraints_clear": "Milestone constraints closed",
       "lineup_verified": "Line-up verified and current",
       "performance_accepted": "Performance test accepted (PTC certificate)",
       "documents_current": "Current documents"
     },
     "crit": {
-      "previousOk": "The previous gate is approved.",
-      "previousMissing": "The previous gate must be approved first.",
-      "previousRegressed": "The previous gate is approved but regressed: recover it first.",
+      "previousOk": "The previous milestone is approved.",
+      "previousMissing": "The previous milestone must be approved first.",
+      "previousRegressed": "The previous milestone is approved but regressed: recover it first.",
       "depsSummary": "{ok}/{total} enabling systems ready",
-      "depsMissing": "{gate} missing",
-      "depsPending": "{gate} pending signatures",
-      "depsRegressed": "{gate} approved but regressed",
-      "depsOk": "{gate} approved",
-      "noPhase": "The gate has no phase: set it in Admin → Gates.",
+      "depsMissing": "Milestone {gate} missing",
+      "depsPending": "Milestone {gate} pending signatures",
+      "depsRegressed": "Milestone {gate} approved but regressed",
+      "depsOk": "Milestone {gate} approved",
+      "noPhase": "The milestone has no phase: set it in Admin → Milestones & criteria.",
       "itrSummary": "{approved}/{total} ITRs approved · {red} of {subsystems} subsystems not ready",
       "catBOpen": "{count} open Cat B (justification required)",
       "certSummary": "{issued}/{total} subsystems with an issued certificate",
@@ -2810,9 +2805,9 @@
       "pssrNone": "No PSSR for this system.",
       "criticalSummary": "{total} critical tags · {failing} with pending items",
       "criticalTagDetail": "{itrs} unapproved ITR(s) · {punches} open A/B punch(es)",
-      "registersNone": "No open registers (temporaries, blinds, bypasses…) block this gate.",
+      "registersNone": "No open registers (temporaries, blinds, bypasses…) block this milestone.",
       "registersOpen": "{count, plural, one {# open register} other {# open registers}}: they must be verified or cancelled.",
-      "constraintsOpen": "{count, plural, one {# unclosed constraint} other {# unclosed constraints}} on this gate{blocking, plural, =0 {: ready with conditions.} one {; # at level 4 blocks it.} other {; # at level 4 block it.}}",
+      "constraintsOpen": "{count, plural, one {# unclosed constraint} other {# unclosed constraints}} on this milestone{blocking, plural, =0 {: ready with conditions.} one {; # at level 4 blocks it.} other {; # at level 4 block it.}}",
       "constraintLevel": "L{n}",
       "lineupMissing": "No verified line-up sheet for this system.",
       "lineupStale": "verified, but an F3 register changed afterwards: issue a new one",
@@ -2898,7 +2893,7 @@
       "save": "Save dates",
       "showHistory": "Date history ({n})",
       "hideHistory": "Hide history",
-      "header": "Weighted physical progress {pct} % · Readiness {approved}/{total} gates",
+      "header": "Weighted physical progress {pct} % · Milestones approved {approved}/{total}",
       "lookahead": "Look-ahead →"
     },
     "milestones": {
@@ -2921,42 +2916,42 @@
     "pendingSignaturesDesignated": "Only the project's designated people can sign (Signatories).",
     "criteriaSummary": "Criteria: {pass} of {total} met",
     "confirm": {
-      "approveTitle": "Approve {gate} of {system}",
-      "revokeTitle": "Revoke {gate} of {system}",
+      "approveTitle": "Approve milestone {gate} of {system}",
+      "revokeTitle": "Revoke milestone {gate} of {system}",
       "cancel": "Cancel",
       "criteria": "{pass} of {total} criteria are met.",
       "conditions": "Conditions (each becomes an ACC action assigned to you):",
       "pendingSignatures": "It will wait for signatures from: {capacities}.",
       "noCosign": "No other signatures needed: approved on confirm.",
-      "enablesGate": "Enables the next gate of the system: {gates}.",
+      "enablesGate": "Enables the next milestone of the system: {gates}.",
       "enablesSystems": "Stops blocking: {systems}.",
-      "regressesGates": "Later approved gates will regress: {gates}.",
-      "noOwnImpact": "No later gate of this system is approved.",
+      "regressesGates": "Later approved milestones will regress: {gates}.",
+      "noOwnImpact": "No later milestone of this system is approved.",
       "affectsSystems": "Blocks again: {systems}."
     }
   },
   "GatesAdmin": {
-    "isStartupGate": "Start-up gate (enables first start-up and first HC)",
-    "noStartupGate": "No gate is marked as the start-up gate: the last gate with line-up that does not require a performance test is used.",
-    "perfBeforeStartup": "{gates} requires a performance test and comes before or with the start-up gate {startup}: the test needs the plant running (circular block). Move it after.",
+    "isStartupGate": "Start-up milestone (enables first start-up and first HC)",
+    "noStartupGate": "No milestone is marked as the start-up milestone: the last milestone with line-up that does not require a performance test is used.",
+    "perfBeforeStartup": "{gates} requires a performance test and comes before or with the start-up milestone {startup}: the test needs the plant running (circular block). Move it after.",
     "confirmRemoveCriterion": "Remove this criterion? It changes the status of every system.",
     "confirmRemoveCriterionImpact": "This criterion has {n} active attestation(s) in {systems} system(s). It will be archived (evidence kept) and no longer evaluated in any system. Continue?",
     "policy": {
-      "title": "Gate regression",
-      "hint": "What happens when an approved gate no longer meets its criteria (regressed).",
-      "previous": "Previous gate regressed",
+      "title": "Milestone regression",
+      "hint": "What happens when an approved milestone no longer meets its criteria (regressed).",
+      "previous": "Previous milestone regressed",
       "dependency": "Provider system regressed",
       "block": "Blocks (red)",
       "condition": "Condition (yellow)",
-      "catA": "A new punch also regresses already approved gates (by default it only holds the next one)"
+      "catA": "A new punch also regresses already approved milestones (by default it only holds the next one)"
     },
-    "title": "Gates (hold points)",
-    "subtitle": "Each gate is a per-system checkpoint: it is computed from its criteria and formally approved by someone with authority. By default there is one per phase (MC, RFPC, RFC, RFSU); you can add the optional gates from the commissioning guide.",
+    "title": "Milestones & criteria",
+    "subtitle": "Each milestone is a per-system checkpoint: it is computed from its criteria and formally approved by someone with authority. By default there is one per phase (MC, RFPC, RFC, RFSU); you can add the optional milestones from the commissioning guide.",
     "name": "Name",
     "code": "Code",
     "phase": "Linked phase",
     "noPhase": "No phase",
-    "requiresPrevious": "Requires the previous gate approved",
+    "requiresPrevious": "Requires the previous milestone approved",
     "approvalRoles": "Can approve",
     "criteria": "Criteria",
     "blocking": "blocking",
@@ -2969,11 +2964,11 @@
     "activate": "Activate",
     "deactivate": "Deactivate",
     "delete": "Delete",
-    "confirmDelete": "Delete gate {code}? This cannot be undone.",
-    "newGate": "New gate",
-    "create": "Create gate",
-    "catalogTitle": "Optional gates from the commissioning guide",
-    "catalogHint": "They are added at the end without requiring the previous gate; adjust order, phase and criteria afterwards.",
+    "confirmDelete": "Delete milestone {code}? This cannot be undone.",
+    "newGate": "New milestone",
+    "create": "Create milestone",
+    "catalogTitle": "Optional milestones from the commissioning guide",
+    "catalogHint": "They are added at the end without requiring the previous milestone; adjust order, phase and criteria afterwards.",
     "add": "Add",
     "added": "Already added",
     "role": {
@@ -2988,8 +2983,8 @@
     "cosignRoles": "Can co-sign",
     "weights": {
       "title": "Weights in physical progress",
-      "help": "How much each gate adds to a system’s weighted progress (approved ITRs of its phase × weight). Empty = 1; normalized over active gates with a phase. Readiness (approved gates) is measured separately.",
-      "none": "No active gates with a phase.",
+      "help": "How much each milestone adds to a system’s weighted progress (approved ITRs of its phase × weight). Empty = 1; normalized over active milestones with a phase. System readiness (approved milestones) is measured separately.",
+      "none": "No active milestones with a phase.",
       "save": "Save weights",
       "invalid": "Weights must be between 0 and 1000."
     },
@@ -3003,7 +2998,7 @@
   "Systems": {
     "title": "Systems",
     "subtitle": "Project systemization: type, priority, battery limits and dependencies between systems.",
-    "openControlTower": "Open in Readiness",
+    "openControlTower": "Open in System readiness",
     "kpi": {
       "systems": "Systems",
       "typed": "With type",
@@ -3083,7 +3078,7 @@
     "detail": {
       "back": "Project systems",
       "scope": "{subsystems} subsystems · {tags} tags",
-      "openGates": "Open gates in Readiness",
+      "openGates": "Open in System readiness",
       "attributes": "Attributes",
       "name": "Name",
       "typeHelp": "Utility: instrument air, power, N₂, cooling water… Usually enabling and commissioned first. Safety: flare, relief systems, fire fighting, ESD.",
@@ -3101,16 +3096,16 @@
       "notFrozen": "Limits open",
       "history": "Limits history",
       "dependsOn": "Depends on",
-      "dependsOnHelp": "Systems that must be ready before this one moves forward. The blocked gate cannot be approved until the provider has the required gate approved.",
+      "dependsOnHelp": "Systems that must be ready before this one moves forward. The blocked milestone cannot be approved until the provider has the required milestone approved.",
       "noDependsOn": "This system does not depend on others.",
       "enables": "Enables",
-      "enablesHelp": "Systems waiting for this one. If a gate of this system is revoked, approved dependents go into regression.",
+      "enablesHelp": "Systems waiting for this one. If a milestone of this system is revoked, approved dependents go into regression.",
       "noEnables": "No system depends on this one.",
       "provider": "Depends on",
       "choose": "Choose a system…",
       "kind": "Dependency type",
-      "requiredGate": "Provider's required gate",
-      "blockedGate": "Gate it blocks here",
+      "requiredGate": "Provider's required milestone",
+      "blockedGate": "Milestone it blocks here",
       "notes": "Notes",
       "notesPlaceholder": "e.g. dry air at 7 barg for control valves",
       "add": "Add dependency",
@@ -3153,7 +3148,7 @@
     "ai": {
       "button": "Suggest with AI",
       "title": "AI suggestions for systemization",
-      "help": "The AI proposes each system's type, priority and name, plus missing dependencies, from areas, subsystems and tags. Nothing is saved until you apply. Systems your team already defined come unchecked; dependencies are created with the default gates for their type and can be adjusted on the system page.",
+      "help": "The AI proposes each system's type, priority and name, plus missing dependencies, from areas, subsystems and tags. Nothing is saved until you apply. Systems your team already defined come unchecked; dependencies are created with the default milestones for their type and can be adjusted on the system page.",
       "loading": "Analyzing the project systems… this can take a minute or two.",
       "failed": "Suggestions could not be generated.",
       "truncated": "The project has more than 80 systems: the first 80 were analyzed.",
@@ -3170,7 +3165,7 @@
       "dependsOnArrow": "depends on",
       "humanDecided": "Already set by the team: {type} · {priority}",
       "rename": "Proposed name: {name}",
-      "gatesNote": "Dependencies use the default gates: utility = provider in service before commissioning; process = upstream start-up before start-up.",
+      "gatesNote": "Dependencies use the default milestones: utility = provider in service before commissioning; process = upstream start-up before start-up.",
       "discarded": "{count, plural, one {# suggestion discarded} other {# suggestions discarded}} (unknown codes, duplicates or cycles)",
       "apply": "Apply selected ({count})",
       "applying": "Applying…",
@@ -3178,18 +3173,18 @@
       "notePrefix": "AI:"
     },
     "file": {
-      "backReadiness": "Readiness",
+      "backReadiness": "System readiness",
       "backSystems": "Systems",
-      "allApproved": "All gates approved",
+      "allApproved": "All milestones approved",
       "weighted": "Weighted progress",
       "itrs": "over {count} ITRs",
-      "gates": "Gates approved",
+      "gates": "Milestones approved",
       "attention": "{count} to review",
       "commitment": "{gate} commitment",
       "forecast": "forecast {date}",
       "tabsLabel": "System sections",
       "tab": {
-        "gates": "Gates",
+        "gates": "Milestones",
         "plan": "Progress and plan",
         "deps": "Dependencies",
         "startup": "Start-up",
@@ -3197,7 +3192,7 @@
         "vendors": "Vendors and performance",
         "data": "System data"
       },
-      "planIntro": "Forecast and commitment per gate (changing a commitment requires a reason; leader+), with the weighted progress of its phase.",
+      "planIntro": "Forecast and commitment per milestone (changing a commitment requires a reason; leader+), with the weighted progress of its phase.",
       "noDaily": "No open constraints or actions on this system.",
       "procedures": "Procedures and runs",
       "lineups": "Line-up sheets",
@@ -3211,7 +3206,7 @@
   },
   "Registers": {
     "title": "Field registers",
-    "subtitle": "Temporary plant state: temporary installations, blinds, reinstatement, bypasses, energization and test packs. Each open register can block a gate.",
+    "subtitle": "Temporary plant state: temporary installations, blinds, reinstatement, bypasses, energization and test packs. Each open register can block a milestone.",
     "new": "New register",
     "kpi": {
       "open": "Open",
@@ -3398,24 +3393,21 @@
       "missing": "Missing fields for this step: {fields}",
       "cancel": "Cancel register",
       "cancelPrompt": "Cancellation reason:",
-      "replanPrompt": "Reason for the new date (kept in the timeline; the on-time KPI measures against the original date):",
-      "movePrompt": "Reason to change the constraint gate or system (leader or above only):",
-      "needDatePrompt": "Reason for the new need date:",
       "delete": "Delete draft",
       "deleteConfirm": "Delete this draft? This cannot be undone.",
       "closed": "Closed register: it can no longer be edited.",
       "by": "{who} · {when}",
       "someone": "a user",
       "otherPerson": "This step must be done by someone other than {who}.",
-      "blocks": "While open it blocks gate {gate} of its system.",
-      "noBlock": "This type does not block any gate.",
+      "blocks": "While open it blocks milestone {gate} of its system.",
+      "noBlock": "This type does not block any milestone.",
       "event": {
         "created": "Created",
         "updated": "Data updated",
         "transition": "{from} → {to}"
       },
       "rejected": "The test was rejected: repeat the test (new test pack) before reinstating or verifying.",
-      "openBlinds": "Note: blinds {list} are still installed. You can verify the pack; each blind keeps blocking its gate until removed and verified.",
+      "openBlinds": "Note: blinds {list} are still installed. You can verify the pack; each blind keeps blocking its milestone until removed and verified.",
       "label": "Print QR label",
       "linkedBlinds": "Test blinds",
       "linked": "Linked registers",
@@ -3428,9 +3420,9 @@
     },
     "admin": {
       "title": "Register types",
-      "subtitle": "Enable the types your organization uses and choose which gate each one blocks while it has open registers in a system.",
+      "subtitle": "Enable the types your organization uses and choose which milestone each one blocks while it has open registers in a system.",
       "active": "Active",
-      "blocks": "Blocks gate",
+      "blocks": "Blocks milestone",
       "none": "Does not block",
       "saved": "Saved."
     },
@@ -3640,7 +3632,7 @@
   },
   "Daily": {
     "title": "Daily management",
-    "subtitle": "Project actions, constraints, technical queries (TQ) and decisions. No hidden constraints: an open constraint puts its gate under conditions and, at level 4, blocks it.",
+    "subtitle": "Project actions, constraints, technical queries (TQ) and decisions. No hidden constraints: an open constraint puts its milestone under conditions and, at level 4, blocks it.",
     "export": "Export Excel",
     "new": {
       "action": "New action",
@@ -3690,7 +3682,7 @@
       "system": "System",
       "status": "Status",
       "level": "Level",
-      "gate": "Gate",
+      "gate": "Milestone",
       "needDate": "Need date",
       "impact": "Impact",
       "subject": "Subject",
@@ -3749,7 +3741,7 @@
       "tq": "TQ",
       "vendor": "Vendor",
       "performance": "Performance",
-      "gate": "Gate condition"
+      "gate": "Milestone condition"
     },
     "impact": {
       "safety": "Safety",
@@ -3815,7 +3807,7 @@
       "sourceRefHint": "Meeting, vendor, PTW/MOC no.…",
       "constraintDescription": "What is blocking progress",
       "pick": "Choose…",
-      "gate": "Affected gate",
+      "gate": "Affected milestone",
       "noGate": "None",
       "needDate": "Need date",
       "impactKind": "Impact type",
@@ -3862,7 +3854,7 @@
       "constraint": "Something blocking a system: with owner, need date, impact and recovery plan.",
       "tq": "Technical query to engineering, a vendor or the client. Created as a draft and issued when ready.",
       "decision": "Stays in the project log. It is not edited: if it changes, it is superseded by a new one.",
-      "constraintGate": "If you pick a gate, the open constraint puts it “ready with conditions”; at level 4 it blocks it.",
+      "constraintGate": "If you pick a milestone, the open constraint puts it “ready with conditions”; at level 4 it blocks it.",
       "decisionImmutable": "Decisions are never edited or deleted: they are superseded and the previous one stays in the log."
     },
     "detail": {
@@ -3873,7 +3865,9 @@
       "closed": "Closed record: read only.",
       "cancelPrompt": "Reason for cancelling:",
       "deleteConfirm": "Delete this draft? This cannot be undone.",
-      "replanPrompt": "Reason for the date change (it stays in the timeline; the “on time” KPI measures against the original date):"
+      "replanPrompt": "Reason for the date change (it stays in the timeline; the “on time” KPI measures against the original date):",
+      "movePrompt": "Reason to change the constraint’s milestone or system (leader or above only):",
+      "needDatePrompt": "Reason for the new need date:"
     },
     "action": {
       "owner": "Owner: {who}",
@@ -3891,10 +3885,10 @@
       "reject": "Reject closure"
     },
     "constraint": {
-      "gate": "Affects gate {gate}",
-      "noGate": "No gate assigned",
-      "blocksGate": "Open at level 4: blocks gate {gate} for this system.",
-      "conditionsGate": "While open, gate {gate} for this system is “ready with conditions”.",
+      "gate": "Affects milestone {gate}",
+      "noGate": "No milestone assigned",
+      "blocksGate": "Open at level 4: blocks milestone {gate} for this system.",
+      "conditionsGate": "While open, milestone {gate} for this system is “ready with conditions”.",
       "overdueHint": "Overdue by {n} days: consider escalating.",
       "resolvedBy": "Resolved by {who} on {when}",
       "closedBy": "Closed by {who} on {when}",
@@ -3940,7 +3934,7 @@
       "supersede": "Supersede decision"
     },
     "lookahead": {
-      "subtitle": "What is due in the next 1, 7, 30 or 90 days: gates by forecast or commitment, actions, constraints, TQs and work plans. Overdue items keep showing until closed.",
+      "subtitle": "What is due in the next 1, 7, 30 or 90 days: milestones by forecast or commitment, actions, constraints, TQs and work plans. Overdue items keep showing until closed.",
       "window": "{n, plural, one {# day} other {# days}}",
       "basis": {
         "forecast": "By forecast",
@@ -3950,18 +3944,18 @@
       "closeEdit": "Back to look-ahead",
       "kpi": {
         "items": "Due in {n} days",
-        "atRisk": "Gates at risk",
+        "atRisk": "Milestones at risk",
         "behind": "Forecast behind commitment",
         "progress": "Weighted progress"
       },
       "saved": "{n, plural, one {# date saved} other {# dates saved}}.",
       "savedPartial": "{n} saved before the error",
-      "help": "Up to {end}. Risk = the gate is due in the window and is not ready. Gap = forecast − commitment (positive: late against commitment).",
+      "help": "Up to {end}. Risk = the milestone is due in the window and is not ready. Gap = forecast − commitment (positive: late against commitment).",
       "empty": "Nothing due in this window.",
       "noSystem": "No system",
-      "systemProgress": "weighted progress {pct} · gates approved {approved}/{total}",
+      "systemProgress": "weighted progress {pct} · milestones approved {approved}/{total}",
       "kind": {
-        "gate": "Gate",
+        "gate": "Milestone",
         "action": "Action",
         "constraint": "Constraint",
         "tq": "TQ",
@@ -4036,16 +4030,16 @@
       },
       "placeholder": {
         "summary": "3–5 sentences: progress, the day’s highlights and the main risk.",
-        "key_events": "- Relevant ITRs, gates or punches of the day",
+        "key_events": "- Relevant ITRs, milestones or punches of the day",
         "issues": "- Failures, regressions, Cat A punches, overdue actions",
         "constraints": "- L≥3 or overdue constraints and their recovery",
-        "next_day_plan": "- Tomorrow’s priorities (committed gates, constraints due)"
+        "next_day_plan": "- Tomorrow’s priorities (committed milestones, constraints due)"
       },
       "dataTitle": "Day data (frozen snapshot)",
       "fact": {
         "weighted": "Weighted progress",
         "noPrev": "no previous snapshot",
-        "gates": "Gates approved",
+        "gates": "Milestones approved",
         "itrs": "ITRs approved today",
         "itrsSub": "{done} completed · {wip} in progress",
         "punches": "Punches raised today",
@@ -4056,7 +4050,7 @@
       },
       "list": {
         "critical": "Critical constraints",
-        "regressed": "Regressed gates",
+        "regressed": "Regressed milestones",
         "field": "Temporary state in the field",
         "lookahead": "Next 7 days",
         "none": "None.",
@@ -4064,7 +4058,7 @@
       },
       "dataNote": "PDF figures come from this data, not from the text. “Refresh data” retakes the snapshot (draft only).",
       "utcCut": "This report was built before the project time zone existed: its day was cut in UTC. It stays as issued; issue a revision to correct it.",
-      "asOf": "Progress, regressed gates, open and overdue items: status as of {when} (not rebuilt for past dates).",
+      "asOf": "Progress, regressed milestones, open and overdue items: status as of {when} (not rebuilt for past dates).",
       "aiReplaceConfirm": "The report already has text. Replace it with the AI draft? (Cancel = AI only fills empty sections)",
       "issueConfirm": "Once issued the report becomes immutable. Issue now?",
       "revisePrompt": "Reason for the revision:"
@@ -4118,7 +4112,7 @@
   },
   "Startup": {
     "title": "Start-up",
-    "subtitle": "Procedures with hold points and stop criteria, and line-up sheets with independent verification. A gate that requires a line-up cannot be approved without a verified, current sheet for the system.",
+    "subtitle": "Procedures with hold points and stop criteria, and line-up sheets with independent verification. A milestone that requires a line-up cannot be approved without a verified, current sheet for the system.",
     "tab": {
       "procedures": "Procedures",
       "lineups": "Line-ups",
@@ -4236,7 +4230,7 @@
       "definitions": "Acronyms and terms used.",
       "responsibilities": "Who executes, who supervises, who releases each hold point.",
       "safety": "PTW, PPE, hazards and controls, communications.",
-      "prerequisites": "Approved gates, ITRs, closed F3 registers, utilities available.",
+      "prerequisites": "Approved milestones, ITRs, closed F3 registers, utilities available.",
       "isolations": "Isolations, blinds and bypasses required and their state.",
       "equipment": "Test instruments, special tools, consumables.",
       "initial_lineup": "Reference to the line-up sheet (LU-…) or key positions.",
@@ -4345,7 +4339,7 @@
         "started": "Started",
         "stopped": "Stopped",
         "resumed": "Resumed",
-        "hold_released": "Hold released",
+        "hold_released": "Hold point released",
         "completed": "Completed",
         "aborted": "Aborted"
       },
@@ -4363,7 +4357,7 @@
     },
     "lineup": {
       "stale": "Possibly out of date",
-      "staleHelp": "An F3 register on the system (blind, bypass, temporary…) changed state after this sheet was verified: the gate treats it as expired. Issue and execute a new sheet.",
+      "staleHelp": "An F3 register on the system (blind, bypass, temporary…) changed state after this sheet was verified: the milestone treats it as expired. Issue and execute a new sheet.",
       "verifiedBy": "Verified by {who} on {when}",
       "registers": "F3 registers in the field on this system ({n})",
       "draftHelp": "Set the required position of each valve and flag the critical ones (they need independent verification). You can add tags or manual rows.",
@@ -4461,7 +4455,7 @@
       "voided": "Voided"
     },
     "events": {
-      "subtitle": "Start-up log: per-system milestones (once each, witnessed) and free events. Recording freezes the IIoT signal readings at that time; first start-up and first HC require the start-up gate and PSSR approved.",
+      "subtitle": "Start-up log: per-system key events (once each, witnessed) and free events. Recording freezes the IIoT signal readings at that time; first start-up and first HC require the start-up milestone and PSSR approved.",
       "record": "Record event",
       "type": "Event type",
       "milestones": "Milestones",
@@ -4472,9 +4466,9 @@
       "witnessBy": "This milestone is witnessed by {who} (someone else).",
       "already": "This milestone is already recorded for the system; void the previous one to correct it.",
       "blocked": "Cannot be recorded yet:",
-      "needGate": "gate {gate} must be approved with all signatures (now: {status}).",
+      "needGate": "milestone {gate} must be approved with all signatures (now: {status}).",
       "needPssr": "PSSR {pssr} must be approved (now: {status}).",
-      "prereqOk": "Start-up prerequisites met: {gate} approved and {pssr} approved.",
+      "prereqOk": "Start-up prerequisites met: milestone {gate} approved and {pssr} approved.",
       "signals": "IIoT signals to freeze",
       "pickSystem": "Choose a system to see its signals.",
       "noSignals": "The system has no signals.",
@@ -4566,7 +4560,7 @@
       "check": {
         "startup_procedure": "Start-up procedure approved and field-verified",
         "staff_level_1": "Staff at level ≥ 1 on every shift",
-        "startup_gate": "Start-up gate approved",
+        "startup_gate": "Start-up milestone approved",
         "lineup_verified": "Line-up verified and current",
         "first_startup_witnessed": "First start-up witnessed",
         "staff_level_2": "Staff at level ≥ 2 on every shift",
@@ -4577,7 +4571,7 @@
       "detail": {
         "noStaff": "No staff assessed on this system",
         "noProcedure": "No approved start-up procedure",
-        "noGate": "No start-up gate",
+        "noGate": "No start-up milestone",
         "stale": "stale",
         "noLineup": "No verified sheet",
         "noFirstStartup": "Milestone not recorded or not witnessed",
@@ -4672,16 +4666,16 @@
     },
     "perf": {
       "withdraw": "Withdraw test",
-      "withdrawPrompt": "Reason to withdraw the test (it stops counting for the gate; at least 10 characters):",
+      "withdrawPrompt": "Reason to withdraw the test (it stops counting for the milestone; at least 10 characters):",
       "withdrawn": "Withdrawn",
-      "withdrawnNote": "Withdrawn test: it does not count for the gate. Reason: {reason}",
+      "withdrawnNote": "Withdrawn test: it does not count for the milestone. Reason: {reason}",
       "pointsTruncated": "The series has more than 30,000 points: the chart and readings show only the first ones. The evaluation (in the database) uses all of them.",
       "subtitle": "Performance test (ch. 18): approved definition with measurable criteria, attempt with stabilization and formal period, disturbances and frozen data.",
       "new": "New test",
       "titlePlaceholder": "E.g. C-103 compressor capacity",
       "primarySystem": "Primary system",
       "primary": "primary",
-      "primaryHint": "The primary system is the one shown in Readiness and feeding the gate. The boundary may include more systems.",
+      "primaryHint": "The primary system is the one shown in System readiness and feeding its milestone. The boundary may include more systems.",
       "empty": "No performance tests yet.",
       "col": {
         "number": "No.",
@@ -5084,7 +5078,7 @@
       "empty": "No referenced documents.",
       "outdatedItr": "{n, plural, one {One document has} other {# documents have}} a newer revision: update the reference before signing.",
       "outdatedProc": "{n, plural, one {One document has} other {# documents have}} a newer revision: update the reference before submitting or approving.",
-      "outdatedLocked": "{n, plural, one {One document was superseded} other {# documents were superseded}} after signing: the system gate carries a condition until a leader revalidates it or the record is redone.",
+      "outdatedLocked": "{n, plural, one {One document was superseded} other {# documents were superseded}} after signing: the system milestone carries a condition until a leader revalidates it or the record is redone.",
       "outdatedChip": "Uses Rev {used} · current {current}",
       "currentChip": "Rev {rev} · current",
       "update": "Update to current",
@@ -5220,8 +5214,8 @@
       "boundariesPh": "Where it starts and ends (flanges, terminals, panels…)",
       "planned": "Planned mobilization",
       "mobSystem": "Mobilization system",
-      "mobGate": "Mobilization gate",
-      "noMobGate": "No gate (checklist only)"
+      "mobGate": "Mobilization milestone",
+      "noMobGate": "No milestone (checklist only)"
     },
     "ifz": {
       "title": "Interfaces",
@@ -5253,8 +5247,8 @@
     },
     "mob": {
       "title": "Mobilization",
-      "gate": "Gate {gate}: {status}",
-      "noGate": "No system gate: checklist only",
+      "gate": "Milestone {gate}: {status}",
+      "noGate": "No system milestone: checklist only",
       "interfaces": "{n, plural, =0 {Interfaces agreed} one {One open interface} other {# open interfaces}}",
       "checklist": "{n, plural, =0 {Checklist complete} one {One checklist item missing} other {# checklist items missing}}",
       "note": "Note (reason if cancelling)",
@@ -5418,7 +5412,7 @@
   "Signatories": {
     "title": "Signatories",
     "subtitle": "who signs for Commissioning, Operations, HSE and the Client",
-    "help": "When people are designated for a capacity, only they sign (with any role: an operator supervisor with the inspector role can release Operations hold points). Without designations the person's role applies and a warning is shown. Applies to gates, hold points, milestone witnesses, transfers, PTCs and the ITR client signature.",
+    "help": "When people are designated for a capacity, only they sign (with any role: an operator supervisor with the inspector role can release Operations hold points). Without designations the person's role applies and a warning is shown. Applies to milestones, hold points, start-up event witnesses, transfers, PTCs and the ITR client signature.",
     "cap": {
       "commissioning": "Commissioning",
       "operations": "Operations",
@@ -5426,9 +5420,9 @@
       "client_rep": "Client representative"
     },
     "capHelp": {
-      "commissioning": "Approves gates, issues the PTC, signs transfers and releases Commissioning hold points.",
-      "operations": "Co-signs gates, releases hold points, witnesses milestones and signs transfers and PTCs for Operations.",
-      "hse": "Co-signs gates and releases HSE hold points.",
+      "commissioning": "Approves milestones, issues the PTC, signs transfers and releases Commissioning hold points.",
+      "operations": "Co-signs milestones, releases hold points, witnesses start-up events and signs transfers and PTCs for Operations.",
+      "hse": "Co-signs milestones and releases HSE hold points.",
       "client_rep": "Signs PTCs and ITRs for the Client."
     },
     "designatedN": "{n, plural, one {# designated} other {# designated}}",
@@ -5556,9 +5550,9 @@
       "pssr_approved": "PSSR approved",
       "pssr_rejected": "PSSR rejected",
       "constraint_overdue": "Constraint overdue",
-      "gate_cosign": "Gate to co-sign",
-      "gate_ready": "Gate ready",
-      "gate_regressed": "Gate regressed",
+      "gate_cosign": "Milestone to co-sign",
+      "gate_ready": "Milestone ready",
+      "gate_regressed": "Milestone regressed",
       "transfer_to_sign": "Transfer to sign",
       "ptc_to_sign": "PTC to sign",
       "hold_to_release": "Hold point",
@@ -5637,18 +5631,18 @@
     "kpi": {
       "physical": "Weighted physical progress",
       "itrs": "{approved} of {total} ITRs approved",
-      "readiness": "Readiness",
-      "gates": "{done} / {total} gates",
+      "readiness": "System readiness",
+      "gates": "{done} / {total} milestones",
       "readinessPct": "{pct} % current approvals",
       "today": "Today",
       "blocked": "{count, plural, =0 {No blockers} one {# system blocked} other {# systems blocked}}",
       "todayDetail": "{sign} to sign · {regressed} regressed"
     },
     "board": {
-      "title": "By phase (gate)",
-      "hint": "Each row opens Readiness with the systems whose next gate is that one",
+      "title": "By phase (milestone)",
+      "hint": "Each row opens System readiness with the systems whose next milestone is that one",
       "noSystems": "The project has no systems yet.",
-      "noGates": "The organization has no gates configured (Administration › Gates).",
+      "noGates": "The organization has no milestones configured (Administration › Milestones & criteria).",
       "col": {
         "phase": "Phase",
         "readiness": "Readiness (systems)",
@@ -5681,11 +5675,11 @@
       "lookahead": "Look-ahead →",
       "none": "Nothing is due in the next 7 days.",
       "late": "overdue",
-      "commitment": "gate commitment",
-      "forecast": "gate forecast",
+      "commitment": "milestone commitment",
+      "forecast": "milestone forecast",
       "kind": {
-        "commitment": "Gate commitment",
-        "forecast": "Gate forecast",
+        "commitment": "Milestone commitment",
+        "forecast": "Milestone forecast",
         "action": "Action",
         "constraint": "Constraint",
         "vendor": "Vendor activity"
@@ -5734,7 +5728,7 @@
   "Planning": {
     "title": "Planning",
     "tab": {
-      "lookahead": "Look-ahead (gates)",
+      "lookahead": "Look-ahead (milestones)",
       "workPlans": "Work plans (ITR)"
     }
   },
@@ -5837,7 +5831,7 @@
     "hint": {
       "punch": "Deficiency on a tag (Cat A · B · C)",
       "action": "ACC with owner, due date and evidence",
-      "constraint": "RES holding a system or a gate",
+      "constraint": "RES holding a system or a milestone",
       "tq": "Technical query to engineering or the client",
       "event": "Milestone or event in the start-up log",
       "register": "Blind, bypass, test or other controlled register"
@@ -5848,7 +5842,7 @@
     "subtitle": "Manual by role and phase (in Spanish) · version {version} · matches today’s navigation",
     "index": "Help index",
     "search": "Search help",
-    "searchPlaceholder": "e.g. firmar ITR, gate, line-up…",
+    "searchPlaceholder": "e.g. sign ITR, milestone, line-up…",
     "noResults": "No results.",
     "yourRole": "Your role · {role}",
     "yourRoleNav": "Sections for your role",
@@ -5863,5 +5857,272 @@
       "inspector": "Inspector",
       "client": "Client"
     }
+  },
+  "Setup": {
+    "title": "Initial setup",
+    "subtitle": "Set up your organization and your first project",
+    "newProjectTitle": "New project",
+    "newProjectSubtitle": "Add a new project to your organization",
+    "unknownError": "Unknown error while processing the request",
+    "errorDetail": "{msg} — check the browser console or the server log for details",
+    "steps": {
+      "org": "Organization",
+      "project": "Project",
+      "phases": "Phases",
+      "disciplines": "Disciplines"
+    },
+    "org": {
+      "title": "Your account and organization",
+      "desc": "Your name will appear on digital signatures, certificates and PDF reports.",
+      "fullName": "Your full name *",
+      "fullNamePh": "e.g. Jane Smith",
+      "name": "Organization name *",
+      "namePh": "e.g. Tecna Engineering",
+      "slug": "Identifier (slug) *",
+      "slugHint": "Lowercase letters, numbers and hyphens only. Used in URLs."
+    },
+    "project": {
+      "title": "First project",
+      "titleNew": "Project details",
+      "desc": "Enter the basic details of the commissioning project.",
+      "name": "Project name *",
+      "namePh": "e.g. LPG Plant - Phase 2",
+      "code": "Code *",
+      "location": "Location",
+      "locationPh": "e.g. Maracaibo, Venezuela",
+      "client": "Client",
+      "clientPh": "e.g. PDVSA Gas",
+      "country": "Country",
+      "countryPh": "e.g. Colombia",
+      "region": "Region / Cluster",
+      "regionPh": "e.g. Llanos",
+      "start": "Start date",
+      "end": "Target date"
+    },
+    "phases": {
+      "title": "Project phases",
+      "desc": "Phases define the completion lifecycle. You can edit them or add your own.",
+      "reset": "Reset",
+      "col": {
+        "code": "Code",
+        "name": "Name",
+        "certificate": "Certificate",
+        "color": "Color"
+      },
+      "namePh": "Phase name",
+      "remove": "Remove phase",
+      "add": "+ Add phase"
+    },
+    "disciplines": {
+      "title": "Disciplines",
+      "desc": "Select the disciplines that apply to this project. They classify ITRs, tags and work plans.",
+      "phase": "Phase {p}",
+      "custom": "Custom disciplines",
+      "codePh": "CODE",
+      "remove": "Remove discipline",
+      "add": "+ Add custom discipline",
+      "selected": "{count, plural, one {# discipline selected} other {# disciplines selected}}"
+    },
+    "back": "Back",
+    "next": "Next",
+    "creating": "Creating...",
+    "createProject": "Create project",
+    "finish": "Finish setup"
+  },
+  "ProjectHeader": {
+    "back": "Projects",
+    "noClientLocation": "No client / location",
+    "edit": "Edit project",
+    "close": "Close",
+    "status": {
+      "planning": "Planning",
+      "active": "Active",
+      "on_hold": "On hold",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "f": {
+      "name": "Name",
+      "namePh": "Project name",
+      "code": "Code",
+      "status": "Status",
+      "country": "Country",
+      "region": "Region / Cluster",
+      "start": "Start date",
+      "end": "End date",
+      "timezone": "Time zone"
+    },
+    "delete": "Delete project…",
+    "deleteWarning": "This deletes the project and <strong>all its data</strong> (tags, ITRs, punches, certificates, P&IDs). It cannot be undone.",
+    "deleting": "Deleting…",
+    "confirmDelete": "Confirm deletion",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save changes"
+  },
+  "TagItrs": {
+    "status": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "sign": {
+      "executor": "Exec",
+      "supervisor": "Sup",
+      "client": "Cli"
+    },
+    "deleteConfirm": "Delete this ITR and all its responses?",
+    "none": "No ITRs assigned to this tag.",
+    "count": "{count, plural, one {# ITR assigned} other {# ITRs assigned}}",
+    "aiHint": "Analyzes the tag with AI and proposes the templates that apply per phase. You decide what to assign.",
+    "aiLoading": "Analyzing…",
+    "aiSuggest": "Suggest with AI",
+    "assign": "Assign ITR",
+    "aiTitle": "AI proposal for {tag} · {count, plural, one {# template} other {# templates}}",
+    "close": "Close",
+    "aiEmpty": "The AI found no applicable templates in the organization catalog.",
+    "phase": "Phase {code}",
+    "confidence": "Confidence",
+    "useHint": "Opens the assignment form with this template",
+    "otherDiscipline": "Template from another discipline: assign it from the full list",
+    "use": "Use",
+    "aiFooter": "The AI proposes; you confirm the assignment in the form.",
+    "open": "Open",
+    "addToPlan": "Add to work plan",
+    "plan": "Plan",
+    "delete": "Delete ITR",
+    "noTemplates": "No active templates for this tag’s discipline.",
+    "template": "Template",
+    "pickTemplate": "Select template...",
+    "recommended": "Recommended for this tag",
+    "recommendedFor": "Recommended for {type}",
+    "allTemplates": "All templates",
+    "availableTemplates": "Available templates",
+    "phaseName": "Phase: <strong>{name}</strong>",
+    "executor": "Inspector * (executor)",
+    "pickExecutor": "Select inspector...",
+    "supervisor": "Supervisor *",
+    "pickSupervisor": "Select supervisor...",
+    "client": "Client *",
+    "pickClient": "Select client...",
+    "scheduled": "Scheduled date (optional)",
+    "cancel": "Cancel",
+    "assigning": "Assigning...",
+    "assignShort": "Assign"
+  },
+  "TwinView": {
+    "sema": {
+      "green": "Complete",
+      "yellow": "In progress",
+      "red": "Blocked",
+      "grey": "No ITRs"
+    },
+    "openCatA": "Open Cat A punches",
+    "openCatB": "Open Cat B punches",
+    "certsIssued": "Certificates issued",
+    "preservationActive": "Active preservation",
+    "pins": "{count, plural, one {# P&ID pin} other {# P&ID pins}}",
+    "noItrs": "No ITRs assigned",
+    "tags": "{count, plural, one {# tag} other {# tags}}",
+    "emptySubsystem": "No tags in this subsystem",
+    "blocked": "{count} blocked",
+    "legend": {
+      "catA": "Cat A punches",
+      "catB": "Cat B punches",
+      "certs": "Certificates issued"
+    },
+    "stats": {
+      "total": "Total tags",
+      "itr": "ITR progress",
+      "green": "Complete",
+      "yellow": "In progress",
+      "red": "Blocked",
+      "punchA": "Punches A",
+      "punchB": "Punches B"
+    },
+    "filter": {
+      "all": "All"
+    },
+    "search": "Search tag, description, system...",
+    "noResults": "No results for the applied filters",
+    "empty": "No tags registered in this project"
+  },
+  "Continuity": {
+    "countError": "Enter a whole number from 1 to 500 and shields without repeated identifiers.",
+    "confirmRemove": "This change removes rows that contain data. Change the configuration anyway?",
+    "legend": "Continuity record per conductor",
+    "grouping": "Arrangement",
+    "groupingAria": "Cable arrangement",
+    "pairs": "Pairs",
+    "conductors": "Conductors",
+    "pairCount": "Number of pairs",
+    "conductorCount": "Number of conductors",
+    "countAria": "Number of pairs or conductors",
+    "shields": "Shields / screens (one identifier per line)",
+    "shieldsAria": "Shield identifiers",
+    "measurement": "The procedure requires a reading and unit",
+    "update": "Update configuration",
+    "create": "Create rows",
+    "help": "Each conductor needs its terminals and result. “Not applicable” requires a justification. New rows start pending.",
+    "col": {
+      "id": "Conductor / shield",
+      "from": "From terminal",
+      "to": "To terminal",
+      "result": "Result",
+      "reading": "Reading",
+      "unit": "Unit",
+      "remarks": "Remarks / justification"
+    },
+    "result": {
+      "pending": "Pending",
+      "pass": "Pass",
+      "fail": "Fail",
+      "na": "Not applicable"
+    },
+    "status": {
+      "fail": "There are failed results.",
+      "complete": "Record filled in; pending the required approvals.",
+      "pending": "Record pending: complete terminals, results and procedure requirements."
+    }
+  },
+  "SwipeCapture": {
+    "min": "Min",
+    "max": "Max",
+    "outOfRange": "Value outside the specified range",
+    "position": "Item {n} / {total}",
+    "pendingSave": "Pending save",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "error": "Error",
+    "quickFill": "Quick fill",
+    "done": "{count} done",
+    "pending": "{count} pending",
+    "required": "Required",
+    "valueLabel": "Value / Remark",
+    "capturePhoto": "Take photo",
+    "photoAlt": "Photo {n}",
+    "notes": "Notes / Remarks",
+    "notesPh": "Add a field note...",
+    "flagged": "Flagged for review",
+    "flag": "Flag for review",
+    "prev": "Previous",
+    "next": "Next",
+    "complete": "Complete ITR",
+    "quickFillHint": "Applies to every pending Yes/No item",
+    "allOk": "All OK",
+    "allNok": "All NOK",
+    "allNa": "All N/A",
+    "quickFillNote": "Only affects unanswered Yes/No items"
+  },
+  "A11y": {
+    "close": "Close",
+    "toasts": "Notifications",
+    "dismiss": "Dismiss notification",
+    "bell": "Notifications",
+    "bellUnread": "Notifications: {count} unread",
+    "deltaNoHistory": "No 7-day history yet",
+    "deltaVs7d": "vs 7 days ago"
   }
 }

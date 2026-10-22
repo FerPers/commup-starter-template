@@ -81,6 +81,12 @@ export default async function DashboardPage() {
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
   const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const isCompact = role === 'inspector' || role === 'client'
+  // V1: el h1 es «Portafolio» (= etiqueta del menú); el saludo pasa al subtítulo.
+  const subtitle = [
+    firstName ? t('hello', { name: firstName }) : null,
+    isCompact ? todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1) : null,
+    org?.name ?? t('subtitle'),
+  ].filter(Boolean).join(' · ')
 
   const ctx = { userId: auth.userId, orgId, role }
 
@@ -89,10 +95,10 @@ export default async function DashboardPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: isCompact ? 28 : 32, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: isCompact ? 'var(--text-xl)' : 26, fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
-            {firstName ? t('hello', { name: firstName }) : t('title')}
+            {t('title')}
           </h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: isCompact ? 'var(--text-sm)' : 'var(--text-base)', textTransform: isCompact ? 'capitalize' : 'none', margin: '4px 0 0' }}>
-            {isCompact ? `${todayLabel} · ${org?.name ?? ''}` : (org?.name ?? t('subtitle'))}
+          <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: isCompact ? 'var(--text-sm)' : 'var(--text-base)', margin: '4px 0 0' }}>
+            {subtitle}
           </p>
           <div style={{ marginTop: 12 }}>
             <DashboardStatusPill />

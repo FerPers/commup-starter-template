@@ -1,5 +1,6 @@
 /**
- * N2b (D-38): readiness por proyecto para el portafolio (/control-tower) y el widget «Readiness» del dashboard.
+ * N2b (D-38): liberación por proyecto para la tabla del Portafolio (/dashboard, widget `readiness`; V1: /control-tower
+ * solo redirige).
  * Gates materializados (S20): un `compute_project_gates` por proyecto; compromisos y restricciones N4 en dos
  * consultas para todos los proyectos.
  */

@@ -7,7 +7,9 @@ import { formatInZone } from '@/lib/time/zone'
 import VerifyFiles from './VerifyFiles'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Verificar paquete de handover', robots: { index: false, follow: false } }
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations('HandoverVerify'))('title'), robots: { index: false, follow: false } }
+}
 
 type Verified = {
   package_id: string

@@ -25,7 +25,7 @@ export const READINESS_GATE_CATALOG: CatalogGate[] = [
     key: 'utility_ready',
     code: 'UTILITY',
     name: 'Utilities disponibles',
-    description: 'Utilities requeridas disponibles con calidad, presión, caudal y capacidad aceptables (guía 4.6, gate 3).',
+    description: 'Utilities requeridas disponibles con calidad, presión, caudal y capacidad aceptables (guía 4.6, liberación 3).',
     criteria: [
       { kind: 'manual_attestation', label: 'Utilities habilitantes disponibles y estables (potencia, aire de instrumentos, N₂, agua de enfriamiento)' },
       { kind: 'manual_attestation', label: 'Calidad de utilities verificada (punto de rocío del aire, pureza de N₂)' },
@@ -35,7 +35,7 @@ export const READINESS_GATE_CATALOG: CatalogGate[] = [
     key: 'functional_ready',
     code: 'FUNCTIONAL',
     name: 'Pruebas funcionales completas',
-    description: 'Equipos, instrumentos, controles y protecciones probados funcionalmente (guía 4.6, gate 4).',
+    description: 'Equipos, instrumentos, controles y protecciones probados funcionalmente (guía 4.6, liberación 4).',
     criteria: [
       { kind: 'critical_tags_ready' },
       { kind: 'manual_attestation', label: 'Lazos, alarmas, disparos, permisivos y matriz C&E probados' },
@@ -45,7 +45,7 @@ export const READINESS_GATE_CATALOG: CatalogGate[] = [
     key: 'process_introduction',
     code: 'PROC-INTRO',
     name: 'Listo para introducir proceso / hidrocarburo',
-    description: 'El sistema puede recibir inventario de proceso (guía 4.6, gate 5; cap. 17).',
+    description: 'El sistema puede recibir inventario de proceso (guía 4.6, liberación 5; cap. 17).',
     criteria: [
       { kind: 'pssr_approved' },
       { kind: 'critical_tags_ready' },
@@ -59,7 +59,7 @@ export const READINESS_GATE_CATALOG: CatalogGate[] = [
     key: 'performance_ready',
     code: 'PERF-TEST',
     name: 'Listo para prueba de desempeño',
-    description: 'Operación estable y sistemas de medición validados (guía 4.6, gate 7; cap. 18).',
+    description: 'Operación estable y sistemas de medición validados (guía 4.6, liberación 7; cap. 18).',
     criteria: [
       { kind: 'manual_attestation', label: 'Operación estable dentro de la envolvente durante el periodo definido' },
       { kind: 'manual_attestation', label: 'Instrumentación de la prueba calibrada y procedimiento de prueba aprobado' },
@@ -69,7 +69,7 @@ export const READINESS_GATE_CATALOG: CatalogGate[] = [
     key: 'handover_ready',
     code: 'HANDOVER',
     name: 'Listo para traspaso a operaciones',
-    description: 'Documentación técnica y operativa completa para el traspaso (guía 4.6, gate 8; cap. 16).',
+    description: 'Documentación técnica y operativa completa para el traspaso (guía 4.6, liberación 8; cap. 16).',
     criteria: [
       { kind: 'manual_attestation', label: 'Dossier técnico completo y aceptado' },
       { kind: 'manual_attestation', label: 'Operadores entrenados y procedimientos de operación aprobados' },

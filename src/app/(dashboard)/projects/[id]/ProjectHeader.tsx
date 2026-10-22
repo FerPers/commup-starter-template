@@ -3,17 +3,12 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { updateProject, deleteProject } from '@/app/actions/projects'
 import { DEFAULT_TIMEZONE, TIMEZONE_OPTIONS } from '@/lib/time/zone'
 import type { ProjectStatus } from '@/types/database'
 
-const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
-  { value: 'planning',  label: 'Planificación' },
-  { value: 'active',    label: 'Activo' },
-  { value: 'on_hold',   label: 'En pausa' },
-  { value: 'completed', label: 'Completado' },
-  { value: 'cancelled', label: 'Cancelado' },
-]
+const STATUS_OPTIONS: readonly ProjectStatus[] = ['planning', 'active', 'on_hold', 'completed', 'cancelled']
 
 const STATUS_STYLE: Record<string, { color: string }> = {
   planning:  { color: '#6366f1' },
@@ -48,6 +43,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
   const [showModal, setShowModal] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const t = useTranslations('ProjectHeader')
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -62,7 +58,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
   const [timezone, setTimezone] = useState(initial.timezone ?? DEFAULT_TIMEZONE)
 
   const statusStyle = STATUS_STYLE[project.status] ?? STATUS_STYLE.planning
-  const statusLabel = STATUS_OPTIONS.find(o => o.value === project.status)?.label ?? project.status
+  const statusLabel = (STATUS_OPTIONS as readonly string[]).includes(project.status) ? t(`status.${project.status as ProjectStatus}`) : project.status
 
   function handleDelete() {
     startTransition(async () => {
@@ -130,7 +126,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '16px',
         }}>
-          ← Proyectos
+          ← {t('back')}
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
@@ -157,7 +153,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                 </span>
               </div>
               <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
-                {[project.country && [project.country, project.region].filter(Boolean).join(' / '), project.client, project.location].filter(Boolean).join(' · ') || 'Sin cliente / ubicación'}
+                {[project.country && [project.country, project.region].filter(Boolean).join(' / '), project.client, project.location].filter(Boolean).join(' · ') || t('noClientLocation')}
               </p>
             </div>
           </div>
@@ -171,7 +167,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                 flexShrink: 0,
               }}
             >
-              Editar proyecto
+              {t('edit')}
             </button>
           )}
         </div>
@@ -195,21 +191,21 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
           >
             {/* Modal header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)' }}>Editar proyecto</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Cerrar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '20px', padding: 0 }}>×</button>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)' }}>{t('edit')}</h2>
+              <button onClick={() => setShowModal(false)} aria-label={t('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '20px', padding: 0 }}>×</button>
             </div>
 
             {/* Form */}
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <Field label="Nombre">
+              <Field label={t('f.name')}>
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
                   style={inputStyle}
-                  placeholder="Nombre del proyecto"
+                  placeholder={t('f.namePh')}
                 />
               </Field>
-              <Field label="Código">
+              <Field label={t('f.code')}>
                 <input
                   value={code}
                   onChange={e => setCode(e.target.value)}
@@ -217,31 +213,31 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                   placeholder="COD-001"
                 />
               </Field>
-              <Field label="Estado">
+              <Field label={t('f.status')}>
                 <select value={status} onChange={e => setStatus(e.target.value as ProjectStatus)} style={inputStyle}>
-                  {STATUS_OPTIONS.map(o => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
+                  {STATUS_OPTIONS.map(s => (
+                    <option key={s} value={s}>{t(`status.${s}`)}</option>
                   ))}
                 </select>
               </Field>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <Field label="País">
+                <Field label={t('f.country')}>
                   <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Colombia" style={inputStyle} />
                 </Field>
-                <Field label="Región / Eje">
+                <Field label={t('f.region')}>
                   <input value={region} onChange={e => setRegion(e.target.value)} placeholder="Llanos" style={inputStyle} />
                 </Field>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <Field label="Fecha inicio">
+                <Field label={t('f.start')}>
                   <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} />
                 </Field>
-                <Field label="Fecha fin">
+                <Field label={t('f.end')}>
                   <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={inputStyle} />
                 </Field>
               </div>
               {/* S10 (D12): define «hoy» y el corte del día en reportes, relevos, snapshots y vencimientos */}
-              <Field label="Zona horaria">
+              <Field label={t('f.timezone')}>
                 <select value={timezone} onChange={e => setTimezone(e.target.value)} style={inputStyle}>
                   {(TIMEZONE_OPTIONS as readonly string[]).includes(timezone) ? null : <option value={timezone}>{timezone}</option>}
                   {TIMEZONE_OPTIONS.map(z => <option key={z} value={z}>{z}</option>)}
@@ -267,12 +263,12 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                       fontSize: '12px', color: '#dc2626', cursor: 'pointer', textAlign: 'left',
                     }}
                   >
-                    Eliminar proyecto…
+                    {t('delete')}
                   </button>
                 ) : (
                   <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px' }}>
                     <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#991b1b', fontWeight: 500 }}>
-                      Esta acción eliminará el proyecto y <strong>todos sus datos</strong> (tags, ITRs, punches, certificados, P&IDs). Es irreversible.
+                      {t.rich('deleteWarning', { strong: chunks => <strong>{chunks}</strong> })}
                     </p>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
@@ -284,7 +280,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                           fontWeight: 600, cursor: isPending ? 'not-allowed' : 'pointer',
                         }}
                       >
-                        {isPending ? 'Eliminando…' : 'Confirmar eliminación'}
+                        {isPending ? t('deleting') : t('confirmDelete')}
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(false)}
@@ -294,7 +290,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                           border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                         }}
                       >
-                        Cancelar
+                        {t('cancel')}
                       </button>
                     </div>
                   </div>
@@ -308,7 +304,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                 onClick={() => setShowModal(false)}
                 style={{ padding: '9px 18px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
-                Cancelar
+                {t('cancel')}
               </button>
               <button
                 onClick={handleSave}
@@ -319,7 +315,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                   cursor: isPending ? 'not-allowed' : 'pointer', fontWeight: 500,
                 }}
               >
-                {isPending ? 'Guardando…' : 'Guardar cambios'}
+                {isPending ? t('saving') : t('save')}
               </button>
             </div>
           </div>

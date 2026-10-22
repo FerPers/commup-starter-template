@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
 import { suggestItrsForTag, type TagAiSuggestion } from '@/app/actions/itr-matrix'
 import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
@@ -14,19 +14,10 @@ import { ink } from '@/lib/theme'
 
 // ── Status config ────────────────────────────────────────────────────
 
-const ITR_STATUS_LABELS: Record<string, string> = {
-  not_started: 'Sin iniciar',
-  in_progress: 'En progreso',
-  completed:   'Completado',
-  approved:    'Aprobado',
-  rejected:    'Rechazado',
-}
-
-const SIGN_LABELS: Record<string, string> = {
-  executor: 'Ejec',
-  supervisor: 'Sup',
-  client: 'Cli',
-}
+const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
+type ItrStatusKey = (typeof ITR_STATUSES)[number]
+const SIGN_ROLES = ['executor', 'supervisor', 'client'] as const
+type SignRoleKey = (typeof SIGN_ROLES)[number]
 
 // ── Props ────────────────────────────────────────────────────────────
 
@@ -62,6 +53,9 @@ export default function TagItrTab({
 }: Props) {
   const router = useRouter()
   const locale = useLocale()
+  const t = useTranslations('TagItrs')
+  const tr = useTranslations('Users')
+  const roleLabel = (role: string) => (['owner', 'admin', 'architect', 'leader', 'inspector', 'client'].includes(role) ? tr(`roles.${role as 'owner'}`) : role)
   // Título de plantilla según idioma del usuario (title_es si existe)
   const tplTitle = (tpl: { title: string; title_es?: string | null }) => (locale === 'es' && tpl.title_es?.trim()) ? tpl.title_es : tpl.title
   const [isPending, startTransition] = useTransition()
@@ -102,11 +96,11 @@ export default function TagItrTab({
     if (res.error) { setAiError(res.error); return }
     setAiSuggestions(res.suggestions ?? [])
   }
-  const recommended = sortedTemplates.filter(t => t.recommended)
-  const others       = sortedTemplates.filter(t => !t.recommended)
+  const recommended = sortedTemplates.filter(x => x.recommended)
+  const others       = sortedTemplates.filter(x => !x.recommended)
 
   // S04 (D4/D6): la plantilla (y su fase) dicen qué firmas pide el ITR; una persona distinta por rol.
-  const selectedTpl = templates.find(t => t.id === selectedTemplate)
+  const selectedTpl = templates.find(x => x.id === selectedTemplate)
   const requiredRoles = selectedTpl ? requiredForTemplate(selectedTpl.required_signatures, selectedTpl.project_phases?.itr_client_signature) : normalizeRequired(null)
   const needsSupervisor = requiredRoles.includes('supervisor')
   const needsClient = requiredRoles.includes('client')
@@ -140,7 +134,7 @@ export default function TagItrTab({
   }
 
   function handleDelete(itrId: string) {
-    if (!confirm('¿Eliminar este ITR y todas sus respuestas?')) return
+    if (!confirm(t('deleteConfirm'))) return
     startTransition(async () => {
       const res = await deleteItr(itrId, projectId, tagId)
       if (res.error) { window.alert(res.error); return }
@@ -148,7 +142,7 @@ export default function TagItrTab({
     })
   }
 
-  const templateObj = templates.find(t => t.id === selectedTemplate)
+  const templateObj = templates.find(x => x.id === selectedTemplate)
 
   return (
     <div style={{ padding: '24px 0' }}>
@@ -156,23 +150,23 @@ export default function TagItrTab({
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-          {tagItrs.length === 0 ? 'No hay ITRs asignados a este tag.' : `${tagItrs.length} ITR${tagItrs.length > 1 ? 's' : ''} asignados`}
+          {tagItrs.length === 0 ? t('none') : t('count', { count: tagItrs.length })}
         </p>
         {canEdit && (
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleAiSuggest}
               disabled={aiLoading}
-              title="Analiza el tag con IA y propone las plantillas que aplican por fase. Tú decides qué asignar."
+              title={t('aiHint')}
               style={{ padding: '8px 14px', background: 'var(--violet-50)', color: 'var(--violet-700)', border: '1px solid var(--violet-200)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: aiLoading ? 'wait' : 'pointer' }}
             >
-              {aiLoading ? 'Analizando…' : '✦ Sugerir con IA'}
+              {aiLoading ? t('aiLoading') : `✦ ${t('aiSuggest')}`}
             </button>
             <button
               onClick={() => setShowAssign(true)}
               style={{ padding: '8px 16px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
             >
-              + Asignar ITR
+              + {t('assign')}
             </button>
           </div>
         )}
@@ -186,17 +180,17 @@ export default function TagItrTab({
         <div style={{ background: 'var(--accent-50)', border: '1px solid var(--violet-200)', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--violet-800)' }}>
-              ✦ Propuesta de la IA para {tagNumber} · {aiSuggestions.length} plantilla{aiSuggestions.length !== 1 ? 's' : ''}
+              ✦ {t('aiTitle', { tag: tagNumber, count: aiSuggestions.length })}
             </p>
-            <button onClick={() => setAiSuggestions(null)} style={{ background: 'none', border: 'none', color: 'var(--violet-600)', fontSize: '12px', cursor: 'pointer' }}>Cerrar</button>
+            <button onClick={() => setAiSuggestions(null)} style={{ background: 'none', border: 'none', color: 'var(--violet-600)', fontSize: '12px', cursor: 'pointer' }}>{t('close')}</button>
           </div>
-          {aiSuggestions.length === 0 && <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>La IA no encontró plantillas aplicables en el catálogo de la organización.</p>}
+          {aiSuggestions.length === 0 && <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>{t('aiEmpty')}</p>}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {aiSuggestions.map(sg => {
-              const inList = templates.some(t => t.id === sg.template_id)
+              const inList = templates.some(x => x.id === sg.template_id)
               return (
                 <div key={sg.template_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                  <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: 'var(--violet-100)', color: 'var(--violet-800)', whiteSpace: 'nowrap' }}>Fase {sg.phase_code ?? '?'}</span>
+                  <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: 'var(--violet-100)', color: 'var(--violet-800)', whiteSpace: 'nowrap' }}>{t('phase', { code: sg.phase_code ?? '?' })}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
                       <span style={{ fontFamily: 'monospace' }}>{sg.template_code}</span> · {sg.title}
@@ -204,20 +198,20 @@ export default function TagItrTab({
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{sg.reason}</div>
                   </div>
-                  <span title="Confianza" style={{ fontSize: '11px', fontWeight: 700, color: sg.confidence >= 0.7 ? 'var(--success-700)' : sg.confidence >= 0.4 ? 'var(--warning-700)' : 'var(--danger-600)', whiteSpace: 'nowrap' }}>{Math.round(sg.confidence * 100)}%</span>
+                  <span title={t('confidence')} style={{ fontSize: '11px', fontWeight: 700, color: sg.confidence >= 0.7 ? 'var(--success-700)' : sg.confidence >= 0.4 ? 'var(--warning-700)' : 'var(--danger-600)', whiteSpace: 'nowrap' }}>{Math.round(sg.confidence * 100)}%</span>
                   <button
                     onClick={() => { setSelectedTemplate(sg.template_id); setShowAssign(true) }}
                     disabled={!inList}
-                    title={inList ? 'Abre el formulario de asignación con esta plantilla' : 'Plantilla de otra disciplina: asígnala desde la lista completa'}
+                    title={inList ? t('useHint') : t('otherDiscipline')}
                     style={{ padding: '5px 10px', fontSize: '12px', fontWeight: 600, background: inList ? 'var(--primary-500)' : 'var(--gray-100)', color: inList ? '#fff' : 'var(--text-muted)', border: 'none', borderRadius: '6px', cursor: inList ? 'pointer' : 'not-allowed' }}
                   >
-                    Usar
+                    {t('use')}
                   </button>
                 </div>
               )
             })}
           </div>
-          <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>La IA propone; la asignación la confirmas tú en el formulario.</p>
+          <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>{t('aiFooter')}</p>
         </div>
       )}
 
@@ -226,7 +220,7 @@ export default function TagItrTab({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {tagItrs.map(itr => {
             const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
-            const stLabel = ITR_STATUS_LABELS[itr.status] ?? ITR_STATUS_LABELS.not_started
+            const stLabel = t(`status.${(ITR_STATUSES as readonly string[]).includes(itr.status) ? itr.status as ItrStatusKey : 'not_started'}`)
             const executor = itr.itr_assignments.find(a => a.role === 'executor')
             const tmpl = itr.itr_templates
             const phase = itr.project_phases
@@ -274,7 +268,7 @@ export default function TagItrTab({
                     const signed = itr.itr_signatures.some(s => s.role === role)
                     return (
                       <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', color: signed ? 'var(--success-500)' : 'var(--gray-300)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, fontWeight: 600 }}>
-                        {SIGN_LABELS[role]}
+                        {(SIGN_ROLES as readonly string[]).includes(role) ? t(`sign.${role as SignRoleKey}`) : role}
                       </span>
                     )
                   })}
@@ -293,7 +287,7 @@ export default function TagItrTab({
                     href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}`}
                     style={{ padding: '6px 12px', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', color: 'var(--gray-700)', textDecoration: 'none', fontWeight: 500, whiteSpace: 'nowrap' }}
                   >
-                    Abrir →
+                    {t('open')} →
                   </a>
                   {canEdit && (
                     <button
@@ -304,9 +298,9 @@ export default function TagItrTab({
                         defaultAssignedTo: executor?.user_id,
                       })}
                       style={{ padding: '6px 10px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', fontSize: '11px', color: 'var(--success-600)', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                      title="Agregar a plan de trabajo"
+                      title={t('addToPlan')}
                     >
-                      + Plan
+                      + {t('plan')}
                     </button>
                   )}
                   {canEdit && (
@@ -314,6 +308,7 @@ export default function TagItrTab({
                       onClick={() => handleDelete(itr.id)}
                       disabled={isPending}
                       style={{ padding: '6px 10px', background: 'var(--card-bg)', border: '1px solid var(--danger-200)', borderRadius: '6px', fontSize: '12px', color: 'var(--danger-500)', cursor: 'pointer' }}
+                      aria-label={t('delete')}
                     >
                       ✕
                     </button>
@@ -344,13 +339,13 @@ export default function TagItrTab({
         >
           <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>Asignar ITR</h2>
-              <button onClick={() => setShowAssign(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px' }}>✕</button>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('assign')}</h2>
+              <button onClick={() => setShowAssign(false)} aria-label={t('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px' }}>✕</button>
             </div>
 
             {templates.length === 0 ? (
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', padding: '20px 0', textAlign: 'center' }}>
-                No hay templates activos para la disciplina de este tag.
+                {t('noTemplates')}
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -358,7 +353,7 @@ export default function TagItrTab({
                 {/* Template selector */}
                 <div>
                   <label style={labelStyle}>
-                    Template *
+                    {t('template')} *
                     {tagType && (
                       <span style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 400, color: 'var(--success-700)', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '4px', padding: '1px 6px' }}>
                         {tagType.typeName}
@@ -370,43 +365,43 @@ export default function TagItrTab({
                     onChange={e => setSelectedTemplate(e.target.value)}
                     style={selStyle}
                   >
-                    <option value="">Seleccionar template...</option>
+                    <option value="">{t('pickTemplate')}</option>
                     {recommended.length > 0 && (
-                      <optgroup label={`⭐ Recomendados para ${tagType?.typeName ?? 'este tag'}`}>
-                        {recommended.map(t => (
-                          <option key={t.id} value={t.id}>
-                            {t.code} — {tplTitle(t)} {t.project_phases ? `[${t.project_phases.code}]` : ''}
+                      <optgroup label={`⭐ ${tagType ? t('recommendedFor', { type: tagType.typeName }) : t('recommended')}`}>
+                        {recommended.map(x => (
+                          <option key={x.id} value={x.id}>
+                            {x.code} — {tplTitle(x)} {x.project_phases ? `[${x.project_phases.code}]` : ''}
                           </option>
                         ))}
                       </optgroup>
                     )}
-                    <optgroup label={recommended.length > 0 ? 'Todos los templates' : 'Templates disponibles'}>
-                      {others.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.code} — {tplTitle(t)} {t.project_phases ? `[${t.project_phases.code}]` : ''}
+                    <optgroup label={recommended.length > 0 ? t('allTemplates') : t('availableTemplates')}>
+                      {others.map(x => (
+                        <option key={x.id} value={x.id}>
+                          {x.code} — {tplTitle(x)} {x.project_phases ? `[${x.project_phases.code}]` : ''}
                         </option>
                       ))}
                     </optgroup>
                   </select>
                   {templateObj?.project_phases && (
                     <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-                      Fase: <strong>{templateObj.project_phases.name}</strong>
+                      {t.rich('phaseName', { name: templateObj.project_phases.name, strong: chunks => <strong>{chunks}</strong> })}
                     </p>
                   )}
                 </div>
 
                 {/* Inspector selector */}
                 <div>
-                  <label style={labelStyle}>Inspector * (Ejecutor)</label>
+                  <label style={labelStyle}>{t('executor')}</label>
                   <select
                     value={selectedInspector}
                     onChange={e => setSelectedInspector(e.target.value)}
                     style={selStyle}
                   >
-                    <option value="">Seleccionar inspector...</option>
+                    <option value="">{t('pickExecutor')}</option>
                     {orgMembers.map(m => (
                       <option key={m.user_id} value={m.user_id}>
-                        {m.profiles?.full_name ?? m.user_id} ({m.role})
+                        {m.profiles?.full_name ?? m.user_id} ({roleLabel(m.role)})
                       </option>
                     ))}
                   </select>
@@ -414,16 +409,16 @@ export default function TagItrTab({
 
                 {/* Supervisor selector — S04: solo si la plantilla lo pide, y entonces obligatorio */}
                 {needsSupervisor && <div>
-                  <label style={labelStyle}>Supervisor *</label>
+                  <label style={labelStyle}>{t('supervisor')}</label>
                   <select
                     value={selectedSupervisor}
                     onChange={e => setSelectedSupervisor(e.target.value)}
                     style={selStyle}
                   >
-                    <option value="">Seleccionar supervisor...</option>
+                    <option value="">{t('pickSupervisor')}</option>
                     {orgMembers.filter(m => m.user_id !== selectedInspector).map(m => (
                       <option key={m.user_id} value={m.user_id}>
-                        {m.profiles?.full_name ?? m.user_id} ({m.role})
+                        {m.profiles?.full_name ?? m.user_id} ({roleLabel(m.role)})
                       </option>
                     ))}
                   </select>
@@ -431,13 +426,13 @@ export default function TagItrTab({
 
                 {/* Client selector — S04: solo si la plantilla o la fase lo piden */}
                 {needsClient && <div>
-                  <label style={labelStyle}>Cliente *</label>
+                  <label style={labelStyle}>{t('client')}</label>
                   <select
                     value={selectedClient}
                     onChange={e => setSelectedClient(e.target.value)}
                     style={selStyle}
                   >
-                    <option value="">Seleccionar cliente...</option>
+                    <option value="">{t('pickClient')}</option>
                     {clientCandidates.length > 0
                       ? clientCandidates.map(m => (
                           <option key={m.user_id} value={m.user_id}>
@@ -446,7 +441,7 @@ export default function TagItrTab({
                         ))
                       : orgMembers.map(m => (
                           <option key={m.user_id} value={m.user_id}>
-                            {m.profiles?.full_name ?? m.user_id} ({m.role})
+                            {m.profiles?.full_name ?? m.user_id} ({roleLabel(m.role)})
                           </option>
                         ))
                     }
@@ -455,7 +450,7 @@ export default function TagItrTab({
 
                 {/* Scheduled date */}
                 <div>
-                  <label style={labelStyle}>Fecha programada (opcional)</label>
+                  <label style={labelStyle}>{t('scheduled')}</label>
                   <input
                     type="date"
                     value={scheduledDate}
@@ -479,14 +474,14 @@ export default function TagItrTab({
                     onClick={() => setShowAssign(false)}
                     style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
                   >
-                    Cancelar
+                    {t('cancel')}
                   </button>
                   <button
                     onClick={handleAssign}
                     disabled={!selectedTemplate || !selectedInspector || !!formError || isPending}
                     style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || formError || isPending ? 'var(--primary-300)' : 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || formError || isPending ? 'not-allowed' : 'pointer' }}
                   >
-                    {isPending ? 'Asignando...' : 'Asignar →'}
+                    {isPending ? t('assigning') : `${t('assignShort')} →`}
                   </button>
                 </div>
               </div>

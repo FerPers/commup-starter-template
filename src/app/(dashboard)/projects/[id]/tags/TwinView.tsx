@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -62,15 +63,16 @@ export type Tag360 = {
 
 // ── Semáforo ──────────────────────────────────────────────────────────────────
 
-const SEMAFORO: Record<string, { color: string; bg: string; border: string; label: string; dot: string }> = {
-  green:  { color: '#059669', bg: '#ecfdf5', border: '#a7f3d0', label: 'Completo',    dot: '#10b981' },
-  yellow: { color: '#b45309', bg: '#fffbeb', border: '#fde68a', label: 'En progreso', dot: '#f59e0b' },
-  red:    { color: '#b91c1c', bg: '#fef2f2', border: '#fecaca', label: 'Bloqueado',   dot: '#ef4444' },
-  grey:   { color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)', label: 'Sin ITRs',    dot: '#94a3b8' },
+type Sema = 'green' | 'yellow' | 'red' | 'grey'
+const SEMAFORO: Record<Sema, { color: string; bg: string; border: string; dot: string }> = {
+  green:  { color: '#059669', bg: '#ecfdf5', border: '#a7f3d0', dot: '#10b981' },
+  yellow: { color: '#b45309', bg: '#fffbeb', border: '#fde68a', dot: '#f59e0b' },
+  red:    { color: '#b91c1c', bg: '#fef2f2', border: '#fecaca', dot: '#ef4444' },
+  grey:   { color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)', dot: '#94a3b8' },
 }
 
 function SemaforoDot({ semaforo, size = 10 }: { semaforo: string; size?: number }) {
-  const s = SEMAFORO[semaforo] ?? SEMAFORO.grey
+  const s = SEMAFORO[semaforo as Sema] ?? SEMAFORO.grey
   return (
     <span style={{
       display: 'inline-block',
@@ -103,6 +105,8 @@ function ProgressMini({ pct, semaforo }: { pct: number; semaforo: string }) {
 
 function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string; highlight: boolean }) {
   const router = useRouter()
+  const tw = useTranslations('TwinView')
+  const locale = useLocale()
   const s = SEMAFORO[tag.semaforo_global] ?? SEMAFORO.grey
   const discColor = tag.discipline_color ?? '#94a3b8'
 
@@ -169,29 +173,29 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
       {/* Badges row */}
       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
         {hasPunchA && (
-          <Badge label={`A:${tag.open_punches_a}`} color="#ef4444" bg="#fef2f2" title="Punch Cat A abiertos" />
+          <Badge label={`A:${tag.open_punches_a}`} color="#ef4444" bg="#fef2f2" title={tw('openCatA')} />
         )}
         {hasPunchB && (
-          <Badge label={`B:${tag.open_punches_b}`} color="#f59e0b" bg="#fffbeb" title="Punch Cat B abiertos" />
+          <Badge label={`B:${tag.open_punches_b}`} color="#f59e0b" bg="#fffbeb" title={tw('openCatB')} />
         )}
         {hasCert && (
-          <Badge label={`✓${tag.certs_issued}`} color="#059669" bg="#ecfdf5" title="Certificados emitidos" />
+          <Badge label={`✓${tag.certs_issued}`} color="#059669" bg="#ecfdf5" title={tw('certsIssued')} />
         )}
         {hasPreserv && (
-          <Badge label="🔧" color="#7c3aed" bg="#f5f3ff" title="Preservation activa" />
+          <Badge label="🔧" color="#7c3aed" bg="#f5f3ff" title={tw('preservationActive')} />
         )}
         {hasPid && (
-          <Badge label="P&ID" color="#0369a1" bg="#e0f2fe" title={`${tag.pid_hotspot_count} hotspot(s)`} />
+          <Badge label="P&ID" color="#0369a1" bg="#e0f2fe" title={tw('pins', { count: tag.pid_hotspot_count })} />
         )}
         {tag.itr_total === 0 && (
-          <Badge label="Sin ITRs" color="#94a3b8" bg="#f8fafc" title="No hay ITRs asignados" />
+          <Badge label={tw('sema.grey')} color="#94a3b8" bg="#f8fafc" title={tw('noItrs')} />
         )}
       </div>
 
       {/* Preservation due */}
       {tag.preservation_next_due && (
         <div style={{ fontSize: '10px', color: '#7c3aed', background: '#f5f3ff', padding: '3px 7px', borderRadius: '5px', display: 'inline-block' }}>
-          ⏰ {new Date(tag.preservation_next_due).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
+          ⏰ {new Date(tag.preservation_next_due).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}
         </div>
       )}
     </div>
@@ -222,6 +226,7 @@ function SubsystemPanel({
   highlightTagId: string | null
 }) {
   const [open, setOpen] = useState(true)
+  const tw = useTranslations('TwinView')
 
   const total    = tags.length
   const green    = tags.filter(t => t.semaforo_global === 'green').length
@@ -253,7 +258,7 @@ function SubsystemPanel({
           {subsystemName}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>{total} tags</span>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>{tw('tags', { count: total })}</span>
           {red > 0 && <span style={{ fontSize: '11px', fontWeight: 600, color: '#ef4444', background: '#fef2f2', padding: '1px 6px', borderRadius: '5px' }}>A:{red}</span>}
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pct}%</span>
           <span style={{ color: '#94a3b8', fontSize: '12px', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', display: 'inline-block' }}>›</span>
@@ -279,7 +284,7 @@ function SubsystemPanel({
           ))}
           {tags.length === 0 && (
             <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px', gridColumn: '1/-1' }}>
-              Sin tags en este subsistema
+              {tw('emptySubsystem')}
             </div>
           )}
         </div>
@@ -301,11 +306,12 @@ function SystemBlock({
   projectId: string
   highlightTagId: string | null
 }) {
+  const tw = useTranslations('TwinView')
   const total   = tags.length
   const green   = tags.filter(t => t.semaforo_global === 'green').length
   const red     = tags.filter(t => t.semaforo_global === 'red').length
   const pct     = total > 0 ? Math.round((green / total) * 100) : 0
-  const sysSema = red > 0 ? 'red' : green === total && total > 0 ? 'green' : total === 0 ? 'grey' : 'yellow'
+  const sysSema: Sema = red > 0 ? 'red' : green === total && total > 0 ? 'green' : total === 0 ? 'grey' : 'yellow'
 
   return (
     <div style={{ marginBottom: '24px' }}>
@@ -330,10 +336,10 @@ function SystemBlock({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           {red > 0 && (
             <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444' }}>
-              ⛔ {red} bloqueado{red > 1 ? 's' : ''}
+              ⛔ {tw('blocked', { count: red })}
             </span>
           )}
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{total} tags · {pct}% ITR</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tw('tags', { count: total })} · {pct}% ITR</span>
         </div>
       </div>
 
@@ -360,25 +366,26 @@ function SystemBlock({
 // ── Legend ────────────────────────────────────────────────────────────────────
 
 function Legend() {
+  const tw = useTranslations('TwinView')
   return (
     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '11px', color: 'var(--text-muted)' }}>
-      {Object.entries(SEMAFORO).map(([k, v]) => (
+      {(Object.keys(SEMAFORO) as Sema[]).map(k => (
         <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: v.dot, display: 'inline-block' }} />
-          {v.label}
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: SEMAFORO[k].dot, display: 'inline-block' }} />
+          {tw(`sema.${k}`)}
         </div>
       ))}
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
         <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: '#fef2f2', color: '#ef4444' }}>A:N</span>
-        Punches Cat A
+        {tw('legend.catA')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
         <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: '#fffbeb', color: '#f59e0b' }}>B:N</span>
-        Punches Cat B
+        {tw('legend.catB')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
         <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: '#ecfdf5', color: '#059669' }}>✓N</span>
-        Certs emitidos
+        {tw('legend.certs')}
       </div>
     </div>
   )
@@ -387,6 +394,7 @@ function Legend() {
 // ── Stats bar ─────────────────────────────────────────────────────────────────
 
 function StatsBar({ tags }: { tags: Tag360[] }) {
+  const tw = useTranslations('TwinView')
   const total   = tags.length
   const green   = tags.filter(t => t.semaforo_global === 'green').length
   const yellow  = tags.filter(t => t.semaforo_global === 'yellow').length
@@ -404,14 +412,14 @@ function StatsBar({ tags }: { tags: Tag360[] }) {
       gap: '12px', padding: '16px', background: 'var(--card-bg)',
       border: '1px solid var(--border)', borderRadius: '12px', marginBottom: '24px',
     }}>
-      <Stat value={total} label="Tags totales" color="#334155" />
-      <Stat value={`${itrPct}%`} label="Compl. ITR" color={itrPct === 100 ? '#059669' : '#3b82f6'} />
-      <Stat value={green}  label="Completados" color="#059669" />
-      <Stat value={yellow} label="En progreso" color="#f59e0b" />
-      <Stat value={red}    label="Bloqueados"  color="#ef4444" />
-      <Stat value={grey}   label="Sin ITRs"    color="#94a3b8" />
-      <Stat value={punchA} label="Punches A"   color="#ef4444" />
-      <Stat value={punchB} label="Punches B"   color="#f59e0b" />
+      <Stat value={total} label={tw('stats.total')} color="#334155" />
+      <Stat value={`${itrPct}%`} label={tw('stats.itr')} color={itrPct === 100 ? '#059669' : '#3b82f6'} />
+      <Stat value={green}  label={tw('stats.green')} color="#059669" />
+      <Stat value={yellow} label={tw('stats.yellow')} color="#f59e0b" />
+      <Stat value={red}    label={tw('stats.red')}  color="#ef4444" />
+      <Stat value={grey}   label={tw('sema.grey')}    color="#94a3b8" />
+      <Stat value={punchA} label={tw('stats.punchA')}   color="#ef4444" />
+      <Stat value={punchB} label={tw('stats.punchB')}   color="#f59e0b" />
     </div>
   )
 }
@@ -435,6 +443,7 @@ export default function TwinView({
   tags: Tag360[]
 }) {
   const searchParams = useSearchParams()
+  const tw = useTranslations('TwinView')
   const highlightTagId = searchParams.get('tag')
   const filterSystem   = searchParams.get('system')
 
@@ -484,11 +493,11 @@ export default function TwinView({
   }, [systems, filteredTags])
 
   const semaOptions = [
-    { key: 'ALL',    label: 'Todos',       color: 'var(--text-muted)' },
-    { key: 'red',    label: 'Bloqueados',  color: '#ef4444' },
-    { key: 'yellow', label: 'En progreso', color: '#f59e0b' },
-    { key: 'green',  label: 'Completados', color: '#059669' },
-    { key: 'grey',   label: 'Sin ITRs',    color: '#94a3b8' },
+    { key: 'ALL',    label: tw('filter.all'),   color: 'var(--text-muted)' },
+    { key: 'red',    label: tw('stats.red'),    color: '#ef4444' },
+    { key: 'yellow', label: tw('stats.yellow'), color: '#f59e0b' },
+    { key: 'green',  label: tw('stats.green'),  color: '#059669' },
+    { key: 'grey',   label: tw('sema.grey'),    color: '#94a3b8' },
   ]
 
   return (
@@ -534,8 +543,8 @@ export default function TwinView({
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar tag, descripción, sistema..."
-          aria-label="Buscar tag, descripción, sistema"
+          placeholder={tw('search')}
+          aria-label={tw('search')}
           style={{
             padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px',
             fontSize: '13px', fontFamily: 'inherit', width: '240px', maxWidth: '100%',
@@ -552,7 +561,7 @@ export default function TwinView({
       {/* System blocks */}
       {filteredSystems.length === 0 ? (
         <div style={{ padding: '64px', textAlign: 'center', color: '#94a3b8', fontSize: '14px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-          {search || semaFilter !== 'ALL' ? 'Sin resultados para los filtros aplicados' : 'No hay tags registrados en este proyecto'}
+          {search || semaFilter !== 'ALL' ? tw('noResults') : tw('empty')}
         </div>
       ) : (
         filteredSystems.map(sys => (

@@ -6,17 +6,16 @@ import { Card } from '@/components/ui'
 import { loadPortfolioReadiness } from '@/lib/readiness/portfolio-server'
 
 /**
- * N2b (D-38): el gerente ya no aterriza solo en métricas de completions. Por proyecto: readiness (gates aprobados
- * vigentes), sistemas que no avanzan, gates por aprobar y por firmar, restricciones en N4 y compromisos que vencen.
- * Ordenado por riesgo; «Ver todos» abre el portafolio (/control-tower).
+ * N2b (D-38) + V1 (Portafolio unificado, decisión de Luis 2026-10-22): la tabla de liberación por proyecto vive aquí,
+ * en el Portafolio (/dashboard); /control-tower solo redirige. Por proyecto: liberaciones aprobadas vigentes, avance
+ * físico, sistemas que no avanzan, por aprobar y por firmar, restricciones en N4 y compromisos que vencen. Todos los
+ * proyectos, ordenados por riesgo; los que aún no tienen sistemas, al final.
  */
 export default async function ReadinessWidget({ orgId }: { orgId: string }) {
   const supabase = await createClient()
-  const [t, all] = await Promise.all([getTranslations('Dashboard'), loadPortfolioReadiness(supabase, orgId, 50)])
-  const projects = all
-    .filter(p => p.systems > 0)
-    .sort((a, b) => (b.counts.regressed + b.counts.blocked) - (a.counts.regressed + a.counts.blocked) || a.code.localeCompare(b.code))
-  const shown = projects.slice(0, 6)
+  const [t, all] = await Promise.all([getTranslations('Dashboard'), loadPortfolioReadiness(supabase, orgId)])
+  const risk = (p: (typeof all)[number]) => p.counts.regressed + p.counts.blocked
+  const projects = [...all].sort((a, b) => Number(a.systems === 0) - Number(b.systems === 0) || risk(b) - risk(a) || a.code.localeCompare(b.code))
 
   const th: React.CSSProperties = { padding: '8px 12px', textAlign: 'right', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }
   const td: React.CSSProperties = { padding: '10px 12px', textAlign: 'right', fontSize: 'var(--text-sm)', fontWeight: 600 }
@@ -24,22 +23,20 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
 
   return (
     <Card padding="md">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
-        <div>
-          <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)', margin: 0 }}>{t('readiness.title')}</h3>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: '2px 0 0' }}>{t('readiness.subtitle')}</p>
-        </div>
-        <Link href="/control-tower" style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600)', textDecoration: 'none' }}>{t('readiness.viewAll')}</Link>
+      <div style={{ marginBottom: 12 }}>
+        <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)', margin: 0 }}>{t('readiness.title')}</h3>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: '2px 0 0' }}>{t('readiness.subtitle')}</p>
       </div>
-      {shown.length === 0 ? (
+      {projects.length === 0 ? (
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: 0 }}>{t('readiness.empty')}</p>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
+          <table aria-label={t('readiness.title')} style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
             <thead>
               <tr style={{ background: 'var(--gray-50)' }}>
-                <th style={{ ...th, textAlign: 'left' }}>{t('readiness.col.project')}</th>
+                <th style={{ ...th, textAlign: 'left', minWidth: 180 }}>{t('readiness.col.project')}</th>
                 <th style={th}>{t('readiness.col.readiness')}</th>
+                <th style={th}>{t('readiness.col.physical')}</th>
                 <th style={th}>{t('readiness.col.blocked')}</th>
                 <th style={th}>{t('readiness.col.toApprove')}</th>
                 <th style={th}>{t('readiness.col.toSign')}</th>
@@ -48,29 +45,33 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
               </tr>
             </thead>
             <tbody>
-              {shown.map(p => (
+              {projects.map(p => (
                 <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
                   <td style={{ ...td, textAlign: 'left' }}>
-                    <Link href={`/projects/${p.id}`} style={{ color: 'var(--text-strong)', textDecoration: 'none' }}>{p.code}</Link>
+                    <Link href={`/projects/${p.id}`} style={{ color: 'var(--text-strong)', textDecoration: 'none', whiteSpace: 'nowrap' }}>{p.code}</Link>
                     <div style={{ fontSize: 'var(--text-xs)', fontWeight: 400, color: 'var(--text-muted)' }}>{p.name}</div>
                   </td>
-                  <td style={td}>
-                    <Link href={`/projects/${p.id}/readiness`} style={{ color: 'var(--text-strong)', textDecoration: 'none' }}>{p.readiness.done}/{p.readiness.total}</Link>
-                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 400, color: 'var(--text-muted)' }}>{(p.readiness.pct * 100).toFixed(0)} %</div>
-                  </td>
-                  <td style={td}><Link href={`/projects/${p.id}/readiness?blocked=1`} style={{ textDecoration: 'none' }}>{n(p.counts.regressed + p.counts.blocked, 'var(--danger-700)')}</Link></td>
-                  <td style={td}><Link href={`/projects/${p.id}/readiness?state=ready`} style={{ textDecoration: 'none' }}>{n(p.counts.ready, 'var(--success-700)')}</Link></td>
-                  <td style={td}><Link href={`/projects/${p.id}/readiness?state=signing`} style={{ textDecoration: 'none' }}>{n(p.counts.signing, '#1d4ed8')}</Link></td>
-                  <td style={td}><Link href={dailyTabHref(p.id, 'constraints')} style={{ textDecoration: 'none' }}>{n(p.constraintsN4, 'var(--danger-700)')}</Link></td>
-                  <td style={td}><Link href={`/projects/${p.id}/readiness?committed=7`} style={{ textDecoration: 'none' }}>{n(p.commitmentsSoon, '#b45309')}</Link></td>
+                  {p.systems === 0 ? (
+                    <td colSpan={7} style={{ ...td, textAlign: 'left', fontWeight: 400, color: 'var(--text-muted)' }}>{t('readiness.noSystems')}</td>
+                  ) : (
+                    <>
+                      <td style={td}>
+                        <Link href={`/projects/${p.id}/readiness`} style={{ color: 'var(--text-strong)', textDecoration: 'none' }}>{p.readiness.done}/{p.readiness.total}</Link>
+                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 400, color: 'var(--text-muted)' }}>{(p.readiness.pct * 100).toFixed(0)} %</div>
+                      </td>
+                      <td style={td}>{(p.weighted * 100).toFixed(1)} %</td>
+                      <td style={td}><Link href={`/projects/${p.id}/readiness?blocked=1`} style={{ textDecoration: 'none' }}>{n(p.counts.regressed + p.counts.blocked, 'var(--danger-700)')}</Link></td>
+                      <td style={td}><Link href={`/projects/${p.id}/readiness?state=ready`} style={{ textDecoration: 'none' }}>{n(p.counts.ready, 'var(--success-700)')}</Link></td>
+                      <td style={td}><Link href={`/projects/${p.id}/readiness?state=signing`} style={{ textDecoration: 'none' }}>{n(p.counts.signing, '#1d4ed8')}</Link></td>
+                      <td style={td}><Link href={dailyTabHref(p.id, 'constraints')} style={{ textDecoration: 'none' }}>{n(p.constraintsN4, 'var(--danger-700)')}</Link></td>
+                      <td style={td}><Link href={`/projects/${p.id}/readiness?committed=7`} style={{ textDecoration: 'none' }}>{n(p.commitmentsSoon, '#b45309')}</Link></td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      )}
-      {projects.length > shown.length && (
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', margin: '10px 0 0' }}>{t('readiness.more', { count: projects.length - shown.length })}</p>
       )}
     </Card>
   )

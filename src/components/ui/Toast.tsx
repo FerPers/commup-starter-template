@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import { useMounted } from '@/hooks/useMounted';
 
 export type ToastVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
@@ -74,10 +75,11 @@ export function useToast(): ToastContextValue {
 }
 
 function ToastViewport({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss: (id: string) => void }) {
+  const t = useTranslations('A11y');
   return (
     <div
       role="region"
-      aria-label="Notifications"
+      aria-label={t('toasts')}
       style={{
         position: 'fixed',
         bottom: 16,
@@ -98,6 +100,7 @@ function ToastViewport({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss: 
 }
 
 function ToastBubble({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => void }) {
+  const t = useTranslations('A11y');
   const v = VARIANT[toast.variant];
   const style: CSSProperties = {
     background: v.bg,
@@ -122,7 +125,7 @@ function ToastBubble({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => 
       <button
         type="button"
         onClick={onDismiss}
-        aria-label="Dismiss notification"
+        aria-label={t('dismiss')}
         style={{
           background: 'transparent',
           border: 'none',

@@ -16,6 +16,7 @@
 import React, {
   useCallback, useEffect, useMemo, useRef, useState, useTransition,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import VoiceInput from './VoiceInput';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
@@ -194,6 +195,7 @@ function NumericField({
   item: ITRItem;
   onChange: (value: string) => void;
 }) {
+  const t = useTranslations('SwipeCapture');
   const inputRef = useRef<HTMLInputElement>(null);
   const num = parseFloat(item.value as string);
   const inRange =
@@ -228,13 +230,13 @@ function NumericField({
       </div>
       {(item.min_value !== undefined || item.max_value !== undefined) && (
         <div className="flex justify-between text-xs text-[var(--gray-500)] px-2">
-          <span>Mín: {item.min_value ?? '—'} {item.unit}</span>
-          <span>Máx: {item.max_value ?? '—'} {item.unit}</span>
+          <span>{t('min')}: {item.min_value ?? '—'} {item.unit}</span>
+          <span>{t('max')}: {item.max_value ?? '—'} {item.unit}</span>
         </div>
       )}
       {hasValue && !inRange && (
         <div className="text-[var(--danger-500)] text-sm text-center">
-          ⚠️ Valor fuera del rango especificado
+          ⚠️ {t('outOfRange')}
         </div>
       )}
     </div>
@@ -284,6 +286,7 @@ export default function SwipeCaptureFlow({
   onComplete,
   initialItemIndex = 0,
 }: SwipeCaptureFlowProps) {
+  const t = useTranslations('SwipeCapture');
   const [currentIndex, setCurrentIndex] = useState(initialItemIndex);
   const [localItems, setLocalItems] = useState<ITRItem[]>(items);
   const [, startTransition] = useTransition();
@@ -377,7 +380,7 @@ export default function SwipeCaptureFlow({
         });
       };
       input.click();
-      stream.getTracks().forEach((t) => t.stop());
+      stream.getTracks().forEach((track) => track.stop());
     } catch (err) {
       console.error('Camera error:', err);
     }
@@ -394,30 +397,31 @@ export default function SwipeCaptureFlow({
           <div className="flex-1 min-w-0">
             <div className="text-xs text-[var(--gray-500)] truncate">{itrName}</div>
             <div className="text-sm font-semibold text-[var(--gray-300)]">
-              Item {currentIndex + 1} / {localItems.length}
+              {t('position', { n: currentIndex + 1, total: localItems.length })}
             </div>
           </div>
 
           {/* Save state indicator */}
           <div className="flex items-center gap-2 mr-2">
             {saveState === 'pending' && (
-              <span className="w-2 h-2 bg-[var(--warning-500)] rounded-full animate-pulse" title="Pendiente de guardar" />
+              <span className="w-2 h-2 bg-[var(--warning-500)] rounded-full animate-pulse" title={t('pendingSave')} />
             )}
             {saveState === 'saving' && (
-              <span className="text-xs text-[var(--primary-400)]">Guardando...</span>
+              <span className="text-xs text-[var(--primary-400)]">{t('saving')}</span>
             )}
             {saveState === 'saved' && (
-              <span className="text-xs text-[var(--success-500)]">✓ Guardado</span>
+              <span className="text-xs text-[var(--success-500)]">✓ {t('saved')}</span>
             )}
             {saveState === 'error' && (
-              <span className="text-xs text-[var(--danger-500)]">✗ Error</span>
+              <span className="text-xs text-[var(--danger-500)]">✗ {t('error')}</span>
             )}
           </div>
 
           <button
             onClick={() => setShowQuickFill(!showQuickFill)}
             className="p-2 rounded-lg text-[var(--gray-400)] hover:text-white hover:bg-[var(--gray-800)] transition"
-            title="Relleno rápido"
+            title={t('quickFill')}
+            aria-label={t('quickFill')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h8M4 18h8" />
@@ -433,8 +437,8 @@ export default function SwipeCaptureFlow({
           />
         </div>
         <div className="flex justify-between text-xs text-[var(--gray-600)] pb-2">
-          <span>{completedCount} completados</span>
-          <span>{localItems.length - completedCount} pendientes</span>
+          <span>{t('done', { count: completedCount })}</span>
+          <span>{t('pending', { count: localItems.length - completedCount })}</span>
         </div>
       </div>
 
@@ -456,7 +460,7 @@ export default function SwipeCaptureFlow({
               <div className="flex-1">
                 <p className="text-white font-medium leading-snug">{currentItem.description}</p>
                 {currentItem.required && (
-                  <span className="text-xs text-[var(--danger-500)] font-semibold">* Requerido</span>
+                  <span className="text-xs text-[var(--danger-500)] font-semibold">* {t('required')}</span>
                 )}
               </div>
             </div>
@@ -487,7 +491,7 @@ export default function SwipeCaptureFlow({
               <VoiceInput
                 value={(currentItem.value as string) || ''}
                 onChange={(v) => updateItem({ value: v, status: v ? 'ok' : 'pending' })}
-                label="Valor / Observación"
+                label={t('valueLabel')}
                 mode="replace"
                 className="w-full"
               />
@@ -507,7 +511,7 @@ export default function SwipeCaptureFlow({
                   className="flex flex-col items-center justify-center gap-2 p-8 bg-[var(--gray-800)] border-2 border-dashed border-[var(--gray-600)] rounded-2xl hover:border-[var(--primary-500)] hover:bg-[color:rgb(from_var(--gray-800)_r_g_b_/_80%)] transition active:scale-95"
                 >
                   <span className="text-4xl">📷</span>
-                  <span className="text-[var(--gray-400)] font-medium">Capturar foto</span>
+                  <span className="text-[var(--gray-400)] font-medium">{t('capturePhoto')}</span>
                   {geoLocation && (
                     <span className="text-xs text-[var(--success-500)]">
                       📍 GPS: {geoLocation.latitude.toFixed(5)}, {geoLocation.longitude.toFixed(5)}
@@ -523,7 +527,7 @@ export default function SwipeCaptureFlow({
                         {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL with rotating token, Image cache would break */}
                         <img
                           src={photo.thumbnail_url ?? photo.url}
-                          alt={`Foto ${i + 1}`}
+                          alt={t('photoAlt', { n: i + 1 })}
                           className="w-20 h-20 object-cover rounded-xl border border-[var(--gray-700)]"
                         />
                         {photo.geolocation && (
@@ -541,8 +545,8 @@ export default function SwipeCaptureFlow({
           <VoiceInput
             value={currentItem.notes ?? ''}
             onChange={(notes) => updateItem({ notes })}
-            label="Notas / Observaciones"
-            placeholder="Agregar nota de campo..."
+            label={t('notes')}
+            placeholder={t('notesPh')}
             mode="append"
             maxLength={500}
           />
@@ -560,7 +564,7 @@ export default function SwipeCaptureFlow({
                 : 'bg-[var(--gray-800)] text-[var(--gray-500)] hover:text-[var(--warning-500)] hover:bg-[var(--gray-700)]'
             }`}
           >
-            🚩 {currentItem.status === 'flagged' ? 'Marcado para revisión' : 'Marcar para revisión'}
+            🚩 {currentItem.status === 'flagged' ? t('flagged') : t('flag')}
           </button>
         </div>
       </div>
@@ -573,7 +577,7 @@ export default function SwipeCaptureFlow({
             disabled={currentIndex === 0}
             className="flex-1 py-4 rounded-xl bg-[var(--gray-800)] text-[var(--gray-400)] disabled:opacity-30 hover:bg-[var(--gray-700)] transition font-semibold text-lg"
           >
-            ← Anterior
+            ← {t('prev')}
           </button>
 
           {currentIndex < localItems.length - 1 ? (
@@ -581,7 +585,7 @@ export default function SwipeCaptureFlow({
               onClick={goNext}
               className="flex-1 py-4 rounded-xl bg-[var(--primary-600)] hover:bg-[var(--primary-500)] text-white transition font-semibold text-lg active:scale-95"
             >
-              Siguiente →
+              {t('next')} →
             </button>
           ) : (
             <button
@@ -589,7 +593,7 @@ export default function SwipeCaptureFlow({
               disabled={localItems.some((i) => i.required && i.status === 'pending')}
               className="flex-1 py-4 rounded-xl bg-[var(--success-500)] hover:bg-[var(--success-500)] disabled:bg-[var(--gray-700)] disabled:text-[var(--gray-500)] text-white transition font-bold text-lg active:scale-95"
             >
-              ✓ Completar ITR
+              ✓ {t('complete')}
             </button>
           )}
         </div>
@@ -605,6 +609,7 @@ export default function SwipeCaptureFlow({
               <button
                 key={item.id}
                 onClick={() => setCurrentIndex(realIdx)}
+                aria-label={t('position', { n: realIdx + 1, total: localItems.length })}
                 className={`rounded-full transition-all ${
                   realIdx === currentIndex
                     ? 'w-4 h-2 bg-[var(--primary-500)]'
@@ -629,9 +634,9 @@ export default function SwipeCaptureFlow({
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div className="flex-1 bg-black/60" onClick={() => setShowQuickFill(false)} />
           <div className="bg-[var(--gray-800)] rounded-t-2xl p-5">
-            <h3 className="font-bold text-lg mb-4">Relleno Rápido</h3>
+            <h3 className="font-bold text-lg mb-4">{t('quickFill')}</h3>
             <p className="text-[var(--gray-400)] text-sm mb-4">
-              Aplica a todos los items de tipo Sí/No que estén pendientes
+              {t('quickFillHint')}
             </p>
             <div className="flex gap-3">
               {(['ok', 'nok', 'na'] as const).map((s) => (
@@ -653,12 +658,12 @@ export default function SwipeCaptureFlow({
                     'bg-[var(--warning-500)] hover:bg-[var(--warning-500)]'
                   } text-white`}
                 >
-                  {s === 'ok' ? '✓ Todos OK' : s === 'nok' ? '✗ Todos NOK' : 'Todos N/A'}
+                  {s === 'ok' ? `✓ ${t('allOk')}` : s === 'nok' ? `✗ ${t('allNok')}` : t('allNa')}
                 </button>
               ))}
             </div>
             <p className="text-[var(--gray-600)] text-xs text-center mt-3">
-              ⚠️ Solo afecta items Sí/No sin respuesta
+              ⚠️ {t('quickFillNote')}
             </p>
           </div>
         </div>

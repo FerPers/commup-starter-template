@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Bell, BellDot, Check } from 'lucide-react'
 import {
   listMyNotifications,
@@ -34,6 +35,7 @@ export default function NotificationsBell({
   orgId: string
 }) {
   const router = useRouter()
+  const t = useTranslations('A11y')
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<NotificationRow[]>([])
   const [unread, setUnread] = useState(initialUnread)
@@ -139,7 +141,7 @@ export default function NotificationsBell({
       <button
         type="button"
         onClick={handleToggle}
-        aria-label="Notificaciones"
+        aria-label={unread > 0 ? t('bellUnread', { count: unread }) : t('bell')}
         style={{
           position: 'relative',
           display: 'inline-flex',

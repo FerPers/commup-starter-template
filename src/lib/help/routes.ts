@@ -43,7 +43,6 @@ const PAGE_HELP: readonly [RegExp, string][] = [
   [/^\/projects\/[^/]+\/?$/, '3'],
   [/^\/(punch-list|ops)/, '5.4'],
   [/^\/preservation/, '5.5'],
-  [/^\/control-tower/, '5.8'],
   [/^\/kpis/, '5.22'],
   [/^\/admin\/(api-keys|webhooks|workflows)/, '5.23'],
   [/^\/admin\/templates/, '5.2'],

@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest'
 
 // Cada t('clave') literal debe existir en su namespace, en es y en en. N3b dejó «Topbar.menu.pageHelp»
 // en el namespace equivocado y el menú de usuario mostraba la clave cruda; esto lo atrapa en CI.
-// Alcance: traductores declarados con useTranslations/getTranslations('Ns') (un solo namespace por nombre)
-// y claves literales; las dinámicas (`t(\`x.${y}\`)`) no se revisan.
+// Alcance: traductores declarados con useTranslations/getTranslations('Ns') (un solo namespace por nombre),
+// claves literales y las dos ramas de un ternario (`t(cond ? 'a' : 'b')`, V1: así se escapó Daily.detail.needDatePrompt
+// en en); las dinámicas (`t(\`x.${y}\`)`) no se revisan. Además es y en deben tener exactamente las mismas claves.
 
 const get = (o: unknown, path: string) => path.split('.').reduce<unknown>((a, k) => (a && typeof a === 'object' ? (a as Record<string, unknown>)[k] : undefined), o)
 
@@ -32,16 +33,30 @@ function missingKeys(messages: unknown): string[] {
       if (namespaces.size !== 1) continue
       const [ns] = namespaces
       const call = new RegExp(`(?<![\\w.])${name}(?:\\.rich|\\.raw|\\.markup)?\\(\\s*'([^'$\`]+)'`, 'g')
-      for (const m of src.matchAll(call)) {
-        const key = ns ? `${ns}.${m[1]}` : m[1]
-        if (get(messages, key) === undefined) missing.push(`${file}:${src.slice(0, m.index).split('\n').length} ${key}`)
+      const ternary = new RegExp(`(?<![\\w.])${name}(?:\\.rich|\\.raw|\\.markup)?\\(\\s*[^()'"\`;]{1,120}?\\?\\s*'([^'$\`]+)'\\s*:\\s*'([^'$\`]+)'`, 'g')
+      const found = [...src.matchAll(call)].map(m => ({ key: m[1], at: m.index }))
+        .concat([...src.matchAll(ternary)].flatMap(m => [{ key: m[1], at: m.index }, { key: m[2], at: m.index }]))
+      for (const { key: k, at } of found) {
+        const key = ns ? `${ns}.${k}` : k
+        if (get(messages, key) === undefined) missing.push(`${file}:${src.slice(0, at).split('\n').length} ${key}`)
       }
     }
   }
   return missing
 }
 
+function leafKeys(o: unknown, prefix = ''): string[] {
+  if (!o || typeof o !== 'object') return [prefix]
+  return Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => leafKeys(v, prefix ? `${prefix}.${k}` : k))
+}
+
 describe('i18n: claves usadas = claves existentes', () => {
+  it('es y en tienen el mismo juego de claves', () => {
+    const [es, en] = ['es', 'en'].map(loc => new Set(leafKeys(JSON.parse(readFileSync(`src/i18n/messages/${loc}.json`, 'utf8')))))
+    expect([...es].filter(k => !en.has(k)), 'solo en es').toEqual([])
+    expect([...en].filter(k => !es.has(k)), 'solo en en').toEqual([])
+  })
+
   for (const loc of ['es', 'en']) {
     it(`${loc}: toda clave literal de t() existe`, () => {
       const messages = JSON.parse(readFileSync(`src/i18n/messages/${loc}.json`, 'utf8'))

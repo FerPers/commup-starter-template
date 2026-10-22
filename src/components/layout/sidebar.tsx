@@ -94,7 +94,7 @@ const ICONS: Record<string, LucideIcon> = {
   myWork: ListChecks, scan: ScanLine, overview: LayoutDashboard, readiness: Radar, systems: Network, tags: Tag, explorer: FolderTree,
   twin: Boxes, documents: FileText, pidDocuments: FileImage, vendors: Truck, signatories: UserCheck, import: Upload, itrs: ClipboardCheck,
   punches: Flag, preservation: Wrench, registers: ClipboardList, signals: Activity, loops: GitBranch, ceMatrices: Zap, certificates: Award,
-  pssr: ShieldCheck, startup: Power, performance: Gauge, operations: Anchor, daily: CalendarCheck, workPlans: CalendarDays, planning: CalendarDays, kpis: TrendingUp, controlTower: Radar,
+  pssr: ShieldCheck, startup: Power, performance: Gauge, operations: Anchor, daily: CalendarCheck, workPlans: CalendarDays, planning: CalendarDays, kpis: TrendingUp,
   projects: FolderKanban, dashboard: LayoutDashboard, opsPunches: Anchor, handover: PackageCheck, allItrs: ClipboardCheck, allPunches: Flag,
   allCertificates: Award, globalPreservation: Wrench, allWorkPlans: CalendarDays, orgKpis: TrendingUp, users: Users, companies: Building2,
   config: Settings, gates: Milestone, itrTemplates: FileCheck2, preservationTemplates: ClipboardList, pssrTemplates: ShieldCheck,
@@ -193,7 +193,7 @@ export default function Sidebar({
 
   return (
     <aside
-      aria-label="Primary navigation"
+      aria-label={t('a11y.primaryNav')}
       className={`app-sidebar${isOpen ? ' is-open' : ''}`}
       style={{
         width: 240, minWidth: 240, height: '100vh',
@@ -319,6 +319,7 @@ interface SidebarLinkProps {
 }
 
 function SidebarLink({ href, label, Icon, active, badge, softBadge, accent, compact }: SidebarLinkProps) {
+  const t = useTranslations('Sidebar')
   const activeBg = accent ? 'rgba(244,122,32,0.16)' : 'rgba(59,130,246,0.15)'
   const activeFg = accent ? 'var(--brand-orange-soft)' : 'var(--sidebar-link-active)'
   const activeBorder = accent ? 'var(--brand-orange)' : 'var(--sidebar-link-border)'
@@ -357,7 +358,7 @@ function SidebarLink({ href, label, Icon, active, badge, softBadge, accent, comp
       </span>
       {badge !== undefined && badge > 0 && (
         <span
-          aria-label={`${badge} pending`}
+          aria-label={t('a11y.pending', { count: badge })}
           style={{
             background: softBadge ? 'rgba(255,255,255,0.12)' : 'var(--danger-500)',
             color: softBadge ? 'var(--sidebar-text-dim)' : '#fff',

@@ -80,18 +80,17 @@
       "pickProject": "Elige un proyecto"
     },
     "nav": {
-      "dashboard": "Panorama",
+      "dashboard": "Portafolio",
       "projects": "Proyectos",
       "projectOverview": "Resumen",
       "tags": "Tags y equipos",
       "signals": "Señales",
       "scan": "Escanear QR/NFC",
       "itrs": "ITRs",
-      "punchList": "Punch List",
+      "punchList": "Punch",
       "preservation": "Preservación",
       "workPlans": "Planes de trabajo",
-      "controlTower": "Readiness por proyecto",
-      "readiness": "Readiness",
+      "readiness": "Liberación de sistemas",
       "certificates": "Certificados",
       "kpis": "KPIs",
       "itrTemplates": "Plantillas ITR",
@@ -120,7 +119,7 @@
       "allPunches": "Todos los punches",
       "allCertificates": "Todos los certificados",
       "allWorkPlans": "Todos los planes",
-      "gates": "Gates (hold points)",
+      "gates": "Liberaciones y criterios",
       "registers": "Registros de campo",
       "daily": "Gestión diaria",
       "startup": "Arranque",
@@ -148,12 +147,16 @@
       "dark": "Oscuro",
       "contrast": "Contraste",
       "label": "Tema"
+    },
+    "a11y": {
+      "primaryNav": "Navegación principal",
+      "pending": "{count, plural, one {# pendiente} other {# pendientes}}"
     }
   },
   "Topbar": {
     "role": {
-      "owner": "Owner",
-      "admin": "Admin",
+      "owner": "Propietario",
+      "admin": "Administrador",
       "architect": "Arquitecto",
       "leader": "Líder",
       "inspector": "Inspector",
@@ -230,7 +233,7 @@
     }
   },
   "Dashboard": {
-    "title": "Dashboard",
+    "title": "Portafolio",
     "subtitle": "Resumen general del estado de completamiento",
     "hello": "Hola, {name}",
     "itrStatus": {
@@ -248,7 +251,7 @@
       "resolved": "Resuelto · por verificar"
     },
     "kpi": {
-      "punchesOpen": "Punch List Abiertos",
+      "punchesOpen": "Punch abiertos",
       "punchesOpenSub": "Cat A: {catA} · Cat B: {catB}",
       "preservation": "Preservación — próx. 7 días",
       "preservationOverdue": "{overdue} vencido(s) · {upcoming} por vencer",
@@ -339,8 +342,8 @@
         "desc": "Disciplinas configuradas para los proyectos"
       },
       "readiness": {
-        "title": "Readiness por proyecto",
-        "desc": "Gates aprobados, sistemas que no avanzan, firmas, restricciones N4 y compromisos que vencen"
+        "title": "Liberación por proyecto",
+        "desc": "Liberaciones aprobadas, sistemas que no avanzan, firmas, restricciones N4 y compromisos que vencen"
       }
     },
     "customizer": {
@@ -349,7 +352,7 @@
       "description": "Muestra, oculta y reordena los widgets según tus necesidades. Tu configuración se guarda en tu perfil.",
       "save": "Guardar",
       "cancel": "Cancelar",
-      "saved": "Dashboard actualizado",
+      "saved": "Portafolio actualizado",
       "saveError": "No se pudo guardar",
       "reset": "Layout restaurado al valor por defecto",
       "resetDefaults": "Restaurar por defecto",
@@ -361,20 +364,20 @@
       "allHidden": "Todos los widgets están ocultos. Usa Personalizar para mostrar al menos uno."
     },
     "readiness": {
-      "title": "Readiness",
-      "subtitle": "Por proyecto, ordenado por riesgo",
-      "viewAll": "Ver todos →",
-      "empty": "Ningún proyecto tiene sistemas todavía.",
-      "more": "y {count} proyectos más en el portafolio",
+      "title": "Liberación por proyecto",
+      "subtitle": "Todos los proyectos, ordenados por riesgo",
+      "empty": "La organización aún no tiene proyectos.",
       "col": {
         "project": "Proyecto",
-        "readiness": "Gates",
+        "readiness": "Liberaciones",
         "blocked": "No avanzan",
         "toApprove": "Por aprobar",
         "toSign": "Por firmar",
         "n4": "Restricc. N4",
-        "due": "Compromisos ≤ 7 d"
-      }
+        "due": "Compromisos ≤ 7 d",
+        "physical": "Avance físico"
+      },
+      "noSystems": "Sin sistemas todavía"
     }
   },
   "Common": {
@@ -410,7 +413,7 @@
       "rejected": "Rechazado"
     },
     "filters": {
-      "search": "Buscar ITR, tag, template, proyecto...",
+      "search": "Buscar ITR, tag, plantilla, proyecto...",
       "allPhases": "Todas las fases",
       "allDisciplines": "Todas las disciplinas",
       "count": "{filtered} de {total} ITRs",
@@ -442,7 +445,7 @@
     "table": {
       "colProject": "Proyecto",
       "colItr": "ITR / Tag",
-      "colTemplate": "Template",
+      "colTemplate": "Plantilla",
       "colInspector": "Inspector",
       "colDate": "Fecha",
       "colProgress": "Progreso",
@@ -455,7 +458,7 @@
       "itr": "ITR",
       "tag": "Tag",
       "tagDesc": "Descripción Tag",
-      "template": "Template",
+      "template": "Plantilla",
       "phase": "Fase",
       "discipline": "Disciplina",
       "inspector": "Inspector",
@@ -469,7 +472,7 @@
     "generate": "Generar ITR"
   },
   "PunchList": {
-    "title": "Punch List",
+    "title": "Punch",
     "punchStatus": {
       "open": "Abierto",
       "in_progress": "En proceso",
@@ -748,7 +751,7 @@
       "itrsEmpty": "Sin ITRs registrados.",
       "itrColNumber": "N° ITR",
       "itrColTag": "Tag",
-      "itrColTemplate": "Template",
+      "itrColTemplate": "Plantilla",
       "itrColStatus": "Estado",
       "itrStatus": {
         "not_started": "Sin iniciar",
@@ -870,7 +873,7 @@
     },
     "items": {
       "colItr": "ITR",
-      "colTag": "Tag / Template",
+      "colTag": "Tag / Plantilla",
       "colAssigned": "Asignado a",
       "colStatus": "Estado",
       "emptyCanAdd": "Sin ítems. Usa el botón + para agregar ITRs.",
@@ -994,24 +997,24 @@
       "footerPunchB": "{count} Punch B abiertos"
     },
     "readiness": {
-      "title": "Readiness y gestión diaria",
+      "title": "Liberación y gestión diaria",
       "lookahead": "Ver look-ahead →",
       "asOf": "KPIs al {date} (snapshot diario).",
       "noSnapshot": "Aún no hay snapshot de gestión diaria: se toma cada noche o con «Tomar snapshot».",
-      "later": "Todos los KPIs del plan readiness están activos.",
+      "later": "Todos los KPIs de liberación y gestión diaria están activos.",
       "weighted": "Avance físico ponderado",
-      "weightedHint": "En vivo · ITR aprobados por gate × peso",
-      "readiness": "Readiness",
-      "readinessHint": "Gates aprobados / gates con fase (en vivo)",
+      "weightedHint": "En vivo · ITR aprobados por liberación × peso",
+      "readiness": "Liberación de sistemas",
+      "readinessHint": "Liberaciones aprobadas / liberaciones con fase (en vivo)",
       "commitments": "Cumplimiento del compromiso",
-      "commitmentsHint": "Gates con todas las firmas a tiempo · {n} compromisos vencían en 30 días",
+      "commitmentsHint": "Liberaciones con todas las firmas a tiempo · {n} compromisos vencían en 30 días",
       "tq": "TQ respondidos a tiempo",
       "tqHint": "{closed} cerrados en 30 d · {days} d promedio · {open} abiertos",
       "actions": "Acciones a tiempo",
       "actionsHint": "{open} abiertas · {overdue} vencidas · {verify} por verificar",
       "constraints": "Restricciones abiertas",
       "constraintsHint": "N1 {l1} · N2 {l2} · N3 {l3} · N4 {l4} · edad promedio {age} d",
-      "curve": "Curva S — avance físico ponderado (línea punteada: plan según compromisos por gate)",
+      "curve": "Curva S — avance físico ponderado (línea punteada: plan según compromisos por liberación)",
       "plan": "Plan (compromisos)",
       "curveEmpty": "La curva aparece desde el segundo snapshot diario.",
       "startup": "Éxito de primer arranque",
@@ -1022,7 +1025,7 @@
       "performanceHint": "{first} de {accepted} aceptadas sin repetir · {tests} pruebas · {failed} intentos fallidos",
       "documents": "Completitud documental",
       "documentsHint": "As-Built/Final {asBuilt} de {linked} ligados a sistemas · {noRev} sin revisión · {outdated} registros firmados con revisión superada",
-      "vendors": "Readiness de vendors",
+      "vendors": "Vendors listos",
       "vendorsHint": "{clear} de {active} activos sin bloqueos · {planned} planificados · {demob} desmovilizados · {findings} hallazgos abiertos"
     }
   },
@@ -1091,17 +1094,17 @@
       "empty": "No hay invitaciones pendientes"
     },
     "roles": {
-      "owner": "Owner",
-      "admin": "Admin",
-      "architect": "Architect",
-      "leader": "Leader",
+      "owner": "Propietario",
+      "admin": "Administrador",
+      "architect": "Arquitecto",
+      "leader": "Líder",
       "inspector": "Inspector",
-      "client": "Client"
+      "client": "Cliente"
     },
     "roleDesc": {
       "owner": "Control total, billing",
       "admin": "Gestión usuarios y config",
-      "architect": "Templates, jerarquía, asignar ITRs",
+      "architect": "Plantillas, jerarquía, asignar ITRs",
       "leader": "Asignar ITRs, cerrar punches",
       "inspector": "Ejecutar ITRs, crear punches",
       "client": "Consulta; firma por el Cliente, Operaciones o HSE según los firmantes designados del proyecto"
@@ -1236,12 +1239,12 @@
     "all": "Todos",
     "allCount": "Todos ({count})",
     "importCatalog": "↑ Importar catálogo",
-    "newTemplate": "+ Nuevo template",
+    "newTemplate": "+ Nueva plantilla",
     "empty": {
-      "noTemplates": "No hay templates aún",
-      "noTemplatesForDisc": "No hay templates para disciplina {disc}",
-      "hint": "Crea el primer template o cambia el filtro de disciplina.",
-      "createFirstBtn": "Crear primer template"
+      "noTemplates": "No hay plantillas aún",
+      "noTemplatesForDisc": "No hay plantillas para la disciplina {disc}",
+      "hint": "Crea la primera plantilla o cambia el filtro de disciplina.",
+      "createFirstBtn": "Crear la primera plantilla"
     },
     "table": {
       "colCode": "Código",
@@ -1258,8 +1261,8 @@
     },
     "global": "Global",
     "modal": {
-      "title": "Nuevo template ITR",
-      "subtitle": "Define el código, título, fase y disciplina del template.",
+      "title": "Nueva plantilla ITR",
+      "subtitle": "Define el código, título, fase y disciplina de la plantilla.",
       "labelPhase": "Fase",
       "labelDiscipline": "Disciplina",
       "labelCode": "Código",
@@ -1269,13 +1272,13 @@
       "selectPlaceholder": "Seleccionar...",
       "codePlaceholder": "ej: I01A",
       "titlePlaceholder": "ej: Loop Check — Transmisor de Presión",
-      "descPlaceholder": "Alcance o notas del template",
+      "descPlaceholder": "Alcance o notas de la plantilla",
       "cancel": "Cancelar",
       "creating": "Creando...",
       "createBtn": "Crear y abrir builder →",
       "errorRequired": "Código, título, fase y disciplina son requeridos"
     },
-    "deleteConfirm": "¿Eliminar template \"{code}\"? Esta acción no se puede deshacer.",
+    "deleteConfirm": "¿Eliminar la plantilla \"{code}\"? Esta acción no se puede deshacer.",
     "builder": {
       "itemTypeCheckbox": "Verificación",
       "itemTypeYesNo": "Sí / No",
@@ -1287,7 +1290,7 @@
       "itemTypePhoto": "Foto",
       "itemTypeSignature": "Firma",
       "itemTypeDate": "Fecha",
-      "breadcrumb": "← Templates ITR",
+      "breadcrumb": "← Plantillas ITR",
       "headerPhaseLabel": "Fase {code}",
       "statusActive": "Activo",
       "statusInactive": "Inactivo",
@@ -1299,12 +1302,12 @@
       "fieldCode": "Código",
       "fieldTitle": "Título",
       "fieldDescription": "Descripción",
-      "placeholderDescription": "Alcance o notas del template",
-      "flagActiveLabel": "Template activo (disponible para asignación)",
+      "placeholderDescription": "Alcance o notas de la plantilla",
+      "flagActiveLabel": "Plantilla activa (disponible para asignación)",
       "btnSaving": "Guardando…",
       "btnSave": "Guardar",
       "btnCancel": "Cancelar",
-      "emptyTitle": "Template sin secciones",
+      "emptyTitle": "Plantilla sin secciones",
       "emptyDesc": "Agrega la primera sección para empezar a construir el ITR.",
       "sectionItemCount": "{count} ítem{plural}",
       "tooltipMoveUp": "Mover arriba",
@@ -1390,7 +1393,14 @@
       "tagLabel": "Tag:",
       "inspectorLabel": "Inspector:",
       "dateLabel": "Fecha:",
-      "progress": "Progreso"
+      "progress": "Progreso",
+      "loopSource": "Loop check del lazo <a>{loop}</a>",
+      "causeSource": "Prueba de la causa <a>{matrix} · {cause}</a> — {description}",
+      "sourceRows": "filas tomadas al generar el ITR ({count})",
+      "itemLanguage": "Idioma de los ítems",
+      "itemsEs": "Mostrar ítems en español",
+      "itemsEn": "Mostrar ítems en inglés",
+      "dismiss": "Cerrar aviso"
     },
     "criticalBlocked": "{count, plural, one {⚠ # ítem crítico fuera de criterio — firma bloqueada} other {⚠ # ítems críticos fuera de criterio — firma bloqueada}}",
     "footer": {
@@ -1587,7 +1597,7 @@
       "tabs": {
         "overview": "Resumen",
         "itrs": "ITRs",
-        "punches": "Punch List",
+        "punches": "Punch",
         "photos": "Fotos",
         "docs": "Documentos",
         "preservation": "Preservación"
@@ -1660,7 +1670,7 @@
       "deleting": "Eliminando…",
       "confirmDelete": "Confirmar eliminación",
       "fieldCriticality": "Criticidad",
-      "criticalityHint": "Los tags críticos bloquean el gate aunque el avance sea alto. Con SIL se sugiere «Seguridad»."
+      "criticalityHint": "Los tags críticos bloquean la liberación aunque el avance sea alto. Con SIL se sugiere «Seguridad»."
     },
     "docs": {
       "sectionTitle": "Documentos P&ID",
@@ -1875,7 +1885,7 @@
     "labelRemarks": "Observaciones / Notas",
     "placeholderRemarks": "Notas del técnico, condiciones encontradas, acciones tomadas…",
     "raisePunchLabel": "Un NOK levanta un punch",
-    "raisePunchDesc": "Se crea en el Punch List de este tag, vinculado a este registro. Elige su categoría.",
+    "raisePunchDesc": "Se crea como punch de este tag, vinculado a este registro. Elige su categoría.",
     "punchCategoryLabel": "Categoría del punch:",
     "punchCatA": "Bloqueante",
     "punchCatB": "Transferible",
@@ -1982,12 +1992,12 @@
     }
   },
   "ControlTower": {
-    "title": "Readiness",
-    "subtitle": "Preparación de sistemas para hitos de completion",
+    "title": "Liberación de sistemas",
+    "subtitle": "Qué sistemas están listos para cada liberación y qué los frena",
     "project": "Proyecto",
     "load": "Cargar",
     "empty": "No hay sistemas para este proyecto",
-    "selectProject": "Selecciona un proyecto para ver readiness",
+    "selectProject": "Selecciona un proyecto para ver la liberación de sus sistemas",
     "approved": "aprobados",
     "noBlockers": "Listo",
     "kpi": {
@@ -1996,12 +2006,12 @@
       "punchesOpen": "Punches Abiertos",
       "catBLimit": "Límite Cat B abiertos por subsistema: {limit}",
       "catBNoLimit": "Sin límite de Cat B abiertos por subsistema",
-      "approvedByGate": "Sistemas aprobados por gate",
+      "approvedByGate": "Sistemas aprobados por liberación",
       "toApprove": "{count} por aprobar",
       "toSign": "{count} por firmar",
-      "weighted": "Avance ponderado por gate: {pct} %",
+      "weighted": "Avance ponderado por liberación: {pct} %",
       "physical": "Avance físico ponderado: {pct} %",
-      "readiness": "Readiness: {done}/{total} gates aprobados ({pct} %)"
+      "readiness": "{done}/{total} liberaciones aprobadas ({pct} %)"
     },
     "col": {
       "area": "Área",
@@ -2010,10 +2020,10 @@
       "punchA": "Cat A",
       "punchB": "Cat B",
       "punchC": "Cat C",
-      "gates": "Gates",
+      "gates": "Liberaciones",
       "topBlocker": "Blocker Principal",
       "physical": "Avance físico",
-      "next": "Siguiente gate · qué lo frena",
+      "next": "Siguiente liberación · qué la frena",
       "nextState": "Estado",
       "blocker": "Bloqueo",
       "commitment": "Compromiso",
@@ -2024,7 +2034,7 @@
       "noSubsystems": "El sistema no tiene subsistemas",
       "noItrs": "No hay ITRs definidos para este sistema",
       "itrsIncomplete": "{pending} ITR(s) pendientes de aprobación",
-      "punchesA": "{count} punch(es) Cat A abiertos — bloquean todos los gates",
+      "punchesA": "{count} punch(es) Cat A abiertos — bloquean todas las liberaciones",
       "punchesBOverLimit": "{count} subsistema(s) superan el límite de {limit} Cat B abiertos",
       "punchesB": "{count} punch(es) Cat B abiertos — requieren justificación al emitir"
     },
@@ -2059,8 +2069,8 @@
       "sortCommitment": "Por compromiso",
       "search": "Buscar sistema",
       "changed": "Cambió en 24 h",
-      "nextGate": "Siguiente gate",
-      "allGates": "Todos los gates",
+      "nextGate": "Siguiente liberación",
+      "allGates": "Todas las liberaciones",
       "nextIs": "Siguiente: {gate}",
       "blocked": "Solo con bloqueo"
     },
@@ -2080,22 +2090,7 @@
     "conditionsOpen": "{count, plural, one {# condición abierta} other {# condiciones abiertas}}",
     "export": "Excel",
     "showing": "{shown} de {total} sistemas",
-    "itrsWeighing": "{count} ITR",
-    "portfolio": {
-      "title": "Readiness por proyecto",
-      "subtitle": "Gates aprobados vigentes y estado del siguiente gate de cada sistema, por proyecto",
-      "empty": "No hay proyectos",
-      "open": "Abrir readiness →",
-      "col": {
-        "project": "Proyecto",
-        "systems": "Sistemas",
-        "readiness": "Readiness",
-        "physical": "Avance",
-        "next": "Siguiente gate por estado",
-        "constraintsN4": "Restricciones N4",
-        "commitmentsSoon": "Compromisos ≤ 7 días"
-      }
-    }
+    "itrsWeighing": "{count} ITR"
   },
   "DataQuality": {
     "title": "Calidad de datos",
@@ -2189,7 +2184,7 @@
     "tracking": {
       "title": "En seguimiento de Operaciones",
       "empty": "Aún no se transfirió ningún punch.",
-      "owner": "Owner",
+      "owner": "Responsable",
       "transferred": "Transferido",
       "targetDate": "Target"
     },
@@ -2257,7 +2252,7 @@
     },
     "list": {
       "startReview": "Iniciar PSSR",
-      "configureTemplateFirst": "Configura un template PSSR primero",
+      "configureTemplateFirst": "Configura primero una plantilla PSSR",
       "emptyTitle": "Sin revisiones PSSR",
       "emptyHint": "Inicia una revisión cuando el sistema tenga el certificado RFC emitido y esté listo para arrancar.",
       "systemFallback": "Sistema",
@@ -2269,7 +2264,7 @@
       "title": "Iniciar PSSR",
       "systemLabel": "Sistema *",
       "systemPlaceholder": "— Seleccionar sistema —",
-      "templateLabel": "Template",
+      "templateLabel": "Plantilla",
       "titleLabel": "Título (opcional)",
       "titlePlaceholder": "Pre-Startup Safety Review",
       "dueDateLabel": "Fecha objetivo (opcional)",
@@ -2278,7 +2273,7 @@
       "submit": "Iniciar revisión",
       "submitting": "Iniciando...",
       "errorSelectSystem": "Selecciona un sistema",
-      "errorSelectTemplate": "Selecciona un template",
+      "errorSelectTemplate": "Selecciona una plantilla",
       "errorGeneric": "Error al crear"
     },
     "review": {
@@ -2609,15 +2604,15 @@
       "actionsVerify": "acciones por verificar",
       "constraints": "restricciones mías",
       "handovers": "relevos por recibir",
-      "holds": "hold points por liberar",
+      "holds": "puntos de espera por liberar",
       "lineup": "válvulas por verificar",
       "milestones": "hitos por atestiguar",
       "transfers": "Traspasos de custodia por firmar",
       "performanceDecide": "Resultados de desempeño",
       "performanceSign": "PTC por firmar",
-      "gatesApprove": "gates por aprobar",
-      "gatesCosign": "gates por co-firmar",
-      "gatesRegressed": "gates en regresión",
+      "gatesApprove": "liberaciones por aprobar",
+      "gatesCosign": "liberaciones por co-firmar",
+      "gatesRegressed": "liberaciones en regresión",
       "registersAuthorize": "registros por autorizar",
       "registersVerify": "registros por verificar",
       "dailyReports": "reportes diarios por emitir",
@@ -2636,15 +2631,15 @@
       "actionsVerify": "Acciones por verificar",
       "constraints": "Mis restricciones",
       "handovers": "Relevos de turno por recibir",
-      "holds": "Hold points por liberar",
+      "holds": "Puntos de espera por liberar",
       "lineup": "Line-up: válvulas críticas por verificar",
       "milestones": "Hitos de arranque por atestiguar",
       "transfers": "Traspasos de custodia por firmar",
       "performanceDecide": "Pruebas de desempeño por decidir",
       "performanceSign": "Certificados PTC por firmar",
-      "gatesApprove": "Gates listos para aprobar",
-      "gatesCosign": "Gates por co-firmar",
-      "gatesRegressed": "Gates en regresión o por revisar",
+      "gatesApprove": "Liberaciones listas para aprobar",
+      "gatesCosign": "Liberaciones por co-firmar",
+      "gatesRegressed": "Liberaciones en regresión o por revisar",
       "registersAuthorize": "Registros por autorizar",
       "registersVerify": "Registros por verificar",
       "dailyReports": "Reportes diarios por emitir",
@@ -2663,15 +2658,15 @@
       "actionsVerify": "No hay acciones hechas esperando verificación.",
       "constraints": "No tienes restricciones abiertas.",
       "handovers": "No hay relevos esperando que alguien los reciba.",
-      "holds": "No hay hold points esperando tu liberación.",
+      "holds": "Ningún punto de espera aguarda que lo liberes.",
       "lineup": "No hay válvulas críticas por verificar.",
       "milestones": "No hay hitos esperando tu firma.",
       "transfers": "Nada por firmar.",
       "performanceDecide": "Nada por decidir.",
       "performanceSign": "Nada por firmar.",
-      "gatesApprove": "Ningún gate espera tu aprobación.",
-      "gatesCosign": "Ningún gate espera tu firma.",
-      "gatesRegressed": "Ningún gate aprobado en regresión.",
+      "gatesApprove": "Ninguna liberación espera tu aprobación.",
+      "gatesCosign": "Ninguna liberación espera tu firma.",
+      "gatesRegressed": "Ninguna liberación aprobada está en regresión.",
       "registersAuthorize": "Ningún registro por autorizar.",
       "registersVerify": "Ningún registro por verificar.",
       "dailyReports": "No hay reportes en borrador.",
@@ -2743,11 +2738,11 @@
     "create": "Crear"
   },
   "Gates": {
-    "back": "Volver a Readiness",
-    "intro": "Cada gate es un hold point: se calcula con sus criterios y, cuando está listo, alguien con autoridad lo aprueba. La aprobación congela la evidencia del momento. Si después deja de cumplir (p. ej. se reabre un ITR), se marca «en regresión» sin revocarse solo, y frena al gate siguiente. Un punch levantado después de aprobar no regresa el gate: frena el siguiente.",
-    "noGates": "La organización no tiene gates activos. Configúralos en Administración → Gates.",
+    "back": "Volver a Liberación de sistemas",
+    "intro": "Cada liberación es un punto de control: se calcula con sus criterios y, cuando está lista, alguien con autoridad la aprueba. La aprobación congela la evidencia del momento. Si después deja de cumplir (p. ej. se reabre un ITR), se marca «en regresión» sin revocarse sola, y frena la liberación siguiente. Un punch levantado después de aprobar no regresa la liberación: frena la siguiente.",
+    "noGates": "La organización no tiene liberaciones activas. Configúralas en Administración → Liberaciones y criterios.",
     "unknownUser": "usuario",
-    "revokePrompt": "Motivo para revocar la aprobación de {gate}:",
+    "revokePrompt": "Motivo para revocar la aprobación de la liberación {gate}:",
     "evidenceError": "No se pudo abrir el adjunto",
     "attestMissing": "La declaración necesita un comentario y un archivo adjunto",
     "andMore": "…y {count} más",
@@ -2760,7 +2755,7 @@
     "conditionsOptional": "Condiciones de la aprobación (opcional), una por línea",
     "conditionsPlaceholder": "Ej.: Los Cat B P-0123 y P-0124 se cierran antes de RFC",
     "notesPlaceholder": "Notas (opcional)",
-    "approve": "Aprobar {gate}",
+    "approve": "Aprobar la liberación {gate}",
     "notReadyHint": "No se puede aprobar hasta que se cumplan los criterios en rojo.",
     "noAuthority": "Listo para aprobar. Pueden aprobarlo los roles: {roles}.",
     "status": {
@@ -2779,7 +2774,7 @@
       "fail": "no cumple"
     },
     "kind": {
-      "previous_gate": "Gate anterior aprobado",
+      "previous_gate": "Liberación anterior aprobada",
       "dependencies_ready": "Sistemas de los que depende",
       "itr_phase_approved": "ITRs de la fase aprobados",
       "certificates_issued": "Certificados emitidos en todos los subsistemas",
@@ -2787,21 +2782,21 @@
       "critical_tags_ready": "Tags críticos completos",
       "manual_attestation": "Declaración con evidencia",
       "registers_clear": "Registros controlados cerrados",
-      "constraints_clear": "Restricciones del gate cerradas",
+      "constraints_clear": "Restricciones de la liberación cerradas",
       "lineup_verified": "Line-up verificado y vigente",
       "performance_accepted": "Prueba de desempeño aceptada (certificado PTC)",
       "documents_current": "Documentos vigentes"
     },
     "crit": {
-      "previousOk": "El gate anterior está aprobado.",
-      "previousMissing": "Requiere aprobar primero el gate anterior.",
-      "previousRegressed": "El gate anterior está aprobado pero en regresión: hay que recuperarlo primero.",
+      "previousOk": "La liberación anterior está aprobada.",
+      "previousMissing": "Requiere aprobar primero la liberación anterior.",
+      "previousRegressed": "La liberación anterior está aprobada pero en regresión: hay que recuperarla primero.",
       "depsSummary": "{ok}/{total} sistemas habilitantes listos",
-      "depsMissing": "Falta {gate}",
-      "depsPending": "{gate} pendiente de firmas",
-      "depsRegressed": "{gate} aprobado pero en regresión",
-      "depsOk": "{gate} aprobado",
-      "noPhase": "El gate no tiene una fase asociada: configúrala en Administración → Gates.",
+      "depsMissing": "Falta la liberación {gate}",
+      "depsPending": "Liberación {gate} pendiente de firmas",
+      "depsRegressed": "Liberación {gate} aprobada pero en regresión",
+      "depsOk": "Liberación {gate} aprobada",
+      "noPhase": "La liberación no tiene una fase asociada: configúrala en Administración → Liberaciones y criterios.",
       "itrSummary": "{approved}/{total} ITRs aprobados · {red} de {subsystems} subsistemas no listos",
       "catBOpen": "{count} Cat B abiertos (requieren justificación)",
       "certSummary": "{issued}/{total} subsistemas con certificado emitido",
@@ -2810,9 +2805,9 @@
       "pssrNone": "No hay PSSR para este sistema.",
       "criticalSummary": "{total} tags críticos · {failing} con pendientes",
       "criticalTagDetail": "{itrs} ITR(s) sin aprobar · {punches} punch(es) A/B abiertos",
-      "registersNone": "No hay registros abiertos (temporales, ciegas, bypass…) que bloqueen este gate.",
+      "registersNone": "No hay registros abiertos (temporales, ciegas, bypass…) que bloqueen esta liberación.",
       "registersOpen": "{count, plural, one {# registro abierto} other {# registros abiertos}}: deben verificarse o cancelarse.",
-      "constraintsOpen": "{count, plural, one {# restricción sin cerrar} other {# restricciones sin cerrar}} en este gate{blocking, plural, =0 {: queda con condiciones.} one {; # en nivel 4 lo bloquea.} other {; # en nivel 4 lo bloquean.}}",
+      "constraintsOpen": "{count, plural, one {# restricción sin cerrar} other {# restricciones sin cerrar}} en esta liberación{blocking, plural, =0 {: queda con condiciones.} one {; # en nivel 4 la bloquea.} other {; # en nivel 4 la bloquean.}}",
       "constraintLevel": "N{n}",
       "lineupMissing": "No hay una hoja de line-up verificada para este sistema.",
       "lineupStale": "verificada, pero un registro F3 cambió después: emite una nueva",
@@ -2898,7 +2893,7 @@
       "save": "Guardar fechas",
       "showHistory": "Historial de fechas ({n})",
       "hideHistory": "Ocultar historial",
-      "header": "Avance físico ponderado {pct} % · Readiness {approved}/{total} gates",
+      "header": "Avance físico ponderado {pct} % · Liberaciones aprobadas {approved}/{total}",
       "lookahead": "Look-ahead →"
     },
     "milestones": {
@@ -2912,7 +2907,7 @@
       "first_on_spec_product": "On-spec"
     },
     "ownership": {
-      "link": "Ver readiness de operaciones",
+      "link": "Ver Operaciones y traspasos",
       "pending": "Traspaso pendiente de firmas"
     },
     "performance": {
@@ -2921,42 +2916,42 @@
     "pendingSignaturesDesignated": "Firman solo las personas designadas del proyecto (Firmantes).",
     "criteriaSummary": "Criterios: {pass} de {total} cumplen",
     "confirm": {
-      "approveTitle": "Aprobar {gate} de {system}",
-      "revokeTitle": "Revocar {gate} de {system}",
+      "approveTitle": "Aprobar la liberación {gate} de {system}",
+      "revokeTitle": "Revocar la liberación {gate} de {system}",
       "cancel": "Cancelar",
       "criteria": "{pass} de {total} criterios cumplen.",
       "conditions": "Condiciones (cada una pasa a una acción ACC a tu nombre):",
       "pendingSignatures": "Quedará esperando las firmas de: {capacities}.",
       "noCosign": "No requiere otras firmas: queda aprobado al confirmar.",
-      "enablesGate": "Habilita el siguiente gate del sistema: {gates}.",
+      "enablesGate": "Habilita la siguiente liberación del sistema: {gates}.",
       "enablesSystems": "Deja de bloquear a: {systems}.",
-      "regressesGates": "Quedan en regresión los gates aprobados posteriores: {gates}.",
-      "noOwnImpact": "Ningún gate posterior de este sistema está aprobado.",
+      "regressesGates": "Quedan en regresión las liberaciones aprobadas posteriores: {gates}.",
+      "noOwnImpact": "Ninguna liberación posterior de este sistema está aprobada.",
       "affectsSystems": "Vuelve a bloquear a: {systems}."
     }
   },
   "GatesAdmin": {
-    "isStartupGate": "Gate de arranque (habilita primer arranque y primer HC)",
-    "noStartupGate": "Ningún gate está marcado como gate de arranque: se usará el último gate con line-up que no exija prueba de desempeño.",
-    "perfBeforeStartup": "{gates} exige prueba de desempeño y va antes o junto al gate de arranque {startup}: la prueba necesita la planta arrancada (bloqueo circular). Muévelo después.",
+    "isStartupGate": "Liberación de arranque (habilita primer arranque y primer HC)",
+    "noStartupGate": "Ninguna liberación está marcada como de arranque: se usará la última liberación con line-up que no exija prueba de desempeño.",
+    "perfBeforeStartup": "{gates} exige prueba de desempeño y va antes o junto a la liberación de arranque {startup}: la prueba necesita la planta arrancada (bloqueo circular). Muévela después.",
     "confirmRemoveCriterion": "¿Quitar este criterio? Cambia el estado de todos los sistemas.",
     "confirmRemoveCriterionImpact": "Este criterio tiene {n} declaración(es) vigente(s) en {systems} sistema(s). Se archiva (la evidencia se conserva) y deja de evaluarse en todos los sistemas. ¿Continuar?",
     "policy": {
-      "title": "Regresión de gates",
-      "hint": "Qué pasa cuando un gate ya aprobado deja de cumplir sus criterios (en regresión).",
-      "previous": "Gate anterior en regresión",
+      "title": "Regresión de liberaciones",
+      "hint": "Qué pasa cuando una liberación ya aprobada deja de cumplir sus criterios (en regresión).",
+      "previous": "Liberación anterior en regresión",
       "dependency": "Sistema proveedor en regresión",
       "block": "Bloquea (rojo)",
       "condition": "Condición (amarillo)",
-      "catA": "Un punch nuevo regresa también los gates ya aprobados (por defecto solo frena el siguiente)"
+      "catA": "Un punch nuevo regresa también las liberaciones ya aprobadas (por defecto solo frena la siguiente)"
     },
-    "title": "Gates (hold points)",
-    "subtitle": "Cada gate es un punto de control por sistema: se calcula con sus criterios y quien tenga autoridad lo aprueba formalmente. Por defecto hay uno por fase (MC, RFPC, RFC, RFSU); puedes sumar los gates opcionales de la guía de comisionamiento.",
+    "title": "Liberaciones y criterios",
+    "subtitle": "Cada liberación es un punto de control por sistema: se calcula con sus criterios y quien tenga autoridad la aprueba formalmente. Por defecto hay una por fase (MC, RFPC, RFC, RFSU); puedes sumar las liberaciones opcionales de la guía de comisionamiento.",
     "name": "Nombre",
     "code": "Código",
     "phase": "Fase asociada",
     "noPhase": "Sin fase",
-    "requiresPrevious": "Exige el gate anterior aprobado",
+    "requiresPrevious": "Exige la liberación anterior aprobada",
     "approvalRoles": "Pueden aprobar",
     "criteria": "Criterios",
     "blocking": "bloqueante",
@@ -2969,16 +2964,16 @@
     "activate": "Activar",
     "deactivate": "Desactivar",
     "delete": "Borrar",
-    "confirmDelete": "¿Borrar el gate {code}? Esta acción no se puede deshacer.",
-    "newGate": "Nuevo gate",
-    "create": "Crear gate",
-    "catalogTitle": "Gates opcionales de la guía de comisionamiento",
-    "catalogHint": "Se agregan al final, sin exigir el gate anterior; ajusta orden, fase y criterios después.",
+    "confirmDelete": "¿Borrar la liberación {code}? Esta acción no se puede deshacer.",
+    "newGate": "Nueva liberación",
+    "create": "Crear liberación",
+    "catalogTitle": "Liberaciones opcionales de la guía de comisionamiento",
+    "catalogHint": "Se agregan al final, sin exigir la liberación anterior; ajusta orden, fase y criterios después.",
     "add": "Agregar",
     "added": "Ya agregado",
     "role": {
-      "owner": "Owner",
-      "admin": "Admin",
+      "owner": "Propietario",
+      "admin": "Administrador",
       "architect": "Arquitecto",
       "leader": "Líder",
       "inspector": "Inspector",
@@ -2988,8 +2983,8 @@
     "cosignRoles": "Pueden co-firmar",
     "weights": {
       "title": "Pesos en el avance físico",
-      "help": "Cuánto aporta cada gate al avance ponderado de un sistema (ITR aprobados de su fase × peso). Vacío = 1; se normaliza sobre los gates activos con fase. El readiness (gates aprobados) se mide aparte.",
-      "none": "No hay gates activos con fase.",
+      "help": "Cuánto aporta cada liberación al avance ponderado de un sistema (ITR aprobados de su fase × peso). Vacío = 1; se normaliza sobre las liberaciones activas con fase. La liberación de sistemas (liberaciones aprobadas) se mide aparte.",
+      "none": "No hay liberaciones activas con fase.",
       "save": "Guardar pesos",
       "invalid": "Los pesos deben estar entre 0 y 1000."
     },
@@ -3003,7 +2998,7 @@
   "Systems": {
     "title": "Sistemas",
     "subtitle": "Sistematización del proyecto: tipo, prioridad, límites de batería y dependencias entre sistemas.",
-    "openControlTower": "Ver en Readiness",
+    "openControlTower": "Ver en Liberación de sistemas",
     "kpi": {
       "systems": "Sistemas",
       "typed": "Con tipo asignado",
@@ -3083,7 +3078,7 @@
     "detail": {
       "back": "Sistemas del proyecto",
       "scope": "{subsystems} subsistemas · {tags} tags",
-      "openGates": "Ver gates en Readiness",
+      "openGates": "Ver en Liberación de sistemas",
       "attributes": "Atributos",
       "name": "Nombre",
       "typeHelp": "Utility: aire de instrumentos, potencia, N₂, agua de enfriamiento… Suelen ser habilitantes y comisionarse primero. Seguridad: tea, sistemas de alivio, contra incendio, ESD.",
@@ -3101,16 +3096,16 @@
       "notFrozen": "Límites abiertos",
       "history": "Historial de límites",
       "dependsOn": "Depende de",
-      "dependsOnHelp": "Sistemas que deben estar listos antes de que este avance. El gate bloqueado no se puede aprobar hasta que el proveedor tenga aprobado el gate requerido.",
+      "dependsOnHelp": "Sistemas que deben estar listos antes de que este avance. La liberación bloqueada no se puede aprobar hasta que el proveedor tenga aprobada la liberación requerida.",
       "noDependsOn": "Este sistema no depende de otros.",
       "enables": "Habilita a",
-      "enablesHelp": "Sistemas que esperan a este. Si se revoca un gate de este sistema, los que dependen de él y ya estaban aprobados quedan en regresión.",
+      "enablesHelp": "Sistemas que esperan a este. Si se revoca una liberación de este sistema, los que dependen de él y ya estaban aprobados quedan en regresión.",
       "noEnables": "Ningún sistema depende de este.",
       "provider": "Depende de",
       "choose": "Elegir sistema…",
       "kind": "Tipo de dependencia",
-      "requiredGate": "Gate requerido del proveedor",
-      "blockedGate": "Gate que bloquea aquí",
+      "requiredGate": "Liberación requerida del proveedor",
+      "blockedGate": "Liberación que bloquea aquí",
       "notes": "Notas",
       "notesPlaceholder": "Ej.: aire seco a 7 barg para las válvulas de control",
       "add": "Agregar dependencia",
@@ -3153,7 +3148,7 @@
     "ai": {
       "button": "Sugerir con IA",
       "title": "Sugerencias de IA para la sistematización",
-      "help": "La IA propone tipo, prioridad y nombre de cada sistema y las dependencias que faltan, a partir de áreas, subsistemas y tags. Nada se guarda hasta que apliques. Los sistemas que tu equipo ya definió llegan desmarcados; las dependencias se crean con los gates por defecto de su tipo y luego se pueden ajustar en la ficha.",
+      "help": "La IA propone tipo, prioridad y nombre de cada sistema y las dependencias que faltan, a partir de áreas, subsistemas y tags. Nada se guarda hasta que apliques. Los sistemas que tu equipo ya definió llegan desmarcados; las dependencias se crean con las liberaciones por defecto de su tipo y luego se pueden ajustar en la ficha.",
       "loading": "Analizando los sistemas del proyecto… puede tardar uno o dos minutos.",
       "failed": "No se pudieron generar sugerencias.",
       "truncated": "El proyecto tiene más de 80 sistemas: se analizaron los primeros 80.",
@@ -3170,7 +3165,7 @@
       "dependsOnArrow": "depende de",
       "humanDecided": "Ya definido por el equipo: {type} · {priority}",
       "rename": "Nombre propuesto: {name}",
-      "gatesNote": "Las dependencias usan los gates por defecto: utility = el proveedor en servicio antes de comisionar; proceso = arranque aguas arriba antes del arranque.",
+      "gatesNote": "Las dependencias usan las liberaciones por defecto: utility = el proveedor en servicio antes de comisionar; proceso = arranque aguas arriba antes del arranque.",
       "discarded": "{count, plural, one {# sugerencia descartada} other {# sugerencias descartadas}} (códigos inexistentes, duplicados o ciclos)",
       "apply": "Aplicar seleccionadas ({count})",
       "applying": "Aplicando…",
@@ -3178,18 +3173,18 @@
       "notePrefix": "IA:"
     },
     "file": {
-      "backReadiness": "Readiness",
+      "backReadiness": "Liberación de sistemas",
       "backSystems": "Sistemas",
-      "allApproved": "Todos los gates aprobados",
+      "allApproved": "Todas las liberaciones aprobadas",
       "weighted": "Avance ponderado",
       "itrs": "sobre {count} ITR",
-      "gates": "Gates aprobados",
+      "gates": "Liberaciones aprobadas",
       "attention": "{count, plural, one {# por revisar} other {# por revisar}}",
       "commitment": "Compromiso {gate}",
       "forecast": "forecast {date}",
       "tabsLabel": "Secciones del sistema",
       "tab": {
-        "gates": "Gates",
+        "gates": "Liberaciones",
         "plan": "Avance y plan",
         "deps": "Dependencias",
         "startup": "Arranque",
@@ -3197,7 +3192,7 @@
         "vendors": "Vendors y desempeño",
         "data": "Datos del sistema"
       },
-      "planIntro": "Forecast y compromiso por gate (cambiar un compromiso pide motivo; líder+), con el avance ponderado de su fase.",
+      "planIntro": "Forecast y compromiso por liberación (cambiar un compromiso pide motivo; líder+), con el avance ponderado de su fase.",
       "noDaily": "Sin restricciones ni acciones abiertas en este sistema.",
       "procedures": "Procedimientos y ejecuciones",
       "lineups": "Hojas de line-up",
@@ -3211,7 +3206,7 @@
   },
   "Registers": {
     "title": "Registros de campo",
-    "subtitle": "Estado temporal de la planta: instalaciones temporales, ciegas, reinstalación, bypass, energización y test packs. Cada registro abierto puede bloquear un gate.",
+    "subtitle": "Estado temporal de la planta: instalaciones temporales, ciegas, reinstalación, bypass, energización y test packs. Cada registro abierto puede bloquear una liberación.",
     "new": "Nuevo registro",
     "kpi": {
       "open": "Abiertos",
@@ -3404,15 +3399,15 @@
       "by": "{who} · {when}",
       "someone": "un usuario",
       "otherPerson": "Este paso debe hacerlo una persona distinta de {who}.",
-      "blocks": "Mientras esté abierto bloquea el gate {gate} de su sistema.",
-      "noBlock": "Este tipo no bloquea ningún gate.",
+      "blocks": "Mientras esté abierto bloquea la liberación {gate} de su sistema.",
+      "noBlock": "Este tipo no bloquea ninguna liberación.",
       "event": {
         "created": "Creado",
         "updated": "Datos actualizados",
         "transition": "{from} → {to}"
       },
       "rejected": "La prueba fue rechazada: repite la prueba (nuevo test pack) antes de restituir o verificar.",
-      "openBlinds": "Atención: siguen instaladas las ciegas {list}. Puedes verificar el pack; cada ciega seguirá bloqueando su gate hasta retirarse y verificarse.",
+      "openBlinds": "Atención: siguen instaladas las ciegas {list}. Puedes verificar el pack; cada ciega seguirá bloqueando su liberación hasta retirarse y verificarse.",
       "label": "Imprimir etiqueta QR",
       "linkedBlinds": "Ciegas de la prueba",
       "linked": "Registros vinculados",
@@ -3425,9 +3420,9 @@
     },
     "admin": {
       "title": "Tipos de registro",
-      "subtitle": "Activa los tipos que usa tu organización y elige qué gate bloquea cada uno mientras tenga registros abiertos en un sistema.",
+      "subtitle": "Activa los tipos que usa tu organización y elige qué liberación bloquea cada uno mientras tenga registros abiertos en un sistema.",
       "active": "Activo",
-      "blocks": "Bloquea el gate",
+      "blocks": "Bloquea la liberación",
       "none": "No bloquea",
       "saved": "Guardado."
     },
@@ -3637,7 +3632,7 @@
   },
   "Daily": {
     "title": "Gestión diaria",
-    "subtitle": "Acciones, restricciones, consultas técnicas (TQ) y decisiones del proyecto. Nada oculto: una restricción abierta deja su gate con condiciones y, en nivel 4, lo bloquea.",
+    "subtitle": "Acciones, restricciones, consultas técnicas (TQ) y decisiones del proyecto. Nada oculto: una restricción abierta deja su liberación con condiciones y, en nivel 4, la bloquea.",
     "export": "Exportar Excel",
     "new": {
       "action": "Nueva acción",
@@ -3687,7 +3682,7 @@
       "system": "Sistema",
       "status": "Estado",
       "level": "Nivel",
-      "gate": "Gate",
+      "gate": "Liberación",
       "needDate": "Fecha requerida",
       "impact": "Impacto",
       "subject": "Asunto",
@@ -3746,7 +3741,7 @@
       "tq": "TQ",
       "vendor": "Vendor",
       "performance": "Desempeño",
-      "gate": "Condición de gate"
+      "gate": "Condición de liberación"
     },
     "impact": {
       "safety": "Seguridad",
@@ -3812,7 +3807,7 @@
       "sourceRefHint": "Reunión, vendor, n.º de PTW/MOC…",
       "constraintDescription": "Qué impide avanzar",
       "pick": "Elegir…",
-      "gate": "Gate afectado",
+      "gate": "Liberación afectada",
       "noGate": "Ninguno",
       "needDate": "Fecha requerida",
       "impactKind": "Tipo de impacto",
@@ -3859,7 +3854,7 @@
       "constraint": "Algo que impide avanzar un sistema: con responsable, fecha requerida, impacto y plan de recuperación.",
       "tq": "Consulta técnica a ingeniería, vendor o cliente. Se crea en borrador y se emite cuando está lista.",
       "decision": "Queda en el log del proyecto. No se edita: si cambia, se reemplaza por otra.",
-      "constraintGate": "Si eliges un gate, la restricción abierta lo deja «listo con condiciones»; en nivel 4 lo bloquea.",
+      "constraintGate": "Si eliges una liberación, la restricción abierta la deja «lista con condiciones»; en nivel 4 la bloquea.",
       "decisionImmutable": "Las decisiones no se editan ni se borran: se reemplazan y la anterior queda en el log."
     },
     "detail": {
@@ -3870,7 +3865,7 @@
       "closed": "Registro cerrado: solo lectura.",
       "cancelPrompt": "Motivo de la cancelación:",
       "replanPrompt": "Motivo del cambio de fecha (queda en la línea de tiempo; el KPI «a tiempo» mide contra la fecha original):",
-      "movePrompt": "Motivo para cambiar el gate o el sistema de la restricción (solo líder o superior):",
+      "movePrompt": "Motivo para cambiar la liberación o el sistema de la restricción (solo líder o superior):",
       "needDatePrompt": "Motivo del cambio de fecha requerida:",
       "deleteConfirm": "¿Borrar este borrador? No se puede deshacer."
     },
@@ -3890,10 +3885,10 @@
       "reject": "Rechazar cierre"
     },
     "constraint": {
-      "gate": "Afecta el gate {gate}",
-      "noGate": "Sin gate asignado",
-      "blocksGate": "Abierta en nivel 4: bloquea el gate {gate} de este sistema.",
-      "conditionsGate": "Mientras esté abierta, el gate {gate} de este sistema queda «listo con condiciones».",
+      "gate": "Afecta la liberación {gate}",
+      "noGate": "Sin liberación asignada",
+      "blocksGate": "Abierta en nivel 4: bloquea la liberación {gate} de este sistema.",
+      "conditionsGate": "Mientras esté abierta, la liberación {gate} de este sistema queda «lista con condiciones».",
       "overdueHint": "Vencida hace {n} días: considera escalarla.",
       "resolvedBy": "Resuelta por {who} el {when}",
       "closedBy": "Cerrada por {who} el {when}",
@@ -3939,7 +3934,7 @@
       "supersede": "Reemplazar decisión"
     },
     "lookahead": {
-      "subtitle": "Qué vence en los próximos 1, 7, 30 o 90 días: gates por forecast o compromiso, acciones, restricciones, TQ y work plans. Lo vencido sigue apareciendo hasta cerrarse.",
+      "subtitle": "Qué vence en los próximos 1, 7, 30 o 90 días: liberaciones por forecast o compromiso, acciones, restricciones, TQ y work plans. Lo vencido sigue apareciendo hasta cerrarse.",
       "window": "{n, plural, one {# día} other {# días}}",
       "basis": {
         "forecast": "Por forecast",
@@ -3949,18 +3944,18 @@
       "closeEdit": "Volver al look-ahead",
       "kpi": {
         "items": "Vence en {n} días",
-        "atRisk": "Gates en riesgo",
+        "atRisk": "Liberaciones en riesgo",
         "behind": "Forecast detrás del compromiso",
         "progress": "Avance ponderado"
       },
       "saved": "{n, plural, one {# fecha guardada} other {# fechas guardadas}}.",
       "savedPartial": "se guardaron {n} antes del error",
-      "help": "Hasta el {end}. Riesgo = el gate vence en la ventana y no está listo. Brecha = forecast − compromiso (positivo: atraso contra lo comprometido).",
+      "help": "Hasta el {end}. Riesgo = la liberación vence en la ventana y no está lista. Brecha = forecast − compromiso (positivo: atraso contra lo comprometido).",
       "empty": "Nada vence en esta ventana.",
       "noSystem": "Sin sistema",
-      "systemProgress": "avance ponderado {pct} · gates aprobados {approved}/{total}",
+      "systemProgress": "avance ponderado {pct} · liberaciones aprobadas {approved}/{total}",
       "kind": {
-        "gate": "Gate",
+        "gate": "Liberación",
         "action": "Acción",
         "constraint": "Restricción",
         "tq": "TQ",
@@ -4035,16 +4030,16 @@
       },
       "placeholder": {
         "summary": "3–5 frases: avance, lo más relevante del día y el principal riesgo.",
-        "key_events": "- ITR, gates o punch relevantes del día",
+        "key_events": "- ITR, liberaciones o punch relevantes del día",
         "issues": "- Fallas, regresiones, punch Cat A, acciones vencidas",
         "constraints": "- Restricciones N≥3 o vencidas y su recuperación",
-        "next_day_plan": "- Prioridades de mañana (gates comprometidos, restricciones que vencen)"
+        "next_day_plan": "- Prioridades de mañana (liberaciones comprometidas, restricciones que vencen)"
       },
       "dataTitle": "Datos del día (foto congelada)",
       "fact": {
         "weighted": "Avance ponderado",
         "noPrev": "sin snapshot previo",
-        "gates": "Gates aprobados",
+        "gates": "Liberaciones aprobadas",
         "itrs": "ITR aprobados hoy",
         "itrsSub": "{done} completados · {wip} en curso",
         "punches": "Punch levantados hoy",
@@ -4055,7 +4050,7 @@
       },
       "list": {
         "critical": "Restricciones críticas",
-        "regressed": "Gates en regresión",
+        "regressed": "Liberaciones en regresión",
         "field": "Estado temporal en campo",
         "lookahead": "Próximos 7 días",
         "none": "Nada.",
@@ -4063,7 +4058,7 @@
       },
       "dataNote": "Las cifras del PDF salen de estos datos, no del texto. «Actualizar datos» vuelve a tomar la foto (solo en borrador).",
       "utcCut": "Este reporte se armó antes de la zona horaria del proyecto: su día se cortó en UTC (en Colombia, de 19:00 del día anterior a 19:00). Queda tal como se emitió; para corregirlo, emite una revisión.",
-      "asOf": "Avance, gates en regresión, abiertos y vencidos: estado al {when} (no se reconstruyen para fechas pasadas).",
+      "asOf": "Avance, liberaciones en regresión, abiertos y vencidos: estado al {when} (no se reconstruyen para fechas pasadas).",
       "aiReplaceConfirm": "Ya hay texto en el reporte. ¿Reemplazarlo por la redacción de la IA? (Cancelar = la IA solo llena las secciones vacías)",
       "issueConfirm": "Al emitir, el reporte queda inmutable. ¿Emitir ahora?",
       "revisePrompt": "Motivo de la revisión:"
@@ -4117,7 +4112,7 @@
   },
   "Startup": {
     "title": "Arranque",
-    "subtitle": "Procedimientos con hold points y criterios de parada, y hojas de line-up con verificación independiente. Un gate que exige line-up no se aprueba sin una hoja verificada y vigente del sistema.",
+    "subtitle": "Procedimientos con puntos de espera y criterios de parada, y hojas de line-up con verificación independiente. Una liberación que exige line-up no se aprueba sin una hoja verificada y vigente del sistema.",
     "tab": {
       "procedures": "Procedimientos",
       "lineups": "Line-ups",
@@ -4187,7 +4182,7 @@
     },
     "runStatus": {
       "in_progress": "En curso",
-      "at_hold": "En hold point",
+      "at_hold": "En punto de espera",
       "stopped": "Detenida",
       "completed": "Completada",
       "aborted": "Abortada"
@@ -4195,7 +4190,7 @@
     "stepStatus": {
       "pending": "Pendiente",
       "done": "Hecho",
-      "at_hold": "Hold point",
+      "at_hold": "Punto de espera",
       "released": "Liberado",
       "na": "N/A"
     },
@@ -4233,9 +4228,9 @@
       "scope": "Sistema, equipos incluidos y límites de batería.",
       "references": "P&ID, hojas de datos, manuales del vendor, procedimientos relacionados.",
       "definitions": "Siglas y términos usados.",
-      "responsibilities": "Quién ejecuta, quién supervisa, quién libera cada hold point.",
+      "responsibilities": "Quién ejecuta, quién supervisa, quién libera cada punto de espera.",
       "safety": "PTW, EPP, riesgos y controles, comunicaciones.",
-      "prerequisites": "Gates aprobados, ITR, registros F3 cerrados, servicios disponibles.",
+      "prerequisites": "Liberaciones aprobadas, ITR, registros F3 cerrados, servicios disponibles.",
       "isolations": "Aislamientos, ciegas y bypass requeridos y su estado.",
       "equipment": "Instrumentos de prueba, herramientas especiales, consumibles.",
       "initial_lineup": "Referencia a la hoja de line-up (LU-…) o posiciones clave.",
@@ -4297,7 +4292,7 @@
       "expected": "Valor esperado",
       "stop": "Criterio de parada",
       "stopHint": "p. ej. vibración > 7 mm/s",
-      "hold": "Hold point",
+      "hold": "Punto de espera",
       "capacity": "Quién libera",
       "releasedBy": "Libera {who}",
       "add": "Agregar paso",
@@ -4318,14 +4313,14 @@
       "resumePrompt": "¿Por qué es seguro reanudar?",
       "aborted": "Ejecución abortada: {reason}",
       "completed": "Ejecución completada el {when}.",
-      "holdTitle": "Paso {n}: hold point — lo libera {who}",
+      "holdTitle": "Paso {n}: punto de espera — lo libera {who}",
       "holdDoneBy": "Ejecutado por {who} el {when}",
       "releaseComment": "Comentario de liberación (opcional)",
-      "release": "Liberar hold point",
+      "release": "Liberar punto de espera",
       "holdOther": "Lo ejecutaste tú: lo libera otra persona.",
       "holdRole": "Espera la liberación de {who}.",
       "stopIf": "Detener si: {c}",
-      "isHold": "Hold point: al marcarlo, la ejecución espera la liberación de {who}.",
+      "isHold": "Punto de espera: al marcarlo, la ejecución espera la liberación de {who}.",
       "actual": "Valor medido (opcional)",
       "actualFor": "Valor medido (esperado: {e})",
       "comment": "Comentario (obligatorio para N/A)",
@@ -4344,7 +4339,7 @@
         "started": "Inició",
         "stopped": "Detenida",
         "resumed": "Reanudada",
-        "hold_released": "Hold liberado",
+        "hold_released": "Punto de espera liberado",
         "completed": "Completada",
         "aborted": "Abortada"
       },
@@ -4362,7 +4357,7 @@
     },
     "lineup": {
       "stale": "Posiblemente desactualizada",
-      "staleHelp": "Un registro F3 del sistema (ciega, bypass, temporal…) cambió de estado después de verificar esta hoja: el gate la considera vencida. Emite y ejecuta una hoja nueva.",
+      "staleHelp": "Un registro F3 del sistema (ciega, bypass, temporal…) cambió de estado después de verificar esta hoja: la liberación la considera vencida. Emite y ejecuta una hoja nueva.",
       "verifiedBy": "Verificada por {who} el {when}",
       "registers": "Registros F3 en campo en este sistema ({n})",
       "draftHelp": "Define la posición requerida de cada válvula y marca las críticas (exigen verificación independiente). Puedes agregar tags o filas manuales.",
@@ -4460,7 +4455,7 @@
       "voided": "Anulado"
     },
     "events": {
-      "subtitle": "Bitácora de arranque: hitos por sistema (una vez cada uno, con testigo) y eventos libres. Al registrar se congela la lectura de las señales IIoT en esa hora; primer arranque y primer HC exigen el gate de arranque y el PSSR aprobados.",
+      "subtitle": "Bitácora de arranque: hitos por sistema (una vez cada uno, con testigo) y eventos libres. Al registrar se congela la lectura de las señales IIoT en esa hora; primer arranque y primer HC exigen la liberación de arranque y el PSSR aprobados.",
       "record": "Registrar evento",
       "type": "Tipo de evento",
       "milestones": "Hitos",
@@ -4471,9 +4466,9 @@
       "witnessBy": "Este hito lo atestigua {who} (otra persona).",
       "already": "Este hito ya está registrado en el sistema; para corregirlo, anula el anterior.",
       "blocked": "No se puede registrar todavía:",
-      "needGate": "falta el gate {gate} aprobado con todas sus firmas (hoy: {status}).",
+      "needGate": "falta la liberación {gate} aprobada con todas sus firmas (hoy: {status}).",
       "needPssr": "falta el PSSR {pssr} aprobado (hoy: {status}).",
-      "prereqOk": "Prerrequisitos de arranque cumplidos: {gate} aprobado y {pssr} aprobado.",
+      "prereqOk": "Prerrequisitos de arranque cumplidos: liberación {gate} aprobada y {pssr} aprobado.",
       "signals": "Señales IIoT a congelar",
       "pickSystem": "Elige un sistema para ver sus señales.",
       "noSignals": "El sistema no tiene señales cargadas.",
@@ -4565,7 +4560,7 @@
       "check": {
         "startup_procedure": "Procedimiento de arranque aprobado y verificado en campo",
         "staff_level_1": "Personal con nivel ≥ 1 en cada turno",
-        "startup_gate": "Gate de arranque aprobado",
+        "startup_gate": "Liberación de arranque aprobada",
         "lineup_verified": "Line-up verificado y vigente",
         "first_startup_witnessed": "Primer arranque atestiguado",
         "staff_level_2": "Personal con nivel ≥ 2 en cada turno",
@@ -4576,7 +4571,7 @@
       "detail": {
         "noStaff": "Sin personal evaluado en este sistema",
         "noProcedure": "Sin procedimiento de arranque aprobado",
-        "noGate": "Sin gate de arranque",
+        "noGate": "Sin liberación de arranque",
         "stale": "desactualizado",
         "noLineup": "Sin hoja verificada",
         "noFirstStartup": "Hito no registrado o sin atestiguar",
@@ -4671,16 +4666,16 @@
     },
     "perf": {
       "withdraw": "Retirar prueba",
-      "withdrawPrompt": "Motivo para retirar la prueba (deja de contar para el gate; mínimo 10 caracteres):",
+      "withdrawPrompt": "Motivo para retirar la prueba (deja de contar para la liberación; mínimo 10 caracteres):",
       "withdrawn": "Retirada",
-      "withdrawnNote": "Prueba retirada: no cuenta para el gate. Motivo: {reason}",
+      "withdrawnNote": "Prueba retirada: no cuenta para la liberación. Motivo: {reason}",
       "pointsTruncated": "La serie tiene más de 30.000 puntos: el gráfico y las lecturas muestran solo los primeros. La evaluación (en la base de datos) usa todos.",
       "subtitle": "Prueba de desempeño (cap. 18): definición aprobada con criterios medibles, intento con estabilización y periodo formal, perturbaciones y datos congelados.",
       "new": "Nueva prueba",
       "titlePlaceholder": "Ej.: Capacidad del compresor C-103",
       "primarySystem": "Sistema principal",
       "primary": "principal",
-      "primaryHint": "El sistema principal es el que se ve en Readiness y alimenta el gate. La frontera puede incluir más sistemas.",
+      "primaryHint": "El sistema principal es el que se ve en Liberación de sistemas y alimenta su liberación. La frontera puede incluir más sistemas.",
       "empty": "Aún no hay pruebas de desempeño.",
       "col": {
         "number": "N.º",
@@ -5083,7 +5078,7 @@
       "empty": "Sin documentos referenciados.",
       "outdatedItr": "{n, plural, one {Un documento tiene} other {# documentos tienen}} una revisión más nueva: actualiza la referencia antes de firmar.",
       "outdatedProc": "{n, plural, one {Un documento tiene} other {# documentos tienen}} una revisión más nueva: actualiza la referencia antes de enviar o aprobar.",
-      "outdatedLocked": "{n, plural, one {Un documento quedó superado} other {# documentos quedaron superados}} después de firmar: el gate del sistema queda con condición hasta que un líder lo revalide o se rehaga el registro.",
+      "outdatedLocked": "{n, plural, one {Un documento quedó superado} other {# documentos quedaron superados}} después de firmar: la liberación del sistema queda con condición hasta que un líder lo revalide o se rehaga el registro.",
       "outdatedChip": "Usa Rev {used} · vigente {current}",
       "currentChip": "Rev {rev} · vigente",
       "update": "Actualizar a la vigente",
@@ -5219,8 +5214,8 @@
       "boundariesPh": "Dónde empieza y termina (bridas, borneras, tableros…)",
       "planned": "Movilización prevista",
       "mobSystem": "Sistema de movilización",
-      "mobGate": "Gate de movilización",
-      "noMobGate": "Sin gate (solo checklist)"
+      "mobGate": "Liberación de movilización",
+      "noMobGate": "Sin liberación (solo checklist)"
     },
     "ifz": {
       "title": "Interfaces",
@@ -5252,8 +5247,8 @@
     },
     "mob": {
       "title": "Movilización",
-      "gate": "Gate {gate}: {status}",
-      "noGate": "Sin gate de sistema: solo checklist",
+      "gate": "Liberación {gate}: {status}",
+      "noGate": "Sin liberación de sistema: solo checklist",
       "interfaces": "{n, plural, =0 {Interfaces acordadas} one {Una interfaz abierta} other {# interfaces abiertas}}",
       "checklist": "{n, plural, =0 {Checklist completo} one {Falta un ítem del checklist} other {Faltan # ítems del checklist}}",
       "note": "Nota (motivo si cancelas)",
@@ -5417,7 +5412,7 @@
   "Signatories": {
     "title": "Firmantes",
     "subtitle": "quién firma por Comisionamiento, Operaciones, HSE y el Cliente",
-    "help": "Con personas designadas para una capacidad, firman solo ellas (con cualquier rol: un supervisor de la operadora con rol inspector puede liberar los hold points de Operaciones). Sin designados rige el rol de la persona y se avisa. Aplica a gates, hold points, testigos de hitos, traspasos, PTC y la firma Cliente del ITR.",
+    "help": "Con personas designadas para una capacidad, firman solo ellas (con cualquier rol: un supervisor de la operadora con rol inspector puede liberar los puntos de espera de Operaciones). Sin designados rige el rol de la persona y se avisa. Aplica a liberaciones, puntos de espera, testigos de hitos, traspasos, PTC y la firma Cliente del ITR.",
     "cap": {
       "commissioning": "Comisionamiento",
       "operations": "Operaciones",
@@ -5425,9 +5420,9 @@
       "client_rep": "Representante del cliente"
     },
     "capHelp": {
-      "commissioning": "Aprueba gates, emite el PTC, firma traspasos y libera hold points de Comisionamiento.",
-      "operations": "Co-firma gates, libera hold points, atestigua hitos y firma traspasos y PTC por Operaciones.",
-      "hse": "Co-firma gates y libera hold points de HSE.",
+      "commissioning": "Aprueba liberaciones, emite el PTC, firma traspasos y libera puntos de espera de Comisionamiento.",
+      "operations": "Co-firma liberaciones, libera puntos de espera, atestigua hitos y firma traspasos y PTC por Operaciones.",
+      "hse": "Co-firma liberaciones y libera puntos de espera de HSE.",
       "client_rep": "Firma el PTC y los ITR por el Cliente."
     },
     "designatedN": "{n, plural, one {# designado} other {# designados}}",
@@ -5442,7 +5437,7 @@
     "pick": "Elige una persona…",
     "noCandidates": "No hay más personas elegibles",
     "designate": "Designar",
-    "clientRepRule": "Solo personas con rol cliente o de la empresa operadora (empresa de tipo «Owner» en Empresas).",
+    "clientRepRule": "Solo personas con rol cliente o de la empresa operadora (empresa de tipo «Operadora / cliente» en Empresas).",
     "history": "Historial ({n})",
     "revokedBy": "quitada por {who} · {when}: {reason}"
   },
@@ -5555,12 +5550,12 @@
       "pssr_approved": "PSSR aprobado",
       "pssr_rejected": "PSSR rechazado",
       "constraint_overdue": "Restricción vencida",
-      "gate_cosign": "Gate por co-firmar",
-      "gate_ready": "Gate listo",
-      "gate_regressed": "Gate en regresión",
+      "gate_cosign": "Liberación por co-firmar",
+      "gate_ready": "Liberación lista",
+      "gate_regressed": "Liberación en regresión",
       "transfer_to_sign": "Traspaso por firmar",
       "ptc_to_sign": "PTC por firmar",
-      "hold_to_release": "Hold point",
+      "hold_to_release": "Punto de espera",
       "milestone_to_witness": "Hito por atestiguar",
       "tq_answered": "TQ respondida",
       "action_assigned": "Acción asignada",
@@ -5620,8 +5615,8 @@
     "deniedNeeds": "No tienes acceso a esa página: necesitas el rol {needs} (tienes {role}).",
     "dismiss": "Cerrar",
     "tier": {
-      "admin": "Owner o Admin",
-      "privileged": "Owner, Admin o Arquitecto",
+      "admin": "Propietario o Administrador",
+      "privileged": "Propietario, Administrador o Arquitecto",
       "editor": "Líder o superior"
     }
   },
@@ -5636,21 +5631,21 @@
     "kpi": {
       "physical": "Avance físico ponderado",
       "itrs": "{approved} de {total} ITR aprobados",
-      "readiness": "Readiness",
-      "gates": "{done} / {total} gates",
+      "readiness": "Liberación de sistemas",
+      "gates": "{done} / {total} liberaciones",
       "readinessPct": "{pct} % aprobados vigentes",
       "today": "Hoy",
       "blocked": "{count, plural, =0 {Sin bloqueos} one {# sistema bloqueado} other {# sistemas bloqueados}}",
       "todayDetail": "{sign} por firmar · {regressed} en regresión"
     },
     "board": {
-      "title": "Por fase (gate)",
-      "hint": "Cada fila abre Readiness con los sistemas cuyo siguiente gate es ese",
+      "title": "Por fase (liberación)",
+      "hint": "Cada fila abre Liberación de sistemas con los sistemas cuya siguiente liberación es esa",
       "noSystems": "El proyecto todavía no tiene sistemas.",
-      "noGates": "La organización no tiene gates configurados (Administración › Gates).",
+      "noGates": "La organización no tiene liberaciones configuradas (Administración › Liberaciones y criterios).",
       "col": {
         "phase": "Fase",
-        "readiness": "Readiness (sistemas)",
+        "readiness": "Liberación (sistemas)",
         "itr": "ITR de la fase",
         "blocker": "Lo que más bloquea",
         "commitment": "Próximo compromiso"
@@ -5680,11 +5675,11 @@
       "lookahead": "Look-ahead →",
       "none": "Nada vence en los próximos 7 días.",
       "late": "vencido",
-      "commitment": "compromiso del gate",
-      "forecast": "forecast del gate",
+      "commitment": "compromiso de la liberación",
+      "forecast": "forecast de la liberación",
       "kind": {
-        "commitment": "Compromiso de gate",
-        "forecast": "Forecast de gate",
+        "commitment": "Compromiso de liberación",
+        "forecast": "Forecast de liberación",
         "action": "Acción",
         "constraint": "Restricción",
         "vendor": "Actividad de vendor"
@@ -5733,7 +5728,7 @@
   "Planning": {
     "title": "Planificación",
     "tab": {
-      "lookahead": "Look-ahead (gates)",
+      "lookahead": "Look-ahead (liberaciones)",
       "workPlans": "Planes de trabajo (ITR)"
     }
   },
@@ -5836,7 +5831,7 @@
     "hint": {
       "punch": "Deficiencia en un tag (Cat A · B · C)",
       "action": "ACC con responsable, fecha y evidencia",
-      "constraint": "RES que frena un sistema o un gate",
+      "constraint": "RES que frena un sistema o una liberación",
       "tq": "Consulta técnica a ingeniería o al cliente",
       "event": "Hito o evento en la bitácora de arranque",
       "register": "Ciega, bypass, prueba u otro registro controlado"
@@ -5847,7 +5842,7 @@
     "subtitle": "Manual por rol y por fase · versión {version} · aplica a la navegación de hoy",
     "index": "Índice de la ayuda",
     "search": "Buscar en la ayuda",
-    "searchPlaceholder": "p. ej. firmar ITR, gate, line-up…",
+    "searchPlaceholder": "p. ej. firmar ITR, liberación, line-up…",
     "noResults": "Sin resultados.",
     "yourRole": "Tu rol · {role}",
     "yourRoleNav": "Secciones de tu rol",
@@ -5855,12 +5850,279 @@
     "manualNav": "Capítulos del manual",
     "pageHelpHint": "¿Esta página no responde tu duda? Desde cualquier pantalla, menú de usuario › «Ayuda de esta página» abre la sección que le corresponde.",
     "role": {
-      "owner": "Owner",
-      "admin": "Admin",
-      "architect": "Architect",
-      "leader": "Leader",
+      "owner": "Propietario",
+      "admin": "Administrador",
+      "architect": "Arquitecto",
+      "leader": "Líder",
       "inspector": "Inspector",
-      "client": "Client"
+      "client": "Cliente"
     }
+  },
+  "Setup": {
+    "title": "Configuración inicial",
+    "subtitle": "Configura tu organización y tu primer proyecto",
+    "newProjectTitle": "Nuevo proyecto",
+    "newProjectSubtitle": "Agrega un nuevo proyecto a tu organización",
+    "unknownError": "Error desconocido al procesar la solicitud",
+    "errorDetail": "{msg} — revisa la consola del navegador o el log del servidor para más detalles",
+    "steps": {
+      "org": "Organización",
+      "project": "Proyecto",
+      "phases": "Fases",
+      "disciplines": "Disciplinas"
+    },
+    "org": {
+      "title": "Tu cuenta y organización",
+      "desc": "Tu nombre aparecerá en firmas digitales, certificados y reportes PDF.",
+      "fullName": "Tu nombre y apellido *",
+      "fullNamePh": "Ej: Ana María Rodríguez",
+      "name": "Nombre de la organización *",
+      "namePh": "Ej: Tecna Ingeniería",
+      "slug": "Identificador (slug) *",
+      "slugHint": "Solo letras minúsculas, números y guiones. Se usa en URLs."
+    },
+    "project": {
+      "title": "Primer proyecto",
+      "titleNew": "Datos del proyecto",
+      "desc": "Define los datos básicos del proyecto de comisionamiento.",
+      "name": "Nombre del proyecto *",
+      "namePh": "Ej: Planta GLP - Fase 2",
+      "code": "Código *",
+      "location": "Ubicación",
+      "locationPh": "Ej: Maracaibo, Venezuela",
+      "client": "Cliente",
+      "clientPh": "Ej: PDVSA Gas",
+      "country": "País",
+      "countryPh": "Ej: Colombia",
+      "region": "Región / Eje",
+      "regionPh": "Ej: Llanos",
+      "start": "Fecha de inicio",
+      "end": "Fecha objetivo"
+    },
+    "phases": {
+      "title": "Fases del proyecto",
+      "desc": "Las fases definen el ciclo de completamiento. Puedes editarlas o agregar las tuyas.",
+      "reset": "Restaurar",
+      "col": {
+        "code": "Cód",
+        "name": "Nombre",
+        "certificate": "Certificado",
+        "color": "Color"
+      },
+      "namePh": "Nombre de fase",
+      "remove": "Eliminar fase",
+      "add": "+ Agregar fase"
+    },
+    "disciplines": {
+      "title": "Disciplinas",
+      "desc": "Selecciona las disciplinas que aplican a este proyecto. Se usan para clasificar ITRs, tags y planes de trabajo.",
+      "phase": "Fase {p}",
+      "custom": "Disciplinas personalizadas",
+      "codePh": "COD",
+      "remove": "Eliminar disciplina",
+      "add": "+ Agregar disciplina personalizada",
+      "selected": "{count, plural, one {# disciplina seleccionada} other {# disciplinas seleccionadas}}"
+    },
+    "back": "Anterior",
+    "next": "Siguiente",
+    "creating": "Creando...",
+    "createProject": "Crear proyecto",
+    "finish": "Completar configuración"
+  },
+  "ProjectHeader": {
+    "back": "Proyectos",
+    "noClientLocation": "Sin cliente / ubicación",
+    "edit": "Editar proyecto",
+    "close": "Cerrar",
+    "status": {
+      "planning": "Planificación",
+      "active": "Activo",
+      "on_hold": "En pausa",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    },
+    "f": {
+      "name": "Nombre",
+      "namePh": "Nombre del proyecto",
+      "code": "Código",
+      "status": "Estado",
+      "country": "País",
+      "region": "Región / Eje",
+      "start": "Fecha inicio",
+      "end": "Fecha fin",
+      "timezone": "Zona horaria"
+    },
+    "delete": "Eliminar proyecto…",
+    "deleteWarning": "Esta acción eliminará el proyecto y <strong>todos sus datos</strong> (tags, ITRs, punches, certificados, P&IDs). Es irreversible.",
+    "deleting": "Eliminando…",
+    "confirmDelete": "Confirmar eliminación",
+    "cancel": "Cancelar",
+    "saving": "Guardando…",
+    "save": "Guardar cambios"
+  },
+  "TagItrs": {
+    "status": {
+      "not_started": "Sin iniciar",
+      "in_progress": "En progreso",
+      "completed": "Completado",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "sign": {
+      "executor": "Ejec",
+      "supervisor": "Sup",
+      "client": "Cli"
+    },
+    "deleteConfirm": "¿Eliminar este ITR y todas sus respuestas?",
+    "none": "No hay ITRs asignados a este tag.",
+    "count": "{count, plural, one {# ITR asignado} other {# ITR asignados}}",
+    "aiHint": "Analiza el tag con IA y propone las plantillas que aplican por fase. Tú decides qué asignar.",
+    "aiLoading": "Analizando…",
+    "aiSuggest": "Sugerir con IA",
+    "assign": "Asignar ITR",
+    "aiTitle": "Propuesta de la IA para {tag} · {count, plural, one {# plantilla} other {# plantillas}}",
+    "close": "Cerrar",
+    "aiEmpty": "La IA no encontró plantillas aplicables en el catálogo de la organización.",
+    "phase": "Fase {code}",
+    "confidence": "Confianza",
+    "useHint": "Abre el formulario de asignación con esta plantilla",
+    "otherDiscipline": "Plantilla de otra disciplina: asígnala desde la lista completa",
+    "use": "Usar",
+    "aiFooter": "La IA propone; la asignación la confirmas tú en el formulario.",
+    "open": "Abrir",
+    "addToPlan": "Agregar a plan de trabajo",
+    "plan": "Plan",
+    "delete": "Eliminar ITR",
+    "noTemplates": "No hay plantillas activas para la disciplina de este tag.",
+    "template": "Plantilla",
+    "pickTemplate": "Seleccionar plantilla...",
+    "recommended": "Recomendadas para este tag",
+    "recommendedFor": "Recomendadas para {type}",
+    "allTemplates": "Todas las plantillas",
+    "availableTemplates": "Plantillas disponibles",
+    "phaseName": "Fase: <strong>{name}</strong>",
+    "executor": "Inspector * (ejecutor)",
+    "pickExecutor": "Seleccionar inspector...",
+    "supervisor": "Supervisor *",
+    "pickSupervisor": "Seleccionar supervisor...",
+    "client": "Cliente *",
+    "pickClient": "Seleccionar cliente...",
+    "scheduled": "Fecha programada (opcional)",
+    "cancel": "Cancelar",
+    "assigning": "Asignando...",
+    "assignShort": "Asignar"
+  },
+  "TwinView": {
+    "sema": {
+      "green": "Completo",
+      "yellow": "En progreso",
+      "red": "Bloqueado",
+      "grey": "Sin ITRs"
+    },
+    "openCatA": "Punch Cat A abiertos",
+    "openCatB": "Punch Cat B abiertos",
+    "certsIssued": "Certificados emitidos",
+    "preservationActive": "Preservación activa",
+    "pins": "{count, plural, one {# pin en P&ID} other {# pines en P&ID}}",
+    "noItrs": "No hay ITRs asignados",
+    "tags": "{count, plural, one {# tag} other {# tags}}",
+    "emptySubsystem": "Sin tags en este subsistema",
+    "blocked": "{count, plural, one {# bloqueado} other {# bloqueados}}",
+    "legend": {
+      "catA": "Punches Cat A",
+      "catB": "Punches Cat B",
+      "certs": "Certificados emitidos"
+    },
+    "stats": {
+      "total": "Tags totales",
+      "itr": "Avance ITR",
+      "green": "Completados",
+      "yellow": "En progreso",
+      "red": "Bloqueados",
+      "punchA": "Punches A",
+      "punchB": "Punches B"
+    },
+    "filter": {
+      "all": "Todos"
+    },
+    "search": "Buscar tag, descripción, sistema...",
+    "noResults": "Sin resultados para los filtros aplicados",
+    "empty": "No hay tags registrados en este proyecto"
+  },
+  "Continuity": {
+    "countError": "Indica una cantidad entera de 1 a 500 y pantallas sin identificadores repetidos.",
+    "confirmRemove": "Este cambio retira filas con información. ¿Confirmas cambiar la configuración?",
+    "legend": "Registro de continuidad por conductor",
+    "grouping": "Organización",
+    "groupingAria": "Organización del cable",
+    "pairs": "Pares",
+    "conductors": "Conductores",
+    "pairCount": "Número de pares",
+    "conductorCount": "Número de conductores",
+    "countAria": "Cantidad de pares o conductores",
+    "shields": "Pantallas / blindajes (un identificador por línea)",
+    "shieldsAria": "Identificadores de pantallas",
+    "measurement": "El procedimiento exige lectura y unidad",
+    "update": "Actualizar configuración",
+    "create": "Crear filas",
+    "help": "Cada conductor requiere sus terminales y resultado. «No aplica» exige justificación. Las filas nuevas quedan pendientes.",
+    "col": {
+      "id": "Conductor / pantalla",
+      "from": "Terminal origen",
+      "to": "Terminal destino",
+      "result": "Resultado",
+      "reading": "Lectura",
+      "unit": "Unidad",
+      "remarks": "Observación / justificación"
+    },
+    "result": {
+      "pending": "Pendiente",
+      "pass": "Aceptado",
+      "fail": "Rechazado",
+      "na": "No aplica"
+    },
+    "status": {
+      "fail": "Hay resultados rechazados.",
+      "complete": "Registro diligenciado; pendiente de las aprobaciones que correspondan.",
+      "pending": "Registro pendiente: completa terminales, resultados y requisitos del procedimiento."
+    }
+  },
+  "SwipeCapture": {
+    "min": "Mín",
+    "max": "Máx",
+    "outOfRange": "Valor fuera del rango especificado",
+    "position": "Ítem {n} / {total}",
+    "pendingSave": "Pendiente de guardar",
+    "saving": "Guardando...",
+    "saved": "Guardado",
+    "error": "Error",
+    "quickFill": "Relleno rápido",
+    "done": "{count, plural, one {# completado} other {# completados}}",
+    "pending": "{count, plural, one {# pendiente} other {# pendientes}}",
+    "required": "Requerido",
+    "valueLabel": "Valor / Observación",
+    "capturePhoto": "Capturar foto",
+    "photoAlt": "Foto {n}",
+    "notes": "Notas / Observaciones",
+    "notesPh": "Agregar nota de campo...",
+    "flagged": "Marcado para revisión",
+    "flag": "Marcar para revisión",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "complete": "Completar ITR",
+    "quickFillHint": "Aplica a todos los ítems de tipo Sí/No que estén pendientes",
+    "allOk": "Todos OK",
+    "allNok": "Todos NOK",
+    "allNa": "Todos N/A",
+    "quickFillNote": "Solo afecta ítems Sí/No sin respuesta"
+  },
+  "A11y": {
+    "close": "Cerrar",
+    "toasts": "Notificaciones",
+    "dismiss": "Descartar notificación",
+    "bell": "Avisos",
+    "bellUnread": "Avisos: {count} sin leer",
+    "deltaNoHistory": "Sin historial de 7 días aún",
+    "deltaVs7d": "vs hace 7 días"
   }
 }
