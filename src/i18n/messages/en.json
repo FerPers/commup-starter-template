@@ -83,7 +83,7 @@
       "dashboard": "Overview",
       "projects": "Projects",
       "projectOverview": "Overview",
-      "tags": "Tags",
+      "tags": "Tags and equipment",
       "signals": "Signals",
       "scan": "Scan QR/NFC",
       "itrs": "ITRs",
@@ -134,7 +134,9 @@
       "performance": "Performance (PTC)",
       "operations": "Operations & transfer",
       "allPreservation": "All preservation",
-      "orgKpis": "Organization KPIs"
+      "orgKpis": "Organization KPIs",
+      "instrumentation": "Signals and loops",
+      "planning": "Planning"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -5666,6 +5668,37 @@
       "systems": "Systems",
       "twin": "Digital Twin",
       "import": "Import…"
+    }
+  },
+  "TagsHub": {
+    "modeLabel": "View mode",
+    "mode": {
+      "list": "List",
+      "tree": "Tree",
+      "cards": "Cards"
+    },
+    "import": "+ Import tags",
+    "subtitle": {
+      "empty": "No tags imported",
+      "list": "{count} tags imported",
+      "tree": "Area › System › Subsystem with tags, approved ITRs and open Cat A; a subsystem opens its tags",
+      "cards": "One card per tag with ITR, punch, certificate, preservation and P&ID status"
+    }
+  },
+  "SignalsHub": {
+    "title": "Signals and loops",
+    "tab": {
+      "signals": "Signals",
+      "loops": "Loops",
+      "ce": "C&E matrices",
+      "import": "Import signals"
+    }
+  },
+  "Planning": {
+    "title": "Planning",
+    "tab": {
+      "lookahead": "Look-ahead (gates)",
+      "workPlans": "Work plans (ITR)"
     }
   }
 }

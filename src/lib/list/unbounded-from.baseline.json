@@ -6,7 +6,7 @@
   "src/app/(dashboard)/admin/users/page.tsx::activity_log": 2,
   "src/app/(dashboard)/ops/punches/page.tsx::ops_dashboard": 1,
   "src/app/(dashboard)/projects/[id]/ce-matrices/page.tsx::ce_matrices": 1,
-  "src/app/(dashboard)/projects/[id]/daily/lookahead/page.tsx::system_gate_plans": 1,
+  "src/app/(dashboard)/projects/[id]/planning/lookahead/page.tsx::system_gate_plans": 1,
   "src/app/(dashboard)/projects/[id]/kpis/page.tsx::mgmt_kpi_snapshots": 1,
   "src/app/(dashboard)/projects/[id]/pid-documents/page.tsx::pid_documents": 1,
   "src/app/(dashboard)/projects/[id]/pssr/page.tsx::pssr_reviews": 1,

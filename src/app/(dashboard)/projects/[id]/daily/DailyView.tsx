@@ -169,7 +169,7 @@ export default function DailyView({ project, initialTab, actions, constraints, t
           </button>
         ))}
         {(['lookahead', 'reports', 'handovers'] as const).map(k => (
-          <Link key={k} href={`/projects/${project.id}/daily/${k}`}
+          <Link key={k} href={k === 'lookahead' ? `/projects/${project.id}/planning/lookahead` : `/projects/${project.id}/daily/${k}`}
             style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>
             {t(`tab.${k}`)}
           </Link>

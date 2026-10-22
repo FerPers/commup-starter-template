@@ -2,6 +2,8 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { isEditor } from '@/lib/auth/permissions'
 import { matrixGaps } from '@/lib/ce/matrix'
+import InstrumentationHub from '../signals/InstrumentationHub'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 import CeMatricesView, { type MatrixRow } from './CeMatricesView'
 
 // Matrices causa-efecto del proyecto (fase 4 · bloque D, §10.17–10.20 del plan readiness).
@@ -37,5 +39,10 @@ export default async function CeMatricesPage({ params }: { params: Promise<{ id:
     }
   })
 
-  return <CeMatricesView project={project} matrices={rows} systems={systems ?? []} canEdit={isEditor(ctx.role)} />
+  return (
+    <div style={{ padding: 'clamp(12px, 4vw, 32px)' }}>
+      <InstrumentationHub projectId={project.id} current="ce" canImport={ROLE_TIERS.privileged.includes(ctx.role)} />
+      <CeMatricesView project={project} matrices={rows} systems={systems ?? []} canEdit={isEditor(ctx.role)} />
+    </div>
+  )
 }

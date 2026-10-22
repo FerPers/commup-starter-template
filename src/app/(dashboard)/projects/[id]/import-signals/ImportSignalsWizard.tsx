@@ -19,11 +19,9 @@ const PRESERVED_LABELS: Array<[string, string]> = [
 
 export default function ImportSignalsWizard({
   projectId,
-  projectName,
   disciplines,
 }: {
   projectId: string
-  projectName: string
   disciplines: { code: string; name: string; color: string }[]
 }) {
   const [step, setStep]                   = useState<Step>('upload')
@@ -228,18 +226,15 @@ export default function ImportSignalsWizard({
   }
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div>
 
-      {/* Header */}
+      {/* Header (N2c: el h1 es el del hub «Señales y lazos») */}
       <div style={{ marginBottom: '28px' }}>
-        <a href={`/projects/${projectId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '16px' }}>
-          ← {projectName}
-        </a>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
               Importar Lista de Señales
-            </h1>
+            </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
               Carga tu Signal List (I&C) desde Excel. Incluye rango, alarmas, P&IDs y diagramas.
             </p>

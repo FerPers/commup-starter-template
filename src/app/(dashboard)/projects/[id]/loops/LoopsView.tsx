@@ -59,7 +59,6 @@ type LoopRow = {
 
 export default function LoopsView({
   projectId,
-  projectName,
   loops,
   loopItrs = {},
   templates = [],
@@ -101,19 +100,13 @@ export default function LoopsView({
   const statuses = ['not_started', 'in_progress', 'completed', 'approved']
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div>
 
-      {/* Header */}
+      {/* Header (N2c: el h1 es el del hub «Señales y lazos») */}
       <div style={{ marginBottom: '24px' }}>
-        <a href={`/projects/${projectId}`} style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '14px',
-        }}>
-          ← {projectName}
-        </a>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: '0 0 4px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>
           {t('loops.title')}
-        </h1>
+        </h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
           {t('loops.subtitle', { count: loops.length })}
         </p>

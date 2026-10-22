@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import PlanningHub from '../planning/PlanningHub'
 import WorkPlansView from './WorkPlansView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
@@ -62,20 +63,19 @@ export default async function ProjectWorkPlansPage({
 
   const tl = await getTranslations('Common')
   return (
-    <>
+    <div style={{ padding: 'clamp(12px, 4vw, 32px)' }}>
+    <PlanningHub projectId={projectId} current="workPlans" />
     {truncated && (
       <PartialNote>{tl('listPartial')}</PartialNote>
     )}
     <WorkPlansView
       projectId={projectId}
-      projectName={project.name}
-      projectCode={project.code}
       disciplines={discRes.data ?? []}
       orgMembers={membersRes.data ?? []}
       workPlans={plansRes.rows}
       canEdit={EDITOR_ROLES.includes(membership.role)}
       currentUserId={ctx.userId}
     />
-    </>
+    </div>
   )
 }

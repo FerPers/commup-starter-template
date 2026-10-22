@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import SignalChainEditor from './SignalChainEditor'
 import { useTranslations } from 'next-intl'
 
@@ -74,7 +75,6 @@ type SubsystemOption = {
 
 export default function SignalsView({
   projectId,
-  projectName,
   signals,
   subsystems,
   canEdit = false,
@@ -124,31 +124,25 @@ export default function SignalsView({
   }
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div>
 
-      {/* Header */}
+      {/* Header (N2c: el h1 es el del hub «Señales y lazos») */}
       <div style={{ marginBottom: '24px' }}>
-        <a href={`/projects/${projectId}`} style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '14px',
-        }}>
-          ← {projectName}
-        </a>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
               {t('title')}
-            </h1>
+            </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
               {t('subtitle', { count: signals.length })}
             </p>
           </div>
-          <a href={`/projects/${projectId}/import-signals`} style={{
+          {canEdit && <Link href={`/projects/${projectId}/import-signals`} style={{
             padding: '8px 16px', background: '#10b981', color: 'white',
             borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none',
           }}>
             {t('importBtn')}
-          </a>
+          </Link>}
         </div>
       </div>
 

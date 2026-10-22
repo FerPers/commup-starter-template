@@ -31,6 +31,8 @@ export type MenuItemDef = {
   phase?: Phase
   /** Subrutas con ítem propio (no activan este) */
   notUnder?: readonly string[]
+  /** N2c: otras rutas del mismo hub que también activan este ítem (pestañas por ruta). */
+  also?: readonly string[]
   exact?: boolean
   badge?: 'myWork' | 'preservation'
 }
@@ -53,8 +55,6 @@ export const PROJECT_ITEMS: readonly MenuItemDef[] = [
   // Planificación primero para el arquitecto (se reordena en buildMenu)
   { key: 'systems', href: '/projects/{p}/systems', labelKey: 'systems', audience: ['lead', 'plan', 'mgmt'], phase: 'prep' },
   { key: 'tags', href: '/projects/{p}/tags', labelKey: 'tags', audience: ['field', 'lead', 'mgmt'], phase: 'prep' },
-  { key: 'explorer', href: '/projects/{p}/explorer', labelKey: 'explorer', audience: ['mgmt'], phase: 'prep' },
-  { key: 'twin', href: '/projects/{p}/twin', labelKey: 'twin', audience: ['mgmt'], phase: 'prep' },
   { key: 'documents', href: '/projects/{p}/documents', labelKey: 'documents', audience: ['lead', 'mgmt', 'client'], phase: 'prep' },
   { key: 'pidDocuments', href: '/projects/{p}/pid-documents', labelKey: 'pidDocuments', audience: ['mgmt'], phase: 'prep' },
   { key: 'vendors', href: '/projects/{p}/vendors', labelKey: 'vendors', audience: ['lead', 'mgmt'], phase: 'prep' },
@@ -64,9 +64,9 @@ export const PROJECT_ITEMS: readonly MenuItemDef[] = [
   { key: 'punches', href: '/projects/{p}/punches', labelKey: 'punchList', audience: ['field', 'lead', 'mgmt', 'client'], phase: 'mc' },
   { key: 'preservation', href: '/projects/{p}/preservation', labelKey: 'preservation', audience: ['field', 'lead', 'mgmt'], phase: 'mc' },
   { key: 'registers', href: '/projects/{p}/registers', labelKey: 'registers', audience: ['field', 'lead', 'mgmt'], phase: 'mc' },
-  { key: 'signals', href: '/projects/{p}/signals', labelKey: 'signals', audience: ['mgmt'], phase: 'com' },
-  { key: 'loops', href: '/projects/{p}/loops', labelKey: 'loops', audience: ['mgmt'], phase: 'com' },
-  { key: 'ceMatrices', href: '/projects/{p}/ce-matrices', labelKey: 'ceMatrices', audience: ['mgmt'], phase: 'com' },
+  // N2c: un solo ítem para el hub (pestañas Señales · Lazos · Matrices C&E · Importar).
+  { key: 'signals', href: '/projects/{p}/signals', labelKey: 'instrumentation', audience: ['mgmt'], phase: 'com',
+    also: ['/projects/{p}/loops', '/projects/{p}/ce-matrices', '/projects/{p}/import-signals'] },
   { key: 'certificates', href: '/projects/{p}/certificates', labelKey: 'certificates', audience: ['lead', 'mgmt', 'client'], phase: 'com' },
   { key: 'pssr', href: '/projects/{p}/pssr', labelKey: 'pssr', audience: ['lead', 'mgmt', 'client'], phase: 'com' },
   { key: 'startup', href: '/projects/{p}/startup', labelKey: 'startup', audience: ['field', 'lead', 'mgmt'], phase: 'su',
@@ -74,7 +74,9 @@ export const PROJECT_ITEMS: readonly MenuItemDef[] = [
   { key: 'performance', href: '/projects/{p}/startup/performance', labelKey: 'performance', audience: ['mgmt', 'client'], phase: 'su' },
   { key: 'operations', href: '/projects/{p}/startup/operations', labelKey: 'operations', audience: ['mgmt', 'client'], phase: 'su' },
   { key: 'daily', href: '/projects/{p}/daily', labelKey: 'daily', audience: ['lead', 'plan', 'mgmt', 'client'], phase: 'mgmt' },
-  { key: 'workPlans', href: '/projects/{p}/work-plans', labelKey: 'workPlans', audience: ['plan', 'mgmt'], phase: 'mgmt' },
+  // N2c: Planificación = look-ahead de gates + planes de trabajo (pestañas por ruta).
+  { key: 'planning', href: '/projects/{p}/planning/lookahead', labelKey: 'planning', audience: ['plan', 'mgmt'], phase: 'mgmt',
+    also: ['/projects/{p}/work-plans', '/projects/{p}/planning'] },
   { key: 'kpis', href: '/projects/{p}/kpis', labelKey: 'kpis', audience: ['plan', 'mgmt'], phase: 'mgmt' },
 ]
 
@@ -125,7 +127,7 @@ export function allowed(item: MenuItemDef, role: string): boolean {
   return !item.tier || ROLE_TIERS[item.tier].includes(role)
 }
 
-export type MenuLink = { key: string; href: string; labelKey: string; exact?: boolean; notUnder?: string[]; badge?: MenuItemDef['badge'] }
+export type MenuLink = { key: string; href: string; labelKey: string; exact?: boolean; notUnder?: string[]; also?: string[]; badge?: MenuItemDef['badge'] }
 export type MenuModel = {
   audience: Audience
   personal: MenuLink[]
@@ -142,6 +144,7 @@ const link = (i: MenuItemDef, projectId: string | null): MenuLink => ({
   key: i.key, labelKey: i.labelKey, exact: i.exact, badge: i.badge,
   href: projectId ? i.href.replaceAll('{p}', projectId) : i.href,
   notUnder: i.notUnder?.map(n => (projectId ? n.replaceAll('{p}', projectId) : n)),
+  also: i.also?.map(n => (projectId ? n.replaceAll('{p}', projectId) : n)),
 })
 
 /** El menú de un rol, dentro de un proyecto (`projectId`) o fuera (null: solo lo personal, portafolio y Más…). */
@@ -164,7 +167,7 @@ export function buildMenu(role: string, projectId: string | null): MenuModel {
     } else {
       // Arquitecto: planificación primero (decisión N1: es la vista del rol).
       const ordered = audience === 'plan'
-        ? [...items.filter(i => i.key === 'workPlans'), ...items.filter(i => i.key !== 'workPlans')]
+        ? [...items.filter(i => i.key === 'planning'), ...items.filter(i => i.key !== 'planning')]
         : items
       project = [...top.filter(mine), ...ordered.filter(mine)].map(i => link(i, projectId))
       more.push(...top.filter(i => !mine(i)).map(i => link(i, projectId)), ...ordered.filter(i => !mine(i)).map(i => link(i, projectId)))

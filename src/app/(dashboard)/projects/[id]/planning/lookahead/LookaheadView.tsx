@@ -10,7 +10,7 @@ import {
   LOOKAHEAD_WINDOWS, addDays, gateAtRisk, gateGap, groupBySystem, inWindow,
   type LookaheadItem, type LookaheadKind, type LookaheadWindow,
 } from '@/lib/readiness/planning'
-import { Alert, Chip, DailyTabs, btn, card, input, small } from '../daily-ui'
+import { Alert, Chip, btn, card, input, small } from '../../daily/daily-ui'
 
 export type GateCell = {
   systemId: string; systemCode: string; systemName: string
@@ -121,8 +121,8 @@ export default function LookaheadView({ project, initialWindow, initialEdit, cel
   })
 
   return (
-    <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <DailyTabs project={project} active="lookahead" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <p style={{ ...small, margin: 0, maxWidth: 760 }}>{t('lookahead.subtitle')}</p>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>

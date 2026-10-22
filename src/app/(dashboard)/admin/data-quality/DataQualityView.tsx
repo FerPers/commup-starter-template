@@ -190,7 +190,7 @@ export default function DataQualityView({
                     </td>
                     <td style={tdStyle}>
                       <a
-                        href={`/projects/${b.project_id}/explorer?subsystem=${b.subsystem_id}`}
+                        href={`/projects/${b.project_id}/tags?subsystem=${b.subsystem_id}`}
                         style={linkStyle}
                       >
                         →

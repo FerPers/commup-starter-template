@@ -18,6 +18,8 @@ export const NAV_TITLE_KEYS: Record<string, string> = {
   signals: 'Signals.title',
   loops: 'Signals.loops.title',
   workPlans: 'WorkPlans.title',
+  planning: 'Planning.title',
+  instrumentation: 'SignalsHub.title',
   auditLog: 'AuditLog.title',
   punchList: 'PunchList.title',
   preservation: 'Preservation.title',

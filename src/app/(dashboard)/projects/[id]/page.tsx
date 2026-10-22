@@ -309,7 +309,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         <section aria-labelledby="upcoming" style={{ ...card, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
             <h2 id="upcoming" style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', flex: 1 }}>{t('upcoming.title')}</h2>
-            <Link href={`${base}/daily/lookahead`} style={{ ...linkStyle, fontSize: 'var(--text-sm)' }}>{t('upcoming.lookahead')}</Link>
+            <Link href={`${base}/planning/lookahead`} style={{ ...linkStyle, fontSize: 'var(--text-sm)' }}>{t('upcoming.lookahead')}</Link>
           </div>
           {upcoming.length === 0 ? <p style={{ ...small, margin: 0, padding: 18 }}>{t('upcoming.none')}</p> : (
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
@@ -339,7 +339,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         <Link href={`${base}/ce-matrices`} style={chipLink}>{t('strip.ce')} <strong>{ceMatrixCount ?? 0}</strong></Link>
         <Link href={`${base}/documents`} style={chipLink}>{t('strip.documents')} <strong>{documentCount ?? 0}</strong> · {t('strip.pid', { count: pidCount ?? 0 })}</Link>
         <Link href={`${base}/systems`} style={chipLink}>{t('strip.systems')} <strong>{rows.length}</strong></Link>
-        <Link href={`${base}/twin`} style={chipLink}>{t('strip.twin')}</Link>
+        <Link href={`${base}/tags?view=cards`} style={chipLink}>{t('strip.twin')}</Link>
         <span style={{ flex: 1 }} />
         {canEdit && <Link href={`${base}/import`} style={{ ...linkStyle, fontSize: 'var(--text-sm)' }}>{t('strip.import')}</Link>}
       </section>

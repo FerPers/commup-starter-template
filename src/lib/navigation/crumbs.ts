@@ -27,7 +27,7 @@ const ADMIN: Record<string, string> = {
 
 const PROJECT: Record<string, string> = {
   systems: 'nav:systems', tags: 'nav:tags', itrs: 'nav:itrs', punches: 'nav:punchList', registers: 'nav:registers', daily: 'nav:daily',
-  readiness: 'nav:readiness', startup: 'nav:startup', documents: 'nav:documents', vendors: 'nav:vendors', signatories: 'nav:signatories', certificates: 'nav:certificates',
+  readiness: 'nav:readiness', planning: 'nav:planning', startup: 'nav:startup', documents: 'nav:documents', vendors: 'nav:vendors', signatories: 'nav:signatories', certificates: 'nav:certificates',
   kpis: 'nav:kpis', signals: 'nav:signals', loops: 'nav:loops', 'ce-matrices': 'nav:ceMatrices', 'pid-documents': 'nav:pidDocuments',
   explorer: 'nav:explorer', twin: 'nav:twin', 'work-plans': 'nav:workPlans', pssr: 'nav:pssr', import: 'nav:import', 'import-signals': 'sub:importSignals',
   preservation: 'nav:preservation', interlocks: 'nav:ceMatrices',

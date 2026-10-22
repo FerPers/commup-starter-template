@@ -141,7 +141,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
           {/* CTA */}
           <div style={{ display: 'flex', gap: '8px' }}>
             <a
-              href={`/projects/${projectId}/twin?tag=${tag.id}`}
+              href={`/projects/${projectId}/tags?view=cards&tag=${tag.id}`}
               style={{
                 flex: 1, textAlign: 'center',
                 padding: '9px 12px',

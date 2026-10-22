@@ -105,6 +105,7 @@ function isActive(pathname: string, item: MenuLink): boolean {
   const href = item.href.split('?')[0]
   if (item.exact) return pathname === href
   if (item.notUnder?.some(n => pathname === n || pathname.startsWith(n + '/'))) return false
+  if (item.also?.some(n => pathname === n || pathname.startsWith(n + '/'))) return true
   return pathname === href || pathname.startsWith(href + '/')
 }
 

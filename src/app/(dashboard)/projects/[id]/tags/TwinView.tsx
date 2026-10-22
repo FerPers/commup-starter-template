@@ -438,7 +438,8 @@ export default function TwinView({
   const highlightTagId = searchParams.get('tag')
   const filterSystem   = searchParams.get('system')
 
-  const [search, setSearch] = useState('')
+  // N2c: el modo Tarjetas de «Tags y equipos» trae la búsqueda de la URL (la comparten Lista y Tarjetas).
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
   const [semaFilter, setSemaFilter] = useState<string>('ALL')
 
   // Build hierarchy from flat tag list

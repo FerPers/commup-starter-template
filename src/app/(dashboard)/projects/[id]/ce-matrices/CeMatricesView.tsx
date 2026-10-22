@@ -51,11 +51,10 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
   }
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1200px' }}>
+    <div style={{ maxWidth: '1200px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
         <div>
-          <Link href={`/projects/${project.id}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {project.name}</Link>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', margin: '12px 0 4px' }}>{tNav('ceMatrices')}</h1>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{tNav('ceMatrices')}</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0, maxWidth: '720px' }}>
             Lógica de paro y enclavamientos (SIS/ESD/PSD): cada causa con los efectos que dispara. Cada causa se prueba con su propio ITR, y el cruce probado queda como evidencia.
           </p>

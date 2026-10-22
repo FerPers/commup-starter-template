@@ -4,6 +4,8 @@ import { isEditor } from '@/lib/auth/permissions'
 import { loadGenerationTemplates, loadMembers, loadSourceItrs } from '@/lib/itr/source-itrs-server'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import LoopsView from './LoopsView'
+import InstrumentationHub from '../signals/InstrumentationHub'
+import { ROLE_TIERS } from '@/lib/constants/roles'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 
@@ -53,7 +55,8 @@ export default async function LoopsPage({ params }: { params: Promise<{ id: stri
 
   const tl = await getTranslations('Common')
   return (
-    <>
+    <div style={{ padding: 'clamp(12px, 4vw, 32px)' }}>
+    <InstrumentationHub projectId={project.id} current="loops" canImport={ROLE_TIERS.privileged.includes(ctx.role)} />
     {truncated && (
       <PartialNote>{tl('listPartial')}</PartialNote>
     )}
@@ -66,6 +69,6 @@ export default async function LoopsPage({ params }: { params: Promise<{ id: stri
       members={members}
       canEdit={canEdit}
     />
-    </>
+    </div>
   )
 }

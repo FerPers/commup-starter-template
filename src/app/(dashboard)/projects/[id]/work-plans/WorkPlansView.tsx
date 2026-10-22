@@ -65,8 +65,6 @@ const PAGE_SIZE = 50
 
 export default function WorkPlansView({
   projectId,
-  projectName,
-  projectCode,
   disciplines,
   orgMembers,
   workPlans,
@@ -74,8 +72,6 @@ export default function WorkPlansView({
   currentUserId: _currentUserId,
 }: {
   projectId: string
-  projectName: string
-  projectCode: string
   disciplines: Discipline[]
   orgMembers: OrgMember[]
   workPlans: WorkPlan[]
@@ -233,16 +229,13 @@ export default function WorkPlansView({
   // ── Render ────────────────────────────────────────────────────────
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1200px' }}>
+    <div style={{ maxWidth: '1200px' }}>
 
-      {/* Breadcrumb + title */}
+      {/* Título (N2c: el h1 es el del hub Planificación) */}
       <div style={{ marginBottom: '24px' }}>
-        <a href={`/projects/${projectId}`} style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>
-          ← {projectCode} — {projectName}
-        </a>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h1>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('title')}</h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{t('subtitleProject')}</p>
           </div>
           {canEdit && (
@@ -257,7 +250,7 @@ export default function WorkPlansView({
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '24px' }}>
         {Object.entries(PLAN_STATUS_STYLE).map(([key, style]) => (
           <div
             key={key}

@@ -83,7 +83,7 @@
       "dashboard": "Panorama",
       "projects": "Proyectos",
       "projectOverview": "Resumen",
-      "tags": "Tags",
+      "tags": "Tags y equipos",
       "signals": "Señales",
       "scan": "Escanear QR/NFC",
       "itrs": "ITRs",
@@ -134,7 +134,9 @@
       "performance": "Desempeño (PTC)",
       "operations": "Operación y traspaso",
       "allPreservation": "Toda la preservación",
-      "orgKpis": "KPIs de la organización"
+      "orgKpis": "KPIs de la organización",
+      "instrumentation": "Señales y lazos",
+      "planning": "Planificación"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -5666,6 +5668,37 @@
       "systems": "Sistemas",
       "twin": "Digital Twin",
       "import": "Importar…"
+    }
+  },
+  "TagsHub": {
+    "modeLabel": "Modo de vista",
+    "mode": {
+      "list": "Lista",
+      "tree": "Árbol",
+      "cards": "Tarjetas"
+    },
+    "import": "+ Importar tags",
+    "subtitle": {
+      "empty": "Sin tags importados",
+      "list": "{count} tags importados",
+      "tree": "Área › Sistema › Subsistema con tags, ITR aprobados y Cat A abiertos; un subsistema abre sus tags",
+      "cards": "Tarjeta por tag con semáforo de ITR, punch, certificados, preservación y P&ID"
+    }
+  },
+  "SignalsHub": {
+    "title": "Señales y lazos",
+    "tab": {
+      "signals": "Señales",
+      "loops": "Lazos",
+      "ce": "Matrices C&E",
+      "import": "Importar señales"
+    }
+  },
+  "Planning": {
+    "title": "Planificación",
+    "tab": {
+      "lookahead": "Look-ahead (gates)",
+      "workPlans": "Planes de trabajo (ITR)"
     }
   }
 }

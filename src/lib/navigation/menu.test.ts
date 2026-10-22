@@ -51,7 +51,7 @@ describe('menú por fase y rol (N1)', () => {
     expect(owner.phases.map(p => p.phase)).toEqual(['prep', 'mc', 'com', 'su', 'mgmt'])
     expect(owner.project.map(l => l.key)).toEqual(['overview', 'readiness'])
     const arch = buildMenu('architect', P)
-    expect(arch.project.map(l => l.key).slice(0, 3)).toEqual(['overview', 'readiness', 'workPlans'])
+    expect(arch.project.map(l => l.key).slice(0, 3)).toEqual(['overview', 'readiness', 'planning'])
     const client = buildMenu('client', P)
     const keys = [...client.personal, ...client.project, ...client.more].map(l => l.key)
     expect(keys).not.toContain('import')

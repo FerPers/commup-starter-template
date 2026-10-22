@@ -36,7 +36,7 @@ describe('migas de pan (N0, H-06)', () => {
     expect(labels('/admin/test-equipment')).toEqual(['sub:admin', 'nav:testEquipment'])
     expect(labels(`/control-tower/${I}`)).toEqual(['nav:controlTower', 'entity:system'])
     expect(labels(`/projects/${P}/vendors`)).toEqual(['nav:projects', P, 'nav:vendors'])
-    expect(labels(`/projects/${P}/daily/lookahead`)).toEqual(['nav:projects', P, 'nav:daily', 'sub:lookahead'])
+    expect(labels(`/projects/${P}/planning/lookahead`)).toEqual(['nav:projects', P, 'nav:planning', 'sub:lookahead'])
   })
 
   it('toda clave usada existe en es y en en', () => {

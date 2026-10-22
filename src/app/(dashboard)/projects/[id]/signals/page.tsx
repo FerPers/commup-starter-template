@@ -1,6 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import InstrumentationHub from './InstrumentationHub'
 import SignalsView from './SignalsView'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
@@ -59,7 +60,8 @@ export default async function SignalsPage({ params }: { params: Promise<{ id: st
 
   const tl = await getTranslations('Common')
   return (
-    <>
+    <div style={{ padding: 'clamp(12px, 4vw, 32px)' }}>
+    <InstrumentationHub projectId={project.id} current="signals" canImport={ROLE_TIERS.privileged.includes(membership.role)} />
     {truncated && (
       <PartialNote>{tl('listPartial')}</PartialNote>
     )}
@@ -70,6 +72,6 @@ export default async function SignalsPage({ params }: { params: Promise<{ id: st
       subsystems={subsystems}
       canEdit={ROLE_TIERS.editor.includes(membership.role)}
     />
-    </>
+    </div>
   )
 }

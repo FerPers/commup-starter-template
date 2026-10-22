@@ -158,7 +158,7 @@ export function SystemPlanTab({ project, systemId, gates, planning, names, canEd
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <p style={{ ...small, margin: 0 }}>
-        {tsys('file.planIntro')}{' '}<Link href={`/projects/${project.id}/daily/lookahead`} style={linkStyle}>{t('plan.lookahead')}</Link>
+        {tsys('file.planIntro')}{' '}<Link href={`/projects/${project.id}/planning/lookahead`} style={linkStyle}>{t('plan.lookahead')}</Link>
       </p>
       {gates.map(g => (
         <section key={g.gate_id} style={card} aria-label={g.gate_code}>
