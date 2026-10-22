@@ -17,6 +17,7 @@ import TagEditForm from './TagEditForm'
 import TagMoveControl, { type SubsystemOption } from './TagMoveControl'
 import { STATUS, navBtn, type ItrTemplate, type OrgMember, type Tag, type TagItr, type TagTab } from './tag-detail-shared'
 import type { ConsolidatedTagPhoto } from '@/lib/tag-photos'
+import { ink } from '@/lib/theme'
 
 // Re-export para callers existentes (TagItrTab importa estos tipos de aquí
 // históricamente; la fuente ahora es tag-detail-shared.ts)
@@ -154,7 +155,7 @@ export default function TagDetail({
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', flex: 1, minWidth: 0 }}>
             <span style={{
               padding: '5px 11px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
-              background: `${d.color}18`, color: d.color, flexShrink: 0, marginTop: '3px',
+              background: `${d.color}18`, color: ink(d.color), flexShrink: 0, marginTop: '3px',
               border: `1px solid ${d.color}30`,
             }}>
               {d.code}
@@ -208,10 +209,10 @@ export default function TagDetail({
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  fontSize: '12px', color: '#2563eb', fontFamily: 'ui-monospace, monospace',
-                  background: '#eff6ff', padding: '3px 10px', borderRadius: '5px',
+                  fontSize: '12px', color: 'var(--primary-600)', fontFamily: 'ui-monospace, monospace',
+                  background: 'var(--primary-50)', padding: '3px 10px', borderRadius: '5px',
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px',
-                  border: '1px solid #bfdbfe',
+                  border: '1px solid var(--primary-200)',
                 }}
               >
                 {tag.pid_drawing}
@@ -228,9 +229,9 @@ export default function TagDetail({
             )}
             {tag.preservation_required && (
               <span style={{
-                marginLeft: '8px', fontSize: '11px', color: '#f59e0b', fontWeight: 600,
-                background: '#fffbeb', padding: '2px 8px', borderRadius: '5px',
-                border: '1px solid #fde68a',
+                marginLeft: '8px', fontSize: '11px', color: 'var(--warning-500)', fontWeight: 600,
+                background: 'var(--warning-50)', padding: '2px 8px', borderRadius: '5px',
+                border: '1px solid var(--warning-200)',
               }}>
                 {t('detail.preservationRequired')}
               </span>
@@ -240,9 +241,9 @@ export default function TagDetail({
         {!tag.pid_drawing && tag.preservation_required && (
           <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
             <span style={{
-              fontSize: '11px', color: '#f59e0b', fontWeight: 600,
-              background: '#fffbeb', padding: '2px 8px', borderRadius: '5px',
-              border: '1px solid #fde68a',
+              fontSize: '11px', color: 'var(--warning-500)', fontWeight: 600,
+              background: 'var(--warning-50)', padding: '2px 8px', borderRadius: '5px',
+              border: '1px solid var(--warning-200)',
             }}>
               {t('detail.preservationRequired')}
             </span>
@@ -268,7 +269,7 @@ export default function TagDetail({
                 padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: '13px', fontWeight: active ? 600 : 400,
                 color: active ? 'var(--text-strong)' : 'var(--text-muted)',
-                borderBottom: active ? '2px solid #3b82f6' : '2px solid transparent',
+                borderBottom: active ? '2px solid var(--primary-500)' : '2px solid transparent',
                 display: 'flex', alignItems: 'center', gap: '6px',
                 transition: 'color 0.15s',
                 marginBottom: '-1px',
@@ -278,7 +279,7 @@ export default function TagDetail({
               {tab.badge !== undefined && (
                 <span style={{
                   padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
-                  background: active ? '#3b82f6' : 'var(--gray-100)',
+                  background: active ? 'var(--primary-500)' : 'var(--gray-100)',
                   color: active ? '#fff' : 'var(--gray-400)',
                 }}>
                   {tab.badge}
@@ -290,8 +291,8 @@ export default function TagDetail({
 
         {editMode && (
           <span style={{
-            padding: '12px 16px', fontSize: '13px', fontWeight: 600, color: '#3b82f6',
-            borderBottom: '2px solid #3b82f6', marginBottom: '-1px',
+            padding: '12px 16px', fontSize: '13px', fontWeight: 600, color: 'var(--primary-500)',
+            borderBottom: '2px solid var(--primary-500)', marginBottom: '-1px',
           }}>
             {t('detail.editing')}
           </span>

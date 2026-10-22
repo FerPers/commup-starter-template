@@ -26,10 +26,10 @@ export type BoardLabels = {
 
 /** Paleta por grupo (maqueta N1). */
 const G: Record<ChipGroup, { fg: string; bg: string }> = {
-  execute: { fg: '#9a4a06', bg: '#fff4e2' },
-  verify: { fg: '#1d4ed8', bg: '#ecf2ff' },
-  sign: { fg: '#5b21b6', bg: '#f2edff' },
-  decide: { fg: '#b42318', bg: '#fdecea' },
+  execute: { fg: 'var(--orange-800)', bg: 'var(--orange-50)' },
+  verify: { fg: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  sign: { fg: 'var(--violet-800)', bg: 'var(--violet-50)' },
+  decide: { fg: 'var(--danger-700)', bg: 'var(--danger-50)' },
 }
 /** Filas por cola dentro de una columna; el resto en la pestaña del grupo. */
 const COLUMN_ROWS = 3

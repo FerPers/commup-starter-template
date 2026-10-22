@@ -19,6 +19,7 @@ import type { OrgMemberRole } from '@/types/database'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import { DEFAULT_TIMEZONE, latestPossibleToday } from '@/lib/time/zone'
 import { projectTodayFn } from '@/lib/time/project-zones'
+import { ink } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,13 +41,13 @@ const CHIP_LABEL: Record<keyof MyWorkCounts, string> = {
 type ReadinessRow = { project_id: string; entity_id: string; system_id: string | null }
 /** S22: cómo se muestra cada cola de readiness (orden = orden en la página). */
 const READINESS_SECTIONS: { queue: ReadinessQueue; due: string; tone: Tone; stripe: string; href: (r: ReadinessRow) => string; more: (r?: ReadinessRow) => string }[] = [
-  { queue: 'gates_to_cosign', due: 'cosign', tone: 'warning', stripe: '#047857', href: r => `/projects/${r.project_id}/systems/${r.system_id}`, more: r => (r ? `/projects/${r.project_id}/readiness?state=signing` : '/control-tower') },
-  { queue: 'gates_to_approve', due: 'approve', tone: 'success', stripe: '#047857', href: r => `/projects/${r.project_id}/systems/${r.system_id}?gate=${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/readiness?state=ready` : '/control-tower') },
+  { queue: 'gates_to_cosign', due: 'cosign', tone: 'warning', stripe: 'var(--success-700)', href: r => `/projects/${r.project_id}/systems/${r.system_id}`, more: r => (r ? `/projects/${r.project_id}/readiness?state=signing` : '/control-tower') },
+  { queue: 'gates_to_approve', due: 'approve', tone: 'success', stripe: 'var(--success-700)', href: r => `/projects/${r.project_id}/systems/${r.system_id}?gate=${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/readiness?state=ready` : '/control-tower') },
   { queue: 'gates_regressed', due: 'review', tone: 'danger', stripe: 'var(--danger-500)', href: r => `/projects/${r.project_id}/systems/${r.system_id}?gate=${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/readiness?state=regressed` : '/control-tower') },
-  { queue: 'registers_to_authorize', due: 'authorize', tone: 'warning', stripe: '#b45309', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
-  { queue: 'registers_to_verify', due: 'verify', tone: 'info', stripe: '#7c3aed', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
+  { queue: 'registers_to_authorize', due: 'authorize', tone: 'warning', stripe: 'var(--warning-700)', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
+  { queue: 'registers_to_verify', due: 'verify', tone: 'info', stripe: 'var(--violet-600)', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
   { queue: 'daily_reports_to_issue', due: 'issue', tone: 'warning', stripe: 'var(--primary-500)', href: r => `/projects/${r.project_id}/daily/reports/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/daily/reports` : '/projects') },
-  { queue: 'tq_answered', due: 'close', tone: 'info', stripe: '#1d4ed8', href: r => `/projects/${r.project_id}/daily/tq/${r.entity_id}`, more: r => (r ? dailyTabHref(r.project_id, 'tqs') : '/projects') },
+  { queue: 'tq_answered', due: 'close', tone: 'info', stripe: 'var(--primary-700)', href: r => `/projects/${r.project_id}/daily/tq/${r.entity_id}`, more: r => (r ? dailyTabHref(r.project_id, 'tqs') : '/projects') },
 ]
 
 type PunchRow = {
@@ -340,7 +341,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
     return <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>
   }
   const itrHref = (itr: NonNullable<AssignmentRow['itrs']>) => `/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`
-  const verifyPill = <Pill tone="info" style={{ background: '#f5f3ff', color: '#7c3aed' }}>{t('due.verify')}</Pill>
+  const verifyPill = <Pill tone="info" style={{ background: 'var(--violet-50)', color: 'var(--violet-600)' }}>{t('due.verify')}</Pill>
   const readinessQueue = (sec: typeof READINESS_SECTIONS[number]) => {
     const rows = readinessOf(sec.queue)
     return {
@@ -391,7 +392,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
       )
     }) },
     punches_verify: { more: '/punch-list?status=in_progress', rows: verifyRows.map(p => (
-      <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe="#7c3aed"
+      <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe="var(--violet-600)"
         code={p.punch_number} tag={catTag(p.category)}
         what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`} project={p.projects?.code} right={verifyPill} />
     )) },
@@ -406,37 +407,37 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
         code={a.number} what={a.title} project={a.projects?.code} right={duePill(a.due_date, a.project_id)} />
     )) },
     actions_verify: { more: dailyHref(actionVerifyRows[0]?.project_id, 'actions'), rows: actionVerifyRows.map(a => (
-      <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe="#7c3aed" code={a.number} what={a.title} project={a.projects?.code} right={verifyPill} />
+      <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe="var(--violet-600)" code={a.number} what={a.title} project={a.projects?.code} right={verifyPill} />
     )) },
     holds_to_release: { more: holdRows[0] ? `/projects/${holdRows[0].project_id}/startup` : '/projects', rows: holdRows.map(h => (
-      <Row key={`${h.run_id}:${h.ord}`} href={`/projects/${h.project_id}/startup/runs/${h.run_id}`} stripe="#b45309"
+      <Row key={`${h.run_id}:${h.ord}`} href={`/projects/${h.project_id}/startup/runs/${h.run_id}`} stripe="var(--warning-700)"
         code={h.procedure_runs?.number ?? ''} what={`${h.ord}. ${h.procedure_steps?.action ?? ''}`} project={h.projects?.code}
         right={<Pill tone="warning">{t('due.release')}</Pill>} />
     )) },
     milestones_to_witness: { more: milestoneRows[0] ? `/projects/${milestoneRows[0].project_id}/startup/events` : '/projects', rows: milestoneRows.map(m => (
-      <Row key={m.id} href={`/projects/${m.project_id}/startup/events/${m.id}`} stripe="#7c3aed"
+      <Row key={m.id} href={`/projects/${m.project_id}/startup/events/${m.id}`} stripe="var(--violet-600)"
         code={m.number} what={`${m.title}${m.systems?.code ? ` · ${m.systems.code}` : ''}`} project={m.projects?.code}
         right={<Pill tone="warning">{t('due.witness')}</Pill>} />
     )) },
     transfers_to_sign: { more: transferRows[0] ? `/projects/${transferRows[0].project_id}/startup/operations` : '/projects', rows: transferRows.map(x => (
-      <Row key={x.id} href={`/projects/${x.project_id}/startup/transfers/${x.id}`} stripe="#047857"
+      <Row key={x.id} href={`/projects/${x.project_id}/startup/transfers/${x.id}`} stripe="var(--success-700)"
         code={x.number} what={`${x.systems?.code ?? ''} → ${tStartup(`ops.stage.${x.to_stage}`)}${x.is_reversal ? ` (${tStartup('ops.reversal')})` : ''}`} project={x.projects?.code}
         right={<Pill tone="warning">{t('due.sign')}</Pill>} />
     )) },
     performance_to_decide: { more: perfDecideRows[0] ? `/projects/${perfDecideRows[0].project_id}/startup/performance` : '/projects', rows: perfDecideRows.map(x => (
-      <Row key={x.id} href={`/projects/${x.project_id}/startup/performance/runs/${x.id}`} stripe="#b45309"
+      <Row key={x.id} href={`/projects/${x.project_id}/startup/performance/runs/${x.id}`} stripe="var(--warning-700)"
         code={x.number} what={x.performance_tests?.title ?? ''} project={x.projects?.code} right={<Pill tone="warning">{t('due.decide')}</Pill>} />
     )) },
     performance_to_sign: { more: perfSignRows[0] ? `/projects/${perfSignRows[0].project_id}/startup/performance` : '/projects', rows: perfSignRows.map(x => (
-      <Row key={x.id} href={`/projects/${x.project_id}/startup/performance/runs/${x.run_id}`} stripe="#047857"
+      <Row key={x.id} href={`/projects/${x.project_id}/startup/performance/runs/${x.run_id}`} stripe="var(--success-700)"
         code={x.number} what={x.systems?.code ?? ''} project={x.projects?.code} right={<Pill tone="warning">{t('due.sign')}</Pill>} />
     )) },
     lineup_to_verify: { more: lineupRows[0] ? startupTabHref(lineupRows[0].project_id, 'lineups') : '/projects', rows: lineupRows.map(i => (
-      <Row key={i.id} href={`/projects/${i.project_id}/startup/lineups/${i.sheet_id}`} stripe="#1d4ed8"
+      <Row key={i.id} href={`/projects/${i.project_id}/startup/lineups/${i.sheet_id}`} stripe="var(--primary-700)"
         code={i.lineup_sheets?.number ?? ''} what={i.tags?.tag_number ?? i.label ?? ''} project={i.projects?.code} right={<Pill tone="info">{t('due.verify')}</Pill>} />
     )) },
     handovers_to_receive: { more: handoverRows[0] ? `/projects/${handoverRows[0].project_id}/daily/handovers` : '/projects', rows: handoverRows.map(h => (
-      <Row key={h.id} href={`/projects/${h.project_id}/daily/handovers/${h.id}`} stripe="#1d4ed8"
+      <Row key={h.id} href={`/projects/${h.project_id}/daily/handovers/${h.id}`} stripe="var(--primary-700)"
         code={h.number} what={`${h.shift_date} · ${t(`shift.${h.shift_label}`)}`} project={h.projects?.code} right={<Pill tone="info">{t('due.receive')}</Pill>} />
     )) },
     constraints_mine: { more: dailyHref(constraintRows[0]?.project_id, 'constraints'), rows: constraintRows.map(c => (
@@ -496,7 +497,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
         .map(i => `/projects/${i.project_id}/tags/${i.tags!.id}/itrs/${i.id}`)} />
 
       <MyWorkBoard groups={boardGroups} projects={(projects ?? []).map(p => ({ id: p.id, code: p.code, name: p.name }))} currentProject={filterProject}
-        labels={{ all: t('board.all'), upToDate: t('board.upToDate'), upToDateHere: t('board.upToDateHere'), noPending: t('board.noPending'), seeAll: t('board.seeAllN'), project: t('board.project'), allProjects: t('board.allProjects') }} />
+        labels={{ all: t('board.all'), upToDate: t('board.upToDate'), upToDateHere: t('board.upToDateHere'), noPending: t('board.noPending'), seeAll: t.raw('board.seeAllN') as string, project: t('board.project'), allProjects: t('board.allProjects') }} />
     </div>
   )
 }
@@ -528,7 +529,7 @@ function Row({ href, stripe, code, phase, tag, what, project, right }: {
       <div style={{ padding: '10px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderLeft: `3px solid ${stripe}`, borderRadius: 'var(--radius-md)', display: 'flex', flexWrap: 'wrap', gap: '6px 12px', alignItems: 'center' }}>
         <div style={{ minWidth: 0, flex: '1 1 160px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
-            {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>}
+            {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: `${phase.color}18`, color: ink(phase.color) }}>{phase.code}</span>}
             {tag}
             <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{code}</span>
             {project && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent-700)', background: 'var(--accent-50)', padding: '1px 6px', borderRadius: 'var(--radius-sm)', fontFamily: 'ui-monospace, monospace' }}>{project}</span>}

@@ -509,7 +509,7 @@ export default function OrgConfigView({
                 aria-label="Máximo de punches Cat B abiertos por subsistema"
                 style={{ ...inputStyle, width: '90px' }}
               />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-strong)' }}>
                 <input type="checkbox" checked={catBUnlimited} onChange={e => setCatBUnlimited(e.target.checked)} />
                 Sin límite
               </label>

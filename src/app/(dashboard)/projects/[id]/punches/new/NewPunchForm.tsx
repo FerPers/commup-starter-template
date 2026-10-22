@@ -10,6 +10,7 @@ import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
 import type { PunchImpact } from '@/lib/punches/category-guide'
 import type { TagContext } from '@/lib/create/tag-context'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG } from '@/lib/constants/status-colors'
+import { ink } from '@/lib/theme'
 
 // N3b: el formulario de alta de punch en su página (lo que antes era la ventana de la lista y del tag).
 
@@ -90,7 +91,7 @@ export default function NewPunchForm({ project, initialTag, assignees, back }: P
           <label htmlFor="punch-tag" style={labelStyle}>{t('create.labelTag')}</label>
           {tag ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--gray-50)', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: tag.disciplines?.color ?? 'var(--text-strong)' }}>{tag.tag_number}</span>
+              <span style={{ fontSize: 13, fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: ink(tag.disciplines?.color ?? 'var(--text-strong)') }}>{tag.tag_number}</span>
               <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1, minWidth: 120 }}>{tag.description}</span>
               {(tag.disciplines?.code ?? tag.where) && (
                 <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{[tag.disciplines?.code, tag.where].filter(Boolean).join(' · ')}</span>
@@ -108,7 +109,7 @@ export default function NewPunchForm({ project, initialTag, assignees, back }: P
                   {tagMatches.map(tg => (
                     <li key={tg.id}>
                       <button type="button" onClick={() => setTag(tg)} style={{ display: 'flex', gap: 8, width: '100%', textAlign: 'left', padding: '10px 11px', minHeight: 44, background: 'none', border: 'none', borderBottom: '1px solid var(--gray-50)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                        <span style={{ fontSize: 12, fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: tg.disciplines?.color ?? 'var(--text-strong)' }}>{tg.tag_number}</span>
+                        <span style={{ fontSize: 12, fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: ink(tg.disciplines?.color ?? 'var(--text-strong)') }}>{tg.tag_number}</span>
                         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tg.description}</span>
                       </button>
                     </li>
@@ -171,7 +172,7 @@ export default function NewPunchForm({ project, initialTag, assignees, back }: P
         </div>
 
         {error && (
-          <p role="alert" style={{ fontSize: 12, color: '#b91c1c', padding: '8px 12px', background: '#fee2e2', borderRadius: 6, margin: 0 }}>{error}</p>
+          <p role="alert" style={{ fontSize: 12, color: 'var(--danger-700)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: 6, margin: 0 }}>{error}</p>
         )}
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>

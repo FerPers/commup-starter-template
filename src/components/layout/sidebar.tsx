@@ -50,7 +50,7 @@ function SidebarFooter() {
         boxShadow: `0 0 8px ${dotColor}`,
         border: '1px solid rgba(255,255,255,0.15)',
       }} />
-      <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: '#e2e8f0', fontWeight: 500 }}>{label}</span>
+      <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--sidebar-text-strong)', fontWeight: 500 }}>{label}</span>
       {canForceSync && (
         <button
           type="button"
@@ -62,7 +62,7 @@ function SidebarFooter() {
             background: 'transparent',
             border: 'none',
             padding: 4,
-            color: '#e2e8f0',
+            color: 'var(--sidebar-text-strong)',
             cursor: syncing ? 'wait' : 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -218,7 +218,7 @@ export default function Sidebar({
           />
           <div>
             <div style={{ color: '#fff', fontWeight: 700, fontSize: 'var(--text-md)', letterSpacing: '-0.3px' }}>CommUp</div>
-            <div style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)' }}>{t('platform')}</div>
+            <div style={{ color: 'var(--sidebar-text-dim)', fontSize: 'var(--text-xs)' }}>{t('platform')}</div>
           </div>
         </div>
       </div>
@@ -294,11 +294,11 @@ function FoldButton({ open, onClick, label, count, header }: { open: boolean; on
         width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
         padding: header ? '8px 20px 4px' : '7px 20px', display: 'flex', alignItems: 'center', gap: 6,
         fontSize: header ? 10 : 'var(--text-sm)', fontWeight: header ? 700 : 600, letterSpacing: header ? '0.08em' : 0,
-        textTransform: header ? 'uppercase' : 'none', color: open ? '#e2e8f0' : '#94a3b8',
+        textTransform: header ? 'uppercase' : 'none', color: open ? 'var(--sidebar-text-strong)' : 'var(--sidebar-text-dim)',
       }}>
       {open ? <ChevronDown size={12} aria-hidden="true" /> : <ChevronRight size={12} aria-hidden="true" />}
       <span style={{ flex: 1 }}>{label}</span>
-      {!open && <span style={{ fontSize: 'var(--text-xs)', fontWeight: 500, color: '#64748b' }}>{count}</span>}
+      {!open && <span style={{ fontSize: 'var(--text-xs)', fontWeight: 500, color: 'var(--sidebar-text-faint)' }}>{count}</span>}
     </button>
   )
 }
@@ -320,8 +320,8 @@ interface SidebarLinkProps {
 
 function SidebarLink({ href, label, Icon, active, badge, softBadge, accent, compact }: SidebarLinkProps) {
   const activeBg = accent ? 'rgba(244,122,32,0.16)' : 'rgba(59,130,246,0.15)'
-  const activeFg = accent ? 'var(--brand-orange-soft)' : 'var(--primary-400)'
-  const activeBorder = accent ? 'var(--brand-orange)' : 'var(--primary-500)'
+  const activeFg = accent ? 'var(--brand-orange-soft)' : 'var(--sidebar-link-active)'
+  const activeBorder = accent ? 'var(--brand-orange)' : 'var(--sidebar-link-border)'
 
   return (
     <Link
@@ -341,7 +341,7 @@ function SidebarLink({ href, label, Icon, active, badge, softBadge, accent, comp
       onMouseEnter={(e) => {
         if (!active) {
           (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
-          (e.currentTarget as HTMLElement).style.color = 'var(--gray-400)'
+          (e.currentTarget as HTMLElement).style.color = 'var(--sidebar-text-dim)'
         }
       }}
       onMouseLeave={(e) => {
@@ -360,7 +360,7 @@ function SidebarLink({ href, label, Icon, active, badge, softBadge, accent, comp
           aria-label={`${badge} pending`}
           style={{
             background: softBadge ? 'rgba(255,255,255,0.12)' : 'var(--danger-500)',
-            color: softBadge ? '#cbd5e1' : '#fff',
+            color: softBadge ? 'var(--sidebar-text-dim)' : '#fff',
             fontSize: 'var(--text-xs)', fontWeight: 700,
             padding: '1px 6px', borderRadius: 'var(--radius-pill)',
             minWidth: 20, textAlign: 'center', lineHeight: '18px',
@@ -378,7 +378,7 @@ function GroupHeader({ children }: { children: React.ReactNode }) {
     <div style={{
       padding: '8px 20px 4px', display: 'flex', alignItems: 'baseline', minWidth: 0,
       fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-      color: '#94a3b8', textTransform: 'uppercase',
+      color: 'var(--sidebar-text-dim)', textTransform: 'uppercase',
     }}>
       {children}
     </div>
@@ -390,7 +390,7 @@ function SubHeader({ children }: { children: React.ReactNode }) {
     <div style={{
       padding: '8px 20px 2px 28px',
       fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
-      color: '#64748b', textTransform: 'uppercase',
+      color: 'var(--sidebar-text-faint)', textTransform: 'uppercase',
     }}>
       {children}
     </div>

@@ -8,9 +8,9 @@ import type { ConsolidatedTagPhoto, TagPhotoSource } from '@/lib/tag-photos'
 const NON_PREVIEWABLE_EXT = ['heic', 'heif']
 
 const SOURCE_CFG: Record<TagPhotoSource, { color: string; bg: string; border: string; icon: typeof ClipboardCheck }> = {
-  itr:          { color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe', icon: ClipboardCheck },
-  punch:        { color: '#ea580c', bg: '#fff7ed', border: '#fed7aa', icon: Flag },
-  preservation: { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', icon: Wrench },
+  itr:          { color: 'var(--primary-500)', bg: 'var(--primary-50)', border: 'var(--primary-200)', icon: ClipboardCheck },
+  punch:        { color: 'var(--orange-600)', bg: 'var(--orange-50)', border: 'var(--orange-200)', icon: Flag },
+  preservation: { color: 'var(--success-600)', bg: 'var(--success-50)', border: 'var(--success-200)', icon: Wrench },
 }
 
 interface Props {

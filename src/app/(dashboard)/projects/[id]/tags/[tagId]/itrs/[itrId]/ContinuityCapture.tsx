@@ -40,7 +40,7 @@ export default function ContinuityCapture({ value, disabled, onChange }: { value
       <label><input type="checkbox" checked={measurement} onChange={e => setMeasurement(e.target.checked)} /> El procedimiento exige lectura y unidad</label>
       <button type="button" onClick={configure} style={{ padding: '9px', borderRadius: '6px', border: '1px solid var(--border)' }}>{data ? 'Actualizar configuración' : 'Crear filas'}</button>
     </div>
-    {error && <p role="alert" style={{ color: '#b91c1c' }}>{error}</p>}
+    {error && <p role="alert" style={{ color: 'var(--danger-700)' }}>{error}</p>}
     {data && <>
       <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Cada conductor requiere sus terminales y resultado. “No aplica” exige justificación. Las filas nuevas quedan pendientes.</p>
       <div style={{ overflowX: 'auto' }}><table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px' }}>
@@ -54,7 +54,7 @@ export default function ContinuityCapture({ value, disabled, onChange }: { value
           <td><textarea aria-label={`${row.id} justificación`} style={field} value={row.remarks} onChange={e => changeRow(row.id, { remarks: e.target.value })} /></td>
         </tr>)}</tbody>
       </table></div>
-      <p role="status" style={{ fontSize: '12px', color: evaluated.hasFail ? '#b91c1c' : 'var(--text-muted)' }}>{evaluated.hasFail ? 'Hay resultados rechazados.' : evaluated.isComplete ? 'Registro diligenciado; pendiente de las aprobaciones que correspondan.' : 'Registro pendiente: completa terminales, resultados y requisitos del procedimiento.'}</p>
+      <p role="status" style={{ fontSize: '12px', color: evaluated.hasFail ? 'var(--danger-700)' : 'var(--text-muted)' }}>{evaluated.hasFail ? 'Hay resultados rechazados.' : evaluated.isComplete ? 'Registro diligenciado; pendiente de las aprobaciones que correspondan.' : 'Registro pendiente: completa terminales, resultados y requisitos del procedimiento.'}</p>
     </>}
   </fieldset>
 }

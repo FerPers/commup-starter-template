@@ -21,7 +21,7 @@ export default function MobileMenuButton() {
         background: 'transparent',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-md)',
-        color: 'var(--text-primary)',
+        color: 'var(--text-strong)',
         cursor: 'pointer',
         flexShrink: 0,
         transition: 'background 0.15s',

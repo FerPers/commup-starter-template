@@ -33,8 +33,8 @@ export default function NfcSection({ projectId, tagId, nfcUid, canEdit }: Props)
         <div
           style={{
             width: 32, height: 32, borderRadius: 8,
-            background: nfcUid ? '#dcfce7' : 'var(--gray-100)',
-            color: nfcUid ? '#16a34a' : 'var(--text-muted)',
+            background: nfcUid ? 'var(--success-100)' : 'var(--gray-100)',
+            color: nfcUid ? 'var(--success-600)' : 'var(--text-muted)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}
@@ -250,8 +250,8 @@ function LinkNfcModal({
 
         {error && (
           <p style={{
-            fontSize: 12, color: '#ef4444',
-            padding: '8px 12px', background: '#fee2e2',
+            fontSize: 12, color: 'var(--danger-500)',
+            padding: '8px 12px', background: 'var(--danger-100)',
             borderRadius: 6, margin: '0 0 12px',
           }}>
             {error}
@@ -266,8 +266,8 @@ function LinkNfcModal({
               disabled={isPending}
               style={{
                 padding: '8px 14px',
-                background: 'transparent', color: '#ef4444',
-                border: '1px solid #fecaca', borderRadius: 7,
+                background: 'transparent', color: 'var(--danger-500)',
+                border: '1px solid var(--danger-200)', borderRadius: 7,
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 marginRight: 'auto',
               }}

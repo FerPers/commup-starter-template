@@ -57,8 +57,8 @@ const FREQ_LABELS: Record<string, string> = {
 }
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  active:    { label: 'Activo',     color: '#16a34a', bg: '#f0fdf4' },
-  suspended: { label: 'Suspendido', color: '#d97706', bg: '#fffbeb' },
+  active:    { label: 'Activo',     color: 'var(--success-600)', bg: 'var(--success-50)' },
+  suspended: { label: 'Suspendido', color: 'var(--warning-600)', bg: 'var(--warning-50)' },
   completed: { label: 'Completado', color: 'var(--text-muted)', bg: 'var(--gray-50)' },
 }
 
@@ -68,10 +68,10 @@ function dueBadge(nextDue: string): { label: string; color: string; bg: string }
   const due = new Date(nextDue + 'T00:00:00')
   const diffDays = Math.ceil((due.getTime() - today.getTime()) / 86400000)
 
-  if (diffDays < 0)  return { label: `Vencido ${Math.abs(diffDays)}d`,  color: '#dc2626', bg: '#fef2f2' }
-  if (diffDays === 0) return { label: 'Vence hoy',                        color: '#dc2626', bg: '#fef2f2' }
-  if (diffDays <= 7)  return { label: `Vence en ${diffDays}d`,            color: '#d97706', bg: '#fffbeb' }
-  return { label: `Próximo: ${nextDue}`,                                   color: '#16a34a', bg: '#f0fdf4' }
+  if (diffDays < 0)  return { label: `Vencido ${Math.abs(diffDays)}d`,  color: 'var(--danger-600)', bg: 'var(--danger-50)' }
+  if (diffDays === 0) return { label: 'Vence hoy',                        color: 'var(--danger-600)', bg: 'var(--danger-50)' }
+  if (diffDays <= 7)  return { label: `Vence en ${diffDays}d`,            color: 'var(--warning-600)', bg: 'var(--warning-50)' }
+  return { label: `Próximo: ${nextDue}`,                                   color: 'var(--success-600)', bg: 'var(--success-50)' }
 }
 
 const DEFAULT_FORM = { procedureId: '', startDate: '', responsibleUserId: '' }
@@ -127,14 +127,14 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
         {canEdit && procedures.length > 0 && (
           <button
             onClick={() => setShowModal(true)}
-            style={{ padding: '7px 16px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
+            style={{ padding: '7px 16px', borderRadius: '8px', background: 'var(--primary-500)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
           >
             + Asignar plan
           </button>
         )}
         {canEdit && procedures.length === 0 && (
           <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
-            Crea procedimientos en <Link href="/admin/templates/preservation" style={{ color: '#3b82f6' }}>Admin › Templates</Link>
+            Crea procedimientos en <Link href="/admin/templates/preservation" style={{ color: 'var(--primary-500)' }}>Admin › Templates</Link>
           </span>
         )}
       </div>
@@ -149,7 +149,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
           <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '6px' }}>
             Sin planes de preservación
           </div>
-          <div style={{ fontSize: '13px', color: '#9ca3af' }}>
+          <div style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
             Asigna un procedimiento para activar las rutinas de preservación de este equipo
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
                   <button
                     onClick={() => router.push(`/projects/${projectId}/tags/${tagId}/preservation/${plan.id}`)}
-                    style={{ padding: '6px 14px', borderRadius: '7px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                    style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--primary-500)', color: '#fff', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
                   >
                     Ejecutar
                   </button>
@@ -219,7 +219,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                     <button
                       onClick={() => handleStatusChange(plan.id, 'suspended')}
                       disabled={isPending}
-                      style={{ padding: '6px 14px', borderRadius: '7px', background: '#fffbeb', color: '#d97706', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                      style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--warning-50)', color: 'var(--warning-600)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
                     >
                       Suspender
                     </button>
@@ -228,7 +228,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                     <button
                       onClick={() => handleStatusChange(plan.id, 'active')}
                       disabled={isPending}
-                      style={{ padding: '6px 14px', borderRadius: '7px', background: '#f0fdf4', color: '#16a34a', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                      style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--success-50)', color: 'var(--success-600)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
                     >
                       Reactivar
                     </button>
@@ -259,7 +259,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
             </div>
 
             {formError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '9px 13px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>
+              <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-600)', padding: '9px 13px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>
                 {formError}
               </div>
             )}
@@ -270,7 +270,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                 <select
                   value={form.procedureId}
                   onChange={e => setForm(f => ({ ...f, procedureId: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                 >
                   <option value="">— Seleccionar procedimiento —</option>
                   {procedures.map(p => (
@@ -289,7 +289,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                   type="date"
                   value={form.startDate}
                   onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                 />
                 <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '4px' }}>
                   Determina el ciclo: primer vencimiento = inicio + intervalo días
@@ -301,7 +301,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                 <select
                   value={form.responsibleUserId}
                   onChange={e => setForm(f => ({ ...f, responsibleUserId: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                 >
                   <option value="">— Sin asignar —</option>
                   {orgMembers.map(m => (
@@ -323,7 +323,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
               <button
                 onClick={handleAssign}
                 disabled={isPending}
-                style={{ padding: '8px 18px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
+                style={{ padding: '8px 18px', borderRadius: '8px', background: 'var(--primary-500)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
               >
                 {isPending ? 'Asignando...' : 'Asignar plan'}
               </button>

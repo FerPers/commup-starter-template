@@ -21,6 +21,7 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 import { formatInZone } from '@/lib/time/zone'
 import PunchPhotosSection from '../../tags/[tagId]/PunchPhotosSection'
+import { ink } from '@/lib/theme'
 
 export type PunchDetailData = {
   id: string
@@ -51,8 +52,8 @@ export type PunchDetailData = {
 type OrgMember = { user_id: string; profiles: { full_name: string } | null }
 
 const KIND_COLOR: Record<PunchTimelineKind, string> = {
-  created: '#ea580c', comment: 'var(--gray-400)', resolved: '#3b82f6', verified: '#10b981',
-  rejected: '#ef4444', cancelled: 'var(--gray-400)', reviewed: '#b45309', reassigned: '#7c3aed',
+  created: 'var(--orange-600)', comment: 'var(--gray-400)', resolved: 'var(--primary-500)', verified: 'var(--success-500)',
+  rejected: 'var(--danger-500)', cancelled: 'var(--gray-400)', reviewed: 'var(--warning-700)', reassigned: 'var(--violet-600)',
 }
 
 const card: React.CSSProperties = {
@@ -115,7 +116,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
     ...(punch.target_date ? [[t('page.targetDate'), punch.target_date] as [string, React.ReactNode]] : []),
     ...(punch.closed_date ? [[t('page.closedDate'), punch.closed_date] as [string, React.ReactNode]] : []),
     ...(punch.subsystem ? [[t('page.location'), `${punch.subsystem.system ? `${punch.subsystem.system.code} › ` : ''}${punch.subsystem.code} — ${punch.subsystem.name}`] as [string, React.ReactNode]] : []),
-    ...(punch.discipline ? [[t('page.discipline'), <span key="d" style={{ color: punch.discipline.color, fontWeight: 600 }}>{punch.discipline.code} · {punch.discipline.name}</span>] as [string, React.ReactNode]] : []),
+    ...(punch.discipline ? [[t('page.discipline'), <span key="d" style={{ color: ink(punch.discipline.color), fontWeight: 600 }}>{punch.discipline.code} · {punch.discipline.name}</span>] as [string, React.ReactNode]] : []),
   ]
 
   return (
@@ -138,13 +139,13 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
           <h1 style={{ fontSize: '20px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{punch.punch_number}</h1>
           <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
           <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{t(`punchStatus.${displayStatus}`)}</span>
-          {!punch.category_reviewed_at && !isClosed && <span style={{ fontSize: '11px', color: '#b45309' }}>{tGuide('unreviewedShort')}</span>}
+          {!punch.category_reviewed_at && !isClosed && <span style={{ fontSize: '11px', color: 'var(--warning-700)' }}>{tGuide('unreviewedShort')}</span>}
         </div>
         <p style={{ fontSize: '16px', fontWeight: 500, color: 'var(--text-strong)', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{punch.description}</p>
 
         {punch.tag && (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '8px 0 0' }}>
-            <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: punch.discipline?.color ?? 'var(--text-strong)' }}>{punch.tag.tag_number}</span>
+            <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: ink(punch.discipline?.color ?? 'var(--text-strong)') }}>{punch.tag.tag_number}</span>
             {punch.tag.description ? ` — ${punch.tag.description}` : ''}
           </p>
         )}
@@ -181,7 +182,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
               <button
                 onClick={() => run(() => updatePunchStatus({ punchId: punch.id, status: 'in_progress', projectId, tagId }))}
                 disabled={isPending}
-                style={{ ...touch, background: '#eff6ff', color: '#3b82f6', border: '1px solid #bfdbfe' }}
+                style={{ ...touch, background: 'var(--primary-50)', color: 'var(--primary-500)', border: '1px solid var(--primary-200)' }}
               >
                 {t('detail.toInProgress')}
               </button>
@@ -230,7 +231,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
       </section>
 
       {error && (
-        <p role="alert" style={{ fontSize: '13px', color: '#b91c1c', padding: '10px 12px', background: '#fee2e2', borderRadius: '8px', margin: '12px 0 0' }}>{error}</p>
+        <p role="alert" style={{ fontSize: '13px', color: 'var(--danger-700)', padding: '10px 12px', background: 'var(--danger-100)', borderRadius: '8px', margin: '12px 0 0' }}>{error}</p>
       )}
 
       {/* ── Historia ───────────────────────────────────────────── */}

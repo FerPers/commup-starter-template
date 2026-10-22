@@ -146,8 +146,8 @@
     "theme": {
       "light": "Light",
       "dark": "Dark",
-      "switchToLight": "Switch to light mode",
-      "switchToDark": "Switch to dark mode"
+      "contrast": "Contrast",
+      "label": "Theme"
     }
   },
   "Topbar": {
@@ -1412,7 +1412,8 @@
       "synced": "✓ Synced",
       "nextPending": "{count} pending",
       "nextPendingTitle": "Go to the next required item not filled in",
-      "more": "More actions"
+      "more": "More actions",
+      "contrast": "High contrast (sunlight)"
     },
     "revoke": {
       "title": "Revoke approval of ITR {itrNumber}",

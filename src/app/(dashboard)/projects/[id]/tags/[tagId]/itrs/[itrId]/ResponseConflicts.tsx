@@ -73,12 +73,12 @@ export default function ResponseConflicts({ itrId, userId, labels, names, timezo
   }
 
   return (
-    <div role="alert" style={{ marginTop: '12px', padding: '10px 14px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a' }}>
-      <p style={{ fontSize: '12px', fontWeight: 700, color: '#92400e', margin: '0 0 6px' }}>⚠ {t('conflictTitle')}</p>
-      {error && <p style={{ fontSize: '12px', color: '#b91c1c', margin: '0 0 6px' }}>{error}</p>}
+    <div role="alert" style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--warning-50)', borderRadius: '8px', border: '1px solid var(--warning-200)' }}>
+      <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--warning-800)', margin: '0 0 6px' }}>⚠ {t('conflictTitle')}</p>
+      {error && <p style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '0 0 6px' }}>{error}</p>}
       {rows.map(r => (
         <div key={r.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 200, fontSize: '12px', color: '#78350f' }}>
+          <div style={{ flex: 1, minWidth: 200, fontSize: '12px', color: 'var(--warning-900)' }}>
             <div style={{ fontWeight: 600 }}>{labels[r.itemId] ?? r.itemId}</div>
             <div>{t('conflictMine', { value: responseValueLabel(r, vl) })}</div>
             <div>{t('conflictTheirs', {
@@ -89,11 +89,11 @@ export default function ResponseConflicts({ itrId, userId, labels, names, timezo
           </div>
           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
             <button type="button" disabled={busy !== null} onClick={() => { void applyMine(r) }}
-              style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid #f59e0b', background: '#fef3c7', color: '#92400e', fontWeight: 600, cursor: 'pointer' }}>
+              style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid var(--warning-500)', background: 'var(--warning-100)', color: 'var(--warning-800)', fontWeight: 600, cursor: 'pointer' }}>
               {t('applyMine')}
             </button>
             <button type="button" disabled={busy !== null} onClick={() => { void discard(r) }}
-              style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid #fecaca', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>
+              style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer' }}>
               {t('keepTheirs')}
             </button>
           </div>

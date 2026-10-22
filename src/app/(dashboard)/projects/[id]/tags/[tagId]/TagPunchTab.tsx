@@ -66,7 +66,7 @@ export default function TagPunchTab({
         <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: '0 0 20px' }}>{t('punches.emptyMsg')}</p>
         {canRaise && <Link
           href={newHref}
-          style={{ display: 'inline-block', padding: '9px 18px', background: '#ea580c', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}
+          style={{ display: 'inline-block', padding: '9px 18px', background: 'var(--orange-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}
         >
           {t('punches.newPunch')}
         </Link>}
@@ -104,7 +104,7 @@ export default function TagPunchTab({
         <div style={{ marginLeft: 'auto' }}>
           {canRaise && <Link
             href={newHref}
-            style={{ display: 'inline-block', padding: '6px 14px', background: '#ea580c', color: '#fff', borderRadius: '8px', fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}
+            style={{ display: 'inline-block', padding: '6px 14px', background: 'var(--orange-600)', color: '#fff', borderRadius: '8px', fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}
           >
             {t('punches.newPunch')}
           </Link>}
@@ -131,7 +131,7 @@ export default function TagPunchTab({
                     <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
                     <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{stLabel}</span>
                     {!punch.category_reviewed_at && punch.status !== 'closed' && punch.status !== 'cancelled' && (
-                      <span style={{ fontSize: '10px', color: '#b45309' }}>{tGuide('unreviewedShort')}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--warning-700)' }}>{tGuide('unreviewedShort')}</span>
                     )}
                   </div>
                   <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '0 0 4px', lineHeight: '1.4' }}>{punch.description}</p>

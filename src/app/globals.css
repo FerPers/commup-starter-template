@@ -33,24 +33,59 @@
 
   /* ---------- Color: Success (green) ---------- */
   --success-50:  #ecfdf5;
+  --success-100: #d1fae5;
+  --success-200: #a7f3d0;
   --success-300: #6ee7b7;
+  --success-400: #34d399;
   --success-500: #10b981;
   --success-600: #059669;
   --success-700: #047857;
+  --success-800: #065f46;
+  --success-900: #064e3b;
 
   /* ---------- Color: Warning (amber) ---------- */
   --warning-50:  #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-200: #fde68a;
   --warning-300: #fcd34d;
+  --warning-400: #fbbf24;
   --warning-500: #f59e0b;
   --warning-600: #d97706;
   --warning-700: #b45309;
+  --warning-800: #92400e;
+  --warning-900: #78350f;
 
   /* ---------- Color: Danger (red) ---------- */
   --danger-50:  #fef2f2;
+  --danger-100: #fee2e2;
+  --danger-200: #fecaca;
   --danger-300: #fca5a5;
+  --danger-400: #f87171;
   --danger-500: #ef4444;
   --danger-600: #dc2626;
   --danger-700: #b91c1c;
+  --danger-800: #991b1b;
+  --danger-900: #7f1d1d;
+
+  /* ---------- Color: Orange (pendientes, Cat B en algunos avisos) ---------- */
+  --orange-50:  #fff7ed;
+  --orange-100: #ffedd5;
+  --orange-200: #fed7aa;
+  --orange-300: #fdba74;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+  --orange-700: #c2410c;
+  --orange-800: #9a3412;
+
+  /* ---------- Color: Violet (aprobado / resuelto) ---------- */
+  --violet-50:  #f5f3ff;
+  --violet-100: #ede9fe;
+  --violet-200: #ddd6fe;
+  --violet-300: #c4b5fd;
+  --violet-500: #8b5cf6;
+  --violet-600: #7c3aed;
+  --violet-700: #6d28d9;
+  --violet-800: #5b21b6;
 
   /* ---------- Color: Accent (purple) ---------- */
   --accent-50:  #faf5ff;
@@ -118,6 +153,13 @@
   --sidebar-bg:     var(--brand-navy-dark);
   --sidebar-text:   var(--gray-400);
   --sidebar-active: var(--primary-500);
+  /* Texto sobre el fondo navy del menú: no depende de la escala de grises
+     (que el tema «Contraste» oscurece para el fondo blanco). */
+  --sidebar-text-strong: #e2e8f0;
+  --sidebar-text-dim:    #94a3b8;
+  --sidebar-text-faint:  #64748b;
+  --sidebar-link-active: var(--primary-400);
+  --sidebar-link-border: var(--primary-500);
 
   --primary:        var(--primary-500);
   --primary-dark:   var(--primary-700);
@@ -128,6 +170,9 @@
   --punch-a:        var(--danger-500);
   --punch-b:        var(--warning-500);
   --punch-c:        var(--gray-500);
+
+  /* Colores de la BD usados como texto (ink() en src/lib/theme) */
+  --ink-darken: 0%;
 
   /* Focus ring (a11y, consumido por componentes UI Fase 2) */
   --focus-ring:     0 0 0 3px rgba(59, 130, 246, 0.35);
@@ -187,6 +232,144 @@
   --role-client-fg:     var(--gray-300);
   --role-client-bg:     rgba(148, 163, 184, 0.22);
   --role-client-border: rgba(148, 163, 184, 0.45);
+}
+
+/* ==========================================================================
+   Alto contraste para campo (C-29) — [data-theme="contrast"] en <html>
+   Variante del claro pensada para leer a pleno sol: fondo blanco puro, texto
+   negro y TODO tono que se usa como texto, borde o relleno (300–900) llevado
+   a ≥ 7:1 sobre blanco. Los fondos pálidos (50–200) quedan: con el texto
+   oscuro encima, los chips siguen leyéndose. Por eso los colores de las
+   pantallas de campo van por tokens de escala (var(--danger-500), no '#ef4444').
+   ========================================================================== */
+:root[data-theme="contrast"] {
+  --gray-50:  #f8fafc;
+  --gray-100: #eef2f6;
+  --gray-200: #cbd5e1;
+  --gray-300: #64748b;
+  --gray-400: #334155;
+  --gray-500: #1e293b;
+  --gray-600: #0f172a;
+  --gray-700: #0f172a;
+  --gray-800: #020617;
+  --gray-900: #000000;
+
+  --primary-300: #1d4ed8;
+  --primary-400: #1e40af;
+  --primary-500: #1e40af;
+  --primary-600: #1e3a8a;
+  --primary-700: #1e3a8a;
+  --primary-800: #172554;
+  --primary-900: #172554;
+
+  --success-300: #047857;
+  --success-400: #065f46;
+  --success-500: #065f46;
+  --success-600: #065f46;
+  --success-700: #064e3b;
+  --success-800: #022c22;
+  --success-900: #022c22;
+
+  --warning-300: #b45309;
+  --warning-400: #78350f;
+  --warning-500: #78350f;
+  --warning-600: #451a03;
+  --warning-700: #451a03;
+  --warning-800: #451a03;
+  --warning-900: #451a03;
+
+  --danger-300: #dc2626;
+  --danger-400: #991b1b;
+  --danger-500: #7f1d1d;
+  --danger-600: #450a0a;
+  --danger-700: #450a0a;
+  --danger-800: #450a0a;
+  --danger-900: #450a0a;
+
+  --orange-300: #c2410c;
+  --orange-500: #9a3412;
+  --orange-600: #9a3412;
+  --orange-700: #7c2d12;
+  --orange-800: #431407;
+
+  --violet-300: #6d28d9;
+  --violet-500: #5b21b6;
+  --violet-600: #5b21b6;
+  --violet-700: #4c1d95;
+  --violet-800: #2e1065;
+
+  --accent-300: #7e22ce;
+  --accent-500: #6b21a8;
+  --accent-600: #6b21a8;
+  --accent-700: #581c87;
+
+  --background:     #ffffff;
+  --foreground:     #000000;
+  --card-bg:        #ffffff;
+  --border:         #334155;
+  --text-muted:     #1e293b;
+  --text-strong:    #000000;
+
+  /* El menú lateral sigue navy: su texto se fija claro aparte de la escala. */
+  --sidebar-text:        #e2e8f0;
+  --sidebar-text-strong: #ffffff;
+  --sidebar-text-dim:    #e2e8f0;
+  --sidebar-text-faint:  #cbd5e1;
+  --sidebar-active:      #93c5fd;
+  --sidebar-link-active: #93c5fd;
+  --sidebar-link-border: #60a5fa;
+
+  --primary:        var(--primary-500);
+  --primary-dark:   var(--primary-700);
+  --success:        var(--success-500);
+  --warning:        var(--warning-500);
+  --danger:         var(--danger-500);
+
+  --punch-a:        var(--danger-500);
+  --punch-b:        var(--warning-500);
+  --punch-c:        var(--gray-500);
+
+  --shadow-sm: none;
+  --shadow-md: 0 0 0 1px #334155;
+  --shadow-lg: 0 0 0 2px #334155;
+
+  --focus-ring: 0 0 0 3px #000000;
+  --ink-darken: 55%;
+
+  /* Texto un punto más grande: con guantes y reflejo, 14 px no alcanza. */
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 16px;
+  --text-md:   17px;
+}
+
+:root[data-theme="contrast"] body {
+  font-weight: 500;
+  accent-color: #1e40af;
+}
+
+/* El naranja de marca no se oscurece en el token (va sobre el menú navy y en
+   chips con texto navy); solo donde es TEXTO sobre blanco: la barra inferior. */
+:root[data-theme="contrast"] .app-tabbar-item.is-active {
+  color: #9a3412;
+  border-top-color: #9a3412;
+}
+
+/* El texto atenuado ya es casi negro: el placeholder necesita su propio gris. */
+:root[data-theme="contrast"] input::placeholder,
+:root[data-theme="contrast"] textarea::placeholder {
+  color: #475569;
+}
+
+:root[data-theme="contrast"] input:focus-visible,
+:root[data-theme="contrast"] textarea:focus-visible,
+:root[data-theme="contrast"] select:focus-visible,
+:root[data-theme="contrast"] button:focus-visible,
+:root[data-theme="contrast"] a:focus-visible,
+:root[data-theme="contrast"] [role="button"]:focus-visible,
+:root[data-theme="contrast"] [tabindex]:focus-visible {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
 }
 
 @theme inline {
@@ -388,10 +571,11 @@ body.drawer-locked { overflow: hidden; }
     width: 280px !important;
     min-width: 280px !important;
     transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+    /* Sin sombra cerrado: asomaba como franja gris en el borde izquierdo del teléfono. */
+    box-shadow: none;
   }
-  .app-sidebar.is-open { transform: translateX(0); }
+  .app-sidebar.is-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0, 0, 0, 0.5); }
   .topbar-burger { display: inline-flex; }
 }
 
@@ -432,7 +616,7 @@ body.drawer-locked { overflow: hidden; }
     background: transparent;
     border: 0;
     border-top: 2px solid transparent;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font: inherit;
     font-size: 11px;
     font-weight: 500;
@@ -476,7 +660,7 @@ body.drawer-locked { overflow: hidden; }
     box-shadow: 0 0 0 2px var(--card-bg);
   }
   .app-tabbar-badge.is-soft {
-    background: var(--text-secondary);
+    background: var(--text-muted);
   }
 }
 

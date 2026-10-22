@@ -209,8 +209,8 @@ export default function PunchPhotosSection({
 
       {error && (
         <p style={{
-          fontSize: 12, color: '#ef4444', padding: '8px 12px',
-          background: '#fee2e2', borderRadius: 6, margin: '8px 0 0',
+          fontSize: 12, color: 'var(--danger-500)', padding: '8px 12px',
+          background: 'var(--danger-100)', borderRadius: 6, margin: '8px 0 0',
         }}>
           {error}
         </p>

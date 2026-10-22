@@ -31,6 +31,9 @@ import ReturnToExecutor from './ReturnToExecutor'
 import AssignmentsPanel, { type AssignableMember } from './AssignmentsPanel'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import { applyTheme, currentTheme, THEME_EVENT } from '@/lib/theme/client'
+import type { Theme } from '@/types/theme'
+import { ink } from '@/lib/theme'
 
 export default function ItrExecution({
   itr,
@@ -288,6 +291,18 @@ export default function ItrExecution({
 
   // C-29: menú «⋯» del pie en el teléfono y salto al siguiente ítem obligatorio pendiente.
   const [moreOpen, setMoreOpen] = useState(false)
+  // C-29: alto contraste a mano en el «⋯» (el inspector no sale del ITR para cambiarlo).
+  const [theme, setThemeState] = useState<Theme>('light')
+  useEffect(() => {
+    setThemeState(currentTheme())
+    const onChange = (e: Event) => setThemeState((e as CustomEvent<Theme>).detail)
+    window.addEventListener(THEME_EVENT, onChange)
+    return () => window.removeEventListener(THEME_EVENT, onChange)
+  }, [])
+  function toggleContrast() {
+    setMoreOpen(false)
+    void applyTheme(theme === 'contrast' ? 'light' : 'contrast')
+  }
   function jumpToNextPending() {
     const id = nextPendingItemId(completion.missingRequiredItemIds, itemId => {
       const el = document.getElementById(`itr-item-${itemId}`)
@@ -320,7 +335,7 @@ export default function ItrExecution({
           <div style={{ flex: '1 1 240px', minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
               {phase && (
-                <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: `${phase.color}18`, color: phase.color }}>
+                <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: `${phase.color}18`, color: ink(phase.color) }}>
                   {phase.code}
                 </span>
               )}
@@ -339,7 +354,7 @@ export default function ItrExecution({
             {template && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{template.title}</span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '999px', padding: '1px 6px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '999px', padding: '1px 6px' }}>
                   v{template.version}
                 </span>
               </div>
@@ -386,7 +401,7 @@ export default function ItrExecution({
           <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
             <span>
               <strong style={{ color: 'var(--gray-700)' }}>{t('header.tagLabel')}</strong>{' '}
-              <span style={{ fontFamily: 'ui-monospace, monospace', color: tag.disciplines?.color ?? '#374151' }}>{tag.tag_number}</span>
+              <span style={{ fontFamily: 'ui-monospace, monospace', color: ink(tag.disciplines?.color ?? 'var(--gray-700)') }}>{tag.tag_number}</span>
               {' — '}{tag.description}
             </span>
             {executor?.profiles?.full_name && (
@@ -438,7 +453,7 @@ export default function ItrExecution({
             <span>{effectiveProgress}%</span>
           </div>
           <div style={{ height: '6px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${effectiveProgress}%`, background: effectiveProgress >= 100 ? '#10b981' : '#3b82f6', borderRadius: '4px', transition: 'width 0.4s' }} />
+            <div style={{ height: '100%', width: `${effectiveProgress}%`, background: effectiveProgress >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: '4px', transition: 'width 0.4s' }} />
           </div>
         </div>
 
@@ -450,30 +465,30 @@ export default function ItrExecution({
             const signedDate = sig ? sig.signed_at.slice(0, 10).split('-').reverse().join('/') : null
             const signedTime = sig ? sig.signed_at.slice(11, 16) : null
             return (
-              <div key={role} style={{ borderRadius: '7px', background: sig?.pending ? '#fffbeb' : sig ? '#ecfdf5' : 'var(--gray-50)', border: `1px solid ${sig?.pending ? '#fde68a' : sig ? '#a7f3d0' : 'var(--border)'}`, overflow: 'hidden', minWidth: '130px' }}>
+              <div key={role} style={{ borderRadius: '7px', background: sig?.pending ? 'var(--warning-50)' : sig ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${sig?.pending ? 'var(--warning-200)' : sig ? 'var(--success-200)' : 'var(--border)'}`, overflow: 'hidden', minWidth: '130px' }}>
                 <div style={{ padding: '7px 10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: sig ? '4px' : 0 }}>
                     <span style={{ fontSize: '12px' }}>{sig?.pending ? '⏳' : sig ? '✓' : '○'}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig?.pending ? '#b45309' : sig ? '#10b981' : 'var(--gray-400)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig?.pending ? 'var(--warning-700)' : sig ? 'var(--success-500)' : 'var(--gray-400)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
                   </div>
                   {sig && (
                     <>
                       <div style={{ fontSize: '11px', color: 'var(--gray-700)', fontWeight: 500, marginLeft: '17px' }}>
                         <PersonName name={sig.profiles?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />{sig.signer_company ? ` · ${sig.signer_company}` : ''}
                       </div>
-                      <div style={{ fontSize: '10px', color: sig.pending ? '#b45309' : 'var(--gray-400)', marginLeft: '17px', marginTop: '1px' }}>
+                      <div style={{ fontSize: '10px', color: sig.pending ? 'var(--warning-700)' : 'var(--gray-400)', marginLeft: '17px', marginTop: '1px' }}>
                         {sig.pending ? t('sync.pending') : `${signedDate} ${signedTime}`}
                       </div>
                     </>
                   )}
                   {!sig && (
-                    <div style={{ fontSize: '11px', color: assignee ? 'var(--text-muted)' : '#b45309', marginLeft: '17px', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', color: assignee ? 'var(--text-muted)' : 'var(--warning-700)', marginLeft: '17px', marginTop: '2px' }}>
                       {assignee ? <PersonName name={assignee.profiles?.full_name} inactive={isInactiveMember(assignee.user_id, memberIds)} /> : t('assign.unassigned')}
                     </div>
                   )}
                 </div>
                 {sig?.signature_image && (
-                  <div style={{ borderTop: '1px solid #a7f3d0', padding: '4px 6px', background: '#f0fdf4' }}>
+                  <div style={{ borderTop: '1px solid var(--success-200)', padding: '4px 6px', background: 'var(--success-50)' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element -- base64 signature data URL, Image optimizer doesn't apply */}
                     <img src={sig.signature_image} alt={t(`roles.${role}` as Parameters<typeof t>[0])} style={{ height: '36px', maxWidth: '140px', objectFit: 'contain', display: 'block' }} />
                   </div>
@@ -494,23 +509,23 @@ export default function ItrExecution({
 
         {/* Sprint O: punch o firma guardados sin red */}
         {queuedNotice && (
-          <div role="status" style={{ marginTop: '12px', padding: '10px 14px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <p style={{ fontSize: '12px', fontWeight: 600, color: '#b45309', margin: 0, flex: 1 }}>
+          <div role="status" style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--warning-50)', borderRadius: '8px', border: '1px solid var(--warning-200)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-700)', margin: 0, flex: 1 }}>
               {queuedNotice === 'punch' ? `⚑ ${t('punchModal.queued')}` : `✍ ${t('sync.signatureQueued')}`}
             </p>
-            <button onClick={() => setQueuedNotice(null)} aria-label="×" style={{ background: 'transparent', border: 'none', color: '#b45309', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>×</button>
+            <button onClick={() => setQueuedNotice(null)} aria-label="×" style={{ background: 'transparent', border: 'none', color: 'var(--warning-700)', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>×</button>
           </div>
         )}
 
         {/* S06 (I-02): punch rechazados por el servidor — visibles hasta corregir o descartar */}
         {unsyncedPunches.length > 0 && (
-          <div role="alert" style={{ marginTop: '12px', padding: '10px 14px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
-            <p style={{ fontSize: '12px', fontWeight: 700, color: '#b91c1c', margin: '0 0 6px' }}>⚠ {t('sync.unsyncedTitle')}</p>
+          <div role="alert" style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--danger-50)', borderRadius: '8px', border: '1px solid var(--danger-200)' }}>
+            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger-700)', margin: '0 0 6px' }}>⚠ {t('sync.unsyncedTitle')}</p>
             {unsyncedPunches.map(u => (
               <div key={u.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '4px' }}>
-                <p style={{ fontSize: '12px', color: '#7f1d1d', margin: 0, flex: 1, wordBreak: 'break-word' }}>{t('sync.unsyncedPunch', { desc: u.description.slice(0, 60), error: u.error })}</p>
+                <p style={{ fontSize: '12px', color: 'var(--danger-900)', margin: 0, flex: 1, wordBreak: 'break-word' }}>{t('sync.unsyncedPunch', { desc: u.description.slice(0, 60), error: u.error })}</p>
                 <button onClick={() => { if (window.confirm(t('sync.discardConfirm'))) void removeFromOutbox(u.id) }}
-                  style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid #fecaca', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer', flexShrink: 0 }}>
+                  style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer', flexShrink: 0 }}>
                   {t('sync.discard')}
                 </button>
               </div>
@@ -522,14 +537,14 @@ export default function ItrExecution({
 
         {/* Critical blockers warning */}
         {criticalBlocked.length > 0 && (
-          <div style={{ marginTop: '12px', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', border: '1px solid #fecaca' }}>
-            <p style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444', margin: '0 0 4px' }}>
+          <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px', border: '1px solid var(--danger-200)' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-500)', margin: '0 0 4px' }}>
               {t('criticalBlocked', { count: criticalBlocked.length })}
             </p>
             {criticalBlocked.map(item => {
               const desc = itemDescription(item, itemLang)
               return (
-                <p key={item.id} style={{ fontSize: '11px', color: '#7f1d1d', margin: '2px 0' }}>
+                <p key={item.id} style={{ fontSize: '11px', color: 'var(--danger-900)', margin: '2px 0' }}>
                   • {item.item_number ? `${item.item_number} ` : ''}{desc}
                 </p>
               )
@@ -630,7 +645,7 @@ export default function ItrExecution({
       />
 
       <div className="itr-footer" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--card-bg)', borderTop: '1px solid var(--border)', padding: '10px 16px calc(10px + env(safe-area-inset-bottom, 0px))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 10px', zIndex: 100 }}>
-        <div className="itr-footer-status" role="status" style={{ fontSize: '11px', color: isOffline ? '#f59e0b' : syncing ? '#3b82f6' : isPending ? '#3b82f6' : lastSaved ? '#10b981' : 'var(--gray-400)' }}>
+        <div className="itr-footer-status" role="status" style={{ fontSize: '11px', color: isOffline ? 'var(--warning-500)' : syncing ? 'var(--primary-500)' : isPending ? 'var(--primary-500)' : lastSaved ? 'var(--success-500)' : 'var(--gray-400)' }}>
           {isOffline && pendingCount > 0
             ? t('footer.offlineWithPending', { count: pendingCount })
             : isOffline
@@ -653,14 +668,14 @@ export default function ItrExecution({
             <button
               onClick={jumpToNextPending}
               title={t('footer.nextPendingTitle')}
-              style={{ ...footerBtn, background: '#fffbeb', border: '1px solid #fde68a', color: '#b45309' }}
+              style={{ ...footerBtn, background: 'var(--warning-50)', border: '1px solid var(--warning-200)', color: 'var(--warning-700)' }}
             >
               ↓ {t('footer.nextPending', { count: completion.missingRequiredItemIds.length })}
             </button>
           )}
           {canEdit && <button
             onClick={() => openPunchModal('')}
-            style={{ ...footerBtn, background: '#fff7ed', border: '1px solid #fed7aa', color: '#c2410c' }}
+            style={{ ...footerBtn, background: 'var(--orange-50)', border: '1px solid var(--orange-200)', color: 'var(--orange-700)' }}
           >
             {t('footer.btnPunch')}
           </button>}
@@ -668,7 +683,7 @@ export default function ItrExecution({
             onClick={() => generalPhotoInputRef.current?.click()}
             disabled={!canCapture || generalUploading}
             title={generalUploadError ?? t('upload.addPhoto')}
-            style={{ ...footerBtn, background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, color: generalUploading ? '#3b82f6' : '#15803d', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '5px' }}
+            style={{ ...footerBtn, background: generalUploading ? 'var(--primary-50)' : 'var(--success-50)', border: `1px solid ${generalUploadError ? 'var(--danger-300)' : 'var(--success-200)'}`, color: generalUploading ? 'var(--primary-500)' : 'var(--success-700)', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '5px' }}
           >
             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
           </button>
@@ -685,7 +700,7 @@ export default function ItrExecution({
                 onClick={() => setShowSignModal(true)}
                 disabled={!canSign}
                 title={signTooltip || undefined}
-                style={{ ...footerBtn, padding: '10px 20px', background: !canSign ? 'var(--gray-50)' : '#7c3aed', color: !canSign ? 'var(--gray-400)' : 'var(--card-bg)', border: 'none', cursor: !canSign ? 'not-allowed' : 'pointer' }}
+                style={{ ...footerBtn, padding: '10px 20px', background: !canSign ? 'var(--gray-50)' : 'var(--violet-600)', color: !canSign ? 'var(--gray-400)' : 'var(--card-bg)', border: 'none', cursor: !canSign ? 'not-allowed' : 'pointer' }}
               >
                 {t('footer.btnSign')}
               </button>
@@ -698,7 +713,7 @@ export default function ItrExecution({
               href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}/pdf`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ ...footerBtn, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', textDecoration: 'none', alignItems: 'center', gap: '5px' }}
+              style={{ ...footerBtn, background: 'var(--success-50)', border: '1px solid var(--success-200)', color: 'var(--success-700)', textDecoration: 'none', alignItems: 'center', gap: '5px' }}
             >
               ⬇ {t('footer.btnPdf')}
             </a>
@@ -707,39 +722,42 @@ export default function ItrExecution({
             <button
               className="itr-footer-extra"
               onClick={() => { setRevokeError(null); setShowRevokeModal(true) }}
-              style={{ ...footerBtn, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c' }}
+              style={{ ...footerBtn, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)' }}
             >
               {t('footer.btnRevoke')}
             </button>
           )}
-          {(itr.status === 'approved' || canRevoke) && (
-            <div className="itr-footer-more" style={{ position: 'relative' }}>
-              <button
-                onClick={() => setMoreOpen(o => !o)}
-                aria-expanded={moreOpen}
-                aria-label={t('footer.more')}
-                style={{ ...footerBtn, minWidth: '44px', padding: '10px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
-              >
-                ⋯
-              </button>
-              {moreOpen && (
-                <div role="menu" style={{ position: 'absolute', right: 0, bottom: 'calc(100% + 8px)', minWidth: '220px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', boxShadow: '0 8px 30px rgba(0,0,0,0.15)', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {itr.status === 'approved' && (
-                    <a role="menuitem" href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}/pdf`} target="_blank" rel="noopener noreferrer" onClick={() => setMoreOpen(false)}
-                      style={{ ...footerBtn, display: 'flex', alignItems: 'center', background: 'transparent', border: 'none', color: '#15803d', textDecoration: 'none' }}>
-                      ⬇ {t('footer.btnPdf')}
-                    </a>
-                  )}
-                  {canRevoke && (
-                    <button role="menuitem" onClick={() => { setMoreOpen(false); setRevokeError(null); setShowRevokeModal(true) }}
-                      style={{ ...footerBtn, textAlign: 'left', background: 'transparent', border: 'none', color: '#b91c1c' }}>
-                      {t('footer.btnRevoke')}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          <div className="itr-footer-more" style={{ position: 'relative' }}>
+            <button
+              onClick={() => setMoreOpen(o => !o)}
+              aria-expanded={moreOpen}
+              aria-label={t('footer.more')}
+              style={{ ...footerBtn, minWidth: '44px', padding: '10px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+            >
+              ⋯
+            </button>
+            {moreOpen && (
+              <div role="menu" style={{ position: 'absolute', right: 0, bottom: 'calc(100% + 8px)', minWidth: '220px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', boxShadow: '0 8px 30px rgba(0,0,0,0.15)', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {itr.status === 'approved' && (
+                  <a role="menuitem" href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}/pdf`} target="_blank" rel="noopener noreferrer" onClick={() => setMoreOpen(false)}
+                    style={{ ...footerBtn, display: 'flex', alignItems: 'center', background: 'transparent', border: 'none', color: 'var(--success-700)', textDecoration: 'none' }}>
+                    ⬇ {t('footer.btnPdf')}
+                  </a>
+                )}
+                {canRevoke && (
+                  <button role="menuitem" onClick={() => { setMoreOpen(false); setRevokeError(null); setShowRevokeModal(true) }}
+                    style={{ ...footerBtn, textAlign: 'left', background: 'transparent', border: 'none', color: 'var(--danger-700)' }}>
+                    {t('footer.btnRevoke')}
+                  </button>
+                )}
+                <button role="menuitemcheckbox" aria-checked={theme === 'contrast'} onClick={toggleContrast}
+                  style={{ ...footerBtn, display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'left', background: 'transparent', border: 'none', color: 'var(--text-strong)' }}>
+                  <span aria-hidden="true">{theme === 'contrast' ? '☑' : '☐'}</span>
+                  {t('footer.contrast')}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

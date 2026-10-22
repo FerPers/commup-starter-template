@@ -235,6 +235,8 @@ Rules for every new page/query/action:
 
 Existing components use **inline styles** (React `style={{}}`) rather than Tailwind classes. Keep this pattern consistent within existing files. New modules may use either approach, but be consistent within a file.
 
+- **Temas (C-29):** cookie `theme` = `light` · `dark` · `contrast` (`src/lib/theme`: `parseTheme`, script pre-pintado en `<head>` para las páginas que sirve el SW; `applyTheme` en `src/lib/theme/client.ts`). Selector en el menú de usuario y «Alto contraste» en el «⋯» de la ejecución del ITR (teléfono). «Contraste» = claro para pleno sol: oscurece la escala 300–900 de cada familia (≥ 7:1 sobre blanco), deja los fondos 50–200. **Colores en pantallas de campo por token de escala (`var(--danger-500)`, no `'#ef4444'`)** o no responden al tema; colores de la BD (disciplina, fase) usados como texto → `ink(color)`; nunca `${token}NN` para alfa (usar `color-mix`). Sobre el menú navy van `--sidebar-text-*` / `--sidebar-link-*`, no la escala de grises.
+
 ## Domain Model Terminology
 
 - **Tag** — a physical piece of equipment or instrument (the atomic unit)

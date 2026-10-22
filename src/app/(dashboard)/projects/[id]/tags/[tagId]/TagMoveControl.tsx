@@ -13,7 +13,7 @@ import { TAG_MOVE_REASON_MIN, type TagMovePreview } from '@/lib/tags/move'
 export type SubsystemOption = { id: string; code: string; name: string; system_code: string }
 
 const btn: React.CSSProperties = { padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }
-const warnBox: React.CSSProperties = { fontSize: '12px', padding: '8px 10px', borderRadius: '6px', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', margin: '8px 0 0' }
+const warnBox: React.CSSProperties = { fontSize: '12px', padding: '8px 10px', borderRadius: '6px', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', color: 'var(--warning-800)', margin: '8px 0 0' }
 
 export default function TagMoveControl({ projectId, tagId, currentSubsystemId, subsystems, onClose }: {
   projectId: string
@@ -61,7 +61,7 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
       </div>
       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px' }}>{t('intro')}</p>
 
-      {done && <p role="status" style={{ fontSize: '12px', color: '#166534', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '8px 10px', margin: '0 0 12px' }}>{done}</p>}
+      {done && <p role="status" style={{ fontSize: '12px', color: 'var(--success-800)', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', padding: '8px 10px', margin: '0 0 12px' }}>{done}</p>}
 
       <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('targetLabel')}</label>
       <select value={target} onChange={e => choose(e.target.value)} disabled={isPending}
@@ -84,10 +84,10 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
           </ul>
 
           {blocked && (
-            <div role="alert" style={{ ...warnBox, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }}>
+            <div role="alert" style={{ ...warnBox, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-800)' }}>
               {t('blocked')}{' '}
               {preview.signed_itrs.map((i, n) => (
-                <span key={i.id}>{n > 0 && ', '}<a href={`/projects/${projectId}/tags/${tagId}/itrs/${i.id}`} style={{ color: '#991b1b', fontWeight: 600 }}>{i.itr_number}</a></span>
+                <span key={i.id}>{n > 0 && ', '}<a href={`/projects/${projectId}/tags/${tagId}/itrs/${i.id}`} style={{ color: 'var(--danger-800)', fontWeight: 600 }}>{i.itr_number}</a></span>
               ))}
             </div>
           )}
@@ -110,7 +110,7 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
           )}
         </div>
       )}
-      {error && <p role="alert" style={{ fontSize: '12px', color: '#b91c1c', margin: '10px 0 0' }}>{error}</p>}
+      {error && <p role="alert" style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '10px 0 0' }}>{error}</p>}
     </div>
   )
 }

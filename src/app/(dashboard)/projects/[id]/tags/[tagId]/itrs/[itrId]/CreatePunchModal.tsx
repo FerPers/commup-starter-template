@@ -40,8 +40,8 @@ export default function CreatePunchModal({
   const t = useTranslations('ItrExecution')
   const tGuide = useTranslations('PunchGuide')
   const CATEGORY_CONFIG = {
-    A: { label: t('punchModal.catA'), color: '#ef4444', bg: '#fee2e2', border: '#fecaca' },
-    B: { label: t('punchModal.catB'), color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+    A: { label: t('punchModal.catA'), color: 'var(--danger-500)', bg: 'var(--danger-100)', border: 'var(--danger-200)' },
+    B: { label: t('punchModal.catB'), color: 'var(--warning-500)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
     C: { label: t('punchModal.catC'), color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
   } as const
 
@@ -153,7 +153,7 @@ export default function CreatePunchModal({
               </div>
             ))}
             <button type="button" onClick={() => photoInput.current?.click()}
-              style={{ padding: '8px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '12px', color: '#15803d', fontWeight: 600, cursor: 'pointer' }}>
+              style={{ padding: '8px 12px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '8px', fontSize: '12px', color: 'var(--success-700)', fontWeight: 600, cursor: 'pointer' }}>
               {t('punchModal.addPhoto')}
             </button>
             <input ref={photoInput} type="file" accept="image/*" capture="environment" multiple style={{ display: 'none' }}
@@ -186,7 +186,7 @@ export default function CreatePunchModal({
         </div>
 
         {error && (
-          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '0 0 16px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--danger-500)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: '0 0 16px' }}>
             {error}
           </p>
         )}
@@ -201,7 +201,7 @@ export default function CreatePunchModal({
           <button
             onClick={handleSubmit}
             disabled={isPending}
-            style={{ padding: '9px 20px', background: isPending ? '#fed7aa' : '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}
+            style={{ padding: '9px 20px', background: isPending ? 'var(--orange-200)' : 'var(--orange-600)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: isPending ? 'default' : 'pointer' }}
           >
             {isPending ? t('punchModal.registering') : t('punchModal.register')}
           </button>

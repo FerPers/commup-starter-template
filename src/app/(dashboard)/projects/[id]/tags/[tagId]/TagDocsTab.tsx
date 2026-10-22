@@ -31,7 +31,7 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
             <span style={{ fontSize: '20px', opacity: 0.5 }}>📄</span>
             <div>
               <div style={{
-                fontSize: '13px', fontWeight: 700, color: '#1e40af',
+                fontSize: '13px', fontWeight: 700, color: 'var(--primary-800)',
                 fontFamily: 'ui-monospace, monospace',
               }}>
                 {tag.pid_drawing}
@@ -48,8 +48,8 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  padding: '7px 16px', background: '#f0fdf4', color: '#16a34a',
-                  border: '1px solid #bbf7d0', borderRadius: '7px',
+                  padding: '7px 16px', background: 'var(--success-50)', color: 'var(--success-600)',
+                  border: '1px solid var(--success-200)', borderRadius: '7px',
                   fontSize: '12px', fontWeight: 500, textDecoration: 'none',
                 }}
               >
@@ -57,8 +57,8 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
               </a>
             ) : (
               <span style={{
-                padding: '7px 16px', background: '#fef3c7', color: '#92400e',
-                border: '1px solid #fde68a', borderRadius: '7px', fontSize: '12px',
+                padding: '7px 16px', background: 'var(--warning-100)', color: 'var(--warning-800)',
+                border: '1px solid var(--warning-200)', borderRadius: '7px', fontSize: '12px',
               }}>
                 {t('docs.pdfNotUploaded')}
               </span>
@@ -67,8 +67,8 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
               <a
                 href={`/projects/${projectId}/documents/${pidDocId}/viewer?tag=${tag.id}`}
                 style={{
-                  padding: '7px 16px', background: '#eff6ff', color: '#2563eb',
-                  border: '1px solid #bfdbfe', borderRadius: '7px',
+                  padding: '7px 16px', background: 'var(--primary-50)', color: 'var(--primary-600)',
+                  border: '1px solid var(--primary-200)', borderRadius: '7px',
                   fontSize: '12px', fontWeight: 500, textDecoration: 'none',
                 }}
               >

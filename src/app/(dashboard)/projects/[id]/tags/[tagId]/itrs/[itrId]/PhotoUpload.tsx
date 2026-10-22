@@ -124,17 +124,17 @@ export default function PhotoUpload({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          style={{ padding: '7px 14px', background: uploading ? '#eff6ff' : '#f0fdf4', border: '1px dashed #86efac', borderRadius: '7px', fontSize: '12px', color: uploading ? '#3b82f6' : '#15803d', cursor: uploading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+          style={{ padding: '7px 14px', background: uploading ? 'var(--primary-50)' : 'var(--success-50)', border: '1px dashed var(--success-300)', borderRadius: '7px', fontSize: '12px', color: uploading ? 'var(--primary-500)' : 'var(--success-700)', cursor: uploading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
         >
           {uploading ? t('upload.uploading') : isDocument ? t('upload.addDocument') : t('upload.addPhoto')}
         </button>
       )}
 
       {uploadError && (
-        <p style={{ fontSize: '11px', color: '#ef4444', margin: '4px 0 0' }}>{uploadError}</p>
+        <p style={{ fontSize: '11px', color: 'var(--danger-500)', margin: '4px 0 0' }}>{uploadError}</p>
       )}
       {queuedHint && (
-        <p style={{ fontSize: '11px', color: '#b45309', margin: '4px 0 0' }}>{t('upload.queuedHint')}</p>
+        <p style={{ fontSize: '11px', color: 'var(--warning-700)', margin: '4px 0 0' }}>{t('upload.queuedHint')}</p>
       )}
 
       {/* Lightbox */}

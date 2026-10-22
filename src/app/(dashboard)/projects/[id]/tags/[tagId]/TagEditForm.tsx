@@ -107,8 +107,8 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {error && (
         <div style={{
-          padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca',
-          borderRadius: '8px', fontSize: '13px', color: '#dc2626',
+          padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)',
+          borderRadius: '8px', fontSize: '13px', color: 'var(--danger-600)',
         }}>
           {error}
         </div>
@@ -161,7 +161,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
                 type="checkbox"
                 checked={form.preservation_required}
                 onChange={e => set('preservation_required', e.target.checked)}
-                style={{ width: '16px', height: '16px', accentColor: '#3b82f6' }}
+                style={{ width: '16px', height: '16px', accentColor: 'var(--primary-500)' }}
               />
               <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('edit.preservationCheck')}</span>
             </label>
@@ -281,7 +281,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
           onClick={handleSave}
           disabled={isPending}
           style={{
-            padding: '9px 20px', background: isPending ? '#93c5fd' : '#3b82f6', border: 'none',
+            padding: '9px 20px', background: isPending ? 'var(--primary-300)' : 'var(--primary-500)', border: 'none',
             borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff',
             cursor: isPending ? 'not-allowed' : 'pointer',
           }}
@@ -292,21 +292,21 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
 
       {/* Danger zone */}
       {canDelete && (
-        <div style={{ borderTop: '1px solid #fee2e2', paddingTop: '16px', marginTop: '4px' }}>
+        <div style={{ borderTop: '1px solid var(--danger-100)', paddingTop: '16px', marginTop: '4px' }}>
           {!showDeleteConfirm ? (
             <button
               onClick={() => setShowDeleteConfirm(true)}
               style={{
                 width: '100%', padding: '8px 12px', background: 'var(--card-bg)',
-                border: '1px solid #fecaca', borderRadius: '7px',
-                fontSize: '12px', color: '#dc2626', cursor: 'pointer', textAlign: 'left',
+                border: '1px solid var(--danger-200)', borderRadius: '7px',
+                fontSize: '12px', color: 'var(--danger-600)', cursor: 'pointer', textAlign: 'left',
               }}
             >
               {t('edit.deleteBtn')}
             </button>
           ) : (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px' }}>
-              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#991b1b', fontWeight: 500 }}>
+            <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '8px', padding: '12px' }}>
+              <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'var(--danger-800)', fontWeight: 500 }}>
                 {t('edit.deleteConfirmMsg', { tagNumber: tag.tag_number })}
               </p>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -314,7 +314,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
                   onClick={handleDelete}
                   disabled={isPending}
                   style={{
-                    padding: '7px 14px', background: '#dc2626', color: '#fff',
+                    padding: '7px 14px', background: 'var(--danger-600)', color: '#fff',
                     border: 'none', borderRadius: '6px', fontSize: '12px',
                     fontWeight: 600, cursor: isPending ? 'not-allowed' : 'pointer',
                   }}

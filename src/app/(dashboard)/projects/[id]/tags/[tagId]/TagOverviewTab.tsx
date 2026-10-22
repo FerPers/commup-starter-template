@@ -97,7 +97,7 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
                 <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontWeight: 500 }}>{f.label}</span>
                 {f.link ? (
                   <a href={f.link} target="_blank" rel="noopener noreferrer" style={{
-                    fontSize: '12px', color: '#2563eb', fontFamily: 'ui-monospace, monospace',
+                    fontSize: '12px', color: 'var(--primary-600)', fontFamily: 'ui-monospace, monospace',
                     textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px',
                   }}>
                     {f.value} <span style={{ opacity: 0.5, fontSize: '10px' }}>↗</span>
@@ -140,9 +140,9 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
               {isInst && (tag.sp_hh != null || tag.sp_h != null || tag.sp_l != null || tag.sp_ll != null) && (
                 <EngRow label={t('overview.engSetpoints')}>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {tag.sp_hh != null && <SetpointPill label="HH" value={tag.sp_hh} unit={tag.eng_unit} color="#ef4444" />}
-                    {tag.sp_h  != null && <SetpointPill label="H"  value={tag.sp_h}  unit={tag.eng_unit} color="#f97316" />}
-                    {tag.sp_l  != null && <SetpointPill label="L"  value={tag.sp_l}  unit={tag.eng_unit} color="#3b82f6" />}
+                    {tag.sp_hh != null && <SetpointPill label="HH" value={tag.sp_hh} unit={tag.eng_unit} color="var(--danger-500)" />}
+                    {tag.sp_h  != null && <SetpointPill label="H"  value={tag.sp_h}  unit={tag.eng_unit} color="var(--orange-500)" />}
+                    {tag.sp_l  != null && <SetpointPill label="L"  value={tag.sp_l}  unit={tag.eng_unit} color="var(--primary-500)" />}
                     {tag.sp_ll != null && <SetpointPill label="LL" value={tag.sp_ll} unit={tag.eng_unit} color="#6366f1" />}
                   </div>
                 </EngRow>
@@ -158,7 +158,7 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
                 <EngRow label={t('overview.engSilLevel')}>
                   <span style={{
                     padding: '2px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 700,
-                    background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a',
+                    background: 'var(--warning-100)', color: 'var(--warning-800)', border: '1px solid var(--warning-200)',
                   }}>
                     {tag.sil_level}
                   </span>
@@ -229,7 +229,7 @@ function SetpointPill({ label, value, unit, color }: { label: string; value: num
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '4px',
       padding: '2px 8px', borderRadius: '5px', fontSize: '12px',
-      background: `${color}12`, border: `1px solid ${color}30`, color,
+      background: `color-mix(in srgb, ${color} 7%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`, color,
     }}>
       <span style={{ fontWeight: 700, fontSize: '10px' }}>{label}</span>
       <span style={{ fontFamily: 'ui-monospace, monospace' }}>

@@ -79,7 +79,7 @@ export default function TestEquipmentSection({ itrId, projectId, requires, used,
   }
 
   return (
-    <section aria-labelledby="itr-test-equipment" style={{ background: 'var(--card-bg)', border: `1px solid ${blocker ? '#fecaca' : 'var(--border)'}`, borderRadius: '12px', padding: '16px 20px', margin: '0 0 16px' }}>
+    <section aria-labelledby="itr-test-equipment" style={{ background: 'var(--card-bg)', border: `1px solid ${blocker ? 'var(--danger-200)' : 'var(--border)'}`, borderRadius: '12px', padding: '16px 20px', margin: '0 0 16px' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
         <h2 id="itr-test-equipment" style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('itrTitle')}</h2>
         {requires && <span style={{ ...small, fontWeight: 600 }}>{t('required')}</span>}
@@ -104,7 +104,7 @@ export default function TestEquipmentSection({ itrId, projectId, requires, used,
                 <span style={small}>{t('usedOn', { date: u.used_on })}</span>
                 {u.snapshot.certificate_path && (
                   <button type="button" onClick={() => openCert(u.snapshot.certificate_path!)}
-                    style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary-600, #2563eb)', cursor: 'pointer', fontSize: '12px' }}>{t('viewCert')}</button>
+                    style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary-600, var(--primary-600))', cursor: 'pointer', fontSize: '12px' }}>{t('viewCert')}</button>
                 )}
                 {editable && (
                   <button type="button" disabled={isPending} onClick={() => run(() => removeItrTestEquipment({ projectId, itrId, equipmentId: u.equipment_id }))}
@@ -131,11 +131,11 @@ export default function TestEquipmentSection({ itrId, projectId, requires, used,
             {t('add')}
           </button>
           {pickedState && !isUsable(pickedState) && <span role="status" style={{ fontSize: '12px', color: 'var(--danger-700)', fontWeight: 600 }}>{t('pickExpired')}</span>}
-          {pickedState === 'expiring' && <span role="status" style={{ fontSize: '12px', color: '#b45309' }}>{t('pickExpiring')}</span>}
+          {pickedState === 'expiring' && <span role="status" style={{ fontSize: '12px', color: 'var(--warning-700)' }}>{t('pickExpiring')}</span>}
           {available.length === 0 && (
             <span style={small}>
               {t('noInventory')}{' '}
-              {canManageInventory && <Link href="/admin/test-equipment" style={{ color: 'var(--primary-600, #2563eb)' }}>{t('goInventory')}</Link>}
+              {canManageInventory && <Link href="/admin/test-equipment" style={{ color: 'var(--primary-600, var(--primary-600))' }}>{t('goInventory')}</Link>}
             </span>
           )}
         </div>

@@ -2,80 +2,78 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
-import { Sun, Moon } from 'lucide-react'
-import { setTheme } from '@/app/actions/theme'
+import { Sun, Moon, Contrast } from 'lucide-react'
 import { useMounted } from '@/hooks/useMounted'
+import { THEMES } from '@/lib/theme'
+import { applyTheme, currentTheme, THEME_EVENT } from '@/lib/theme/client'
 import type { Theme } from '@/types/theme'
 
-function getInitialTheme(): Theme {
-  if (typeof document === 'undefined') return 'light'
-  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
-}
+const ICONS = { light: Sun, dark: Moon, contrast: Contrast } as const
 
-export default function ThemeToggle({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
+// Selector Claro · Oscuro · Contraste (C-29) del menú de usuario.
+export default function ThemeToggle() {
   const t = useTranslations('Sidebar')
   const [theme, setThemeState] = useState<Theme>('light')
   const mounted = useMounted()
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration-safe: SSR renders 'light' default; on mount we read documentElement.dataset.theme set by the cookie-based pre-paint script
-    setThemeState(getInitialTheme())
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration-safe: SSR renders 'light' default; on mount we read documentElement.dataset.theme (cookie SSR + pre-paint script)
+    setThemeState(currentTheme())
+    const onChange = (e: Event) => setThemeState((e as CustomEvent<Theme>).detail)
+    window.addEventListener(THEME_EVENT, onChange)
+    return () => window.removeEventListener(THEME_EVENT, onChange)
   }, [])
 
-  function toggle() {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    document.documentElement.dataset.theme = next
+  function choose(next: Theme) {
+    if (next === theme) return
     setThemeState(next)
-    // Persist cookie for future SSR; do NOT refresh — keeps current page state.
-    startTransition(() => {
-      void setTheme(next)
-    })
+    startTransition(() => { void applyTheme(next) })
   }
 
-  const isDark = theme === 'dark'
-  // Mostrar ESTADO actual: en dark vemos Moon+"Oscuro"; en light vemos Sun+"Claro".
-  // El click alterna al opuesto. aria-label dice la acción.
-  const Icon = isDark ? Moon : Sun
-  const light = variant === 'light'
-  const bg = light ? 'var(--gray-100)' : 'rgba(255,255,255,0.06)'
-  const bgHover = light ? 'var(--gray-200)' : 'rgba(255,255,255,0.12)'
-  const fg = light ? 'var(--text-strong)' : '#e2e8f0'
-  const border = light ? 'var(--border)' : 'rgba(255,255,255,0.12)'
-  const stateLabel = isDark ? t('theme.dark') : t('theme.light')
-  const actionLabel = isDark ? t('theme.switchToLight') : t('theme.switchToDark')
-
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={actionLabel}
-      title={actionLabel}
-      disabled={!mounted}
+    <div
+      role="radiogroup"
+      aria-label={t('theme.label')}
       style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        padding: '6px 10px',
-        background: bg,
-        border: `1px solid ${border}`,
+        display: 'inline-flex', padding: 2, gap: 2,
+        background: 'var(--gray-100)',
+        border: '1px solid var(--border)',
         borderRadius: 'var(--radius-md)',
-        color: fg,
-        fontSize: 'var(--text-xs)',
-        fontWeight: 500,
-        cursor: mounted ? 'pointer' : 'default',
-        opacity: isPending ? 0.5 : 1,
-        transition: 'background 0.15s, color 0.15s, opacity 0.15s',
-        fontFamily: 'inherit',
-      }}
-      onMouseEnter={(e) => {
-        if (!mounted) return
-        ;(e.currentTarget as HTMLElement).style.background = bgHover
-      }}
-      onMouseLeave={(e) => {
-        ;(e.currentTarget as HTMLElement).style.background = bg
+        opacity: isPending ? 0.6 : 1,
+        transition: 'opacity 0.15s',
       }}
     >
-      <Icon size={14} strokeWidth={2} aria-hidden="true" />
-      <span>{stateLabel}</span>
-    </button>
+      {THEMES.map(option => {
+        const Icon = ICONS[option]
+        const selected = option === theme
+        return (
+          <button
+            key={option}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            title={t(`theme.${option}`)}
+            disabled={!mounted}
+            onClick={() => choose(option)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '5px 8px',
+              background: selected ? 'var(--card-bg)' : 'transparent',
+              border: selected ? '1px solid var(--border)' : '1px solid transparent',
+              borderRadius: 'var(--radius-sm)',
+              color: selected ? 'var(--text-strong)' : 'var(--text-muted)',
+              fontSize: 'var(--text-xs)',
+              fontWeight: selected ? 600 : 500,
+              fontFamily: 'inherit',
+              cursor: mounted ? 'pointer' : 'default',
+            }}
+          >
+            <Icon size={13} strokeWidth={2} aria-hidden="true" />
+            <span>{t(`theme.${option}`)}</span>
+          </button>
+        )
+      })}
+    </div>
   )
 }

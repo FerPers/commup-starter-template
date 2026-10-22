@@ -146,8 +146,8 @@
     "theme": {
       "light": "Claro",
       "dark": "Oscuro",
-      "switchToLight": "Cambiar a modo claro",
-      "switchToDark": "Cambiar a modo oscuro"
+      "contrast": "Contraste",
+      "label": "Tema"
     }
   },
   "Topbar": {
@@ -1412,7 +1412,8 @@
       "synced": "✓ Sincronizado",
       "nextPending": "{count, plural, one {# pendiente} other {# pendientes}}",
       "nextPendingTitle": "Ir al siguiente ítem obligatorio sin llenar",
-      "more": "Más acciones"
+      "more": "Más acciones",
+      "contrast": "Alto contraste (sol)"
     },
     "revoke": {
       "title": "Revocar aprobación del ITR {itrNumber}",

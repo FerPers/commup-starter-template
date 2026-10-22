@@ -44,7 +44,7 @@ export default function RevokeModal({
           </p>
         </div>
 
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: '#7f1d1d', lineHeight: 1.5 }}>
+        <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--danger-900)', lineHeight: 1.5 }}>
           {t('revoke.signersAffected', { count: signatures.length })}
         </div>
 
@@ -62,7 +62,7 @@ export default function RevokeModal({
         </label>
 
         {revokeError && (
-          <p style={{ margin: 0, fontSize: 12, color: '#dc2626' }}>{revokeError}</p>
+          <p style={{ margin: 0, fontSize: 12, color: 'var(--danger-600)' }}>{revokeError}</p>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -76,7 +76,7 @@ export default function RevokeModal({
           <button
             onClick={() => onRevoke(trimmed)}
             disabled={!canSubmit}
-            style={{ padding: '8px 16px', background: canSubmit ? '#dc2626' : '#fca5a5', border: 'none', borderRadius: 8, fontSize: 13, color: '#fff', cursor: canSubmit ? 'pointer' : 'not-allowed', fontWeight: 600 }}
+            style={{ padding: '8px 16px', background: canSubmit ? 'var(--danger-600)' : 'var(--danger-300)', border: 'none', borderRadius: 8, fontSize: 13, color: '#fff', cursor: canSubmit ? 'pointer' : 'not-allowed', fontWeight: 600 }}
           >
             {isPending ? t('revoke.confirming') : t('revoke.confirm')}
           </button>

@@ -4,6 +4,7 @@ import './globals.css'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
+import { parseTheme, THEME_COOKIE, THEME_PREPAINT_SCRIPT } from '@/lib/theme'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://commup.app'),
@@ -55,11 +56,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale()
   const messages = await getMessages()
   const cookieStore = await cookies()
-  const theme = cookieStore.get('theme')?.value === 'dark' ? 'dark' : 'light'
+  const theme = parseTheme(cookieStore.get(THEME_COOKIE)?.value)
 
   return (
     <html lang={locale} data-theme={theme} suppressHydrationWarning>
-      <head />
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_PREPAINT_SCRIPT }} />
+      </head>
       <body>
         <NextIntlClientProvider messages={messages}>
           {children}

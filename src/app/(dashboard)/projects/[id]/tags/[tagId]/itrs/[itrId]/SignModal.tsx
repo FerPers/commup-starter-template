@@ -116,7 +116,7 @@ export default function SignModal({
                   key={role}
                   onClick={() => allowedRoles.includes(role) && setSignRole(role)}
                   disabled={alreadySigned || !allowedRoles.includes(role)}
-                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? '#7c3aed' : 'var(--border)', background: alreadySigned ? 'var(--gray-50)' : signRole === role ? '#f5f3ff' : 'var(--card-bg)', color: alreadySigned ? 'var(--gray-400)' : signRole === role ? '#7c3aed' : '#374151', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
+                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? 'var(--violet-600)' : 'var(--border)', background: alreadySigned ? 'var(--gray-50)' : signRole === role ? 'var(--violet-50)' : 'var(--card-bg)', color: alreadySigned ? 'var(--gray-400)' : signRole === role ? 'var(--violet-600)' : 'var(--gray-700)', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
                 >
                   {alreadySigned ? '✓ ' : ''}{t(`roles.${role}` as Parameters<typeof t>[0])}
                 </button>
@@ -154,15 +154,15 @@ export default function SignModal({
 
         {/* Critical blocker warning */}
         {blocked && (
-          <div style={{ padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '12px', color: '#ef4444', margin: 0, fontWeight: 600 }}>
+          <div style={{ padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px', marginBottom: '16px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--danger-500)', margin: 0, fontWeight: 600 }}>
               {t('signModal.blockedMsg', { count: criticalBlocked.length })}
             </p>
           </div>
         )}
 
         {signError && (
-          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '0 0 16px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--danger-500)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: '0 0 16px' }}>
             {signError}
           </p>
         )}
@@ -177,7 +177,7 @@ export default function SignModal({
           <button
             onClick={() => { if (!cannotSign) onSign(signRole, canvasRef.current!.toDataURL('image/png')) }}
             disabled={cannotSign}
-            style={{ padding: '9px 20px', background: cannotSign ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: cannotSign ? 'not-allowed' : 'pointer' }}
+            style={{ padding: '9px 20px', background: cannotSign ? 'var(--violet-200)' : 'var(--violet-600)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: cannotSign ? 'not-allowed' : 'pointer' }}
           >
             {isPending ? t('signModal.signing') : t('signModal.confirm')}
           </button>

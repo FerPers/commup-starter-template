@@ -57,7 +57,7 @@ export default function ItemRow({
   const visibleDesc = itemDescription(item, lang)
 
   return (
-    <div style={{ background: 'var(--card-bg)', border: `1px solid ${isPassed === false ? '#fecaca' : 'var(--border)'}`, borderRadius: '10px', padding: '14px 16px' }}>
+    <div style={{ background: 'var(--card-bg)', border: `1px solid ${isPassed === false ? 'var(--danger-200)' : 'var(--border)'}`, borderRadius: '10px', padding: '14px 16px' }}>
 
       {/* Item header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: item.item_type === 'checkbox' || item.item_type === 'yes_no' ? '0' : '12px' }}>
@@ -67,9 +67,9 @@ export default function ItemRow({
               <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--gray-400)', minWidth: '28px' }}>{item.item_number}</span>
             )}
             <div style={{ display: 'flex', gap: '4px' }}>
-              {item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleCritical')} />}
-              {item.is_required && !item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleRequired')} />}
-              {item.requires_photo && <span style={{ fontSize: '10px', color: '#3b82f6' }} title={t('item.titlePhoto')}>⊙</span>}
+              {item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger-500)', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleCritical')} />}
+              {item.is_required && !item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--warning-500)', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleRequired')} />}
+              {item.requires_photo && <span style={{ fontSize: '10px', color: 'var(--primary-500)' }} title={t('item.titlePhoto')}>⊙</span>}
               {item.requires_document && <span style={{ fontSize: '10px', color: '#0891b2' }} title={t('item.titleDocument')}>📄</span>}
             </div>
           </div>
@@ -82,7 +82,7 @@ export default function ItemRow({
           title={t('item.punchTooltip')}
           aria-label={t('item.punchTooltip')}
           // C-29: objetivo táctil de 44 px (antes ~20 px)
-          style={{ flexShrink: 0, minWidth: '44px', minHeight: '44px', padding: '4px 8px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, color: '#c2410c', background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer' }}
+          style={{ flexShrink: 0, minWidth: '44px', minHeight: '44px', padding: '4px 8px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, color: 'var(--orange-700)', background: 'var(--orange-50)', border: '1px solid var(--orange-200)', cursor: 'pointer' }}
         >
           ⚑
         </button>}
@@ -115,7 +115,7 @@ export default function ItemRow({
                   isPassed: item.is_critical ? val : null,
                 })}
                 aria-pressed={response?.value_bool === val}
-                style={{ minHeight: '44px', minWidth: '56px', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : 'var(--border)', background: response?.value_bool === val ? (val ? '#ecfdf5' : '#fee2e2') : 'var(--card-bg)', color: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : 'var(--text-muted)', cursor: canEdit ? 'pointer' : 'default' }}
+                style={{ minHeight: '44px', minWidth: '56px', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? 'var(--success-500)' : 'var(--danger-500)') : 'var(--border)', background: response?.value_bool === val ? (val ? 'var(--success-50)' : 'var(--danger-100)') : 'var(--card-bg)', color: response?.value_bool === val ? (val ? 'var(--success-500)' : 'var(--danger-500)') : 'var(--text-muted)', cursor: canEdit ? 'pointer' : 'default' }}
               >
                 {val ? t('item.yesBtn') : t('item.noBtn')}
               </button>
@@ -173,7 +173,7 @@ export default function ItemRow({
                 const passed = val !== null ? computeIsPassed(val, item.acceptance_min, item.acceptance_max) : null
                 onSave(item.id, { valueNumeric: val, isPassed: passed })
               }}
-              style={{ padding: '8px 10px', border: `1px solid ${isPassed === false ? '#fca5a5' : 'var(--border)'}`, borderRadius: '7px', fontSize: '16px', width: '140px', minHeight: '44px', boxSizing: 'border-box' }}
+              style={{ padding: '8px 10px', border: `1px solid ${isPassed === false ? 'var(--danger-300)' : 'var(--border)'}`, borderRadius: '7px', fontSize: '16px', width: '140px', minHeight: '44px', boxSizing: 'border-box' }}
             />
             {item.unit && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.unit}</span>}
           </div>
@@ -186,8 +186,8 @@ export default function ItemRow({
                 : t('item.criterionMax', { max: item.acceptance_max!, unit: item.unit ?? '' })}
             </span>
           )}
-          {isPassed === true && <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>{t('item.passed')}</span>}
-          {isPassed === false && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600 }}>{t('item.failed')}</span>}
+          {isPassed === true && <span style={{ fontSize: '12px', color: 'var(--success-500)', fontWeight: 600 }}>{t('item.passed')}</span>}
+          {isPassed === false && <span style={{ fontSize: '12px', color: 'var(--danger-500)', fontWeight: 600 }}>{t('item.failed')}</span>}
         </div>
       )}
 
@@ -260,7 +260,7 @@ export default function ItemRow({
       {(item.is_critical || item.item_type === 'measurement' || answeredNo || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, response?.value_option).requiresJustification)) && (
         <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {answeredNo && !response?.remarks?.trim() && (
-            <span role="note" style={{ fontSize: '11px', color: '#b45309', fontWeight: 600 }}>
+            <span role="note" style={{ fontSize: '11px', color: 'var(--warning-700)', fontWeight: 600 }}>
               {t('item.noNeedsRemarks')}{canPunch ? ` ${t('item.noSuggestPunch')}` : ''}
             </span>
           )}
@@ -272,7 +272,7 @@ export default function ItemRow({
             disabled={!canEdit}
             placeholder={t('item.remarksPlaceholder')}
             onBlur={e => onSave(item.id, { remarks: e.target.value || null })}
-            style={{ width: '100%', padding: '6px 10px', border: `1px solid ${answeredNo && !response?.remarks?.trim() ? '#fcd34d' : '#f1f5f9'}`, borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
+            style={{ width: '100%', padding: '6px 10px', border: `1px solid ${answeredNo && !response?.remarks?.trim() ? 'var(--warning-300)' : '#f1f5f9'}`, borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
           />
           <div style={{ alignSelf: 'flex-end' }}>
             <MicAppend

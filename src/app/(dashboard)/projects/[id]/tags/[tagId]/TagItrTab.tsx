@@ -10,6 +10,7 @@ import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanMod
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 import { assignmentError, normalizeRequired, requiredForTemplate } from '@/lib/itr/signatures'
+import { ink } from '@/lib/theme'
 
 // ── Status config ────────────────────────────────────────────────────
 
@@ -163,13 +164,13 @@ export default function TagItrTab({
               onClick={handleAiSuggest}
               disabled={aiLoading}
               title="Analiza el tag con IA y propone las plantillas que aplican por fase. Tú decides qué asignar."
-              style={{ padding: '8px 14px', background: '#f5f3ff', color: '#6d28d9', border: '1px solid #ddd6fe', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: aiLoading ? 'wait' : 'pointer' }}
+              style={{ padding: '8px 14px', background: 'var(--violet-50)', color: 'var(--violet-700)', border: '1px solid var(--violet-200)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: aiLoading ? 'wait' : 'pointer' }}
             >
               {aiLoading ? 'Analizando…' : '✦ Sugerir con IA'}
             </button>
             <button
               onClick={() => setShowAssign(true)}
-              style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+              style={{ padding: '8px 16px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
             >
               + Asignar ITR
             </button>
@@ -179,15 +180,15 @@ export default function TagItrTab({
 
       {/* Sugerencias de IA (respaldo de la matriz) */}
       {aiError && (
-        <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px', marginBottom: '14px' }}>{aiError}</div>
+        <div style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '8px', color: 'var(--danger-600)', fontSize: '13px', marginBottom: '14px' }}>{aiError}</div>
       )}
       {aiSuggestions && (
-        <div style={{ background: '#faf5ff', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
+        <div style={{ background: 'var(--accent-50)', border: '1px solid var(--violet-200)', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#5b21b6' }}>
+            <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--violet-800)' }}>
               ✦ Propuesta de la IA para {tagNumber} · {aiSuggestions.length} plantilla{aiSuggestions.length !== 1 ? 's' : ''}
             </p>
-            <button onClick={() => setAiSuggestions(null)} style={{ background: 'none', border: 'none', color: '#7c3aed', fontSize: '12px', cursor: 'pointer' }}>Cerrar</button>
+            <button onClick={() => setAiSuggestions(null)} style={{ background: 'none', border: 'none', color: 'var(--violet-600)', fontSize: '12px', cursor: 'pointer' }}>Cerrar</button>
           </div>
           {aiSuggestions.length === 0 && <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>La IA no encontró plantillas aplicables en el catálogo de la organización.</p>}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -195,7 +196,7 @@ export default function TagItrTab({
               const inList = templates.some(t => t.id === sg.template_id)
               return (
                 <div key={sg.template_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                  <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: '#ede9fe', color: '#5b21b6', whiteSpace: 'nowrap' }}>Fase {sg.phase_code ?? '?'}</span>
+                  <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: 'var(--violet-100)', color: 'var(--violet-800)', whiteSpace: 'nowrap' }}>Fase {sg.phase_code ?? '?'}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
                       <span style={{ fontFamily: 'monospace' }}>{sg.template_code}</span> · {sg.title}
@@ -203,12 +204,12 @@ export default function TagItrTab({
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{sg.reason}</div>
                   </div>
-                  <span title="Confianza" style={{ fontSize: '11px', fontWeight: 700, color: sg.confidence >= 0.7 ? '#15803d' : sg.confidence >= 0.4 ? '#b45309' : '#dc2626', whiteSpace: 'nowrap' }}>{Math.round(sg.confidence * 100)}%</span>
+                  <span title="Confianza" style={{ fontSize: '11px', fontWeight: 700, color: sg.confidence >= 0.7 ? 'var(--success-700)' : sg.confidence >= 0.4 ? 'var(--warning-700)' : 'var(--danger-600)', whiteSpace: 'nowrap' }}>{Math.round(sg.confidence * 100)}%</span>
                   <button
                     onClick={() => { setSelectedTemplate(sg.template_id); setShowAssign(true) }}
                     disabled={!inList}
                     title={inList ? 'Abre el formulario de asignación con esta plantilla' : 'Plantilla de otra disciplina: asígnala desde la lista completa'}
-                    style={{ padding: '5px 10px', fontSize: '12px', fontWeight: 600, background: inList ? '#3b82f6' : 'var(--gray-100)', color: inList ? '#fff' : 'var(--text-muted)', border: 'none', borderRadius: '6px', cursor: inList ? 'pointer' : 'not-allowed' }}
+                    style={{ padding: '5px 10px', fontSize: '12px', fontWeight: 600, background: inList ? 'var(--primary-500)' : 'var(--gray-100)', color: inList ? '#fff' : 'var(--text-muted)', border: 'none', borderRadius: '6px', cursor: inList ? 'pointer' : 'not-allowed' }}
                   >
                     Usar
                   </button>
@@ -237,7 +238,7 @@ export default function TagItrTab({
               >
                 {/* Phase badge */}
                 {phase && (
-                  <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: `${phase.color}18`, color: phase.color, whiteSpace: 'nowrap' }}>
+                  <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: `${phase.color}18`, color: ink(phase.color), whiteSpace: 'nowrap' }}>
                     {phase.code}
                   </span>
                 )}
@@ -258,7 +259,7 @@ export default function TagItrTab({
                 <div style={{ width: '80px' }}>
                   <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginBottom: '3px', textAlign: 'right' }}>{itr.progress_pct}%</div>
                   <div style={{ height: '5px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '3px', transition: 'width 0.3s' }} />
+                    <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: '3px', transition: 'width 0.3s' }} />
                   </div>
                 </div>
 
@@ -272,7 +273,7 @@ export default function TagItrTab({
                   {normalizeRequired(itr.required_signatures).map(role => {
                     const signed = itr.itr_signatures.some(s => s.role === role)
                     return (
-                      <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? '#ecfdf5' : 'var(--gray-50)', color: signed ? '#10b981' : 'var(--gray-300)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, fontWeight: 600 }}>
+                      <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', color: signed ? 'var(--success-500)' : 'var(--gray-300)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, fontWeight: 600 }}>
                         {SIGN_LABELS[role]}
                       </span>
                     )
@@ -302,7 +303,7 @@ export default function TagItrTab({
                         tagNumber: tagNumber,
                         defaultAssignedTo: executor?.user_id,
                       })}
-                      style={{ padding: '6px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '11px', color: '#16a34a', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      style={{ padding: '6px 10px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', fontSize: '11px', color: 'var(--success-600)', cursor: 'pointer', whiteSpace: 'nowrap' }}
                       title="Agregar a plan de trabajo"
                     >
                       + Plan
@@ -312,7 +313,7 @@ export default function TagItrTab({
                     <button
                       onClick={() => handleDelete(itr.id)}
                       disabled={isPending}
-                      style={{ padding: '6px 10px', background: 'var(--card-bg)', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', color: '#ef4444', cursor: 'pointer' }}
+                      style={{ padding: '6px 10px', background: 'var(--card-bg)', border: '1px solid var(--danger-200)', borderRadius: '6px', fontSize: '12px', color: 'var(--danger-500)', cursor: 'pointer' }}
                     >
                       ✕
                     </button>
@@ -359,7 +360,7 @@ export default function TagItrTab({
                   <label style={labelStyle}>
                     Template *
                     {tagType && (
-                      <span style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 400, color: '#15803d', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '1px 6px' }}>
+                      <span style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 400, color: 'var(--success-700)', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '4px', padding: '1px 6px' }}>
                         {tagType.typeName}
                       </span>
                     )}
@@ -464,11 +465,11 @@ export default function TagItrTab({
                 </div>
 
                 {formError && !assignError && (
-                  <p style={{ fontSize: '12px', color: '#b45309', margin: 0 }}>{formError}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--warning-700)', margin: 0 }}>{formError}</p>
                 )}
 
                 {assignError && (
-                  <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: 0 }}>
+                  <p style={{ fontSize: '12px', color: 'var(--danger-500)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: 0 }}>
                     {assignError}
                   </p>
                 )}
@@ -483,7 +484,7 @@ export default function TagItrTab({
                   <button
                     onClick={handleAssign}
                     disabled={!selectedTemplate || !selectedInspector || !!formError || isPending}
-                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || formError || isPending ? '#93c5fd' : '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || formError || isPending ? 'not-allowed' : 'pointer' }}
+                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || formError || isPending ? 'var(--primary-300)' : 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || formError || isPending ? 'not-allowed' : 'pointer' }}
                   >
                     {isPending ? 'Asignando...' : 'Asignar →'}
                   </button>

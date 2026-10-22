@@ -90,9 +90,9 @@ export default function MicAppend({
       title={blocked ? 'El navegador bloqueó el micrófono: habilítalo en los permisos del sitio' : active ? 'Detener dictado' : 'Dictar'}
       style={{
         padding: '4px 8px', borderRadius: '6px', fontSize: '11px',
-        border: '1px solid', borderColor: active ? '#ef4444' : 'var(--gray-300)',
-        background: active ? '#fee2e2' : 'var(--card-bg)',
-        color: active ? '#ef4444' : 'var(--text-muted)',
+        border: '1px solid', borderColor: active ? 'var(--danger-500)' : 'var(--gray-300)',
+        background: active ? 'var(--danger-100)' : 'var(--card-bg)',
+        color: active ? 'var(--danger-500)' : 'var(--text-muted)',
         cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
       }}
     >

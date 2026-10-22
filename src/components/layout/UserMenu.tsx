@@ -243,7 +243,7 @@ export default function UserMenu({
           {/* Preferencias */}
           <SectionLabel>{t('preferences')}</SectionLabel>
           <PrefRow label={t('language')}><LocaleSwitcher variant="light" /></PrefRow>
-          <PrefRow label={t('theme')}><ThemeToggle variant="light" /></PrefRow>
+          <PrefRow label={t('theme')}><ThemeToggle /></PrefRow>
           {/* N1: las preferencias de aviso viven aquí (antes, entrada del sidebar) */}
           <Link href="/admin/notifications" role="menuitem" onClick={() => setOpen(false)}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6, fontSize: 13, color: 'var(--text-strong)', textDecoration: 'none' }}>
@@ -291,7 +291,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function PrefRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '5px 10px', fontSize: 13, color: 'var(--text-strong)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px 10px', padding: '5px 10px', fontSize: 13, color: 'var(--text-strong)' }}>
       <span>{label}</span>
       {children}
     </div>
