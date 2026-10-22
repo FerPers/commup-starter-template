@@ -17,6 +17,8 @@ import { drawBrandBar, type PdfBranding } from './branding'
 export type DossierItr = {
   number: string
   templateCode: string | null
+  /** R2b: código del cliente de la plantilla (columna solo si alguno lo tiene). */
+  clientCode?: string | null
   tag: string | null
   status: string
   progressPct: number
@@ -85,6 +87,7 @@ const ITR_COLS: TableCol[] = [
   { w: 90, label: 'Status', align: 'center' },
   { w: 46, label: '%', align: 'right' },
 ]
+const CLIENT_COL: TableCol = { w: 96, label: 'Client code' }
 
 const EXC_COLS: TableCol[] = [
   { w: 70, label: 'Punch' },
@@ -195,23 +198,15 @@ export async function renderCompletionDossierPdf(data: CompletionDossierData): P
   if (data.itrs.length === 0) {
     r.empty('No ITRs linked to this subsystem/phase.')
   } else {
-    r.tableHeader(ITR_COLS)
+    const withClient = data.itrs.some(x => x.clientCode)
+    const cols = withClient ? [...ITR_COLS.slice(0, 2), CLIENT_COL, ...ITR_COLS.slice(2)] : ITR_COLS
+    r.tableHeader(cols)
     data.itrs.forEach((itr, i) => {
-      r.tableRow(
-        ITR_COLS,
-        [
-          itr.number,
-          itr.templateCode ?? '—',
-          itr.tag ?? '—',
-          ITR_STATUS_LABEL[itr.status] ?? itr.status,
-          `${itr.progressPct}%`,
-        ],
-        {
-          alternate: i % 2 === 1,
-          valueColors: [COLOR.text, COLOR.muted, COLOR.text, ITR_STATUS_COLOR[itr.status] ?? COLOR.muted, COLOR.text],
-          valueBold: [true, false, false, false, false],
-        },
-      )
+      const values = [itr.number, itr.templateCode ?? '—', itr.tag ?? '—', ITR_STATUS_LABEL[itr.status] ?? itr.status, `${itr.progressPct}%`]
+      const colors = [COLOR.text, COLOR.muted, COLOR.text, ITR_STATUS_COLOR[itr.status] ?? COLOR.muted, COLOR.text]
+      const bold = [true, false, false, false, false]
+      if (withClient) { values.splice(2, 0, itr.clientCode ?? '—'); colors.splice(2, 0, COLOR.muted); bold.splice(2, 0, false) }
+      r.tableRow(cols, values, { alternate: i % 2 === 1, valueColors: colors, valueBold: bold })
     })
   }
 

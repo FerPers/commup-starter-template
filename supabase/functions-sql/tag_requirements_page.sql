@@ -28,6 +28,7 @@ BEGIN
       CASE WHEN p_subsystem_id IS NULL THEN NULL ELSE ARRAY[p_subsystem_id] END) r
     WHERE r.tag_id IN (SELECT id FROM t)
   ),
+  cc AS (SELECT * FROM public.template_client_codes_for(p_project_id)),
   agg AS (
     SELECT t.id, t.tag_number, t.description, t.type_code, t.equipment_type_id,
            COUNT(r.template_code) AS n,
@@ -53,9 +54,10 @@ BEGIN
         'tag_id', pg.id, 'tag_number', pg.tag_number, 'description', pg.description, 'type_code', pg.type_code,
         'has_type', pg.equipment_type_id IS NOT NULL,
         'reqs', COALESCE((SELECT jsonb_agg(jsonb_build_object('code', r.template_code, 'title', r.template_title, 'state', r.state,
-                            'origin', r.origin, 'itr_id', r.itr_id, 'phase', ph.code, 'reason', r.reason)
+                            'origin', r.origin, 'itr_id', r.itr_id, 'phase', ph.code, 'reason', r.reason, 'client_code', cc.client_code)
                           ORDER BY ph.order_index NULLS LAST, r.template_code)
-                          FROM r LEFT JOIN project_phases ph ON ph.id = r.phase_id WHERE r.tag_id = pg.id), '[]'::jsonb))
+                          FROM r LEFT JOIN project_phases ph ON ph.id = r.phase_id LEFT JOIN cc ON cc.template_code = upper(r.template_code)
+                          WHERE r.tag_id = pg.id), '[]'::jsonb))
       ORDER BY pg.tag_number) FROM pg), '[]'::jsonb)
   ) INTO v;
   RETURN v;

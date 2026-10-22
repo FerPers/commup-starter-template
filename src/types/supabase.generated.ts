@@ -10353,6 +10353,51 @@ export type Database = {
           },
         ]
       }
+      template_client_codes: {
+        Row: {
+          client_code: string
+          id: string
+          org_id: string
+          project_id: string | null
+          template_code: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          client_code: string
+          id?: string
+          org_id: string
+          project_id?: string | null
+          template_code: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          client_code?: string
+          id?: string
+          org_id?: string
+          project_id?: string | null
+          template_code?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_client_codes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_client_codes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test_equipment: {
         Row: {
           calibrated_on: string
@@ -13909,6 +13954,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_template_client_codes: {
+        Args: { p_codes: Json; p_level: string; p_project_id: string }
+        Returns: number
+      }
       set_vendor_checklist_item: {
         Args: {
           p_done: boolean
@@ -14080,6 +14129,16 @@ export type Database = {
           template_title: string
         }[]
       }
+      tag_requirements_export: {
+        Args: {
+          p_area_id?: string
+          p_limit?: number
+          p_project_id: string
+          p_subsystem_id?: string
+          p_system_id?: string
+        }
+        Returns: Json
+      }
       tag_requirements_page: {
         Args: {
           p_area_id?: string
@@ -14108,6 +14167,14 @@ export type Database = {
       take_mgmt_snapshot: {
         Args: { p_date?: string; p_project_id: string }
         Returns: Json
+      }
+      template_client_codes_for: {
+        Args: { p_project_id: string }
+        Returns: {
+          client_code: string
+          source: string
+          template_code: string
+        }[]
       }
       tq_set_tags: {
         Args: { p_project_id: string; p_tag_ids: string[]; p_tq_id: string }

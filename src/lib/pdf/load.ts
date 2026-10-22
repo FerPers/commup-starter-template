@@ -341,11 +341,16 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
   if (!itr) return null
 
   // S13 (F-11): documentos de referencia con la revisión usada y la vigente al imprimir.
-  const [{ data: refs }, branding] = await Promise.all([
+  const tplCode = (itr.itr_templates as { code: string } | null)?.code
+  const [{ data: refs }, branding, { data: clientCode }] = await Promise.all([
     db.from('document_references')
       .select('revalidation_reason, used:document_revisions!document_references_revision_id_fkey(rev, status), from:document_revisions!document_references_revalidated_from_fkey(rev), documents(number, title, current:document_revisions!documents_current_revision_fkey(rev))')
       .eq('project_id', x.projectId).eq('itr_id', x.itrId),
     x.branding ?? loadPdfBranding(db, x.projectId),
+    // R2b: código del cliente de la plantilla (proyecto > defecto de la org)
+    tplCode
+      ? db.rpc('template_client_codes_for', { p_project_id: x.projectId }).eq('template_code', tplCode.toUpperCase()).maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
   type Rev = { rev: string; status?: string } | null
   const documentRefs: ItrDocumentRef[] = (refs ?? []).map(r => {
@@ -362,6 +367,7 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
     input: {
       ...itr,
       document_refs: documentRefs,
+      client_code: clientCode?.client_code ?? null,
       // snapshot es jsonb: la foto de calibración que copió el trigger al registrar el equipo.
       itr_test_equipment: (itr.itr_test_equipment ?? []).map(u => ({ ...u, snapshot: u.snapshot as ItrTestEquipmentRef['snapshot'] })),
       branding,

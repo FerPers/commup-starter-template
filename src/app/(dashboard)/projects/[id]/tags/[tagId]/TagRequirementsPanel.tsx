@@ -131,6 +131,7 @@ export default function TagRequirementsPanel({ projectId, tagId, reqs, phaseCode
                           <span style={{ fontSize: 11, marginLeft: 'auto' }}>{ts(`state.${c.state}`)}</span>
                         </div>
                         {c.title && <span style={{ fontSize: 11, textDecoration: 'none', opacity: 0.9 }}>{c.title}</span>}
+                        {c.client_code && <span style={{ fontSize: 11, fontFamily: 'ui-monospace, monospace', opacity: 0.9 }}>{ts('clientCode', { code: c.client_code })}</span>}
                         {(c.origin === 'manual' || c.origin === 'ai' || c.reason) && (
                           <span style={{ fontSize: 11, opacity: 0.85 }}>{[c.origin && c.origin !== 'matrix' ? ts(`origin.${c.origin}`) : null, c.reason].filter(Boolean).join(' · ')}</span>
                         )}

@@ -1,6 +1,8 @@
 -- S20 — banco de carga reproducible (decisión de Luis 2026-10-20): org LOADTEST aparte en prod.
 -- Escala: 10 áreas · 300 sistemas · 1.500 subsistemas · 50.000 tags · ~60.000 ITR · 10.000 punch · 450 certificados.
 -- Meta: Control Tower, Mi trabajo y la lista de ITR con p95 < 1,5 s (ver bench.sql).
+-- R2b (2026-10-22): matriz aceptada que reproduce los ITR sembrados + una regla con requisitos sin generar (12.500),
+-- 500 exclusiones, 500 agregados a mano y códigos del cliente, para medir el registro «Requisitos ITR» y su Excel.
 --
 -- Uso:   supabase db query --linked -f scripts/loadtest/seed.sql      (≈ 1–3 min; idempotente: borra y vuelve a sembrar)
 -- Borrar: supabase db query --linked -f scripts/loadtest/teardown.sql
@@ -101,6 +103,34 @@ INSERT INTO itr_assignments (itr_id, user_id, role)
 SELECT x.id, i.bench_user, 'executor'::signature_role FROM lt_ids i,
   LATERAL (SELECT id FROM itrs WHERE project_id = i.project_id AND status IN ('not_started', 'in_progress') ORDER BY itr_number LIMIT 2000) x;
 
+-- R2b: matriz aceptada. Los tags llevan el tipo y la disciplina del mismo puesto (por código): MTR↔ELEC, PL↔INST,
+-- PMP↔MECH, TX↔PIPE; cada tipo recibe las plantillas de su disciplina (= los ITR de arriba) y TX además B-INST, que
+-- nadie generó (12.500 requisitos «falta»).
+INSERT INTO equipment_type_templates (org_id, equipment_type_id, itr_template_id, status, source, reason)
+SELECT i.org_id, et.id, tp.id, 'accepted', 'manual', 'LOADTEST'
+FROM lt_ids i
+JOIN (SELECT id, org_id, row_number() OVER (PARTITION BY org_id ORDER BY code) AS rn FROM equipment_types) et ON et.org_id = i.org_id
+JOIN (SELECT id, org_id, row_number() OVER (PARTITION BY org_id ORDER BY code) AS rn FROM disciplines) d ON d.org_id = i.org_id AND d.rn = et.rn
+JOIN itr_templates tp ON tp.org_id = i.org_id AND tp.discipline_id = d.id;
+INSERT INTO equipment_type_templates (org_id, equipment_type_id, itr_template_id, status, source, reason)
+SELECT i.org_id, et.id, tp.id, 'accepted', 'manual', 'LOADTEST'
+FROM lt_ids i JOIN equipment_types et ON et.org_id = i.org_id AND et.code = 'TX' JOIN itr_templates tp ON tp.org_id = i.org_id AND tp.code = 'B-INST';
+-- Excepciones: 500 exclusiones del A de su disciplina y 500 agregados de C-ELEC (en el alcance).
+INSERT INTO tag_itr_overrides (org_id, project_id, tag_id, template_code, action, reason, created_by)
+SELECT i.org_id, i.project_id, t.id, 'A-' || d.code, 'exclude', 'LOADTEST: excluido para el banco', i.bench_user
+FROM lt_ids i JOIN tags t ON t.project_id = i.project_id JOIN disciplines d ON d.id = t.discipline_id
+WHERE t.tag_number IN (SELECT 'LT-' || lpad((n * 97 % 50000 + 1)::text, 6, '0') FROM generate_series(1, 500) n);
+INSERT INTO tag_itr_overrides (org_id, project_id, tag_id, template_code, action, created_by)
+SELECT i.org_id, i.project_id, t.id, 'C-ELEC', 'add', i.bench_user
+FROM lt_ids i JOIN tags t ON t.project_id = i.project_id JOIN disciplines d ON d.id = t.discipline_id AND d.code <> 'ELEC'
+WHERE t.tag_number IN (SELECT 'LT-' || lpad((n * 89 % 50000 + 2)::text, 6, '0') FROM generate_series(1, 600) n)
+ON CONFLICT (tag_id, template_code) DO NOTHING;
+-- Códigos del cliente: defecto de la org para todas las plantillas y del proyecto para las de fase C.
+INSERT INTO template_client_codes (org_id, project_id, template_code, client_code)
+SELECT i.org_id, NULL, upper(tp.code), 'CLI-' || tp.code FROM lt_ids i JOIN itr_templates tp ON tp.org_id = i.org_id;
+INSERT INTO template_client_codes (org_id, project_id, template_code, client_code)
+SELECT i.org_id, i.project_id, upper(tp.code), 'PRJ-' || tp.code FROM lt_ids i JOIN itr_templates tp ON tp.org_id = i.org_id AND tp.code LIKE 'C-%';
+
 -- 10.000 punch: 10 % A, 30 % B, 60 % C; 60 % cerrados.
 INSERT INTO punches (project_id, subsystem_id, tag_id, discipline_id, punch_number, category, description, raised_by, status, assigned_to)
 SELECT t.project_id, t.subsystem_id, t.id, t.discipline_id, 'P-' || lpad(n::text, 5, '0'),
@@ -129,7 +159,7 @@ ALTER TABLE punches ENABLE TRIGGER trg_events_punches, ENABLE TRIGGER punches_gu
   ENABLE TRIGGER punches_certificate_base;
 ALTER TABLE itr_assignments ENABLE TRIGGER itr_assignments_integrity, ENABLE TRIGGER itr_assignments_client_guard;
 
-ANALYZE tags; ANALYZE itrs; ANALYZE punches; ANALYZE subsystems; ANALYZE systems; ANALYZE itr_assignments; ANALYZE certificates;
+ANALYZE tags; ANALYZE itrs; ANALYZE equipment_type_templates; ANALYZE tag_itr_overrides; ANALYZE template_client_codes; ANALYZE punches; ANALYZE subsystems; ANALYZE systems; ANALYZE itr_assignments; ANALYZE certificates;
 
 SELECT (SELECT count(*) FROM systems WHERE project_id = (SELECT project_id FROM lt_ids)) AS systems,
        (SELECT count(*) FROM subsystems WHERE project_id = (SELECT project_id FROM lt_ids)) AS subsystems,

@@ -30,7 +30,16 @@ BEGIN
     -- S20 sesión 2 (B-06): políticas set-based en tablas hijas
     ('rls.punch_attachments', 'SELECT count(*) FROM punch_attachments'),
     ('rls.work_plan_items', 'SELECT count(*) FROM work_plan_items'),
-    ('itr_generation_summary', format('SELECT length(public.itr_generation_summary(%L, (SELECT array_agg(id) FROM project_phases WHERE org_id = %L))::text)', v_proj, v_org))
+    ('itr_generation_summary', format('SELECT length(public.itr_generation_summary(%L, (SELECT array_agg(id) FROM project_phases WHERE org_id = %L))::text)', v_proj, v_org)),
+    -- R2b: registro «Requisitos ITR» (totales + página 1 del proyecto, filtro «faltan», un subsistema) y su Excel
+    ('requirements.summary', format('SELECT length(public.tag_requirements_summary(%L)::text)', v_proj)),
+    ('requirements.page_all', format('SELECT length(public.tag_requirements_page(%L)::text)', v_proj)),
+    ('requirements.page_missing', format('SELECT length(public.tag_requirements_page(%L, ''missing'')::text)', v_proj)),
+    ('requirements.page_subsystem', format('SELECT length(public.tag_requirements_page(%L, ''all'', NULL, NULL, (SELECT id FROM subsystems WHERE project_id = %L ORDER BY code LIMIT 1))::text)', v_proj, v_proj)),
+    ('requirements.tag', format('SELECT count(*) FROM public.tag_itr_requirements(%L, ARRAY[(SELECT id FROM tags WHERE project_id = %L AND tag_number = ''LT-000097'')])', v_proj, v_proj)),
+    ('requirements.export_system', format('SELECT length(public.tag_requirements_export(%L, NULL, (SELECT id FROM systems WHERE project_id = %L ORDER BY code LIMIT 1))::text)', v_proj, v_proj)),
+    ('requirements.export_area', format('SELECT length(public.tag_requirements_export(%L, (SELECT id FROM areas WHERE project_id = %L ORDER BY code LIMIT 1))::text)', v_proj, v_proj)),
+    ('requirements.export_project', format('SELECT length(public.tag_requirements_export(%L)::text)', v_proj))
   ) v(label, sql) LOOP
     FOR i IN 1..5 LOOP
       t0 := clock_timestamp();

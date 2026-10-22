@@ -6292,7 +6292,47 @@
     "pageInfo": "{shown} of {total} tags in {node}",
     "pageOf": "Page {page} of {pages}",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "export": "Excel",
+    "exportHint": "Management report, summary by system and detail of {node}",
+    "clientCode": "Client code: {code}",
+    "xls": {
+      "sheet": {
+        "report": "Management report",
+        "summary": "Summary by system",
+        "detail": "Detail by element"
+      },
+      "info": {
+        "project": "Project",
+        "node": "Scope",
+        "date": "Date",
+        "tags": "Tags",
+        "proposed": "Matrix rules to review",
+        "truncated": "Detail truncated (rows shown / total): export by area or system"
+      },
+      "col": {
+        "area": "Area",
+        "system": "System",
+        "systemName": "System name",
+        "subsystem": "Subsystem",
+        "subsystemName": "Subsystem name",
+        "discipline": "Discipline",
+        "disciplineName": "Discipline name",
+        "stage": "Stage",
+        "stageName": "Stage name",
+        "pct": "% approved",
+        "pending": "Pending approval",
+        "element": "Element",
+        "code": "CommUp code",
+        "clientCode": "Client code",
+        "template": "Template",
+        "state": "Status",
+        "origin": "Origin",
+        "itr": "ITR",
+        "reason": "Reason"
+      },
+      "total": "Total"
+    }
   },
   "TagRequirements": {
     "title": "Required ITRs",
@@ -6318,6 +6358,33 @@
       "out_of_scope": "That template belongs to a discipline outside the project scope.",
       "template_not_found": "There is no active template with that code.",
       "invalid_override": "Invalid action."
+    }
+  },
+  "ClientCodes": {
+    "title": "Client codes",
+    "intro": "The number the operator gives each form (e.g. ECP-GTD-F-132). The organization default applies to all its projects; this project’s code replaces it. It shows in the requirements register, the Excel, the ITR PDF and the dossier.",
+    "search": "Search code or template…",
+    "onlyScope": "Templates of the disciplines in scope: {count}",
+    "col": {
+      "code": "Code",
+      "template": "Template",
+      "discipline": "Discipline",
+      "phase": "Stage",
+      "org": "Organization default",
+      "project": "This project",
+      "effective": "In use"
+    },
+    "placeholder": "—",
+    "save": "{count, plural, =0 {Save} one {Save # change} other {Save # changes}}",
+    "saving": "Saving…",
+    "saved": "Codes saved.",
+    "undo": "Undo",
+    "readOnly": "Only Owner, Administrator and Architect change client codes.",
+    "empty": "No template matches this search.",
+    "error": {
+      "template_not_found": "One of the templates no longer exists in the organization.",
+      "client_code_too_long": "A client code is longer than 60 characters.",
+      "invalid_client_codes": "The codes are not valid."
     }
   }
 }

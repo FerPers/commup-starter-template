@@ -81,6 +81,7 @@ export async function GET(
   const [
     { data: itrs },
     { data: punches },
+    { data: clientCodes },
   ] = await Promise.all([
     subsystemId && phaseId
       ? supabase
@@ -102,7 +103,10 @@ export async function GET(
           .eq('project_id', projectId)
           .eq('subsystem_id', subsystemId)
       : Promise.resolve({ data: [] }),
+    // R2b: código del cliente por plantilla (proyecto > defecto de la org)
+    supabase.rpc('template_client_codes_for', { p_project_id: projectId }),
   ])
+  const clientCode = new Map((clientCodes ?? []).map(c => [c.template_code, c.client_code]))
 
   const itrRows: DossierItr[] = (itrs ?? []).map(i => {
     const tmpl = pickOne(i.itr_templates)
@@ -110,6 +114,7 @@ export async function GET(
     return {
       number: i.itr_number,
       templateCode: tmpl?.code ?? null,
+      clientCode: tmpl?.code ? clientCode.get(tmpl.code.toUpperCase()) ?? null : null,
       tag: tag?.tag_number ?? null,
       status: i.status as string,
       progressPct: i.progress_pct ?? 0,

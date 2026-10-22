@@ -85,6 +85,9 @@ export default async function RequirementsPage({ params, searchParams }: {
           <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{t('subtitle', { project: project.code })}</p>
         </div>
         <Link href={`/projects/${id}/scope`} style={btn('outline')}>{t('scope')}</Link>
+        {/* R2b: el Excel es el plan completo del nodo del árbol (los chips de filtro no aplican). */}
+        <a href={`${base}/export${reqQuery({ area: p.area, system: p.system, subsystem: p.subsystem })}`} download
+          title={t('exportHint', { node: nodeLabel ?? project.code })} style={btn('outline')}>{t('export')}</a>
         {canGenerate && summary.missing > 0 && (
           <Link href={`/projects/${id}/itrs/generate`} style={btn('primary')}>{t('generate', { count: summary.missing })}</Link>
         )}
@@ -205,7 +208,7 @@ type T = Awaited<ReturnType<typeof getTranslations<'ItrRequirements'>>>
 
 function Chip({ c, t }: { c: ReqChip; t: T }) {
   const origin = c.origin && c.origin !== 'matrix' ? ` · ${t(`origin.${c.origin}`)}` : ''
-  const title = [`${c.code}${c.title ? ` — ${c.title}` : ''}`, c.phase ? t('phase', { phase: c.phase }) : null,
+  const title = [`${c.code}${c.title ? ` — ${c.title}` : ''}`, c.client_code ? t('clientCode', { code: c.client_code }) : null, c.phase ? t('phase', { phase: c.phase }) : null,
     t(`state.${c.state}`), c.origin ? t(`origin.${c.origin}`) : null, c.reason].filter(Boolean).join(' · ')
   return (
     <span title={title} style={{ ...CHIP_STYLE[c.state], padding: '2px 7px', borderRadius: 5, fontSize: 12, fontWeight: 600, fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap' }}>

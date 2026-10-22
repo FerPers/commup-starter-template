@@ -6292,7 +6292,47 @@
     "pageInfo": "{shown} de {total} tags en {node}",
     "pageOf": "Página {page} de {pages}",
     "prev": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "export": "Excel",
+    "exportHint": "Reporte gerencial, resumen por sistema y detalle de {node}",
+    "clientCode": "Código del cliente: {code}",
+    "xls": {
+      "sheet": {
+        "report": "Reporte gerencial",
+        "summary": "Resumen por sistema",
+        "detail": "Detalle por elemento"
+      },
+      "info": {
+        "project": "Proyecto",
+        "node": "Alcance",
+        "date": "Fecha",
+        "tags": "Tags",
+        "proposed": "Reglas de la matriz por revisar",
+        "truncated": "Detalle truncado (filas mostradas / total): exporte por área o sistema"
+      },
+      "col": {
+        "area": "Área",
+        "system": "Sistema",
+        "systemName": "Nombre del sistema",
+        "subsystem": "Subsistema",
+        "subsystemName": "Nombre del subsistema",
+        "discipline": "Disciplina",
+        "disciplineName": "Nombre de la disciplina",
+        "stage": "Etapa",
+        "stageName": "Nombre de la etapa",
+        "pct": "% aprobado",
+        "pending": "Pendientes de aprobar",
+        "element": "Elemento",
+        "code": "Código CommUp",
+        "clientCode": "Código del cliente",
+        "template": "Plantilla",
+        "state": "Estado",
+        "origin": "Origen",
+        "itr": "ITR",
+        "reason": "Motivo"
+      },
+      "total": "Total"
+    }
   },
   "TagRequirements": {
     "title": "ITR requeridos",
@@ -6318,6 +6358,33 @@
       "out_of_scope": "Esa plantilla es de una disciplina fuera del alcance del proyecto.",
       "template_not_found": "No hay una plantilla activa con ese código.",
       "invalid_override": "Acción no válida."
+    }
+  },
+  "ClientCodes": {
+    "title": "Códigos del cliente",
+    "intro": "El número que el operador le da a cada formato (p. ej. ECP-GTD-F-132). El defecto de la organización vale para todos sus proyectos; el de este proyecto lo reemplaza. Sale en el registro de requisitos, el Excel, el PDF del ITR y el dossier.",
+    "search": "Buscar código o plantilla…",
+    "onlyScope": "Plantillas de las disciplinas en el alcance: {count}",
+    "col": {
+      "code": "Código",
+      "template": "Plantilla",
+      "discipline": "Disciplina",
+      "phase": "Etapa",
+      "org": "Defecto de la org",
+      "project": "Este proyecto",
+      "effective": "Vigente"
+    },
+    "placeholder": "—",
+    "save": "{count, plural, =0 {Guardar} one {Guardar # cambio} other {Guardar # cambios}}",
+    "saving": "Guardando…",
+    "saved": "Códigos guardados.",
+    "undo": "Deshacer",
+    "readOnly": "Solo Propietario, Administrador y Arquitecto cambian los códigos del cliente.",
+    "empty": "Ninguna plantilla con esta búsqueda.",
+    "error": {
+      "template_not_found": "Una de las plantillas ya no existe en la organización.",
+      "client_code_too_long": "Un código del cliente pasa de 60 caracteres.",
+      "invalid_client_codes": "Los códigos no son válidos."
     }
   }
 }

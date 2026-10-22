@@ -16,6 +16,8 @@ export type ReqChip = {
   itr_id: string | null
   phase: string | null
   reason: string | null
+  /** R2b: código del cliente de la plantilla (proyecto > defecto de la org). */
+  client_code?: string | null
 }
 
 export type ReqPageRow = {

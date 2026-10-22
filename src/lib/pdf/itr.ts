@@ -94,6 +94,8 @@ export type ItrPdfData = {
     range_min?: number | null; range_max?: number | null; eng_unit?: string | null; revision?: string | null
   } | null
   projects: { code: string; name: string } | null
+  /** R2b: código del cliente de la plantilla (proyecto > defecto de la org). */
+  client_code?: string | null
   itr_responses: ItrResponse[]
   itr_signatures: ItrSignature[]
   /** S04 (D4): firmas que exige el ITR; el PDF solo muestra esos recuadros. */
@@ -244,6 +246,7 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
     ['Fecha / Date',        itr.scheduled_date],
     ['Plantilla / Template', itr.itr_templates ? `${itr.itr_templates.code} — ${tplTitleEs ?? itr.itr_templates.title}` : null],
     ...(tplTitleEs && tplTitleEs !== itr.itr_templates?.title ? [['Title (EN)', itr.itr_templates?.title] as [string, string | undefined]] : []),
+    ['Código del cliente / Client code', itr.client_code],
   ]
   const metaTextSize = 9
   for (const [label, value] of metas) {
