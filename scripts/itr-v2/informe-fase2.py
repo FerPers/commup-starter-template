@@ -3,7 +3,7 @@
 
 Lee de Supabase (PostgREST, clave de servicio de .env.local) las revisiones inactivas
 cuya descripción empieza por «Revisión N (borrador Fase 2» y escribe
-docs/ITR-FASE2-LOTE-<fecha>.md con una fila por formato: revisión activa, borrador,
+docs/itr-v2/ITR-FASE2-LOTE-<fecha>.md con una fila por formato: revisión activa, borrador,
 ítems, fotos, equipo de prueba y enlace al editor para revisarlo y activarlo.
 """
 import json, os, urllib.request, urllib.parse
@@ -12,7 +12,7 @@ from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ORG = 'e12c53b2-85fd-462f-86f3-bba318aa77ee'
-OUT = os.path.join(ROOT, f'docs/ITR-FASE2-LOTE-{date.today().isoformat()}.md')
+OUT = os.path.join(ROOT, f'docs/itr-v2/ITR-FASE2-LOTE-{date.today().isoformat()}.md')
 
 
 def env():
@@ -32,10 +32,10 @@ def get(e, params):
 
 
 def warnings_by_code():
-    """Avisos del generador (docs/ITR-FASE2-AVISOS-*.csv, vista previa por familia)."""
+    """Avisos del generador (docs/itr-v2/ITR-FASE2-AVISOS-*.csv, vista previa por familia)."""
     import csv, glob
     out = {}
-    for f in sorted(glob.glob(os.path.join(ROOT, 'docs/ITR-FASE2-AVISOS-*.csv'))):
+    for f in sorted(glob.glob(os.path.join(ROOT, 'docs/itr-v2/ITR-FASE2-AVISOS-*.csv'))):
         with open(f, encoding='utf-8-sig') as fh:
             for r in csv.DictReader(fh):
                 if r.get('avisos'):

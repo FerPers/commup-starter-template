@@ -217,6 +217,9 @@ testsprite_tests/tmp/config.json
 # Local source documents for ITR review
 /insumos-locales/
 
-# Respaldos zip de entregas locales
-/entrega-commup-*/**/*.zip
-/entrega-commup-*/*.zip
+# Respaldos zip de entregas locales (archivadas en docs/archive)
+/docs/archive/**/*.zip
+
+### Claude Code — configuración local y worktrees
+.claude/settings.local.json
+.claude/worktrees/

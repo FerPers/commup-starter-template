@@ -1,7 +1,7 @@
 /**
  * Crea un usuario demo confirmado via Supabase admin API.
  * Uso: node scripts/demo-data/create_demo_user.mjs
- * Lee SUPABASE_URL y SERVICE_ROLE_KEY desde .env.local
+ * Lee NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y DEMO_USER_PASSWORD desde .env.local
  */
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
@@ -29,7 +29,11 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
 })
 
 const EMAIL = 'demo-glp@commup.test'
-const PASSWORD = 'DemoGLP2026!'
+const PASSWORD = env.DEMO_USER_PASSWORD
+if (!PASSWORD) {
+  console.error('✗ Falta DEMO_USER_PASSWORD en .env.local')
+  process.exit(1)
+}
 
 // Si el user ya existe, lo borramos y recreamos para tener estado limpio
 const { data: existing } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })

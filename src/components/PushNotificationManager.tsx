@@ -8,7 +8,7 @@
  * 1. Usuario permite notificaciones
  * 2. SW genera PushSubscription (endpoint + keys)
  * 3. App envía subscription a Supabase (tabla push_subscriptions)
- * 4. Cloudflare Worker lee subscriptions y envía web-push
+ * 4. El cron /api/cron/push-dispatch lee la cola y envía el push (src/lib/push/web-push.ts)
  * 5. SW recibe push → muestra notificación
  */
 

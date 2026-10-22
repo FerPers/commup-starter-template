@@ -425,7 +425,7 @@ Hoy quedaron en prod las **fases 5 y 6 completas** (6 sesiones + offline): c8646
 ### 13.4 Aplazado por decisión de Luis
 
 - **Validación campo por campo de los ITR** → después, pasar las tablas de calibración del catálogo a tabla v2 con tolerancias reales (I10A v3, I05A, I11A, P03A, E32A; y reemplazar por la sección de equipos de prueba las tablas E26A M.2, E49BV-1 M.3/M.5/M.7, I33C T.1). No proponer hasta que Luis lo retome.
-- **Plan de migración ITR v2** (`docs/PLAN-MIGRACION-ITR-V2-2026-09-09.md`): activar los borradores v2 por lote en DEMO y re-sincronizar el catálogo; queda detrás de la validación anterior.
+- **Plan de migración ITR v2** (`docs/itr-v2/PLAN-MIGRACION-ITR-V2-2026-09-09.md`): activar los borradores v2 por lote en DEMO y re-sincronizar el catálogo; queda detrás de la validación anterior.
 
 ### 13.5 Arrastrados de antes del plan readiness (verificar si siguen vigentes)
 

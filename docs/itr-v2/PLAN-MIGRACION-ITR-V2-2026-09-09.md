@@ -149,7 +149,7 @@ Migraciones aplicadas en prod: 20260909230000 → 20260909251000 (+ `itr_option_
 
 ### Estado al cierre del 2026-09-09
 
-Fase 0 completa. Fase 1: I10A v3 e I01A v3 como borradores inactivos para revisión; I06A v2 e I04A v2 ratificadas. Fase 2 completa para las cuatro familias: 262 borradores inactivos (C 98, C+V 75, D 45, M 30, DM 14) generados con `scripts/itr-v2/generar-v2-listas.mjs` a partir de las tablas del Word; informe con enlaces en `docs/ITR-FASE2-LOTE-2026-09-09.md`. Quedan ~35 formatos para diseño manual (listados como bloqueados en el informe) y la Fase 6 (organización catálogo + clonación, regenerar Ecopetrol). Regla operativa: el generador crea siempre version max+1; no re-ejecutar `--apply` sobre una familia ya generada.
+Fase 0 completa. Fase 1: I10A v3 e I01A v3 como borradores inactivos para revisión; I06A v2 e I04A v2 ratificadas. Fase 2 completa para las cuatro familias: 262 borradores inactivos (C 98, C+V 75, D 45, M 30, DM 14) generados con `scripts/itr-v2/generar-v2-listas.mjs` a partir de las tablas del Word; informe con enlaces en `docs/itr-v2/ITR-FASE2-LOTE-2026-09-09.md`. Quedan ~35 formatos para diseño manual (listados como bloqueados en el informe) y la Fase 6 (organización catálogo + clonación, regenerar Ecopetrol). Regla operativa: el generador crea siempre version max+1; no re-ejecutar `--apply` sobre una familia ya generada.
 
 ### Fase 1 — Fijar el estándar con tres referencias
 
@@ -195,7 +195,7 @@ I33C (lazo de válvula), I05A↔I10A (dependencia entre ITR del mismo tag: neces
 
 ### Fase 6 — Repositorio y despliegue a organizaciones — ✅ SOFTWARE Y CATÁLOGO LISTOS (2026-09-10)
 
-Modelo: organización catálogo + clonación (decisión 7). Hecho: org «CommUp Catálogo» (`commup-catalogo`) creada y sembrada con la revisión activa de cada código de DEMO; huella de contenido (`src/lib/itr/clone.ts`); importación desde el catálogo que copia todos los campos v2 (título ES, tipo de equipo, condiciones, matriz) y **actualiza** códigos existentes como revisión inactiva; política RLS para la matriz del catálogo; script `scripts/itr-v2/sincronizar-catalogo.mjs`. Los scripts `preparar-*.mjs` ya no existen; el único camino es «Nueva revisión» → «Activar». Detalle y flujo operativo en `docs/CATALOGO-BIBLIOTECA-ITR-2026-09-10.md`. Pendiente: re-sincronizar tras cada lote activado en DEMO y regenerar Ecopetrol desde el catálogo (`--from commup-catalogo --to morelco --apply`) cuando las v2 estén activas.
+Modelo: organización catálogo + clonación (decisión 7). Hecho: org «CommUp Catálogo» (`commup-catalogo`) creada y sembrada con la revisión activa de cada código de DEMO; huella de contenido (`src/lib/itr/clone.ts`); importación desde el catálogo que copia todos los campos v2 (título ES, tipo de equipo, condiciones, matriz) y **actualiza** códigos existentes como revisión inactiva; política RLS para la matriz del catálogo; script `scripts/itr-v2/sincronizar-catalogo.mjs`. Los scripts `preparar-*.mjs` ya no existen; el único camino es «Nueva revisión» → «Activar». Detalle y flujo operativo en `docs/itr-v2/CATALOGO-BIBLIOTECA-ITR-2026-09-10.md`. Pendiente: re-sincronizar tras cada lote activado en DEMO y regenerar Ecopetrol desde el catálogo (`--from commup-catalogo --to morelco --apply`) cuando las v2 estén activas.
 
 ---
 

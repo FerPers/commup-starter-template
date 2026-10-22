@@ -19,7 +19,7 @@
 // salvo con --force (regla: no duplicar borradores).
 // Formatos sin plantilla en la base: la spec declara "create": { title, title_es, discipline, phase }
 // (códigos de disciplina y fase de la org) y se crea la v1 como borrador inactivo.
-// Salida: docs/ITR-FASE2-MANUAL-<fecha>.csv (--csv <ruta> para otro destino).
+// Salida: docs/itr-v2/ITR-FASE2-MANUAL-<fecha>.csv (--csv <ruta> para otro destino).
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs'
@@ -184,7 +184,7 @@ async function main() {
     }
   }
   const csvArg = args.includes('--csv') ? args[args.indexOf('--csv') + 1] : null
-  const file = csvArg ? path.resolve(ROOT, csvArg) : path.join(ROOT, `docs/ITR-FASE2-MANUAL-${TODAY}.csv`)
+  const file = csvArg ? path.resolve(ROOT, csvArg) : path.join(ROOT, `docs/itr-v2/ITR-FASE2-MANUAL-${TODAY}.csv`)
   writeFileSync(file, '﻿' + out.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n') + '\n')
   console.log(`\n${APPLY ? 'aplicado' : 'vista previa'} → ${file}`)
 }

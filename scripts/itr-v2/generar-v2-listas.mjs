@@ -27,7 +27,7 @@
 //     ensayo»; filas fijas (puntos, tiempos, pares) o variables (registros por elemento); columnas
 //     número/texto con la unidad impresa; siempre con Resultado y Observación opcionales.
 //   node scripts/itr-v2/generar-v2-listas.mjs --family DM --apply         # datos + lista + matrices.
-// Salida: docs/ITR-FASE2-LOTE-<fecha>.csv (una fila por formato, con avisos); --csv <ruta> para otro destino.
+// Salida: docs/itr-v2/ITR-FASE2-LOTE-<fecha>.csv (una fila por formato, con avisos); --csv <ruta> para otro destino.
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
@@ -410,7 +410,7 @@ async function apply(plan) {
 const { readdirSync } = await import('node:fs')
 const classification = {}
 {
-  const latest = readdirSync(path.join(ROOT, 'docs')).filter(f => /^ITR-CLASIFICACION-ORIGINALES-.*\.csv$/.test(f)).sort().pop()
+  const latest = readdirSync(path.join(ROOT, 'docs', 'itr-v2')).filter(f => /^ITR-CLASIFICACION-ORIGINALES-.*\.csv$/.test(f)).sort().pop()
   // CSV con comillas (los ejemplos traen comas): parser mínimo RFC 4180.
   const parseCsv = text => { const rows = []; let row = [], cell = '', q = false
     for (let i = 0; i < text.length; i++) { const ch = text[i]
@@ -422,7 +422,7 @@ const classification = {}
     if (cell || row.length) { row.push(cell); rows.push(row) }
     return rows }
   if (latest) {
-    const [header, ...rows] = parseCsv(readFileSync(path.join(ROOT, 'docs', latest), 'utf8').replace(/^\uFEFF/, ''))
+    const [header, ...rows] = parseCsv(readFileSync(path.join(ROOT, 'docs', 'itr-v2', latest), 'utf8').replace(/^\uFEFF/, ''))
     const col = name => header.indexOf(name)
     for (const c of rows) if (c[col('codigo')]) classification[c[col('codigo')]] = { familia: c[col('familia')], items_chequeo: Number(c[col('items_chequeo')]), tablas_sin_clasificar: Number(c[col('tablas_sin_clasificar')] || 0) }
   }
@@ -432,7 +432,7 @@ async function main() {
   let codes = []
   if (codesArg && !codesArg.startsWith('--')) codes = codesArg.split(',').map(s => s.trim()).filter(Boolean)
   if (!codes.length && (PURE || FAMILY)) {
-    if (!Object.keys(classification).length) throw new Error('falta docs/ITR-CLASIFICACION-ORIGINALES-*.csv (ejecuta scripts/itr-v2/clasificar-originales.py)')
+    if (!Object.keys(classification).length) throw new Error('falta docs/itr-v2/ITR-CLASIFICACION-ORIGINALES-*.csv (ejecuta scripts/itr-v2/clasificar-originales.py)')
     // Las familias con matriz admiten formatos sin lista de chequeo (solo registro de ensayo).
     codes = Object.entries(classification).filter(([, c]) => c.familia === FAMILY && (c.items_chequeo > 0 || FAMILY === 'M' || FAMILY === 'DM')).map(([code]) => code)
   }
@@ -460,7 +460,7 @@ async function main() {
     }
   }
   const csvArg = args.includes('--csv') ? args[args.indexOf('--csv') + 1] : null
-  const file = csvArg ? path.resolve(ROOT, csvArg) : path.join(ROOT, `docs/ITR-FASE2-LOTE-${TODAY}.csv`)
+  const file = csvArg ? path.resolve(ROOT, csvArg) : path.join(ROOT, `docs/itr-v2/ITR-FASE2-LOTE-${TODAY}.csv`)
   writeFileSync(file, '﻿' + out.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n') + '\n')
   console.log(`\n${APPLY ? 'aplicado' : 'vista previa'} → ${file}`)
 }

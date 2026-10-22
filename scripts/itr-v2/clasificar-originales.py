@@ -12,7 +12,7 @@ con celdas extraídas del .docx) y decide, por formato, qué contiene el cuerpo:
 Y lo contrasta con lo que hoy tiene la plantilla activa en CommUp (tipos de ítem),
 para señalar dónde la importación por Excel aplanó todo como casillas.
 
-Salida: docs/ITR-CLASIFICACION-ORIGINALES-<fecha>.csv y .md
+Salida: docs/itr-v2/ITR-CLASIFICACION-ORIGINALES-<fecha>.csv y .md
 Uso: python3 scripts/itr-v2/clasificar-originales.py  (desde la raíz del repo)
 """
 from __future__ import annotations
@@ -22,7 +22,7 @@ from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EST = os.path.join(ROOT, 'insumos-locales/revision-itr/lote-completo/estructuras')
-OUT_CSV = os.path.join(ROOT, f'docs/ITR-CLASIFICACION-ORIGINALES-{date.today().isoformat()}.csv')
+OUT_CSV = os.path.join(ROOT, f'docs/itr-v2/ITR-CLASIFICACION-ORIGINALES-{date.today().isoformat()}.csv')
 OUT_MD = OUT_CSV[:-4] + '.md'
 DEMO_ORG = 'e12c53b2-85fd-462f-86f3-bba318aa77ee'
 

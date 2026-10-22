@@ -3,8 +3,8 @@
 Estado de partida (2026-09-10): los 302 formatos tienen una revisión v2 propuesta **inactiva** en la organización DEMO (262 automáticas, 36 manuales, más I01A v3 e I10A v3). I04A e I06A v2 ya están activas. La org «CommUp Catálogo» tiene la revisión activa de cada código y Ecopetrol recibió 90 revisiones inactivas (traducciones) y LCT-FT.
 
 Informes con enlace directo al editor de cada borrador:
-- Automáticos: `docs/ITR-FASE2-LOTE-2026-09-09.md` (columna «Avisos» = qué revisar).
-- Manuales: `docs/ITR-FASE2-MANUAL-2026-09-10.md` (columna «Decisiones de diseño» + decisiones transversales al final).
+- Automáticos: `docs/itr-v2/ITR-FASE2-LOTE-2026-09-09.md` (columna «Avisos» = qué revisar).
+- Manuales: `docs/itr-v2/ITR-FASE2-MANUAL-2026-09-10.md` (columna «Decisiones de diseño» + decisiones transversales al final).
 
 Orden sugerido: I (instrumentación) → E → M → H → P → T → L → Q → X. Lotes de 10–15 códigos de la misma letra.
 
@@ -25,7 +25,7 @@ Orden sugerido: I (instrumentación) → E → M → H → P → T → L → Q �
 5. Vuelve al editor y pulsa «↑ Activar esta revisión» → confirma «Activar v2». El mensaje indica: revisión activada, 1 desactivada, N filas de matriz re-apuntadas. Desde ese momento las asignaciones nuevas usan la v2; los ITR ya asignados conservan su revisión, respuestas y firmas.
 6. Si el borrador no sirve y prefieres regenerarlo: bórralo desde el editor y ejecuta desde la carpeta del proyecto
    - manual: `node scripts/itr-v2/generar-v2-manual.mjs --codes I11B --apply` (edita antes `scripts/itr-v2/manual/I11B.json` si quieres cambiar el diseño);
-   - automático: `node scripts/itr-v2/generar-v2-listas.mjs --codes M01A --family C --apply` (la familia del código está en `docs/ITR-CLASIFICACION-ORIGINALES-2026-09-09.csv`).
+   - automático: `node scripts/itr-v2/generar-v2-listas.mjs --codes M01A --family C --apply` (la familia del código está en `docs/itr-v2/ITR-CLASIFICACION-ORIGINALES-2026-09-09.csv`).
    Regla: nunca `--apply` sobre una familia completa ya generada; solo por códigos.
 
 Bloqueos al activar: un ítem de selección sin opciones impide activar (el editor lo indica). Todo lo generado pasa esta validación.
@@ -39,7 +39,7 @@ node scripts/itr-v2/sincronizar-catalogo.mjs --apply
 ```
 
 - Compara la revisión activa de cada código de DEMO con el catálogo por huella de contenido; solo los códigos activados en el lote crean una revisión nueva en el catálogo, que allí queda activa de inmediato (el catálogo no ejecuta ITRs) con su matriz equipo×ITR.
-- Resultado en `docs/CATALOGO-SYNC-<fecha>-demo-refiner-a-los-andes-commup-catalogo.csv`. Sin `--apply` es vista previa. Repetirlo no duplica nada («sin cambios»).
+- Resultado en `docs/itr-v2/CATALOGO-SYNC-<fecha>-demo-refiner-a-los-andes-commup-catalogo.csv`. Sin `--apply` es vista previa. Repetirlo no duplica nada («sin cambios»).
 
 ## 3. Ecopetrol: traer las revisiones del catálogo
 

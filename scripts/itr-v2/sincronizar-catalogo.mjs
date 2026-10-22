@@ -25,7 +25,7 @@
 //     Luis como owner, disciplinas, fases y tipos de equipo copiados del origen.
 //   • --seed-config: crea en el destino las disciplinas / fases / tipos de equipo
 //     que falten (por código) antes de sincronizar.
-// Salida: docs/CATALOGO-SYNC-<fecha>-<origen>-<destino>.csv (--csv <ruta> para otro destino).
+// Salida: docs/itr-v2/CATALOGO-SYNC-<fecha>-<origen>-<destino>.csv (--csv <ruta> para otro destino).
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -202,7 +202,7 @@ async function main() {
       tally.error++; out.push([src.code, 'ERROR', src.version, '', '', '', e.message]); console.error(src.code, 'ERROR', e.message)
     }
   }
-  const file = path.resolve(ROOT, arg('--csv', `docs/CATALOGO-SYNC-${TODAY}-${source.slug}-${target.slug}.csv`))
+  const file = path.resolve(ROOT, arg('--csv', `docs/itr-v2/CATALOGO-SYNC-${TODAY}-${source.slug}-${target.slug}.csv`))
   writeFileSync(file, '﻿' + out.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n') + '\n')
   console.log(`\n${srcTemplates.length} plantillas activas en origen → nuevas ${tally.created} · revisiones ${tally.revision} · sin cambios ${tally.unchanged} · errores ${tally.error}\n${APPLY ? 'aplicado' : 'vista previa'} → ${file}`)
 }
