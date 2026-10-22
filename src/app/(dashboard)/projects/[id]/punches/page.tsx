@@ -3,11 +3,14 @@ import { redirect, notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 import PunchListView from './PunchListView'
+import AllPunches from '../../../punch-list/AllPunches'
+import ScopeToggle from '@/components/navigation/ScopeToggle'
+import { isScopeAll } from '@/lib/list/scope'
 import ClientPunchSummary from './ClientPunchSummary'
 import { fetchPunchPage, fetchPunchSummary, PUNCH_SORT_KEYS } from '@/lib/list/punch-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
 
-type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; system?: string; q?: string; view?: string }
+type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; system?: string; q?: string; view?: string; scope?: string; project?: string; assigned?: string }
 
 export default async function PunchListPage({
   params,
@@ -22,6 +25,12 @@ export default async function PunchListPage({
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
+  // N2c: alcance «Todos los proyectos» (antes la página global); el id del proyecto solo da el contexto del menú.
+  if (isScopeAll(sp.scope)) {
+    const { data: inOrg } = await supabase.from('projects').select('id').eq('id', projectId).eq('org_id', ctx.orgId).maybeSingle()
+    if (!inOrg) notFound()
+    return <><ScopeToggle projectId={projectId} list="punches" all /><AllPunches sp={sp} /></>
+  }
 
   // Sprint E: página/filtros en la URL; el servidor devuelve 50 filas + conteos en SQL.
   const page = parsePage(sp.page)
@@ -101,6 +110,7 @@ export default async function PunchListPage({
   const tc = await getTranslations('Common')
   return (
     <>
+      <ScopeToggle projectId={projectId} list="punches" all={false} />
       {pageRes.searchCapped && <PartialNote>{tc('searchPartial')}</PartialNote>}
       <PunchListView
         projectId={projectId}

@@ -1,22 +1,39 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import PlanningHub from '../planning/PlanningHub'
 import WorkPlansView from './WorkPlansView'
+import AllWorkPlans from '../../../work-plans/AllWorkPlans'
+import ScopeToggle from '@/components/navigation/ScopeToggle'
+import { isScopeAll } from '@/lib/list/scope'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function ProjectWorkPlansPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ scope?: string }>
 }) {
-  const { id: projectId } = await params
+  const [{ id: projectId }, sp] = await Promise.all([params, searchParams])
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
+  // N2c: alcance «Todos los proyectos» (antes la página global); el id del proyecto solo da el contexto del menú.
+  if (isScopeAll(sp.scope)) {
+    const { data: inOrg } = await supabase.from('projects').select('id').eq('id', projectId).eq('org_id', ctx.orgId).maybeSingle()
+    if (!inOrg) notFound()
+    return (
+      <div style={{ padding: 'clamp(12px, 4vw, 32px)' }}>
+        <PlanningHub projectId={projectId} current="workPlans" />
+        <ScopeToggle projectId={projectId} list="work-plans" all bare />
+        <AllWorkPlans />
+      </div>
+    )
+  }
 
   // Fetch project (verify it belongs to user's org)
   const { data: project } = await supabase
@@ -65,6 +82,7 @@ export default async function ProjectWorkPlansPage({
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 32px)' }}>
     <PlanningHub projectId={projectId} current="workPlans" />
+    <ScopeToggle projectId={projectId} list="work-plans" all={false} bare />
     {truncated && (
       <PartialNote>{tl('listPartial')}</PartialNote>
     )}

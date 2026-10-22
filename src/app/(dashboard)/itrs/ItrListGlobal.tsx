@@ -12,7 +12,7 @@ import { exportItrList } from '@/app/actions/itr-list'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
 import type { SortDir } from '@/lib/list/params'
-import { toSafeCsv } from '@/lib/excel/sanitize'
+import { buildItrCsv, downloadCsv } from '@/lib/list/itr-csv'
 import { browserToday } from '@/lib/time/zone'
 
 type Project    = { id: string; name: string; code: string }
@@ -123,40 +123,7 @@ export default function ItrListGlobal({
     startExport(async () => {
       const res = await exportItrList({ filters: { status: filters.status, phase: filters.phase, disc: filters.disc, q: filters.q, project: filters.project, assignee: filters.assignee } })
       if (res.error || !res.rows) { setBulkError(res.error ?? 'Export error'); return }
-      const headers = [
-        t('exportHeaders.project'), t('exportHeaders.itr'), t('exportHeaders.tag'),
-        t('exportHeaders.tagDesc'), t('exportHeaders.template'), t('exportHeaders.phase'),
-        t('exportHeaders.discipline'), t('exportHeaders.inspector'), t('exportHeaders.scheduledDate'),
-        t('exportHeaders.progress'), t('exportHeaders.status'),
-        t('exportHeaders.signE'), t('exportHeaders.signS'), t('exportHeaders.signC'),
-      ]
-      const body = res.rows.map(itr => {
-        const executor = itr.assignments.find(a => a.role === 'executor')
-        return [
-          itr.project_code ?? '',
-          itr.itr_number,
-          itr.tag_number ?? '',
-          itr.tag_description ?? '',
-          itr.template_title ?? '',
-          itr.phase_code ?? '',
-          itr.discipline_code ?? '',
-          executor?.full_name ?? '',
-          itr.scheduled_date ?? '',
-          String(itr.progress_pct),
-          itr.status,
-          itr.signatures.some(s => s.role === 'executor') ? 'S' : 'N',
-          itr.signatures.some(s => s.role === 'supervisor') ? 'S' : 'N',
-          itr.signatures.some(s => s.role === 'client') ? 'S' : 'N',
-        ]
-      })
-      const csv = toSafeCsv([headers, ...body])
-      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-      const href = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = href
-      a.download = `itrs_${browserToday()}.csv`
-      a.click()
-      URL.revokeObjectURL(href)
+      downloadCsv(buildItrCsv(res.rows, k => t(k as Parameters<typeof t>[0])), `itrs_${browserToday()}.csv`)
     })
   }
 

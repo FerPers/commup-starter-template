@@ -3,11 +3,14 @@ import { redirect, notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import PartialNote from '@/components/ui/PartialNote'
 import ItrListView from './ItrListView'
+import AllItrs from '../../../itrs/AllItrs'
+import ScopeToggle from '@/components/navigation/ScopeToggle'
+import { isScopeAll } from '@/lib/list/scope'
 import { fetchItrPage, fetchItrStatusCounts } from '@/lib/list/itr-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
 import { ITR_SORT_KEYS } from '@/lib/list/itr-types'
 
-type Search = { page?: string; sort?: string; dir?: string; status?: string; phase?: string; disc?: string; q?: string; system?: string; subsystem?: string; area?: string; assignee?: string }
+type Search = { page?: string; sort?: string; dir?: string; status?: string; phase?: string; disc?: string; q?: string; system?: string; subsystem?: string; area?: string; assignee?: string; scope?: string; project?: string }
 
 export default async function ProjectItrsPage({
   params,
@@ -22,6 +25,12 @@ export default async function ProjectItrsPage({
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
+  // N2c: alcance «Todos los proyectos» (antes la página global); el id del proyecto solo da el contexto del menú.
+  if (isScopeAll(sp.scope)) {
+    const { data: inOrg } = await supabase.from('projects').select('id').eq('id', projectId).eq('org_id', ctx.orgId).maybeSingle()
+    if (!inOrg) notFound()
+    return <><ScopeToggle projectId={projectId} list="itrs" all /><AllItrs sp={sp} /></>
+  }
 
   // Paginación/orden/filtros viven en la URL (Sprint E): el servidor devuelve una página.
   const page = parsePage(sp.page)
@@ -56,6 +65,7 @@ export default async function ProjectItrsPage({
   const tc = await getTranslations('Common')
   return (
     <>
+      <ScopeToggle projectId={projectId} list="itrs" all={false} />
       {pageRes.searchCapped && <PartialNote>{tc('searchPartial')}</PartialNote>}
       <ItrListView
         projectId={projectId}

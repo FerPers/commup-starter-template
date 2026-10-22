@@ -62,7 +62,7 @@ export const PROJECT_ITEMS: readonly MenuItemDef[] = [
   { key: 'import', href: '/projects/{p}/import', labelKey: 'import', tier: 'privileged', audience: ['mgmt'], phase: 'prep' },
   { key: 'itrs', href: '/projects/{p}/itrs', labelKey: 'itrs', audience: ['field', 'lead', 'mgmt'], phase: 'mc' },
   { key: 'punches', href: '/projects/{p}/punches', labelKey: 'punchList', audience: ['field', 'lead', 'mgmt', 'client'], phase: 'mc' },
-  { key: 'preservation', href: '/projects/{p}/preservation', labelKey: 'preservation', audience: ['field', 'lead', 'mgmt'], phase: 'mc' },
+  { key: 'preservation', href: '/projects/{p}/preservation', labelKey: 'preservation', audience: ['field', 'lead', 'mgmt'], phase: 'mc', badge: 'preservation' },
   { key: 'registers', href: '/projects/{p}/registers', labelKey: 'registers', audience: ['field', 'lead', 'mgmt'], phase: 'mc' },
   // N2c: un solo ítem para el hub (pestañas Señales · Lazos · Matrices C&E · Importar).
   { key: 'signals', href: '/projects/{p}/signals', labelKey: 'instrumentation', audience: ['mgmt'], phase: 'com',
@@ -87,11 +87,8 @@ export const PORTFOLIO_ITEMS: readonly MenuItemDef[] = [
   { key: 'controlTower', href: '/control-tower', labelKey: 'controlTower', audience: ['mgmt'] },
   { key: 'opsPunches', href: '/ops/punches', labelKey: 'opsPunches', audience: ['mgmt'] },
   { key: 'handover', href: '/admin/handover', labelKey: 'handover', tier: 'privileged', audience: ['mgmt'] },
-  { key: 'allItrs', href: '/itrs', labelKey: 'allItrs', audience: [] },
-  { key: 'allPunches', href: '/punch-list', labelKey: 'allPunches', audience: [] },
-  { key: 'allCertificates', href: '/certificates', labelKey: 'allCertificates', audience: [] },
-  { key: 'globalPreservation', href: '/preservation', labelKey: 'allPreservation', audience: [], badge: 'preservation' },
-  { key: 'allWorkPlans', href: '/work-plans', labelKey: 'allWorkPlans', audience: [] },
+  // N2c: «Todos los ITR / punches / certificados / planes / preservación» ya no son entradas: son el alcance
+  // «Todos los proyectos» de cada lista del proyecto (las rutas viejas redirigen).
   { key: 'orgKpis', href: '/kpis', labelKey: 'orgKpis', audience: [] },
 ]
 

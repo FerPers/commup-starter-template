@@ -10,7 +10,7 @@ import { createPunch } from '@/app/actions/punches'
 import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
 import type { PunchImpact } from '@/lib/punches/category-guide'
 import { punchDisplayStatus } from '@/lib/punches/verification'
-import { bulkDeletePunches } from '@/app/actions/bulk'
+import { bulkDeletePunches, bulkUpdatePunchStatus } from '@/app/actions/bulk'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
@@ -89,6 +89,7 @@ export default function PunchListView({
   const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
   const t = useTranslations('PunchList')
   const tGuide = useTranslations('PunchGuide')
+  const tc = useTranslations('Common')
   const router = useRouter()
   // Sprint E: filtros/página en la URL; `punches` es la página visible.
   const url = useUrlFilters()
@@ -154,6 +155,21 @@ export default function PunchListView({
     startBulkTransition(async () => {
       const res = await bulkDeletePunches([...selected])
       if (res.error) { setBulkError(res.error); return }
+      clearSelection()
+      router.refresh()
+    })
+  }
+
+  // N2c: el cambio de estado masivo que antes solo tenía la lista global (abierto ↔ en proceso; cerrar y cancelar
+  // siguen siendo uno por uno, con verificación o motivo).
+  const [bulkStatus, setBulkStatus] = useState<'' | 'open' | 'in_progress'>('')
+  function handleBulkStatus() {
+    if (!bulkStatus || !selected.size) return
+    setBulkError(null)
+    startBulkTransition(async () => {
+      const res = await bulkUpdatePunchStatus([...selected], bulkStatus)
+      if (res.error) { setBulkError(res.error); return }
+      setBulkStatus('')
       clearSelection()
       router.refresh()
     })
@@ -254,6 +270,20 @@ export default function PunchListView({
             {t('bulk.selected', { count: selected.size })}
           </span>
           {/* S06 (C-11, D8): ya no hay cancelación masiva: cada punch se cancela con su motivo. */}
+          {canDelete && (
+            <>
+              <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value as '' | 'open' | 'in_progress')} aria-label={tc('changeStatusTo')}
+                style={{ padding: '7px 10px', borderRadius: '7px', fontSize: '12px', border: '1px solid #bae6fd', background: 'var(--card-bg)', fontFamily: 'inherit' }}>
+                <option value="">{tc('changeStatusTo')}</option>
+                <option value="open">{punchStatusLabels.open}</option>
+                <option value="in_progress">{punchStatusLabels.in_progress}</option>
+              </select>
+              <button onClick={handleBulkStatus} disabled={!bulkStatus || isBulkPending}
+                style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: bulkStatus ? '#0369a1' : 'var(--gray-100)', color: bulkStatus ? '#fff' : 'var(--gray-400)', border: 'none', cursor: bulkStatus ? 'pointer' : 'default' }}>
+                {tc('apply')}
+              </button>
+            </>
+          )}
           {canDelete && (
             <button
               onClick={handleBulkDelete}

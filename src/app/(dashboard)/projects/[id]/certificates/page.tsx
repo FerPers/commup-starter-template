@@ -4,19 +4,30 @@ import { fetchAllRows } from '@/lib/list/fetch-all'
 import { fetchSubsystemPhaseItrCounts, fetchSubsystemRollup } from '@/lib/list/kpi-query'
 import { redirect, notFound } from 'next/navigation'
 import CertificatesView from './CertificatesView'
+import AllCertificates from '../../../certificates/AllCertificates'
+import ScopeToggle from '@/components/navigation/ScopeToggle'
+import { isScopeAll } from '@/lib/list/scope'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function CertificatesPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ scope?: string }>
 }) {
-  const { id: projectId } = await params
+  const [{ id: projectId }, sp] = await Promise.all([params, searchParams])
 
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
   const membership = { org_id: ctx.orgId, role: ctx.role }
+  // N2c: alcance «Todos los proyectos» (antes la página global); el id del proyecto solo da el contexto del menú.
+  if (isScopeAll(sp.scope)) {
+    const { data: inOrg } = await supabase.from('projects').select('id').eq('id', projectId).eq('org_id', ctx.orgId).maybeSingle()
+    if (!inOrg) notFound()
+    return <><ScopeToggle projectId={projectId} list="certificates" all /><AllCertificates /></>
+  }
 
   // S09 (B-02): la matriz subsistema × fase sale de conteos SQL (antes: todos los ITR y punches del
   // proyecto, cortados en 1000 filas, y un bucle subsistemas × fases × ITR en el Worker). La lista de
@@ -147,6 +158,8 @@ export default async function CertificatesPage({
   const canEdit = ROLE_TIERS.editor.includes(membership.role)
 
   return (
+    <>
+    <ScopeToggle projectId={projectId} list="certificates" all={false} />
     <CertificatesView
       projectId={projectId}
       projectName={project.name}
@@ -154,5 +167,6 @@ export default async function CertificatesPage({
       subsystemRows={subsystemRows}
       canEdit={canEdit}
     />
+    </>
   )
 }

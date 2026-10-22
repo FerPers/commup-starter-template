@@ -94,7 +94,7 @@ const ICONS: Record<string, LucideIcon> = {
   myWork: ListChecks, scan: ScanLine, overview: LayoutDashboard, readiness: Radar, systems: Network, tags: Tag, explorer: FolderTree,
   twin: Boxes, documents: FileText, pidDocuments: FileImage, vendors: Truck, signatories: UserCheck, import: Upload, itrs: ClipboardCheck,
   punches: Flag, preservation: Wrench, registers: ClipboardList, signals: Activity, loops: GitBranch, ceMatrices: Zap, certificates: Award,
-  pssr: ShieldCheck, startup: Power, performance: Gauge, operations: Anchor, daily: CalendarCheck, workPlans: CalendarDays, kpis: TrendingUp,
+  pssr: ShieldCheck, startup: Power, performance: Gauge, operations: Anchor, daily: CalendarCheck, workPlans: CalendarDays, planning: CalendarDays, kpis: TrendingUp, controlTower: Radar,
   projects: FolderKanban, dashboard: LayoutDashboard, opsPunches: Anchor, handover: PackageCheck, allItrs: ClipboardCheck, allPunches: Flag,
   allCertificates: Award, globalPreservation: Wrench, allWorkPlans: CalendarDays, orgKpis: TrendingUp, users: Users, companies: Building2,
   config: Settings, gates: Milestone, itrTemplates: FileCheck2, preservationTemplates: ClipboardList, pssrTemplates: ShieldCheck,

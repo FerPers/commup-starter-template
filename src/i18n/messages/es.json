@@ -387,7 +387,8 @@
     "exporting": "Exportando…",
     "clear": "Limpiar",
     "inactive": "(inactivo)",
-    "inactiveTitle": "Ya no pertenece a la organización"
+    "inactiveTitle": "Ya no pertenece a la organización",
+    "noProjects": "No hay proyectos en la organización."
   },
   "ItrList": {
     "title": "ITRs",
@@ -5700,5 +5701,10 @@
       "lookahead": "Look-ahead (gates)",
       "workPlans": "Planes de trabajo (ITR)"
     }
+  },
+  "Scope": {
+    "label": "Alcance",
+    "project": "Este proyecto",
+    "all": "Todos los proyectos"
   }
 }

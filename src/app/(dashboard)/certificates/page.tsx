@@ -1,56 +1,20 @@
-import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
-import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
-import CertificatesGlobal from './CertificatesGlobal'
 import { getTranslations } from 'next-intl/server'
-import PartialNote from '@/components/ui/PartialNote'
+import { getActiveMembership } from '@/lib/supabase/membership'
+import ScopeAllRedirect from '@/components/navigation/ScopeAllRedirect'
+import { legacyProject, scopeAllHref } from '@/lib/list/scope'
 
-export default async function GlobalCertificatesPage() {
-  const ctx = await getActiveMembership()
+// N2c: la lista global es el alcance «Todos los proyectos» de la lista del proyecto; los enlaces viejos
+// (Mi trabajo, avisos, widgets) siguen funcionando con sus filtros.
+export default async function LegacyGlobalList({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const [ctx, sp] = await Promise.all([getActiveMembership(), searchParams])
   if (!ctx) redirect('/login')
-  const supabase = ctx.supabase
-  const membership = { org_id: ctx.orgId, role: ctx.role }
-
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('id, name, code')
-    .eq('org_id', membership.org_id)
-    .order('name')
-
-  const projectIds = (projects ?? []).map(p => p.id)
-
-  // S09 (B-07): PostgREST corta en 1000 filas → se pagina.
-  const [{ rows: certificates, truncated }, { data: phases }] = await Promise.all([
-    projectIds.length === 0
-      ? Promise.resolve({ rows: [], truncated: false })
-      : fetchAllRowsFlagged(() => supabase
-          .from('certificates')
-          .select(`
-            id, certificate_number, title, status, issued_date, project_id,
-            projects(id, name, code),
-            project_phases(id, code, name, color, certificate_name),
-            subsystems(id, code, name, systems(code, name))
-          `)
-          .in('project_id', projectIds)
-          .order('created_at', { ascending: false })),
-    supabase
-      .from('project_phases')
-      .select('id, code, name, color, certificate_name')
-      .eq('org_id', membership.org_id)
-      .order('order_index'),
-  ])
-
-  const tl = await getTranslations('Common')
-  return (
-    <>
-    {truncated && (
-      <PartialNote>{tl('listPartial')}</PartialNote>
-    )}
-    <CertificatesGlobal
-      projects={projects ?? []}
-      certificates={certificates}
-      phases={phases ?? []}
-    />
-    </>
-  )
+  // bounded: proyectos de la org (decenas)
+  const { data: projects } = await ctx.supabase.from('projects').select('id').eq('org_id', ctx.orgId).order('code').limit(500)
+  const ids = (projects ?? []).map(p => p.id)
+  const params = new URLSearchParams(Object.entries(sp).filter(([, v]) => !!v) as [string, string][])
+  const fromParam = legacyProject(ids, sp.project)
+  if (fromParam) redirect(scopeAllHref(fromParam, 'certificates', params))
+  const t = await getTranslations('Common')
+  return <ScopeAllRedirect list="certificates" projectIds={ids} query={params.toString()} emptyText={t('noProjects')} />
 }

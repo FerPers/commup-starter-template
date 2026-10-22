@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { bulkRescheduleItrs } from '@/app/actions/bulk'
 import { bulkAssignItrs } from '@/app/actions/itr-assign'
+import { exportItrList } from '@/app/actions/itr-list'
+import { buildItrCsv, downloadCsv } from '@/lib/list/itr-csv'
+import { browserToday } from '@/lib/time/zone'
 import { normalizeRequired } from '@/lib/itr/signatures'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
@@ -89,6 +92,15 @@ export default function ItrListView({
   const [isPending, startTransition]  = useTransition()
   const [bulkError, setBulkError]     = useState<string | null>(null)
   const [showPlanModal, setShowPlanModal] = useState(false)
+  // N2c: el CSV que antes solo tenía la lista global, con los filtros del proyecto.
+  const [isExporting, startExport] = useTransition()
+  function exportCsv() {
+    startExport(async () => {
+      const res = await exportItrList({ projectId, filters: { ...filters, project: projectId } })
+      if (res.error || !res.rows) { setBulkError(res.error ?? 'Export error'); return }
+      downloadCsv(buildItrCsv(res.rows, k => t(k as Parameters<typeof t>[0])), `itrs_${browserToday()}.csv`)
+    })
+  }
 
   const planModalMembers = useMemo(
     () => users.map(u => ({ user_id: u.user_id, full_name: u.full_name })),
@@ -174,6 +186,14 @@ export default function ItrListView({
             {t('generate')}
           </a>
         )}
+        <button type="button" onClick={exportCsv} disabled={isExporting || total === 0}
+          style={{
+            padding: '9px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap', fontWeight: 500,
+            cursor: isExporting || total === 0 ? 'default' : 'pointer', fontFamily: 'inherit',
+          }}>
+          {isExporting ? '…' : '↓ CSV'}
+        </button>
         <a
           href={`/projects/${projectId}/reports/itr-test-pack/pdf`}
           target="_blank"

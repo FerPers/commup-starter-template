@@ -1,53 +1,20 @@
-import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import PartialNote from '@/components/ui/PartialNote'
-import ItrListGlobal from './ItrListGlobal'
-import { fetchItrPage, fetchItrStatusCounts } from '@/lib/list/itr-query'
-import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
-import { ITR_SORT_KEYS } from '@/lib/list/itr-types'
+import { getActiveMembership } from '@/lib/supabase/membership'
+import ScopeAllRedirect from '@/components/navigation/ScopeAllRedirect'
+import { legacyProject, scopeAllHref } from '@/lib/list/scope'
 
-type Search = { page?: string; sort?: string; dir?: string; status?: string; phase?: string; disc?: string; q?: string; project?: string; assignee?: string }
-
-export default async function GlobalItrsPage({ searchParams }: { searchParams: Promise<Search> }) {
-  const sp = await searchParams
-  const ctx = await getActiveMembership()
+// N2c: la lista global es el alcance «Todos los proyectos» de la lista del proyecto; los enlaces viejos
+// (Mi trabajo, avisos, widgets) siguen funcionando con sus filtros.
+export default async function LegacyGlobalList({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const [ctx, sp] = await Promise.all([getActiveMembership(), searchParams])
   if (!ctx) redirect('/login')
-  const supabase = ctx.supabase
-
-  const page = parsePage(sp.page)
-  const sort = parseSort(sp.sort, ITR_SORT_KEYS, 'created_at')
-  const dir = parseDir(sp.dir, sort === 'created_at' ? 'desc' : 'asc')
-  const filters = { status: sp.status, phase: sp.phase, disc: sp.disc, q: sp.q, project: sp.project, assignee: sp.assignee === 'me' ? ctx.userId : sp.assignee }
-  const scope = { orgId: ctx.orgId }
-
-  const [{ data: projects }, pageRes, counts, { data: phases }, { data: disciplines }, { data: members }] = await Promise.all([
-    supabase.from('projects').select('id, name, code').eq('org_id', ctx.orgId).order('name'),
-    fetchItrPage(supabase, scope, { filters, page, sort, dir }),
-    fetchItrStatusCounts(supabase, scope),
-    supabase.from('project_phases').select('id, code, name, color, order_index').eq('org_id', ctx.orgId).order('order_index'),
-    supabase.from('disciplines').select('code, name, color').eq('org_id', ctx.orgId).order('code'),
-    supabase.from('org_members').select('user_id').eq('org_id', ctx.orgId),
-  ])
-
-  const tc = await getTranslations('Common')
-  return (
-    <>
-      {pageRes.searchCapped && <PartialNote>{tc('searchPartial')}</PartialNote>}
-      <ItrListGlobal
-        memberIds={(members ?? []).map(m => m.user_id)}
-        projects={projects ?? []}
-        rows={pageRes.rows}
-        total={pageRes.total}
-        page={page}
-        pageSize={LIST_PAGE_SIZE}
-        counts={counts}
-        filters={{ status: sp.status ?? '', phase: sp.phase ?? '', disc: sp.disc ?? '', q: sp.q ?? '', project: sp.project ?? '', assignee: sp.assignee ?? '' }}
-        sort={sort}
-        dir={dir}
-        phases={phases ?? []}
-        disciplines={disciplines ?? []}
-      />
-    </>
-  )
+  // bounded: proyectos de la org (decenas)
+  const { data: projects } = await ctx.supabase.from('projects').select('id').eq('org_id', ctx.orgId).order('code').limit(500)
+  const ids = (projects ?? []).map(p => p.id)
+  const params = new URLSearchParams(Object.entries(sp).filter(([, v]) => !!v) as [string, string][])
+  const fromParam = legacyProject(ids, sp.project)
+  if (fromParam) redirect(scopeAllHref(fromParam, 'itrs', params))
+  const t = await getTranslations('Common')
+  return <ScopeAllRedirect list="itrs" projectIds={ids} query={params.toString()} emptyText={t('noProjects')} />
 }

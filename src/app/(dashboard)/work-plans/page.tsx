@@ -1,80 +1,20 @@
-import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
-import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
-import WorkPlansGlobal from './WorkPlansGlobal'
 import { getTranslations } from 'next-intl/server'
-import PartialNote from '@/components/ui/PartialNote'
-import { ROLE_TIERS } from '@/lib/constants/roles'
+import { getActiveMembership } from '@/lib/supabase/membership'
+import ScopeAllRedirect from '@/components/navigation/ScopeAllRedirect'
+import { legacyProject, scopeAllHref } from '@/lib/list/scope'
 
-
-export default async function WorkPlansPage() {
-  const ctx = await getActiveMembership()
+// N2c: la lista global es el alcance «Todos los proyectos» de la lista del proyecto; los enlaces viejos
+// (Mi trabajo, avisos, widgets) siguen funcionando con sus filtros.
+export default async function LegacyGlobalList({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const [ctx, sp] = await Promise.all([getActiveMembership(), searchParams])
   if (!ctx) redirect('/login')
-  const supabase = ctx.supabase
-  const member = { org_id: ctx.orgId, role: ctx.role }
-
-  const orgId = member.org_id
-  const canEdit = ROLE_TIERS.editor.includes(member.role)
-
-  // Fetch all projects for this org
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('id, name, code, status')
-    .eq('org_id', orgId)
-    .order('name')
-
-  // Fetch all disciplines for this org
-  const { data: disciplines } = await supabase
-    .from('disciplines')
-    .select('id, code, name, color')
-    .eq('org_id', orgId)
-    .order('code')
-
-  // Fetch org members for leader / assigned_to selectors
-  const { data: members } = await supabase
-    .from('org_members')
-    .select('user_id, role, profiles(full_name)')
-    .eq('org_id', orgId)
-    .order('role')
-
-  // Fetch work plans with items count + leader info. S09 (B-07): PostgREST corta en 1000 filas → se pagina.
-  const projectIds = (projects ?? []).map(p => p.id)
-  const { rows: rawPlans, truncated } = projectIds.length === 0
-    ? { rows: [], truncated: false }
-    : await fetchAllRowsFlagged(() => supabase
-    .from('work_plans')
-    .select(`
-      id, plan_date, status, notes,
-      project_id,
-      projects(id, name, code),
-      disciplines(id, code, name, color),
-      leader:profiles!work_plans_leader_id_fkey(full_name),
-      work_plan_items(
-        id, status, remarks,
-        itrs(id, itr_number, status, progress_pct,
-          tags(id, tag_number, description),
-          itr_templates(code, title)
-        ),
-        assigned:profiles!work_plan_items_assigned_to_fkey(full_name)
-      )
-    `)
-    .in('project_id', projectIds)
-    .order('plan_date', { ascending: false }))
-
-  const tl = await getTranslations('Common')
-  return (
-    <>
-    {truncated && (
-      <PartialNote>{tl('listPartial')}</PartialNote>
-    )}
-    <WorkPlansGlobal
-      projects={projects ?? []}
-      disciplines={disciplines ?? []}
-      orgMembers={members ?? []}
-      workPlans={rawPlans}
-      canEdit={canEdit}
-      currentUserId={ctx.userId}
-    />
-    </>
-  )
+  // bounded: proyectos de la org (decenas)
+  const { data: projects } = await ctx.supabase.from('projects').select('id').eq('org_id', ctx.orgId).order('code').limit(500)
+  const ids = (projects ?? []).map(p => p.id)
+  const params = new URLSearchParams(Object.entries(sp).filter(([, v]) => !!v) as [string, string][])
+  const fromParam = legacyProject(ids, sp.project)
+  if (fromParam) redirect(scopeAllHref(fromParam, 'work-plans', params))
+  const t = await getTranslations('Common')
+  return <ScopeAllRedirect list="work-plans" projectIds={ids} query={params.toString()} emptyText={t('noProjects')} />
 }
