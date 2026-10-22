@@ -286,6 +286,9 @@ Hallazgos: H-01, H-04, H-05/G-04, H-07, H-11, H-06, H-13, H-14, H-16. De paso: G
 | 12 | Dashboard con todas las fases (si no quedó en S09) | `KpiSummaryWidget.tsx` | se ven todas las fases |
 
 #### N1 — Mi trabajo y menú por fase y rol · L · después de S14 y S22
+- **Maquetas revisadas con Luis (2026-10-21)** — lienzo «Maquetas N1» (https://claude.ai/artifact/VXTpUEgosRNYYASQVqz8Vf). Decisiones:
+  - Mi trabajo: columnas Ejecutar · Verificar · Firmar · Decidir en «Todo» (pestaña por grupo = lista con acción por fila); colas en 0 visibles en gris (no se ocultan ni se despliegan); «ITR por firmar» pasa de Verificar a Firmar; el filtro de proyecto NO se recuerda (siempre «Todos»; oculto si la org tiene un solo proyecto). «Recientes» tipo SAP (últimos objetos abiertos) va en N3 con ⌘K.
+  - Menú: la vista de planificación es la del rol **arquitecto**; owner/admin = gerencia (todas las fases, plegadas) + Administración; fase abierta por defecto = la de más actividad del proyecto; «Más…» recuerda si quedó abierto; la Bandeja sale del menú (queda en la campana) y Preferencias de notificación pasa al menú de usuario; el cliente ve Punch list como resumen por categoría (A/B/C) y elige una para ver el detalle.
 Mi trabajo agrupado (Ejecutar · Verificar · Firmar · Decidir) con las colas de S22; menú por fase y rol con `audience` y un test de paridad menú ↔ página (meta: inspector ≤ 9 entradas, leader ≤ 17, client ≤ 10); selector de proyecto arriba; tag con `?tab=`; página propia del punch. Hallazgos: H-03, H-09, C-29 (ejecución en teléfono). De paso: H-18, H-20, D-38. **Primero se revisan las maquetas contigo.**
 
 #### N2 — Readiness y fusiones · L · después de N1 y S23
