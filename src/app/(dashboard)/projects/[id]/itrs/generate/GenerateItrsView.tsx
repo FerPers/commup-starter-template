@@ -133,17 +133,24 @@ export default function GenerateItrsView({ projectId, projectName, phases, syste
               <Stat n={summary.no_equipment_type} label={t('stat.noType')} tone={summary.no_equipment_type ? '#b45309' : undefined} />
               <Stat n={summary.no_rule} label={t('stat.noRule')} tone={summary.no_rule ? '#b45309' : undefined} />
               <Stat n={summary.no_subsystem} label={t('stat.noSubsystem')} tone={summary.no_subsystem ? '#b91c1c' : undefined} />
+              {summary.out_of_scope > 0 && <Stat n={summary.out_of_scope} label={t('stat.outOfScope')} />}
             </div>
             {(['no_equipment_type', 'no_rule', 'no_subsystem'] as const).map(k => summary.samples[k].length > 0 && (
               <p key={k} style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0' }}>
                 <strong>{t(`sample.${k}`)}</strong> {summary.samples[k].join(', ')}{summary.samples[k].length >= 20 ? '…' : ''}
               </p>
             ))}
+            {summary.samples.out_of_scope.length > 0 && (
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0' }}>
+                <strong>{t('sample.out_of_scope')}</strong> {summary.samples.out_of_scope.join(', ')}{summary.samples.out_of_scope.length >= 20 ? '…' : ''}{' '}
+                <Link href={`/projects/${projectId}/scope`} style={{ color: 'var(--primary-600, #2563eb)', fontWeight: 600 }}>{t('scopeLink')}</Link>
+              </p>
+            )}
             {summary.by_template.length > 0 && (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 10 }}>
                 <thead><tr style={{ textAlign: 'left', color: 'var(--gray-500)' }}><th style={{ padding: 6 }}>{t('col.template')}</th><th style={{ padding: 6 }}>{t('col.create')}</th><th style={{ padding: 6 }}>{t('col.exists')}</th></tr></thead>
                 <tbody>
-                  {summary.by_template.map(tp => (
+                  {summary.by_template.filter(tp => tp.create + tp.exists > 0).map(tp => (
                     <tr key={tp.code} style={{ borderTop: '1px solid var(--gray-100)' }}>
                       <td style={{ padding: 6 }}><strong style={{ fontFamily: 'ui-monospace, monospace' }}>{tp.code}</strong> {tp.title}</td>
                       <td style={{ padding: 6, fontWeight: 600 }}>{tp.create}</td>

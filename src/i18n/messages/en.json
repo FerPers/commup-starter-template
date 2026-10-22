@@ -135,7 +135,8 @@
       "allPreservation": "All preservation",
       "orgKpis": "Organization KPIs",
       "instrumentation": "Signals and loops",
-      "planning": "Planning"
+      "planning": "Planning",
+      "scope": "Project scope"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -2109,7 +2110,8 @@
       "certificate_prereqs": "Certificate prereqs",
       "date_logic": "Date logic",
       "system_completeness": "System completeness",
-      "pid_coverage": "P&ID coverage"
+      "pid_coverage": "P&ID coverage",
+      "discipline_scope": "Discipline scope"
     },
     "reason": {
       "punch_a_open": "Open Cat A punches",
@@ -5498,12 +5500,14 @@
       "tags": "Tags in scope",
       "noType": "Tags without equipment type",
       "noRule": "Tags without a matrix rule",
-      "noSubsystem": "Tags without subsystem (skipped)"
+      "noSubsystem": "Tags without subsystem (skipped)",
+      "outOfScope": "Out of scope"
     },
     "sample": {
       "no_equipment_type": "No equipment type:",
       "no_rule": "No accepted rule:",
-      "no_subsystem": "No subsystem:"
+      "no_subsystem": "No subsystem:",
+      "out_of_scope": "Templates outside the project scope:"
     },
     "col": {
       "template": "Template",
@@ -5527,7 +5531,8 @@
     "seeUnassigned": "See unassigned",
     "seeAll": "See all",
     "samePerson": "Each signing role must be a different person.",
-    "error": "Could not compute the preview."
+    "error": "Could not compute the preview.",
+    "scopeLink": "Project scope ›"
   },
   "Inbox": {
     "all": "All",
@@ -5785,6 +5790,48 @@
     "project": "This project",
     "all": "All projects"
   },
+  "ProjectScope": {
+    "title": "Project scope",
+    "intro": "A tag gets the templates of its equipment type whose <strong>template discipline</strong> is in the scope of {project}. Example: a compressor (Mechanical) gets its motor's electrical ITR only if Electrical is checked. Removing a discipline never deletes ITRs.",
+    "listTitle": "Disciplines in scope: {count} of {total}",
+    "col": {
+      "included": "In scope",
+      "discipline": "Discipline",
+      "requirements": "Requirements",
+      "itrs": "ITRs created"
+    },
+    "impact": {
+      "title": "Change impact",
+      "none": "No pending changes.",
+      "removed": "Leaving the scope",
+      "added": "Entering the scope",
+      "reqOff": "ITR requirements no longer required",
+      "reqOn": "New ITR requirements",
+      "reqTotal": "Requirements with the new scope",
+      "itrsOut": "{count, plural, =0 {No created ITR falls out of scope} one {# created ITR becomes “out of scope”} other {# created ITRs become “out of scope”}}",
+      "itrsKept": "They are not deleted: they stay in the list with their history and show up in Data quality."
+    },
+    "reason": "Reason (required, at least {min} characters)",
+    "reasonPh": "E.g. instrumentation is done by the package vendor with its own system",
+    "undo": "Undo",
+    "save": "Save scope",
+    "saving": "Saving…",
+    "saved": "Scope saved: {added} in, {removed} out.",
+    "readOnly": "Only Owner, Administrator and Architect change the scope.",
+    "who": "Requirements = tag × template pairs the accepted matrix asks for, across all phases. Every change is kept in the history with its reason.",
+    "toGenerate": "Generate ITRs ›",
+    "error": {
+      "reason_required": "Some ITRs fall out of scope: write the reason (at least 10 characters).",
+      "scope_empty": "The scope needs at least one discipline.",
+      "discipline_not_in_org": "One of the disciplines does not belong to this organization."
+    },
+    "history": {
+      "title": "Scope history",
+      "add": "{discipline} added",
+      "remove": "{discipline} removed",
+      "itrs": "{count, plural, one {# ITR out of scope} other {# ITRs out of scope}}"
+    }
+  },
   "PidViewer": {
     "back": "Document",
     "revisions": "Revisions",
@@ -5945,7 +5992,9 @@
       "region": "Region / Cluster",
       "regionPh": "e.g. Llanos",
       "start": "Start date",
-      "end": "Target date"
+      "end": "Target date",
+      "scope": "Disciplines in scope ({count} of {total})",
+      "scopeHint": "The project gets the ITRs of templates in these disciplines. You can change it later in “Project scope”."
     },
     "phases": {
       "title": "Project phases",

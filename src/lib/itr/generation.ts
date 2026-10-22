@@ -23,9 +23,11 @@ export type GenerationSummary = {
   no_subsystem: number
   no_equipment_type: number
   no_rule: number
+  /** R1: pares tag × plantilla de una disciplina fuera del alcance del proyecto (no se generan). */
+  out_of_scope: number
   by_discipline: { discipline_id: string | null; code: string | null; name: string | null; create: number; roles: GenerationRole[] | null }[]
   by_template: { code: string; title: string; create: number; exists: number }[]
-  samples: { no_equipment_type: string[]; no_rule: string[]; no_subsystem: string[] }
+  samples: { no_equipment_type: string[]; no_rule: string[]; no_subsystem: string[]; out_of_scope: string[] }
 }
 
 export type Assignment = Record<string, Partial<Record<GenerationRole, string>>>

@@ -54,7 +54,11 @@ interface Discipline {
 
 // ── Main Component ────────────────────────────────────────────
 
-export default function SetupWizard({ isNewProject }: { isNewProject: boolean }) {
+export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
+  isNewProject: boolean
+  /** R1: disciplinas de la org para el alcance del proyecto nuevo (modo «otro proyecto»). */
+  orgDisciplines?: { id: string; code: string; name: string; color: string | null }[]
+}) {
   const router = useRouter()
   const t = useTranslations('Setup')
 
@@ -76,6 +80,8 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
   const [projRegion, setProjRegion] = useState('')
   const [projStart, setProjStart] = useState('')
   const [projEnd, setProjEnd] = useState('')
+  // R1: alcance de disciplinas del proyecto nuevo (todas por defecto)
+  const [scopeIds, setScopeIds] = useState<Set<string>>(() => new Set(orgDisciplines.map(d => d.id)))
 
   // Step 3 — Phases (initial setup only)
   const [phases, setPhases] = useState<Phase[]>(DEFAULT_PHASES)
@@ -103,6 +109,7 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
           location: projLocation, client: projClient,
           country: projCountry, region: projRegion,
           start_date: projStart, end_date: projEnd,
+          ...(orgDisciplines.length > 0 ? { disciplineIds: [...scopeIds] } : {}),
         })
         if (result.error) {
           setError(result.error)
@@ -296,6 +303,23 @@ export default function SetupWizard({ isNewProject }: { isNewProject: boolean })
                 <input style={inputStyle} type="date" value={projEnd} onChange={e => setProjEnd(e.target.value)} />
               </div>
             </div>
+
+            {isNewProject && orgDisciplines.length > 0 && (
+              <fieldset style={{ border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', margin: '4px 0 0' }}>
+                <legend style={{ ...labelStyle, padding: '0 6px' }}>{t('project.scope', { count: scopeIds.size, total: orgDisciplines.length })}</legend>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 8px', lineHeight: 1.45 }}>{t('project.scopeHint')}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 4 }}>
+                  {orgDisciplines.map(d => (
+                    <label key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 36, fontSize: 13, color: 'var(--text-strong)', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={scopeIds.has(d.id)} style={{ width: 18, height: 18 }}
+                        onChange={() => setScopeIds(prev => { const n = new Set(prev); if (n.has(d.id)) n.delete(d.id); else n.add(d.id); return n })} />
+                      <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 3, background: d.color ?? 'var(--gray-400)' }} />
+                      {d.name} <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{d.code}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
           </div>
         )}
 

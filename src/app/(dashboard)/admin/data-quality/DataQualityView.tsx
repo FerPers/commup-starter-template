@@ -36,6 +36,8 @@ const CATEGORIES = [
   'system_completeness',
   // E2: tag que cita un P&ID cargado sin pin en su revisión vigente.
   'pid_coverage',
+  // R1: ITR de una disciplina fuera del alcance del proyecto.
+  'discipline_scope',
 ] as const
 
 export default function DataQualityView({

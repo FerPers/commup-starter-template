@@ -15,6 +15,7 @@ export const NAV_TITLE_KEYS: Record<string, string> = {
   documents: 'Documents.title',
   vendors: 'Vendors.title',
   signatories: 'Signatories.title',
+  scope: 'ProjectScope.title',
   signals: 'Signals.title',
   loops: 'Signals.loops.title',
   workPlans: 'WorkPlans.title',

@@ -119,7 +119,7 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
 - La identidad de la plantilla es su `template_code` (las revisiones cambian el id).
 - El alcance del proyecto filtra por la **disciplina de la plantilla**, no la del tag: una bomba mecánica lleva el ITR eléctrico de su motor.
 
-- **R1. Disciplinas del proyecto:**
+- **R1. Disciplinas del proyecto:** ✅ hecho 2026-10-22 (migración `20261130120000`; pantalla `/projects/[id]/scope` «Alcance del proyecto» en el menú Preparación, selector en el alta, `out_of_scope` en la generación y `discipline_scope` en Calidad de datos; historial en `project_discipline_events`). Una disciplina nueva de la org entra a todos sus proyectos (trigger), coherente con «por defecto, todas».
   - Tabla `project_disciplines`, escrita solo por la RPC `set_project_disciplines`, con vista previa e impacto. Quitar una disciplina con ITR exige motivo y nunca borra ITR.
   - Backfill: todos los proyectos quedan con todas las disciplinas de su org, así que no cambia nada.
   - Selector de disciplinas al crear y al editar el proyecto (y en el asistente).

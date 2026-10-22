@@ -135,7 +135,8 @@
       "allPreservation": "Toda la preservación",
       "orgKpis": "KPIs de la organización",
       "instrumentation": "Señales y lazos",
-      "planning": "Planificación"
+      "planning": "Planificación",
+      "scope": "Alcance del proyecto"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -2109,7 +2110,8 @@
       "certificate_prereqs": "Prereqs certificados",
       "date_logic": "Lógica de fechas",
       "system_completeness": "Completitud de sistemas",
-      "pid_coverage": "Cobertura del P&ID"
+      "pid_coverage": "Cobertura del P&ID",
+      "discipline_scope": "Alcance de disciplinas"
     },
     "reason": {
       "punch_a_open": "Punches Cat A abiertos",
@@ -5498,12 +5500,14 @@
       "tags": "Tags en el alcance",
       "noType": "Tags sin tipo de equipo",
       "noRule": "Tags sin regla en la matriz",
-      "noSubsystem": "Tags sin subsistema (no se generan)"
+      "noSubsystem": "Tags sin subsistema (no se generan)",
+      "outOfScope": "Fuera del alcance"
     },
     "sample": {
       "no_equipment_type": "Sin tipo de equipo:",
       "no_rule": "Sin regla aceptada:",
-      "no_subsystem": "Sin subsistema:"
+      "no_subsystem": "Sin subsistema:",
+      "out_of_scope": "Plantillas fuera del alcance del proyecto:"
     },
     "col": {
       "template": "Plantilla",
@@ -5527,7 +5531,8 @@
     "seeUnassigned": "Ver sin asignar",
     "seeAll": "Ver todos",
     "samePerson": "Cada rol de firma lo asume una persona distinta.",
-    "error": "No se pudo calcular la vista previa."
+    "error": "No se pudo calcular la vista previa.",
+    "scopeLink": "Alcance del proyecto ›"
   },
   "Inbox": {
     "all": "Todas",
@@ -5785,6 +5790,48 @@
     "project": "Este proyecto",
     "all": "Todos los proyectos"
   },
+  "ProjectScope": {
+    "title": "Alcance del proyecto",
+    "intro": "Un tag recibe las plantillas de su tipo de equipo cuya <strong>disciplina de plantilla</strong> está en el alcance de {project}. Ejemplo: un compresor (Mecánica) lleva el ITR eléctrico de su motor solo si Eléctrica está marcada. Quitar una disciplina nunca borra ITR.",
+    "listTitle": "Disciplinas en el alcance: {count} de {total}",
+    "col": {
+      "included": "En el alcance",
+      "discipline": "Disciplina",
+      "requirements": "Requisitos",
+      "itrs": "ITR creados"
+    },
+    "impact": {
+      "title": "Impacto del cambio",
+      "none": "Sin cambios pendientes.",
+      "removed": "Salen del alcance",
+      "added": "Entran al alcance",
+      "reqOff": "Requisitos ITR que dejan de exigirse",
+      "reqOn": "Requisitos ITR nuevos",
+      "reqTotal": "Requisitos con el alcance nuevo",
+      "itrsOut": "{count, plural, =0 {Ningún ITR creado queda fuera de alcance} one {# ITR creado queda «fuera de alcance»} other {# ITR creados quedan «fuera de alcance»}}",
+      "itrsKept": "No se borran: siguen en la lista con su historia y aparecen en Calidad de datos."
+    },
+    "reason": "Motivo (obligatorio, mínimo {min} caracteres)",
+    "reasonPh": "Ej.: la instrumentación la ejecuta el proveedor del paquete con su propio sistema",
+    "undo": "Deshacer",
+    "save": "Guardar alcance",
+    "saving": "Guardando…",
+    "saved": "Alcance guardado: {added} entran, {removed} salen.",
+    "readOnly": "Solo Propietario, Administrador y Arquitecto cambian el alcance.",
+    "who": "Requisitos = pares tag × plantilla que pide la matriz aceptada, en todas las fases. Cada cambio queda en el historial con su motivo.",
+    "toGenerate": "Generar ITR ›",
+    "error": {
+      "reason_required": "Quedan ITR fuera de alcance: escribe el motivo (mínimo 10 caracteres).",
+      "scope_empty": "El alcance necesita al menos una disciplina.",
+      "discipline_not_in_org": "Una de las disciplinas no es de esta organización."
+    },
+    "history": {
+      "title": "Historial del alcance",
+      "add": "Entró {discipline}",
+      "remove": "Salió {discipline}",
+      "itrs": "{count, plural, one {# ITR fuera de alcance} other {# ITR fuera de alcance}}"
+    }
+  },
   "PidViewer": {
     "back": "Documento",
     "revisions": "Revisiones",
@@ -5945,7 +5992,9 @@
       "region": "Región / Eje",
       "regionPh": "Ej: Llanos",
       "start": "Fecha de inicio",
-      "end": "Fecha objetivo"
+      "end": "Fecha objetivo",
+      "scope": "Disciplinas del alcance ({count} de {total})",
+      "scopeHint": "El proyecto recibe los ITR de las plantillas de estas disciplinas. Se puede cambiar después en «Alcance del proyecto»."
     },
     "phases": {
       "title": "Fases del proyecto",

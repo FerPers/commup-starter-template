@@ -60,6 +60,8 @@ interface ProjectInput {
   name: string; code: string; location: string; client: string
   country: string; region: string
   start_date: string; end_date: string
+  /** R1: alcance de disciplinas; ausente = todas las de la org (el trigger de proyectos las pone). */
+  disciplineIds?: string[]
 }
 
 // Nota: antes usaba la PRIMERA membership del usuario; con el wrapper usa la
@@ -69,6 +71,14 @@ export const createProject = withAuth(
   { role: PRIVILEGED_ROLES },
   async (ctx, input: ProjectInput): Promise<{ error?: string; project_id?: string }> => {
     const admin = createAdminClient()
+
+    // R1: el alcance elegido se valida antes de crear (solo disciplinas de la org, al menos una).
+    let keep: Set<string> | null = null
+    if (input.disciplineIds) {
+      const { data: org } = await admin.from('disciplines').select('id').eq('org_id', ctx.orgId).in('id', input.disciplineIds)
+      keep = new Set((org ?? []).map(d => d.id))
+      if (keep.size === 0) return { error: 'El alcance necesita al menos una disciplina' }
+    }
 
     const { data: project, error: projectError } = await admin
       .from('projects')
@@ -88,6 +98,17 @@ export const createProject = withAuth(
       .single()
 
     if (projectError) return { error: projectError.message }
+
+    // R1: el trigger dejó todas las disciplinas de la org; se quitan las no elegidas (sin ITR todavía: sin motivo).
+    if (keep) {
+      // bounded: disciplinas de la org (decenas)
+      const { data: all } = await admin.from('project_disciplines').select('discipline_id').eq('project_id', project.id)
+      const drop = (all ?? []).map(r => r.discipline_id).filter(id => !keep.has(id))
+      if (drop.length) {
+        const { error } = await admin.from('project_disciplines').delete().eq('project_id', project.id).in('discipline_id', drop)
+        if (error) return { error: error.message, project_id: project.id }
+      }
+    }
     return { project_id: project.id }
   },
 )

@@ -6516,6 +6516,124 @@ export type Database = {
           },
         ]
       }
+      project_discipline_events: {
+        Row: {
+          action: string
+          created_at: string
+          discipline_id: string
+          id: string
+          itrs_affected: number
+          org_id: string
+          project_id: string
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          discipline_id: string
+          id?: string
+          itrs_affected?: number
+          org_id: string
+          project_id: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          discipline_id?: string
+          id?: string
+          itrs_affected?: number
+          org_id?: string
+          project_id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_discipline_events_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_discipline_events_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["discipline_id"]
+          },
+          {
+            foreignKeyName: "project_discipline_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_discipline_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_disciplines: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          discipline_id: string
+          org_id: string
+          project_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          discipline_id: string
+          org_id: string
+          project_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          discipline_id?: string
+          org_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_disciplines_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_disciplines_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["discipline_id"]
+          },
+          {
+            foreignKeyName: "project_disciplines_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_disciplines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_phases: {
         Row: {
           certificate_name: string | null
@@ -13253,6 +13371,18 @@ export type Database = {
           status: Database["public"]["Enums"]["certificate_status"]
         }[]
       }
+      project_discipline_scope: {
+        Args: { p_project_id: string }
+        Returns: {
+          code: string
+          color: string
+          discipline_id: string
+          included: boolean
+          itrs: number
+          name: string
+          requirements: number
+        }[]
+      }
       project_itr_phase_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {
@@ -13685,6 +13815,14 @@ export type Database = {
           p_reason: string
         }
         Returns: undefined
+      }
+      set_project_disciplines: {
+        Args: {
+          p_discipline_ids: string[]
+          p_project_id: string
+          p_reason?: string
+        }
+        Returns: Json
       }
       set_vendor_checklist_item: {
         Args: {

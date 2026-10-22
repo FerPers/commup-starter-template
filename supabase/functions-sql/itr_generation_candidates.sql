@@ -24,7 +24,9 @@ AS $function$
     ORDER BY tp.code, tp.version DESC, tp.created_at DESC
   ),
   rules AS (
-    SELECT DISTINCT m.equipment_type_id, a.id AS template_id, a.code, a.title, a.discipline_id, a.phase_id
+    SELECT DISTINCT m.equipment_type_id, a.id AS template_id, a.code, a.title, a.discipline_id, a.phase_id,
+           EXISTS (SELECT 1 FROM project_disciplines pd
+                   WHERE pd.project_id = p_project_id AND pd.discipline_id = a.discipline_id) AS in_scope
     FROM equipment_type_templates m
     JOIN itr_templates mt ON mt.id = m.itr_template_id
     JOIN active a ON a.code = mt.code
@@ -32,7 +34,8 @@ AS $function$
     WHERE m.status = 'accepted' AND a.phase_id = ANY (p_phase_ids)
   )
   SELECT s.id, s.tag_number, s.subsystem_id, s.equipment_type_id, r.template_id, r.code, r.title, r.discipline_id, r.phase_id,
-         CASE WHEN s.subsystem_id IS NULL THEN 'no_subsystem'
+         CASE WHEN NOT r.in_scope THEN 'out_of_scope'
+              WHEN s.subsystem_id IS NULL THEN 'no_subsystem'
               WHEN EXISTS (SELECT 1 FROM itrs i JOIN itr_templates it ON it.id = i.template_id
                            WHERE i.tag_id = s.id AND it.code = r.code) THEN 'exists'
               ELSE 'create' END

@@ -124,3 +124,36 @@ export const removeProjectClientLogo = withAuthOnly(
     return {}
   },
 )
+
+/**
+ * R1 (maquetas M): alcance de disciplinas del proyecto. Única escritura = RPC set_project_disciplines (Propietario,
+ * Administrador, Arquitecto); quitar una disciplina con ITR exige motivo ≥ 10 y nunca borra ITR.
+ * Errores con código para la UI: reason_required · scope_empty · discipline_not_in_org.
+ */
+export const setProjectDisciplines = withAuthOnly(
+  { role: PRIVILEGED_ROLES },
+  async (
+    ctx,
+    projectId: string,
+    disciplineIds: string[],
+    reason?: string | null,
+  ): Promise<{ error?: string; itrs?: number; result?: { added: number; removed: number; itrsOutOfScope: number } }> => {
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
+    if (!access.ok) return { error: access.error }
+
+    const why = reason?.trim()
+    const { data, error } = await ctx.supabase.rpc('set_project_disciplines', {
+      p_project_id: projectId,
+      p_discipline_ids: [...new Set(disciplineIds)],
+      ...(why ? { p_reason: why } : {}),
+    })
+    if (error) {
+      const code = ['reason_required', 'scope_empty', 'discipline_not_in_org'].find(c => error.message.includes(c))
+      const itrs = Number(error.details)
+      return code ? { error: code, itrs: Number.isFinite(itrs) && itrs > 0 ? itrs : undefined } : { error: error.message }
+    }
+    const r = data as { added: number; removed: number; itrs_out_of_scope: number }
+    revalidatePath(`/projects/${projectId}`, 'layout')
+    return { result: { added: r.added, removed: r.removed, itrsOutOfScope: r.itrs_out_of_scope } }
+  },
+)
