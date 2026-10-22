@@ -12400,6 +12400,16 @@ export type Database = {
         }
         Returns: string
       }
+      compute_project_gate_progress: {
+        Args: { p_project_id: string }
+        Returns: {
+          gate_id: string
+          itr_approved: number
+          itr_total: number
+          pct: number
+          system_id: string
+        }[]
+      }
       compute_project_gates: {
         Args: { p_project_id: string }
         Returns: {

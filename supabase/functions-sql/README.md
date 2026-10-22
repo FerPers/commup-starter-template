@@ -14,6 +14,7 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 | `guard_same_project` | B-17: subsistema/sistema/tag/ITR referenciados del mismo proyecto (trigger en subsystems, tags, itrs, punches, certificates) |
 | `gate_status_compute` / `system_open_punches` / `gate_conditions_create_actions` / `register_required_fields` / `transition_register_item` / `notify_registers_overdue` / `mgmt_check_source` | Readiness v2 (S23): bloqueo por gate guardado, punch A/B por sistema, condiciones = acciones, campos obligatorios de registros y vencidos |
 | `compute_project_readiness` / `compute_project_progress` | Readiness y avance físico del proyecto, set-based con una sola verificación de pertenencia (S20; banco en `scripts/loadtest/`) |
+| `compute_project_gate_progress` | Avance de cada sistema en cada gate (ITR aprobados de la fase / ITR de la fase) en una consulta: skyline de liberación (E1) |
 | `org_gate_policy` / `system_pssr_status` / `system_phase_level` / `startup_prerequisites` | Política de regresión (D13), PSSR único, nivel por fase con corte de punch, prerrequisitos de arranque (S11) |
 | `approve_system_gate` / `sign_system_gate` | Aprobación y multifirma de gates |
 | `my_work_counts` | Badge y colas de «Mi trabajo» |

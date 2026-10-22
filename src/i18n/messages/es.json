@@ -5729,7 +5729,48 @@
     "title": "Planificación",
     "tab": {
       "lookahead": "Look-ahead (liberaciones)",
+      "skyline": "Skyline (liberaciones)",
       "workPlans": "Planes de trabajo (ITR)"
+    },
+    "skyline": {
+      "noGates": "La organización no tiene liberaciones activas con fase. Configúralas en «Liberaciones y criterios».",
+      "gate": "Liberación",
+      "scale": "Escala",
+      "scale_week": "Semana",
+      "scale_month": "Mes",
+      "prev": "Antes",
+      "next": "Después",
+      "today": "Hoy",
+      "excel": "Excel",
+      "heading": "{gate} · {name}: un sistema por caja en su fecha comprometida",
+      "before": "{count, plural, one {# sistema antes de este rango} other {# sistemas antes de este rango}}",
+      "after": "{count, plural, one {# sistema después de este rango} other {# sistemas después de este rango}}",
+      "undated": "Sin fecha ({count})",
+      "undatedHint": "· clic para fijar la fecha en la ficha del sistema",
+      "approved": "Aprobada",
+      "pct": "{pct} %",
+      "commitment": "Compromiso",
+      "forecast": "Pronóstico",
+      "itrs": "{pct} % de {total} ITR aprobados",
+      "overdue": "Vencida",
+      "legend": "Leyenda",
+      "legendMid": "≥ 50 %",
+      "legendLow": "< 50 %",
+      "legendForecast": "Solo pronóstico",
+      "xlsBefore": "Antes del rango",
+      "xlsAfter": "Después del rango",
+      "xlsUndated": "Sin fecha",
+      "col": {
+        "area": "Área",
+        "system": "Sistema",
+        "name": "Nombre",
+        "date": "Fecha",
+        "basis": "Base",
+        "period": "Período",
+        "pct": "Avance %",
+        "itrs": "ITR de la fase",
+        "tone": "Estado"
+      }
     }
   },
   "Scope": {

@@ -5729,7 +5729,48 @@
     "title": "Planning",
     "tab": {
       "lookahead": "Look-ahead (milestones)",
+      "skyline": "Skyline (milestones)",
       "workPlans": "Work plans (ITR)"
+    },
+    "skyline": {
+      "noGates": "The organization has no active milestones with a phase. Set them up in «Milestones & criteria».",
+      "gate": "Milestone",
+      "scale": "Scale",
+      "scale_week": "Week",
+      "scale_month": "Month",
+      "prev": "Earlier",
+      "next": "Later",
+      "today": "Today",
+      "excel": "Excel",
+      "heading": "{gate} · {name}: one system per box on its committed date",
+      "before": "{count, plural, one {# system before this range} other {# systems before this range}}",
+      "after": "{count, plural, one {# system after this range} other {# systems after this range}}",
+      "undated": "No date ({count})",
+      "undatedHint": "· click to set the date in the system file",
+      "approved": "Approved",
+      "pct": "{pct}%",
+      "commitment": "Commitment",
+      "forecast": "Forecast",
+      "itrs": "{pct}% of {total} ITRs approved",
+      "overdue": "Overdue",
+      "legend": "Legend",
+      "legendMid": "≥ 50%",
+      "legendLow": "< 50%",
+      "legendForecast": "Forecast only",
+      "xlsBefore": "Before range",
+      "xlsAfter": "After range",
+      "xlsUndated": "No date",
+      "col": {
+        "area": "Area",
+        "system": "System",
+        "name": "Name",
+        "date": "Date",
+        "basis": "Basis",
+        "period": "Period",
+        "pct": "Progress %",
+        "itrs": "Phase ITRs",
+        "tone": "Status"
+      }
     }
   },
   "Scope": {

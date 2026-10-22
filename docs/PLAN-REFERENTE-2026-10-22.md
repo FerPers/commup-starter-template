@@ -100,7 +100,7 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
 
 ### E — Espejo rápido (2 sesiones, después de las maquetas)
 
-- **E1. Skyline de liberación:**
+- **E1. Skyline de liberación:** ✅ hecho 2026-10-22 (migración `20261128120000`: RPC `compute_project_gate_progress`; seed `scripts/demo-data/seed_skyline_plans_demo.sql` corrido en DEMO-GLP).
   - Nueva pestaña de «Planificación» (`planning/skyline` en el `PlanningHub`).
   - Una caja por sistema en la fecha comprometida (o pronosticada) de la liberación elegida, con color por avance de esa liberación: 100 % / ≥ 50 % / < 50 % (de `compute_system_progress`, por gate).
   - Rango de fechas, clic → ficha del sistema (`?tab=plan&gate=`) y Excel.
@@ -182,7 +182,7 @@ Más adelante, si se pide: **reglas condicionales en la matriz** (SIL, tipo de s
 
 ### M — Maquetas (1 revisión contigo, antes de E, R2 y P2)
 
-> **Lienzo listo (2026-10-22):** «Maquetas M — Plan referente», https://claude.ai/artifact/T3dMYKAr7soGQzsWH1Qs6s — 9 pantallas en 4 filas, con las preguntas en notas naranjas (incluidas las 4 del doc de insumos). **Pendiente: respuestas de Luis.** Hallazgo al armarlo: en DEMO la matriz tiene 412 filas propuestas y solo 8 aceptadas, así que un registro que cuente solo lo aceptado sale casi vacío (pregunta 1 de R2). DEMO-GLP no tiene fechas en `system_gate_plans` (E1 necesita sembrarlas para verificar) y 37 de 239 tags no tienen tipo.
+> **Lienzo listo (2026-10-22):** «Maquetas M — Plan referente», https://claude.ai/artifact/T3dMYKAr7soGQzsWH1Qs6s — 9 pantallas en 4 filas, con las preguntas en notas naranjas (incluidas las 4 del doc de insumos). ✅ **Aprobado por Luis el 2026-10-22 tal cual: cada respuesta es lo propuesto en su nota.** Hallazgo al armarlo: en DEMO la matriz tiene 412 filas propuestas y solo 8 aceptadas, así que un registro que cuente solo lo aceptado sale casi vacío (pregunta 1 de R2). DEMO-GLP no tiene fechas en `system_gate_plans` (E1 necesita sembrarlas para verificar) y 37 de 239 tags no tienen tipo.
 
 Una sola sesión de maquetas en un lienzo, como en N1–N3:
 - Portafolio unificado.
@@ -192,6 +192,22 @@ Una sola sesión de maquetas en un lienzo, como en N1–N3:
 - Panel «ITR requeridos» del tag.
 - Visor con límites (escritorio y tableta, leyenda y herramientas).
 - Pestaña «Planos» de la ficha de sistema.
+
+**Decisiones de M (Luis, 2026-10-22):**
+
+| Tema | Decisión |
+|---|---|
+| Menú del Portafolio | La entrada «Portafolio» queda sola arriba, junto a Mi trabajo, sin grupo |
+| «Milestone» en inglés | = liberación. Los hitos de arranque pasan a «Key events» en todas partes |
+| Portafolio + R2 | Bloque «Requisitos ITR por disciplina» (requeridos · generados · aprobados · % · faltan), como el reporte gerencial de la matriz |
+| Logo del cliente | También en la fila de cada proyecto del Portafolio (E2) |
+| Skyline (E1) | Caja por sistema en la fecha de **compromiso**; solo pronóstico = borde punteado; sin fecha = bandeja «Sin fecha». Color por avance de esa liberación (aprobada · ≥ 50 % · < 50 %) con el % escrito; vencida (fecha pasada sin aprobar) = borde rojo grueso. Semanas (2 atrás, 9 adelante, hoy resaltado) con conmutador Semana / Mes. Una liberación a la vez, en la URL. Clic → ficha del sistema `?tab=plan&gate=`. Excel con la misma vista. Se siembran fechas de demo en DEMO-GLP |
+| Disciplinas (R1) | En el alta y en Configuración del proyecto; por defecto todas. Filtra por la disciplina de la **plantilla**. Quitar una con ITR = vista previa + motivo; los ITR no se borran (quedan «fuera de alcance» en Calidad de datos). Cambian el alcance Propietario, Administrador y Arquitecto. Un «agregar» manual no sale del alcance |
+| Registro (R2) | Base = filas **aceptadas** de la matriz, con aviso «N reglas por revisar» que lleva a la matriz. Solo **tags** (las líneas ya son tags PL); paquetes de prueba en una sesión siguiente, con la columna «Elemento» lista. Cantidad requerida **después** (R2 = 1 por tag). Código del cliente **por proyecto** con defecto de la org (chip, PDF, Excel). Excel con 3 hojas: Reporte gerencial · Resumen sistema × subsistema × disciplina × etapa · Detalle por elemento. Chips: falta · generado · en ejecución · aprobado · excluido · fuera de requisitos; origen al pasar el cursor y en la ficha del tag |
+| Sin tipo (R2/R3) | R2: lista con enlace para asignar. R3: grupos por firma (prefijo gratis → IA barata), aceptar por grupo con vista previa. Cambiar el tipo nunca borra ITR (quedan «fuera de requisitos»). Prefijos sin tipo en el catálogo: la IA puede proponer crear el tipo |
+| ITR requeridos del tag | Arriba de la pestaña ITR; cadena A → B → C por disciplina con aviso de eslabón faltante; Generar (líder+), Excluir con motivo ≥ 10, Agregar código dentro del alcance; en el teléfono del inspector solo lectura |
+| Límites en el P&ID (P2) | Resaltar recorrido + barra de límite con los dos códigos + etiqueta, sin polígonos. Color por sistema con conmutador «Por estado». Dibujan Líder+ y Arquitecto. Sistema aprobado: editar queda registrado, no se bloquea. Revisión nueva = marcas «por revisar» |
+| Tableta y Planos (P3) | Un dedo dibuja, dos mueven; Deshacer / Terminar grandes; leyenda plegable; teléfono solo ve. Pestaña «Planos» (8.ª) con hojas, cobertura de pines y estado de límites; «Abrir en el plano» con `?system=`; PDF de límites en P4 |
 
 ### C — Cierre del backlog (repartido entre los bloques)
 
