@@ -1,3 +1,4 @@
+import { dailyTabHref } from '@/lib/navigation/hub-routes'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { ROLE_TIERS } from '@/lib/constants/roles'
@@ -17,14 +18,14 @@ export default async function NewDailyPage({ params, searchParams }: {
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   // N3b: el cliente solo levanta TQ (create_tq lo permite; el resto de las altas, no).
-  if (ctx.role === 'client' && sp.kind !== 'tq') redirect(`/projects/${id}/daily?tab=tqs`)
+  if (ctx.role === 'client' && sp.kind !== 'tq') redirect(dailyTabHref(id, 'tqs'))
   const supabase = ctx.supabase
 
   const { data: project } = await supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
   const kind: MgmtKind = MGMT_KINDS.includes(sp.kind as MgmtKind) ? (sp.kind as MgmtKind) : 'action'
   // S15 (D-16/I-27): las decisiones formales las registra un líder o superior (la RPC lo exige).
-  if (kind === 'decision' && !ROLE_TIERS.editor.includes(ctx.role)) redirect(`/projects/${id}/daily?tab=decisions`)
+  if (kind === 'decision' && !ROLE_TIERS.editor.includes(ctx.role)) redirect(dailyTabHref(id, 'decisions'))
 
   // Origen (restricción o TQ del mismo proyecto): número para mostrar y sistema para precargar.
   let source: SourceRef | null = null

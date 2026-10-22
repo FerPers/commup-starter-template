@@ -20,7 +20,7 @@ import {
   type MgmtKind,
   type TqStatus,
 } from '@/lib/daily/catalog'
-import { LevelChip, OverdueChip, PriorityChip, StatusChip, btn, card, input, linkStyle, small } from './daily-ui'
+import { DailyTabs, LevelChip, OverdueChip, PriorityChip, StatusChip, btn, card, input, small } from './daily-ui'
 
 export type DailyTab = 'actions' | 'constraints' | 'tqs' | 'decisions'
 
@@ -43,7 +43,10 @@ export type DecisionRow = {
 
 type Props = {
   project: { id: string; code: string; name: string }
-  initialTab: DailyTab
+  /** H-18: la pestaña la fija la ruta (`/daily`, `/daily/constraints`…); solo vienen las filas de esa pestaña. */
+  tab: DailyTab
+  /** Pendientes vivos por pestaña (conteos en el servidor). */
+  counts: Record<DailyTab, number>
   actions: ActionRow[]
   constraints: ConstraintRow[]
   tqs: TqRow[]
@@ -67,9 +70,8 @@ const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid
 const mono: React.CSSProperties = { fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }
 const dash = <span style={{ color: 'var(--gray-400)' }}>—</span>
 
-export default function DailyView({ project, initialTab, actions, constraints, tqs, decisions, names, userId, canCreate, canCreateTq, canDecide }: Props) {
+export default function DailyView({ project, tab, counts, actions, constraints, tqs, decisions, names, userId, canCreate, canCreateTq, canDecide }: Props) {
   const t = useTranslations('Daily')
-  const [tab, setTab] = useState<DailyTab>(initialTab)
   const [q, setQ] = useState('')
   const [live, setLive] = useState(true)
   const [mine, setMine] = useState(false)
@@ -83,13 +85,6 @@ export default function DailyView({ project, initialTab, actions, constraints, t
   const query = q.trim().toLowerCase()
   const hit = (...vals: (string | null)[]) => !query || vals.some(v => v?.toLowerCase().includes(query))
   const href = (kind: MgmtKind, id: string) => `/projects/${project.id}/daily/${kind}/${id}`
-
-  function selectTab(next: DailyTab) {
-    setTab(next)
-    const url = new URL(window.location.href)
-    url.searchParams.set('tab', next)
-    window.history.replaceState(null, '', url)
-  }
 
   const actionRows = actions
     .filter(a => (!live || ACTION_LIVE.includes(a.status)) && (!mine || a.owner_id === userId)
@@ -130,13 +125,6 @@ export default function DailyView({ project, initialTab, actions, constraints, t
     ],
   }
 
-  const counts: Record<DailyTab, number> = {
-    actions: actions.filter(a => ACTION_LIVE.includes(a.status)).length,
-    constraints: constraints.filter(c => CONSTRAINT_LIVE.includes(c.status)).length,
-    tqs: tqs.filter(x => TQ_LIVE.includes(x.status)).length,
-    decisions: decisions.filter(d => d.status === 'active').length,
-  }
-
   const toggle = (on: boolean, set: (v: boolean) => void, text: string) => (
     <label style={{ ...small, display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
       <input type="checkbox" checked={on} onChange={e => set(e.target.checked)} /> {text}
@@ -145,38 +133,20 @@ export default function DailyView({ project, initialTab, actions, constraints, t
 
   return (
     <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <Link href={`/projects/${project.id}`} style={linkStyle}>← {project.code} · {project.name}</Link>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
-          <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
-            <p style={{ ...small, margin: '4px 0 0', maxWidth: 760 }}>{t('subtitle')}</p>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <DailyTabs
+        projectId={project.id}
+        active={tab}
+        counts={counts}
+        subtitle={t('subtitle')}
+        actions={(
+          <>
             <a href={`/projects/${project.id}/daily/export`} style={btn('outline')}>{t('export')}</a>
             {(canCreate || (canCreateTq && TAB_KIND[tab] === 'tq')) && (TAB_KIND[tab] !== 'decision' || canDecide) && (
               <Link href={`/projects/${project.id}/daily/new?kind=${TAB_KIND[tab]}`} style={btn('primary')}>+ {t(`new.${TAB_KIND[tab]}`)}</Link>
             )}
-          </div>
-        </div>
-      </div>
-
-      <div role="tablist" aria-label={t('title')} style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-        {(Object.keys(TAB_KIND) as DailyTab[]).map(k => (
-          <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => selectTab(k)}
-            style={{ padding: '8px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 'var(--text-sm)', fontWeight: 600,
-              color: tab === k ? 'var(--primary-600, #2563eb)' : 'var(--text-muted)',
-              borderBottom: tab === k ? '2px solid var(--primary-500)' : '2px solid transparent', marginBottom: -1 }}>
-            {t(`tab.${k}`)} · {counts[k]}
-          </button>
-        ))}
-        {(['lookahead', 'reports', 'handovers'] as const).map(k => (
-          <Link key={k} href={k === 'lookahead' ? `/projects/${project.id}/planning/lookahead` : `/projects/${project.id}/daily/${k}`}
-            style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>
-            {t(`tab.${k}`)}
-          </Link>
-        ))}
-      </div>
+          </>
+        )}
+      />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
         {kpis[tab].map(k => (
@@ -206,7 +176,7 @@ export default function DailyView({ project, initialTab, actions, constraints, t
         )}
       </div>
 
-      <div style={{ ...card, padding: 0, overflowX: 'auto' }} role="tabpanel">
+      <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           {tab === 'actions' && (
             <>

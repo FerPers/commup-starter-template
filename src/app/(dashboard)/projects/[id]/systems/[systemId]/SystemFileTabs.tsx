@@ -1,5 +1,6 @@
 'use client'
 
+import { startupTabHref } from '@/lib/navigation/hub-routes'
 // N2a: ficha de sistema única. Encabezado común (lo que antes se repartía entre /control-tower/[id] y la ficha de
 // Sistemas) + pestañas por URL. Las pestañas Gates, Dependencias y Datos son SystemGatesView y SystemDetailView;
 // aquí viven Avance y plan, Arranque, Traspaso y Vendors y desempeño.
@@ -238,7 +239,7 @@ export function SystemStartupTab({ project, systemId, milestones }: {
       </section>
       <section style={{ ...card, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <Link href={`/projects/${project.id}/startup`} style={linkStyle}>{tsys('file.procedures')} →</Link>
-        <Link href={`/projects/${project.id}/startup?tab=lineups`} style={linkStyle}>{tsys('file.lineups')} →</Link>
+        <Link href={startupTabHref(project.id, 'lineups')} style={linkStyle}>{tsys('file.lineups')} →</Link>
       </section>
     </div>
   )

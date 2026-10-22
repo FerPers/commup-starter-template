@@ -1,5 +1,6 @@
 'use client'
 
+import { startupTabHref } from '@/lib/navigation/hub-routes'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -120,7 +121,7 @@ export default function LineupView({ project, sheet, items: serverItems, registe
     <div style={{ padding: '20px 16px', maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       {dialog}
       <div>
-        <Link href={`/projects/${project.id}/startup?tab=lineups`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {t('tab.lineups')}</Link>
+        <Link href={startupTabHref(project.id, 'lineups')} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {t('tab.lineups')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{sheet.number}</h1>
           <Chip tone={SHEET_TONE[sheet.status] ?? 'muted'}>{t(`sheetStatus.${sheet.status}`)}</Chip>
@@ -195,7 +196,7 @@ export default function LineupView({ project, sheet, items: serverItems, registe
               <button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} disabled={isPending}
                 onClick={async () => {
                   if ((await ask({ title: t('editor.delete'), message: t('editor.deleteConfirm'), confirmLabel: t('editor.delete'), danger: true })) === null) return
-                  act(() => transitionLineupSheet({ ...ids, to: 'deleted' }), () => router.push(`/projects/${project.id}/startup?tab=lineups`))
+                  act(() => transitionLineupSheet({ ...ids, to: 'deleted' }), () => router.push(startupTabHref(project.id, 'lineups')))
                 }}>{t('editor.delete')}</button>
             )}
           </div>

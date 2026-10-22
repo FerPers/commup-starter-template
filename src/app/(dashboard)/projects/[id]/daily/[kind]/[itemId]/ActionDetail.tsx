@@ -64,7 +64,7 @@ export default function ActionDetail({ project, opts, names, userId, role, event
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Header projectId={project.id} kind="action" number={item.number} title={item.title} status={status} tab="actions">
+      <Header projectId={project.id} kind="action" number={item.number} title={item.title} status={status}>
         <PriorityChip priority={item.priority} />
         {(status === 'open' || status === 'in_progress') && <OverdueChip days={daysOverdue(item.due_date, today)} />}
       </Header>

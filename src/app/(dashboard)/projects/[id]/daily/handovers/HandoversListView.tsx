@@ -44,7 +44,7 @@ export default function HandoversListView({ project, rows, canOpen }: { project:
 
   return (
     <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <DailyTabs project={project} active="handovers" />
+      <DailyTabs projectId={project.id} active="handovers" subtitle={t('handovers.subtitle')} />
 
       {canOpen && (
         <section style={{ ...card, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>

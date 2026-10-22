@@ -11,6 +11,7 @@ import {
 } from '@/app/actions/ops-readiness'
 import { COMPETENCY_LEVELS, EVIDENCE_KINDS, SPARE_STATUSES, nextStage, previousStages, type EvidenceKind, type OwnershipStage, type SpareStatus } from '@/lib/startup/catalog'
 import { Alert, Chip, Field, MemberSelect, SystemSelect, btn, card, grid, input, linkStyle, small, type Member } from '../../daily/daily-ui'
+import StartupTabs from '../StartupTabs'
 import { Checklist, LEVEL_COLOR, StageChip, type CheckItem } from './ownership-ui'
 
 type View = 'systems' | 'competency' | 'personnel' | 'spares'
@@ -122,19 +123,7 @@ export default function OperationsView({ project, initialView, systems, transfer
   return (
     <div style={{ padding: 32, maxWidth: 1300, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       {dialog}
-      <div>
-        <Link href={`/projects/${project.id}`} style={linkStyle}>← {project.code} · {project.name}</Link>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>{t('title')}</h1>
-        <p style={{ ...small, margin: '4px 0 0', maxWidth: 780 }}>{t('ops.subtitle')}</p>
-      </div>
-      <nav style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)' }}>
-        {(['procedures', 'lineups'] as const).map(k => (
-          <Link key={k} href={`${root}?tab=${k}`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t(`tab.${k}`)}</Link>
-        ))}
-        <Link href={`${root}/events`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t('tab.events')}</Link>
-        <span aria-current="page" style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600, #2563eb)', borderBottom: '2px solid var(--primary-500)', marginBottom: -1 }}>{t('tab.operations')}</span>
-        <Link href={`${root}/performance`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t('tab.performance')}</Link>
-      </nav>
+      <StartupTabs projectId={project.id} active="operations" subtitle={t('ops.subtitle')} />
 
       <div role="tablist" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {tabs.map(k => (

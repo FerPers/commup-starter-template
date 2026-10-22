@@ -1,5 +1,6 @@
 'use client'
 
+import { dailyTabHref } from '@/lib/navigation/hub-routes'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { answerTq, deleteMgmtItem, transitionTq, updateTq } from '@/app/actions/daily'
@@ -56,13 +57,13 @@ export default function TqDetail({ project, opts, names, userId, role, events, a
   }
   function remove() {
     if (!window.confirm(t('detail.deleteConfirm'))) return
-    run(() => deleteMgmtItem({ projectId: project.id, kind: 'tq', entityId: item.id }), () => router.push(`/projects/${project.id}/daily?tab=tqs`))
+    run(() => deleteMgmtItem({ projectId: project.id, kind: 'tq', entityId: item.id }), () => router.push(dailyTabHref(project.id, 'tqs')))
   }
   const canDelete = status === 'draft' && attachments.length === 0 && (item.raised_by === userId || role === 'owner' || role === 'admin')
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Header projectId={project.id} kind="tq" number={item.number} title={item.subject} status={status} tab="tqs">
+      <Header projectId={project.id} kind="tq" number={item.number} title={item.subject} status={status}>
         {status === 'issued' && <OverdueChip days={daysOverdue(item.required_by, today)} />}
       </Header>
       <p style={{ ...small, margin: '-8px 0 0' }}>

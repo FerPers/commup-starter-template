@@ -10,7 +10,8 @@ import {
   type EventCategory, type Milestone, type StartupEventStatus,
 } from '@/lib/startup/catalog'
 import { TagPicker } from '../../registers/RegisterFields'
-import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, linkStyle, small } from '../../daily/daily-ui'
+import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, small } from '../../daily/daily-ui'
+import StartupTabs from '../StartupTabs'
 import { useLocalTime } from '@/lib/use-local-time'
 
 type Ev = {
@@ -115,24 +116,12 @@ export default function EventsView({ project, systems, initialSystemId, initialO
 
   return (
     <div style={{ padding: 32, maxWidth: 1300, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <Link href={`/projects/${project.id}`} style={linkStyle}>← {project.code} · {project.name}</Link>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
-          <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
-            <p style={{ ...small, margin: '4px 0 0', maxWidth: 780 }}>{t('events.subtitle')}</p>
-          </div>
-          {canRecord && <button type="button" style={btn('primary')} onClick={openForm}>+ {t('events.record')}</button>}
-        </div>
-      </div>
-      <nav style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)' }}>
-        {(['procedures', 'lineups'] as const).map(k => (
-          <Link key={k} href={`${root}?tab=${k}`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t(`tab.${k}`)}</Link>
-        ))}
-        <span aria-current="page" style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600, #2563eb)', borderBottom: '2px solid var(--primary-500)', marginBottom: -1 }}>{t('tab.events')}</span>
-        <Link href={`${root}/operations`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t('tab.operations')}</Link>
-        <Link href={`${root}/performance`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>{t('tab.performance')}</Link>
-      </nav>
+      <StartupTabs
+        projectId={project.id}
+        active="events"
+        subtitle={t('events.subtitle')}
+        actions={canRecord && <button type="button" style={btn('primary')} onClick={openForm}>+ {t('events.record')}</button>}
+      />
 
       {error && <Alert kind="error">{error}</Alert>}
 

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createPerformanceTest } from '@/app/actions/performance'
 import { RESULT_TONE, type PerfResult, type PerfRunStatus, type RevisionStatus } from '@/lib/performance/catalog'
-import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, linkStyle, small } from '../../daily/daily-ui'
+import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, small } from '../../daily/daily-ui'
 import StartupTabs from '../StartupTabs'
 
 type TestRow = {
@@ -52,18 +52,12 @@ export default function PerformanceView({ project, systems, tests, canLead }: {
 
   return (
     <div style={{ padding: 32, maxWidth: 1300, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <Link href={`/projects/${project.id}`} style={linkStyle}>← {project.code} · {project.name}</Link>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
-          <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
-            <p style={{ ...small, margin: '4px 0 0', maxWidth: 780 }}>{t('perf.subtitle')}</p>
-          </div>
-          {canLead && <button type="button" style={btn('primary')} onClick={() => setCreating(!creating)}>+ {t('perf.new')}</button>}
-        </div>
-      </div>
-
-      <StartupTabs projectId={project.id} active="performance" />
+      <StartupTabs
+        projectId={project.id}
+        active="performance"
+        subtitle={t('perf.subtitle')}
+        actions={canLead && <button type="button" style={btn('primary')} onClick={() => setCreating(!creating)}>+ {t('perf.new')}</button>}
+      />
 
       {error && <Alert kind="error">{error}</Alert>}
 

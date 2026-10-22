@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { dailyTabForKind, dailyTabHref } from '@/lib/navigation/hub-routes'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -103,15 +104,16 @@ export function LinkedList({ projectId, actions, decisions, names, newActionHref
   )
 }
 
-export function Header({ projectId, kind, number, title, status, children, tab }: {
+export function Header({ projectId, kind, number, title, status, children }: {
   projectId: string; kind: 'action' | 'constraint' | 'tq' | 'decision'; number: string; title: string; status: string
-  children?: React.ReactNode; tab: string
+  children?: React.ReactNode
 }) {
   const t = useTranslations('Daily')
+  const tab = dailyTabForKind(kind)
   return (
     <div>
-      <Link href={`/projects/${projectId}/daily?tab=${tab}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>
-        ← {t('title')}
+      <Link href={dailyTabHref(projectId, tab)} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>
+        ← {t('title')} · {t(`tab.${tab}`)}
       </Link>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', margin: 0, fontFamily: 'ui-monospace, monospace' }}>{number}</h1>

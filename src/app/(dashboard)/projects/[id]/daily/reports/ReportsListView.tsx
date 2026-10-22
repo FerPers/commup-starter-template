@@ -47,7 +47,7 @@ export default function ReportsListView({ project, reports, areas, canCreate }: 
 
   return (
     <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <DailyTabs project={project} active="reports" />
+      <DailyTabs projectId={project.id} active="reports" subtitle={t('reports.subtitle')} />
 
       {canCreate && (
         <section style={{ ...card, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>

@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/client'
 import { addMgmtAttachment, getMgmtEvidenceUrl } from '@/app/actions/daily'
 import { evidencePath, type EvidenceKind, type MgmtKind } from '@/lib/daily/catalog'
 import { btn, card, input, label, small } from '../registers/register-ui'
+import HubTabs from '@/components/navigation/HubTabs'
+import { DAILY_TABS, dailyTabHref, type DailyHubTab } from '@/lib/navigation/hub-routes'
 
 // Piezas compartidas de la gestión diaria (fase 5): chips de estado, prioridad y nivel, campo con
 // etiqueta, línea de tiempo y evidencia. Los estilos base salen de los registros controlados (F3).
@@ -220,28 +222,29 @@ export function Evidence({ projectId, kind, entityId, attachments, names, canAdd
 }
 
 /** Cabecera y pestañas como enlaces (para subpáginas del hub, p. ej. el look-ahead). */
-export function DailyTabs({ project, active }: { project: { id: string; code: string; name: string }; active: 'reports' | 'handovers' }) {
+/** H-18: cabecera del hub Gestión diaria con pestañas por ruta (`HubTabs`); el look-ahead vive en Planificación (N2c). */
+export function DailyTabs({ projectId, active, counts, subtitle, actions }: {
+  projectId: string
+  active: DailyHubTab
+  counts?: Partial<Record<DailyHubTab, number>>
+  subtitle?: string
+  actions?: React.ReactNode
+}) {
   const t = useTranslations('Daily')
-  const base = `/projects/${project.id}/daily`
-  const tab = (on: boolean): React.CSSProperties => ({
-    padding: '8px 14px', textDecoration: 'none', fontSize: 'var(--text-sm)', fontWeight: 600,
-    color: on ? 'var(--primary-600, #2563eb)' : 'var(--text-muted)',
-    borderBottom: on ? '2px solid var(--primary-500)' : '2px solid transparent', marginBottom: -1,
-  })
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <Link href={`/projects/${project.id}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>← {project.code} · {project.name}</Link>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>{t('title')}</h1>
-        <p style={{ ...small, margin: '4px 0 0', maxWidth: 760 }}>{t(`${active}.subtitle`)}</p>
-      </div>
-      <nav aria-label={t('title')} style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-        {(['actions', 'constraints', 'tqs', 'decisions'] as const).map(k => <Link key={k} href={`${base}?tab=${k}`} style={tab(false)}>{t(`tab.${k}`)}</Link>)}
-        {(['lookahead', 'reports', 'handovers'] as const).map(k => (
-          // N2c: el look-ahead vive en Planificación; aquí queda el enlace.
-          <Link key={k} href={k === 'lookahead' ? `/projects/${project.id}/planning/lookahead` : `${base}/${k}`} aria-current={active === k ? 'page' : undefined} style={tab(active === k)}>{t(`tab.${k}`)}</Link>
-        ))}
-      </nav>
+    <div>
+      <HubTabs
+        title={t('title')}
+        current={active}
+        aside={(
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Link href={`/projects/${projectId}/planning/lookahead`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)', fontWeight: 600 }}>{t('tab.lookahead')} →</Link>
+            {actions}
+          </div>
+        )}
+        tabs={DAILY_TABS.map(k => ({ key: k, href: dailyTabHref(projectId, k), label: t(`tab.${k}`), count: counts?.[k] }))}
+      />
+      {subtitle && <p style={{ ...small, margin: '-8px 0 0', maxWidth: 760 }}>{subtitle}</p>}
     </div>
   )
 }

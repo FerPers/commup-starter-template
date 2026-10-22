@@ -1,3 +1,4 @@
+import { dailyTabHref, startupTabHref } from '@/lib/navigation/hub-routes'
 import Link from 'next/link'
 import PrepareOffline, { OfflineReadyChip } from '@/components/offline/PrepareOffline'
 import MyWorkBoard, { type BoardGroup } from './MyWorkBoard'
@@ -45,7 +46,7 @@ const READINESS_SECTIONS: { queue: ReadinessQueue; due: string; tone: Tone; stri
   { queue: 'registers_to_authorize', due: 'authorize', tone: 'warning', stripe: '#b45309', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
   { queue: 'registers_to_verify', due: 'verify', tone: 'info', stripe: '#7c3aed', href: r => `/projects/${r.project_id}/registers/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/registers` : '/projects') },
   { queue: 'daily_reports_to_issue', due: 'issue', tone: 'warning', stripe: 'var(--primary-500)', href: r => `/projects/${r.project_id}/daily/reports/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/daily/reports` : '/projects') },
-  { queue: 'tq_answered', due: 'close', tone: 'info', stripe: '#1d4ed8', href: r => `/projects/${r.project_id}/daily/tq/${r.entity_id}`, more: r => (r ? `/projects/${r.project_id}/daily?tab=tq` : '/projects') },
+  { queue: 'tq_answered', due: 'close', tone: 'info', stripe: '#1d4ed8', href: r => `/projects/${r.project_id}/daily/tq/${r.entity_id}`, more: r => (r ? dailyTabHref(r.project_id, 'tqs') : '/projects') },
 ]
 
 type PunchRow = {
@@ -299,7 +300,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
   const perfSignRows = ((perfCerts ?? []) as unknown as (CertSigners & {
     id: string; number: string; run_id: string; project_id: string; projects: { code: string } | null; systems: { code: string } | null
   })[]).filter(c => canSignCertificate(c, 'operations', capsOf(c.project_id), userId) || canSignCertificate(c, 'client', capsOf(c.project_id), userId))
-  const dailyHref = (projectId: string | undefined, tab: string) => (projectId ? `/projects/${projectId}/daily?tab=${tab}` : '/projects')
+  const dailyHref = (projectId: string | undefined, tab: 'actions' | 'constraints') => (projectId ? dailyTabHref(projectId, tab) : '/projects')
 
   const projectsInvolved = new Set<string>([
     ...queues.execute.map(r => r.itrs!.project_id),
@@ -430,7 +431,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
       <Row key={x.id} href={`/projects/${x.project_id}/startup/performance/runs/${x.run_id}`} stripe="#047857"
         code={x.number} what={x.systems?.code ?? ''} project={x.projects?.code} right={<Pill tone="warning">{t('due.sign')}</Pill>} />
     )) },
-    lineup_to_verify: { more: lineupRows[0] ? `/projects/${lineupRows[0].project_id}/startup?tab=lineups` : '/projects', rows: lineupRows.map(i => (
+    lineup_to_verify: { more: lineupRows[0] ? startupTabHref(lineupRows[0].project_id, 'lineups') : '/projects', rows: lineupRows.map(i => (
       <Row key={i.id} href={`/projects/${i.project_id}/startup/lineups/${i.sheet_id}`} stripe="#1d4ed8"
         code={i.lineup_sheets?.number ?? ''} what={i.tags?.tag_number ?? i.label ?? ''} project={i.projects?.code} right={<Pill tone="info">{t('due.verify')}</Pill>} />
     )) },

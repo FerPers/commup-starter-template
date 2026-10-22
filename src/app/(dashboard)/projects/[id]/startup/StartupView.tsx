@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { copyProcedure, createLineupSheet, createProcedure } from '@/app/actions/startup'
 import { LINEUP_PURPOSES, PROCEDURE_KINDS, lineupProgress, type LineupItemState, type LineupPurpose, type ProcedureKind } from '@/lib/startup/catalog'
-import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, linkStyle, small } from '../daily/daily-ui'
+import { Alert, Chip, Field, SystemSelect, btn, card, grid, input, small } from '../daily/daily-ui'
+import StartupTabs from './StartupTabs'
 
 type ProcRow = {
   id: string; number: string; title: string; kind: string; system: string | null
@@ -22,9 +23,10 @@ const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid
 const mono: React.CSSProperties = { fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }
 export const SHEET_TONE: Record<string, 'muted' | 'blue' | 'amber' | 'green' | 'struck'> = { draft: 'muted', issued: 'blue', in_progress: 'amber', verified: 'green', superseded: 'struck' }
 
-export default function StartupView({ project, initialTab, procedures, sheets, systems, otherProcedures, canEdit }: {
+// H-18: Procedimientos (`/startup`) y Line-ups (`/startup/lineups`) son pestañas con ruta; la vista recibe cuál.
+export default function StartupView({ project, tab, procedures, sheets, systems, otherProcedures, canEdit }: {
   project: { id: string; code: string; name: string }
-  initialTab: 'procedures' | 'lineups'
+  tab: 'procedures' | 'lineups'
   procedures: ProcRow[]
   sheets: SheetRow[]
   systems: { id: string; code: string; name: string }[]
@@ -35,17 +37,12 @@ export default function StartupView({ project, initialTab, procedures, sheets, s
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [tab, setTab] = useState(initialTab)
   const [creating, setCreating] = useState(false)
   const [proc, setProc] = useState({ title: '', kind: 'startup' as ProcedureKind, systemId: '' })
   const [sheet, setSheet] = useState({ title: '', purpose: 'startup' as LineupPurpose, systemId: '', procedureId: '', generate: true })
   const [copyId, setCopyId] = useState('')
   const root = `/projects/${project.id}/startup`
 
-  function selectTab(next: typeof tab) {
-    setTab(next); setCreating(false)
-    const url = new URL(window.location.href); url.searchParams.set('tab', next); window.history.replaceState(null, '', url)
-  }
   function go(fn: () => Promise<{ id?: string; error?: string }>, to: (id: string) => string) {
     setError(null)
     startTransition(async () => {
@@ -57,33 +54,12 @@ export default function StartupView({ project, initialTab, procedures, sheets, s
 
   return (
     <div style={{ padding: 32, maxWidth: 1300, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <Link href={`/projects/${project.id}`} style={linkStyle}>← {project.code} · {project.name}</Link>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
-          <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
-            <p style={{ ...small, margin: '4px 0 0', maxWidth: 780 }}>{t('subtitle')}</p>
-          </div>
-          {canEdit && <button type="button" style={btn('primary')} onClick={() => setCreating(!creating)}>+ {t(tab === 'procedures' ? 'newProcedure' : 'newLineup')}</button>}
-        </div>
-      </div>
-
-      <div role="tablist" style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)' }}>
-        {(['procedures', 'lineups'] as const).map(k => (
-          <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => selectTab(k)}
-            style={{ padding: '8px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 'var(--text-sm)', fontWeight: 600,
-              color: tab === k ? 'var(--primary-600, #2563eb)' : 'var(--text-muted)', borderBottom: tab === k ? '2px solid var(--primary-500)' : '2px solid transparent', marginBottom: -1 }}>
-            {t(`tab.${k}`)} · {k === 'procedures' ? procedures.length : sheets.filter(s => s.status !== 'superseded').length}
-          </button>
-        ))}
-        <Link href={`${root}/events`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>
-          {t('tab.events')}
-        </Link>
-        <Link href={`${root}/operations`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>
-          {t('tab.operations')}
-        </Link>
-        <Link href={`${root}/performance`} style={{ padding: '8px 14px', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', borderBottom: '2px solid transparent', marginBottom: -1 }}>{t('tab.performance')}</Link>
-      </div>
+      <StartupTabs
+        projectId={project.id}
+        active={tab}
+        subtitle={t('subtitle')}
+        actions={canEdit && <button type="button" style={btn('primary')} onClick={() => setCreating(!creating)}>+ {t(tab === 'procedures' ? 'newProcedure' : 'newLineup')}</button>}
+      />
 
       {error && <Alert kind="error">{error}</Alert>}
 
@@ -143,7 +119,7 @@ export default function StartupView({ project, initialTab, procedures, sheets, s
         </section>
       )}
 
-      <div style={{ ...card, padding: 0, overflowX: 'auto' }} role="tabpanel">
+      <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           {tab === 'procedures' ? (
             <>

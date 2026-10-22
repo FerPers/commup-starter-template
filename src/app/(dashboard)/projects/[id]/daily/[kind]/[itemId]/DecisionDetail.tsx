@@ -28,7 +28,7 @@ export default function DecisionDetail({ project, opts, names, role, events, att
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Header projectId={project.id} kind="decision" number={item.number} title={item.title} status={item.status} tab="decisions" />
+      <Header projectId={project.id} kind="decision" number={item.number} title={item.title} status={item.status} />
       <p style={{ ...small, margin: '-8px 0 0' }}>
         {item.decided_at} · {who(item.decided_by)} · {t(`decisionSource.${item.source_kind}`)}{item.source_ref ? ` · ${item.source_ref}` : ''}
         {origin && <> · <Link href={origin.href} style={{ color: 'var(--primary-600, #2563eb)' }}>{origin.label}</Link></>}

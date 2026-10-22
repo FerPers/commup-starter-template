@@ -1,3 +1,4 @@
+import { dailyTabHref } from '@/lib/navigation/hub-routes'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
@@ -60,7 +61,7 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
                   <td style={td}><Link href={`/projects/${p.id}/readiness?blocked=1`} style={{ textDecoration: 'none' }}>{n(p.counts.regressed + p.counts.blocked, 'var(--danger-700)')}</Link></td>
                   <td style={td}><Link href={`/projects/${p.id}/readiness?state=ready`} style={{ textDecoration: 'none' }}>{n(p.counts.ready, 'var(--success-700)')}</Link></td>
                   <td style={td}><Link href={`/projects/${p.id}/readiness?state=signing`} style={{ textDecoration: 'none' }}>{n(p.counts.signing, '#1d4ed8')}</Link></td>
-                  <td style={td}><Link href={`/projects/${p.id}/daily?tab=constraints`} style={{ textDecoration: 'none' }}>{n(p.constraintsN4, 'var(--danger-700)')}</Link></td>
+                  <td style={td}><Link href={dailyTabHref(p.id, 'constraints')} style={{ textDecoration: 'none' }}>{n(p.constraintsN4, 'var(--danger-700)')}</Link></td>
                   <td style={td}><Link href={`/projects/${p.id}/readiness?committed=7`} style={{ textDecoration: 'none' }}>{n(p.commitmentsSoon, '#b45309')}</Link></td>
                 </tr>
               ))}

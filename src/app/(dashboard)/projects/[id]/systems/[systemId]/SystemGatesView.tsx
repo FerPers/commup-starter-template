@@ -1,5 +1,6 @@
 'use client'
 
+import { startupTabHref } from '@/lib/navigation/hub-routes'
 import Link from 'next/link'
 import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
 import { useRouter } from 'next/navigation'
@@ -244,7 +245,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
         if (d.missing) return (
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={small}>{t('crit.lineupMissing')}</span>
-            <Link style={linkStyle} href={`/projects/${project.id}/startup?tab=lineups`}>{t('link.lineups')}</Link>
+            <Link style={linkStyle} href={startupTabHref(project.id, 'lineups')}>{t('link.lineups')}</Link>
           </div>
         )
         return (

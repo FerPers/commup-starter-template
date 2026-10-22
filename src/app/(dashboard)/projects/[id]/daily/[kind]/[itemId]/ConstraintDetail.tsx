@@ -1,5 +1,6 @@
 'use client'
 
+import { dailyTabHref } from '@/lib/navigation/hub-routes'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { deleteMgmtItem, escalateConstraint, transitionConstraint, updateConstraint } from '@/app/actions/daily'
@@ -60,7 +61,7 @@ export default function ConstraintDetail({ project, opts, names, userId, role, e
   }
   function remove() {
     if (!window.confirm(t('detail.deleteConfirm'))) return
-    run(() => deleteMgmtItem({ projectId: project.id, kind: 'constraint', entityId: item.id }), () => router.push(`/projects/${project.id}/daily?tab=constraints`))
+    run(() => deleteMgmtItem({ projectId: project.id, kind: 'constraint', entityId: item.id }), () => router.push(dailyTabHref(project.id, 'constraints')))
   }
   const canDelete = status === 'open' && item.escalation_level === 1 && linked.actions.length === 0 && linked.decisions.length === 0 &&
     attachments.length === 0 && (item.created_by === userId || role === 'owner' || role === 'admin')
@@ -68,7 +69,7 @@ export default function ConstraintDetail({ project, opts, names, userId, role, e
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Header projectId={project.id} kind="constraint" number={item.number} title={item.title} status={status} tab="constraints">
+      <Header projectId={project.id} kind="constraint" number={item.number} title={item.title} status={status}>
         <LevelChip level={item.escalation_level} />
         <OverdueChip days={overdue} />
       </Header>

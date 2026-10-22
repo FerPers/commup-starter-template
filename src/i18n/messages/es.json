@@ -193,7 +193,11 @@
       "translations": "Traducciones",
       "backup": "Respaldo",
       "matrix": "Matriz ITR",
-      "help": "Ayuda"
+      "help": "Ayuda",
+      "constraints": "Restricciones",
+      "tqs": "TQ",
+      "decisions": "Decisiones",
+      "lineups": "Line-ups"
     },
     "entity": {
       "tag": "Tag",

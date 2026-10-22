@@ -1,5 +1,6 @@
 'use client'
 
+import { dailyTabForKind, dailyTabHref } from '@/lib/navigation/hub-routes'
 import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -48,7 +49,7 @@ export default function NewDailyForm({ project, kind, opts, userId, source, supe
   }))
   const [supersedeReason, setSupersedeReason] = useState('')
 
-  const back = source ? `/projects/${project.id}/daily/${source.kind}/${source.id}` : `/projects/${project.id}/daily?tab=${kind === 'tq' ? 'tqs' : `${kind}s`}`
+  const back = source ? `/projects/${project.id}/daily/${source.kind}/${source.id}` : dailyTabHref(project.id, dailyTabForKind(kind))
 
   function submit() {
     setError(null)

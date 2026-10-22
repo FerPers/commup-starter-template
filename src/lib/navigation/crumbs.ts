@@ -37,12 +37,13 @@ const PROJECT: Record<string, string> = {
 const SUB: Record<string, string> = {
   performance: 'nav:performance', operations: 'sub:operations', events: 'sub:events', lookahead: 'sub:lookahead', handovers: 'sub:handovers',
   reports: 'sub:reports', new: 'sub:new', generate: 'sub:generate', report: 'sub:report', 'test-packs': 'sub:testPacks', import: 'sub:import',
+  constraints: 'sub:constraints', tqs: 'sub:tqs', decisions: 'sub:decisions', lineups: 'sub:lineups',
   viewer: 'sub:viewer', preview: 'sub:preview', translations: 'sub:translations', backup: 'sub:backup', matrix: 'sub:matrix', pssr: 'nav:pssrTemplates',
   preservation: 'nav:preservationTemplates', punches: 'nav:opsPunches',
 }
 
 /** Colecciones sin página índice: no son miga; el id que sigue toma su etiqueta de entidad. */
-const NO_INDEX = new Set(['runs', 'lineups', 'procedures', 'transfers', 'itrs@tag', 'preservation@tag', 'action', 'constraint', 'tq', 'decision'])
+const NO_INDEX = new Set(['runs', 'procedures', 'transfers', 'itrs@tag', 'preservation@tag', 'action', 'constraint', 'tq', 'decision'])
 
 /** Qué es el id que sigue a una colección. */
 const ENTITY: Record<string, string> = {
