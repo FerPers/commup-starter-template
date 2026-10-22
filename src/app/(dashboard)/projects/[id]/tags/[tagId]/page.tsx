@@ -4,6 +4,8 @@ import { fetchConsolidatedTagPhotos } from '@/lib/tag-photos'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import TagDetail from './TagDetail'
+import { loadPidDrawings } from '@/lib/documents/pid'
+import { normalizePidRef } from '@/lib/excel/normalize'
 import { parseTagTab } from './tag-detail-shared'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
@@ -182,19 +184,11 @@ export default async function TagDetailPage({
   let pidSignedUrl: string | null = null
   let pidDocId: string | null = null
   if (tag.pid_drawing) {
-    const { data: pidDoc } = await supabase
-      .from('pid_documents')
-      .select('id, file_path')
-      .eq('project_id', projectId)
-      .eq('drawing_number', tag.pid_drawing)
-      .maybeSingle()
-
-    if (pidDoc) {
-      pidDocId = pidDoc.id
-      const { data: signed } = await supabase.storage
-        .from('pid-documents')
-        .createSignedUrl(pidDoc.file_path, 3600)
-      pidSignedUrl = signed?.signedUrl ?? null
+    // N2d: el plano es el documento P&ID del registro con ese número (revisión vigente).
+    const pid = (await loadPidDrawings(supabase, projectId, [tag.pid_drawing])).get(normalizePidRef(tag.pid_drawing) ?? '')
+    if (pid) {
+      pidDocId = pid.documentId
+      pidSignedUrl = pid.signedUrl
     }
   }
 

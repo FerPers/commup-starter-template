@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { normalizePidRef } from '@/lib/excel/normalize'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
@@ -61,8 +62,10 @@ export const saveDocument = withAuth(
   }): Promise<{ id?: string; error?: string }> => {
     if (!DOC_TYPES.includes(input.docType)) return { error: 'Tipo de documento no válido' }
     if (!txt(input.number, 80) || !txt(input.title, 300)) return { error: 'Número y título son obligatorios' }
+    // N2d: el número de un P&ID se normaliza como el campo «P&ID» de tags y señales, para que el plano se encuentre.
+    const number = input.docType === 'pid' ? (normalizePidRef(input.number) ?? '') : txt(input.number, 80)
     const { data, error } = await ctx.supabase.rpc('save_document', {
-      p_project_id: input.projectId, p_id: opt(input.id), p_number: txt(input.number, 80), p_title: txt(input.title, 300),
+      p_project_id: input.projectId, p_id: opt(input.id), p_number: number.slice(0, 80), p_title: txt(input.title, 300),
       p_doc_type: input.docType, p_discipline_id: opt(input.disciplineId), p_company_id: opt(input.companyId),
       p_systems: (input.systemIds ?? []).slice(0, 200),
     })

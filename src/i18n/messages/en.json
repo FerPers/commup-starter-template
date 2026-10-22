@@ -1818,7 +1818,11 @@
       "colorBy_status": "Status",
       "colorBy_system": "System",
       "noSystems": "Marked tags have no system.",
-      "filterSystem": "Click to highlight only this system"
+      "filterSystem": "Click to highlight only this system",
+      "needsReview": "position to review",
+      "reviewBanner": "{count, plural, one {# pin came} other {# pins came}} from the previous revision: check they landed in place (moving one also confirms it).",
+      "confirmAll": "Confirm all in place",
+      "confirmOne": "Confirm position"
     }
   },
   "PreservationExecution": {
@@ -5086,6 +5090,18 @@
       "block": "IFR/IFA: block",
       "warnHelp": "Referencing an IFR/IFA revision (not issued for construction) in an ITR or procedure shows a warning.",
       "blockHelp": "Only IFC, As-Built or Final revisions can be referenced and signed against; IFR/IFA blocks."
+    },
+    "pid": {
+      "filter": "P&ID (with viewer)",
+      "openViewer": "Open viewer",
+      "pins": "{count, plural, one {# pin} other {# pins}}",
+      "toReview": "{count} to review",
+      "missingTitle": "{count, plural, one {# drawing cited by tags without a document} other {# drawings cited by tags without a document}}",
+      "create": "Create the P&ID document",
+      "openViewerRev": "Open viewer (rev {rev})",
+      "reviewBanner": "Rev {rev} received {count, plural, one {# pin} other {# pins}} from the previous revision that still need confirming on the drawing.",
+      "reviewPins": "Review pins →",
+      "viewerPins": "Viewer · {count, plural, one {# pin} other {# pins}}"
     }
   },
   "Companies": {
@@ -5706,5 +5722,14 @@
     "label": "Scope",
     "project": "This project",
     "all": "All projects"
+  },
+  "PidViewer": {
+    "back": "Document",
+    "revisions": "Revisions",
+    "rev": "Rev {rev}",
+    "current": "current",
+    "notCurrent": "Superseded revision: its pins are not the current drawing's",
+    "pins": "{count, plural, one {# pin} other {# pins}}",
+    "noFile": "This P&ID revision has no PDF: upload it as a revision of the document to open the viewer."
   }
 }

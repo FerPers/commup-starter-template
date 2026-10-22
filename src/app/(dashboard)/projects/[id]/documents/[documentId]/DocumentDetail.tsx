@@ -37,7 +37,7 @@ const th: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', ...lab
 const td: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const MAX_BYTES = 50 * 1024 * 1024
 
-export default function DocumentDetail({ project, doc, revisions, usage, systems, disciplines, companies, names, canEdit, policy, lockedOutdated }: {
+export default function DocumentDetail({ project, doc, revisions, usage, systems, disciplines, companies, names, canEdit, policy, lockedOutdated, pidPins = {} }: {
   project: { id: string; code: string; name: string }
   doc: Doc
   revisions: RevisionRow[]
@@ -51,6 +51,8 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
   policy: DocumentPolicy
   /** Referencias superadas en registros ya firmados/aprobados (se revalidan con motivo). */
   lockedOutdated: number
+  /** N2d: P&ID — pines por revisión (total y «por revisar»). */
+  pidPins?: Record<string, { count: number; review: number }>
 }) {
   const t = useTranslations('Documents')
   const router = useRouter()
@@ -121,7 +123,17 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
           {outdated.length > 0 && <Chip tone="red">{t('outdatedN', { n: outdated.length })}</Chip>}
           <span style={small}>{doc.systemIds.map(s => sysCode.get(s)).filter(Boolean).join(', ') || t('noSystems')}</span>
           {canEdit && !edit && <button type="button" style={btn('outline')} onClick={() => setEdit(doc)}>{t('editDoc')}</button>}
+          {doc.docType === 'pid' && current?.file_path && (
+            <Link href={`/projects/${project.id}/documents/${doc.id}/viewer`} style={{ ...btn('primary'), textDecoration: 'none' }}>{t('pid.openViewerRev', { rev: current.rev })}</Link>
+          )}
         </div>
+        {/* N2d: pines copiados de la revisión anterior que falta confirmar en el plano nuevo */}
+        {doc.docType === 'pid' && current && (pidPins[current.id]?.review ?? 0) > 0 && (
+          <div role="status" style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#fff8ec', border: '1px solid #f6d7a7', fontSize: 'var(--text-sm)', color: '#7c4a03' }}>
+            {t('pid.reviewBanner', { count: pidPins[current.id].review, rev: current.rev })}{' '}
+            <Link href={`/projects/${project.id}/documents/${doc.id}/viewer`} style={{ ...linkStyle, fontWeight: 600 }}>{t('pid.reviewPins')}</Link>
+          </div>
+        )}
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}
@@ -247,6 +259,11 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>{r.issued_on ?? '—'}</td>
                     <td style={td}>
                       {r.file_path && <button type="button" style={{ ...btn('outline'), padding: '3px 10px' }} onClick={() => openFile(r.id)}>{r.file_name ?? t('rev.pdf')}</button>}
+                      {doc.docType === 'pid' && r.file_path && !voided && (
+                        <Link href={`/projects/${project.id}/documents/${doc.id}/viewer?rev=${r.id}`} style={{ ...linkStyle, marginLeft: 8, whiteSpace: 'nowrap' }}>
+                          {t('pid.viewerPins', { count: pidPins[r.id]?.count ?? 0 })}{(pidPins[r.id]?.review ?? 0) > 0 ? ` · ${t('pid.toReview', { count: pidPins[r.id].review })}` : ''}
+                        </Link>
+                      )}
                       {r.external_url && <a href={r.external_url} target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, marginLeft: r.file_path ? 8 : 0 }}>{t('rev.edms')} ↗</a>}
                       {!r.file_path && !r.external_url && '—'}
                     </td>

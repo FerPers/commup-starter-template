@@ -65,7 +65,7 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
             )}
             {pidDocId && (
               <a
-                href={`/projects/${projectId}/pid-documents/${pidDocId}/viewer?tag=${tag.id}`}
+                href={`/projects/${projectId}/documents/${pidDocId}/viewer?tag=${tag.id}`}
                 style={{
                   padding: '7px 16px', background: '#eff6ff', color: '#2563eb',
                   border: '1px solid #bfdbfe', borderRadius: '7px',

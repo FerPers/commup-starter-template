@@ -1,7 +1,7 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { documentPolicy, isDocumentController, type DocType, type RevisionRowStatus } from '@/lib/documents/catalog'
-import { fetchAllRows } from '@/lib/list/fetch-all'
+import { fetchAllRows, fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import DocumentDetail, { type RevisionRow, type UsageRow } from './DocumentDetail'
 
 // Ficha de un documento del registro maestro (fase 8, sesión 1): revisiones (PDF y/o enlace al EDMS), vigente,
@@ -58,8 +58,22 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     }
   }).sort((a, b) => Number(b.outdated) - Number(a.outdated) || a.label.localeCompare(b.label))
 
+  // N2d: pines por revisión de un P&ID.
+  const pidPins: Record<string, { count: number; review: number }> = {}
+  if (doc.doc_type === 'pid' && (revisions ?? []).length) {
+    const { rows: pins } = await fetchAllRowsFlagged(() => supabase.from('pid_hotspots').select('id, revision_id, needs_review')
+      .eq('project_id', id).in('revision_id', (revisions ?? []).map(r => r.id)))
+    for (const h of pins) {
+      const e = pidPins[h.revision_id] ?? { count: 0, review: 0 }
+      e.count += 1
+      if (h.needs_review) e.review += 1
+      pidPins[h.revision_id] = e
+    }
+  }
+
   return (
     <DocumentDetail
+      pidPins={pidPins}
       project={project}
       doc={{
         id: doc.id, number: doc.number, title: doc.title, docType: doc.doc_type as DocType, disciplineId: doc.discipline_id ?? '',

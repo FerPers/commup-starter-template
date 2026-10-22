@@ -5237,59 +5237,16 @@ export type Database = {
           },
         ]
       }
-      pid_documents: {
-        Row: {
-          created_at: string | null
-          drawing_number: string
-          file_name: string
-          file_path: string
-          file_size: number | null
-          id: string
-          project_id: string
-          title: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          drawing_number: string
-          file_name: string
-          file_path: string
-          file_size?: number | null
-          id?: string
-          project_id: string
-          title?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          drawing_number?: string
-          file_name?: string
-          file_path?: string
-          file_size?: number | null
-          id?: string
-          project_id?: string
-          title?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pid_documents_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       pid_hotspots: {
         Row: {
           created_at: string
           created_by: string
           id: string
+          needs_review: boolean
           org_id: string
           page_num: number
-          pid_document_id: string
           project_id: string
+          revision_id: string
           tag_id: string
           x_pct: number
           y_pct: number
@@ -5298,10 +5255,11 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          needs_review?: boolean
           org_id: string
           page_num?: number
-          pid_document_id: string
           project_id: string
+          revision_id: string
           tag_id: string
           x_pct: number
           y_pct: number
@@ -5310,10 +5268,11 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          needs_review?: boolean
           org_id?: string
           page_num?: number
-          pid_document_id?: string
           project_id?: string
+          revision_id?: string
           tag_id?: string
           x_pct?: number
           y_pct?: number
@@ -5334,17 +5293,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pid_hotspots_pid_document_id_fkey"
-            columns: ["pid_document_id"]
-            isOneToOne: false
-            referencedRelation: "pid_documents"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "pid_hotspots_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_hotspots_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "document_revisions"
             referencedColumns: ["id"]
           },
           {

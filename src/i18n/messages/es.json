@@ -1818,7 +1818,11 @@
       "colorBy_status": "Estado",
       "colorBy_system": "Sistema",
       "noSystems": "Los tags marcados no tienen sistema.",
-      "filterSystem": "Clic para resaltar solo este sistema"
+      "filterSystem": "Clic para resaltar solo este sistema",
+      "needsReview": "posición por revisar",
+      "reviewBanner": "{count, plural, one {# pin llegó} other {# pines llegaron}} de la revisión anterior: comprueba que quedaron en su lugar (moverlo también lo confirma).",
+      "confirmAll": "Confirmar todos en su lugar",
+      "confirmOne": "Confirmar posición"
     }
   },
   "PreservationExecution": {
@@ -5086,6 +5090,18 @@
       "block": "IFR/IFA: bloqueo",
       "warnHelp": "Referenciar una revisión IFR/IFA (no emitida para construcción) en un ITR o procedimiento muestra un aviso.",
       "blockHelp": "Solo se referencia y se firma contra revisiones IFC, As-Built o Final; una IFR/IFA bloquea."
+    },
+    "pid": {
+      "filter": "P&ID (con visor)",
+      "openViewer": "Abrir visor",
+      "pins": "{count, plural, one {# pin} other {# pines}}",
+      "toReview": "{count} por revisar",
+      "missingTitle": "{count, plural, one {# plano citado en tags sin documento} other {# planos citados en tags sin documento}}",
+      "create": "Crear el documento P&ID",
+      "openViewerRev": "Abrir visor (rev {rev})",
+      "reviewBanner": "La rev {rev} recibió {count, plural, one {# pin} other {# pines}} de la revisión anterior que falta confirmar en el plano.",
+      "reviewPins": "Revisar pines →",
+      "viewerPins": "Visor · {count, plural, one {# pin} other {# pines}}"
     }
   },
   "Companies": {
@@ -5706,5 +5722,14 @@
     "label": "Alcance",
     "project": "Este proyecto",
     "all": "Todos los proyectos"
+  },
+  "PidViewer": {
+    "back": "Documento",
+    "revisions": "Revisiones",
+    "rev": "Rev {rev}",
+    "current": "vigente",
+    "notCurrent": "Revisión superada: sus pines no son los del plano vigente",
+    "pins": "{count, plural, one {# pin} other {# pines}}",
+    "noFile": "Esta revisión del P&ID no tiene PDF: súbelo como revisión en el documento para abrir el visor."
   }
 }

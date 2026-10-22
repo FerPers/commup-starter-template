@@ -61,7 +61,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     supabase.from('loops').select('id', { count: 'exact', head: true }).eq('project_id', id),
     supabase.from('ce_matrices').select('id', { count: 'exact', head: true }).eq('project_id', id),
     supabase.from('documents').select('id', { count: 'exact', head: true }).eq('project_id', id),
-    supabase.from('pid_documents').select('id', { count: 'exact', head: true }).eq('project_id', id),
+    supabase.from('documents').select('id', { count: 'exact', head: true }).eq('project_id', id).eq('doc_type', 'pid'),
     // bounded: una fila por sistema del proyecto
     supabase.from('system_ownership').select('stage').eq('project_id', id).limit(5000),
     supabase.from('ownership_transfers').select('id', { count: 'exact', head: true }).eq('project_id', id).eq('status', 'pending_signatures'),

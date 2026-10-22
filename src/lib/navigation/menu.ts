@@ -56,7 +56,7 @@ export const PROJECT_ITEMS: readonly MenuItemDef[] = [
   { key: 'systems', href: '/projects/{p}/systems', labelKey: 'systems', audience: ['lead', 'plan', 'mgmt'], phase: 'prep' },
   { key: 'tags', href: '/projects/{p}/tags', labelKey: 'tags', audience: ['field', 'lead', 'mgmt'], phase: 'prep' },
   { key: 'documents', href: '/projects/{p}/documents', labelKey: 'documents', audience: ['lead', 'mgmt', 'client'], phase: 'prep' },
-  { key: 'pidDocuments', href: '/projects/{p}/pid-documents', labelKey: 'pidDocuments', audience: ['mgmt'], phase: 'prep' },
+  // N2d: los P&ID son documentos (Documentos › P&ID con visor).
   { key: 'vendors', href: '/projects/{p}/vendors', labelKey: 'vendors', audience: ['lead', 'mgmt'], phase: 'prep' },
   { key: 'signatories', href: '/projects/{p}/signatories', labelKey: 'signatories', audience: ['mgmt'], phase: 'prep' },
   { key: 'import', href: '/projects/{p}/import', labelKey: 'import', tier: 'privileged', audience: ['mgmt'], phase: 'prep' },

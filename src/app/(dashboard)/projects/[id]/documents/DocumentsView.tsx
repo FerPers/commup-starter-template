@@ -15,13 +15,17 @@ export type DocRow = {
   id: string; number: string; title: string; docType: DocType; disciplineId: string | null; companyId: string | null
   currentRev: string | null; currentStatus: RevisionStatus | null; issuedOn: string | null; hasDraft: boolean
   systemIds: string[]; refs: number; outdatedRefs: number
+  /** N2d: la revisión vigente tiene PDF (un P&ID se abre en el visor). */
+  currentHasFile: boolean
 }
+/** N2d: pines de la revisión vigente de cada P&ID y planos citados en tags que no tienen documento. */
+export type PidInfo = { pins: Record<string, { count: number; review: number }>; missing: string[] }
 type Opt = { id: string; code: string; name: string }
 
 const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', ...label, borderBottom: '1px solid var(--border)', background: 'var(--gray-50)', whiteSpace: 'nowrap' }
 const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 
-export default function DocumentsView({ project, rows, systems, disciplines, companies, canEdit, policy, canAdmin }: {
+export default function DocumentsView({ project, rows, systems, disciplines, companies, canEdit, policy, canAdmin, initialType = '', pid }: {
   project: { id: string; code: string; name: string }
   rows: DocRow[]
   systems: Opt[]
@@ -31,13 +35,16 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
   /** S13 (F-20): política de la org frente a revisiones IFR/IFA; la cambia owner/admin. */
   policy: DocumentPolicy
   canAdmin: boolean
+  /** N2d: `?type=pid` (los enlaces viejos a «Documentos P&ID» llegan aquí). */
+  initialType?: '' | DocType
+  pid?: PidInfo
 }) {
   const t = useTranslations('Documents')
   const router = useRouter()
   const [isPending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [q, setQ] = useState('')
-  const [type, setType] = useState<'' | DocType>('')
+  const [type, setType] = useState<'' | DocType>(initialType)
   const [status, setStatus] = useState<'' | RevisionStatus | 'none' | 'outdated'>('')
   const [system, setSystem] = useState('')
   const [form, setForm] = useState<null | { number: string; title: string; docType: DocType; disciplineId: string; companyId: string; systemIds: string[] }>(null)
@@ -154,6 +161,8 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input style={{ ...input, maxWidth: 260 }} placeholder={t('search')} aria-label={t('search')} value={q} onChange={e => setQ(e.target.value)} />
+        <button type="button" aria-pressed={type === 'pid'} onClick={() => setType(type === 'pid' ? '' : 'pid')}
+          style={{ ...btn(type === 'pid' ? 'primary' : 'outline'), minHeight: 38 }}>{t('pid.filter')}</button>
         <select style={{ ...input, maxWidth: 200 }} aria-label={t('f.type')} value={type} onChange={e => setType(e.target.value as DocType | '')}>
           <option value="">{t('allTypes')}</option>
           {DOC_TYPES.map(d => <option key={d} value={d}>{t(`type.${d}`)}</option>)}
@@ -170,6 +179,20 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
         </select>
       </div>
 
+      {/* N2d: planos que los tags citan en su campo P&ID y que no tienen documento en el registro */}
+      {type === 'pid' && (pid?.missing.length ?? 0) > 0 && (
+        <section style={{ ...card, background: '#fffbeb', borderColor: '#fde68a' }} aria-label={t('pid.missingTitle')}>
+          <strong style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{t('pid.missingTitle', { count: pid!.missing.length })}</strong>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+            {pid!.missing.slice(0, 60).map(n => canEdit
+              ? <button key={n} type="button" onClick={() => setForm({ number: n, title: '', docType: 'pid', disciplineId: '', companyId: '', systemIds: [] })}
+                  style={{ ...btn('outline'), fontFamily: 'ui-monospace, monospace', fontSize: 'var(--text-xs)' }} title={t('pid.create')}>＋ {n}</button>
+              : <span key={n} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 'var(--text-xs)' }}>{n}</span>)}
+            {pid!.missing.length > 60 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>+{pid!.missing.length - 60}</span>}
+          </div>
+        </section>
+      )}
+
       <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -184,6 +207,13 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
               <tr key={r.id}>
                 <td style={{ ...td, fontWeight: 600, whiteSpace: 'nowrap' }}>
                   <Link href={`/projects/${project.id}/documents/${r.id}`} style={{ color: 'var(--primary-600, #2563eb)', textDecoration: 'none' }}>{r.number}</Link>
+                  {r.docType === 'pid' && r.currentHasFile && (
+                    <div style={{ marginTop: 4, display: 'flex', gap: 6, alignItems: 'center', fontWeight: 400 }}>
+                      <Link href={`/projects/${project.id}/documents/${r.id}/viewer`} style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 600 }}>{t('pid.openViewer')}</Link>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{t('pid.pins', { count: pid?.pins[r.id]?.count ?? 0 })}</span>
+                      {(pid?.pins[r.id]?.review ?? 0) > 0 && <Chip tone="amber">{t('pid.toReview', { count: pid!.pins[r.id].review })}</Chip>}
+                    </div>
+                  )}
                 </td>
                 <td style={td}>{r.title}</td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>{t(`type.${r.docType}`)}</td>

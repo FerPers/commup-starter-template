@@ -10,6 +10,8 @@ import PartialNote from '@/components/ui/PartialNote'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import { fetchSubsystemRollup } from '@/lib/list/kpi-query'
 import { parseTagView } from '@/lib/list/tag-view'
+import { loadPidDrawings } from '@/lib/documents/pid'
+import { normalizePidRef } from '@/lib/excel/normalize'
 import type { ExplorerArea } from '@/types/database'
 import { fetchTagPage, fetchTagDisciplineCounts, TAG_SORT_KEYS } from '@/lib/list/tag-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
@@ -122,18 +124,12 @@ export default async function TagsPage({
   const drawings = [...new Set(pageRes.rows.map(r => r.pid_drawing).filter((d): d is string => !!d))]
   const pidUrlMap: Record<string, string> = {}
   if (drawings.length > 0) {
-    const { data: pidDocs } = await supabase
-      .from('pid_documents')
-      .select('drawing_number, file_path')
-      .eq('project_id', id)
-      .in('drawing_number', drawings)
-    const signed = await Promise.all(
-      (pidDocs ?? []).map(async doc => {
-        const { data } = await supabase.storage.from('pid-documents').createSignedUrl(doc.file_path, 3600)
-        return [doc.drawing_number, data?.signedUrl] as const
-      }),
-    )
-    for (const [num, url] of signed) if (url) pidUrlMap[num] = url
+    // N2d: planos = documentos P&ID del registro (PDF de la revisión vigente).
+    const pids = await loadPidDrawings(supabase, id, drawings)
+    for (const d of drawings) {
+      const url = pids.get(normalizePidRef(d) ?? '')?.signedUrl
+      if (url) pidUrlMap[d] = url
+    }
   }
 
   const totalProjectTags = subsystem

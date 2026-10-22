@@ -7,7 +7,7 @@ import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import { useSearchParams } from 'next/navigation'
 import TagQuickViewModal from '@/components/TagQuickViewModal'
-import { upsertHotspot, deleteHotspot } from '@/app/actions/pid-hotspots'
+import { upsertHotspot, deleteHotspot, confirmHotspots } from '@/app/actions/pid-hotspots'
 import { NO_SYSTEM_COLOR, systemColorMap } from '@/lib/systems/colors'
 
 // Point to the worker we copied to public/ — safe for Cloudflare Workers runtime
@@ -27,6 +27,8 @@ type SystemRef = { id: string; code: string; name: string }
 
 type Hotspot = {
   id: string; tag_id: string; page_num: number; x_pct: number; y_pct: number
+  /** N2d: copiado de la revisión anterior; falta confirmar que quedó en su lugar. */
+  needs_review: boolean
   tag: Pick<HotspotTag, 'id' | 'tag_number' | 'description' | 'status'>
   discipline: { id: string; code: string; name: string; color: string }
   system: SystemRef | null
@@ -62,7 +64,9 @@ interface Props {
   hotspots: Hotspot[]
   tags: TagItem[]
   projectId: string
-  docId: string
+  /** N2d: documento P&ID y revisión abierta (los pines son de la revisión). */
+  documentId: string
+  revisionId: string
   canEdit: boolean
 }
 
@@ -184,7 +188,7 @@ function TagSelector({
 
 // ── Main Component ───────────────────────────────────────────
 
-export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, projectId, docId, canEdit }: Props) {
+export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, projectId, documentId, revisionId, canEdit }: Props) {
   const t = useTranslations('PidDocuments')
   const searchParams = useSearchParams()
   const highlightTagId = searchParams.get('tag')
@@ -335,6 +339,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
       page_num: currentPage,
       x_pct: pendingPos.x,
       y_pct: pendingPos.y,
+      needs_review: false,
       tag: { id: tagData.id, tag_number: tagData.tag_number, description: tagData.description, status: tagData.status },
       discipline: tagData.discipline,
       system: tagData.system,
@@ -349,7 +354,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
 
     startTransition(async () => {
       const result = await upsertHotspot({
-        pid_document_id: docId,
+        revision_id: revisionId,
         tag_id: placingTag,
         project_id: projectId,
         page_num: currentPage,
@@ -366,7 +371,17 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
     setHotspots(prev => prev.filter(h => h.id !== hotspotId))
     setSelectedHotspot(null)
     startTransition(async () => {
-      await deleteHotspot({ hotspot_id: hotspotId, project_id: projectId, pid_document_id: docId })
+      await deleteHotspot({ hotspot_id: hotspotId, project_id: projectId, document_id: documentId })
+    })
+  }
+
+  // N2d: confirmar que los pines copiados de la revisión anterior quedaron en su lugar (uno o todos).
+  const toReview = hotspots.filter(h => h.needs_review && !h.id.startsWith('temp-'))
+  function handleConfirm(ids?: string[]) {
+    setHotspots(prev => prev.map(h => (!ids || ids.includes(h.id) ? { ...h, needs_review: false } : h)))
+    setSelectedHotspot(sel => (sel && (!ids || ids.includes(sel.id)) ? { ...sel, needs_review: false } : sel))
+    startTransition(async () => {
+      await confirmHotspots({ project_id: projectId, revision_id: revisionId, hotspot_ids: ids })
     })
   }
 
@@ -397,6 +412,18 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
         borderRight: '1px solid var(--border)', padding: '16px 12px',
         display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto',
       }}>
+        {/* N2d: pines copiados de la revisión anterior */}
+        {toReview.length > 0 && (
+          <div role="status" style={{ padding: '10px 12px', borderRadius: '8px', background: '#fff8ec', border: '1px solid #f6d7a7', fontSize: '12px', color: '#7c4a03', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span>{t('viewer.reviewBanner', { count: toReview.length })}</span>
+            {canEdit && (
+              <button onClick={() => handleConfirm()} disabled={isPending}
+                style={{ minHeight: '36px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #f6d7a7', background: 'var(--card-bg)', color: '#7c4a03', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                {t('viewer.confirmAll')}
+              </button>
+            )}
+          </div>
+        )}
         {/* Page navigation */}
         {numPages > 1 && (
           <div>
@@ -624,7 +651,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
               <div
                 key={h.id}
                 onClick={() => { setSelectedHotspot(h) }}
-                title={`${h.tag.tag_number}${h.system ? ` · ${h.system.code}` : ''} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}`}
+                title={`${h.tag.tag_number}${h.system ? ` · ${h.system.code}` : ''} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}${h.needs_review ? ` · ${t('viewer.needsReview')}` : ''}`}
                 style={{
                   position: 'absolute',
                   left: `${h.x_pct}%`,
@@ -633,7 +660,7 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
                   width: pinSize, height: pinSize,
                   borderRadius: '50%',
                   background: statusColor,
-                  border: `2px solid white`,
+                  border: h.needs_review ? '2px dashed #f59e0b' : `2px solid white`,
                   cursor: 'pointer',
                   zIndex: 10,
                   opacity: dimmed(h) ? 0.2 : 1,
@@ -712,6 +739,18 @@ export default function PidViewer({ signedUrl, hotspots: initialHotspots, tags, 
               position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
               zIndex: 60,
             }}>
+              {selectedHotspot.needs_review && (
+                <button
+                  onClick={() => handleConfirm([selectedHotspot.id])}
+                  disabled={isPending}
+                  style={{
+                    padding: '8px 16px', marginRight: '8px', background: '#fff8ec', color: '#7c4a03',
+                    border: '1px solid #f6d7a7', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontWeight: 600,
+                  }}
+                >
+                  {t('viewer.confirmOne')}
+                </button>
+              )}
               <button
                 onClick={() => handleDeleteHotspot(selectedHotspot.id)}
                 disabled={isPending}
