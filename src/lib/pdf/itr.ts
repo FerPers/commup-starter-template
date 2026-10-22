@@ -1,6 +1,7 @@
 import { evaluateContinuity } from '../itr/continuity'
 import { evaluateTable, parseSourceRows } from '../itr/table'
 import { drawItrSignatures } from './itr-signatures'
+import { drawBrandBar, drawRecordQr, type PdfBranding } from './branding'
 import { calibrationState, isUsable } from '../test-equipment/calibration'
 /**
  * ITR (Inspection & Test Record) PDF — pdf-lib (Workers-native).
@@ -105,6 +106,10 @@ export type ItrPdfData = {
   loops?: { loop_number: string } | null
   ce_causes?: { code: string; description: string; ce_matrices: { code: string } | null } | null
   document_refs?: ItrDocumentRef[]
+  /** E2: logos de la org y del cliente (sin ellos, «CommUp» como antes). */
+  branding?: PdfBranding | null
+  /** E2: QR a la ficha del ITR en la app. */
+  recordUrl?: string | null
 }
 
 export type ItrTestEquipmentRef = {
@@ -192,25 +197,33 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
 
   r.newPage()
 
-  // ─── Header (left-aligned with right-side info) ──────────────────────────
-  // CommUp logo + subtitle on left, ITR number + status badge on right
-  r.drawText('CommUp', { x: MARGIN, y: r.y - 16, size: 16, bold: true, color: COLOR.purple })
+  // ─── Header ──────────────────────────────────────────────────────────────
+  // E2: franja de marca (org a la izquierda, cliente a la derecha); debajo, el tipo de registro a la izquierda y
+  // el número + estado a la derecha, con el QR a la ficha del ITR en el extremo derecho.
+  await drawBrandBar(r, itr.branding)
+  const QR = 56
+  const headTop = r.y
+  if (itr.recordUrl) drawRecordQr(r, itr.recordUrl, A4_W - MARGIN - QR, headTop, QR)
+  const rightX = itr.recordUrl ? A4_W - MARGIN - QR - 14 : A4_W - MARGIN
+
+  r.drawText('Registro de inspección y prueba', { x: MARGIN, y: r.y - 14, size: 12, bold: true, color: COLOR.purple })
   r.drawText('Inspection & Test Record', {
     x: MARGIN, y: r.y - 26, size: 8, color: COLOR.muted,
   })
 
-  r.drawTextRight(itr.itr_number, { rightX: A4_W - MARGIN, y: r.y - 14, size: 13, bold: true, color: COLOR.text })
+  r.drawTextRight(itr.itr_number, { rightX, y: r.y - 14, size: 13, bold: true, color: COLOR.text })
   // Status badge right-aligned
   const badgeTxt = sanitize(visual.label)
   const badgeW = r.fontBold.widthOfTextAtSize(badgeTxt, 8) + 12
   const badgeH = 14
-  const badgeX = A4_W - MARGIN - badgeW
+  const badgeX = rightX - badgeW
   r.drawRect({ x: badgeX, y: r.y - 32, width: badgeW, height: badgeH, color: visual.bg })
   r.page.drawText(badgeTxt, {
     x: badgeX + 6, y: r.y - 29, size: 8, font: r.fontBold, color: visual.fg,
   })
 
   r.moveY(40)
+  if (itr.recordUrl) r.y = Math.min(r.y, headTop - QR - 22)
 
   // Meta row (wrapped key:value pairs)
   // Bilingüe: español primero cuando existe traducción; el inglés queda como

@@ -11,6 +11,7 @@ import {
   sanitize,
   type Color, type TableCol,
 } from './renderer'
+import { drawBrandBar, type PdfBranding } from './branding'
 
 export type PunchPdfRow = {
   number: string
@@ -29,6 +30,8 @@ export type PunchListPdfData = {
   projectCode: string
   projectClient: string | null
   punches: PunchPdfRow[]
+  /** E2: logos de la org y del cliente (sin ellos, «CommUp» como antes). */
+  branding?: PdfBranding | null
 }
 
 const CAT_META: Record<'A' | 'B' | 'C', { label: string; color: Color; bg: Color }> = {
@@ -106,8 +109,7 @@ export async function renderPunchListPdf(data: PunchListPdfData): Promise<Uint8A
 
   // ─── Header ───────────────────────────────────────────────────────────────
   r.moveY(8)
-  r.drawTextCentered('CommUp', { y: r.y - 18, size: 18, bold: true, color: COLOR.purple })
-  r.moveY(22)
+  await drawBrandBar(r, data.branding)
   r.drawTextCentered('Punch List Report', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
   r.moveY(15)
   r.drawTextCentered(`${data.projectCode} — ${data.projectName}`, {

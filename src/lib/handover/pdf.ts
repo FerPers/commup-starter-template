@@ -8,6 +8,7 @@
  */
 
 import { Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H, sanitize, wrapText, type TableCol } from '@/lib/pdf/renderer'
+import { drawBrandBar, type PdfBranding } from '@/lib/pdf/branding'
 import { dateTimeIn, zoneLabel } from '@/lib/time/zone'
 import type { HandoverPackageData, HandoverSigner } from './types'
 
@@ -115,6 +116,8 @@ export type HandoverPdfOptions = {
   omitted?: { path: string; reason: string }[]
   /** Etiquetas del espacio `Startup` (etapas, capacidades); sin traductor se muestra el código. */
   label?: (key: string) => string
+  /** E2: logos de la org y del cliente en la portada. */
+  branding?: PdfBranding | null
 }
 
 export async function renderHandoverPdf(data: HandoverPackageData, opts: HandoverPdfOptions): Promise<Uint8Array> {
@@ -169,10 +172,9 @@ export async function renderHandoverPdf(data: HandoverPackageData, opts: Handove
   r.newPage()
   r.topBar(COLOR.purple, 6)
   r.moveY(8)
-  r.drawText('CommUp', { x: MARGIN, y: r.y - 14, size: 14, bold: true, color: COLOR.purple })
+  await drawBrandBar(r, opts.branding)
   r.badge(`v${pkg.schema_version}`, { x: A4_W - MARGIN - 40, y: r.y - 14, fg: COLOR.purple, bg: COLOR.purpleBg, size: 9 })
-  r.moveY(22)
-  r.drawText(`${T.title[L]} — ${pkg.project.code}`, { x: MARGIN, y: r.y - 14, size: 15, bold: true, maxWidth: CONTENT_W })
+  r.drawText(`${T.title[L]} — ${pkg.project.code}`, { x: MARGIN, y: r.y - 14, size: 15, bold: true, maxWidth: CONTENT_W - 56 })
   r.moveY(20)
   r.kv(T.project[L], `${pkg.project.name}${pkg.project.org_name ? ` · ${pkg.project.org_name}` : ''}`)
   r.kv(T.client[L], pkg.project.client ?? '—')

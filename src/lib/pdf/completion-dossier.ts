@@ -12,6 +12,7 @@ import {
   sanitize,
   type Color, type TableCol,
 } from './renderer'
+import { drawBrandBar, type PdfBranding } from './branding'
 
 export type DossierItr = {
   number: string
@@ -36,6 +37,8 @@ export type DossierSignature = {
 }
 
 export type CompletionDossierData = {
+  /** E2: logos de la org y del cliente (sin ellos, el nombre o «CommUp»). */
+  branding?: PdfBranding | null
   projectName: string
   projectCode: string
   projectClient: string | null
@@ -130,9 +133,10 @@ export async function renderCompletionDossierPdf(data: CompletionDossierData): P
   // ─── Cover ────────────────────────────────────────────────────────────────
   r.newPage()
   r.topBar(COLOR.purple, 6)
-  r.y = A4_H - 150
-  r.drawTextCentered('CommUp', { y: r.y, size: 22, bold: true, color: COLOR.purple })
-  r.moveY(40)
+  // E2: franja de marca arriba de la portada (org y cliente); el título baja como antes.
+  r.y = A4_H - MARGIN - 8
+  await drawBrandBar(r, data.branding)
+  r.y = A4_H - 190
   r.drawTextCentered('COMPLETION DOSSIER', { y: r.y, size: 20, bold: true, color: COLOR.text })
   r.moveY(26)
   if (data.certificateTypeName) {

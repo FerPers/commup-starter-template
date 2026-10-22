@@ -65,15 +65,24 @@ export default async function DocumentsPage({ params, searchParams }: { params: 
   const docByRev = new Map(pidDocs.map(d => [d.current_revision_id, d.id]))
   const pid: PidInfo = { pins: {}, missing: [] }
   if (currentPidRevs.length) {
-    const { rows: pins } = await fetchAllRowsFlagged(() => supabase.from('pid_hotspots').select('id, revision_id, needs_review')
-      .eq('project_id', id).in('revision_id', currentPidRevs.slice(0, 300)))
+    // E2: cobertura por plano (tags que citan el plano y cuántos tienen pin en la revisión vigente) en una consulta.
+    const [{ rows: pins }, { data: coverage }] = await Promise.all([
+      fetchAllRowsFlagged(() => supabase.from('pid_hotspots').select('id, revision_id, needs_review')
+        .eq('project_id', id).in('revision_id', currentPidRevs.slice(0, 300))),
+      supabase.rpc('compute_project_pid_drawing_coverage', { p_project_id: id }),
+    ])
+    const entry = (doc: string) => (pid.pins[doc] ??= { count: 0, review: 0, cited: 0, citedPinned: 0 })
     for (const h of pins) {
       const doc = docByRev.get(h.revision_id)
       if (!doc) continue
-      const e = pid.pins[doc] ?? { count: 0, review: 0 }
+      const e = entry(doc)
       e.count += 1
       if (h.needs_review) e.review += 1
-      pid.pins[doc] = e
+    }
+    for (const c of coverage ?? []) {
+      const e = entry(c.document_id)
+      e.cited = c.tags_cited
+      e.citedPinned = c.tags_cited_pinned
     }
   }
   if (initialType === 'pid') {

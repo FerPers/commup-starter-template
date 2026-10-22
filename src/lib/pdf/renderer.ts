@@ -6,6 +6,7 @@
  */
 
 import { PDFDocument, type PDFPage, type PDFFont, StandardFonts, rgb, type RGB } from 'pdf-lib'
+import qrcode from 'qrcode-generator'
 
 export const A4_W = 595.28
 export const A4_H = 841.89
@@ -124,6 +125,31 @@ export function wrapText(rawText: string, font: PDFFont, size: number, maxWidth:
     if (current) lines.push(current)
   }
   return lines
+}
+
+/**
+ * QR (qrcode-generator, JS puro compatible con Workers) dibujado como rectángulos, con zona de silencio de 4
+ * módulos; une los módulos oscuros contiguos de cada fila. Lo usan las etiquetas de registros y, desde E2, el QR
+ * al registro en certificados e ITR.
+ */
+export function drawQr(page: PDFPage, text: string, x: number, y: number, size: number) {
+  const qr = qrcode(0, 'M')
+  qr.addData(text)
+  qr.make()
+  const n = qr.getModuleCount()
+  const cell = size / (n + 8)
+  const ox = x + cell * 4
+  const top = y + size - cell * 4
+  for (let r = 0; r < n; r++) {
+    let c = 0
+    while (c < n) {
+      if (!qr.isDark(r, c)) { c++; continue }
+      const start = c
+      while (c < n && qr.isDark(r, c)) c++
+      // +0.15 evita líneas blancas finas entre módulos al rasterizar.
+      page.drawRectangle({ x: ox + start * cell, y: top - (r + 1) * cell, width: (c - start) * cell + 0.15, height: cell + 0.15, color: COLOR.text })
+    }
+  }
 }
 
 export type TableCol = {

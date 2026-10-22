@@ -5,6 +5,7 @@ import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { EQUIPMENT_TYPE_DEFAULTS, defaultLineupFlags } from '@/lib/equipment-types'
 import { revalidatePath } from 'next/cache'
 import { CAT_B_LIMIT_SETTING } from '@/lib/certificates/eligibility'
+import { LOGO_BUCKET, LOGO_MAX_BYTES, LOGO_MIME_EXT } from '@/lib/constants/logos'
 
 // ═══════════════════════════════════════════════════════════
 // PROJECT PHASES
@@ -374,7 +375,6 @@ export const saveCatBLimit = withAuthOnly(
   },
 )
 
-const LOGO_MIME_EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
 
 export const uploadOrgLogo = withAuthOnly(
   { role: ADMIN_ROLES },
@@ -387,7 +387,7 @@ export const uploadOrgLogo = withAuthOnly(
 
     const file = formData.get('file') as File | null
     if (!file) return { error: 'No se adjuntó archivo' }
-    if (file.size > 2 * 1024 * 1024) return { error: 'El archivo supera 2 MB' }
+    if (file.size > LOGO_MAX_BYTES) return { error: 'El archivo supera 2 MB' }
 
     // A-26 (S02): el bucket es público → solo imágenes rasterizadas (nunca SVG/HTML) y la extensión
     // sale del MIME validado, no del nombre del archivo. El bucket repite la lista (migración S02).
@@ -396,12 +396,12 @@ export const uploadOrgLogo = withAuthOnly(
     const path = `${orgId}/logo.${ext}`
 
     const { error: upErr } = await ctx.supabase.storage
-      .from('org-assets')
+      .from(LOGO_BUCKET)
       .upload(path, file, { upsert: true, contentType: file.type })
 
     if (upErr) return { error: upErr.message }
 
-    const { data } = ctx.supabase.storage.from('org-assets').getPublicUrl(path)
+    const { data } = ctx.supabase.storage.from(LOGO_BUCKET).getPublicUrl(path)
     // misma ruta al reemplazar el logo: el parámetro evita que el navegador muestre el anterior
     return { url: `${data.publicUrl}?v=${Date.now()}` }
   },

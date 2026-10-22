@@ -51,7 +51,7 @@ export default async function SystemFilePage({ params, searchParams }: {
     dependent:systems!system_dependencies_system_id_fkey(id, code, name)`
 
   // ── Encabezado (siempre) ─────────────────────────────────────────────
-  const [{ data: gatesRaw, error: gatesError }, { data: progress }, { data: plans }, { data: ownership }, { data: pendingTransfer }, { data: perfTests }, { data: vendorRows }, { data: deps }, day] = await Promise.all([
+  const [{ data: gatesRaw, error: gatesError }, { data: progress }, { data: plans }, { data: ownership }, { data: pendingTransfer }, { data: perfTests }, { data: vendorRows }, { data: deps }, day, { data: pidCoverage }] = await Promise.all([
     supabase.rpc('compute_system_gates', { p_system_id: systemId }),
     supabase.rpc('compute_system_progress', { p_system_id: systemId }),
     // bounded: una fila por gate del sistema
@@ -69,6 +69,8 @@ export default async function SystemFilePage({ params, searchParams }: {
     supabase.from('system_dependencies').select(depSelect)
       .eq('project_id', id).or(`system_id.eq.${system.id},depends_on_system_id.eq.${system.id}`).limit(500),
     getProjectToday(supabase, id),
+    // E2: cobertura del P&ID (tags del sistema con pin en la revisión vigente).
+    supabase.rpc('compute_project_pid_coverage', { p_project_id: id }),
   ])
   if (gatesError) console.error('[SystemFile] gates rpc error:', gatesError)
   const gates = (gatesRaw ?? []) as unknown as SystemGate[]
@@ -98,6 +100,10 @@ export default async function SystemFilePage({ params, searchParams }: {
     commitment: next && nextPlan?.commitment_date
       ? { gate: next.code, date: nextPlan.commitment_date, late: nextPlan.commitment_date < day.today, forecast: nextPlan.forecast_date }
       : null,
+    pid: (() => {
+      const c = (pidCoverage ?? []).find(x => x.system_id === systemId)
+      return c && c.tags_total > 0 ? { pinned: c.tags_pinned, total: c.tags_total } : null
+    })(),
   }
   const depRows = deps ?? []
 

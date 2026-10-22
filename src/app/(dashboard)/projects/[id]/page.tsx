@@ -35,7 +35,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const { data: project } = await supabase
     .from('projects')
-    .select('id, name, code, location, client, country, region, start_date, end_date, status, timezone, created_at')
+    .select('id, name, code, location, client, client_logo_url, country, region, start_date, end_date, status, timezone, created_at')
     .eq('id', id)
     .eq('org_id', ctx.orgId)
     .maybeSingle()
@@ -143,7 +143,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 32px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <ProjectHeader project={project} canEdit={canEdit} canDelete={canDelete} />
+      <ProjectHeader project={project} canEdit={canEdit} canDelete={canDelete} canBrand={ROLE_TIERS.admin.includes(ctx.role)} />
 
       {/* Datos del proyecto (H-20: i18n y en el teléfono bajan de línea) */}
       <div style={{ ...card, display: 'flex', flexWrap: 'wrap' }}>

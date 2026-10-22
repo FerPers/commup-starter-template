@@ -6560,6 +6560,7 @@ export type Database = {
       projects: {
         Row: {
           client: string | null
+          client_logo_url: string | null
           code: string
           country: string | null
           created_at: string
@@ -6575,6 +6576,7 @@ export type Database = {
         }
         Insert: {
           client?: string | null
+          client_logo_url?: string | null
           code: string
           country?: string | null
           created_at?: string
@@ -6590,6 +6592,7 @@ export type Database = {
         }
         Update: {
           client?: string | null
+          client_logo_url?: string | null
           code?: string
           country?: string | null
           created_at?: string
@@ -12419,6 +12422,24 @@ export type Database = {
           system_code: string
           system_id: string
           system_name: string
+        }[]
+      }
+      compute_project_pid_coverage: {
+        Args: { p_project_id: string }
+        Returns: {
+          system_id: string
+          tags_cited: number
+          tags_pinned: number
+          tags_total: number
+        }[]
+      }
+      compute_project_pid_drawing_coverage: {
+        Args: { p_project_id: string }
+        Returns: {
+          document_id: string
+          pins: number
+          tags_cited: number
+          tags_cited_pinned: number
         }[]
       }
       compute_project_progress: {

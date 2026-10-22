@@ -8,6 +8,7 @@ import {
   sanitize, truncateToWidth, wrapText,
   type TableCol, type Color,
 } from './renderer'
+import { drawBrandBar, drawRecordQr, type PdfBranding } from './branding'
 
 type ExceptionRow = {
   id: string
@@ -60,6 +61,10 @@ export type CertPdfData = {
   exceptions: ExceptionRow[]
   itrs: ItrRow[]
   signatures: SignatureRow[]
+  /** E2: logos de la org y del cliente (sin ellos, «CommUp» como antes). */
+  branding?: PdfBranding | null
+  /** E2: QR al certificado en la app. */
+  recordUrl?: string | null
 }
 
 function statusVisual(status: string): { fg: Color; bg: Color; label: string } {
@@ -111,15 +116,20 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
 
   // ─── Header (centered) ────────────────────────────────────────────────────
   r.y = A4_H - MARGIN - 8
-  r.drawTextCentered('CommUp', { y: r.y - 18, size: 18, bold: true, color: COLOR.purple })
-  r.moveY(22)
+  await drawBrandBar(r, cert.branding)
+
+  // E2: QR al registro a la derecha del encabezado; los títulos centrados dejan su espacio.
+  const QR = 58
+  const headTop = r.y
+  if (cert.recordUrl) drawRecordQr(r, cert.recordUrl, A4_W - MARGIN - QR, headTop, QR)
+  const headW = cert.recordUrl ? CONTENT_W - 2 * (QR + 12) : CONTENT_W
 
   const certHeading = cert.project_phases?.certificate_name ?? 'Completion Certificate'
-  r.drawTextCentered(certHeading, { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
+  r.drawTextCentered(certHeading, { y: r.y - 13, size: 13, bold: true, color: COLOR.text, maxWidth: headW })
   r.moveY(15)
   r.drawTextCentered(cert.certificate_number, { y: r.y - 11, size: 11, oblique: true, color: COLOR.muted })
   r.moveY(13)
-  r.drawTextCentered(cert.title, { y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: CONTENT_W })
+  r.drawTextCentered(cert.title, { y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: headW })
   r.moveY(16)
 
   // Status badge centered
@@ -133,6 +143,7 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
     x: badgeX + 12, y: r.y - badgeH + 5, size: 9, font: r.fontBold, color: visual.fg,
   })
   r.moveY(badgeH + 6)
+  if (cert.recordUrl) r.y = Math.min(r.y, headTop - QR - 20)
 
   // Separator line under header
   r.drawHLine(MARGIN, A4_W - MARGIN, r.y, 1.2, COLOR.text)

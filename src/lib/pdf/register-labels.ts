@@ -5,8 +5,7 @@
  */
 
 import { PDFDocument, StandardFonts, type PDFFont, type PDFPage } from 'pdf-lib'
-import qrcode from 'qrcode-generator'
-import { A4_H, A4_W, COLOR, sanitize, truncateToWidth, wrapText } from './renderer'
+import { A4_H, A4_W, COLOR, drawQr, sanitize, truncateToWidth, wrapText } from './renderer'
 
 export type RegisterLabel = {
   number: string
@@ -25,27 +24,6 @@ const COLS = 2
 const ROWS = 4
 const PAD = 10
 const QR_SIZE = 140
-
-/** Dibuja el QR con zona de silencio de 4 módulos; une los módulos oscuros contiguos de cada fila. */
-function drawQr(page: PDFPage, text: string, x: number, y: number, size: number) {
-  const qr = qrcode(0, 'M')
-  qr.addData(text)
-  qr.make()
-  const n = qr.getModuleCount()
-  const cell = size / (n + 8)
-  const ox = x + cell * 4
-  const top = y + size - cell * 4
-  for (let r = 0; r < n; r++) {
-    let c = 0
-    while (c < n) {
-      if (!qr.isDark(r, c)) { c++; continue }
-      const start = c
-      while (c < n && qr.isDark(r, c)) c++
-      // +0.15 evita líneas blancas finas entre módulos al rasterizar.
-      page.drawRectangle({ x: ox + start * cell, y: top - (r + 1) * cell, width: (c - start) * cell + 0.15, height: cell + 0.15, color: COLOR.text })
-    }
-  }
-}
 
 function drawLabel(page: PDFPage, fonts: { regular: PDFFont; bold: PDFFont }, l: RegisterLabel, texts: LabelTexts, x: number, y: number, w: number, h: number) {
   page.drawRectangle({ x, y, width: w, height: h, borderColor: COLOR.border, borderWidth: 0.75, borderDashArray: [4, 3] })

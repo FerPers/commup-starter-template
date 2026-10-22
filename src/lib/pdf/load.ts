@@ -14,6 +14,8 @@ import type { ItrDocumentRef, ItrPdfData, ItrTestEquipmentRef } from './itr'
 import type { EventPdfInput, LineupPdfInput, RunPdfInput } from './startup-records'
 import type { Evaluation } from '@/lib/performance/catalog'
 import { PROCEDURE_SECTIONS, rangeLabel, type ProcedureSection } from '@/lib/startup/catalog'
+import { loadPdfBranding, type PdfBranding } from './branding'
+import { siteUrl } from '@/lib/site-url'
 
 type Db = SupabaseClient<Database>
 /** Traductor del espacio `Startup` (next-intl). */
@@ -218,8 +220,8 @@ export async function loadPssrPdf(db: Db, x: { projectId: string; reviewId: stri
   }
 }
 
-export async function loadCertificatePdf(db: Db, x: { projectId: string; certId: string }): Promise<{ input: CertPdfData; filename: string } | null> {
-  const [{ data: cert }, { data: project }, { data: exceptions }, { data: signatures }] = await Promise.all([
+export async function loadCertificatePdf(db: Db, x: { projectId: string; certId: string; branding?: PdfBranding }): Promise<{ input: CertPdfData; filename: string } | null> {
+  const [{ data: cert }, { data: project }, { data: exceptions }, { data: signatures }, branding] = await Promise.all([
     db.from('certificates')
       .select(`
         id, certificate_number, title, status,
@@ -236,6 +238,7 @@ export async function loadCertificatePdf(db: Db, x: { projectId: string; certId:
     db.from('certificate_signatures')
       .select('id, role, signed_at, comments, signer_profile:profiles!user_id(full_name)')
       .eq('certificate_id', x.certId).order('signed_at'),
+    x.branding ?? loadPdfBranding(db, x.projectId),
   ])
   if (!cert) return null
 
@@ -257,12 +260,14 @@ export async function loadCertificatePdf(db: Db, x: { projectId: string; certId:
       exceptions: exceptions ?? [],
       itrs: itrs ?? [],
       signatures: signatures ?? [],
+      branding,
+      recordUrl: `${siteUrl()}/projects/${x.projectId}/certificates/${x.certId}`,
     },
   }
 }
 
 /** ITR con respuestas, firmas, adjuntos, equipos y documentos de referencia. `tagId` acota a la ruta del tag. */
-export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; tagId?: string }): Promise<{ input: ItrPdfData; filename: string } | null> {
+export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; tagId?: string; branding?: PdfBranding }): Promise<{ input: ItrPdfData; filename: string } | null> {
   let q = db.from('itrs')
     .select(`
       id,
@@ -336,9 +341,12 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
   if (!itr) return null
 
   // S13 (F-11): documentos de referencia con la revisión usada y la vigente al imprimir.
-  const { data: refs } = await db.from('document_references')
-    .select('revalidation_reason, used:document_revisions!document_references_revision_id_fkey(rev, status), from:document_revisions!document_references_revalidated_from_fkey(rev), documents(number, title, current:document_revisions!documents_current_revision_fkey(rev))')
-    .eq('project_id', x.projectId).eq('itr_id', x.itrId)
+  const [{ data: refs }, branding] = await Promise.all([
+    db.from('document_references')
+      .select('revalidation_reason, used:document_revisions!document_references_revision_id_fkey(rev, status), from:document_revisions!document_references_revalidated_from_fkey(rev), documents(number, title, current:document_revisions!documents_current_revision_fkey(rev))')
+      .eq('project_id', x.projectId).eq('itr_id', x.itrId),
+    x.branding ?? loadPdfBranding(db, x.projectId),
+  ])
   type Rev = { rev: string; status?: string } | null
   const documentRefs: ItrDocumentRef[] = (refs ?? []).map(r => {
     const d = r.documents as unknown as { number: string; title: string; current: Rev } | null
@@ -356,6 +364,9 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
       document_refs: documentRefs,
       // snapshot es jsonb: la foto de calibración que copió el trigger al registrar el equipo.
       itr_test_equipment: (itr.itr_test_equipment ?? []).map(u => ({ ...u, snapshot: u.snapshot as ItrTestEquipmentRef['snapshot'] })),
+      branding,
+      // E2: QR a la ficha del ITR (vive bajo su tag; un ITR sin tag no tiene página propia y sale sin QR).
+      recordUrl: itr.tag_id ? `${siteUrl()}/projects/${x.projectId}/tags/${itr.tag_id}/itrs/${x.itrId}` : null,
     },
   }
 }

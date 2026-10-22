@@ -19,6 +19,7 @@ import { renderPssrPdf } from '@/lib/pdf/pssr'
 import { renderCertificatePdf } from '@/lib/pdf/certificate'
 import { renderItrPdf } from '@/lib/pdf/itr'
 import { renderHandoverPdf } from './pdf'
+import { loadPdfBranding } from '@/lib/pdf/branding'
 import { sha256Hex, signBytes, type SigningKey } from './sign'
 import type { HandoverManifest, HandoverPackageData } from './types'
 
@@ -80,6 +81,8 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
   const json = strToU8(JSON.stringify(data))
   const dataSha256 = await sha256Hex(json)
 
+  // E2: logos una sola vez para todo el paquete (índice, certificados, ITR).
+  const branding = await loadPdfBranding(db, projectId)
   const tasks: Task[] = []
   let itrBudget = MAX_ITR_PDFS
   let docBytes = 0
@@ -142,7 +145,7 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
     }
     for (const c of pkg.certificates.filter(c => c.system_id === sys.system_id)) {
       tasks.push({ path: `${dir}/certificados/${safeName(c.certificate_number)}.pdf`, run: async () => {
-        const r = await loadCertificatePdf(db, { projectId, certId: c.certificate_id })
+        const r = await loadCertificatePdf(db, { projectId, certId: c.certificate_id, branding })
         return r ? renderCertificatePdf(r.input) : fail(c.certificate_number)
       } })
     }
@@ -150,7 +153,7 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
       const path = `${dir}/itr/${safeName(itr.itr_number)}.pdf`
       if (itrBudget-- <= 0) { omittedUpfront.push({ path, reason: `más de ${MAX_ITR_PDFS} ITR por paquete` }); continue }
       tasks.push({ path, run: async () => {
-        const r = await loadItrPdf(db, { projectId, itrId: itr.itr_id })
+        const r = await loadItrPdf(db, { projectId, itrId: itr.itr_id, branding })
         return r ? renderItrPdf(r.input) : fail(itr.itr_number)
       } })
     }
@@ -175,7 +178,7 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
   const verifyUrl = `${x.verifyBaseUrl.replace(/\/$/, '')}/verify/${dataSha256}`
   const indexPdf = await renderHandoverPdf(data, {
     lang, dataSha256, keyId: x.key.keyId, verifyUrl, label: t,
-    annexes: annexes.files.map(f => f.path), omitted,
+    annexes: annexes.files.map(f => f.path), omitted, branding,
   })
 
   const indexName = `${safeName(pkg.project.code)}-handover.pdf`

@@ -15,6 +15,7 @@ import type { Json } from '@/types/supabase.generated'
 import { buildHandoverBundle } from './bundle'
 import { loadSigningKey } from './sign'
 import type { HandoverPackageData } from './types'
+import { siteUrl } from '@/lib/site-url'
 
 export type HandoverFormat = 'json' | 'pdf' | 'zip'
 
@@ -41,10 +42,8 @@ export type GenerateResult = {
   expiresIn:     number
 }
 
-/** Origen público para los enlaces de verificación. */
-export function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '') ?? 'https://commup.app'
-}
+/** Origen público para los enlaces de verificación (vive en src/lib/site-url.ts; se reexporta por compatibilidad). */
+export { siteUrl }
 
 function errMsg(e: unknown): string {
   if (e instanceof Error) return e.message

@@ -34,6 +34,8 @@ const CATEGORIES = [
   'certificate_prereqs',
   'date_logic',
   'system_completeness',
+  // E2: tag que cita un P&ID cargado sin pin en su revisión vigente.
+  'pid_coverage',
 ] as const
 
 export default function DataQualityView({

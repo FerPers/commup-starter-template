@@ -377,7 +377,8 @@
         "due": "Commitments ≤ 7 d",
         "physical": "Physical progress"
       },
-      "noSystems": "No systems yet"
+      "noSystems": "No systems yet",
+      "clientLogo": "{client} logo"
     }
   },
   "Common": {
@@ -2107,7 +2108,8 @@
       "loop_coverage": "Loop coverage",
       "certificate_prereqs": "Certificate prereqs",
       "date_logic": "Date logic",
-      "system_completeness": "System completeness"
+      "system_completeness": "System completeness",
+      "pid_coverage": "P&ID coverage"
     },
     "reason": {
       "punch_a_open": "Open Cat A punches",
@@ -3182,6 +3184,8 @@
       "attention": "{count} to review",
       "commitment": "{gate} commitment",
       "forecast": "forecast {date}",
+      "pidCoverage": "P&ID coverage",
+      "pidCoverageDetail": "{pinned} of {total} tags pinned",
       "tabsLabel": "System sections",
       "tab": {
         "gates": "Milestones",
@@ -5110,6 +5114,7 @@
       "openViewer": "Open viewer",
       "pins": "{count, plural, one {# pin} other {# pins}}",
       "toReview": "{count} to review",
+      "coverage": "Coverage {pct}% · {pinned} of {cited} citing tags",
       "missingTitle": "{count, plural, one {# drawing cited by tags without a document} other {# drawings cited by tags without a document}}",
       "create": "Create the P&ID document",
       "openViewerRev": "Open viewer (rev {rev})",
@@ -5993,7 +5998,10 @@
       "region": "Region / Cluster",
       "start": "Start date",
       "end": "End date",
-      "timezone": "Time zone"
+      "timezone": "Time zone",
+      "client": "Client",
+      "clientPh": "Client or operator name",
+      "clientLogo": "Client logo"
     },
     "delete": "Delete project…",
     "deleteWarning": "This deletes the project and <strong>all its data</strong> (tags, ITRs, punches, certificates, P&IDs). It cannot be undone.",
@@ -6001,7 +6009,13 @@
     "confirmDelete": "Confirm deletion",
     "cancel": "Cancel",
     "saving": "Saving…",
-    "save": "Save changes"
+    "save": "Save changes",
+    "clientLogoAlt": "{client} logo",
+    "clientLogoNone": "No logo",
+    "clientLogoUpload": "Upload logo",
+    "clientLogoReplace": "Change logo",
+    "clientLogoRemove": "Remove",
+    "clientLogoHint": "PNG or JPG up to 2 MB: shown on formal PDFs and in the Portfolio. A WebP shows on screen, but the PDF prints the name."
   },
   "TagItrs": {
     "status": {

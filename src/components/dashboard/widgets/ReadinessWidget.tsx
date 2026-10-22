@@ -48,8 +48,16 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
               {projects.map(p => (
                 <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
                   <td style={{ ...td, textAlign: 'left' }}>
-                    <Link href={`/projects/${p.id}`} style={{ color: 'var(--text-strong)', textDecoration: 'none', whiteSpace: 'nowrap' }}>{p.code}</Link>
-                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 400, color: 'var(--text-muted)' }}>{p.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {p.clientLogoUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element -- E2: logo del cliente (bucket público), tamaño fijo
+                        <img src={p.clientLogoUrl} alt={t('readiness.clientLogo', { client: p.client ?? p.code })} style={{ width: 40, height: 28, objectFit: 'contain', flexShrink: 0 }} />
+                      )}
+                      <div style={{ minWidth: 0 }}>
+                        <Link href={`/projects/${p.id}`} style={{ color: 'var(--text-strong)', textDecoration: 'none', whiteSpace: 'nowrap' }}>{p.code}</Link>
+                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 400, color: 'var(--text-muted)' }}>{p.client ? `${p.name} · ${p.client}` : p.name}</div>
+                      </div>
+                    </div>
                   </td>
                   {p.systems === 0 ? (
                     <td colSpan={7} style={{ ...td, textAlign: 'left', fontWeight: 400, color: 'var(--text-muted)' }}>{t('readiness.noSystems')}</td>

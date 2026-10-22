@@ -377,7 +377,8 @@
         "due": "Compromisos ≤ 7 d",
         "physical": "Avance físico"
       },
-      "noSystems": "Sin sistemas todavía"
+      "noSystems": "Sin sistemas todavía",
+      "clientLogo": "Logo de {client}"
     }
   },
   "Common": {
@@ -2107,7 +2108,8 @@
       "loop_coverage": "Cobertura de loops",
       "certificate_prereqs": "Prereqs certificados",
       "date_logic": "Lógica de fechas",
-      "system_completeness": "Completitud de sistemas"
+      "system_completeness": "Completitud de sistemas",
+      "pid_coverage": "Cobertura del P&ID"
     },
     "reason": {
       "punch_a_open": "Punches Cat A abiertos",
@@ -3182,6 +3184,8 @@
       "attention": "{count, plural, one {# por revisar} other {# por revisar}}",
       "commitment": "Compromiso {gate}",
       "forecast": "forecast {date}",
+      "pidCoverage": "Cobertura P&ID",
+      "pidCoverageDetail": "{pinned} de {total} tags con pin",
       "tabsLabel": "Secciones del sistema",
       "tab": {
         "gates": "Liberaciones",
@@ -5110,6 +5114,7 @@
       "openViewer": "Abrir visor",
       "pins": "{count, plural, one {# pin} other {# pines}}",
       "toReview": "{count} por revisar",
+      "coverage": "Cobertura {pct} % · {pinned} de {cited} tags que lo citan",
       "missingTitle": "{count, plural, one {# plano citado en tags sin documento} other {# planos citados en tags sin documento}}",
       "create": "Crear el documento P&ID",
       "openViewerRev": "Abrir visor (rev {rev})",
@@ -5993,7 +5998,10 @@
       "region": "Región / Eje",
       "start": "Fecha inicio",
       "end": "Fecha fin",
-      "timezone": "Zona horaria"
+      "timezone": "Zona horaria",
+      "client": "Cliente",
+      "clientPh": "Nombre del cliente u operador",
+      "clientLogo": "Logo del cliente"
     },
     "delete": "Eliminar proyecto…",
     "deleteWarning": "Esta acción eliminará el proyecto y <strong>todos sus datos</strong> (tags, ITRs, punches, certificados, P&IDs). Es irreversible.",
@@ -6001,7 +6009,13 @@
     "confirmDelete": "Confirmar eliminación",
     "cancel": "Cancelar",
     "saving": "Guardando…",
-    "save": "Guardar cambios"
+    "save": "Guardar cambios",
+    "clientLogoAlt": "Logo de {client}",
+    "clientLogoNone": "Sin logo",
+    "clientLogoUpload": "Subir logo",
+    "clientLogoReplace": "Cambiar logo",
+    "clientLogoRemove": "Quitar",
+    "clientLogoHint": "PNG o JPG de hasta 2 MB: sale en los PDF formales y en el Portafolio. Un WebP se ve en pantalla, pero en el PDF sale el nombre."
   },
   "TagItrs": {
     "status": {

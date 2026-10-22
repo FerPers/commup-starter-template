@@ -49,6 +49,8 @@ export function SystemFileShell({ project, system, tab, summary, ownership, perf
     itrs: number
     next: { code: string; status: GateStatus } | null
     commitment: { gate: string; date: string; late: boolean; forecast: string | null } | null
+    /** E2: tags del sistema con pin en la revisión vigente de un P&ID. */
+    pid: { pinned: number; total: number } | null
   }
   ownership: { stage: OwnershipStage; pendingTransferId: string | null }
   performance: SystemPerformance[]
@@ -111,6 +113,15 @@ export function SystemFileShell({ project, system, tab, summary, ownership, perf
               <div style={kpiLabel}>{t('file.commitment', { gate: summary.commitment.gate })}</div>
               <div style={{ ...kpiValue, color: summary.commitment.late ? 'var(--danger-700)' : 'var(--text-strong)' }}>{summary.commitment.date}</div>
               {summary.commitment.forecast && <div style={small}>{t('file.forecast', { date: summary.commitment.forecast })}</div>}
+            </div>
+          )}
+          {summary.pid && (
+            <div style={{ minWidth: 130 }}>
+              <div style={kpiLabel}>{t('file.pidCoverage')}</div>
+              <div style={kpiValue}>{Math.round(summary.pid.pinned * 100 / summary.pid.total)} %</div>
+              <Link href={`/projects/${project.id}/documents?type=pid`} style={{ ...small, textDecoration: 'none' }}>
+                {t('file.pidCoverageDetail', { pinned: summary.pid.pinned, total: summary.pid.total })}
+              </Link>
             </div>
           )}
         </div>

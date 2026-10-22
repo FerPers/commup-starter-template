@@ -16,6 +16,9 @@ export type ProjectReadiness = {
   id: string
   code: string
   name: string
+  /** E2: cliente del proyecto y su logo (fila del Portafolio). */
+  client: string | null
+  clientLogoUrl: string | null
   systems: number
   readiness: { done: number; total: number; pct: number }
   weighted: number
@@ -28,7 +31,7 @@ export type ProjectReadiness = {
 
 export async function loadPortfolioReadiness(supabase: SupabaseClient<Database>, orgId: string, limit = 200): Promise<ProjectReadiness[]> {
   // bounded: proyectos de la org (decenas)
-  const { data: projects } = await supabase.from('projects').select('id, code, name, timezone').eq('org_id', orgId).order('code').limit(limit)
+  const { data: projects } = await supabase.from('projects').select('id, code, name, timezone, client, client_logo_url').eq('org_id', orgId).order('code').limit(limit)
   const list = projects ?? []
   if (!list.length) return []
   const ids = list.map(p => p.id)
@@ -57,7 +60,7 @@ export async function loadPortfolioReadiness(supabase: SupabaseClient<Database>,
     const prog = progress.data ?? []
     const itrs = prog.reduce((n, x) => n + x.itr_total, 0)
     return {
-      id: p.id, code: p.code, name: p.name,
+      id: p.id, code: p.code, name: p.name, client: p.client, clientLogoUrl: p.client_logo_url,
       systems: rows.length,
       readiness: readinessSummary(rows.map(r => r.gates)),
       weighted: itrs > 0 ? prog.reduce((n, x) => n + Number(x.weighted_pct) * x.itr_total, 0) / itrs : 0,

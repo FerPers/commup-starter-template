@@ -105,7 +105,7 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
   - Una caja por sistema en la fecha comprometida (o pronosticada) de la liberación elegida, con color por avance de esa liberación: 100 % / ≥ 50 % / < 50 % (de `compute_system_progress`, por gate).
   - Rango de fechas, clic → ficha del sistema (`?tab=plan&gate=`) y Excel.
   - Los datos salen del armado del look-ahead (`planning/lookahead/page.tsx`, `src/lib/readiness/planning.ts`).
-- **E2. Logos, QR y cobertura** (migración chica):
+- **E2. Logos, QR y cobertura** (migración chica): ✅ hecho 2026-10-22 (migraciones `20261129120000` + `20261129130000`; cliente y su logo en «Editar proyecto», marca y QR en los PDF, logo en la fila del Portafolio, cobertura en la ficha del sistema, el registro y Calidad de datos).
   - `projects.client_logo_url` con carga en la edición del proyecto, más el logo de la org que ya existe.
   - Un helper de cabecera con logos en `src/lib/pdf/renderer.ts` (embed png/jpg como `itr-signatures.ts`; un webp cae a texto) en certificado, ITR, dossier, punch list e índice del handover.
   - QR al registro: se mueve `drawQr` de `register-labels.ts` al renderer y se usa en certificado e ITR.

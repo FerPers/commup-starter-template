@@ -1,6 +1,7 @@
 import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { renderPunchListPdf, type PunchListPdfData, type PunchPdfRow } from '@/lib/pdf/punch-list'
+import { loadPdfBranding } from '@/lib/pdf/branding'
 
 export const dynamic = 'force-dynamic'
 
@@ -76,6 +77,7 @@ export async function GET(
     projectCode: project.code,
     projectClient: project.client ?? null,
     punches: rows,
+    branding: await loadPdfBranding(supabase, projectId),
   }
 
   const bytes = await renderPunchListPdf(reportData)

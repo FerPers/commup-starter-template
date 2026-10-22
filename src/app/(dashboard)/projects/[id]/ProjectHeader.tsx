@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { updateProject, deleteProject } from '@/app/actions/projects'
+import { updateProject, deleteProject, removeProjectClientLogo, uploadProjectClientLogo } from '@/app/actions/projects'
 import { DEFAULT_TIMEZONE, TIMEZONE_OPTIONS } from '@/lib/time/zone'
 import type { ProjectStatus } from '@/types/database'
 
@@ -30,15 +30,18 @@ interface ProjectData {
   start_date: string | null
   end_date: string | null
   timezone?: string | null
+  client_logo_url?: string | null
 }
 
 interface Props {
   project: ProjectData
   canEdit: boolean
   canDelete: boolean
+  /** E2: subir el logo del cliente (owner/admin, como el logo de la org). */
+  canBrand: boolean
 }
 
-export default function ProjectHeader({ project: initial, canEdit, canDelete }: Props) {
+export default function ProjectHeader({ project: initial, canEdit, canDelete, canBrand }: Props) {
   const [project, setProject] = useState(initial)
   const [showModal, setShowModal] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -56,6 +59,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
   const [startDate, setStartDate] = useState(initial.start_date?.slice(0, 10) ?? '')
   const [endDate, setEndDate] = useState(initial.end_date?.slice(0, 10) ?? '')
   const [timezone, setTimezone] = useState(initial.timezone ?? DEFAULT_TIMEZONE)
+  const [client, setClient] = useState(initial.client ?? '')
+  const logoInput = useRef<HTMLInputElement>(null)
 
   const statusStyle = STATUS_STYLE[project.status] ?? STATUS_STYLE.planning
   const statusLabel = (STATUS_OPTIONS as readonly string[]).includes(project.status) ? t(`status.${project.status as ProjectStatus}`) : project.status
@@ -82,6 +87,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
     setStartDate(project.start_date?.slice(0, 10) ?? '')
     setEndDate(project.end_date?.slice(0, 10) ?? '')
     setTimezone(project.timezone ?? DEFAULT_TIMEZONE)
+    setClient(project.client ?? '')
     setError(null)
     setShowModal(true)
   }
@@ -98,6 +104,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
         start_date: startDate || null,
         end_date: endDate || null,
         timezone,
+        client: client.trim() || null,
       })
       if (result.error) {
         setError(result.error)
@@ -113,8 +120,33 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
         start_date: startDate || null,
         end_date: endDate || null,
         timezone,
+        client: client.trim() || null,
       }))
       setShowModal(false)
+    })
+  }
+
+  // E2: el logo se guarda al elegirlo (no espera a «Guardar»), como el logo de la org.
+  function handleLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const fd = new FormData()
+    fd.append('file', file)
+    setError(null)
+    startTransition(async () => {
+      const res = await uploadProjectClientLogo(project.id, fd)
+      if (res.error) setError(res.error)
+      else if (res.url) setProject(prev => ({ ...prev, client_logo_url: res.url }))
+    })
+  }
+
+  function handleRemoveLogo() {
+    setError(null)
+    startTransition(async () => {
+      const res = await removeProjectClientLogo(project.id)
+      if (res.error) setError(res.error)
+      else setProject(prev => ({ ...prev, client_logo_url: null }))
     })
   }
 
@@ -152,7 +184,11 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                   {statusLabel}
                 </span>
               </div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                {project.client_logo_url && (
+                  // eslint-disable-next-line @next/next/no-img-element -- logo del bucket público, tamaño fijo; next/image no aporta aquí
+                  <img src={project.client_logo_url} alt={t('clientLogoAlt', { client: project.client ?? '' })} style={{ height: 22, maxWidth: 90, objectFit: 'contain' }} />
+                )}
                 {[project.country && [project.country, project.region].filter(Boolean).join(' / '), project.client, project.location].filter(Boolean).join(' · ') || t('noClientLocation')}
               </p>
             </div>
@@ -187,6 +223,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
             style={{
               background: 'var(--card-bg)', borderRadius: '14px', width: '100%', maxWidth: '480px',
               boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+              // E2: con Cliente y Logo el formulario ya no cabe en pantallas bajas: se desplaza dentro.
+              maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto',
             }}
           >
             {/* Modal header */}
@@ -213,6 +251,32 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete }: 
                   placeholder="COD-001"
                 />
               </Field>
+              <Field label={t('f.client')}>
+                <input value={client} onChange={e => setClient(e.target.value)} style={inputStyle} placeholder={t('f.clientPh')} />
+              </Field>
+              {canBrand && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{t('f.clientLogo')}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    {project.client_logo_url
+                      // eslint-disable-next-line @next/next/no-img-element -- vista previa del logo del bucket público
+                      ? <img src={project.client_logo_url} alt={t('clientLogoAlt', { client: client || project.name })} style={{ height: 40, maxWidth: 140, objectFit: 'contain', border: '1px solid var(--border)', borderRadius: 6, padding: 4, background: '#ffffff' }} />
+                      : <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('clientLogoNone')}</span>}
+                    <input ref={logoInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleLogo} style={{ display: 'none' }} aria-label={t('f.clientLogo')} />
+                    <button type="button" onClick={() => logoInput.current?.click()} disabled={isPending}
+                      style={{ minHeight: 36, padding: '0 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 7, fontSize: 12, color: 'var(--text-strong)', cursor: 'pointer' }}>
+                      {project.client_logo_url ? t('clientLogoReplace') : t('clientLogoUpload')}
+                    </button>
+                    {project.client_logo_url && (
+                      <button type="button" onClick={handleRemoveLogo} disabled={isPending}
+                        style={{ minHeight: 36, padding: '0 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 7, fontSize: 12, color: 'var(--danger-700)', cursor: 'pointer' }}>
+                        {t('clientLogoRemove')}
+                      </button>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('clientLogoHint')}</span>
+                </div>
+              )}
               <Field label={t('f.status')}>
                 <select value={status} onChange={e => setStatus(e.target.value as ProjectStatus)} style={inputStyle}>
                   {STATUS_OPTIONS.map(s => (

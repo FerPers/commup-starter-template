@@ -19,7 +19,8 @@ export type DocRow = {
   currentHasFile: boolean
 }
 /** N2d: pines de la revisión vigente de cada P&ID y planos citados en tags que no tienen documento. */
-export type PidInfo = { pins: Record<string, { count: number; review: number }>; missing: string[] }
+/** Pines de la revisión vigente; E2: `cited` = tags que citan el plano, `citedPinned` = de esos, con pin. */
+export type PidInfo = { pins: Record<string, { count: number; review: number; cited: number; citedPinned: number }>; missing: string[] }
 type Opt = { id: string; code: string; name: string }
 
 const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', ...label, borderBottom: '1px solid var(--border)', background: 'var(--gray-50)', whiteSpace: 'nowrap' }
@@ -212,6 +213,11 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
                       <Link href={`/projects/${project.id}/documents/${r.id}/viewer`} style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 600 }}>{t('pid.openViewer')}</Link>
                       <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{t('pid.pins', { count: pid?.pins[r.id]?.count ?? 0 })}</span>
                       {(pid?.pins[r.id]?.review ?? 0) > 0 && <Chip tone="amber">{t('pid.toReview', { count: pid!.pins[r.id].review })}</Chip>}
+                      {(pid?.pins[r.id]?.cited ?? 0) > 0 && (
+                        <Chip tone={pid!.pins[r.id].citedPinned >= pid!.pins[r.id].cited ? 'green' : 'amber'}>
+                          {t('pid.coverage', { pinned: pid!.pins[r.id].citedPinned, cited: pid!.pins[r.id].cited, pct: Math.round(pid!.pins[r.id].citedPinned * 100 / pid!.pins[r.id].cited) })}
+                        </Chip>
+                      )}
                     </div>
                   )}
                 </td>

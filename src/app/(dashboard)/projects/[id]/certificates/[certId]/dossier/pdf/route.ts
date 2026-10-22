@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import { loadPdfBranding } from '@/lib/pdf/branding'
 import {
   renderCompletionDossierPdf,
   type CompletionDossierData,
@@ -165,6 +166,7 @@ export async function GET(
     openPunchA: openA,
     openPunchB: openB,
     openPunchC: openC,
+    branding: await loadPdfBranding(supabase, projectId),
   }
 
   const bytes = await renderCompletionDossierPdf(reportData)
