@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import RememberRecent from '@/components/layout/RememberRecent'
 import { redirect, notFound } from 'next/navigation'
 import { fetchConsolidatedTagPhotos } from '@/lib/tag-photos'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
@@ -39,7 +40,7 @@ export default async function TagDetailPage({
   ] = await Promise.all([
     supabase
       .from('projects')
-      .select('id, name')
+      .select('id, code, name')
       .eq('id', projectId)
       .eq('org_id', membership.org_id)
       .single(),
@@ -198,6 +199,8 @@ export default async function TagDetailPage({
   const clientRepIds = (clientReps ?? []).map(r => r.user_id)
 
   return (
+    <>
+    <RememberRecent kind="tag" code={tag.tag_number} title={tag.description} href={`/projects/${projectId}/tags/${tag.id}`} projectCode={project.code} />
     <TagDetail
       tag={tag}
       projectId={projectId}
@@ -221,5 +224,6 @@ export default async function TagDetailPage({
       tagPhotos={tagPhotos}
       initialTab={initialTab}
     />
+    </>
   )
 }

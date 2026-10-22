@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import RememberRecent from '@/components/layout/RememberRecent'
 import { notFound, redirect } from 'next/navigation'
 import { documentPolicy, isDocumentController, type DocType, type RevisionRowStatus } from '@/lib/documents/catalog'
 import { fetchAllRows, fetchAllRowsFlagged } from '@/lib/list/fetch-all'
@@ -72,6 +73,8 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   }
 
   return (
+    <>
+    <RememberRecent kind="document" code={doc.number} title={doc.title} href={`/projects/${id}/documents/${doc.id}`} projectCode={project.code} />
     <DocumentDetail
       pidPins={pidPins}
       project={project}
@@ -90,5 +93,6 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       policy={documentPolicy(org?.settings)}
       lockedOutdated={usage.filter(u => u.outdated && u.locked).length}
     />
+    </>
   )
 }

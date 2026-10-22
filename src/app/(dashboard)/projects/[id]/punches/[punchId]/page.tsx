@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import RememberRecent from '@/components/layout/RememberRecent'
 import { redirect, notFound } from 'next/navigation'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 import { buildPunchTimeline } from '@/lib/punches/timeline'
@@ -17,7 +18,7 @@ export default async function PunchPage({ params }: { params: Promise<{ id: stri
   const readsAudit = ROLE_TIERS.admin.includes(ctx.role)
 
   const [{ data: project }, { data: punch }, { data: comments }, { data: activity }, { data: orgMembers }] = await Promise.all([
-    supabase.from('projects').select('id, name, timezone').eq('id', projectId).eq('org_id', ctx.orgId).maybeSingle(),
+    supabase.from('projects').select('id, code, name, timezone').eq('id', projectId).eq('org_id', ctx.orgId).maybeSingle(),
     supabase
       .from('punches')
       .select(`
@@ -92,6 +93,8 @@ export default async function PunchPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
+    <>
+    <RememberRecent kind="punch" code={punch.punch_number} title={punch.description} href={`/projects/${projectId}/punches/${punch.id}`} projectCode={project.code} />
     <PunchDetail
       punch={data}
       projectId={projectId}
@@ -103,5 +106,6 @@ export default async function PunchPage({ params }: { params: Promise<{ id: stri
       userId={ctx.userId}
       role={ctx.role}
     />
+    </>
   )
 }

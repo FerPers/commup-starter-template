@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import RememberRecent from '@/components/layout/RememberRecent'
 import { notFound, redirect } from 'next/navigation'
 import type { Attachment } from '../../daily/daily-ui'
 import {
@@ -112,6 +113,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
   const tl = await getTranslations('Common')
   return (
     <>
+    <RememberRecent kind="vendor" code={pkg.number} title={pkg.title} href={`/projects/${id}/vendors/${pkg.id}`} projectCode={project.code} />
     {tagsTruncated && (
       <PartialNote>{tl('listPartial')}</PartialNote>
     )}

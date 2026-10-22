@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import RememberRecent from '@/components/layout/RememberRecent'
 import ResponseConflicts from './ResponseConflicts'
 import { getProjectToday } from '@/lib/time/project-zones'
 import { itemDescription } from '@/lib/itr/item-text'
@@ -112,6 +113,7 @@ export default async function ItrExecutionPage({
 
   return (
     <>
+      <RememberRecent kind="itr" code={itr.itr_number} title={(itr.tags as { tag_number: string } | null)?.tag_number ?? null} href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}`} />
       <div style={{ padding: '16px 32px 0' }}>
         <SuggestionsBar suggestions={(suggestions ?? []) as ItrSuggestion[]} />
       </div>

@@ -13564,6 +13564,23 @@ export type Database = {
         }
         Returns: string
       }
+      search_everything: {
+        Args: {
+          p_limit?: number
+          p_org_id: string
+          p_project_id?: string
+          p_q: string
+        }
+        Returns: {
+          extra_id: string
+          id: string
+          kind: string
+          project_id: string
+          rank: number
+          ref: string
+          title: string
+        }[]
+      }
       seed_default_gate_for_phase: {
         Args: { p_phase_id: string }
         Returns: string

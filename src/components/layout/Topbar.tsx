@@ -3,6 +3,7 @@ import type { OrgMemberRole } from '@/types/database'
 import Breadcrumbs from './Breadcrumbs'
 import UserMenu from './UserMenu'
 import NotificationsBell from './NotificationsBell'
+import CommandPalette from './CommandPalette'
 
 type Membership = {
   orgId: string
@@ -52,6 +53,9 @@ export default async function Topbar({ role, orgName, activeOrgId, memberships, 
     >
       {children}
       <Breadcrumbs projectNames={projectNames} />
+
+      {/* N3a: buscar cualquier cosa (⌘K) */}
+      {role && <CommandPalette />}
 
       {role && (
         <NotificationsBell

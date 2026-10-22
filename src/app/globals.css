@@ -505,3 +505,14 @@ body.drawer-locked { overflow: hidden; }
   .itr-footer-extra { display: none; }
   .itr-footer-more { display: block; }
 }
+
+/* ==========================================================================
+   Búsqueda ⌘K (N3a)
+   ========================================================================== */
+@media (max-width: 639px) {
+  .cmdk-trigger { width: 40px; justify-content: center; padding: 0 !important; }
+  .cmdk-trigger-label { display: none; }
+  .cmdk-backdrop { padding-top: 0 !important; }
+  .cmdk-panel { width: 100vw !important; max-height: 100dvh !important; height: 100dvh; border-radius: 0 !important; }
+  .cmdk-footer { display: none !important; }
+}

@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import RememberRecent from '@/components/layout/RememberRecent'
 import { notFound, redirect } from 'next/navigation'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { loadMyCapacities } from '@/lib/capacities/server'
@@ -229,6 +230,8 @@ export default async function SystemFilePage({ params, searchParams }: {
   }
 
   return (
+    <>
+    <RememberRecent kind="system" code={system.code} title={system.name} href={`/projects/${project.id}/systems/${system.id}`} projectCode={project.code} />
     <SystemFileShell
       project={projectRef}
       system={{ id: system.id, code: system.code, name: system.name, area: area ? `${area.code} — ${area.name}` : '', system_type: (system.system_type as SystemType | null) ?? null, priority: system.priority }}
@@ -241,5 +244,6 @@ export default async function SystemFilePage({ params, searchParams }: {
     >
       {content}
     </SystemFileShell>
+    </>
   )
 }

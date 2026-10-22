@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import RememberRecent from '@/components/layout/RememberRecent'
 import { notFound, redirect } from 'next/navigation'
 import { MGMT_KINDS, type MgmtKind } from '@/lib/daily/catalog'
 import { loadOptions } from '../../options'
@@ -35,6 +36,11 @@ export default async function DailyDetailPage({ params }: { params: Promise<{ id
     events: (events ?? []) as MgmtEvent[], attachments: (attachments ?? []) as Attachment[],
   }
 
+  // N3a: la ficha queda en los recientes de ⌘K.
+  const recent = (ref: string, title: string | null) => (
+    <RememberRecent kind={kind} code={ref} title={title} href={`/projects/${id}/daily/${kind}/${itemId}`} projectCode={project.code} />
+  )
+
   // Acciones y decisiones que nacen de una restricción o un TQ.
   async function linked(source: 'constraint' | 'tq') {
     const [{ data: acts }, { data: decs }] = await Promise.all([
@@ -68,13 +74,13 @@ export default async function DailyDetailPage({ params }: { params: Promise<{ id
       const gate = data?.readiness_gates as { code: string } | null
       if (data) origin = { label: `${sys?.code ?? ''} · ${gate?.code ?? ''}`, href: `/projects/${id}/systems/${data.system_id}` }
     }
-    return <ActionDetail {...common} item={item} origin={origin} />
+    return <>{recent(item.number, item.title)}<ActionDetail {...common} item={item} origin={origin} /></>
   }
 
   if (kind === 'constraint') {
     const { data: item } = await supabase.from('project_constraints').select('*').eq('id', itemId).eq('project_id', id).maybeSingle()
     if (!item) notFound()
-    return <ConstraintDetail {...common} item={item} linked={await linked('constraint')} />
+    return <>{recent(item.number, item.title)}<ConstraintDetail {...common} item={item} linked={await linked('constraint')} /></>
   }
 
   if (kind === 'tq') {
@@ -86,7 +92,7 @@ export default async function DailyDetailPage({ params }: { params: Promise<{ id
     const tagValues = (tags ?? []).map(tg => ({
       tag_id: tg.tag_id, role: 'subject' as const, tag_number: (tg.tags as { tag_number: string } | null)?.tag_number ?? '?',
     }))
-    return <TqDetail {...common} item={item} tags={tagValues} linked={await linked('tq')} />
+    return <>{recent(item.number, item.subject)}<TqDetail {...common} item={item} tags={tagValues} linked={await linked('tq')} /></>
   }
 
   const { data: item } = await supabase.from('decisions').select('*').eq('id', itemId).eq('project_id', id).maybeSingle()
@@ -105,7 +111,10 @@ export default async function DailyDetailPage({ params }: { params: Promise<{ id
     if (data) origin = { label: `${data.number} — ${data.title}`, href: `/projects/${id}/daily/${item.source_kind}/${item.source_id}` }
   }
   return (
+    <>
+    {recent(item.number, item.title)}
     <DecisionDetail {...common} item={item} origin={origin}
       replacedBy={(replacedBy as LinkedDecision | null) ?? null} replaces={(replaces as LinkedDecision | null) ?? null} />
+    </>
   )
 }

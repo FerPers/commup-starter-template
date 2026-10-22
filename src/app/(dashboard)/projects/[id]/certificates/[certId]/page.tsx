@@ -1,4 +1,5 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
+import RememberRecent from '@/components/layout/RememberRecent'
 import { redirect, notFound } from 'next/navigation'
 import CertificateDetail from './CertificateDetail'
 import { ROLE_TIERS } from '@/lib/constants/roles'
@@ -89,6 +90,8 @@ export default async function CertificateDetailPage({
   const isAdmin = ROLE_TIERS.admin.includes(membership.role)
 
   return (
+    <>
+    <RememberRecent kind="certificate" code={cert.certificate_number} title={cert.title} href={`/projects/${projectId}/certificates/${cert.id}`} projectCode={project.code} />
     <CertificateDetail
       projectId={projectId}
       projectName={project.name}
@@ -103,5 +106,6 @@ export default async function CertificateDetailPage({
       caps={caps}
       isAdmin={isAdmin}
     />
+    </>
   )
 }
