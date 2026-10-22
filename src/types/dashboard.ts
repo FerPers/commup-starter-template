@@ -11,6 +11,7 @@ export type WidgetId =
   | 'kpi_summary'
   | 'projects_active'
   | 'disciplines'
+  | 'readiness'
 
 // type (no interface): los aliases tienen index signature implícita y por
 // tanto son asignables a Json al persistir en profiles.dashboard_layout

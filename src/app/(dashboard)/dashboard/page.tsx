@@ -17,6 +17,7 @@ import CatAAlertsWidget from '@/components/dashboard/widgets/CatAAlertsWidget'
 import KpiSummaryWidget from '@/components/dashboard/widgets/KpiSummaryWidget'
 import ProjectsActiveWidget from '@/components/dashboard/widgets/ProjectsActiveWidget'
 import DisciplinesWidget from '@/components/dashboard/widgets/DisciplinesWidget'
+import ReadinessWidget from '@/components/dashboard/widgets/ReadinessWidget'
 
 const RIBBON_COLORS: Record<WidgetId, string> = {
   inspector_summary: 'var(--primary-500)',
@@ -29,6 +30,7 @@ const RIBBON_COLORS: Record<WidgetId, string> = {
   kpi_summary: 'var(--primary-500)',
   projects_active: 'var(--success-500)',
   disciplines: 'var(--accent-500)',
+  readiness: 'var(--danger-500)',
 }
 
 function renderWidget(id: WidgetId, ctx: { userId: string; orgId: string; role: OrgMemberRole }) {
@@ -43,6 +45,7 @@ function renderWidget(id: WidgetId, ctx: { userId: string; orgId: string; role: 
     case 'kpi_summary': return <KpiSummaryWidget orgId={ctx.orgId} />
     case 'projects_active': return <ProjectsActiveWidget orgId={ctx.orgId} role={ctx.role} />
     case 'disciplines': return <DisciplinesWidget orgId={ctx.orgId} />
+    case 'readiness': return <ReadinessWidget orgId={ctx.orgId} />
   }
 }
 

@@ -57,6 +57,13 @@ export const WIDGET_REGISTRY: Record<WidgetId, WidgetMeta> = {
     descKey: 'widgets.projectsActive.desc',
     allowedRoles: tierRoles('editor'),
   },
+  readiness: {
+    id: 'readiness',
+    titleKey: 'widgets.readiness.title',
+    descKey: 'widgets.readiness.desc',
+    // N2b (D-38): readiness por proyecto para gerencia, planificación, líder y cliente.
+    allowedRoles: [...tierRoles('editor'), 'client'],
+  },
   disciplines: {
     id: 'disciplines',
     titleKey: 'widgets.disciplines.title',
@@ -67,11 +74,11 @@ export const WIDGET_REGISTRY: Record<WidgetId, WidgetMeta> = {
 
 export const DEFAULT_LAYOUTS: Record<OrgMemberRole, WidgetId[]> = {
   inspector: ['inspector_summary', 'my_itrs', 'my_punches'],
-  client: ['client_summary', 'client_signatures', 'client_projects'],
-  architect: ['cat_a_alerts', 'kpi_summary', 'projects_active', 'disciplines'],
-  leader: ['cat_a_alerts', 'kpi_summary', 'projects_active', 'disciplines'],
-  owner: ['kpi_summary', 'projects_active', 'disciplines'],
-  admin: ['kpi_summary', 'projects_active', 'disciplines'],
+  client: ['client_summary', 'client_signatures', 'readiness', 'client_projects'],
+  architect: ['cat_a_alerts', 'readiness', 'kpi_summary', 'projects_active', 'disciplines'],
+  leader: ['cat_a_alerts', 'readiness', 'kpi_summary', 'projects_active', 'disciplines'],
+  owner: ['readiness', 'kpi_summary', 'projects_active', 'disciplines'],
+  admin: ['readiness', 'kpi_summary', 'projects_active', 'disciplines'],
 }
 
 export function widgetsForRole(role: OrgMemberRole): WidgetMeta[] {

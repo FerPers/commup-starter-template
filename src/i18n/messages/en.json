@@ -326,6 +326,10 @@
       "disciplines": {
         "title": "Disciplines",
         "desc": "Disciplines configured for projects"
+      },
+      "readiness": {
+        "title": "Readiness by project",
+        "desc": "Approved gates, systems not moving, signatures, level-4 constraints and commitments coming due"
       }
     },
     "customizer": {
@@ -344,6 +348,22 @@
       "hide": "Hide widget",
       "empty": "No widgets available for your role.",
       "allHidden": "All widgets are hidden. Open Customize to show at least one."
+    },
+    "readiness": {
+      "title": "Readiness",
+      "subtitle": "By project, sorted by risk",
+      "viewAll": "View all →",
+      "empty": "No project has systems yet.",
+      "more": "and {count} more projects in the portfolio",
+      "col": {
+        "project": "Project",
+        "readiness": "Gates",
+        "blocked": "Not moving",
+        "toApprove": "To approve",
+        "toSign": "To sign",
+        "n4": "L4 constraints",
+        "due": "Commitments ≤ 7 d"
+      }
     }
   },
   "Common": {
@@ -2046,7 +2066,9 @@
         "systems": "Systems",
         "readiness": "Readiness",
         "physical": "Progress",
-        "next": "Next gate by status"
+        "next": "Next gate by status",
+        "constraintsN4": "Level-4 constraints",
+        "commitmentsSoon": "Commitments ≤ 7 days"
       }
     }
   },
@@ -5563,6 +5585,87 @@
       "admin": "Owner or Admin",
       "privileged": "Owner, Admin or Architect",
       "editor": "Leader or above"
+    }
+  },
+  "ProjectOverview": {
+    "info": {
+      "code": "Code",
+      "client": "Client",
+      "location": "Location",
+      "start": "Start",
+      "target": "Target"
+    },
+    "kpi": {
+      "physical": "Weighted physical progress",
+      "itrs": "{approved} of {total} ITRs approved",
+      "readiness": "Readiness",
+      "gates": "{done} / {total} gates",
+      "readinessPct": "{pct} % current approvals",
+      "today": "Today",
+      "blocked": "{count, plural, =0 {No blockers} one {# system blocked} other {# systems blocked}}",
+      "todayDetail": "{sign} to sign · {regressed} regressed"
+    },
+    "board": {
+      "title": "By phase (gate)",
+      "hint": "Each row opens Readiness with the systems whose next gate is that one",
+      "noSystems": "The project has no systems yet.",
+      "noGates": "The organization has no gates configured (Administration › Gates).",
+      "col": {
+        "phase": "Phase",
+        "readiness": "Readiness (systems)",
+        "itr": "Phase ITRs",
+        "blocker": "Main blocker",
+        "commitment": "Next commitment"
+      },
+      "toApprove": "{count} ready to approve",
+      "toSign": "{count} to sign",
+      "regressed": "{count} regressed",
+      "itrCount": "{approved} / {total}",
+      "blockedSystems": "{count, plural, one {# system not moving} other {# systems not moving}}",
+      "mostCommon": "most common: {label} ({count})",
+      "overdue": "overdue",
+      "forecast": "forecast {date}",
+      "noForecast": "no forecast",
+      "open": "View systems →",
+      "transfer": "Handover",
+      "transferHint": "System custody",
+      "transfersToSign": "{count, plural, one {# handover to sign} other {# handovers to sign}}",
+      "openTransfers": "Handovers →"
+    },
+    "blocked": {
+      "title": "Blocking today",
+      "all": "Blocked only →",
+      "none": "No system is blocked or regressed."
+    },
+    "upcoming": {
+      "title": "Next 7 days",
+      "lookahead": "Look-ahead →",
+      "none": "Nothing is due in the next 7 days.",
+      "late": "overdue",
+      "commitment": "gate commitment",
+      "forecast": "gate forecast",
+      "kind": {
+        "commitment": "Gate commitment",
+        "forecast": "Gate forecast",
+        "action": "Action",
+        "constraint": "Constraint",
+        "vendor": "Vendor activity"
+      }
+    },
+    "strip": {
+      "label": "Completion and engineering",
+      "itrs": "ITRs approved",
+      "punches": "Open punches",
+      "catA": "{count} Cat A",
+      "certificates": "Certificates issued",
+      "tags": "Tags and equipment",
+      "signals": "Signals · loops",
+      "ce": "C&E matrices",
+      "documents": "Documents",
+      "pid": "{count} P&ID",
+      "systems": "Systems",
+      "twin": "Digital Twin",
+      "import": "Import…"
     }
   }
 }

@@ -3,14 +3,13 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Card, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
-import type { MatrixGate } from '@/lib/readiness/gates'
-import { readinessSummary, rowState, type RowState } from '@/lib/readiness/matrix'
+import type { RowState } from '@/lib/readiness/matrix'
+import { loadPortfolioReadiness, ROW_STATES } from '@/lib/readiness/portfolio-server'
 
 // N2a (decisión de Luis 2026-10-21): Readiness vive dentro del proyecto (/projects/[id]/readiness).
 // /control-tower queda como vista de portafolio: una fila por proyecto con su readiness, que abre el proyecto.
 // Enlaces viejos con ?projectId= siguen funcionando (redirigen con los mismos filtros).
 
-const ROW_STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
 const STATE_TONE: Record<RowState, string> = {
   regressed: 'var(--danger-700)', blocked: 'var(--danger-500)', signing: '#1d4ed8', ready: 'var(--success-700)', done: 'var(--success-500)',
 }
@@ -25,25 +24,8 @@ export default async function ReadinessPortfolioPage({ searchParams }: { searchP
     redirect(`/projects/${encodeURIComponent(params.projectId)}/readiness${qs ? `?${qs}` : ''}`)
   }
 
-  const { supabase, orgId } = ctx
   const t = await getTranslations('ControlTower')
-  // bounded: proyectos de la org (decenas)
-  const { data: projects } = await supabase.from('projects').select('id, code, name').eq('org_id', orgId).order('code').limit(200)
-
-  // Gates materializados (S20): compute_project_gates lee el estado guardado; un llamado por proyecto.
-  const summaries = await Promise.all((projects ?? []).map(async p => {
-    const [gates, progress] = await Promise.all([
-      supabase.rpc('compute_project_gates', { p_project_id: p.id }),
-      supabase.rpc('compute_project_progress', { p_project_id: p.id }),
-    ])
-    const rows = (gates.data ?? []).map(r => (r.gates ?? []) as unknown as MatrixGate[])
-    const counts = Object.fromEntries(ROW_STATES.map(s => [s, 0])) as Record<RowState, number>
-    for (const g of rows) counts[rowState(g)]++
-    const prog = progress.data ?? []
-    const itrs = prog.reduce((n, x) => n + x.itr_total, 0)
-    const weighted = itrs > 0 ? prog.reduce((n, x) => n + Number(x.weighted_pct) * x.itr_total, 0) / itrs : 0
-    return { ...p, systems: rows.length, readiness: readinessSummary(rows), counts, weighted }
-  }))
+  const summaries = await loadPortfolioReadiness(ctx.supabase, ctx.orgId)
 
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 32px)', maxWidth: 1200, margin: '0 auto' }}>
@@ -64,6 +46,8 @@ export default async function ReadinessPortfolioPage({ searchParams }: { searchP
                   <TH style={{ width: 170 }}>{t('portfolio.col.readiness')}</TH>
                   <TH style={{ width: 120 }}>{t('portfolio.col.physical')}</TH>
                   <TH style={{ minWidth: 300 }}>{t('portfolio.col.next')}</TH>
+                  <TH style={{ width: 130, textAlign: 'right' }}>{t('portfolio.col.constraintsN4')}</TH>
+                  <TH style={{ width: 150, textAlign: 'right' }}>{t('portfolio.col.commitmentsSoon')}</TH>
                   <TH style={{ width: 150 }} />
                 </TR>
               </THead>
@@ -89,6 +73,10 @@ export default async function ReadinessPortfolioPage({ searchParams }: { searchP
                         ))}
                         {p.systems === 0 && <span style={{ color: 'var(--text-muted)' }}>{t('empty')}</span>}
                       </div>
+                    </TD>
+                    <TD style={{ textAlign: 'right', fontWeight: 600, color: p.constraintsN4 > 0 ? 'var(--danger-700)' : 'var(--gray-400)' }}>{p.constraintsN4}</TD>
+                    <TD style={{ textAlign: 'right' }}>
+                      <Link href={`/projects/${p.id}/readiness?committed=7`} style={{ fontWeight: 600, textDecoration: 'none', color: p.commitmentsSoon > 0 ? '#b45309' : 'var(--gray-400)' }}>{p.commitmentsSoon}</Link>
                     </TD>
                     <TD style={{ textAlign: 'right' }}>
                       <Link href={`/projects/${p.id}/readiness`} style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600)', textDecoration: 'none' }}>{t('portfolio.open')}</Link>

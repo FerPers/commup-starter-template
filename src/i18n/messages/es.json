@@ -326,6 +326,10 @@
       "disciplines": {
         "title": "Disciplinas",
         "desc": "Disciplinas configuradas para los proyectos"
+      },
+      "readiness": {
+        "title": "Readiness por proyecto",
+        "desc": "Gates aprobados, sistemas que no avanzan, firmas, restricciones N4 y compromisos que vencen"
       }
     },
     "customizer": {
@@ -344,6 +348,22 @@
       "hide": "Ocultar widget",
       "empty": "No hay widgets disponibles para tu rol.",
       "allHidden": "Todos los widgets están ocultos. Usa Personalizar para mostrar al menos uno."
+    },
+    "readiness": {
+      "title": "Readiness",
+      "subtitle": "Por proyecto, ordenado por riesgo",
+      "viewAll": "Ver todos →",
+      "empty": "Ningún proyecto tiene sistemas todavía.",
+      "more": "y {count} proyectos más en el portafolio",
+      "col": {
+        "project": "Proyecto",
+        "readiness": "Gates",
+        "blocked": "No avanzan",
+        "toApprove": "Por aprobar",
+        "toSign": "Por firmar",
+        "n4": "Restricc. N4",
+        "due": "Compromisos ≤ 7 d"
+      }
     }
   },
   "Common": {
@@ -2046,7 +2066,9 @@
         "systems": "Sistemas",
         "readiness": "Readiness",
         "physical": "Avance",
-        "next": "Siguiente gate por estado"
+        "next": "Siguiente gate por estado",
+        "constraintsN4": "Restricciones N4",
+        "commitmentsSoon": "Compromisos ≤ 7 días"
       }
     }
   },
@@ -5563,6 +5585,87 @@
       "admin": "Owner o Admin",
       "privileged": "Owner, Admin o Arquitecto",
       "editor": "Líder o superior"
+    }
+  },
+  "ProjectOverview": {
+    "info": {
+      "code": "Código",
+      "client": "Cliente",
+      "location": "Ubicación",
+      "start": "Inicio",
+      "target": "Objetivo"
+    },
+    "kpi": {
+      "physical": "Avance físico ponderado",
+      "itrs": "{approved} de {total} ITR aprobados",
+      "readiness": "Readiness",
+      "gates": "{done} / {total} gates",
+      "readinessPct": "{pct} % aprobados vigentes",
+      "today": "Hoy",
+      "blocked": "{count, plural, =0 {Sin bloqueos} one {# sistema bloqueado} other {# sistemas bloqueados}}",
+      "todayDetail": "{sign} por firmar · {regressed} en regresión"
+    },
+    "board": {
+      "title": "Por fase (gate)",
+      "hint": "Cada fila abre Readiness con los sistemas cuyo siguiente gate es ese",
+      "noSystems": "El proyecto todavía no tiene sistemas.",
+      "noGates": "La organización no tiene gates configurados (Administración › Gates).",
+      "col": {
+        "phase": "Fase",
+        "readiness": "Readiness (sistemas)",
+        "itr": "ITR de la fase",
+        "blocker": "Lo que más bloquea",
+        "commitment": "Próximo compromiso"
+      },
+      "toApprove": "{count} listos para aprobar",
+      "toSign": "{count} por firmar",
+      "regressed": "{count} en regresión",
+      "itrCount": "{approved} / {total}",
+      "blockedSystems": "{count, plural, one {# sistema no avanza} other {# sistemas no avanzan}}",
+      "mostCommon": "más común: {label} ({count})",
+      "overdue": "vencido",
+      "forecast": "forecast {date}",
+      "noForecast": "sin forecast",
+      "open": "Ver sistemas →",
+      "transfer": "Traspaso",
+      "transferHint": "Custodia de los sistemas",
+      "transfersToSign": "{count, plural, one {# traspaso por firmar} other {# traspasos por firmar}}",
+      "openTransfers": "Traspasos →"
+    },
+    "blocked": {
+      "title": "Lo que bloquea hoy",
+      "all": "Solo con bloqueo →",
+      "none": "Ningún sistema está bloqueado ni en regresión."
+    },
+    "upcoming": {
+      "title": "Próximos 7 días",
+      "lookahead": "Look-ahead →",
+      "none": "Nada vence en los próximos 7 días.",
+      "late": "vencido",
+      "commitment": "compromiso del gate",
+      "forecast": "forecast del gate",
+      "kind": {
+        "commitment": "Compromiso de gate",
+        "forecast": "Forecast de gate",
+        "action": "Acción",
+        "constraint": "Restricción",
+        "vendor": "Actividad de vendor"
+      }
+    },
+    "strip": {
+      "label": "Completamiento e ingeniería",
+      "itrs": "ITR aprobados",
+      "punches": "Punch abiertos",
+      "catA": "{count} Cat A",
+      "certificates": "Certificados emitidos",
+      "tags": "Tags y equipos",
+      "signals": "Señales · lazos",
+      "ce": "Matrices C&E",
+      "documents": "Documentos",
+      "pid": "{count} P&ID",
+      "systems": "Sistemas",
+      "twin": "Digital Twin",
+      "import": "Importar…"
     }
   }
 }

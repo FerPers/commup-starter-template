@@ -1,10 +1,28 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
+import Link from 'next/link'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { fetchItrPhaseCounts, fetchPunchCounts, fetchCertCounts, sumItr, sumPunch, sumCert, isOpenPunch } from '@/lib/list/kpi-query'
-import { Boxes, Award, TrendingUp } from 'lucide-react'
-import { Card } from '@/components/ui'
+import { loadMatrix } from '@/lib/readiness/matrix-server'
+import { blockerCount, readinessSummary, rowState } from '@/lib/readiness/matrix'
+import { blockedToday, buildPhaseBoard, upcomingWindow, type UpcomingItem } from '@/lib/readiness/phase-board'
+import type { MatrixGate } from '@/lib/readiness/gates'
+import { OWNERSHIP_STAGES } from '@/lib/startup/catalog'
+import { addDaysIso, formatInZone } from '@/lib/time/zone'
 import ProjectHeader from './ProjectHeader'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+
+// N2b (H-10/H-20, «Maquetas N2» aprobadas por Luis 2026-10-21): el Resumen del proyecto es un tablero por fases.
+// Una fila por gate (readiness, avance de los ITR de su fase, lo que más bloquea, próximo compromiso) que abre
+// Readiness filtrado; abajo, lo que bloquea hoy, los próximos 7 días y una franja chica de ingeniería y datos.
+// El Digital Twin dejó de ser el banner principal.
+
+const card: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12 }
+const small: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }
+const th: React.CSSProperties = { padding: '10px 16px', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }
+const td: React.CSSProperties = { padding: '12px 16px', fontSize: 'var(--text-sm)', color: 'var(--text-strong)', verticalAlign: 'top' }
+const linkStyle: React.CSSProperties = { color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 600 }
+const chipLink: React.CSSProperties = { textDecoration: 'none', padding: '6px 10px', borderRadius: 8, background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-strong)', fontSize: 'var(--text-sm)', whiteSpace: 'nowrap' }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -12,464 +30,319 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
-  const membership = { org_id: ctx.orgId, role: ctx.role }
+  const canEdit = ROLE_TIERS.privileged.includes(ctx.role)
+  const canDelete = ctx.role === 'owner'
 
-  const canEdit = ROLE_TIERS.privileged.includes(membership.role)
-  const canDelete = membership.role === 'owner'
+  const { data: project } = await supabase
+    .from('projects')
+    .select('id, name, code, location, client, country, region, start_date, end_date, status, timezone, created_at')
+    .eq('id', id)
+    .eq('org_id', ctx.orgId)
+    .maybeSingle()
+  if (!project) notFound()
 
   const [
-    { data: project },
-    { data: phases },
-    { data: disciplines },
-    { count: tagCount },
-    itrCounts,
-    punchCounts,
-    certCounts,
-    { count: signalCount },
-    { count: loopCount },
-    { count: ceMatrixCount },
+    t, tc, tg, ts, locale,
+    matrix,
+    { data: orgGates },
+    itrCounts, punchCounts, certCounts,
+    { count: tagCount }, { count: signalCount }, { count: loopCount }, { count: ceMatrixCount }, { count: documentCount }, { count: pidCount },
+    { data: ownership }, { count: pendingTransfers },
   ] = await Promise.all([
-    supabase
-      .from('projects')
-      .select('id, name, code, location, client, country, region, start_date, end_date, status, timezone, created_at')
-      .eq('id', id)
-      .eq('org_id', membership.org_id)
-      .single(),
-    supabase
-      .from('project_phases')
-      .select('id, code, name, color, order_index, certificate_name')
-      .eq('org_id', membership.org_id)
-      .order('order_index'),
-    supabase
-      .from('disciplines')
-      .select('id, code, name, color')
-      .eq('org_id', membership.org_id),
-    supabase
-      .from('tags')
-      .select('id', { count: 'exact', head: true })
-      .eq('project_id', id),
-    // Sprint E: agregados SQL en vez de traer todas las filas
+    getTranslations('ProjectOverview'), getTranslations('ControlTower'), getTranslations('Gates'), getTranslations('Startup'), getLocale(),
+    loadMatrix(supabase, id, ctx.orgId),
+    // bounded: gates de la org
+    supabase.from('readiness_gates').select('id, phase_id').eq('org_id', ctx.orgId).limit(100),
     fetchItrPhaseCounts(supabase, { projectId: id }),
     fetchPunchCounts(supabase, { projectId: id }),
     fetchCertCounts(supabase, { projectId: id }),
-    supabase
-      .from('signals')
-      .select('id, tags!inner(project_id)', { count: 'exact', head: true })
-      .eq('tags.project_id', id),
-    supabase
-      .from('loops')
-      .select('id', { count: 'exact', head: true })
-      .eq('project_id', id),
-    supabase
-      .from('ce_matrices')
-      .select('id', { count: 'exact', head: true })
-      .eq('project_id', id),
+    supabase.from('tags').select('id', { count: 'exact', head: true }).eq('project_id', id),
+    supabase.from('signals').select('id, tags!inner(project_id)', { count: 'exact', head: true }).eq('tags.project_id', id),
+    supabase.from('loops').select('id', { count: 'exact', head: true }).eq('project_id', id),
+    supabase.from('ce_matrices').select('id', { count: 'exact', head: true }).eq('project_id', id),
+    supabase.from('documents').select('id', { count: 'exact', head: true }).eq('project_id', id),
+    supabase.from('pid_documents').select('id', { count: 'exact', head: true }).eq('project_id', id),
+    // bounded: una fila por sistema del proyecto
+    supabase.from('system_ownership').select('stage').eq('project_id', id).limit(5000),
+    supabase.from('ownership_transfers').select('id', { count: 'exact', head: true }).eq('project_id', id).eq('status', 'pending_signatures'),
   ])
 
-  if (!project) notFound()
+  const { rows, today } = matrix
+  const end = addDaysIso(today, 7)
+  const [{ data: actions }, { data: constraints }, { data: vendorActs }] = await Promise.all([
+    supabase.from('actions').select('id, number, title, due_date').eq('project_id', id)
+      .in('status', ['open', 'in_progress']).not('due_date', 'is', null).lte('due_date', end).order('due_date').limit(20),
+    supabase.from('project_constraints').select('id, number, title, need_date').eq('project_id', id)
+      .eq('status', 'open').lte('need_date', end).order('need_date').limit(20),
+    supabase.from('vendor_activities').select('id, title, planned_date, package_id, vendor_packages(number)').eq('project_id', id)
+      .is('performed_on', null).gte('planned_date', today).lte('planned_date', end).order('planned_date').limit(20),
+  ])
 
-  function formatDate(d: string | null) {
-    if (!d) return '—'
-    return new Date(d).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+  // ── Tablero por fases ────────────────────────────────────────────────
+  const itrByPhase = new Map<string, { approved: number; total: number }>()
+  for (const c of itrCounts) {
+    const cur = itrByPhase.get(c.phase_id) ?? { approved: 0, total: 0 }
+    cur.total += c.n
+    if (c.status === 'approved') cur.approved += c.n
+    itrByPhase.set(c.phase_id, cur)
   }
+  const board = buildPhaseBoard(rows, {
+    commitments: matrix.commitments, forecasts: matrix.forecasts, today,
+    gatePhase: new Map((orgGates ?? []).map(g => [g.id, g.phase_id])),
+    itrByPhase,
+  })
+
+  const weightedVals = [...matrix.weighted.values()]
+  const weightedItrs = weightedVals.reduce((s, w) => s + w.itrs, 0)
+  const weighted = weightedItrs > 0 ? weightedVals.reduce((s, w) => s + w.pct * w.itrs, 0) / weightedItrs : 0
+  const readiness = readinessSummary(rows.map(r => r.gates))
+  const states = rows.map(r => rowState(r.gates))
+  const blockedNow = states.filter(s => s === 'blocked' || s === 'regressed').length
+  const regressedNow = states.filter(s => s === 'regressed').length
+  const toSignNow = board.reduce((n, p) => n + p.toSign, 0)
+
+  const blockerText = (g: MatrixGate): string => {
+    if (!g.blocker) return tc(`gateStatus.${g.status}`)
+    const label = g.blocker.label ?? tg(`kind.${g.blocker.kind}`)
+    const n = blockerCount(g.blocker)
+    return n ? tc('next.blockerCount', { label, count: n }) : label
+  }
+  const blockers = blockedToday(rows, { commitment: (s, g) => matrix.commitments.get(`${s}:${g}`) ?? null, today })
+
+  // ── Próximos 7 días ─────────────────────────────────────────────────
+  const base = `/projects/${id}`
+  const gateItems: UpcomingItem[] = []
+  for (const r of rows) {
+    for (const g of r.gates) {
+      if (g.status === 'approved' || g.status === 'approved_with_conditions') continue
+      const key = `${r.system_id}:${g.gate_id}`
+      const href = `${base}/systems/${r.system_id}?tab=plan`
+      const commit = matrix.commitments.get(key)
+      const forecast = matrix.forecasts.get(key)
+      if (commit) gateItems.push({ kind: 'commitment', date: commit, ref: `${r.system_code} · ${g.code}`, title: t('upcoming.commitment'), href })
+      else if (forecast) gateItems.push({ kind: 'forecast', date: forecast, ref: `${r.system_code} · ${g.code}`, title: t('upcoming.forecast'), href })
+    }
+  }
+  const upcoming = upcomingWindow([
+    ...gateItems,
+    ...(actions ?? []).map(a => ({ kind: 'action' as const, date: a.due_date as string, ref: a.number, title: a.title, href: `${base}/daily/action/${a.id}` })),
+    ...(constraints ?? []).map(c => ({ kind: 'constraint' as const, date: c.need_date, ref: c.number, title: c.title, href: `${base}/daily/constraint/${c.id}` })),
+    ...(vendorActs ?? []).map(v => ({ kind: 'vendor' as const, date: v.planned_date as string, ref: (v.vendor_packages as { number: string } | null)?.number ?? 'VND', title: v.title, href: `${base}/vendors/${v.package_id}` })),
+  ], today).slice(0, 10)
+
+  // ── Custodia ────────────────────────────────────────────────────────
+  const stageCounts = Object.fromEntries(OWNERSHIP_STAGES.map(s => [s, 0])) as Record<string, number>
+  for (const o of ownership ?? []) stageCounts[o.stage] = (stageCounts[o.stage] ?? 0) + 1
+
+  const openPunch = sumPunch(punchCounts, isOpenPunch)
+  const catA = sumPunch(punchCounts, p => isOpenPunch(p) && p.category === 'A')
+  const itrTotal = sumItr(itrCounts, () => true)
+  const itrApproved = sumItr(itrCounts, i => i.status === 'approved')
+  const certIssued = sumCert(certCounts, c => c.status === 'issued')
+  const fmtDate = (d: string | null) => (d ? formatInZone(`${d}T12:00:00Z`, project.timezone, locale, false) : '—')
 
   return (
-    <div style={{ padding: 32 }}>
-
+    <div style={{ padding: 'clamp(12px, 4vw, 32px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <ProjectHeader project={project} canEdit={canEdit} canDelete={canDelete} />
 
-      {/* Info strip */}
-      <div style={{
-        display: 'flex', gap: 0, background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--border)', marginBottom: 24, overflow: 'hidden',
-      }}>
+      {/* Datos del proyecto (H-20: i18n y en el teléfono bajan de línea) */}
+      <div style={{ ...card, display: 'flex', flexWrap: 'wrap' }}>
         {[
-          { label: 'Código', value: project.code },
-          { label: 'Cliente', value: project.client ?? '—' },
-          { label: 'Ubicación', value: project.location ?? '—' },
-          { label: 'Inicio', value: formatDate(project.start_date) },
-          { label: 'Objetivo', value: formatDate(project.end_date) },
-        ].map((item, i, arr) => (
-          <div key={item.label} style={{
-            flex: 1, padding: '14px 20px',
-            borderRight: i < arr.length - 1 ? '1px solid var(--gray-100)' : 'none',
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-              {item.label}
-            </div>
-            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>{item.value}</div>
+          [t('info.code'), project.code], [t('info.client'), project.client ?? '—'], [t('info.location'), project.location ?? '—'],
+          [t('info.start'), fmtDate(project.start_date)], [t('info.target'), fmtDate(project.end_date)],
+        ].map(([label, value]) => (
+          <div key={label} style={{ flex: '1 1 160px', padding: '12px 18px' }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>{value}</div>
           </div>
         ))}
       </div>
 
-      {/* Digital Twin — hero entry */}
-      <a
-        href={`/projects/${project.id}/twin`}
-        style={{ textDecoration: 'none', display: 'block', marginBottom: 24 }}
-      >
-        <div style={{
-          background: 'linear-gradient(135deg, var(--gray-900) 0%, var(--primary-900) 60%, var(--primary-600) 100%)',
-          borderRadius: 'var(--radius-lg)', padding: '22px 26px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 20, color: '#fff',
-          boxShadow: '0 4px 14px rgba(37,99,235,0.25)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0 }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: 'var(--radius-lg)',
-              background: 'rgba(255,255,255,0.12)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <Boxes size={26} color="#fff" aria-hidden="true" />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, letterSpacing: '-0.2px' }}>
-                Digital Twin · Vista 360°
-              </div>
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-300)', marginTop: 3 }}>
-                Semáforo en tiempo real por tag — ITRs, punches, certs, preservation y P&ID
-              </div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success-500)', boxShadow: '0 0 8px var(--success-500)' }} />
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--warning-500)' }} />
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger-500)' }} />
-            <span style={{
-              marginLeft: 10, padding: '7px 14px',
-              background: 'rgba(255,255,255,0.15)', borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)', fontWeight: 600, whiteSpace: 'nowrap',
-            }}>
-              Abrir Twin →
-            </span>
-          </div>
+      {/* Los dos números canónicos (D-18) y lo de hoy */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+        <div style={{ ...card, padding: '14px 18px' }}>
+          <div style={{ ...small, fontWeight: 600 }}>{t('kpi.physical')}</div>
+          <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)' }}>{(weighted * 100).toFixed(1)} %</div>
+          <div style={small}>{t('kpi.itrs', { approved: itrApproved, total: itrTotal })}</div>
         </div>
-      </a>
-
-      {/* Phase KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
-        {(phases ?? []).map(phase => {
-          const total = sumItr(itrCounts, i => i.phase_id === phase.id)
-          const approved = sumItr(itrCounts, i => i.phase_id === phase.id && i.status === 'approved')
-          const pct = total > 0 ? Math.round((approved / total) * 100) : 0
-          return (
-          <Card key={phase.id} padding="md" style={{ borderTop: `3px solid ${phase.color}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-              <div>
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 500, margin: 0 }}>{phase.name}</p>
-                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', margin: '2px 0 0' }}>Certificado: {phase.certificate_name}</p>
-              </div>
-              <span style={{
-                padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700,
-                background: `${phase.color}18`, color: phase.color,
-              }}>
-                {phase.code}
-              </span>
-            </div>
-            <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px', letterSpacing: '-1px' }}>{pct}%</p>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', margin: '0 0 8px' }}>{approved} / {total} ITRs</p>
-            <div style={{ height: 5, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', background: phase.color, borderRadius: 3 }} />
-            </div>
-          </Card>
-          )
-        })}
-        {(() => {
-          const openTotal = sumPunch(punchCounts, isOpenPunch)
-          const catA = sumPunch(punchCounts, p => isOpenPunch(p) && p.category === 'A')
-          const catB = sumPunch(punchCounts, p => isOpenPunch(p) && p.category === 'B')
-          return (
-            <Card padding="md" style={{ borderTop: '3px solid var(--danger-500)' }}>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 500, margin: '0 0 10px' }}>Punch List Abiertos</p>
-              <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--danger-500)', margin: '0 0 4px', letterSpacing: '-1px' }}>{openTotal}</p>
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', margin: 0 }}>Cat A: {catA} · Cat B: {catB}</p>
-            </Card>
-          )
-        })()}
+        <div style={{ ...card, padding: '14px 18px' }}>
+          <div style={{ ...small, fontWeight: 600 }}>{t('kpi.readiness')}</div>
+          <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)' }}>{t('kpi.gates', { done: readiness.done, total: readiness.total })}</div>
+          <div style={small}>{t('kpi.readinessPct', { pct: (readiness.pct * 100).toFixed(1) })}</div>
+        </div>
+        <Link href={`${base}/readiness?blocked=1`} style={{ ...card, padding: '14px 18px', textDecoration: 'none', borderColor: blockedNow > 0 ? '#f3c9c3' : 'var(--border)' }}>
+          <div style={{ ...small, fontWeight: 600 }}>{t('kpi.today')}</div>
+          <div style={{ fontSize: 26, fontWeight: 700, color: blockedNow > 0 ? 'var(--danger-700)' : 'var(--success-700)' }}>{t('kpi.blocked', { count: blockedNow })}</div>
+          <div style={small}>{t('kpi.todayDetail', { sign: toSignNow, regressed: regressedNow })}</div>
+        </Link>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-
-        {/* Disciplines */}
-        <Card padding="md">
-          <h3 style={sectionTitle}>Disciplinas</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-            {(disciplines ?? []).map(d => (
-              <span key={d.id} style={{
-                padding: '5px 12px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-sm)', fontWeight: 500,
-                background: `${d.color}15`, color: d.color, border: `1px solid ${d.color}30`,
-              }}>
-                {d.code} — {d.name}
-              </span>
-            ))}
-          </div>
-        </Card>
-
-        {/* Tags + Signals — import links */}
-        <Card padding="md">
-          <h3 style={sectionTitle}>Tags / Equipos y Señales</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
-
-            {/* Sistematización (fase 2 plan readiness) */}
-            <ResourceRow
-              title="Sistemas y dependencias"
-              detail="Tipo, prioridad, límites de batería y qué sistema habilita a cuál"
-              actions={<ResourceLink href={`/projects/${project.id}/systems`}>Ver sistemas →</ResourceLink>}
-            />
-
-            {/* Registros controlados (fase 3 plan readiness) */}
-            <ResourceRow
-              title="Registros controlados"
-              detail="Temporales, ciegas, reinstalación, bypass, energización y test packs"
-              actions={<ResourceLink href={`/projects/${project.id}/registers`}>Ver registros →</ResourceLink>}
-            />
-
-            {/* Arranque (fase 6 plan readiness) */}
-            <ResourceRow
-              title="Arranque"
-              detail="Procedimientos con hold points y hojas de line-up"
-              actions={<ResourceLink href={`/projects/${project.id}/startup`}>Ver arranque →</ResourceLink>}
-            />
-
-            {/* Gestión diaria (fase 5 plan readiness) */}
-            <ResourceRow
-              title="Gestión diaria"
-              detail="Acciones, restricciones, TQ y decisiones"
-              actions={<ResourceLink href={`/projects/${project.id}/daily`}>Ver gestión diaria →</ResourceLink>}
-            />
-
-            {/* Tags de Equipos */}
-            <ResourceRow
-              title="Tags de Equipos"
-              detail={tagCount && tagCount > 0
-                ? <span style={{ color: 'var(--primary-500)', fontWeight: 500 }}>{tagCount} tags importados</span>
-                : 'Mecánicos, eléctricos, tuberías… (Fase A)'}
-              actions={
-                <>
-                  {(tagCount ?? 0) > 0 && (
-                    <ResourceLink href={`/projects/${project.id}/tags`}>Ver tags →</ResourceLink>
-                  )}
-                  {canEdit && (
-                    <ResourcePrimary href={`/projects/${project.id}/import`}>
-                      {(tagCount ?? 0) > 0 ? 'Importar más' : 'Importar'}
-                    </ResourcePrimary>
-                  )}
-                </>
-              }
-            />
-
-            {/* Documentos P&ID */}
-            <ResourceRow
-              title="Documentos P&ID"
-              detail="PDFs de planos de proceso para caminatas de verificación"
-              actions={<ResourceLink href={`/projects/${project.id}/pid-documents`}>Gestionar →</ResourceLink>}
-            />
-
-            {/* Lista de Señales I&C */}
-            <ResourceRow
-              title="Lista de Señales I&C"
-              detail={(signalCount ?? 0) > 0
-                ? <span style={{ color: 'var(--success-500)', fontWeight: 500 }}>{signalCount} señales importadas</span>
-                : 'AI/AO/DI/DO con rango, alarmas, P&IDs (Fases B/C)'}
-              actions={
-                <>
-                  {(signalCount ?? 0) > 0 && (
-                    <ResourceLink href={`/projects/${project.id}/signals`}>Ver señales →</ResourceLink>
-                  )}
-                  {canEdit && (
-                    <ResourcePrimary href={`/projects/${project.id}/import-signals`} color="var(--success-500)">
-                      {(signalCount ?? 0) > 0 ? 'Importar más' : 'Importar'}
-                    </ResourcePrimary>
-                  )}
-                </>
-              }
-            />
-
-            {/* Loops */}
-            <ResourceRow
-              title="Loops de Control"
-              detail={(loopCount ?? 0) > 0
-                ? <span style={{ color: '#8b5cf6', fontWeight: 500 }}>{loopCount} loops</span>
-                : 'Lazos de control agrupados por subsistema'}
-              actions={<ResourceLink href={`/projects/${project.id}/loops`}>Ver →</ResourceLink>}
-            />
-
-            {/* Matrices C&E (reemplazan a interlocks, fase 4-D) */}
-            <ResourceRow
-              title="Matrices causa-efecto (SIS/ESD)"
-              detail={(ceMatrixCount ?? 0) > 0
-                ? <span style={{ color: 'var(--danger-500)', fontWeight: 500 }}>{ceMatrixCount} matrices C&E</span>
-                : 'Causas, efectos y cruces de la lógica de paro'}
-              actions={<ResourceLink href={`/projects/${project.id}/ce-matrices`}>Ver →</ResourceLink>}
-            />
-
-          </div>
-        </Card>
-      </div>
-
-      {/* Certificates badge */}
-      {(() => {
-        const issued = sumCert(certCounts, c => c.status === 'issued')
-        return (
-          <div style={{ marginTop: 16, marginBottom: 16 }}>
-            <a href={`/projects/${project.id}/certificates`} style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: issued > 0 ? 'var(--success-50)' : 'var(--card-bg)',
-                border: `1px solid ${issued > 0 ? '#a7f3d0' : 'var(--border)'}`,
-                borderRadius: 'var(--radius-lg)', padding: '14px 20px',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                transition: 'box-shadow 0.15s',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Award size={20} color="var(--success-700)" aria-hidden="true" />
-                  <div>
-                    <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>Certificados de Completación</div>
-                    <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 1 }}>
-                      {issued > 0 ? `${issued} certificado${issued > 1 ? 's' : ''} emitido${issued > 1 ? 's' : ''}` : 'Ver elegibilidad por subsistema'}
+      {/* Tablero por fases */}
+      <section aria-labelledby="phase-board" style={{ ...card, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+          <h2 id="phase-board" style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', flex: 1 }}>{t('board.title')}</h2>
+          <span style={small}>{t('board.hint')}</span>
+        </div>
+        {board.length === 0 ? (
+          <p style={{ ...small, margin: 0, padding: 18 }}>{rows.length === 0 ? t('board.noSystems') : t('board.noGates')}</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+              <thead>
+                <tr style={{ background: 'var(--gray-50)' }}>
+                  <th style={th}>{t('board.col.phase')}</th>
+                  <th style={{ ...th, width: 220 }}>{t('board.col.readiness')}</th>
+                  <th style={th}>{t('board.col.itr')}</th>
+                  <th style={th}>{t('board.col.blocker')}</th>
+                  <th style={th}>{t('board.col.commitment')}</th>
+                  <th style={{ ...th, textAlign: 'right' }} />
+                </tr>
+              </thead>
+              <tbody>
+                {board.map(p => {
+                  const pct = p.total > 0 ? Math.round((p.approved / p.total) * 100) : 0
+                  const pending = [
+                    p.toApprove > 0 && t('board.toApprove', { count: p.toApprove }),
+                    p.toSign > 0 && t('board.toSign', { count: p.toSign }),
+                    p.regressed > 0 && t('board.regressed', { count: p.regressed }),
+                  ].filter(Boolean).join(' · ')
+                  return (
+                    <tr key={p.gate_id} style={{ borderTop: '1px solid var(--border)' }}>
+                      <td style={td}>
+                        <div style={{ fontWeight: 700 }}>{p.code}</div>
+                        <div style={small}>{p.name}</div>
+                      </td>
+                      <td style={td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ flex: 1, height: 8, background: 'var(--gray-100)', borderRadius: 999, overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', background: pct >= 60 ? 'var(--success-500)' : pct >= 25 ? 'var(--primary-500)' : 'var(--gray-400)' }} />
+                          </div>
+                          <strong style={{ minWidth: 48, textAlign: 'right' }}>{p.approved}/{p.total}</strong>
+                        </div>
+                        {pending && <div style={{ ...small, marginTop: 4 }}>{pending}</div>}
+                      </td>
+                      <td style={{ ...td, fontWeight: 600 }}>
+                        {p.itr ? `${Math.round((p.itr.approved / p.itr.total) * 100)} %` : '—'}
+                        {p.itr && <div style={{ ...small, fontWeight: 400 }}>{t('board.itrCount', { approved: p.itr.approved, total: p.itr.total })}</div>}
+                      </td>
+                      <td style={{ ...td, color: p.blocked > 0 ? 'var(--danger-700)' : 'var(--text-muted)' }}>
+                        {p.blocked > 0
+                          ? <>
+                              {t('board.blockedSystems', { count: p.blocked })}
+                              {p.topBlocker && <div style={small}>{t('board.mostCommon', { label: p.topBlocker.label ?? tg(`kind.${p.topBlocker.kind}`), count: p.topBlocker.systems })}</div>}
+                            </>
+                          : '—'}
+                      </td>
+                      <td style={td}>
+                        {p.commitment ? (
+                          <>
+                            <Link href={`${base}/systems/${p.commitment.system_id}?tab=plan`} style={{ ...linkStyle, color: p.commitment.late ? 'var(--danger-700)' : 'var(--text-strong)' }}>
+                              {p.commitment.system_code} · {p.commitment.date}
+                            </Link>
+                            <div style={{ ...small, color: p.commitment.late ? 'var(--danger-700)' : 'var(--text-muted)' }}>
+                              {p.commitment.late ? t('board.overdue') : p.commitment.forecast ? t('board.forecast', { date: p.commitment.forecast }) : t('board.noForecast')}
+                            </div>
+                          </>
+                        ) : <span style={small}>—</span>}
+                      </td>
+                      <td style={{ ...td, textAlign: 'right' }}>
+                        <Link href={`${base}/readiness?gate=${encodeURIComponent(p.code)}`} style={{ ...linkStyle, display: 'inline-flex', alignItems: 'center', minHeight: 36, padding: '0 12px', border: '1px solid var(--border)', borderRadius: 8, whiteSpace: 'nowrap' }}>
+                          {t('board.open')}
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                })}
+                <tr style={{ borderTop: '1px solid var(--border)', background: 'var(--gray-50)' }}>
+                  <td style={td}><div style={{ fontWeight: 700 }}>{t('board.transfer')}</div><div style={small}>{t('board.transferHint')}</div></td>
+                  <td colSpan={4} style={td}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {OWNERSHIP_STAGES.map(s => (
+                        <span key={s} style={{ padding: '4px 10px', borderRadius: 999, background: 'var(--card-bg)', border: '1px solid var(--border)', fontSize: 'var(--text-sm)' }}>
+                          {ts(`ops.stage.${s}`)} <strong>{stageCounts[s] ?? 0}</strong>
+                        </span>
+                      ))}
+                      {(pendingTransfers ?? 0) > 0 && (
+                        <span style={{ padding: '4px 10px', borderRadius: 999, background: '#f5f3ff', color: '#5b21b6', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
+                          {t('board.transfersToSign', { count: pendingTransfers ?? 0 })}
+                        </span>
+                      )}
                     </div>
-                  </div>
-                </div>
-                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', fontWeight: 500 }}>Ver →</span>
-              </div>
-            </a>
+                  </td>
+                  <td style={{ ...td, textAlign: 'right' }}>
+                    <Link href={`${base}/startup/operations`} style={{ ...linkStyle, whiteSpace: 'nowrap' }}>{t('board.openTransfers')}</Link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        )
-      })()}
+        )}
+      </section>
 
-      {/* KPIs card */}
-      <div style={{ marginBottom: 16 }}>
-        <a href={`/projects/${project.id}/kpis`} style={{ textDecoration: 'none' }}>
-          <div style={{
-            background: 'var(--card-bg)', border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-lg)', padding: '14px 20px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <TrendingUp size={20} color="var(--primary-500)" aria-hidden="true" />
-              <div>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>KPIs & S-curve</div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 1 }}>
-                  Avance por subsistema, curva S planificado vs real, export Excel
-                </div>
-              </div>
-            </div>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', fontWeight: 500 }}>Ver →</span>
+      {/* Lo que bloquea hoy · Próximos 7 días */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, alignItems: 'start' }}>
+        <section aria-labelledby="blocked-today" style={{ ...card, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+            <h2 id="blocked-today" style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', flex: 1 }}>{t('blocked.title')}</h2>
+            <Link href={`${base}/readiness?blocked=1`} style={{ ...linkStyle, fontSize: 'var(--text-sm)' }}>{t('blocked.all')}</Link>
           </div>
-        </a>
-      </div>
-
-      {/* ITRs + Punch List */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-
-        {/* ITR card — real */}
-        <Card padding="md">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h3 style={sectionTitle}>ITRs</h3>
-            <a href={`/projects/${project.id}/itrs`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', textDecoration: 'none', fontWeight: 500 }}>
-              Ver todos →
-            </a>
-          </div>
-          {sumItr(itrCounts) === 0 ? (
-            <div style={{ padding: 24, background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0 }}>
-                Sin ITRs asignados. Abre un tag y asigna un template.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {[
-                { key: 'not_started', label: 'Sin iniciar', color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
-                { key: 'in_progress', label: 'En progreso', color: 'var(--primary-500)', bg: 'var(--primary-50)' },
-                { key: 'completed',   label: 'Completados', color: 'var(--success-500)', bg: 'var(--success-50)' },
-                { key: 'approved',    label: 'Aprobados',   color: '#7c3aed',            bg: '#f5f3ff' },
-              ].map(s => {
-                const cnt = sumItr(itrCounts, i => i.status === s.key)
-                return cnt > 0 ? (
-                  <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: 'var(--radius-md)', textAlign: 'center', minWidth: 70 }}>
-                    <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: s.color }}>{cnt}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{s.label}</div>
-                  </div>
-                ) : null
-              })}
-            </div>
-          )}
-        </Card>
-
-        {/* Punch List card — real */}
-        <Card padding="md">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h3 style={sectionTitle}>Punch List</h3>
-            <a href={`/projects/${project.id}/punches`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-500)', textDecoration: 'none', fontWeight: 500 }}>
-              Ver todos →
-            </a>
-          </div>
-          {sumPunch(punchCounts) === 0 ? (
-            <div style={{ padding: 24, background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0 }}>
-                Sin punches registrados. Se crean desde la ejecución de ITRs.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {[
-                { key: 'A', label: 'Cat A', color: 'var(--danger-500)',  bg: 'var(--danger-50)' },
-                { key: 'B', label: 'Cat B', color: 'var(--warning-500)', bg: 'var(--warning-50)' },
-                { key: 'C', label: 'Cat C', color: 'var(--gray-500)',    bg: 'var(--gray-50)' },
-              ].map(s => {
-                const open = sumPunch(punchCounts, p => p.category === s.key && isOpenPunch(p))
-                const closed = sumPunch(punchCounts, p => p.category === s.key && !isOpenPunch(p))
+          {blockers.length === 0 ? <p style={{ ...small, margin: 0, padding: 18 }}>{t('blocked.none')}</p> : (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {blockers.map(({ row, gate }) => {
+                const by = matrix.blocks.get(`${row.system_id}:${gate.gate_id}`)
                 return (
-                  <div key={s.key} style={{ padding: '10px 14px', background: s.bg, borderRadius: 'var(--radius-md)', textAlign: 'center', minWidth: 70 }}>
-                    <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: s.color }}>{open}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{s.label} abiertos</div>
-                    {closed > 0 && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 1 }}>{closed} cerrados</div>}
-                  </div>
+                  <li key={row.system_id} style={{ borderTop: '1px solid var(--border)', padding: '10px 18px', display: 'flex', gap: 12, alignItems: 'baseline' }}>
+                    <span style={{ minWidth: 48, textAlign: 'center', padding: '2px 8px', borderRadius: 6, fontSize: 'var(--text-xs)', fontWeight: 700,
+                      background: gate.status === 'regressed' ? 'var(--danger-500)' : 'var(--danger-50)', color: gate.status === 'regressed' ? '#fff' : 'var(--danger-700)' }}>{gate.code}</span>
+                    <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)' }}>
+                      <Link href={`${base}/systems/${row.system_id}?gate=${gate.gate_id}`} style={linkStyle}>{row.system_code}</Link>
+                      <span style={{ color: 'var(--text-strong)' }}> · {by ? tc('blockedBy', { systems: by.join(', ') }) : blockerText(gate)}</span>
+                      <div style={small}>{row.system_name}</div>
+                    </div>
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           )}
-        </Card>
+        </section>
+
+        <section aria-labelledby="upcoming" style={{ ...card, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+            <h2 id="upcoming" style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', flex: 1 }}>{t('upcoming.title')}</h2>
+            <Link href={`${base}/daily/lookahead`} style={{ ...linkStyle, fontSize: 'var(--text-sm)' }}>{t('upcoming.lookahead')}</Link>
+          </div>
+          {upcoming.length === 0 ? <p style={{ ...small, margin: 0, padding: 18 }}>{t('upcoming.none')}</p> : (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {upcoming.map(u => (
+                <li key={`${u.kind}:${u.ref}:${u.date}`} style={{ borderTop: '1px solid var(--border)', padding: '10px 18px', display: 'flex', gap: 14, alignItems: 'baseline' }}>
+                  <span style={{ fontWeight: 700, minWidth: 86, fontSize: 'var(--text-sm)', color: u.late ? 'var(--danger-700)' : 'var(--text-strong)' }}>{u.date}</span>
+                  <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)' }}>
+                    <Link href={u.href} style={linkStyle}>{u.ref}</Link>
+                    <span style={{ color: 'var(--text-strong)' }}> · {u.title}</span>
+                    <div style={small}>{t(`upcoming.kind.${u.kind}`)}{u.late ? ` · ${t('upcoming.late')}` : ''}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
 
+      {/* Completamiento e ingeniería: franja chica (reemplaza las tarjetas del directorio y el banner del Twin) */}
+      <section aria-label={t('strip.label')} style={{ ...card, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', padding: '12px 18px' }}>
+        <Link href={`${base}/itrs`} style={chipLink}>{t('strip.itrs')} <strong>{itrApproved}/{itrTotal}</strong></Link>
+        <Link href={`${base}/punches`} style={chipLink}>{t('strip.punches')} <strong>{openPunch}</strong>{catA > 0 && <span style={{ color: 'var(--danger-700)' }}> · {t('strip.catA', { count: catA })}</span>}</Link>
+        <Link href={`${base}/certificates`} style={chipLink}>{t('strip.certificates')} <strong>{certIssued}</strong></Link>
+        <span style={{ width: 1, alignSelf: 'stretch', background: 'var(--border)', margin: '0 4px' }} aria-hidden="true" />
+        <Link href={`${base}/tags`} style={chipLink}>{t('strip.tags')} <strong>{tagCount ?? 0}</strong></Link>
+        <Link href={`${base}/signals`} style={chipLink}>{t('strip.signals')} <strong>{signalCount ?? 0} · {loopCount ?? 0}</strong></Link>
+        <Link href={`${base}/ce-matrices`} style={chipLink}>{t('strip.ce')} <strong>{ceMatrixCount ?? 0}</strong></Link>
+        <Link href={`${base}/documents`} style={chipLink}>{t('strip.documents')} <strong>{documentCount ?? 0}</strong> · {t('strip.pid', { count: pidCount ?? 0 })}</Link>
+        <Link href={`${base}/systems`} style={chipLink}>{t('strip.systems')} <strong>{rows.length}</strong></Link>
+        <Link href={`${base}/twin`} style={chipLink}>{t('strip.twin')}</Link>
+        <span style={{ flex: 1 }} />
+        {canEdit && <Link href={`${base}/import`} style={{ ...linkStyle, fontSize: 'var(--text-sm)' }}>{t('strip.import')}</Link>}
+      </section>
     </div>
-  )
-}
-
-const sectionTitle: React.CSSProperties = {
-  fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-strong)', margin: 0,
-}
-
-function ResourceRow({ title, detail, actions }: { title: string; detail: React.ReactNode; actions: React.ReactNode }) {
-  return (
-    <div style={{ padding: '14px 16px', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-      <div>
-        <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>{title}</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginTop: 2 }}>{detail}</div>
-      </div>
-      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>{actions}</div>
-    </div>
-  )
-}
-
-function ResourceLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <a href={href} style={{
-      padding: '6px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)',
-      color: 'var(--gray-600)', borderRadius: 'var(--radius-sm)',
-      fontSize: 'var(--text-sm)', fontWeight: 500,
-      textDecoration: 'none', whiteSpace: 'nowrap',
-    }}>{children}</a>
-  )
-}
-
-function ResourcePrimary({ href, children, color = 'var(--primary-500)' }: { href: string; children: React.ReactNode; color?: string }) {
-  return (
-    <a href={href} style={{
-      padding: '6px 14px', background: color, color: '#fff',
-      borderRadius: 'var(--radius-sm)',
-      fontSize: 'var(--text-sm)', fontWeight: 500,
-      textDecoration: 'none', whiteSpace: 'nowrap',
-    }}>{children}</a>
   )
 }

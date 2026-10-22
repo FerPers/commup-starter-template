@@ -20,6 +20,8 @@ export type MatrixData = {
   blocks: Map<string, string[]>
   /** `${systemId}:${gateId}` → fecha comprometida. */
   commitments: Map<string, string>
+  /** `${systemId}:${gateId}` → forecast (N2b: brecha del compromiso en el Resumen). */
+  forecasts: Map<string, string>
   /** approvalId → condiciones (acciones de origen «gate») abiertas. */
   openConditions: Map<string, number>
   /** Sistemas con eventos de gate en las últimas 24 h. */
@@ -39,7 +41,7 @@ export async function loadMatrix(supabase: SupabaseClient<Database>, projectId: 
     fetchAllRows(() => supabase.from('system_dependencies').select('system_id, depends_on_system_id, required_gate_id, blocked_gate_id').eq('project_id', projectId)),
     supabase.from('organizations').select('settings').eq('id', orgId).maybeSingle(),
     // La clave de system_gate_plans es (system_id, gate_id): no tiene columna id para paginar.
-    fetchAllRows(() => supabase.from('system_gate_plans').select('system_id, gate_id, commitment_date').eq('project_id', projectId).not('commitment_date', 'is', null).order('gate_id'), { key: 'system_id' }),
+    fetchAllRows(() => supabase.from('system_gate_plans').select('system_id, gate_id, commitment_date, forecast_date').eq('project_id', projectId).or('commitment_date.not.is.null,forecast_date.not.is.null').order('gate_id'), { key: 'system_id' }),
     fetchAllRows(() => supabase.from('actions').select('source_id').eq('project_id', projectId).eq('source_kind', 'gate').in('status', ['open', 'in_progress', 'done'])),
     supabase.from('domain_events').select('payload').eq('project_id', projectId).eq('aggregate_type', 'gate').gte('occurred_at', since).limit(1000),
     getProjectToday(supabase, projectId),
@@ -74,7 +76,8 @@ export async function loadMatrix(supabase: SupabaseClient<Database>, projectId: 
       systemId => codes.get(systemId) ?? '?',
       gatePolicy(org.data?.settings).regressed_dependency,  // S11 (D13)
     ),
-    commitments: new Map(plans.map(p => [`${p.system_id}:${p.gate_id}`, p.commitment_date as string])),
+    commitments: new Map(plans.filter(p => p.commitment_date).map(p => [`${p.system_id}:${p.gate_id}`, p.commitment_date as string])),
+    forecasts: new Map(plans.filter(p => p.forecast_date).map(p => [`${p.system_id}:${p.gate_id}`, p.forecast_date as string])),
     openConditions,
     changedIds,
     today: day.today,
