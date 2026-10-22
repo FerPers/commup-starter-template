@@ -148,8 +148,7 @@
       "dark": "Oscuro",
       "switchToLight": "Cambiar a modo claro",
       "switchToDark": "Cambiar a modo oscuro"
-    },
-    "pageHelp": "Ayuda de esta página"
+    }
   },
   "Topbar": {
     "role": {
@@ -167,9 +166,10 @@
       "preferences": "Preferencias",
       "language": "Idioma",
       "theme": "Tema",
-      "guide": "Guía de arranque",
+      "guide": "Ayuda",
       "logout": "Cerrar sesión",
-      "notificationPrefs": "Preferencias de notificación"
+      "notificationPrefs": "Preferencias de notificación",
+      "pageHelp": "Ayuda de esta página"
     }
   },
   "Breadcrumbs": {
@@ -256,7 +256,10 @@
       "empty": "No hay proyectos todavía",
       "emptyDesc": "Crea tu primer proyecto para comenzar a gestionar el completamiento",
       "noMeta": "Sin cliente / ubicación",
-      "active": "Activo"
+      "active": "Activo",
+      "noneActive": "Ningún proyecto activo",
+      "noneActiveDesc": "{count, plural, one {Hay # proyecto en otro estado (planificación, en pausa o cerrado).} other {Hay # proyectos en otros estados (planificación, en pausa o cerrados).}}",
+      "viewAll": "Ver proyectos →"
     },
     "disciplines": "Disciplinas del Proyecto",
     "inspector": {

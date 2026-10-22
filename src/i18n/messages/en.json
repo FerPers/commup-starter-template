@@ -148,8 +148,7 @@
       "dark": "Dark",
       "switchToLight": "Switch to light mode",
       "switchToDark": "Switch to dark mode"
-    },
-    "pageHelp": "Help for this page"
+    }
   },
   "Topbar": {
     "role": {
@@ -167,9 +166,10 @@
       "preferences": "Preferences",
       "language": "Language",
       "theme": "Theme",
-      "guide": "Getting started guide",
+      "guide": "Help",
       "logout": "Sign out",
-      "notificationPrefs": "Notification preferences"
+      "notificationPrefs": "Notification preferences",
+      "pageHelp": "Help for this page"
     }
   },
   "Breadcrumbs": {
@@ -256,7 +256,10 @@
       "empty": "No projects yet",
       "emptyDesc": "Create your first project to start managing completion",
       "noMeta": "No client / location",
-      "active": "Active"
+      "active": "Active",
+      "noneActive": "No active projects",
+      "noneActiveDesc": "{count, plural, one {There is # project in another status (planning, on hold or closed).} other {There are # projects in other statuses (planning, on hold or closed).}}",
+      "viewAll": "View projects →"
     },
     "disciplines": "Project Disciplines",
     "inspector": {
@@ -3863,7 +3866,8 @@
       "data": "Details",
       "closed": "Closed record: read only.",
       "cancelPrompt": "Reason for cancelling:",
-      "deleteConfirm": "Delete this draft? This cannot be undone."
+      "deleteConfirm": "Delete this draft? This cannot be undone.",
+      "replanPrompt": "Reason for the date change (it stays in the timeline; the “on time” KPI measures against the original date):"
     },
     "action": {
       "owner": "Owner: {who}",

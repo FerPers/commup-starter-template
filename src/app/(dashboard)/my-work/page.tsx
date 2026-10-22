@@ -320,7 +320,9 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
 
   const firstName = greetingName(profile?.full_name, ctx.userEmail)
   const dateLocale = locale === 'en' ? 'en-US' : 'es-ES'
-  const todayLabel = new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: headerTz })
+  const todayRaw = new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: headerTz })
+  // Solo la primera letra: `textTransform: capitalize` daba «Jueves, 22 De Octubre».
+  const todayLabel = todayRaw.charAt(0).toUpperCase() + todayRaw.slice(1)
   const roleLabel = t(`roles.${role}`)
   const fmt = (d: string) => new Date(`${d.slice(0, 10)}T00:00:00`).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })
 
@@ -482,7 +484,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
           {firstName ? t('hello', { name: firstName }) : t('title')}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', margin: '4px 0 0' }}>
-          <span style={{ textTransform: 'capitalize' }}>{todayLabel}</span>
+          <span>{todayLabel}</span>
           {' · '}{roleLabel}{' · '}
           {t('summary', { count: filterProject ? badgeTotal(shown, role) : personalTotal, projects: projectsInvolved.size })}
         </p>

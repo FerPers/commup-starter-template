@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { FolderKanban } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
@@ -37,11 +38,21 @@ export default async function ProjectsActiveWidget({ orgId, role }: { orgId: str
         )}
       </div>
       {activeProjects.length === 0 ? (
-        <EmptyState
-          icon={<FolderKanban size={24} aria-hidden="true" />}
-          title={t('projects.empty')}
-          description={t('projects.emptyDesc')}
-        />
+        // Con proyectos en otro estado (p. ej. «planning») no es «crea tu primer proyecto»: se dice cuántos hay.
+        (projects ?? []).length > 0 ? (
+          <EmptyState
+            icon={<FolderKanban size={24} aria-hidden="true" />}
+            title={t('projects.noneActive')}
+            description={t('projects.noneActiveDesc', { count: (projects ?? []).length })}
+            action={<Link href="/projects" style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600)', fontWeight: 500 }}>{t('projects.viewAll')}</Link>}
+          />
+        ) : (
+          <EmptyState
+            icon={<FolderKanban size={24} aria-hidden="true" />}
+            title={t('projects.empty')}
+            description={t('projects.emptyDesc')}
+          />
+        )
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {activeProjects.map(project => (

@@ -1,11 +1,12 @@
-// CommUp Service Worker — v2.1 (S18)
+// CommUp Service Worker — v2.1 (S18; 2026-10-22: /api propio y fetch() de la app fuera de la caché)
 // Strategy:
 //   /_next/static/*  → cache-first (immutable assets)
 //   navigate (HTML)  → network-first, fallback to cache (commup-pages, últimas 40; commup-pages-prep, ITR preparados), fallback to /offline.html
 //   images           → cache-first (same-origin)
-//   API/Supabase     → NO se intercepta ni se cachea (S18, G-03): lo offline va por IndexedDB
+//   API/Supabase     → NO se intercepta ni se cachea (S18, G-03): lo offline va por IndexedDB; tampoco /api/* propio
 //   scripts/estilos  → network-first (S18, G-20)
-//   default          → stale-while-revalidate
+//   default          → stale-while-revalidate, solo recursos que pide el navegador (manifest…); un fetch() de la app
+//                      (destination '') va directo a la red: antes /api/itrs-for-plan y /api/admin/export salían viejos
 // Plus: Push notifications.
 //
 // S18 (C-08/G-03/A-09): las páginas van en su propia caché (`commup-pages-*`) para que el cierre de sesión
@@ -52,6 +53,7 @@ self.addEventListener('activate', event => {
       .then(keys => Promise.all(
         keys.filter(k => !KEEP_CACHES.includes(k)).map(k => caches.delete(k))
       ))
+      .then(() => purgeAppDataFromStatic())
       .then(() => self.clients.claim())
   )
 })
@@ -71,6 +73,9 @@ self.addEventListener('fetch', event => {
     event.respondWith(cacheFirst(request, CACHE_STATIC))
     return
   }
+
+  // /api/* propio: datos y exportaciones (respaldo de la org); nunca se cachea
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return
 
   // Network-first for navigation (HTML)
   if (request.mode === 'navigate') {
@@ -96,8 +101,8 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // Default: stale-while-revalidate for same-origin assets
-  if (url.origin === self.location.origin) {
+  // Default: stale-while-revalidate for same-origin assets que pide el navegador (no los fetch() de la app)
+  if (url.origin === self.location.origin && request.destination !== '') {
     event.respondWith(staleWhileRevalidate(request, CACHE_STATIC))
   }
 })
@@ -132,6 +137,15 @@ async function networkFirst(request, cacheName) {
   }
 }
 
+// Borra las respuestas de /api/* que versiones anteriores guardaron por error en la caché estática.
+async function purgeAppDataFromStatic() {
+  const cache = await caches.open(CACHE_STATIC)
+  for (const req of await cache.keys()) {
+    const url = new URL(req.url)
+    if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) await cache.delete(req)
+  }
+}
+
 async function trimCache(cacheName, max) {
   const cache = await caches.open(cacheName)
   const keys = await cache.keys()
@@ -141,7 +155,8 @@ async function trimCache(cacheName, max) {
 async function navigateFirst(request) {
   try {
     const resp = await fetch(request)
-    if (resp.ok) {
+    // Solo HTML: una descarga (Excel, PDF, ZIP del handover) también llega como navegación
+    if (resp.ok && (resp.headers.get('content-type') || '').includes('text/html')) {
       const clone = resp.clone()
       caches.open(CACHE_PAGES).then(c => c.put(request, clone)).then(() => trimCache(CACHE_PAGES, MAX_PAGES))
     }
