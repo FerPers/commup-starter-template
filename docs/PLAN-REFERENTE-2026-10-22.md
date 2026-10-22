@@ -182,6 +182,8 @@ Más adelante, si se pide: **reglas condicionales en la matriz** (SIL, tipo de s
 
 ### M — Maquetas (1 revisión contigo, antes de E, R2 y P2)
 
+> **Lienzo listo (2026-10-22):** «Maquetas M — Plan referente», https://claude.ai/artifact/T3dMYKAr7soGQzsWH1Qs6s — 9 pantallas en 4 filas, con las preguntas en notas naranjas (incluidas las 4 del doc de insumos). **Pendiente: respuestas de Luis.** Hallazgo al armarlo: en DEMO la matriz tiene 412 filas propuestas y solo 8 aceptadas, así que un registro que cuente solo lo aceptado sale casi vacío (pregunta 1 de R2). DEMO-GLP no tiene fechas en `system_gate_plans` (E1 necesita sembrarlas para verificar) y 37 de 239 tags no tienen tipo.
+
 Una sola sesión de maquetas en un lienzo, como en N1–N3:
 - Portafolio unificado.
 - Skyline.
