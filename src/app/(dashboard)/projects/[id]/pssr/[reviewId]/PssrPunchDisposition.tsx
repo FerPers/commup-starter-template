@@ -85,7 +85,7 @@ export default function PssrPunchDisposition({ projectId, systemCode, punches, e
                 return (
                   <tr key={p.id} style={{ background: blocking ? '#fffbeb' : undefined }}>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                      <div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700 }}>{p.punch_number}</div>
+                      <Link href={`/projects/${projectId}/punches/${p.id}`} style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'inherit', textDecoration: 'none', display: 'block' }}>{p.punch_number}</Link>
                       <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>
                     </td>
                     <td style={td}>

@@ -106,7 +106,6 @@ export default async function PunchListPage({
         projectId={projectId}
         projectName={project.name}
         currentUserRole={ctx.role}
-        currentUserId={ctx.userId}
         punches={punches}
         total={pageRes.total}
         page={page}

@@ -8,6 +8,7 @@ import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import { exportPunchList } from '@/app/actions/punch-list'
 import type { PunchSummary } from '@/lib/list/punch-query'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X, Download } from 'lucide-react'
@@ -432,13 +433,13 @@ export default function PunchListGlobal({
             width: 100,
             header: t('table.colProject'),
             cell: (p) => p.projects ? (
-              <a
+              <Link
                 href={`/projects/${p.projects.id}/punches`}
                 title={p.projects.name}
                 style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               >
                 {p.projects.code}
-              </a>
+              </Link>
             ) : null,
           },
           {
@@ -461,7 +462,7 @@ export default function PunchListGlobal({
               const disc = p.tags?.disciplines
               return (
                 <div>
-                  <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{p.punch_number}</div>
+                  <Link href={`/projects/${p.project_id}/punches/${p.id}`} style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}>{p.punch_number}</Link>
                   {p.tags && (
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                       {disc && <span style={{ fontSize: 9, fontWeight: 700, color: disc.color, background: `${disc.color}15`, padding: '1px 4px', borderRadius: 3 }}>{disc.code}</span>}

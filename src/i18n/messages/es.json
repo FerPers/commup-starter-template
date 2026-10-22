@@ -216,6 +216,7 @@
       "constraint": "Restricción",
       "tq": "TQ",
       "decision": "Decisión",
+      "punch": "Punch",
       "detail": "Detalle"
     }
   },
@@ -548,6 +549,28 @@
       "seeDetail": "Ver detalle →",
       "closed": "{n} cerrados de {total} en total",
       "seeAll": "Ver la lista completa"
+    },
+    "page": {
+      "backToList": "Punch list · {project}",
+      "raisedBy": "Levantado por",
+      "assignedTo": "Asignado a",
+      "targetDate": "Fecha límite",
+      "closedDate": "Cerrado",
+      "location": "Sistema › subsistema",
+      "discipline": "Disciplina",
+      "fromItr": "Levantado en el ITR",
+      "actions": "Qué hacer ahora",
+      "history": "Historia",
+      "kind": {
+        "created": "levantó el punch",
+        "comment": "comentó",
+        "resolved": "lo resolvió",
+        "verified": "lo verificó en campo y lo cerró",
+        "rejected": "rechazó la resolución",
+        "cancelled": "lo canceló",
+        "reviewed": "revisó la categoría",
+        "reassigned": "lo reasignó a {to}"
+      }
     }
   },
   "Preservation": {
@@ -1345,7 +1368,10 @@
       "signTooltipIncomplete": "Completa todos los ítems antes de firmar",
       "signTooltipRejected": "ITR rechazado: corrige los ítems críticos para volver a completado",
       "signTooltipApproved": "Este ITR ya está aprobado",
-      "synced": "✓ Sincronizado"
+      "synced": "✓ Sincronizado",
+      "nextPending": "{count, plural, one {# pendiente} other {# pendientes}}",
+      "nextPendingTitle": "Ir al siguiente ítem obligatorio sin llenar",
+      "more": "Más acciones"
     },
     "revoke": {
       "title": "Revocar aprobación del ITR {itrNumber}",

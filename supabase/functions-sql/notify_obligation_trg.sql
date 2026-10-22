@@ -98,7 +98,7 @@ BEGIN
     SELECT p.org_id INTO v_org FROM projects p WHERE p.id = NEW.project_id;
     SELECT array_agg(u) INTO v_users FROM public.project_role_members(NEW.project_id, ARRAY['owner', 'admin', 'architect', 'leader']) u;
     PERFORM public.notify_users(v_org, array_remove(v_users, NEW.raised_by), 'punch_cat_a', 'Punch Cat A: ' || NEW.punch_number,
-      left(NEW.description, 300), '/projects/' || NEW.project_id || '/punches',
+      left(NEW.description, 300), '/projects/' || NEW.project_id || '/punches/' || NEW.id,
       jsonb_build_object('punchId', NEW.id, 'projectId', NEW.project_id));
   END IF;
   RETURN NULL;

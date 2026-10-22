@@ -155,7 +155,7 @@ export default function ItrListView({
   const busy = isPending || url.isPending
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1200px' }}>
+    <div style={{ padding: 'clamp(12px, 4vw, 32px)', maxWidth: '1200px' }}>
 
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px' }}>
@@ -189,7 +189,8 @@ export default function ItrListView({
       </div>
 
       {/* Summary cards (conteos en SQL) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '24px' }}>
+      {/* C-29: en el teléfono las tarjetas bajan de línea en vez de aplastarse */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '24px' }}>
         {ITR_STATUS_KEYS.map(key => {
           const cfg = ITR_STATUS_COLORS[key]
           const active = filters.status === key
@@ -379,9 +380,9 @@ export default function ItrListView({
           <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{t('empty')}</p>
         </div>
       ) : (
-        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflowX: 'auto', opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', gap: '4px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', minWidth: '760px', gap: '4px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
             <input
               type="checkbox"
               checked={allPageSelected}
@@ -408,7 +409,7 @@ export default function ItrListView({
               <div
                 key={itr.id}
                 style={{
-                  display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', gap: '4px',
+                  display: 'grid', gridTemplateColumns: '36px 1fr 1fr 140px 90px 80px 90px 60px', minWidth: '760px', gap: '4px',
                   padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center',
                   background: isChecked ? '#eff6ff' : 'transparent',
                   transition: 'background 0.1s',

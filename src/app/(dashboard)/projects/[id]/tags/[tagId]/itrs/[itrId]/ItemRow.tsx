@@ -61,7 +61,7 @@ export default function ItemRow({
 
       {/* Item header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: item.item_type === 'checkbox' || item.item_type === 'yes_no' ? '0' : '12px' }}>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {item.item_number && (
               <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--gray-400)', minWidth: '28px' }}>{item.item_number}</span>
@@ -80,23 +80,28 @@ export default function ItemRow({
         {canPunch && <button
           onClick={() => onAddPunch(visibleDesc, item.id)}
           title={t('item.punchTooltip')}
-          style={{ flexShrink: 0, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, color: '#c2410c', background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer', marginTop: '2px' }}
+          aria-label={t('item.punchTooltip')}
+          // C-29: objetivo táctil de 44 px (antes ~20 px)
+          style={{ flexShrink: 0, minWidth: '44px', minHeight: '44px', padding: '4px 8px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, color: '#c2410c', background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer' }}
         >
           ⚑
         </button>}
 
         {/* Inline input for checkbox / yes_no */}
         {item.item_type === 'checkbox' && (
+          <label style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', flexShrink: 0, cursor: canEdit ? 'pointer' : 'default' }}>
           <input
             type="checkbox"
+            aria-label={visibleDesc}
             checked={response?.value_bool ?? false}
             disabled={!canEdit}
             onChange={e => onSave(item.id, {
               valueBool: e.target.checked,
               isPassed: item.is_critical ? e.target.checked : null,
             })}
-            style={{ width: '20px', height: '20px', cursor: canEdit ? 'pointer' : 'default', marginTop: '2px', flexShrink: 0 }}
+            style={{ width: '24px', height: '24px', cursor: canEdit ? 'pointer' : 'default', flexShrink: 0 }}
           />
+          </label>
         )}
 
         {item.item_type === 'yes_no' && (
@@ -109,7 +114,8 @@ export default function ItemRow({
                   valueBool: val,
                   isPassed: item.is_critical ? val : null,
                 })}
-                style={{ padding: '6px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : 'var(--border)', background: response?.value_bool === val ? (val ? '#ecfdf5' : '#fee2e2') : 'var(--card-bg)', color: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : 'var(--text-muted)', cursor: canEdit ? 'pointer' : 'default' }}
+                aria-pressed={response?.value_bool === val}
+                style={{ minHeight: '44px', minWidth: '56px', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : 'var(--border)', background: response?.value_bool === val ? (val ? '#ecfdf5' : '#fee2e2') : 'var(--card-bg)', color: response?.value_bool === val ? (val ? '#10b981' : '#ef4444') : 'var(--text-muted)', cursor: canEdit ? 'pointer' : 'default' }}
               >
                 {val ? t('item.yesBtn') : t('item.noBtn')}
               </button>
@@ -128,7 +134,7 @@ export default function ItemRow({
             disabled={!canEdit}
             placeholder={t('item.observationsPlaceholder')}
             onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
-            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '16px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
           />
           <div style={{ alignSelf: 'flex-end' }}>
             <MicAppend
@@ -144,10 +150,11 @@ export default function ItemRow({
       {item.item_type === 'number' && (
         <input
           type="number"
+          inputMode="decimal"
           defaultValue={response?.value_numeric ?? ''}
           disabled={!canEdit}
           onBlur={e => onSave(item.id, { valueNumeric: e.target.value !== '' ? Number(e.target.value) : null })}
-          style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', width: '160px' }}
+          style={{ minHeight: '44px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '16px', width: '160px', maxWidth: '100%', boxSizing: 'border-box' }}
         />
       )}
 
@@ -157,7 +164,8 @@ export default function ItemRow({
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <input
               type="number"
-              step="0.001"
+              inputMode="decimal"
+              step="any"
               defaultValue={response?.value_numeric ?? ''}
               disabled={!canEdit}
               onBlur={e => {
@@ -165,7 +173,7 @@ export default function ItemRow({
                 const passed = val !== null ? computeIsPassed(val, item.acceptance_min, item.acceptance_max) : null
                 onSave(item.id, { valueNumeric: val, isPassed: passed })
               }}
-              style={{ padding: '8px 10px', border: `1px solid ${isPassed === false ? '#fca5a5' : 'var(--border)'}`, borderRadius: '7px', fontSize: '13px', width: '140px' }}
+              style={{ padding: '8px 10px', border: `1px solid ${isPassed === false ? '#fca5a5' : 'var(--border)'}`, borderRadius: '7px', fontSize: '16px', width: '140px', minHeight: '44px', boxSizing: 'border-box' }}
             />
             {item.unit && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.unit}</span>}
           </div>
@@ -189,7 +197,7 @@ export default function ItemRow({
           value={response?.value_option ?? ''}
           disabled={!canEdit}
           onChange={e => onSave(item.id, { valueOption: e.target.value || null, isPassed: evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, e.target.value).isPassed })}
-          style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit', minWidth: '200px' }}
+          style={{ minHeight: '44px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '16px', background: 'var(--card-bg)', fontFamily: 'inherit', minWidth: 'min(200px, 100%)', maxWidth: '100%' }}
         >
           <option value="">{t('item.selectPlaceholder')}</option>
           {(Array.isArray(item.options) ? item.options.filter((o): o is string => typeof o === 'string') : []).map(opt => (
@@ -205,7 +213,7 @@ export default function ItemRow({
           defaultValue={response?.value_text ?? ''}
           disabled={!canEdit}
           onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
-          style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px' }}
+          style={{ minHeight: '44px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '16px' }}
         />
       )}
 

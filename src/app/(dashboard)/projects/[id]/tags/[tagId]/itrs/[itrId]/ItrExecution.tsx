@@ -8,6 +8,7 @@ import { isInactiveMember } from '@/lib/people/inactive'
 // RevokeModal, CreatePunchModal, MicAppend) son componentes hermanos.
 
 import { useState, useEffect, useMemo, useTransition, useCallback, useRef, Fragment } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeItrApproval } from '@/app/actions/itr-instances'
@@ -16,6 +17,7 @@ import { evaluateItrCompletion } from '@/lib/itr/completion'
 import { parseSourceRows } from '@/lib/itr/table'
 import { localItrStatus } from '@/lib/sync/outbox-utils'
 import { itemDescription } from '@/lib/itr/item-text'
+import { nextPendingItemId } from '@/lib/itr/next-pending'
 import { getOutbox, removeFromOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
 import { useItrAutosave } from './useItrAutosave'
 import ItemRow from './ItemRow'
@@ -284,16 +286,31 @@ export default function ItrExecution({
     setShowPunchModal(true)
   }
 
+  // C-29: menú «⋯» del pie en el teléfono y salto al siguiente ítem obligatorio pendiente.
+  const [moreOpen, setMoreOpen] = useState(false)
+  function jumpToNextPending() {
+    const id = nextPendingItemId(completion.missingRequiredItemIds, itemId => {
+      const el = document.getElementById(`itr-item-${itemId}`)
+      return el ? el.getBoundingClientRect().top : null
+    })
+    const el = id ? document.getElementById(`itr-item-${id}`) : null
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    el.classList.remove('is-flash')
+    void el.offsetWidth  // reinicia la animación si se vuelve al mismo ítem
+    el.classList.add('is-flash')
+  }
+
   // ── Render ───────────────────────────────────────────────────────────
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '100px' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '150px' }}>
 
-      {/* Back nav */}
-      <div style={{ padding: '20px 20px 0' }}>
-        <a href={`/projects/${projectId}/tags/${tagId}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
+      {/* Back nav: vuelve a la pestaña ITRs del tag (N1b) */}
+      <div style={{ padding: '16px 16px 0' }}>
+        <Link href={`/projects/${projectId}/tags/${tagId}?tab=itrs`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-block', padding: '6px 0' }}>
           ← {tag?.tag_number} / ITRs
-        </a>
+        </Link>
       </div>
 
       {/* Header card */}
@@ -537,7 +554,7 @@ export default function ItrExecution({
       )}
 
       {/* ── Sections + Items ─────────────────────────────────────────── */}
-      <div style={{ padding: '0 20px' }}>
+      <div style={{ padding: '0 clamp(10px, 3vw, 20px)' }}>
         {sections.map(section => (
           <div key={section.id} style={{ marginTop: '20px' }}>
             <div style={{ padding: '10px 16px', background: 'var(--gray-50)', borderRadius: '8px', marginBottom: '8px', border: '1px solid var(--border)' }}>
@@ -548,8 +565,8 @@ export default function ItrExecution({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {section.itr_template_items.filter(item => visibleIds.has(item.id)).map(item => (
+                <div key={item.id} id={`itr-item-${item.id}`} className="itr-item-anchor">
                 <ItemRow
-                  key={item.id}
                   item={item}
                   response={responses[item.id] ?? null}
                   canEdit={canCapture}
@@ -565,6 +582,7 @@ export default function ItrExecution({
                   onAttachmentRemoved={attId => removeAttachment(item.id, attId)}
                   lang={itemLang}
                 />
+                </div>
               ))}
             </div>
           </div>
@@ -611,8 +629,8 @@ export default function ItrExecution({
         }}
       />
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--card-bg)', borderTop: '1px solid var(--border)', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', zIndex: 100 }}>
-        <div style={{ fontSize: '11px', color: isOffline ? '#f59e0b' : syncing ? '#3b82f6' : isPending ? '#3b82f6' : lastSaved ? '#10b981' : 'var(--gray-400)' }}>
+      <div className="itr-footer" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--card-bg)', borderTop: '1px solid var(--border)', padding: '10px 16px calc(10px + env(safe-area-inset-bottom, 0px))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 10px', zIndex: 100 }}>
+        <div className="itr-footer-status" role="status" style={{ fontSize: '11px', color: isOffline ? '#f59e0b' : syncing ? '#3b82f6' : isPending ? '#3b82f6' : lastSaved ? '#10b981' : 'var(--gray-400)' }}>
           {isOffline && pendingCount > 0
             ? t('footer.offlineWithPending', { count: pendingCount })
             : isOffline
@@ -629,10 +647,20 @@ export default function ItrExecution({
             ? t('footer.saved', { time: lastSaved.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) })
             : t('footer.autoSave')}
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
+          {/* C-29: salta al siguiente ítem obligatorio sin llenar (circular) */}
+          {canCapture && completion.missingRequiredItemIds.length > 0 && (
+            <button
+              onClick={jumpToNextPending}
+              title={t('footer.nextPendingTitle')}
+              style={{ ...footerBtn, background: '#fffbeb', border: '1px solid #fde68a', color: '#b45309' }}
+            >
+              ↓ {t('footer.nextPending', { count: completion.missingRequiredItemIds.length })}
+            </button>
+          )}
           {canEdit && <button
             onClick={() => openPunchModal('')}
-            style={{ padding: '9px 16px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', fontSize: '13px', color: '#c2410c', cursor: 'pointer', fontWeight: 600 }}
+            style={{ ...footerBtn, background: '#fff7ed', border: '1px solid #fed7aa', color: '#c2410c' }}
           >
             {t('footer.btnPunch')}
           </button>}
@@ -640,7 +668,7 @@ export default function ItrExecution({
             onClick={() => generalPhotoInputRef.current?.click()}
             disabled={!canCapture || generalUploading}
             title={generalUploadError ?? t('upload.addPhoto')}
-            style={{ padding: '9px 16px', background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, borderRadius: '8px', fontSize: '13px', color: generalUploading ? '#3b82f6' : '#15803d', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
+            style={{ ...footerBtn, background: generalUploading ? '#eff6ff' : '#f0fdf4', border: `1px solid ${generalUploadError ? '#fca5a5' : '#bbf7d0'}`, color: generalUploading ? '#3b82f6' : '#15803d', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '5px' }}
           >
             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
           </button>
@@ -657,29 +685,60 @@ export default function ItrExecution({
                 onClick={() => setShowSignModal(true)}
                 disabled={!canSign}
                 title={signTooltip || undefined}
-                style={{ padding: '9px 20px', background: !canSign ? 'var(--gray-50)' : '#7c3aed', color: !canSign ? 'var(--gray-400)' : 'var(--card-bg)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !canSign ? 'not-allowed' : 'pointer' }}
+                style={{ ...footerBtn, padding: '10px 20px', background: !canSign ? 'var(--gray-50)' : '#7c3aed', color: !canSign ? 'var(--gray-400)' : 'var(--card-bg)', border: 'none', cursor: !canSign ? 'not-allowed' : 'pointer' }}
               >
                 {t('footer.btnSign')}
               </button>
             )
           })()}
+          {/* En escritorio, PDF y revocar van en la barra; en el teléfono, en «⋯» (itr-footer-extra / itr-footer-more) */}
           {itr.status === 'approved' && (
             <a
+              className="itr-footer-extra"
               href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}/pdf`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ padding: '9px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '13px', color: '#15803d', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+              style={{ ...footerBtn, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', textDecoration: 'none', alignItems: 'center', gap: '5px' }}
             >
               ⬇ {t('footer.btnPdf')}
             </a>
           )}
           {canRevoke && (
             <button
+              className="itr-footer-extra"
               onClick={() => { setRevokeError(null); setShowRevokeModal(true) }}
-              style={{ padding: '9px 16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', fontSize: '13px', color: '#b91c1c', fontWeight: 600, cursor: 'pointer' }}
+              style={{ ...footerBtn, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c' }}
             >
               {t('footer.btnRevoke')}
             </button>
+          )}
+          {(itr.status === 'approved' || canRevoke) && (
+            <div className="itr-footer-more" style={{ position: 'relative' }}>
+              <button
+                onClick={() => setMoreOpen(o => !o)}
+                aria-expanded={moreOpen}
+                aria-label={t('footer.more')}
+                style={{ ...footerBtn, minWidth: '44px', padding: '10px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+              >
+                ⋯
+              </button>
+              {moreOpen && (
+                <div role="menu" style={{ position: 'absolute', right: 0, bottom: 'calc(100% + 8px)', minWidth: '220px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', boxShadow: '0 8px 30px rgba(0,0,0,0.15)', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {itr.status === 'approved' && (
+                    <a role="menuitem" href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}/pdf`} target="_blank" rel="noopener noreferrer" onClick={() => setMoreOpen(false)}
+                      style={{ ...footerBtn, display: 'flex', alignItems: 'center', background: 'transparent', border: 'none', color: '#15803d', textDecoration: 'none' }}>
+                      ⬇ {t('footer.btnPdf')}
+                    </a>
+                  )}
+                  {canRevoke && (
+                    <button role="menuitem" onClick={() => { setMoreOpen(false); setRevokeError(null); setShowRevokeModal(true) }}
+                      style={{ ...footerBtn, textAlign: 'left', background: 'transparent', border: 'none', color: '#b91c1c' }}>
+                      {t('footer.btnRevoke')}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -732,4 +791,9 @@ export default function ItrExecution({
       )}
     </div>
   )
+}
+
+/** C-29: botones del pie con objetivo táctil de 44 px (con guantes, en campo). */
+const footerBtn: React.CSSProperties = {
+  minHeight: '44px', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
 }

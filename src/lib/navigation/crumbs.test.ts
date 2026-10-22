@@ -15,6 +15,12 @@ describe('migas de pan (N0, H-06)', () => {
     expect(c[4].href).toBeUndefined()
   })
 
+  it('la página propia del punch cuelga del punch list del proyecto (N1b)', () => {
+    const c = buildCrumbs(`/projects/${P}/punches/${I}`)
+    expect(c.map(x => x.label)).toEqual(['nav:projects', P, 'nav:punchList', 'entity:punch'])
+    expect(c[2].href).toBe(`/projects/${P}/punches`)
+  })
+
   it('colecciones sin página no son miga (nunca un enlace a 404)', () => {
     expect(labels(`/projects/${P}/startup/runs/${I}`)).toEqual(['nav:projects', P, 'nav:startup', 'entity:run'])
     expect(labels(`/projects/${P}/startup/performance/runs/${I}`)).toEqual(['nav:projects', P, 'nav:startup', 'nav:performance', 'entity:attempt'])

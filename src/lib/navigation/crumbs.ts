@@ -46,7 +46,7 @@ const NO_INDEX = new Set(['runs', 'lineups', 'procedures', 'transfers', 'itrs@ta
 
 /** Qué es el id que sigue a una colección. */
 const ENTITY: Record<string, string> = {
-  tags: 'tag', itrs: 'itr', systems: 'system', runs: 'run', lineups: 'lineup', procedures: 'procedure', transfers: 'transfer', events: 'event',
+  tags: 'tag', itrs: 'itr', punches: 'punch', systems: 'system', runs: 'run', lineups: 'lineup', procedures: 'procedure', transfers: 'transfer', events: 'event',
   performance: 'test', documents: 'document', vendors: 'package', pssr: 'pssr', certificates: 'certificate', registers: 'register', reports: 'report',
   handovers: 'handover', 'ce-matrices': 'matrix', 'pid-documents': 'pid', preservation: 'plan', 'control-tower': 'system', templates: 'template',
   action: 'action', constraint: 'constraint', tq: 'tq', decision: 'decision', r: 'register', tag_360: 'tag',

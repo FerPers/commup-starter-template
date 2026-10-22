@@ -222,7 +222,7 @@ export default function PreservationGlobal({
                 <div>
                   {/* H-08 (S08): la fila lleva al tag y a ejecutar el plan */}
                   {plan.tags ? (
-                    <a href={`/projects/${plan.project_id}/tags/${plan.tags.id}`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}>
+                    <a href={`/projects/${plan.project_id}/tags/${plan.tags.id}?tab=preservation`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}>
                       {plan.tags.tag_number}
                     </a>
                   ) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</div>}

@@ -381,19 +381,19 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
     punches: { more: '/punch-list?assigned=me', rows: myPunches.map(p => {
       const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
       return (
-        <Row key={p.id} href={`/projects/${p.project_id}/punches?q=${encodeURIComponent(p.punch_number)}`} stripe={CATEGORY_CFG[p.category].color}
+        <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe={CATEGORY_CFG[p.category].color}
           code={p.punch_number} tag={catTag(p.category)}
           what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`} project={p.projects?.code}
           right={p.target_date ? duePill(p.target_date, p.project_id) : <Pill tone={p.status === 'in_progress' ? 'info' : 'neutral'} style={{ background: pStyle.bg, color: pStyle.color }}>{t(`punchStatus.${p.status}`)}</Pill>} />
       )
     }) },
     punches_verify: { more: '/punch-list?status=in_progress', rows: verifyRows.map(p => (
-      <Row key={p.id} href={`/projects/${p.project_id}/punches?q=${encodeURIComponent(p.punch_number)}`} stripe="#7c3aed"
+      <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe="#7c3aed"
         code={p.punch_number} tag={catTag(p.category)}
         what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`} project={p.projects?.code} right={verifyPill} />
     )) },
     punches_review: { more: '/punch-list', rows: reviewRows.map(p => (
-      <Row key={p.id} href={`/projects/${p.project_id}/punches?q=${encodeURIComponent(p.punch_number)}`} stripe={CATEGORY_CFG[p.category].color}
+      <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe={CATEGORY_CFG[p.category].color}
         code={p.punch_number} tag={catTag(p.category)}
         what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`} project={p.projects?.code}
         right={<Pill tone="warning">{p.impact ? tGuide(`impact.${p.impact}`) : tGuide('noImpact')}</Pill>} />
@@ -456,7 +456,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
         project={c.projects?.code} right={<Pill tone="info">{t('due.sign')}</Pill>} />
     )) },
     preservation_overdue: { more: '/preservation', rows: overduePres.map(p => (
-      <Row key={p.id} href={`/projects/${p.project_id}/tags/${p.tags?.id}`} stripe="var(--danger-500)"
+      <Row key={p.id} href={`/projects/${p.project_id}/tags/${p.tags?.id}?tab=preservation`} stripe="var(--danger-500)"
         code={p.tags?.tag_number ?? '—'} what={`${p.preservation_procedures?.code ?? ''} ${p.preservation_procedures?.title ?? ''}`.trim()}
         project={p.projects?.code} right={<Pill tone="danger">{t('due.overdueDays', { days: daysOverdue(p.next_due_date, todayOf(p.project_id)) })}</Pill>} />
     )) },

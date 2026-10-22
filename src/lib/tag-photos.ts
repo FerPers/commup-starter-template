@@ -100,7 +100,7 @@ export async function fetchConsolidatedTagPhotos(
         id: row.id,
         source: 'punch' as const,
         source_label: punchNumberById.get(row.punch_id) ?? 'Punch',
-        source_href: `${tagBase}`,
+        source_href: `/projects/${projectId}/punches/${row.punch_id}`,
         signed_url: signed?.signedUrl ?? null,
         captured_at: row.created_at,
         ext: extOf(row.file_url),

@@ -479,3 +479,29 @@ body.drawer-locked { overflow: hidden; }
     background: var(--text-secondary);
   }
 }
+
+/* ==========================================================================
+   Ejecución de ITR en el teléfono (C-29, N1b)
+   ========================================================================== */
+.itr-footer-extra { display: inline-flex; }
+.itr-footer-more { display: none; }
+.itr-item-anchor { scroll-margin-top: 72px; border-radius: 10px; }
+.itr-item-anchor.is-flash { animation: itr-item-flash 1.6s ease-out; }
+@keyframes itr-item-flash {
+  0%, 35% { box-shadow: 0 0 0 3px var(--brand-orange); }
+  100%    { box-shadow: 0 0 0 3px transparent; }
+}
+
+@media (max-width: 1023px) {
+  /* La barra fija del ITR queda encima de la barra inferior de los roles de campo, no la tapa. */
+  .app-main.has-tabbar .itr-footer {
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: 10px !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .itr-footer-status { flex: 1 1 100%; }
+  .itr-footer-extra { display: none; }
+  .itr-footer-more { display: block; }
+}

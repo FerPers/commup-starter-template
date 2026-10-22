@@ -5,6 +5,7 @@
 // compartidos en tag-detail-shared.ts.
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import TagItrTab from './TagItrTab'
 import TagPunchTab, { type TagPunch, type OrgMemberForPunch } from './TagPunchTab'
@@ -14,14 +15,14 @@ import TagOverviewTab from './TagOverviewTab'
 import TagDocsTab from './TagDocsTab'
 import TagEditForm from './TagEditForm'
 import TagMoveControl, { type SubsystemOption } from './TagMoveControl'
-import { STATUS, navBtn, type ItrTemplate, type OrgMember, type Tag, type TagItr } from './tag-detail-shared'
+import { STATUS, navBtn, type ItrTemplate, type OrgMember, type Tag, type TagItr, type TagTab } from './tag-detail-shared'
 import type { ConsolidatedTagPhoto } from '@/lib/tag-photos'
 
 // Re-export para callers existentes (TagItrTab importa estos tipos de aquí
 // históricamente; la fuente ahora es tag-detail-shared.ts)
 export type { TagItr, ItrTemplate, OrgMember } from './tag-detail-shared'
 
-type Tab = 'overview' | 'itrs' | 'punches' | 'photos' | 'docs' | 'preservation'
+type Tab = TagTab
 
 export default function TagDetail({
   tag,
@@ -35,7 +36,6 @@ export default function TagDetail({
   canMove = false,
   subsystemOptions = [],
   currentUserRole,
-  currentUserId,
   tagItrs,
   templates,
   orgMembers,
@@ -44,6 +44,7 @@ export default function TagDetail({
   preservationPlans,
   preservationProcedures,
   tagPhotos,
+  initialTab = 'overview',
 }: {
   tag: Tag
   projectId: string
@@ -56,7 +57,6 @@ export default function TagDetail({
   canMove?: boolean
   subsystemOptions?: SubsystemOption[]
   currentUserRole: string
-  currentUserId: string
   tagItrs: TagItr[]
   templates: ItrTemplate[]
   matrixTemplateIds?: string[]
@@ -67,9 +67,19 @@ export default function TagDetail({
   preservationPlans: PreservationPlanRow[]
   preservationProcedures: PreservationProcedureOption[]
   tagPhotos: ConsolidatedTagPhoto[]
+  /** N1b: pestaña pedida en `?tab=`. */
+  initialTab?: TagTab
 }) {
   const t = useTranslations('Tags')
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const [activeTab, setActiveTabState] = useState<Tab>(initialTab)
+  // N1b: la pestaña queda en la URL (enlazable, y «atrás» desde un ITR vuelve a la misma) sin recargar datos.
+  function setActiveTab(next: Tab) {
+    setActiveTabState(next)
+    const url = new URL(window.location.href)
+    if (next === 'overview') url.searchParams.delete('tab')
+    else url.searchParams.set('tab', next)
+    window.history.replaceState(null, '', url)
+  }
   const [editMode, setEditMode]   = useState(false)
   const [moveOpen, setMoveOpen]   = useState(false)
 
@@ -98,24 +108,24 @@ export default function TagDetail({
   ]
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1100px' }}>
+    <div style={{ padding: 'clamp(12px, 4vw, 32px)', maxWidth: '1100px' }}>
 
       {/* Top nav: back link + prev/next */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <a
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <Link
           href={`/projects/${projectId}/tags`}
           style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
         >
           {t('detail.backLink', { project: projectName })}
-        </a>
+        </Link>
         <div style={{ display: 'flex', gap: '6px' }}>
           {prevTagId ? (
-            <a href={`/projects/${projectId}/tags/${prevTagId}`} style={navBtn}>{t('detail.prevTag')}</a>
+            <Link href={`/projects/${projectId}/tags/${prevTagId}${activeTab === 'overview' ? '' : `?tab=${activeTab}`}`} style={navBtn}>{t('detail.prevTag')}</Link>
           ) : (
             <span style={{ ...navBtn, opacity: 0.3, pointerEvents: 'none', cursor: 'default' }}>{t('detail.prevTag')}</span>
           )}
           {nextTagId ? (
-            <a href={`/projects/${projectId}/tags/${nextTagId}`} style={navBtn}>{t('detail.nextTag')}</a>
+            <Link href={`/projects/${projectId}/tags/${nextTagId}${activeTab === 'overview' ? '' : `?tab=${activeTab}`}`} style={navBtn}>{t('detail.nextTag')}</Link>
           ) : (
             <span style={{ ...navBtn, opacity: 0.3, pointerEvents: 'none', cursor: 'default' }}>{t('detail.nextTag')}</span>
           )}
@@ -126,7 +136,7 @@ export default function TagDetail({
       <div style={{
         background: 'var(--card-bg)', borderRadius: '14px 14px 0 0',
         border: '1px solid var(--border)', borderBottom: 'none',
-        padding: '22px 24px',
+        padding: 'clamp(14px, 3vw, 22px) clamp(14px, 3vw, 24px)',
       }}>
         {/* Breadcrumb hierarchy */}
         {hier && (
@@ -138,7 +148,7 @@ export default function TagDetail({
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px 20px', flexWrap: 'wrap' }}>
 
           {/* Left: discipline + tag number + description */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', flex: 1, minWidth: 0 }}>
@@ -152,7 +162,7 @@ export default function TagDetail({
             <div style={{ minWidth: 0 }}>
               <h1 style={{
                 fontSize: '24px', fontWeight: 700, color: 'var(--text-strong)', margin: 0,
-                fontFamily: 'ui-monospace, monospace', letterSpacing: '-0.5px',
+                fontFamily: 'ui-monospace, monospace', letterSpacing: '-0.5px', wordBreak: 'break-word',
               }}>
                 {tag.tag_number}
               </h1>
@@ -244,7 +254,7 @@ export default function TagDetail({
       <div style={{
         background: 'var(--card-bg)', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)',
         borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0',
-        paddingLeft: '8px',
+        paddingLeft: '8px', overflowX: 'auto',
       }}>
         {!editMode && tabs.map(tab => {
           const active = activeTab === tab.key
@@ -252,7 +262,9 @@ export default function TagDetail({
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
+              aria-current={active ? 'page' : undefined}
               style={{
+                flexShrink: 0, whiteSpace: 'nowrap', minHeight: '44px',
                 padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: '13px', fontWeight: active ? 600 : 400,
                 color: active ? 'var(--text-strong)' : 'var(--text-muted)',
@@ -287,7 +299,7 @@ export default function TagDetail({
 
         {/* Edit / move buttons floated right */}
         {(canEdit || canMove) && (
-          <div style={{ marginLeft: 'auto', paddingRight: '16px', display: 'flex', gap: '6px' }}>
+          <div style={{ marginLeft: 'auto', paddingLeft: '8px', paddingRight: '16px', display: 'flex', gap: '6px', flexShrink: 0, whiteSpace: 'nowrap' }}>
             {canMove && !editMode && !moveOpen && (
               <button
                 onClick={() => setMoveOpen(true)}
@@ -327,7 +339,7 @@ export default function TagDetail({
       {/* ── Tab content ─────────────────────────────────────────── */}
       <div style={{
         background: 'var(--gray-50)', border: '1px solid var(--border)', borderTop: 'none',
-        borderRadius: '0 0 14px 14px', padding: '24px', minHeight: '300px',
+        borderRadius: '0 0 14px 14px', padding: 'clamp(12px, 3vw, 24px)', minHeight: '300px',
       }}>
         {editMode ? (
           <TagEditForm tag={tag} projectId={projectId} onCancel={() => setEditMode(false)} canDelete={canEdit} />
@@ -364,7 +376,6 @@ export default function TagDetail({
                 tagId={tag.id}
                 orgMembers={orgMembers as OrgMemberForPunch[]}
                 currentUserRole={currentUserRole}
-                currentUserId={currentUserId}
                 disciplineCode={d?.code ?? null}
               />
             )}

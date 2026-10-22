@@ -245,7 +245,7 @@ export default function PreservationExecution({
       if (res.error) { setSubmitError(res.error); return }
       setSavedPunchNumber(res.punchNumber ?? null)
       setSaved(true)
-      setTimeout(() => router.push(`/projects/${projectId}/tags/${tagId}`), 2200)
+      setTimeout(() => router.push(`/projects/${projectId}/tags/${tagId}?tab=preservation`), 2200)
     })
   }
 
@@ -276,7 +276,7 @@ export default function PreservationExecution({
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <button
-          onClick={() => router.push(`/projects/${projectId}/tags/${tagId}`)}
+          onClick={() => router.push(`/projects/${projectId}/tags/${tagId}?tab=preservation`)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: 500, padding: 0 }}
         >
           {tag?.tag_number}
@@ -533,7 +533,7 @@ export default function PreservationExecution({
 
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
           <button
-            onClick={() => router.push(`/projects/${projectId}/tags/${tagId}`)}
+            onClick={() => router.push(`/projects/${projectId}/tags/${tagId}?tab=preservation`)}
             style={{ padding: '10px 20px', borderRadius: '9px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none' }}
           >
             {t('btnCancel')}

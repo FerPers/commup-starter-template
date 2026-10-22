@@ -3,6 +3,20 @@
 
 import type { Enums } from '@/types/supabase.generated'
 
+// ── Pestañas (N1b): la activa vive en `?tab=` para que Mi trabajo, Escanear y los avisos abran la correcta ──
+
+export const TAG_TABS = ['overview', 'itrs', 'punches', 'photos', 'docs', 'preservation'] as const
+export type TagTab = (typeof TAG_TABS)[number]
+
+const TAG_TAB_ALIASES: Record<string, TagTab> = { punch: 'punches', documents: 'docs' }
+
+/** `?tab=` → pestaña válida; lo desconocido abre el Resumen. */
+export function parseTagTab(value: string | string[] | undefined | null): TagTab {
+  const v = Array.isArray(value) ? value[0] : value
+  if (!v) return 'overview'
+  return (TAG_TABS as readonly string[]).includes(v) ? (v as TagTab) : TAG_TAB_ALIASES[v] ?? 'overview'
+}
+
 // ── ITR prop types ───────────────────────────────────────────────────
 
 export type TagItr = {

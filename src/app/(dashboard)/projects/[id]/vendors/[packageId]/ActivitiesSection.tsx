@@ -101,7 +101,7 @@ export default function ActivitiesSection({ projectId, pkgId, pkgNumber, closed,
                       {fd.punches ? (
                         <>
                           <Chip tone={fd.category === 'A' ? 'red' : 'amber'}>{t('tests.punchChip', { cat: fd.category ?? '' })}</Chip>
-                          <Link href={`/projects/${projectId}/punches`} style={{ ...linkStyle, fontWeight: 700 }}>{fd.punches.punch_number}</Link>
+                          <Link href={`/projects/${projectId}/punches/${fd.punches.id}`} style={{ ...linkStyle, fontWeight: 700 }}>{fd.punches.punch_number}</Link>
                           <span style={small}>{fd.tags?.tag_number ?? ''} · {fd.punches.status}</span>
                         </>
                       ) : fd.actions ? (

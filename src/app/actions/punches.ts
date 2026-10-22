@@ -107,9 +107,7 @@ export const createPunch = withAuth(
         kind: 'punch_assigned',
         title: `Te asignaron el punch ${punch.punch_number}`,
         body: input.description.length > 140 ? `${input.description.slice(0, 137)}…` : input.description,
-        link_url: input.tagId
-          ? `/projects/${input.projectId}/tags/${input.tagId}`
-          : `/projects/${input.projectId}/punches`,
+        link_url: `/projects/${input.projectId}/punches/${punch.id}`,
         payload: {
           punchId: punch.id,
           punchNumber: punch.punch_number,
@@ -184,9 +182,7 @@ export const reassignPunch = withAuth(
         kind: 'punch_assigned',
         title: `Te asignaron el punch ${punch.punch_number}`,
         body,
-        link_url: punch.tag_id
-          ? `/projects/${input.projectId}/tags/${punch.tag_id}`
-          : `/projects/${input.projectId}/punches`,
+        link_url: `/projects/${input.projectId}/punches/${punch.id}`,
         payload: {
           punchId: punch.id,
           punchNumber: punch.punch_number,

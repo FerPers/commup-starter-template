@@ -1,15 +1,13 @@
 'use client'
 
 import { PersonName } from '@/components/ui'
-import CancelPunchControl from '@/components/punch/CancelPunchControl'
 import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
 import { useEffect, useMemo, useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { updatePunchStatus, addPunchComment, reassignPunch, createPunch } from '@/app/actions/punches'
-import { PunchVerification } from '@/components/punch/PunchVerification'
+import { createPunch } from '@/app/actions/punches'
 import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
-import { PunchClassification } from '@/components/punch/PunchClassification'
 import type { PunchImpact } from '@/lib/punches/category-guide'
 import { punchDisplayStatus } from '@/lib/punches/verification'
 import { bulkDeletePunches } from '@/app/actions/bulk'
@@ -19,10 +17,8 @@ import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import { searchProjectTags, type TagSearchHit } from '@/app/actions/tag-search'
 import type { PunchSummary } from '@/lib/list/punch-query'
 import { canRaisePunch } from '@/lib/constants/punch-roles'
-import PunchPhotosSection from '../tags/[tagId]/PunchPhotosSection'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
-const REASSIGN_ROLES = ROLE_TIERS.editor
 const EDITOR_ROLES = ROLE_TIERS.editor
 
 type OrgMember = { user_id: string; profiles: { full_name: string } | null }
@@ -70,7 +66,6 @@ export default function PunchListView({
   systems,
   orgMembers,
   currentUserRole,
-  currentUserId,
   total,
   page,
   pageSize,
@@ -85,7 +80,6 @@ export default function PunchListView({
   systems: System[]
   orgMembers: OrgMember[]
   currentUserRole: string
-  currentUserId: string
   total: number
   page: number
   pageSize: number
@@ -105,7 +99,6 @@ export default function PunchListView({
     return () => clearTimeout(handle)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe disparar cuando cambia lo que escribe el usuario
   }, [search])
-  const [selectedPunch, setSelectedPunch] = useState<Punch | null>(null)
   const [showCreate, setShowCreate] = useState(false)
 
   // ── Bulk selection ───────────────────────────────────────────────────
@@ -169,7 +162,7 @@ export default function PunchListView({
   function refresh() { router.refresh() }
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: '1200px' }}>
+    <div style={{ padding: 'clamp(12px, 4vw, 28px) clamp(12px, 4vw, 32px)', maxWidth: '1200px' }}>
 
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '6px' }}>
@@ -338,8 +331,9 @@ export default function PunchListView({
           <p style={{ fontSize: '14px' }}>{hasFilters ? t('noResultsFiltered') : t('noResultsEmpty')}</p>
         </div>
       ) : (
-        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflowX: 'auto' }}>
+          {/* C-29: en el teléfono la tabla se desplaza en horizontal en vez de aplastarse */}
+          <table style={{ width: '100%', minWidth: '820px', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--gray-50)' }}>
                 <th style={{ padding: '10px 14px', width: '36px', borderBottom: '1px solid var(--border)' }}>
@@ -366,7 +360,7 @@ export default function PunchListView({
                 return (
                   <tr
                     key={punch.id}
-                    onClick={() => setSelectedPunch(punch)}
+                    onClick={() => router.push(`/projects/${projectId}/punches/${punch.id}`)}
                     style={{ borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', transition: 'background 0.1s', background: isChecked ? '#eff6ff' : 'transparent' }}
                     onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = 'var(--gray-50)' }}
                     onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = isChecked ? '#eff6ff' : 'transparent' }}
@@ -381,7 +375,10 @@ export default function PunchListView({
                       />
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                      {punch.punch_number}
+                      {/* N1b: el número es el enlace a la página del punch (clic medio, compartir) */}
+                      <Link href={`/projects/${projectId}/punches/${punch.id}`} onClick={e => e.stopPropagation()} style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {punch.punch_number}
+                      </Link>
                     </td>
                     <td style={{ padding: '12px 14px' }}>
                       {punch.tags ? (
@@ -427,20 +424,6 @@ export default function PunchListView({
 
       <Pagination page={page} total={total} pageSize={pageSize} onPage={p => url.set({ page: p }, { resetPage: false })} disabled={url.isPending} />
 
-      {/* Detail modal */}
-      {selectedPunch && (
-        <PunchDetailModal
-          punch={selectedPunch}
-          projectId={projectId}
-          orgMembers={orgMembers}
-          canReassign={REASSIGN_ROLES.includes(currentUserRole)}
-          userId={currentUserId}
-          role={currentUserRole}
-          onClose={() => setSelectedPunch(null)}
-          onUpdated={() => { setSelectedPunch(null); refresh() }}
-        />
-      )}
-
       {/* Create modal */}
       {showCreate && (
         <CreatePunchModal
@@ -457,212 +440,6 @@ export default function PunchListView({
 const selStyle: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
   fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
-}
-
-// ── Punch Detail Modal ──────────────────────────────────────────────────
-
-function PunchDetailModal({
-  punch,
-  projectId,
-  orgMembers,
-  canReassign,
-  userId,
-  role,
-  onClose,
-  onUpdated,
-}: {
-  punch: Punch
-  projectId: string
-  orgMembers: OrgMember[]
-  canReassign: boolean
-  userId: string
-  role: string
-  onClose: () => void
-  onUpdated: () => void
-}) {
-  const t = useTranslations('PunchList')
-  const tTags = useTranslations('Tags')
-  const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
-  const [comment, setComment] = useState('')
-  const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
-  const [reassignTo, setReassignTo] = useState<string>(punch.assigned_to ?? '')
-
-  const catCfg = CATEGORY_CFG[punch.category]
-  const displayStatus = punchDisplayStatus(punch)
-  const stColors = STATUS_COLORS[displayStatus] ?? STATUS_COLORS.open
-  const punchStatusLabels: Record<string, string> = {
-    open:        t('punchStatus.open'),
-    in_progress: t('punchStatus.in_progress'),
-    resolved:    t('punchStatus.resolved'),
-    closed:      t('punchStatus.closed'),
-    cancelled:   t('punchStatus.cancelled'),
-  }
-  const isClosed = punch.status === 'closed' || punch.status === 'cancelled'
-  const reassignDirty = (reassignTo || null) !== (punch.assigned_to ?? null)
-
-  function handleStatusChange(newStatus: 'in_progress') {
-    startTransition(async () => {
-      const res = await updatePunchStatus({ punchId: punch.id, status: newStatus, projectId, tagId: punch.tags?.id ?? null })
-      if (res.error) { setError(res.error); return }
-      onUpdated()
-    })
-  }
-
-  function handleAddComment() {
-    if (!comment.trim()) return
-    startTransition(async () => {
-      const res = await addPunchComment({ punchId: punch.id, comment: comment.trim(), projectId, tagId: punch.tags?.id ?? null })
-      if (res.error) { setError(res.error); return }
-      setComment('')
-      onUpdated()
-    })
-  }
-
-  function handleReassign() {
-    if (!reassignDirty) return
-    setError(null)
-    startTransition(async () => {
-      const res = await reassignPunch({
-        punchId: punch.id,
-        projectId,
-        tagId: punch.tags?.id ?? null,
-        newAssignee: reassignTo || null,
-      })
-      if (res.error) { setError(res.error); return }
-      onUpdated()
-    })
-  }
-
-  return (
-    <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'var(--text-muted)' }}>{punch.punch_number}</span>
-              <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
-              <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{punchStatusLabels[displayStatus] ?? punch.status}</span>
-            </div>
-            <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: 0, lineHeight: '1.4' }}>{punch.description}</p>
-          </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#94a3b8', cursor: 'pointer', padding: '0 0 0 12px' }}>✕</button>
-        </div>
-
-        {/* Tag link */}
-        {punch.tags && (
-          <div style={{ marginBottom: '12px' }}>
-            <a
-              href={`/projects/${projectId}/tags/${punch.tags.id}?tab=punches`}
-              onClick={e => e.stopPropagation()}
-              style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-            >
-              <span style={{ fontFamily: 'ui-monospace, monospace' }}>{punch.tags.tag_number}</span>
-              <span style={{ color: '#94a3b8' }}>↗</span>
-            </a>
-          </div>
-        )}
-
-        {/* Meta */}
-        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {punch.raised_by_profile && <span><strong>{t('detail.raisedBy')}</strong> <PersonName name={punch.raised_by_profile.full_name} inactive={isInactiveMember(punch.raised_by, memberIds)} /></span>}
-          {punch.assigned_to_profile && <span><strong>{t('detail.assignedTo')}</strong> <PersonName name={punch.assigned_to_profile.full_name} inactive={isInactiveMember(punch.assigned_to, memberIds)} /></span>}
-          {punch.target_date && <span><strong>{t('detail.targetDate')}</strong> {punch.target_date}</span>}
-          {punch.closed_date && <span><strong>{t('detail.closedDate')}</strong> {punch.closed_date}</span>}
-        </div>
-
-        {/* Fotos (C-03: también desde la lista, no solo desde la ficha del tag) */}
-        <PunchPhotosSection punchId={punch.id} projectId={projectId} tagId={punch.tags?.id ?? null} canUpload={canRaisePunch(role)} />
-
-        {/* Resolver → verificar en campo (fase 4) */}
-        {!isClosed && (
-          <PunchVerification punch={punch} projectId={projectId} tagId={punch.tags?.id ?? null} userId={userId} role={role} onUpdated={onUpdated} />
-        )}
-
-        {/* Impacto, disposición para el arranque y revisión de categoría (fase 4) */}
-        <PunchClassification punch={punch} projectId={projectId} tagId={punch.tags?.id ?? null} userId={userId} role={role} onUpdated={onUpdated} />
-
-        {/* Status actions */}
-        {!isClosed && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('detail.changeStatus')}</label>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {punch.status !== 'in_progress' && (
-                <button onClick={() => handleStatusChange('in_progress')} disabled={isPending} style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#eff6ff', color: '#3b82f6', border: '1px solid #bfdbfe', cursor: 'pointer' }}>
-                  {t('detail.toInProgress')}
-                </button>
-              )}
-              {/* S06 (C-11, D8): cancelar con motivo, por un supervisor distinto de quien lo levantó */}
-              <CancelPunchControl punch={punch} projectId={projectId} tagId={punch.tags?.id ?? null} userId={userId} role={role} onDone={onUpdated} />
-            </div>
-          </div>
-        )}
-
-        {/* Reassign */}
-        {!isClosed && canReassign && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-              {tTags('punches.detail.labelReassign')}
-            </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <select
-                value={reassignTo}
-                onChange={e => setReassignTo(e.target.value)}
-                disabled={isPending}
-                style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit' }}
-              >
-                <option value="">{tTags('punches.detail.reassignPlaceholder')}</option>
-                {orgMembers.map(m => (
-                  <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name ?? m.user_id}</option>
-                ))}
-              </select>
-              <button
-                onClick={handleReassign}
-                disabled={isPending || !reassignDirty}
-                style={{
-                  padding: '8px 14px',
-                  background: reassignDirty && !isPending ? 'var(--primary-500)' : 'var(--gray-100)',
-                  color: reassignDirty && !isPending ? '#fff' : 'var(--gray-400)',
-                  border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                  cursor: reassignDirty && !isPending ? 'pointer' : 'default',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {isPending ? tTags('punches.detail.reassignSubmitting') : tTags('punches.detail.reassignBtn')}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Comment */}
-        {!isClosed && canRaisePunch(role) && (
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-              {t('detail.labelComment')}
-            </label>
-            <textarea
-              rows={2}
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              placeholder={t('detail.commentPlaceholder')}
-              style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', marginBottom: '8px' }}
-            />
-            <button onClick={handleAddComment} disabled={isPending || !comment.trim()} style={{ padding: '7px 14px', background: comment.trim() ? 'var(--primary-500)' : 'var(--gray-100)', color: comment.trim() ? '#fff' : 'var(--gray-400)', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: comment.trim() ? 'pointer' : 'default' }}>
-              {t('detail.addComment')}
-            </button>
-          </div>
-        )}
-
-        {error && (
-          <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: '12px 0 0' }}>{error}</p>
-        )}
-      </div>
-    </div>
-  )
 }
 
 // ── Create Punch Modal ────────────────────────────────────────────────────

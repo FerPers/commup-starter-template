@@ -216,6 +216,7 @@
       "constraint": "Constraint",
       "tq": "TQ",
       "decision": "Decision",
+      "punch": "Punch",
       "detail": "Detail"
     }
   },
@@ -548,6 +549,28 @@
       "seeDetail": "See detail →",
       "closed": "{n} closed of {total} in total",
       "seeAll": "See the full list"
+    },
+    "page": {
+      "backToList": "Punch list · {project}",
+      "raisedBy": "Raised by",
+      "assignedTo": "Assigned to",
+      "targetDate": "Target date",
+      "closedDate": "Closed",
+      "location": "System › subsystem",
+      "discipline": "Discipline",
+      "fromItr": "Raised in ITR",
+      "actions": "What to do now",
+      "history": "History",
+      "kind": {
+        "created": "raised the punch",
+        "comment": "commented",
+        "resolved": "resolved it",
+        "verified": "verified it in the field and closed it",
+        "rejected": "rejected the resolution",
+        "cancelled": "cancelled it",
+        "reviewed": "reviewed the category",
+        "reassigned": "reassigned it to {to}"
+      }
     }
   },
   "Preservation": {
@@ -1345,7 +1368,10 @@
       "signTooltipIncomplete": "Complete all items before signing",
       "signTooltipRejected": "ITR rejected: fix critical items to return it to completed",
       "signTooltipApproved": "This ITR is already approved",
-      "synced": "✓ Synced"
+      "synced": "✓ Synced",
+      "nextPending": "{count} pending",
+      "nextPendingTitle": "Go to the next required item not filled in",
+      "more": "More actions"
     },
     "revoke": {
       "title": "Revoke approval of ITR {itrNumber}",

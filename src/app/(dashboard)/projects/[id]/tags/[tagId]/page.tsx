@@ -4,14 +4,18 @@ import { fetchConsolidatedTagPhotos } from '@/lib/tag-photos'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import TagDetail from './TagDetail'
+import { parseTagTab } from './tag-detail-shared'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export default async function TagDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; tagId: string }>
+  searchParams: Promise<{ tab?: string | string[] }>
 }) {
   const { id: projectId, tagId } = await params
+  const initialTab = parseTagTab((await searchParams).tab)
 
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
@@ -212,7 +216,6 @@ export default async function TagDetailPage({
       canMove={canMove}
       subsystemOptions={subsystemOptions}
       currentUserRole={membership.role}
-      currentUserId={ctx.userId}
       tagItrs={tagItrs ?? []}
       templates={templates ?? []}
       matrixTemplateIds={matrixTemplateIds}
@@ -222,6 +225,7 @@ export default async function TagDetailPage({
       preservationPlans={preservationPlans ?? []}
       preservationProcedures={preservationProcedures ?? []}
       tagPhotos={tagPhotos}
+      initialTab={initialTab}
     />
   )
 }
