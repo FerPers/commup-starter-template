@@ -42,10 +42,11 @@ describe('parseCounts / badgeTotal', () => {
     expect(badgeTotal(c, 'owner')).toBe(11)
   })
 
-  it('fase 4: la revisión de categoría suma al badge del supervisor; la verificación en campo no', () => {
+  it('fase 4: la revisión de categoría suma al badge del supervisor; la verificación en campo, solo a quien no supervisa', () => {
     const c = { ...EMPTY_COUNTS, punches_verify: 5, punches_review: 2 }
     expect(badgeTotal(c, 'leader')).toBe(2)
-    expect(badgeTotal(c, 'inspector')).toBe(0)
+    // el inspector solo cuenta los que levantó (my_work_counts): son suyos y suman
+    expect(badgeTotal(c, 'inspector')).toBe(5)
     expect(parseCounts({ punches_verify: '5', punches_review: 2 })).toMatchObject({ punches_verify: 5, punches_review: 2 })
   })
 
@@ -71,7 +72,8 @@ describe('parseCounts / badgeTotal', () => {
   it('N1: columnas Ejecutar · Verificar · Firmar · Decidir; las colas del rol se ven en 0, las ajenas solo con algo', () => {
     const keysOf = (gs: ReturnType<typeof chipGroups>) => gs.flatMap(g => g.chips.map(x => x.key))
     const inspector = chipGroups(EMPTY_COUNTS, 'inspector')
-    expect(inspector.map(g => g.group)).toEqual(['execute', 'verify', 'sign', 'decide'])
+    // Decidir no es del inspector: la columna aparece solo si le llega algo
+    expect(inspector.map(g => g.group)).toEqual(['execute', 'verify', 'sign'])
     expect(keysOf(inspector)).not.toContain('signatures')
     expect(keysOf(inspector)).not.toContain('punches_review')
     expect(inspector.find(g => g.group === 'sign')?.chips[0]).toEqual({ key: 'itrs_review', n: 0 })  // «ITR por firmar» está en Firmar
@@ -83,6 +85,8 @@ describe('parseCounts / badgeTotal', () => {
     expect(queueApplies('itrs_execute', 'client')).toBe(false)
     expect(queueApplies('preservation_overdue', 'inspector')).toBe(true)
     expect(queueApplies('preservation_overdue', 'client')).toBe(false)
+    expect(queueApplies('gates_to_approve', 'inspector')).toBe(false)
+    expect(keysOf(chipGroups({ ...EMPTY_COUNTS, gates_to_approve: 1 }, 'inspector'))).toContain('gates_to_approve')
     expect(queueApplies('performance_to_decide', 'leader')).toBe(true)
     // cada contador está en exactamente un grupo
     expect(CHIP_GROUPS.flatMap(g => g.keys).sort()).toEqual(Object.keys(EMPTY_COUNTS).sort())

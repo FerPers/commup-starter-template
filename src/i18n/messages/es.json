@@ -2841,6 +2841,7 @@
     "title": "Mi trabajo",
     "hello": "Hola, {name}",
     "summary": "{count, plural, =0 {sin pendientes} one {# pendiente} other {# pendientes}} · {projects, plural, =0 {sin proyectos} one {# proyecto} other {# proyectos}}",
+    "summarySplit": "{total, plural, one {# pendiente} other {# pendientes}} ({mine, plural, =0 {ninguno tuyo} one {# tuyo} other {# tuyos}}) · {projects, plural, =0 {sin proyectos} one {# proyecto} other {# proyectos}}",
     "viewAll": "Ver todos ({count}) →",
     "completedOn": "completado el {date}",
     "issuedOn": "emitido el {date}",

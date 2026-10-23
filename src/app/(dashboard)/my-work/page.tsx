@@ -305,6 +305,11 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
   })[]).filter(c => canSignCertificate(c, 'operations', capsOf(c.project_id), userId) || canSignCertificate(c, 'client', capsOf(c.project_id), userId))
   const dailyHref = (projectId: string | undefined, tab: 'actions' | 'constraints') => (projectId ? dailyTabHref(projectId, tab) : '/projects')
 
+  // D-23: el mismo total que el badge del sidebar.
+  const personalTotal = badgeTotal(counts, role)  // con filtro de proyecto se recalcula abajo con las filas
+  type ReadinessItem = { queue: ReadinessQueue; project_id: string; entity_id: string; ref: string | null; title: string | null; system_id: string | null; system_code: string | null; since: string | null }
+  const readiness = ((readinessRaw ?? []) as ReadinessItem[]).filter(r => projectSet.has(r.project_id))
+  // Proyectos con algo en el tablero (el encabezado cuenta todo lo del tablero, no solo lo personal)
   const projectsInvolved = new Set<string>([
     ...queues.execute.map(r => r.itrs!.project_id),
     ...queues.review.map(r => r.itrs!.project_id),
@@ -313,11 +318,18 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
     ...(signer ? pendingCerts.map(c => c.project_id) : []),
     ...actionRows.map(a => a.project_id),
     ...constraintRows.map(c => c.project_id),
+    ...overduePres.map(p => p.project_id),
+    ...verifyRows.map(p => p.project_id),
+    ...reviewRows.map(p => p.project_id),
+    ...actionVerifyRows.map(a => a.project_id),
+    ...holdRows.map(h => h.project_id),
+    ...lineupRows.map(l => l.project_id),
+    ...milestoneRows.map(m => m.project_id),
+    ...transferRows.map(x => x.project_id),
+    ...perfDecideRows.map(x => x.project_id),
+    ...perfSignRows.map(x => x.project_id),
+    ...readiness.map(r => r.project_id),
   ].filter(Boolean))
-  // D-23: el mismo total que el badge del sidebar.
-  const personalTotal = badgeTotal(counts, role)  // con filtro de proyecto se recalcula abajo con las filas
-  type ReadinessItem = { queue: ReadinessQueue; project_id: string; entity_id: string; ref: string | null; title: string | null; system_id: string | null; system_code: string | null; since: string | null }
-  const readiness = ((readinessRaw ?? []) as ReadinessItem[]).filter(r => projectSet.has(r.project_id))
   const projectCode = new Map((projects ?? []).map(p => [p.id, p.code]))
   const readinessOf = (q: ReadinessQueue) => readiness.filter(r => r.queue === q)
     .sort((a, b) => (a.since ?? '').localeCompare(b.since ?? ''))
@@ -481,6 +493,9 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
     })),
   }))
 
+  const boardTotal = boardGroups.reduce((a, g) => a + g.queues.reduce((b, q) => b + q.total, 0), 0)
+  const mine = filterProject ? badgeTotal(shown, role) : personalTotal
+
   return (
     <div style={{ padding: 28, maxWidth: 1320 }}>
       <header style={{ marginBottom: 20 }}>
@@ -490,7 +505,10 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
         <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', margin: '4px 0 0' }}>
           <span>{todayLabel}</span>
           {' · '}{roleLabel}{' · '}
-          {t('summary', { count: filterProject ? badgeTotal(shown, role) : personalTotal, projects: projectsInvolved.size })}
+          {/* Mismo total que el chip «Todo»; si no todo es personal (colas compartidas), cuántos son tuyos */}
+          {mine === boardTotal
+            ? t('summary', { count: boardTotal, projects: projectsInvolved.size })
+            : t('summarySplit', { total: boardTotal, mine, projects: projectsInvolved.size })}
         </p>
       </header>
 

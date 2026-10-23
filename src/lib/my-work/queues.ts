@@ -106,7 +106,8 @@ export function seesPreservation(role: OrgMemberRole): boolean {
 export function badgeTotal(c: MyWorkCounts, role: OrgMemberRole): number {
   return c.itrs_execute + c.itrs_review + c.punches + c.plan_items + (canSignCertificates(role) ? c.signatures : 0)
     // Preservación vencida: para el supervisor es de todo el proyecto (no suma); para el resto, sus planes (suma)
-    + (seesPreservation(role) ? c.punches_review : c.preservation_overdue) + c.actions_mine + c.constraints_mine
+    // Punch por verificar: el supervisor ve todos los resueltos (no suma); el resto, solo los que levantó (suma)
+    + (seesPreservation(role) ? c.punches_review : c.preservation_overdue + c.punches_verify) + c.actions_mine + c.constraints_mine
     + c.holds_to_release + c.milestones_to_witness + c.transfers_to_sign
     + c.performance_to_decide + c.performance_to_sign + c.gates_to_cosign + c.tq_answered
 }
@@ -130,12 +131,18 @@ const NOT_CLIENT = new Set<keyof MyWorkCounts>([
   'performance_to_decide', 'daily_reports_to_issue', 'registers_to_authorize', 'actions_verify', 'handovers_to_receive', 'registers_to_verify',
 ])
 
+/** Colas de decidir que el inspector solo ve si le llega algo (p. ej. si es firmante designado). */
+const FIELD_ONLY_IF_ANY = new Set<keyof MyWorkCounts>([
+  'gates_to_approve', 'gates_regressed', 'daily_reports_to_issue', 'registers_to_authorize',
+])
+
 /** ¿La cola es del rol? (aunque esté en 0). Mismas reglas de rol que las consultas de la página. */
 export function queueApplies(key: keyof MyWorkCounts, role: OrgMemberRole): boolean {
   if (key === 'signatures') return canSignCertificates(role)
   if (key === 'preservation_overdue') return role !== 'client'
   if (key === 'punches_review' || key === 'performance_to_decide') return seesPreservation(role)
   if (role === 'client') return !NOT_CLIENT.has(key)
+  if (role === 'inspector') return !FIELD_ONLY_IF_ANY.has(key)
   return true
 }
 

@@ -227,6 +227,23 @@ Una sola sesión de maquetas en un lienzo, como en N1–N3:
 | TQ (decisión de Luis, 2026-10-23): CommUp **no** amplía el módulo de TQ (es de ingeniería y construcción; su dueño es el EDMS o el sistema del EPC). Descartados el aviso y la cola «TQ por responder» del cliente. El módulo actual queda tal cual para proyectos sin EDMS; a futuro, TQ como referencia externa ligada a una restricción del sistema | Con la integración EDMS (trimestre) |
 | Trimestre: membresía por proyecto, SSO/MFA y reautenticación al firmar, P6, EDMS, observabilidad, brechas de la API v1, red-line | Después de P |
 
+**Cierre del backlog (Luis, 2026-10-23, noche):**
+
+| N.º | Punto | Decisión |
+|---|---|---|
+| 1–2 | Contadores del inspector («5 pendientes» vs «Todo 7») y colas de decidir en 0 que no son suyas | Hacer |
+| 3–4 | Listas de ITR y preservación en el teléfono; barra inferior del ITR | Hacer (maqueta antes) |
+| 5 | D16 resumen diario por correo | **Descartado**: no genera valor; para eso está «Mi trabajo» en la app |
+| 6 | F-21 red-line de campo | Proponer |
+| 7 | Calidad de datos «ITR rechazado ≥ 3 veces» (evento viejo, enlace roto) | Hacer |
+| 8, 10, 12, 13 | G-11 resto (≤ 11 px, paletas en hex), autosave del ITR (C-19/B-15), casts (G-18), D2 base de pruebas aparte | Hacer |
+| 9, 11 | G-09 design system, G-15 diccionario i18n por página | **Descartados** (G-09 cubierto por los tokens de G-10/G-11) |
+| 14–15 | Tareas de Luis (PTC con `+smtp2`, subida de PDF) | Más adelante, dentro de una validación completa con una organización nueva, datos reales de ingeniería, borrado de DEMO y pruebas de punta a punta |
+| 16 | Proyectos extra de Supabase | ✅ Verificado 2026-10-23: solo queda `commup-production` |
+| 17–18 | ITR v2 Fase 1 y calibración de la tabla v2 | Retomar |
+| 19–24 | Trimestre (membresía por proyecto, SSO/MFA, P6, EDMS, observabilidad, API v1) | Aparte |
+
+
 ---
 
 ## Orden recomendado

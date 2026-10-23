@@ -2841,6 +2841,7 @@
     "title": "My work",
     "hello": "Hello, {name}",
     "summary": "{count, plural, =0 {nothing pending} one {# pending item} other {# pending items}} · {projects, plural, =0 {no projects} one {# project} other {# projects}}",
+    "summarySplit": "{total, plural, one {# pending item} other {# pending items}} ({mine, plural, =0 {none yours} other {# yours}}) · {projects, plural, =0 {no projects} one {# project} other {# projects}}",
     "viewAll": "View all ({count}) →",
     "completedOn": "completed on {date}",
     "issuedOn": "issued on {date}",
