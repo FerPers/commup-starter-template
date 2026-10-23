@@ -4,8 +4,10 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
-import { assignmentDbError, isSigningRole, type SigningRole } from '@/lib/itr/signatures'
+import { isSigningRole, type SigningRole } from '@/lib/itr/signatures'
 import type { ActiveContext } from '@/lib/supabase/membership'
+import { assignmentDbError } from '@/lib/i18n/action-errors'
+import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 
 type ItrMeta = { itr_number: string; project_id: string; tag_id: string | null }
@@ -56,16 +58,17 @@ export const bulkAssignItrs = withAuthOnly(
     role: 'executor' | 'supervisor' | 'client',
   ): Promise<{ error?: string }> => {
     if (!ids.length) return {}
-    if (!isSigningRole(role)) return { error: 'Rol de firma inválido' }
+    const t = await getTranslations('ActionErrors')
+    if (!isSigningRole(role)) return { error: t('itrInstances.signRoleInvalid') }
 
     const { prevByItr, itrMeta, rows } = await snapshot(ctx, ids, role)
     const notRequired = rows.filter(r => !r.required_signatures.includes(role)).map(r => r.itr_number)
-    if (notRequired.length) return { error: `Estos ITR no exigen ese rol de firma: ${notRequired.slice(0, 5).join(', ')}${notRequired.length > 5 ? '…' : ''}` }
+    if (notRequired.length) return { error: t('itrAssign.bulkNotRequired', { list: `${notRequired.slice(0, 5).join(', ')}${notRequired.length > 5 ? '…' : ''}` }) }
 
     const { error } = await ctx.supabase
       .from('itr_assignments')
       .upsert(ids.map(itr_id => ({ itr_id, user_id: userId, role })), { onConflict: 'itr_id,role' })
-    if (error) return { error: assignmentDbError(error.message) }
+    if (error) return { error: await assignmentDbError(error.message) }
 
     const changes = assignmentChanges(ids, role, userId, prevByItr, itrMeta)
     if (changes.length > 0) await notifyItrAssignmentChanged(createAdminClient(), ctx.orgId, ctx.userId, changes)
@@ -85,16 +88,17 @@ export const setItrAssignment = withAuth(
     ctx,
     input: { itrId: string; projectId: string; tagId: string | null; role: SigningRole; userId: string },
   ): Promise<{ error?: string }> => {
-    if (!isSigningRole(input.role)) return { error: 'Rol de firma inválido' }
+    const t = await getTranslations('ActionErrors')
+    if (!isSigningRole(input.role)) return { error: t('itrInstances.signRoleInvalid') }
     const { prevByItr, itrMeta, rows } = await snapshot(ctx, [input.itrId], input.role)
     const itr = rows[0]
-    if (!itr || itr.project_id !== input.projectId) return { error: 'ITR no encontrado' }
-    if (!itr.required_signatures.includes(input.role)) return { error: 'Este ITR no exige ese rol de firma' }
+    if (!itr || itr.project_id !== input.projectId) return { error: t('itrInstances.itrNotFound') }
+    if (!itr.required_signatures.includes(input.role)) return { error: t('itrAssign.role_not_required') }
 
     const { error } = await ctx.supabase
       .from('itr_assignments')
       .upsert({ itr_id: input.itrId, user_id: input.userId, role: input.role }, { onConflict: 'itr_id,role' })
-    if (error) return { error: assignmentDbError(error.message) }
+    if (error) return { error: await assignmentDbError(error.message) }
 
     const changes = assignmentChanges([input.itrId], input.role, input.userId, prevByItr, itrMeta)
     if (changes.length > 0) await notifyItrAssignmentChanged(createAdminClient(), ctx.orgId, ctx.userId, changes)

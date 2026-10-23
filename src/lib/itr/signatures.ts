@@ -69,15 +69,17 @@ export function availableSigningRoles(
  * Valida un juego de asignaciones antes de crear o cambiar: cada rol requerido con persona y nadie en
  * dos roles. Devuelve el mensaje de error o null.
  */
-export function assignmentError(
+/** V3: problema de la asignación de firmantes; el texto sale de `ActionErrors.itrAssign.<code>` (ICU `role`). */
+export type AssignmentIssue = { code: 'missing_role'; role: SigningRole } | { code: 'same_person' }
+
+export function assignmentIssue(
   required: ReadonlyArray<string>,
   people: Partial<Record<SigningRole, string | null | undefined>>,
-): string | null {
+): AssignmentIssue | null {
   const roles = normalizeRequired(required)
-  const label: Record<SigningRole, string> = { executor: 'el ejecutor', supervisor: 'el supervisor', client: 'el cliente' }
-  for (const r of roles) if (!people[r]) return `Esta plantilla exige la firma de ${label[r]}: asígnalo`
+  for (const r of roles) if (!people[r]) return { code: 'missing_role', role: r }
   const ids = roles.map(r => people[r]).filter((v): v is string => !!v)
-  if (new Set(ids).size !== ids.length) return 'Una misma persona no puede firmar dos roles del ITR'
+  if (new Set(ids).size !== ids.length) return { code: 'same_person' }
   return null
 }
 
@@ -91,11 +93,11 @@ export function itrSignErrorKey(message: string): 'alreadySigned' | 'previous' |
   return null
 }
 
-/** Errores de asignación de la BD en texto para el usuario (las actions devuelven español). */
-export function assignmentDbError(message: string): string {
-  if (/two signing roles/i.test(message)) return 'Una misma persona no puede tener dos roles de firma en el mismo ITR'
-  if (/not required for this ITR/i.test(message)) return 'Este ITR no exige ese rol de firma'
-  if (/audited reopening/i.test(message)) return 'Ese rol ya firmó: para cambiarlo hay que reabrir el ITR'
-  if (/not a project organization member/i.test(message)) return 'La persona no es miembro de la organización'
-  return message
+/** Errores de asignación de la BD → clave de `ActionErrors.itrAssign` (null = mostrar el mensaje de la BD). */
+export function assignmentDbErrorKey(message: string): 'same_person_db' | 'role_not_required' | 'role_signed' | 'not_member' | null {
+  if (/two signing roles/i.test(message)) return 'same_person_db'
+  if (/not required for this ITR/i.test(message)) return 'role_not_required'
+  if (/audited reopening/i.test(message)) return 'role_signed'
+  if (/not a project organization member/i.test(message)) return 'not_member'
+  return null
 }

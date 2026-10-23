@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { reflexiveRuleError } from './rules'
+import { isReflexiveRule } from './rules'
 
-describe('reflexiveRuleError (I-10)', () => {
+describe('isReflexiveRule (I-10)', () => {
   it('rechaza «punch creado → crear punch»', () => {
-    expect(reflexiveRuleError('punches.created', 'create_punch')).toMatch(/a sí misma/)
-    expect(reflexiveRuleError(' punches.created ', 'create_punch')).not.toBeNull()
+    expect(isReflexiveRule('punches.created', 'create_punch')).toBe(true)
+    expect(isReflexiveRule(' punches.created ', 'create_punch')).toBe(true)
   })
   it('acepta el resto', () => {
-    expect(reflexiveRuleError('itrs.updated', 'create_punch')).toBeNull()
-    expect(reflexiveRuleError('punches.created', 'notify_user')).toBeNull()
+    expect(isReflexiveRule('itrs.updated', 'create_punch')).toBe(false)
+    expect(isReflexiveRule('punches.created', 'notify_user')).toBe(false)
   })
 })

@@ -6738,7 +6738,8 @@
       "reason_required": "Explica el cambio (mínimo 10 caracteres): deja ITR fuera de requisitos.",
       "type_exists": "Ya existe un tipo con ese código: elígelo de la lista.",
       "invalid_type": "Código (letras y dígitos, hasta 12) y nombre son obligatorios.",
-      "no_tags": "Ya no quedan tags sin tipo en este grupo."
+      "no_tags": "Ya no quedan tags sin tipo en este grupo.",
+      "equipment_type_not_found": "El tipo de equipo ya no existe o no es de esta organización."
     },
     "tag": {
       "label": "Tipo de equipo",
@@ -8119,5 +8120,630 @@
     "statusComplete": "Registro diligenciado; pendiente de las aprobaciones que correspondan.",
     "statusPending": "Registro pendiente: {errors}",
     "statusFill": "Registro pendiente: diligencia las celdas requeridas."
+  },
+  "ActionErrors": {
+    "users": {
+      "invalidEmail": "Correo no válido",
+      "invalidRole": "Rol no válido",
+      "ownerInvitesOwner": "Solo un Propietario puede invitar a otro Propietario",
+      "inviteFailed": "No se pudo enviar la invitación: intenta de nuevo",
+      "inviteEmailFailed": "No se pudo enviar la invitación por correo: {detail}. Revisa la configuración SMTP en Supabase Auth",
+      "unknownError": "error desconocido",
+      "profileFailed": "Usuario invitado, pero no se pudo crear su perfil: {detail}",
+      "memberFailed": "Usuario invitado, pero no se pudo agregar a la organización: {detail}",
+      "memberNotFound": "Miembro no encontrado",
+      "invalidStatus": "Estado no válido",
+      "inviteSent": "Invitación enviada"
+    },
+    "pssr": {
+      "templateNotFoundOrForbidden": "Plantilla no encontrada o sin permiso",
+      "deleteTemplateFailed": "No se pudo borrar la plantilla (sin permiso o ya no existe)",
+      "templateNotFound": "Plantilla PSSR no encontrada",
+      "invalidCapacity": "Firma no válida",
+      "rejectReason": "Indica el motivo del rechazo (mínimo 3 caracteres)",
+      "sourceNotFound": "Plantilla de origen no encontrada o sin acceso",
+      "alreadyInOrg": "La plantilla ya está en la organización activa",
+      "nameExists": "Ya existe una plantilla llamada «{name}» en esta organización",
+      "createFailed": "No se pudo crear la plantilla",
+      "cloneItemsFailed": "Plantilla clonada, pero no se pudieron copiar los ítems: {detail}"
+    },
+    "preservation": {
+      "procedureInUse": "No se puede eliminar: {count, plural, one {# plan usa} other {# planes usan}} este procedimiento",
+      "procedureNotFound": "Procedimiento no encontrado",
+      "openRecordFailed": "No se pudo abrir el registro",
+      "nokNeedsCategory": "Un resultado NOK genera un punch: indica su categoría",
+      "sourceNotFound": "Procedimiento de origen no encontrado o sin acceso",
+      "alreadyInOrg": "El procedimiento ya está en la organización activa",
+      "missingDiscipline": "Falta la disciplina «{code}» en la organización activa: créala antes de importar",
+      "missingEquipmentType": "Falta el tipo de equipo «{code}» en la organización activa: créalo antes de importar",
+      "codeExists": "Ya existe un procedimiento con el código «{code}» en esta organización",
+      "createFailed": "No se pudo crear el procedimiento",
+      "cloneItemsFailed": "Procedimiento clonado, pero no se pudieron copiar los ítems: {detail}"
+    },
+    "gatesAdmin": {
+      "codeNameRequired": "Escribe el código y el nombre",
+      "codeExists": "Ya existe una liberación con el código {code}",
+      "catalogNotFound": "Liberación del catálogo no encontrada",
+      "nameRequired": "Escribe el nombre",
+      "approvalRoleRequired": "Al menos un rol debe poder aprobar la liberación",
+      "cosignRoleRequired": "Al menos un rol debe poder cofirmar la liberación",
+      "hasApprovals": "La liberación tiene aprobaciones registradas: desactívala en lugar de borrarla",
+      "hasAttestations": "La liberación tiene declaraciones registradas: desactívala en lugar de borrarla",
+      "invalidCriterion": "Tipo de criterio no válido",
+      "attestationLabelRequired": "Escribe el texto de la declaración"
+    },
+    "config": {
+      "phaseInUse": "No se puede eliminar: {count, plural, one {# ITR usa} other {# ITR usan}} esta fase",
+      "disciplineInUse": "No se puede eliminar: {count, plural, one {# tag usa} other {# tags usan}} esta disciplina",
+      "equipmentTypeInUse": "No se puede eliminar: {count, plural, one {# tag usa} other {# tags usan}} este tipo de equipo",
+      "invalidOrg": "Organización no válida",
+      "catBLimitRange": "El límite debe ser un número entero entre 0 y 999",
+      "logoMissing": "No se adjuntó ningún archivo",
+      "logoTooLarge": "El archivo supera {mb} MB",
+      "logoType": "El logo debe ser PNG, JPG o WebP"
+    },
+    "webhooks": {
+      "nameRequired": "Escribe el nombre",
+      "urlRequired": "Escribe la URL",
+      "httpsRequired": "La URL debe usar https",
+      "eventRequired": "Elige al menos un tipo de evento",
+      "emptyResponse": "La base de datos no devolvió el webhook creado"
+    },
+    "apiKeys": {
+      "nameRequired": "Escribe el nombre",
+      "scopeRequired": "Elige al menos un alcance (scope)",
+      "emptyResponse": "La base de datos no devolvió la clave creada"
+    },
+    "tags": {
+      "hasPreservationHistory": "El tag tiene historial de preservación: no se puede eliminar",
+      "invalidCriticality": "Criticidad no válida",
+      "nfcEmpty": "El UID del NFC está vacío",
+      "nfcConflict": "Este NFC ya está vinculado al tag {tag}",
+      "moveReason": "Explica por qué se mueve (mínimo {min} caracteres)"
+    },
+    "setup": {
+      "fullNameRequired": "Escribe tu nombre completo",
+      "invalidInput": "Datos de configuración no válidos",
+      "alreadyMember": "Ya perteneces a una organización: crea el proyecto desde ella",
+      "nameIsEmail": "El nombre no puede ser tu correo electrónico",
+      "scopeEmpty": "El alcance necesita al menos una disciplina"
+    },
+    "org": {
+      "notActiveMember": "No eres miembro activo de esa organización"
+    },
+    "gates": {
+      "invalidCapacity": "Firma no válida",
+      "revokeReason": "Indica el motivo de la revocación",
+      "invalidEvidence": "Adjunto de evidencia no válido",
+      "invalidPath": "Ruta no válida",
+      "openEvidenceFailed": "No se pudo abrir el adjunto"
+    },
+    "bulk": {
+      "invalidDate": "Fecha no válida",
+      "closeOneByOne": "Los punch se cierran verificándolos en campo, uno por uno",
+      "cancelOneByOne": "Los punch se cancelan uno por uno, con motivo",
+      "deleteBlocked": "No se borró nada: {count, plural, one {# punch no se puede borrar} other {# punch no se pueden borrar}} (en curso, cerrados o con evidencia): {list}. Cancélalos con motivo",
+      "deletePartial": "Algunos punch no se pudieron borrar (sin permiso)"
+    },
+    "projects": {
+      "invalidTimezone": "Zona horaria no válida"
+    },
+    "certificates": {
+      "noData": "Sin datos de elegibilidad",
+      "issueFailed": "No se pudo emitir el certificado",
+      "notFound": "Certificado no encontrado"
+    },
+    "planning": {
+      "invalidDate": "Fecha no válida",
+      "weightRange": "El peso debe estar entre 0 y {max}"
+    },
+    "capacities": {
+      "invalidCapacity": "Capacidad no válida",
+      "reasonRequired": "Indica el motivo (mínimo 3 caracteres)",
+      "notFound": "Designación no encontrada"
+    },
+    "handover": {
+      "formatRequired": "Elige al menos un formato",
+      "packageNotFound": "Paquete no encontrado"
+    },
+    "ai": {
+      "notConfigured": "La IA no está configurada en este entorno (falta ANTHROPIC_API_KEY). Pídele al administrador de la plataforma que la active",
+      "quota": "La organización alcanzó su tope diario de IA ({budget} USD). Se renueva a las 00:00 UTC; un Propietario o Administrador puede subirlo",
+      "badKey": "La clave de la IA (ANTHROPIC_API_KEY) no es válida en este entorno. Pídele al administrador de la plataforma que la renueve",
+      "rateLimited": "La IA está saturada en este momento. Intenta de nuevo en unos minutos",
+      "badRequest": "La solicitud a la IA no es válida (el documento puede ser demasiado grande)",
+      "failed": "No se pudo consultar la IA. Intenta de nuevo en unos minutos",
+      "refused": "El modelo declinó la solicitud"
+    },
+    "auth": {
+      "unauthenticated": "Tu sesión terminó: vuelve a iniciar sesión",
+      "forbidden": "Tu rol no permite esta acción"
+    },
+    "guard": {
+      "invalidInput": "Datos no válidos para comprobar permisos",
+      "missingField": "Falta el campo requerido: {field}",
+      "invalidField": "El campo {field} no es un identificador válido",
+      "missingScope": "Falta el proyecto para validar {field}"
+    },
+    "access": {
+      "notFound": "{resource, select, project {El proyecto} subsystem {El subsistema} system {El sistema} systems {Los sistemas} discipline {La disciplina} equipment_type {El tipo de equipo} tag {El tag} template {La plantilla ITR} phase {La fase} other {El elemento}} no existe o no tienes acceso",
+      "invalid": "{resource, select, systems {Hay sistemas que no pertenecen al proyecto} other {Referencia no válida}}"
+    },
+    "itrAssign": {
+      "missing_role": "Esta plantilla exige la firma {role, select, executor {del ejecutor} supervisor {del supervisor} other {del cliente}}: asígnalo",
+      "same_person": "Una misma persona no puede firmar dos roles del ITR",
+      "same_person_db": "Una misma persona no puede tener dos roles de firma en el mismo ITR",
+      "role_not_required": "Este ITR no exige ese rol de firma",
+      "role_signed": "Ese rol ya firmó: para cambiarlo hay que reabrir el ITR",
+      "not_member": "La persona no es miembro de la organización",
+      "bulkNotRequired": "Estos ITR no exigen ese rol de firma: {list}"
+    },
+    "workflows": {
+      "nameRequired": "Escribe el nombre de la regla",
+      "eventRequired": "Elige el evento",
+      "actionRequired": "Elige la acción",
+      "reflexive": "Esta regla se dispararía a sí misma (el punch que crea vuelve a emitir «Punch creado»): elige otro evento",
+      "conditionObject": "La condición debe ser un objeto JsonLogic",
+      "payloadObject": "Los datos de la acción deben ser un objeto"
+    },
+    "table": {
+      "invalid_config": "Configuración de tabla no válida",
+      "pending": "Registro pendiente",
+      "invalid_record": "Registro de tabla no válido",
+      "no_source_rows": "El ITR no tiene la foto de filas del lazo o de la causa",
+      "source_count": "Cantidad de filas distinta de la foto del ITR",
+      "row_count": "Cantidad de filas fuera de la configuración",
+      "rows_mismatch": "Faltan o sobran filas",
+      "missing": "{row}: falta {column}",
+      "na_reason": "{row}: justifica el No aplica",
+      "stability": "Se requieren al menos {n} lecturas para el criterio de estabilidad"
+    },
+    "itrInstances": {
+      "tagNotFound": "Tag no encontrado",
+      "templateNotFound": "Plantilla no encontrada",
+      "templateDraft": "La plantilla es un borrador: actívala antes de asignar ITR",
+      "subsystemMismatch": "El subsistema no corresponde al del tag",
+      "executorNotMember": "El ejecutor no es miembro de la organización",
+      "clientExecutor": "El cliente no puede ser el ejecutor del ITR",
+      "deleteFailed": "No se pudo borrar el ITR (sin permiso o ya no existe)",
+      "deleteSigned": "El ITR tiene firmas: para borrarlo primero hay que reabrirlo",
+      "itrNotAccessible": "ITR no encontrado o sin acceso",
+      "revisionMismatch": "La revisión indicada no corresponde a este ITR",
+      "itrApproved": "El ITR está aprobado y no puede modificarse",
+      "signatureCheckFailed": "No se pudo comprobar si el ITR tiene firmas",
+      "itrSigned": "Este ITR tiene firmas: debe reabrirse con motivo antes de modificarlo",
+      "itrSignedEvidence": "El ITR tiene firmas: requiere reapertura antes de modificar evidencias",
+      "captureNotAssigned": "Solo el ejecutor asignado (o un supervisor) captura este ITR",
+      "itemNotInRevision": "La casilla no pertenece a la revisión de este ITR o no está disponible",
+      "itemNotInTemplate": "El ítem no pertenece a la plantilla del ITR",
+      "responseCheckFailed": "No se pudo comprobar la respuesta existente",
+      "continuityInvalid": "La estructura por conductores no es válida",
+      "tableConfigInvalid": "La plantilla no define una tabla válida para esta casilla",
+      "tableRecordInvalid": "El registro de la tabla no corresponde a su configuración",
+      "optionInvalid": "La opción no pertenece a esta casilla",
+      "responseGone": "La respuesta ya no existe",
+      "progressFailed": "La respuesta se guardó, pero no se pudo actualizar el avance del ITR",
+      "itrNotFound": "ITR no encontrado",
+      "itrMismatch": "El ITR no corresponde al proyecto y tag indicados",
+      "evidenceMissing": "Falta la referencia o el tipo de evidencia",
+      "evidenceType": "Tipo de evidencia no admitido (imagen o PDF)",
+      "evidenceProgressFailed": "La evidencia cambió, pero no se pudo guardar el avance actualizado",
+      "attachmentMismatch": "El adjunto no pertenece al ITR",
+      "signRoleInvalid": "Rol de firma no válido",
+      "signatureInvalid": "La firma no es válida o es demasiado grande",
+      "reasonMin3": "Indica un motivo (al menos 3 caracteres)",
+      "reopenUnverified": "La reapertura respondió sin detalle verificable; actualiza el ITR antes de continuar",
+      "rejectReasonMin10": "Explica qué hay que corregir (mínimo 10 caracteres)"
+    },
+    "sourceItrs": {
+      "nothing": "Nada que generar",
+      "maxBatch": "Máximo {max} por vez",
+      "templateNotFound": "Plantilla no encontrada",
+      "templateDraft": "La plantilla es un borrador: actívala antes de generar ITR",
+      "noLoopTable": "La plantilla no tiene tabla de señales del lazo",
+      "noCeTable": "La plantilla no tiene tabla de efectos de la matriz C&E",
+      "notMember": "{role, select, executor {El inspector} supervisor {El supervisor} other {El cliente}} no es miembro de la organización",
+      "createFailed": "No se pudo crear el ITR",
+      "loopNoSignals": "{code}: el lazo no tiene señales activas",
+      "loopNoInstrument": "{code}: el lazo no tiene instrumento asociado",
+      "causeNoEffects": "{code}: la causa no tiene efectos marcados en la matriz",
+      "causeNoTag": "{code}: indica el tag iniciador de la causa (o el elemento final de un efecto)"
+    },
+    "itrTemplates": {
+      "hasItrs": "La plantilla tiene ITR: desactívala en lugar de borrarla",
+      "deleteFailed": "No se pudo borrar la plantilla (sin permiso o ya no existe)",
+      "selectNeedsOption": "Un ítem de tipo lista requiere al menos una opción",
+      "tableInvalid": "Tabla no válida: {issue}",
+      "outcomesInvalid": "Los resultados deben corresponder a opciones existentes y válidas",
+      "outcomesSelectOnly": "Solo las listas admiten resultados por opción",
+      "itemNotFound": "Ítem no encontrado o sin acceso",
+      "revisionCreateFailed": "No se pudo crear la revisión",
+      "revisionNoItems": "La revisión no tiene ítems",
+      "selectsWithoutOptions": "Ítems de tipo lista sin opciones (agrega opciones antes de activar): {names}",
+      "revisionActivateFailed": "No se pudo activar la revisión",
+      "catalogDisciplineUnmapped": "{code}: la disciplina «{discipline}» no tiene equivalencia, se omitió",
+      "catalogPhaseUnmapped": "{code}: la fase «{phase}» no tiene equivalencia, se omitió",
+      "catalogTemplateFailed": "{code}: no se pudo crear la plantilla",
+      "catalogSectionFailed": "{code}: no se pudo crear la sección",
+      "catalogItemsFailed": "{code}: no se pudieron insertar los ítems ({detail})",
+      "sourceNotFound": "Plantilla de origen no encontrada o sin acceso",
+      "alreadyInOrg": "La plantilla ya está en la organización activa",
+      "sourceNoDisciplinePhase": "La plantilla de origen no tiene disciplina o fase válida",
+      "missingDiscipline": "Falta la disciplina «{code}» en la organización activa: créala antes de importar",
+      "missingPhase": "Falta la fase «{code}» en la organización activa: créala antes de importar",
+      "codeExists": "Ya existe una plantilla con código «{code}» en esta organización. Usa «Actualizar» para traer el contenido del catálogo como revisión nueva",
+      "createFailed": "No se pudo crear la plantilla",
+      "sectionCopyFailed": "No se pudo copiar la sección «{section}»: {detail}",
+      "itemsCopyFailed": "No se pudieron copiar los ítems de «{section}»: {detail}",
+      "noRowsReturned": "la base de datos no devolvió filas",
+      "cloneFailed": "No se pudo clonar"
+    },
+    "templatesBackup": {
+      "orgNotFound": "Organización no encontrada",
+      "exportFailed": "{part, select, itr {Plantillas ITR} preservation {Preservación} other {PSSR}}: {detail}",
+      "backupFailed": "No se pudo armar el respaldo",
+      "procedureNotFound": "Procedimiento no encontrado",
+      "pssrTemplateNotFound": "Plantilla PSSR no encontrada",
+      "invalidFormat": "Formato de respaldo no válido",
+      "taxonomyFailed": "{kind, select, disciplines {Disciplinas} phases {Fases} other {Tipos de equipo}}: {detail}",
+      "rowOutcomesInvalid": "{code}: resultados de selección no válidos",
+      "rowMissingDiscipline": "{code}: falta la disciplina «{discipline}» en la organización activa",
+      "rowMissingPhase": "{code}: falta la fase «{phase}» en la organización activa",
+      "rowMissingEquipmentType": "{code}: falta el tipo de equipo «{equipmentType}» en la organización activa",
+      "rowCodeExists": "{code}: el código «{newCode}» ya existe, se omitió",
+      "rowNameExists": "{code}: el nombre «{newName}» ya existe, se omitió",
+      "rowError": "{code}: {detail}",
+      "rowSectionFailed": "{code}: sección «{section}»: {detail}",
+      "rowSectionItemsFailed": "{code}: ítems de la sección «{section}»: {detail}",
+      "rowItemsFailed": "{code}: ítems: {detail}",
+      "noRowReturned": "la base de datos no devolvió el registro creado",
+      "unexpected": "error inesperado"
+    },
+    "itrMatrix": {
+      "noTypes": "No hay tipos de equipo para procesar",
+      "typesNotFound": "Tipos de equipo no encontrados en la organización",
+      "noActiveTemplates": "La organización no tiene plantillas ITR activas: importa el catálogo primero",
+      "truncated": "La respuesta quedó incompleta: procesa menos tipos de equipo por vez",
+      "aiUnparseable": "La respuesta de la IA no pudo interpretarse: intenta de nuevo",
+      "importTypeNotFound": "El tipo de equipo «{code}» no existe en la organización",
+      "importTemplateNotFound": "La plantilla «{code}» no existe en la organización"
+    },
+    "itrTranslations": {
+      "aiUnparseable": "La respuesta de la IA no pudo interpretarse: intenta de nuevo",
+      "aiError": "Error de la IA"
+    },
+    "itrGeneration": {
+      "phaseRequired": "Elige al menos una fase",
+      "samePerson": "Cada rol de firma lo asume una persona distinta"
+    },
+    "itrAiAdjust": {
+      "noCandidates": "No hay plantillas activas dentro del alcance de disciplinas del proyecto",
+      "aiUnparseable": "La respuesta de la IA no pudo interpretarse: intenta de nuevo"
+    },
+    "tagTypes": {
+      "aiUnparseable": "La respuesta de la IA no pudo interpretarse: intenta de nuevo"
+    },
+    "daily": {
+      "invalidSource": "Origen no válido",
+      "actionNotFound": "Acción no encontrada",
+      "invalidEscalationLevel": "Nivel de escalamiento no válido",
+      "constraintNotFound": "Restricción no encontrada",
+      "tqNotFound": "TQ no encontrado",
+      "responseRequired": "Escribe la respuesta",
+      "decisionFieldsRequired": "Título y decisión son obligatorios",
+      "supersededNotFound": "No se encontró la decisión a reemplazar",
+      "invalidKind": "Tipo no válido",
+      "invalidEvidencePath": "Ruta de evidencia no válida",
+      "fileOpenFailed": "No se pudo abrir el archivo",
+      "notDeletable": "Este tipo de registro no se puede borrar",
+      "recordNotFound": "Registro no encontrado",
+      "invalidPriority": "Prioridad no válida",
+      "invalidVerificationMethod": "Método de verificación no válido",
+      "titleRequired": "El título es obligatorio",
+      "ownerRequired": "La acción necesita un responsable",
+      "invalidImpactKind": "Tipo de impacto no válido",
+      "constraintFieldsRequired": "Título y descripción son obligatorios",
+      "constraintScopeRequired": "Sistema, responsable y fecha requerida son obligatorios",
+      "invalidAddressee": "Destinatario no válido",
+      "tqFieldsRequired": "Asunto y pregunta son obligatorios"
+    },
+    "dailyReport": {
+      "invalidDate": "Fecha no válida",
+      "reportNotFound": "Reporte no encontrado",
+      "reportIssued": "El reporte ya fue emitido",
+      "aiUnparseable": "No se pudo interpretar la respuesta de la IA. Intenta de nuevo",
+      "invalidShift": "Turno no válido",
+      "handoverNotFound": "Relevo no encontrado"
+    },
+    "vendors": {
+      "titleRequired": "El título es obligatorio",
+      "companyRequired": "Elige la empresa del vendor",
+      "mobilizationPair": "Indica juntos el sistema y la liberación de movilización",
+      "invalidStatus": "Estado no válido",
+      "packageNotFound": "Paquete no encontrado",
+      "invalidItem": "Ítem no válido",
+      "invalidKind": "Tipo no válido",
+      "invalidResult": "Resultado no válido",
+      "invalidPerformedOn": "Fecha de ejecución no válida",
+      "activityNotFound": "Actividad no encontrada",
+      "findingRequired": "Describe el hallazgo",
+      "punchCategoryRequired": "Indica la categoría del punch",
+      "invalidDate": "Fecha no válida",
+      "activitiesRequired": "Describe las actividades",
+      "recommendationRequired": "Describe la recomendación",
+      "invalidDecision": "Decisión no válida",
+      "recommendationNotFound": "Recomendación no encontrada"
+    },
+    "documents": {
+      "invalidCompanyKind": "Tipo de empresa no válido",
+      "nameRequired": "El nombre es obligatorio",
+      "invalidDocType": "Tipo de documento no válido",
+      "numberTitleRequired": "Número y título son obligatorios",
+      "invalidStatus": "Estado no válido",
+      "revisionRequired": "Indica la revisión",
+      "invalidFile": "Archivo no válido",
+      "httpsRequired": "El enlace debe empezar con https://",
+      "reasonMin": "Escribe el motivo (mínimo {min} caracteres)",
+      "noFile": "La revisión no tiene archivo",
+      "fileOpenFailed": "No se pudo abrir el archivo",
+      "invalidReferenceKind": "Tipo de referencia no válido"
+    },
+    "pidMarkups": {
+      "labelTooLong": "La etiqueta admite hasta {max} caracteres",
+      "invalidKind": "Tipo de marca no válido",
+      "invalidPage": "Página no válida",
+      "invalidPoints": "Puntos de la marca no válidos",
+      "invalidPageSize": "Tamaño de página no válido",
+      "sameSystem": "Los dos lados del límite deben ser sistemas distintos",
+      "revisionNotFound": "Revisión del P&ID no encontrada en el proyecto",
+      "markupNotFound": "Marca no encontrada",
+      "otherSideLimitOnly": "Solo un límite tiene sistema del otro lado"
+    },
+    "pidHotspots": {
+      "revisionNotFound": "Revisión del P&ID no encontrada en el proyecto",
+      "invalidPage": "Página no válida"
+    },
+    "performance": {
+      "titleRequired": "Escribe el título de la prueba",
+      "testNotFound": "Prueba de desempeño no encontrada",
+      "revisionNotFound": "Revisión no encontrada",
+      "transitionInvalid": "Transición no válida",
+      "runNotFound": "Intento no encontrado",
+      "disturbanceKindInvalid": "Tipo de perturbación no válido",
+      "startTimeInvalid": "Hora de inicio no válida",
+      "disturbanceNotFound": "Perturbación no encontrada",
+      "valueInvalid": "Valor no válido",
+      "timeInvalid": "Hora no válida",
+      "resultInvalid": "Resultado no válido",
+      "capacityInvalid": "Capacidad de firma no válida",
+      "certificateNotFound": "Certificado no encontrado"
+    },
+    "startup": {
+      "procedureKindInvalid": "Tipo de procedimiento no válido",
+      "titleRequired": "Escribe el título",
+      "procedureNotFound": "Procedimiento no encontrado",
+      "revisionNotFound": "Revisión no encontrada",
+      "runNotFound": "Ejecución no encontrada",
+      "purposeInvalid": "Propósito no válido",
+      "sheetNotFound": "Hoja de line-up no encontrada",
+      "positionInvalid": "Posición no válida",
+      "asFoundInvalid": "Posición encontrada no válida",
+      "itemNotFound": "Fila del line-up no encontrada"
+    },
+    "opsReadiness": {
+      "nameRequired": "Escribe el nombre",
+      "levelInvalid": "Nivel no válido (0–4)",
+      "evidenceKindInvalid": "Tipo de evidencia no válido",
+      "personNotFound": "Persona no encontrada",
+      "recordNotFound": "Registro de competencia no encontrado",
+      "statusInvalid": "Estado no válido",
+      "itemRequired": "Escribe el ítem",
+      "quantitiesInvalid": "Cantidades no válidas",
+      "spareNotFound": "Repuesto no encontrado",
+      "stageInvalid": "Etapa no válida",
+      "transferNotFound": "Traspaso no encontrado",
+      "handoverOnlyCompleted": "Solo para traspasos completados a Operaciones",
+      "handoverExists": "El traspaso ya tiene paquete de handover"
+    },
+    "startupEvents": {
+      "eventKindInvalid": "Tipo de evento no válido",
+      "timeInvalid": "Hora no válida",
+      "titleRequired": "Escribe el título del evento",
+      "eventNotFound": "Evento no encontrado"
+    },
+    "testEquipment": {
+      "requiredFields": "Código, serie y n.º de certificado son obligatorios",
+      "kindInvalid": "Tipo de equipo no válido",
+      "datesInvalid": "Fechas de calibración no válidas",
+      "dueBeforeCalibration": "El vencimiento no puede ser anterior a la calibración",
+      "codeExists": "Ya existe un equipo con el código {code}",
+      "saveFailed": "No se pudo guardar el equipo",
+      "inUse": "El equipo ya se usó en ITR: dalo de baja en lugar de borrarlo",
+      "pathInvalid": "Ruta no válida",
+      "certificateOpenFailed": "No se pudo abrir el certificado",
+      "alreadyInItr": "Ese equipo ya está registrado en este ITR"
+    },
+    "systems": {
+      "dependencyExists": "Esa dependencia ya existe",
+      "priorityRange": "La prioridad debe ser P1 a P5",
+      "colorInvalid": "Color no válido",
+      "batteryLimitsInvalid": "Límites de batería no válidos",
+      "nameRequired": "El nombre no puede quedar vacío",
+      "typeInvalid": "Tipo de sistema no válido",
+      "dependencyKindInvalid": "Tipo de dependencia no válido",
+      "selfDependency": "Un sistema no puede depender de sí mismo",
+      "noActiveGates": "La organización no tiene liberaciones activas",
+      "gateInvalid": "Liberación no válida",
+      "dependencyNotFound": "Dependencia no encontrada",
+      "maxRows": "Máximo {max} filas por importación",
+      "importSystemMissing": "Sistemas, fila {row}: el sistema {code} no existe en el proyecto",
+      "importSystemRowError": "Sistemas, fila {row}: {error}",
+      "importDepSystemMissing": "Dependencias, fila {row}: no existe el sistema {code}",
+      "importDepKindInvalid": "Dependencias, fila {row}: tipo no válido",
+      "importDepGateMissing": "Dependencias, fila {row}: la liberación «{gate}» no existe o no está activa",
+      "importDepRowError": "Dependencias, fila {row} ({system} → {provider}): {error}"
+    },
+    "systemsAi": {
+      "noSystems": "El proyecto no tiene sistemas: importa la jerarquía primero",
+      "aiUnparsable": "La respuesta de la IA no pudo interpretarse: intenta de nuevo",
+      "tooMany": "Demasiadas sugerencias en una sola aplicación (máximo {max})",
+      "systemOutside": "Sistema fuera del proyecto",
+      "typeOrPriorityInvalid": "{code}: tipo o prioridad no válidos",
+      "dependencyKindInvalid": "Tipo de dependencia no válido",
+      "noActiveGates": "La organización no tiene liberaciones activas"
+    },
+    "signals": {
+      "rangeNumeric": "El rango debe ser numérico",
+      "notFound": "Señal no encontrada"
+    },
+    "registers": {
+      "kindInvalid": "Tipo de registro no válido",
+      "linkTargetNotFound": "Registro a vincular no encontrado",
+      "titleRequired": "Escribe el título",
+      "notFound": "Registro no encontrado",
+      "missingFields": "Faltan campos obligatorios para este paso",
+      "testRejected": "La prueba fue rechazada: repite la prueba antes de restituir o verificar",
+      "maxRows": "Máximo {max} filas por importación",
+      "importLineMissing": "Líneas, fila {row}: la línea {line} no existe como tag del proyecto",
+      "importWhereRow": "Packs, fila {row}",
+      "importWherePack": "Pack {pack}",
+      "importSystemMissing": "{where}: el sistema {code} no existe en el proyecto",
+      "importPackClosed": "{where}: {number} está cerrado y no se modifica",
+      "importPackUnknown": "{where}: no existe el test pack {pack} (los números TPK los asigna CommUp)"
+    },
+    "punches": {
+      "impactInvalid": "Impacto no válido",
+      "impactRequired": "Indica el impacto del punch (seguridad, ambiente, proceso, equipo u operabilidad)",
+      "tagNotFound": "Tag no encontrado",
+      "subsystemUnresolved": "No se pudo resolver el subsistema o la disciplina del tag",
+      "idInvalid": "Identificador de punch no válido",
+      "notFound": "Punch no encontrado",
+      "notInProject": "El punch no pertenece al proyecto",
+      "closeRequiresVerify": "Para cerrar un punch hay que verificarlo en campo",
+      "cancelUseAction": "Para cancelar un punch indica el motivo con «Cancelar»",
+      "cancelReasonMin": "Explica por qué se cancela (mínimo 10 caracteres)",
+      "categoryInvalid": "Categoría no válida",
+      "dispositionInvalid": "Disposición no válida",
+      "deleteBlocked": "No se puede borrar: {reason}. Cancélalo con motivo",
+      "deleteFailed": "No se pudo borrar el punch (sin permiso)",
+      "photoDeleteFailed": "No se pudo borrar la foto: solo la borra quien la subió o un supervisor"
+    },
+    "ceMatrix": {
+      "tagNotFound": "El tag {tag} no existe en el proyecto",
+      "tagAmbiguous": "Hay más de un tag {tag}: usa el número exacto",
+      "signalNotFound": "La señal {signal} no existe en el proyecto",
+      "signalNotFoundInTag": "La señal {signal} no existe en ese instrumento",
+      "signalAmbiguous": "La señal {signal} está en varios instrumentos: indica también el tag",
+      "codeTitleRequired": "Código y título son obligatorios",
+      "matrixExists": "Ya existe una matriz {code} en el proyecto",
+      "matrixSaveFailed": "No se pudo guardar la matriz",
+      "matrixNotFound": "Matriz no encontrada",
+      "codeDescriptionRequired": "Código (máx. 30) y descripción son obligatorios",
+      "votingInvalid": "Votación no válida",
+      "causeExists": "Ya existe la causa {code} en esta matriz",
+      "causeSaveFailed": "No se pudo guardar la causa",
+      "actionInvalid": "Acción no válida",
+      "effectExists": "Ya existe el efecto {code} en esta matriz",
+      "effectSaveFailed": "No se pudo guardar el efecto"
+    },
+    "ceImport": {
+      "sheetTooLarge": "La hoja es demasiado grande para importarla de una vez",
+      "pdfRequired": "El archivo debe ser PDF",
+      "pdfTooLarge": "El PDF supera {mb} MB: envía solo las páginas de la matriz",
+      "fileRequired": "Adjunta una hoja de Excel o un PDF",
+      "tooLargeForOneRead": "La matriz es demasiado grande para una sola lectura: divide el documento",
+      "aiUnparsable": "La respuesta de la IA no pudo interpretarse: intenta de nuevo",
+      "noMatrix": "No se encontró una matriz causa-efecto en el documento",
+      "noMatrixWithWarnings": "No se encontró una matriz causa-efecto en el documento. {warnings}",
+      "codeTitleRequired": "Código y título de la matriz son obligatorios",
+      "tooLarge": "La matriz es demasiado grande",
+      "matrixExists": "Ya existe una matriz {code} en el proyecto",
+      "createFailed": "No se pudo crear la matriz"
+    },
+    "import": {
+      "duplicateTags": "{count, plural, one {# tag repetido en el archivo: se usó su última fila} other {# tags repetidos en el archivo: se usó la última fila de cada uno}}: {list}",
+      "disciplineNotFound": "La disciplina «{code}» no existe en la organización",
+      "subsystemNotCreated": "El subsistema «{code}» no pudo crearse",
+      "unknownEquipmentTypes": "Tipos de equipo no reconocidos (se usó la detección por prefijo del tag): {list}. Créalos en Admin → Configuración → Tipos de equipo",
+      "noEquipmentTypes": "La organización no tiene tipos de equipo configurados: los tags quedaron sin tipo. Carga el catálogo estándar en Admin → Configuración",
+      "movesBlocked": "{count, plural, one {# tag con ITR o punch no se movió} other {# tags con ITR o punch no se movieron}} de subsistema (muévelos desde el detalle de cada tag → «Mover de subsistema»): {list}"
+    },
+    "importSignals": {
+      "disciplineNotFound": "La disciplina «{code}» no existe",
+      "signalTypeInvalid": "Tipo de señal no válido «{type}». Válidos: {valid}",
+      "duplicateSignals": "{count, plural, one {# señal repetida en el archivo: se usó su última fila} other {# señales repetidas en el archivo: se usó la última fila de cada una}}: {list}",
+      "loopSubsystemMissing": "Lazo «{loop}»: el subsistema «{code}» no está disponible",
+      "loopsError": "Lazos: {error}",
+      "instrumentTagError": "Tag instrumento «{tag}»: {error}",
+      "instrumentTagNotCreated": "El tag instrumento «{tag}» no pudo crearse",
+      "subsystemNotCreated": "El subsistema «{code}» no pudo crearse",
+      "loopTagsError": "Lazos ↔ instrumentos: {error}"
+    }
+  },
+  "PdfReports": {
+    "common": {
+      "generated": "Generado: {date}",
+      "page": "Página {n}",
+      "client": "Cliente: {name}",
+      "none": "Ninguno",
+      "tags": "Tags",
+      "itrsApproved": "ITR aprobados",
+      "itrsTotal": "ITR totales",
+      "certsIssued": "Certificados emitidos",
+      "openPunches": "Punches abiertos",
+      "overallProgress": "Avance general (ITR aprobados)",
+      "inProgress": "En ejecución",
+      "completed": "Completados",
+      "approved": "Aprobados"
+    },
+    "areaKpis": {
+      "short": "KPIs por área",
+      "title": "Reporte de KPIs por área",
+      "areas": "Áreas",
+      "detail": "Detalle por área",
+      "empty": "El proyecto no tiene áreas configuradas.",
+      "topSystems": "Sistemas con más punches abiertos",
+      "certsShort": "Cert. emitidos"
+    },
+    "phaseProgress": {
+      "short": "Avance por fase",
+      "title": "Reporte de avance por fase",
+      "itrProgress": "Avance de ITR",
+      "approvedOf": "{approved} / {total} aprobados",
+      "openCatA": "Punches Cat A abiertos",
+      "blocking": "Bloquean",
+      "phases": "Fases",
+      "detail": "Detalle por fase",
+      "empty": "El proyecto no tiene fases configuradas.",
+      "certsLine": "Certificados: {issued} / {total} emitidos",
+      "catAOpen": "Cat A abiertos: {n}",
+      "unassigned": "Nota: {n, plural, one {# punch Cat A abierto} other {# punches Cat A abiertos}} sin fase (el subsistema no tiene fase actual)."
+    },
+    "preservation": {
+      "title": "Estado de preservación",
+      "overdue": "Vencidos",
+      "actionRequired": "Requieren acción",
+      "dueSoon": "Por vencer",
+      "nextDays": "Próximos {days} días",
+      "totalPlans": "Planes",
+      "projects": "Proyectos",
+      "empty": "No hay planes de preservación registrados.",
+      "emptyProject": "El proyecto no tiene planes.",
+      "projectOverdue": "{n, plural, one {# vencido} other {# vencidos}}",
+      "col": {
+        "tag": "Tag",
+        "proc": "Proc.",
+        "procedure": "Procedimiento",
+        "frequency": "Frecuencia",
+        "nextDue": "Próximo",
+        "status": "Estado"
+      },
+      "due": {
+        "overdue": "VENCIDO",
+        "soon": "Por vencer",
+        "ok": "Al día",
+        "inactive": "Inactivo"
+      }
+    }
   }
 }

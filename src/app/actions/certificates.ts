@@ -4,6 +4,7 @@ import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Eligibility } from '@/lib/certificates/eligibility'
 import { CERT_ROLE_CAPACITY, type CertSignRole } from '@/lib/constants/capacities'
@@ -58,12 +59,13 @@ export const checkSubsystemEligibility = withAuth(
     ctx,
     input: { projectId: string; subsystemId: string; phaseId: string },
   ): Promise<Eligibility & { previousBlocker?: string | null; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const [{ data, error }, { data: prev }] = await Promise.all([
       ctx.supabase.rpc('certificate_eligibility', { p_subsystem_id: input.subsystemId, p_phase_id: input.phaseId }),
       ctx.supabase.rpc('certificate_previous_blocker', { p_subsystem_id: input.subsystemId, p_phase_id: input.phaseId }),
     ])
     if (error || !data) {
-      return { eligible: 'red', totalItrs: 0, approvedItrs: 0, openCatA: 0, openCatBPunches: [], catBLimit: null, catBOverLimit: false, error: error?.message ?? 'Sin datos' }
+      return { eligible: 'red', totalItrs: 0, approvedItrs: 0, openCatA: 0, openCatBPunches: [], catBLimit: null, catBOverLimit: false, error: error?.message ?? t('certificates.noData') }
     }
     return { ...(data as unknown as Eligibility), previousBlocker: prev ?? null }
   },
@@ -90,6 +92,7 @@ export const issueCertificate = withAuth(
       catBExceptions?: { punchId: string; justification: string }[]
     },
   ): Promise<{ certId?: string; certNumber?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { projectId, subsystemId, phaseId } = input
     const { data: certId, error } = await ctx.supabase.rpc('issue_certificate', {
       p_subsystem_id: subsystemId,
@@ -97,7 +100,7 @@ export const issueCertificate = withAuth(
       p_notes: optText(input.notes),
       p_exceptions: (input.catBExceptions ?? []).map(e => ({ punch_id: e.punchId, justification: e.justification })),
     })
-    if (error || !certId) return { error: error?.message ?? 'No se pudo emitir el certificado' }
+    if (error || !certId) return { error: error?.message ?? t('certificates.issueFailed') }
 
     const cert = await certInfo(ctx.supabase, certId)
     if (cert) {
@@ -167,9 +170,10 @@ export const revokeCertificate = withAuth(
     ctx,
     input: { certId: string; projectId: string; reason: string },
   ): Promise<{ error?: string; revokedCount?: number }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = (input.reason ?? '').trim()
     const cert = await certInfo(ctx.supabase, input.certId)
-    if (!cert || cert.project_id !== input.projectId) return { error: 'Certificado no encontrado' }
+    if (!cert || cert.project_id !== input.projectId) return { error: t('certificates.notFound') }
 
     const { data, error } = await ctx.supabase.rpc('revoke_certificate', { p_certificate_id: input.certId, p_reason: reason })
     if (error) return { error: error.message }
@@ -203,9 +207,10 @@ export const reopenCertificate = withAuth(
     ctx,
     input: { certId: string; projectId: string; reason: string },
   ): Promise<{ error?: string; notifiedCount?: number }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = (input.reason ?? '').trim()
     const cert = await certInfo(ctx.supabase, input.certId)
-    if (!cert || cert.project_id !== input.projectId) return { error: 'Certificado no encontrado' }
+    if (!cert || cert.project_id !== input.projectId) return { error: t('certificates.notFound') }
 
     const { error } = await ctx.supabase.rpc('reopen_certificate', { p_certificate_id: input.certId, p_reason: reason })
     if (error) return { error: error.message }

@@ -2,10 +2,11 @@
 
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
-import { AI_NOT_CONFIGURED, isAiConfigured } from '@/lib/ai/claude'
+import { aiNotConfigured, isAiConfigured } from '@/lib/ai/claude'
 import { aiCostUsd } from '@/lib/ai/pricing'
 import { runAi } from '@/lib/ai/run'
 import { createAdminClient, emitImportSummary } from '@/lib/supabase/admin'
@@ -187,7 +188,8 @@ export const assignEquipmentType = withAuth(
 export const classifyTagTypes = withAuth(
   { role: PRIVILEGED_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: { projectId: string }): Promise<{ error?: string; proposed?: number; remaining?: number; costUsd?: number }> => {
-    if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED }
+    const t = await getTranslations('ActionErrors')
+    if (!isAiConfigured()) return { error: await aiNotConfigured() }
     const [groupsRes, { data: catalog }, { data: open }] = await Promise.all([
       ctx.supabase.rpc('tag_type_groups', { p_project_id: input.projectId }),
       // bounded: catálogo de tipos de una org (decenas a cientos)
@@ -200,7 +202,7 @@ export const classifyTagTypes = withAuth(
     const data = groupsRes.data as unknown as { groups: TypeGroup[]; learned: LearnedPrefix[] }
     const cat = (catalog ?? []) as CatalogType[]
     const learned = learnedMap(data.learned)
-    const codeOf = new Map(cat.map(t => [t.id, t.code]))
+    const codeOf = new Map(cat.map(ty => [ty.id, ty.code]))
 
     const openKeys = new Set((open ?? []).filter(p => p.status === 'proposed').map(signatureKey))
     const rejectedBy = new Map<string, string[]>()
@@ -226,7 +228,7 @@ export const classifyTagTypes = withAuth(
       }))
     if (!run.response) return { error: run.error }
     const parsed = run.response.parsed_output
-    if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
+    if (!parsed) return { error: t('tagTypes.aiUnparseable') }
 
     const proposals = reconcileTypeProposals(parsed, batch, cat)
     const rows = batch.map((g, i) => {

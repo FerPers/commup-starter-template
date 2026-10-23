@@ -30,7 +30,7 @@ export async function GET(
   ] = await Promise.all([
     supabase
       .from('projects')
-      .select('id, code, name, client')
+      .select('id, code, name, client, timezone')
       .eq('id', projectId)
       .eq('org_id', orgId)
       .single(),
@@ -114,6 +114,7 @@ export async function GET(
     projectName: project.name,
     projectCode: project.code,
     projectClient: project.client ?? null,
+    timezone: project.timezone,
     phases: phaseRows,
     unassignedOpenCatA,
   }

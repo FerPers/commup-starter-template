@@ -5,9 +5,10 @@
 
 import {
   Renderer, COLOR, A4_W, A4_H, MARGIN, CONTENT_W, FOOTER_H,
-  sanitize, truncateToWidth, wrapText,
+  sanitize, truncateToWidth, wrapText, bi,
   type Color,
 } from './renderer'
+import { todayIn, formatInZone } from '@/lib/time/zone'
 
 type PssrReviewItem = {
   id: string
@@ -45,18 +46,20 @@ export type PssrPdfData = {
   projectClient: string | null
   items: PssrReviewItem[]
   signatures: PssrSignatureRow[]
+  /** Zona del proyecto: fecha «Generado», de aprobación y hora de las firmas (el Worker corre en UTC). */
+  timezone?: string | null
 }
 
 function statusVisual(status: PssrPdfData['status']): { fg: Color; bg: Color; label: string } {
-  if (status === 'approved')         return { fg: COLOR.greenStrong, bg: COLOR.greenBg,     label: 'APPROVED' }
-  if (status === 'pending_approval') return { fg: COLOR.amber,       bg: COLOR.amberBg,     label: 'PENDING APPROVAL' }
-  if (status === 'in_progress')      return { fg: COLOR.blue,        bg: COLOR.blueBg,      label: 'IN PROGRESS' }
-  if (status === 'rejected')         return { fg: COLOR.red,         bg: COLOR.redBg,       label: 'REJECTED' }
-  return { fg: COLOR.muted, bg: COLOR.borderLight, label: 'DRAFT' }
+  if (status === 'approved')         return { fg: COLOR.greenStrong, bg: COLOR.greenBg,     label: 'APROBADO / APPROVED' }
+  if (status === 'pending_approval') return { fg: COLOR.amber,       bg: COLOR.amberBg,     label: 'PENDIENTE DE APROBACIÓN / PENDING APPROVAL' }
+  if (status === 'in_progress')      return { fg: COLOR.blue,        bg: COLOR.blueBg,      label: 'EN CURSO / IN PROGRESS' }
+  if (status === 'rejected')         return { fg: COLOR.red,         bg: COLOR.redBg,       label: 'RECHAZADO / REJECTED' }
+  return { fg: COLOR.muted, bg: COLOR.borderLight, label: 'BORRADOR / DRAFT' }
 }
 
 function itemStatusVisual(s: PssrReviewItem['status']): { fg: Color; bg: Color; label: string } {
-  if (s === 'si') return { fg: COLOR.greenStrong, bg: COLOR.greenBg,     label: 'SI' }
+  if (s === 'si') return { fg: COLOR.greenStrong, bg: COLOR.greenBg,     label: 'SÍ / YES' }
   if (s === 'no') return { fg: COLOR.red,         bg: COLOR.redBg,       label: 'NO' }
   if (s === 'na') return { fg: COLOR.muted,       bg: COLOR.borderLight, label: 'N/A' }
   return            { fg: COLOR.empty,       bg: COLOR.borderXlight, label: '—' }
@@ -64,11 +67,12 @@ function itemStatusVisual(s: PssrReviewItem['status']): { fg: Color; bg: Color; 
 
 export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
   const r = await Renderer.create()
+  // V3: PDF formal bilingüe (español / inglés), como el del ITR.
   r.doc.setTitle(`PSSR ${review.review_number}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('Pre-Startup Safety Review')
+  r.doc.setSubject('Revisión de seguridad previa al arranque / Pre-Startup Safety Review')
 
-  const generatedAt = new Date().toISOString().slice(0, 10)
+  const generatedAt = todayIn(review.timezone)
   const visual = statusVisual(review.status)
   const total = review.items.length
   const resolved = review.items.filter(i => i.status === 'si' || i.status === 'na').length
@@ -84,12 +88,12 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
     page.drawText(sanitize(`CommUp · ${review.review_number}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${generatedAt}`)
+    const centerText = sanitize(`Generado / Generated: ${generatedAt}`)
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `Pág. / Page ${pageNum} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -105,15 +109,17 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
   r.y = A4_H - MARGIN - 8
   r.drawTextCentered('CommUp', { y: r.y - 18, size: 18, bold: true, color: COLOR.purple })
   r.moveY(22)
-  r.drawTextCentered('Pre-Startup Safety Review', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
+  r.drawTextCentered('Revisión de seguridad previa al arranque', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
   r.moveY(15)
+  r.drawTextCentered('Pre-Startup Safety Review (PSSR)', { y: r.y - 10, size: 10, color: COLOR.muted })
+  r.moveY(13)
   r.drawTextCentered(review.review_number, { y: r.y - 11, size: 11, oblique: true, color: COLOR.muted })
   r.moveY(13)
   r.drawTextCentered(review.title, { y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: CONTENT_W })
   r.moveY(16)
 
   // Status badge centered
-  const badgeLabel = visual.label + (review.approved_at ? ` · ${review.approved_at.slice(0, 10)}` : '')
+  const badgeLabel = visual.label + (review.approved_at ? ` · ${todayIn(review.timezone, new Date(review.approved_at))}` : '')
   const badgeTxt = sanitize(badgeLabel)
   const badgeW = r.fontBold.widthOfTextAtSize(badgeTxt, 9) + 24
   const badgeH = 18
@@ -130,21 +136,21 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
   // ─── Info card grid ───────────────────────────────────────────────────────
   const infoCards: Array<{ label: string; value: string; sub?: string }> = [
     {
-      label: 'Project',
+      label: bi('Proyecto', 'Project'),
       value: `${review.projectCode} — ${review.projectName}`,
-      sub: review.projectClient ? `Client: ${review.projectClient}` : undefined,
+      sub: review.projectClient ? `${bi('Cliente', 'Client')}: ${review.projectClient}` : undefined,
     },
   ]
   if (review.systems) {
     infoCards.push({
-      label: 'System',
+      label: bi('Sistema', 'System'),
       value: `${review.systems.code} — ${review.systems.name}`,
     })
   }
   infoCards.push({
-    label: 'Progress',
+    label: bi('Avance', 'Progress'),
     value: `${resolved} / ${total} (${pct}%)`,
-    sub: review.review_due_date ? `Due: ${review.review_due_date}` : undefined,
+    sub: review.review_due_date ? `${bi('Vence', 'Due')}: ${review.review_due_date}` : undefined,
   })
   r.infoCardRow(infoCards)
 
@@ -168,14 +174,17 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
     for (const item of catItems) {
       const iv = itemStatusVisual(item.status)
       const orderLabel = `#${item.item_order}`
-      const wrapW = CONTENT_W - 80 // leaves room for status badge on the right
+      // Status badge (top-right): its width sets how far the text may run («SÍ / YES» is wider than «SI»)
+      const badgeTxtItem = sanitize(iv.label)
+      const badgeWItem = r.fontBold.widthOfTextAtSize(badgeTxtItem, 8) + 14
+      const wrapW = CONTENT_W - 40 - badgeWItem - 10
 
       const elementLines = wrapText(item.element, r.fontBold, 9, wrapW)
       const reqLines     = wrapText(item.requirement, r.fontRegular, 8.5, wrapW)
       const detailLines: string[] = []
-      if (item.responsible)     detailLines.push(`Responsable: ${item.responsible}`)
-      if (item.actions)         detailLines.push(`Acciones: ${item.actions}`)
-      if (item.completion_date) detailLines.push(`Fecha: ${item.completion_date}`)
+      if (item.responsible)     detailLines.push(`${bi('Responsable', 'Responsible')}: ${item.responsible}`)
+      if (item.actions)         detailLines.push(`${bi('Acciones', 'Actions')}: ${item.actions}`)
+      if (item.completion_date) detailLines.push(`${bi('Fecha de cierre', 'Completion date')}: ${item.completion_date}`)
       const detailWrapped: string[] = []
       for (const d of detailLines) {
         for (const ln of wrapText(d, r.fontOblique, 7.5, wrapW)) detailWrapped.push(ln)
@@ -219,8 +228,6 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
       }
 
       // Status badge (top-right)
-      const badgeTxtItem = iv.label
-      const badgeWItem = r.fontBold.widthOfTextAtSize(badgeTxtItem, 8) + 14
       const badgeHItem = 16
       const badgeXItem = A4_W - MARGIN - badgeWItem
       const badgeYItem = top - badgeHItem - 2
@@ -236,12 +243,12 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
   }
 
   if (catOrder.length === 0) {
-    r.empty('No items in this review.')
+    r.empty(bi('Esta revisión no tiene ítems.', 'No items in this review.'))
   }
 
   // ─── Notes ────────────────────────────────────────────────────────────────
   if (review.notes && review.notes.trim()) {
-    r.accentSection('Notes')
+    r.accentSection(bi('Notas', 'Notes'))
     const notesLines = wrapText(review.notes, r.fontRegular, 8.5, CONTENT_W - 20)
     const notesHeight = notesLines.length * 12 + 12
     r.ensureSpace(notesHeight + 4)
@@ -263,11 +270,11 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
   r.ensureSpace(80)
   r.drawHLine(MARGIN, A4_W - MARGIN, r.y, 1, COLOR.border)
   r.moveY(10)
-  r.drawText('SIGNATURES', { x: MARGIN, y: r.y - 9, size: 9, bold: true, color: COLOR.muted })
+  r.drawText('FIRMAS / SIGNATURES', { x: MARGIN, y: r.y - 9, size: 9, bold: true, color: COLOR.muted })
   r.moveY(16)
 
   if (review.signatures.length === 0) {
-    r.empty('No signatures yet.')
+    r.empty(bi('Aún no hay firmas.', 'No signatures yet.'))
   } else {
     // Grid: 2 columns of signature cards with embedded PNG
     const cols = 2
@@ -318,7 +325,7 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
       }
 
       if (!imageEmbedded) {
-        r.page.drawText('[signature]', {
+        r.page.drawText('[firma / signature]', {
           x: x + 8, y: top - 30, size: 8, font: r.fontOblique, color: COLOR.empty,
         })
       }
@@ -330,7 +337,9 @@ export async function renderPssrPdf(review: PssrPdfData): Promise<Uint8Array> {
         const disc = truncateToWidth(sig.discipline, r.fontRegular, 8, boxW - 16)
         r.page.drawText(disc, { x: x + 8, y: top - boxH + 15, size: 8, font: r.fontRegular, color: COLOR.muted })
       }
-      const dateStr = sig.signed_at ? new Date(sig.signed_at).toISOString().slice(0, 16).replace('T', ' ') : ''
+      const dateStr = !sig.signed_at ? ''
+        : review.timezone ? formatInZone(sig.signed_at, review.timezone, 'es')
+        : `${new Date(sig.signed_at).toISOString().slice(0, 16).replace('T', ' ')} UTC`
       r.page.drawText(sanitize(dateStr), {
         x: x + 8, y: top - boxH + 5, size: 7, font: r.fontRegular, color: COLOR.empty,
       })

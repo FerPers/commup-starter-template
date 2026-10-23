@@ -3,6 +3,7 @@
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import type { Enums } from '@/types/supabase.generated'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (startPreservationRecord,
@@ -98,13 +99,14 @@ export const updateProcedure = withAuth(
 export const deleteProcedure = withAuthOnly(
   { role: PRIVILEGED_ROLES },
   async (ctx, procedureId: string): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { count } = await ctx.supabase
       .from('preservation_plans')
       .select('id', { count: 'exact', head: true })
       .eq('procedure_id', procedureId)
 
     if ((count ?? 0) > 0) {
-      return { error: `No se puede eliminar: ${count} plan(es) usan este procedimiento` }
+      return { error: t('preservation.procedureInUse', { count: count ?? 0 }) }
     }
 
     const { error } = await ctx.supabase
@@ -229,6 +231,7 @@ export const assignPreservationPlan = withAuth(
       responsibleUserId?: string
     },
   ): Promise<{ data?: { id: string }; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     // Fetch interval_days from procedure
     const { data: proc, error: procErr } = await ctx.supabase
       .from('preservation_procedures')
@@ -237,7 +240,7 @@ export const assignPreservationPlan = withAuth(
       .eq('org_id', ctx.orgId)
       .single()
 
-    if (procErr || !proc) return { error: 'Procedimiento no encontrado' }
+    if (procErr || !proc) return { error: t('preservation.procedureNotFound') }
 
     // next_due_date = start_date + interval_days
     const start = new Date(input.startDate)
@@ -301,8 +304,9 @@ export const startPreservationRecord = withAuth(
     ],
   },
   async (ctx, input: { planId: string; tagId: string; projectId: string }): Promise<{ data?: { id: string }; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data, error } = await ctx.supabase.rpc('start_preservation_record', { p_plan_id: input.planId })
-    if (error || !data) return { error: error?.message ?? 'No se pudo abrir el registro' }
+    if (error || !data) return { error: error?.message ?? t('preservation.openRecordFailed') }
     return { data: { id: data as string } }
   },
 )
@@ -360,7 +364,8 @@ export const finalizeRecord = withAuth(
       tagId: string
     },
   ): Promise<{ error?: string; punchNumber?: string; alreadyFinalized?: boolean }> => {
-    if (input.result === 'nok' && !input.punchCategory) return { error: 'Un resultado NOK genera un punch: indica su categoría' }
+    const t = await getTranslations('ActionErrors')
+    if (input.result === 'nok' && !input.punchCategory) return { error: t('preservation.nokNeedsCategory') }
     const { data, error } = await ctx.supabase.rpc('finalize_preservation_record', {
       p_record_id: input.recordId,
       p_result: input.result,
@@ -465,6 +470,7 @@ export const cloneProcedureToActiveOrg = withAuthOnly(
     sourceProcedureId: string,
     options?: { codeSuffix?: string },
   ): Promise<{ id?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: source } = await ctx.supabase
       .from('preservation_procedures')
       .select(`
@@ -479,8 +485,8 @@ export const cloneProcedureToActiveOrg = withAuthOnly(
       .eq('id', sourceProcedureId)
       .single()
 
-    if (!source) return { error: 'Procedimiento origen no encontrado o sin acceso' }
-    if (source.org_id === ctx.orgId) return { error: 'El procedimiento ya está en la org activa' }
+    if (!source) return { error: t('preservation.sourceNotFound') }
+    if (source.org_id === ctx.orgId) return { error: t('preservation.alreadyInOrg') }
 
     const sourceDisc = source.disciplines as { code: string } | { code: string }[] | null
     const sourceEqt = source.equipment_types as { code: string } | { code: string }[] | null
@@ -498,10 +504,10 @@ export const cloneProcedureToActiveOrg = withAuthOnly(
     ])
 
     if (discCode && !targetDisc) {
-      return { error: `Falta la disciplina "${discCode}" en la org activa. Créala antes de importar.` }
+      return { error: t('preservation.missingDiscipline', { code: discCode }) }
     }
     if (eqtCode && !targetEqt) {
-      return { error: `Falta el tipo de equipo "${eqtCode}" en la org activa. Créalo antes de importar.` }
+      return { error: t('preservation.missingEquipmentType', { code: eqtCode }) }
     }
 
     const newCode = `${source.code}${options?.codeSuffix ?? ''}`
@@ -514,7 +520,7 @@ export const cloneProcedureToActiveOrg = withAuthOnly(
       .maybeSingle()
 
     if (existing) {
-      return { error: `Ya existe un procedimiento con código "${newCode}" en esta org` }
+      return { error: t('preservation.codeExists', { code: newCode }) }
     }
 
     const { data: cloned, error: procErr } = await ctx.supabase
@@ -534,7 +540,7 @@ export const cloneProcedureToActiveOrg = withAuthOnly(
       .select('id')
       .single()
 
-    if (procErr || !cloned) return { error: procErr?.message ?? 'No se pudo crear el procedimiento' }
+    if (procErr || !cloned) return { error: procErr?.message ?? t('preservation.createFailed') }
 
     const items = source.preservation_procedure_items ?? []
     if (items.length > 0) {
@@ -542,7 +548,7 @@ export const cloneProcedureToActiveOrg = withAuthOnly(
       const { error: itemErr } = await ctx.supabase
         .from('preservation_procedure_items')
         .insert(itemRows)
-      if (itemErr) return { error: `Procedimiento clonado pero items fallaron: ${itemErr.message}` }
+      if (itemErr) return { error: t('preservation.cloneItemsFailed', { detail: itemErr.message }) }
     }
 
     revalidatePath('/admin/templates/preservation')

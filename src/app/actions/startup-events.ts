@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth/withAuth'
@@ -43,10 +44,11 @@ export type RecordEventInput = {
 export const recordStartupEvent = withAuth(
   { guards: [...projectGuard, { resource: 'system' as const, field: 'systemId', scopeField: 'projectId' }] },
   async (ctx, input: RecordEventInput): Promise<{ id?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const okCode = input.kind === 'milestone' ? MILESTONES.includes(input.code as Milestone) : EVENT_CATEGORIES.includes(input.code as EventCategory)
-    if (!okCode) return { error: 'Tipo de evento no válido' }
-    if (Number.isNaN(Date.parse(input.occurredAt))) return { error: 'Hora no válida' }
-    if (!input.title?.trim()) return { error: 'El título es obligatorio' }
+    if (!okCode) return { error: t('startupEvents.eventKindInvalid') }
+    if (Number.isNaN(Date.parse(input.occurredAt))) return { error: t('startupEvents.timeInvalid') }
+    if (!input.title?.trim()) return { error: t('startupEvents.titleRequired') }
     const manual = (input.manual ?? []).filter(m => m.label?.trim() && m.value?.trim()).slice(0, 50)
       .map(m => ({ label: m.label.trim().slice(0, 100), value: m.value.trim().slice(0, 200), unit: m.unit?.trim().slice(0, 30) ?? '' }))
     const { data, error } = await ctx.supabase.rpc('record_startup_event', {
@@ -72,7 +74,8 @@ export const recordStartupEvent = withAuth(
 export const addStartupEventParam = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; eventId: string; label: string; value: string; unit?: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, input.eventId, input.projectId))) return { error: 'Evento no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, input.eventId, input.projectId))) return { error: t('startupEvents.eventNotFound') }
     const { error } = await ctx.supabase.rpc('add_startup_event_param', {
       p_event_id: input.eventId, p_label: input.label.slice(0, 100), p_value: input.value.slice(0, 200),
       p_unit: input.unit?.trim() ? input.unit.trim().slice(0, 30) : undefined,
@@ -86,7 +89,8 @@ export const addStartupEventParam = withAuth(
 export const witnessStartupEvent = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; eventId: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, input.eventId, input.projectId))) return { error: 'Evento no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, input.eventId, input.projectId))) return { error: t('startupEvents.eventNotFound') }
     const { error } = await ctx.supabase.rpc('witness_startup_event', { p_event_id: input.eventId })
     if (error) return { error: error.message }
     revalidate(input.projectId, input.eventId)
@@ -97,7 +101,8 @@ export const witnessStartupEvent = withAuth(
 export const voidStartupEvent = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; eventId: string; reason: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, input.eventId, input.projectId))) return { error: 'Evento no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, input.eventId, input.projectId))) return { error: t('startupEvents.eventNotFound') }
     const { error } = await ctx.supabase.rpc('void_startup_event', { p_event_id: input.eventId, p_reason: input.reason.slice(0, 2000) })
     if (error) return { error: error.message }
     revalidate(input.projectId, input.eventId)

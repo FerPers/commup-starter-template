@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import { normalizePidRef } from '@/lib/excel/normalize'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
@@ -28,8 +29,9 @@ function revalidateDocs(projectId: string, documentId?: string) {
 export const saveCompany = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, input: { id?: string; name: string; shortName?: string; kind: CompanyKind; taxId?: string; notes?: string; isActive?: boolean }): Promise<{ id?: string; error?: string }> => {
-    if (!COMPANY_KINDS.includes(input.kind)) return { error: 'Tipo de empresa no válido' }
-    if (!txt(input.name, 160)) return { error: 'El nombre es obligatorio' }
+    const t = await getTranslations('ActionErrors')
+    if (!COMPANY_KINDS.includes(input.kind)) return { error: t('documents.invalidCompanyKind') }
+    if (!txt(input.name, 160)) return { error: t('documents.nameRequired') }
     const { data, error } = await ctx.supabase.rpc('save_company', {
       p_org_id: ctx.orgId, p_id: opt(input.id), p_name: txt(input.name, 160), p_short_name: opt(txt(input.shortName, 40)),
       p_kind: input.kind, p_tax_id: opt(txt(input.taxId, 40)), p_notes: opt(txt(input.notes, 2000)), p_is_active: input.isActive ?? true,
@@ -60,8 +62,9 @@ export const saveDocument = withAuth(
     projectId: string; id?: string; number: string; title: string; docType: DocType
     disciplineId?: string | null; companyId?: string | null; systemIds: string[]
   }): Promise<{ id?: string; error?: string }> => {
-    if (!DOC_TYPES.includes(input.docType)) return { error: 'Tipo de documento no válido' }
-    if (!txt(input.number, 80) || !txt(input.title, 300)) return { error: 'Número y título son obligatorios' }
+    const t = await getTranslations('ActionErrors')
+    if (!DOC_TYPES.includes(input.docType)) return { error: t('documents.invalidDocType') }
+    if (!txt(input.number, 80) || !txt(input.title, 300)) return { error: t('documents.numberTitleRequired') }
     // N2d: el número de un P&ID se normaliza como el campo «P&ID» de tags y señales, para que el plano se encuentre.
     const number = input.docType === 'pid' ? (normalizePidRef(input.number) ?? '') : txt(input.number, 80)
     const { data, error } = await ctx.supabase.rpc('save_document', {
@@ -81,11 +84,12 @@ export const addDocumentRevision = withAuth(
     projectId: string; documentId: string; rev: string; status: RevisionStatus; issuedOn?: string | null
     filePath?: string | null; fileName?: string | null; externalUrl?: string | null; notes?: string | null
   }): Promise<{ id?: string; error?: string }> => {
-    if (!REVISION_STATUSES.includes(input.status)) return { error: 'Estado no válido' }
-    if (!txt(input.rev, 20)) return { error: 'Indica la revisión' }
-    if (input.filePath && !isDocumentPathFor(input.filePath, input.projectId, input.documentId)) return { error: 'Archivo no válido' }
+    const t = await getTranslations('ActionErrors')
+    if (!REVISION_STATUSES.includes(input.status)) return { error: t('documents.invalidStatus') }
+    if (!txt(input.rev, 20)) return { error: t('documents.revisionRequired') }
+    if (input.filePath && !isDocumentPathFor(input.filePath, input.projectId, input.documentId)) return { error: t('documents.invalidFile') }
     const url = txt(input.externalUrl, 1000)
-    if (url && !isHttpsUrl(url)) return { error: 'El enlace debe empezar con https://' }
+    if (url && !isHttpsUrl(url)) return { error: t('documents.httpsRequired') }
     const { data, error } = await ctx.supabase.rpc('add_document_revision', {
       p_document_id: input.documentId, p_rev: txt(input.rev, 20), p_status: input.status,
       p_issued_on: opt(input.issuedOn), p_file_path: opt(input.filePath), p_file_name: opt(txt(input.fileName, 255)),
@@ -101,7 +105,8 @@ export const addDocumentRevision = withAuth(
 export const issueDocumentRevision = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; documentId: string; revisionId: string; status: RevisionStatus | null; issuedOn?: string | null }): Promise<{ error?: string }> => {
-    if (input.status !== null && (!REVISION_STATUSES.includes(input.status) || input.status === 'draft')) return { error: 'Estado no válido' }
+    const t = await getTranslations('ActionErrors')
+    if (input.status !== null && (!REVISION_STATUSES.includes(input.status) || input.status === 'draft')) return { error: t('documents.invalidStatus') }
     const { error } = await ctx.supabase.rpc('issue_document_revision', {
       p_revision_id: input.revisionId, p_status: opt(input.status), p_issued_on: opt(input.issuedOn),
     })
@@ -115,8 +120,9 @@ export const issueDocumentRevision = withAuth(
 export const voidDocumentRevision = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; documentId: string; revisionId: string; reason: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = txt(input.reason, 2000)
-    if (reason.length < VOID_REASON_MIN) return { error: `Indica el motivo (mín. ${VOID_REASON_MIN} caracteres)` }
+    if (reason.length < VOID_REASON_MIN) return { error: t('documents.reasonMin', { min: VOID_REASON_MIN }) }
     const { error } = await ctx.supabase.rpc('void_document_revision', { p_revision_id: input.revisionId, p_reason: reason })
     if (error) return { error: error.message }
     revalidateDocs(input.projectId, input.documentId)
@@ -145,8 +151,9 @@ export const referenceDocumentInOpenItrs = withAuth(
 export const revalidateDocumentReferences = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; documentId: string; reason: string }): Promise<{ updated?: number; revalidated?: number; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = txt(input.reason, 2000)
-    if (reason.length < REVALIDATION_MIN) return { error: `Indica el motivo (mín. ${REVALIDATION_MIN} caracteres)` }
+    if (reason.length < REVALIDATION_MIN) return { error: t('documents.reasonMin', { min: REVALIDATION_MIN }) }
     const { data, error } = await ctx.supabase.rpc('revalidate_document_references', { p_document_id: input.documentId, p_reason: reason })
     if (error) return { error: error.message }
     revalidateDocs(input.projectId, input.documentId)
@@ -178,11 +185,12 @@ export const setDocumentPolicy = withAuthOnly(
 export const getDocumentFileUrl = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; revisionId: string }): Promise<{ url?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: rev } = await ctx.supabase.from('document_revisions').select('file_path')
       .eq('id', input.revisionId).eq('project_id', input.projectId).maybeSingle()
-    if (!rev?.file_path) return { error: 'La revisión no tiene archivo' }
+    if (!rev?.file_path) return { error: t('documents.noFile') }
     const { data, error } = await ctx.supabase.storage.from('project-documents').createSignedUrl(rev.file_path, 300)
-    if (error || !data) return { error: error?.message ?? 'No se pudo abrir el archivo' }
+    if (error || !data) return { error: error?.message ?? t('documents.fileOpenFailed') }
     return { url: data.signedUrl }
   },
 )
@@ -196,7 +204,8 @@ function revalidateTarget(input: { projectId: string; path?: string }) {
 export const addDocumentReference = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; kind: ReferenceKind; targetId: string; documentId: string; path?: string }): Promise<{ error?: string }> => {
-    if (!REFERENCE_KINDS.includes(input.kind)) return { error: 'Tipo de referencia no válido' }
+    const t = await getTranslations('ActionErrors')
+    if (!REFERENCE_KINDS.includes(input.kind)) return { error: t('documents.invalidReferenceKind') }
     const { error } = await ctx.supabase.rpc('add_document_reference', {
       p_kind: input.kind, p_target_id: input.targetId, p_document_id: input.documentId,
     })
@@ -220,8 +229,9 @@ export const removeDocumentReference = withAuth(
 export const updateDocumentReference = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; referenceId: string; reason?: string; locked?: boolean; path?: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = txt(input.reason, 2000)
-    if (input.locked && reason.length < REVALIDATION_MIN) return { error: `Indica el motivo (mín. ${REVALIDATION_MIN} caracteres)` }
+    if (input.locked && reason.length < REVALIDATION_MIN) return { error: t('documents.reasonMin', { min: REVALIDATION_MIN }) }
     const { error } = await ctx.supabase.rpc('update_document_reference', { p_reference_id: input.referenceId, p_reason: opt(reason) })
     if (error) return { error: error.message }
     revalidateTarget(input)

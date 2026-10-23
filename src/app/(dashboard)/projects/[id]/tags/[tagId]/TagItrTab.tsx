@@ -8,7 +8,7 @@ import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
-import { assignmentError, normalizeRequired, requiredForTemplate } from '@/lib/itr/signatures'
+import { assignmentIssue, normalizeRequired, requiredForTemplate } from '@/lib/itr/signatures'
 import { ink } from '@/lib/theme'
 
 // ── Status config ────────────────────────────────────────────────────
@@ -54,6 +54,7 @@ export default function TagItrTab({
   const locale = useLocale()
   const t = useTranslations('TagItrs')
   const tr = useTranslations('Users')
+  const te = useTranslations('ActionErrors')
   const roleLabel = (role: string) => (['owner', 'admin', 'architect', 'leader', 'inspector', 'client'].includes(role) ? tr(`roles.${role as 'owner'}`) : role)
   // Título de plantilla según idioma del usuario (title_es si existe)
   const tplTitle = (tpl: { title: string; title_es?: string | null }) => (locale === 'es' && tpl.title_es?.trim()) ? tpl.title_es : tpl.title
@@ -92,7 +93,8 @@ export default function TagItrTab({
   const needsSupervisor = requiredRoles.includes('supervisor')
   const needsClient = requiredRoles.includes('client')
   const people = { executor: selectedInspector, supervisor: needsSupervisor ? selectedSupervisor : null, client: needsClient ? selectedClient : null }
-  const formError = selectedTemplate && selectedInspector ? assignmentError(requiredRoles, people) : null
+  const formIssue = selectedTemplate && selectedInspector ? assignmentIssue(requiredRoles, people) : null
+  const formError = formIssue ? te(`itrAssign.${formIssue.code}`, formIssue) : null
 
   function handleAssign() {
     if (!selectedTemplate || !selectedInspector) return

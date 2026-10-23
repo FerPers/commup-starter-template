@@ -52,6 +52,8 @@ import {
   checkEquipmentTypeAccess,
   type AccessResult,
 } from '@/lib/auth/access'
+import { getTranslations } from 'next-intl/server'
+import { accessError } from '@/lib/i18n/action-errors'
 
 /**
  * Supported FK resource types. Each maps to a `check*Access` helper in
@@ -162,9 +164,10 @@ async function runGuards<I>(
   guards: readonly FKGuard[],
   input: I,
 ): Promise<{ error: string } | null> {
+  const t = await getTranslations('ActionErrors')
   // Guards require a non-null object input. Reject silently otherwise.
   if (input == null || typeof input !== 'object') {
-    return { error: 'Input no válido para validación de permisos' }
+    return { error: t('guard.invalidInput') }
   }
   const obj = input as Record<string, unknown>
 
@@ -173,57 +176,53 @@ async function runGuards<I>(
 
     if (raw == null || raw === '') {
       if (g.optional) continue
-      return { error: `Falta el campo requerido: ${g.field}` }
+      return { error: t('guard.missingField', { field: g.field }) }
     }
 
     // system supports string[] (bulk import path); everything else is a single id
     if (g.resource === 'system' && Array.isArray(raw)) {
       const ids = raw.filter((v): v is string => typeof v === 'string')
       if (ids.length !== raw.length) {
-        return { error: `Field ${g.field} debe ser string[] de ids` }
+        return { error: t('guard.invalidField', { field: g.field }) }
       }
       const scope = readScope(obj, g)
-      if (scope.error) return scope.error
+      if (scope.error) return { error: t('guard.missingScope', { field: scope.error.field }) }
       const result = await checkSystemsAccess(ctx.supabase, scope.value, ids)
-      if (!result.ok) return { error: result.error }
+      if (!result.ok) return { error: await accessError(result) }
       continue
     }
 
     if (typeof raw !== 'string') {
-      return { error: `Field ${g.field} debe ser un string id` }
+      return { error: t('guard.invalidField', { field: g.field }) }
     }
 
-    const result = await runSingleGuard(ctx, g, raw, obj)
-    if (!result.ok) return { error: result.error }
+    const scoped = SCOPED.has(g.resource) ? readScope(obj, g) : null
+    if (scoped?.error) return { error: t('guard.missingScope', { field: scoped.error.field }) }
+    const result = await runSingleGuard(ctx, g, raw, scoped?.value ?? '')
+    if (!result.ok) return { error: await accessError(result) }
   }
 
   return null
 }
 
+/** Guards cuyo id se valida dentro de un proyecto (`scopeField`). */
+const SCOPED = new Set<FKGuard['resource']>(['subsystem', 'system', 'tag'])
+
 async function runSingleGuard(
   ctx: ActiveContext,
   g: FKGuard,
   id: string,
-  obj: Record<string, unknown>,
+  scope: string,
 ): Promise<AccessResult> {
   switch (g.resource) {
     case 'project':
       return checkProjectAccess(ctx.supabase, ctx.orgId, id)
-    case 'subsystem': {
-      const scope = readScope(obj, g)
-      if (scope.error) return { ok: false, error: scope.error.error, reason: 'invalid' }
-      return checkSubsystemAccess(ctx.supabase, scope.value, id)
-    }
-    case 'system': {
-      const scope = readScope(obj, g)
-      if (scope.error) return { ok: false, error: scope.error.error, reason: 'invalid' }
-      return checkSystemAccess(ctx.supabase, scope.value, id)
-    }
-    case 'tag': {
-      const scope = readScope(obj, g)
-      if (scope.error) return { ok: false, error: scope.error.error, reason: 'invalid' }
-      return checkTagAccess(ctx.supabase, scope.value, id)
-    }
+    case 'subsystem':
+      return checkSubsystemAccess(ctx.supabase, scope, id)
+    case 'system':
+      return checkSystemAccess(ctx.supabase, scope, id)
+    case 'tag':
+      return checkTagAccess(ctx.supabase, scope, id)
     case 'template':
       return checkTemplateAccess(ctx.supabase, ctx.orgId, id)
     case 'discipline':
@@ -235,16 +234,13 @@ async function runSingleGuard(
   }
 }
 
+/** `error.field` = el campo de alcance que falta (o el recurso si el guard no declara `scopeField`: error de código). */
 function readScope(
   obj: Record<string, unknown>,
   g: FKGuard,
-): { value: string; error: null } | { value: ''; error: { error: string } } {
-  if (!g.scopeField) {
-    return { value: '', error: { error: `Guard de ${g.resource} requiere scopeField` } }
-  }
+): { value: string; error: null } | { value: ''; error: { field: string } } {
+  if (!g.scopeField) return { value: '', error: { field: g.resource } }
   const v = obj[g.scopeField]
-  if (typeof v !== 'string' || v === '') {
-    return { value: '', error: { error: `Falta scopeField ${g.scopeField} para ${g.resource}` } }
-  }
+  if (typeof v !== 'string' || v === '') return { value: '', error: { field: g.scopeField } }
   return { value: v, error: null }
 }

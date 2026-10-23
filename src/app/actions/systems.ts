@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
@@ -33,11 +34,12 @@ function revalidate(projectId: string, systemId?: string) {
 }
 
 /** Errores de Postgres → mensaje para el usuario (los de nuestros triggers ya vienen en español). */
-function dbError(err: { code?: string; message: string }): string {
-  if (err.code === '23505') return 'Esa dependencia ya existe'
-  if (err.code === '23514' && /priority/.test(err.message)) return 'La prioridad debe ser P1 a P5'
-  if (err.code === '23514' && /systems_color_hex/.test(err.message)) return 'Color no válido'
-  if (err.code === '23514' && /battery_limits/.test(err.message)) return 'Límites de batería no válidos'
+async function dbError(err: { code?: string; message: string }): Promise<string> {
+  const t = await getTranslations('ActionErrors')
+  if (err.code === '23505') return t('systems.dependencyExists')
+  if (err.code === '23514' && /priority/.test(err.message)) return t('systems.priorityRange')
+  if (err.code === '23514' && /systems_color_hex/.test(err.message)) return t('systems.colorInvalid')
+  if (err.code === '23514' && /battery_limits/.test(err.message)) return t('systems.batteryLimitsInvalid')
   return err.message
 }
 
@@ -71,24 +73,25 @@ export const updateSystem = withAuth(
       color?: string | null
     },
   ): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     // Parche parcial: solo se toca lo que viene en el input.
     const patch: TablesUpdate<'systems'> = {}
     if ('name' in input) {
       const name = (input.name ?? '').trim()
-      if (!name) return { error: 'El nombre no puede quedar vacío' }
+      if (!name) return { error: t('systems.nameRequired') }
       patch.name = name.slice(0, 200)
     }
     if ('system_type' in input) {
-      if (input.system_type != null && !SYSTEM_TYPES.includes(input.system_type)) return { error: 'Tipo de sistema no válido' }
+      if (input.system_type != null && !SYSTEM_TYPES.includes(input.system_type)) return { error: t('systems.typeInvalid') }
       patch.system_type = input.system_type ?? null
     }
     if ('priority' in input) {
-      if (input.priority != null && !(Number.isInteger(input.priority) && input.priority >= 1 && input.priority <= 5)) return { error: 'La prioridad debe ser P1 a P5' }
+      if (input.priority != null && !(Number.isInteger(input.priority) && input.priority >= 1 && input.priority <= 5)) return { error: t('systems.priorityRange') }
       patch.priority = input.priority ?? null
     }
     if ('color' in input) {
       const color = input.color == null ? '' : normalizeSystemColor(input.color)
-      if (color === null) return { error: 'Color no válido' }
+      if (color === null) return { error: t('systems.colorInvalid') }
       // '' = que el trigger system_assign_color ponga el menos usado del proyecto.
       patch.color = color
     }
@@ -96,7 +99,7 @@ export const updateSystem = withAuth(
     if (!Object.keys(patch).length) return {}
 
     const { error } = await ctx.supabase.from('systems').update(patch).eq('id', input.systemId).eq('project_id', input.projectId)
-    if (error) return { error: dbError(error) }
+    if (error) return { error: await dbError(error) }
     revalidate(input.projectId, input.systemId)
     return {}
   },
@@ -111,7 +114,7 @@ export const setSystemBoundaryFrozen = withAuth(
       .update({ boundary_frozen_at: input.frozen ? new Date().toISOString() : null })
       .eq('id', input.systemId)
       .eq('project_id', input.projectId)
-    if (error) return { error: dbError(error) }
+    if (error) return { error: await dbError(error) }
     revalidate(input.projectId, input.systemId)
     return {}
   },
@@ -136,8 +139,9 @@ export const addSystemDependency = withAuth(
       notes?: string | null
     },
   ): Promise<{ id?: string; error?: string }> => {
-    if (!DEPENDENCY_KINDS.includes(input.kind)) return { error: 'Tipo de dependencia no válido' }
-    if (input.systemId === input.providerId) return { error: 'Un sistema no puede depender de sí mismo' }
+    const t = await getTranslations('ActionErrors')
+    if (!DEPENDENCY_KINDS.includes(input.kind)) return { error: t('systems.dependencyKindInvalid') }
+    if (input.systemId === input.providerId) return { error: t('systems.selfDependency') }
 
     const gates = await orgGates(ctx)
     const def = defaultDependencyGates(input.kind, gates)
@@ -145,9 +149,9 @@ export const addSystemDependency = withAuth(
     const requiredGateId = blank(input.requiredGateId) ?? def?.requiredGateId
     const blockedGateId = blank(input.blockedGateId) ?? def?.blockedGateId
     const notes = input.notes?.trim().slice(0, 1000)
-    if (!requiredGateId || !blockedGateId) return { error: 'La organización no tiene gates activos' }
+    if (!requiredGateId || !blockedGateId) return { error: t('systems.noActiveGates') }
     const ids = new Set(gates.map(g => g.id))
-    if (!ids.has(requiredGateId) || !ids.has(blockedGateId)) return { error: 'Gate no válido' }
+    if (!ids.has(requiredGateId) || !ids.has(blockedGateId)) return { error: t('systems.gateInvalid') }
 
     const { data, error } = await ctx.supabase
       .from('system_dependencies')
@@ -164,7 +168,7 @@ export const addSystemDependency = withAuth(
       })
       .select('id')
       .single()
-    if (error) return { error: dbError(error) }
+    if (error) return { error: await dbError(error) }
 
     await logActivity(ctx.supabase, {
       orgId: ctx.orgId, userId: ctx.userId, action: 'system.dependency_added', entityType: 'system', entityId: input.systemId,
@@ -179,6 +183,7 @@ export const addSystemDependency = withAuth(
 export const removeSystemDependency = withAuth(
   { role: EDITOR_ROLES, guards: systemGuards },
   async (ctx, input: { projectId: string; systemId: string; dependencyId: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data, error } = await ctx.supabase
       .from('system_dependencies')
       .delete()
@@ -186,8 +191,8 @@ export const removeSystemDependency = withAuth(
       .eq('system_id', input.systemId)
       .eq('project_id', input.projectId)
       .select('depends_on_system_id')
-    if (error) return { error: dbError(error) }
-    if (!data?.length) return { error: 'Dependencia no encontrada' }
+    if (error) return { error: await dbError(error) }
+    if (!data?.length) return { error: t('systems.dependencyNotFound') }
 
     await logActivity(ctx.supabase, {
       orgId: ctx.orgId, userId: ctx.userId, action: 'system.dependency_removed', entityType: 'system', entityId: input.systemId,
@@ -217,9 +222,10 @@ export const importSystemsWorkbook = withAuth(
     ctx,
     input: { projectId: string; systems: SystemImportRow[]; dependencies: DependencyImportRow[] },
   ): Promise<SystemsImportResult> => {
+    const t = await getTranslations('ActionErrors')
     const result: SystemsImportResult = { systemsUpdated: 0, dependenciesCreated: 0, dependenciesExisting: 0, errors: [] }
     if (input.systems.length + input.dependencies.length > MAX_IMPORT_ROWS) {
-      return { ...result, error: `Máximo ${MAX_IMPORT_ROWS} filas por importación` }
+      return { ...result, error: t('systems.maxRows', { max: MAX_IMPORT_ROWS }) }
     }
 
     const [{ data: systems }, gates] = await Promise.all([
@@ -232,7 +238,7 @@ export const importSystemsWorkbook = withAuth(
     // 1) Atributos de sistemas existentes (el importador de jerarquía es quien los crea).
     for (const r of input.systems) {
       const id = idByCode.get(r.system_code)
-      if (!id) { result.errors.push(`Sistemas, fila ${r.row}: el sistema ${r.system_code} no existe en el proyecto`); continue }
+      if (!id) { result.errors.push(t('systems.importSystemMissing', { row: r.row, code: r.system_code })); continue }
       // Celdas vacías no borran lo ya cargado: solo se escribe lo que trae el Excel.
       const patch: TablesUpdate<'systems'> = {}
       const limits = cleanBatteryLimits(r.battery_limits ?? {})
@@ -242,7 +248,7 @@ export const importSystemsWorkbook = withAuth(
       if (r.priority != null && Number.isInteger(r.priority) && r.priority >= 1 && r.priority <= 5) patch.priority = r.priority
       if (!Object.keys(patch).length) continue
       const { error } = await ctx.supabase.from('systems').update(patch).eq('id', id).eq('project_id', input.projectId)
-      if (error) result.errors.push(`Sistemas, fila ${r.row}: ${dbError(error)}`)
+      if (error) result.errors.push(t('systems.importSystemRowError', { row: r.row, error: await dbError(error) }))
       else result.systemsUpdated++
     }
 
@@ -251,15 +257,15 @@ export const importSystemsWorkbook = withAuth(
       const systemId = idByCode.get(r.system_code)
       const providerId = idByCode.get(r.depends_on_code)
       if (!systemId || !providerId) {
-        result.errors.push(`Dependencias, fila ${r.row}: no existe el sistema ${!systemId ? r.system_code : r.depends_on_code}`)
+        result.errors.push(t('systems.importDepSystemMissing', { row: r.row, code: !systemId ? r.system_code : r.depends_on_code }))
         continue
       }
-      if (!DEPENDENCY_KINDS.includes(r.kind)) { result.errors.push(`Dependencias, fila ${r.row}: tipo no válido`); continue }
+      if (!DEPENDENCY_KINDS.includes(r.kind)) { result.errors.push(t('systems.importDepKindInvalid', { row: r.row })); continue }
       const def = defaultDependencyGates(r.kind, gates)
       const requiredGateId = r.required_gate_code ? gateByCode.get(r.required_gate_code) : def?.requiredGateId
       const blockedGateId = r.blocked_gate_code ? gateByCode.get(r.blocked_gate_code) : def?.blockedGateId
       if (!requiredGateId || !blockedGateId) {
-        result.errors.push(`Dependencias, fila ${r.row}: gate «${(!requiredGateId ? r.required_gate_code : r.blocked_gate_code) ?? '—'}» no existe o no está activo`)
+        result.errors.push(t('systems.importDepGateMissing', { row: r.row, gate: (!requiredGateId ? r.required_gate_code : r.blocked_gate_code) ?? '—' }))
         continue
       }
       const { error } = await ctx.supabase.from('system_dependencies').insert({
@@ -274,7 +280,7 @@ export const importSystemsWorkbook = withAuth(
         source: 'import',
       })
       if (error?.code === '23505') result.dependenciesExisting++
-      else if (error) result.errors.push(`Dependencias, fila ${r.row} (${r.system_code} → ${r.depends_on_code}): ${dbError(error)}`)
+      else if (error) result.errors.push(t('systems.importDepRowError', { row: r.row, system: r.system_code, provider: r.depends_on_code, error: await dbError(error) }))
       else result.dependenciesCreated++
     }
 

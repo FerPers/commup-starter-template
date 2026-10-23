@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
@@ -28,25 +29,27 @@ const ilikeLiteral = (v: string) => v.replace(/[\\%_]/g, c => `\\${c}`)
 
 /** Tag por número dentro del proyecto (vacío = sin tag). S13 (F-15/F-33): por la clave normalizada `tag_key`. */
 async function resolveTag(supabase: SupabaseClient, projectId: string, tagNumber: string | null | undefined): Promise<{ id: string | null } | { error: string }> {
+  const t = await getTranslations('ActionErrors')
   const number = txt(tagNumber, 100)
   if (!number) return { id: null }
   const key = normalizeTag(number)
-  if (!key) return { error: `El tag ${number} no existe en el proyecto` }
+  if (!key) return { error: t('ceMatrix.tagNotFound', { tag: number }) }
   const { data } = await supabase.from('tags').select('id').eq('project_id', projectId).eq('tag_key', key).limit(2)
-  if (!data?.length) return { error: `El tag ${number} no existe en el proyecto` }
-  if (data.length > 1) return { error: `Hay más de un tag ${number}; usa el número exacto` }
+  if (!data?.length) return { error: t('ceMatrix.tagNotFound', { tag: number }) }
+  if (data.length > 1) return { error: t('ceMatrix.tagAmbiguous', { tag: number }) }
   return { id: data[0].id }
 }
 
 /** Señal por tag de señal; si hay tag, dentro de ese instrumento. */
 async function resolveSignal(supabase: SupabaseClient, projectId: string, tagId: string | null, signalTag: string | null | undefined): Promise<{ id: string | null } | { error: string }> {
+  const t = await getTranslations('ActionErrors')
   const name = txt(signalTag, 100)
   if (!name) return { id: null }
   let q = supabase.from('signals').select('id, tag_id, tags!inner(project_id)').eq('tags.project_id', projectId).ilike('signal_tag', ilikeLiteral(name)).limit(2)
   if (tagId) q = q.eq('tag_id', tagId)
   const { data } = await q
-  if (!data?.length) return { error: `La señal ${name} no existe${tagId ? ' en ese instrumento' : ' en el proyecto'}` }
-  if (data.length > 1) return { error: `La señal ${name} está en varios instrumentos; indica también el tag` }
+  if (!data?.length) return { error: tagId ? t('ceMatrix.signalNotFoundInTag', { signal: name }) : t('ceMatrix.signalNotFound', { signal: name }) }
+  if (data.length > 1) return { error: t('ceMatrix.signalAmbiguous', { signal: name }) }
   return { id: data[0].id }
 }
 
@@ -64,9 +67,10 @@ export type CeMatrixInput = {
 export const saveCeMatrix = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }, { resource: 'system', field: 'systemId', scopeField: 'projectId', optional: true }] },
   async (ctx, input: CeMatrixInput): Promise<{ id?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const code = txt(input.code, 60)?.toUpperCase()
     const title = txt(input.title, 200)
-    if (!code || !title) return { error: 'Código y título son obligatorios' }
+    if (!code || !title) return { error: t('ceMatrix.codeTitleRequired') }
     const row = {
       code, title, system_id: txt(input.systemId, 40), revision: txt(input.revision, 30),
       source_document: txt(input.sourceDocument, 200), notes: txt(input.notes, 2000),
@@ -75,8 +79,8 @@ export const saveCeMatrix = withAuth(
       ? ctx.supabase.from('ce_matrices').update(row).eq('id', input.id).eq('project_id', input.projectId).select('id').single()
       : ctx.supabase.from('ce_matrices').insert({ ...row, project_id: input.projectId, org_id: ctx.orgId, source: 'manual' }).select('id').single()
     const { data, error } = await q
-    if (error?.code === '23505') return { error: `Ya existe una matriz ${code} en el proyecto` }
-    if (error || !data) return { error: error?.message ?? 'No se pudo guardar la matriz' }
+    if (error?.code === '23505') return { error: t('ceMatrix.matrixExists', { code }) }
+    if (error || !data) return { error: error?.message ?? t('ceMatrix.matrixSaveFailed') }
     revalidate(input.projectId, data.id)
     return { id: data.id }
   },
@@ -110,11 +114,12 @@ export type CeCauseInput = {
 export const saveCeCause = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: CeCauseInput): Promise<{ id?: string; error?: string }> => {
-    if (!(await matrixInProject(ctx.supabase, input.projectId, input.matrixId))) return { error: 'Matriz no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await matrixInProject(ctx.supabase, input.projectId, input.matrixId))) return { error: t('ceMatrix.matrixNotFound') }
     const code = normalizeCeCode(input.code)
     const description = txt(input.description, 300)
-    if (!code || !description) return { error: 'Código (máx. 30) y descripción son obligatorios' }
-    if (input.voting && !CE_VOTINGS.includes(input.voting)) return { error: 'Votación no válida' }
+    if (!code || !description) return { error: t('ceMatrix.codeDescriptionRequired') }
+    if (input.voting && !CE_VOTINGS.includes(input.voting)) return { error: t('ceMatrix.votingInvalid') }
     const tag = await resolveTag(ctx.supabase, input.projectId, input.tagNumber)
     if ('error' in tag) return tag
     const signal = await resolveSignal(ctx.supabase, input.projectId, tag.id, input.signalTag)
@@ -127,8 +132,8 @@ export const saveCeCause = withAuth(
       ? ctx.supabase.from('ce_causes').update(row).eq('id', input.id).eq('matrix_id', input.matrixId).select('id').single()
       : ctx.supabase.from('ce_causes').insert({ ...row, matrix_id: input.matrixId, project_id: input.projectId }).select('id').single()
     const { data, error } = await q
-    if (error?.code === '23505') return { error: `Ya existe la causa ${code} en esta matriz` }
-    if (error || !data) return { error: error?.message ?? 'No se pudo guardar la causa' }
+    if (error?.code === '23505') return { error: t('ceMatrix.causeExists', { code }) }
+    if (error || !data) return { error: error?.message ?? t('ceMatrix.causeSaveFailed') }
     revalidate(input.projectId, input.matrixId)
     return { id: data.id }
   },
@@ -149,11 +154,12 @@ export type CeEffectInput = {
 export const saveCeEffect = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: CeEffectInput): Promise<{ id?: string; error?: string }> => {
-    if (!(await matrixInProject(ctx.supabase, input.projectId, input.matrixId))) return { error: 'Matriz no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await matrixInProject(ctx.supabase, input.projectId, input.matrixId))) return { error: t('ceMatrix.matrixNotFound') }
     const code = normalizeCeCode(input.code)
     const description = txt(input.description, 300)
-    if (!code || !description) return { error: 'Código (máx. 30) y descripción son obligatorios' }
-    if (!CE_ACTIONS.includes(input.action)) return { error: 'Acción no válida' }
+    if (!code || !description) return { error: t('ceMatrix.codeDescriptionRequired') }
+    if (!CE_ACTIONS.includes(input.action)) return { error: t('ceMatrix.actionInvalid') }
     const tag = await resolveTag(ctx.supabase, input.projectId, input.tagNumber)
     if ('error' in tag) return tag
     const row = { seq: Math.trunc(input.seq) || 0, code, description, tag_id: tag.id, action: input.action, notes: txt(input.notes, 1000) }
@@ -161,8 +167,8 @@ export const saveCeEffect = withAuth(
       ? ctx.supabase.from('ce_effects').update(row).eq('id', input.id).eq('matrix_id', input.matrixId).select('id').single()
       : ctx.supabase.from('ce_effects').insert({ ...row, matrix_id: input.matrixId, project_id: input.projectId }).select('id').single()
     const { data, error } = await q
-    if (error?.code === '23505') return { error: `Ya existe el efecto ${code} en esta matriz` }
-    if (error || !data) return { error: error?.message ?? 'No se pudo guardar el efecto' }
+    if (error?.code === '23505') return { error: t('ceMatrix.effectExists', { code }) }
+    if (error || !data) return { error: error?.message ?? t('ceMatrix.effectSaveFailed') }
     revalidate(input.projectId, input.matrixId)
     return { id: data.id }
   },

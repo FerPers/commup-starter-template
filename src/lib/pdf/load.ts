@@ -198,7 +198,7 @@ export async function loadPssrPdf(db: Db, x: { projectId: string; reviewId: stri
     db.from('pssr_reviews')
       .select('id, review_number, title, status, notes, review_due_date, approved_at, rfsu_certificate_id, systems(code, name)')
       .eq('id', x.reviewId).eq('project_id', x.projectId).maybeSingle(),
-    db.from('projects').select('code, name, client').eq('id', x.projectId).maybeSingle(),
+    db.from('projects').select('code, name, client, timezone').eq('id', x.projectId).maybeSingle(),
     db.from('pssr_review_items')
       .select('id, item_order, category, element, requirement, notes_hint, status, responsible, actions, completion_date')
       .eq('review_id', x.reviewId).order('item_order'),
@@ -214,6 +214,7 @@ export async function loadPssrPdf(db: Db, x: { projectId: string; reviewId: stri
       projectName: project?.name ?? '',
       projectCode: project?.code ?? '',
       projectClient: project?.client ?? null,
+      timezone: project?.timezone ?? null,
       items: (items ?? []).map(i => ({ ...i, status: i.status as PssrPdfData['items'][number]['status'] })),
       signatures: signatures ?? [],
     },
@@ -231,7 +232,7 @@ export async function loadCertificatePdf(db: Db, x: { projectId: string; certId:
         issued_by_profile:profiles!issued_by(full_name)
       `)
       .eq('id', x.certId).eq('project_id', x.projectId).maybeSingle(),
-    db.from('projects').select('code, name, client').eq('id', x.projectId).maybeSingle(),
+    db.from('projects').select('code, name, client, timezone').eq('id', x.projectId).maybeSingle(),
     db.from('certificate_punch_exceptions')
       .select('id, justification, approved_at, punches(punch_number, description, category), approved_by_profile:profiles!approved_by(full_name)')
       .eq('certificate_id', x.certId).order('approved_at'),
@@ -257,6 +258,7 @@ export async function loadCertificatePdf(db: Db, x: { projectId: string; certId:
       projectName: project?.name ?? '',
       projectCode: project?.code ?? '',
       projectClient: project?.client ?? null,
+      timezone: project?.timezone ?? null,
       exceptions: exceptions ?? [],
       itrs: itrs ?? [],
       signatures: signatures ?? [],

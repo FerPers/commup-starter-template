@@ -4,6 +4,7 @@ import { ADMIN_ROLES, OWNER_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { EQUIPMENT_TYPE_DEFAULTS, defaultLineupFlags } from '@/lib/equipment-types'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { CAT_B_LIMIT_SETTING } from '@/lib/certificates/eligibility'
 import { LOGO_BUCKET, LOGO_MAX_BYTES, LOGO_MIME_EXT } from '@/lib/constants/logos'
 
@@ -83,6 +84,7 @@ export const updatePhase = withAuth(
 export const deletePhase = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, phaseId: string): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     // Block if ITRs reference this phase
     const { count } = await ctx.supabase
       .from('itrs')
@@ -90,7 +92,7 @@ export const deletePhase = withAuthOnly(
       .eq('phase_id', phaseId)
 
     if ((count ?? 0) > 0) {
-      return { error: `No se puede eliminar: ${count} ITR(s) usan esta fase` }
+      return { error: t('config.phaseInUse', { count: count ?? 0 }) }
     }
 
     const { error } = await ctx.supabase
@@ -162,6 +164,7 @@ export const updateDiscipline = withAuth(
 export const deleteDiscipline = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, disciplineId: string): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     // Block if tags reference this discipline
     const { count } = await ctx.supabase
       .from('tags')
@@ -169,7 +172,7 @@ export const deleteDiscipline = withAuthOnly(
       .eq('discipline_id', disciplineId)
 
     if ((count ?? 0) > 0) {
-      return { error: `No se puede eliminar: ${count} tag(s) usan esta disciplina` }
+      return { error: t('config.disciplineInUse', { count: count ?? 0 }) }
     }
 
     const { error } = await ctx.supabase
@@ -252,12 +255,13 @@ export const updateEquipmentType = withAuth(
 export const deleteEquipmentType = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, equipmentTypeId: string): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { count } = await ctx.supabase
       .from('tags')
       .select('id', { count: 'exact', head: true })
       .eq('equipment_type_id', equipmentTypeId)
     if ((count ?? 0) > 0) {
-      return { error: `No se puede eliminar: ${count} tag(s) usan este tipo de equipo` }
+      return { error: t('config.equipmentTypeInUse', { count: count ?? 0 }) }
     }
     const { error } = await ctx.supabase
       .from('equipment_types')
@@ -284,7 +288,8 @@ export const updateOrgProfile = withAuth(
       logoUrl: string | null
     },
   ): Promise<{ error?: string }> => {
-    if (ctx.orgId !== input.orgId) return { error: 'Organización no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (ctx.orgId !== input.orgId) return { error: t('config.invalidOrg') }
 
     const { error } = await ctx.supabase
       .from('organizations')
@@ -356,8 +361,9 @@ export const saveOrgGlossary = withAuthOnly(
 export const saveCatBLimit = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, limit: number | null): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     if (limit !== null && (!Number.isInteger(limit) || limit < 0 || limit > 999)) {
-      return { error: 'El límite debe ser un entero entre 0 y 999' }
+      return { error: t('config.catBLimitRange') }
     }
     const { data: org, error: fetchErr } = await ctx.supabase
       .from('organizations')
@@ -383,16 +389,17 @@ export const uploadOrgLogo = withAuthOnly(
     orgId: string,
     formData: FormData,
   ): Promise<{ url?: string; error?: string }> => {
-    if (ctx.orgId !== orgId) return { error: 'Organización no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (ctx.orgId !== orgId) return { error: t('config.invalidOrg') }
 
     const file = formData.get('file') as File | null
-    if (!file) return { error: 'No se adjuntó archivo' }
-    if (file.size > LOGO_MAX_BYTES) return { error: 'El archivo supera 2 MB' }
+    if (!file) return { error: t('config.logoMissing') }
+    if (file.size > LOGO_MAX_BYTES) return { error: t('config.logoTooLarge', { mb: LOGO_MAX_BYTES / 1024 / 1024 }) }
 
     // A-26 (S02): el bucket es público → solo imágenes rasterizadas (nunca SVG/HTML) y la extensión
     // sale del MIME validado, no del nombre del archivo. El bucket repite la lista (migración S02).
     const ext = LOGO_MIME_EXT[file.type]
-    if (!ext) return { error: 'El logo debe ser PNG, JPG o WebP' }
+    if (!ext) return { error: t('config.logoType') }
     const path = `${orgId}/logo.${ext}`
 
     const { error: upErr } = await ctx.supabase.storage

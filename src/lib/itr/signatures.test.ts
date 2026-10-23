@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { allRequiredSigned, assignmentError, availableSigningRoles, nextSigningRole, normalizeRequired, requiredForTemplate } from './signatures'
+import { allRequiredSigned, assignmentIssue, availableSigningRoles, nextSigningRole, normalizeRequired, requiredForTemplate } from './signatures'
 
 describe('firmas requeridas del ITR (S04)', () => {
   it('normaliza: orden fijo, ejecutor siempre, vacío = por defecto', () => {
@@ -37,10 +37,10 @@ describe('firmas requeridas del ITR (S04)', () => {
   })
 
   it('valida asignaciones: requeridas completas y personas distintas', () => {
-    expect(assignmentError(['executor', 'supervisor'], { executor: 'A', supervisor: 'B' })).toBeNull()
-    expect(assignmentError(['executor', 'supervisor'], { executor: 'A' })).toMatch(/supervisor/)
-    expect(assignmentError(['executor', 'supervisor', 'client'], { executor: 'A', supervisor: 'B' })).toMatch(/cliente/)
-    expect(assignmentError(['executor', 'supervisor'], { executor: 'A', supervisor: 'A' })).toMatch(/misma persona/)
-    expect(assignmentError(['executor'], { executor: 'A', supervisor: 'A' })).toBeNull()
+    expect(assignmentIssue(['executor', 'supervisor'], { executor: 'A', supervisor: 'B' })).toBeNull()
+    expect(assignmentIssue(['executor', 'supervisor'], { executor: 'A' })).toEqual({ code: 'missing_role', role: 'supervisor' })
+    expect(assignmentIssue(['executor', 'supervisor', 'client'], { executor: 'A', supervisor: 'B' })).toEqual({ code: 'missing_role', role: 'client' })
+    expect(assignmentIssue(['executor', 'supervisor'], { executor: 'A', supervisor: 'A' })).toEqual({ code: 'same_person' })
+    expect(assignmentIssue(['executor'], { executor: 'A', supervisor: 'A' })).toBeNull()
   })
 })

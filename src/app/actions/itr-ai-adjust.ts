@@ -2,10 +2,11 @@
 
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
-import { AI_NOT_CONFIGURED, isAiConfigured } from '@/lib/ai/claude'
+import { aiNotConfigured, isAiConfigured } from '@/lib/ai/claude'
 import { aiCostUsd } from '@/lib/ai/pricing'
 import { runAi } from '@/lib/ai/run'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -23,14 +24,15 @@ import {
 export const runItrAdjustBatch = withAuth(
   { role: PRIVILEGED_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: { projectId: string }): Promise<{ error?: string; reviewed?: number; proposals?: number; remaining?: number; costUsd?: number }> => {
-    if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED }
+    const t = await getTranslations('ActionErrors')
+    if (!isAiConfigured()) return { error: await aiNotConfigured() }
     const { data, error } = await ctx.supabase.rpc('tag_ai_signatures', { p_project_id: input.projectId, p_status: 'pending', p_limit: SIGNATURES_PER_CALL, p_offset: 0 })
     if (error) return { error: error.message }
     const page = data as unknown as AiSignaturePage
     if (!page.groups.length) return { reviewed: 0, proposals: 0, remaining: 0, costUsd: 0 }
 
     const candidates = await loadAdjustCandidates(ctx.supabase, ctx.orgId, input.projectId)
-    if (!candidates.length) return { error: 'No hay plantillas activas dentro del alcance de disciplinas del proyecto.' }
+    if (!candidates.length) return { error: t('itrAiAdjust.noCandidates') }
     const { data: phases } = await ctx.supabase.from('project_phases').select('code, name, order_index').eq('org_id', ctx.orgId).order('order_index').limit(100)
 
     const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, projectId: input.projectId, feature: 'itr_adjust' }, (client, model) =>
@@ -50,7 +52,7 @@ export const runItrAdjustBatch = withAuth(
       }))
     if (!run.response) return { error: run.error }
     const parsed = run.response.parsed_output
-    if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
+    if (!parsed) return { error: t('itrAiAdjust.aiUnparseable') }
     const model = run.response.model
     const adjusts = reconcileAdjust(parsed, page.groups, new Set(candidates.map(c => c.code.toUpperCase())))
 

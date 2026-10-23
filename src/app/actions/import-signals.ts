@@ -2,7 +2,9 @@
 
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
+import { getTranslations } from 'next-intl/server'
 import { checkProjectAccess } from '@/lib/auth/access'
+import { accessError } from '@/lib/i18n/action-errors'
 import { createAdminClient, emitImportSummary } from '@/lib/supabase/admin'
 import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
 import { normalizeCode, normalizePidRef, textOr } from '@/lib/excel/normalize'
@@ -64,9 +66,10 @@ export const importSignals = withAuthOnly(
     /** S07 (D9): columnas que trae el archivo; lo que no viene (o viene vacío) no se toca. */
     columns: string[],
   ): Promise<{ error?: string; result?: SignalImportResult }> => {
+    const t = await getTranslations('ActionErrors')
     const present = new Set(columns)
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
     // S21 (B-03): sin un evento por fila; un resumen al final.
     const admin = createAdminClient({ bulk: 'signals' })
@@ -99,12 +102,12 @@ export const importSignals = withAuthOnly(
 
       if (!signalTag) return
       if (!discId) {
-        result.errors.push({ row: index + 2, tag: signalTag, reason: `Disciplina "${row.discipline_code}" no existe` })
+        result.errors.push({ row: index + 2, tag: signalTag, reason: t('importSignals.disciplineNotFound', { code: row.discipline_code }) })
         result.skipped++
         return
       }
       if (!VALID_SIGNAL_TYPES.includes(signalType)) {
-        result.errors.push({ row: index + 2, tag: signalTag, reason: `Tipo de señal inválido "${row.signal_type}". Válidos: ${VALID_SIGNAL_TYPES.join(', ')}` })
+        result.errors.push({ row: index + 2, tag: signalTag, reason: t('importSignals.signalTypeInvalid', { type: row.signal_type, valid: VALID_SIGNAL_TYPES.join(', ') }) })
         result.skipped++
         return
       }
@@ -114,7 +117,7 @@ export const importSignals = withAuthOnly(
     })
     if (dupes.size > 0) {
       const list = [...dupes]
-      result.warnings.push(`${dupes.size} señal(es) repetidas en el archivo; se usó la última fila de cada una: ${list.slice(0, 5).join(', ')}${list.length > 5 ? '…' : ''}`)
+      result.warnings.push(t('importSignals.duplicateSignals', { count: dupes.size, list: `${list.slice(0, 5).join(', ')}${list.length > 5 ? '…' : ''}` }))
     }
     const pending = [...byKey.values()]
 
@@ -142,12 +145,12 @@ export const importSignals = withAuthOnly(
       for (const [loopNumber, p] of loopSeeds) {
         if (loopIdMap.has(loopNumber)) continue
         const subsystemId = hier.subsystemIdMap.get(normalizeCode(p.row.subsystem_code, DEFAULT_SUBSYSTEM))
-        if (!subsystemId) { result.warnings.push(`Lazo "${loopNumber}": subsistema "${p.row.subsystem_code}" no disponible`); continue }
+        if (!subsystemId) { result.warnings.push(t('importSignals.loopSubsystemMissing', { loop: loopNumber, code: p.row.subsystem_code })); continue }
         newLoops.push({ project_id: projectId, subsystem_id: subsystemId, loop_number: loopNumber, discipline_id: p.discId, description: textOr(p.row.service, loopNumber) })
       }
       for (let i = 0; i < newLoops.length; i += CHUNK) {
         const { data: inserted, error: insErr } = await admin.from('loops').insert(newLoops.slice(i, i + CHUNK)).select('id, loop_number')
-        if (insErr) return { error: `Lazos: ${insErr.message}` }
+        if (insErr) return { error: t('importSignals.loopsError', { error: insErr.message }) }
         for (const l of inserted ?? []) loopIdMap.set(l.loop_number, l.id)
         result.loopsCreated += inserted?.length ?? 0
       }
@@ -167,7 +170,7 @@ export const importSignals = withAuthOnly(
         .eq('project_id', projectId)
         .in('tag_number', instrTags)
       if (exErr) return { error: exErr.message }
-      const tagIdMap = new Map((existingTags ?? []).map(t => [t.tag_number, t.id]))
+      const tagIdMap = new Map((existingTags ?? []).map(tg => [tg.tag_number, tg.id]))
 
       const newTags = new Map<string, TablesInsert<'tags'>>()
       for (const c of chunk) {
@@ -193,10 +196,10 @@ export const importSignals = withAuthOnly(
           for (const payload of newTags.values()) {
             const { data: one, error: oneErr } = await admin.from('tags').insert(payload).select('id, tag_number').single()
             if (one) { tagIdMap.set(one.tag_number, one.id); result.tagsCreated++ }
-            else result.warnings.push(`Tag instrumento "${payload.tag_number}": ${oneErr?.message ?? 'no pudo crearse'}`)
+            else result.warnings.push(oneErr ? t('importSignals.instrumentTagError', { tag: payload.tag_number, error: oneErr.message }) : t('importSignals.instrumentTagNotCreated', { tag: payload.tag_number }))
           }
         } else {
-          for (const t of inserted ?? []) tagIdMap.set(t.tag_number, t.id)
+          for (const tg of inserted ?? []) tagIdMap.set(tg.tag_number, tg.id)
           result.tagsCreated += inserted?.length ?? 0
         }
       }
@@ -220,8 +223,8 @@ export const importSignals = withAuthOnly(
         const tagId = tagIdMap.get(c.instrTag)
         if (!tagId) {
           const reason = hier.subsystemIdMap.has(normalizeCode(c.row.subsystem_code, DEFAULT_SUBSYSTEM))
-            ? `Tag instrumento "${c.instrTag}" no pudo crearse`
-            : `Subsistema "${c.row.subsystem_code}" no pudo crearse`
+            ? t('importSignals.instrumentTagNotCreated', { tag: c.instrTag })
+            : t('importSignals.subsystemNotCreated', { code: c.row.subsystem_code })
           result.errors.push({ row: c.index + 2, tag: c.signalTag, reason })
           result.skipped++
           continue
@@ -238,7 +241,7 @@ export const importSignals = withAuthOnly(
       const loopTags = [...new Map(sigs.filter(s => s.payload.loop_id).map(s => [`${s.payload.loop_id}|${s.payload.tag_id}`, { loop_id: s.payload.loop_id!, tag_id: s.payload.tag_id }])).values()]
       if (loopTags.length) {
         const { error: ltErr } = await admin.from('loop_tags').upsert(loopTags, { onConflict: 'loop_id,tag_id', ignoreDuplicates: true })
-        if (ltErr) result.warnings.push(`Lazos ↔ instrumentos: ${ltErr.message}`)
+        if (ltErr) result.warnings.push(t('importSignals.loopTagsError', { error: ltErr.message }))
       }
 
       const { error: batchErr } = await admin

@@ -155,8 +155,15 @@ export function drawQr(page: PDFPage, text: string, x: number, y: number, size: 
 export type TableCol = {
   w: number
   label: string
+  /** V3: rótulo en inglés de un PDF formal bilingüe; el encabezado pasa a dos líneas (ES arriba, EN en gris). */
+  labelEn?: string
   align?: 'left' | 'right' | 'center'
   bold?: boolean
+}
+
+/** V3: rótulo bilingüe de una línea para los PDF formales («Proyecto / Project»). */
+export function bi(es: string, en: string): string {
+  return es === en ? es : `${es} / ${en}`
 }
 
 export type FooterFn = (ctx: { page: PDFPage; pageNum: number; renderer: Renderer }) => void
@@ -374,7 +381,8 @@ export class Renderer {
   tableHeader(cols: TableCol[], opts?: { bg?: Color; size?: number; height?: number }) {
     const bg = opts?.bg ?? COLOR.borderXlight
     const size = opts?.size ?? 8
-    const rowH = opts?.height ?? 14
+    const bilingual = cols.some(c => c.labelEn)
+    const rowH = opts?.height ?? (bilingual ? 22 : 14)
     this.ensureSpace(rowH + 2)
     this.drawRect({
       x: MARGIN, y: this.y - rowH, width: CONTENT_W, height: rowH,
@@ -388,8 +396,17 @@ export class Renderer {
       if (c.align === 'right')  tx = x + c.w - 4 - labelW
       if (c.align === 'center') tx = x + (c.w - labelW) / 2
       this.page.drawText(label, {
-        x: tx, y: this.y - rowH + 4, size, font: this.fontBold, color: COLOR.muted,
+        x: tx, y: this.y - rowH + (bilingual ? 12 : 4), size, font: this.fontBold, color: COLOR.muted,
       })
+      if (c.labelEn) {
+        const enSize = size - 1.5
+        const en = truncateToWidth(c.labelEn, this.fontRegular, enSize, c.w - 8)
+        const enW = this.fontRegular.widthOfTextAtSize(en, enSize)
+        let ex = x + 4
+        if (c.align === 'right')  ex = x + c.w - 4 - enW
+        if (c.align === 'center') ex = x + (c.w - enW) / 2
+        this.page.drawText(en, { x: ex, y: this.y - rowH + 4, size: enSize, font: this.fontRegular, color: COLOR.empty })
+      }
       x += c.w
     }
     this.moveY(rowH)
@@ -473,7 +490,7 @@ export class Renderer {
         x, y: this.y - h, width: cardW, height: h,
         color: COLOR.cardBg, borderColor: COLOR.border, borderWidth: 0.5,
       })
-      this.page.drawText(sanitize(c.label).toUpperCase(), {
+      this.page.drawText(truncateToWidth(sanitize(c.label).toUpperCase(), this.fontBold, 7, cardW - 16), {
         x: x + 8, y: this.y - 12, size: 7, font: this.fontBold, color: COLOR.empty,
       })
       const valTxt = truncateToWidth(c.value, this.fontRegular, 9, cardW - 16)
@@ -498,7 +515,7 @@ export class Renderer {
    * Draws a horizontal grid of N signature boxes. Each box: top accent line,
    * role label, then either { name, date } if signed, or a dashed line + "Name / Date".
    */
-  signatureGrid(boxes: Array<{ role: string; name?: string; date?: string }>, opts?: { accentColor?: Color; height?: number; gap?: number; placeholder?: string }) {
+  signatureGrid(boxes: Array<{ role: string; roleEn?: string; name?: string; date?: string }>, opts?: { accentColor?: Color; height?: number; gap?: number; placeholder?: string }) {
     const accent = opts?.accentColor ?? COLOR.purple
     const gap = opts?.gap ?? 14
     const h = opts?.height ?? 58
@@ -509,19 +526,25 @@ export class Renderer {
     for (const b of boxes) {
       // Top accent line
       this.drawRect({ x, y: this.y - 2, width: boxW, height: 2, color: accent })
-      // Role
-      this.page.drawText(sanitize(b.role).toUpperCase(), {
+      // Role (V3: con `roleEn`, el inglés va debajo en gris y lo demás baja 6 pt)
+      this.page.drawText(truncateToWidth(sanitize(b.role).toUpperCase(), this.fontBold, 7.5, boxW), {
         x, y: this.y - 14, size: 7.5, font: this.fontBold, color: COLOR.muted,
       })
+      const dy = b.roleEn ? 6 : 0
+      if (b.roleEn) {
+        this.page.drawText(truncateToWidth(b.roleEn, this.fontRegular, 6.5, boxW), {
+          x, y: this.y - 22, size: 6.5, font: this.fontRegular, color: COLOR.empty,
+        })
+      }
       if (b.name) {
         const name = truncateToWidth(b.name, this.fontRegular, 10, boxW)
-        this.page.drawText(name, { x, y: this.y - 28, size: 10, font: this.fontRegular, color: COLOR.text })
+        this.page.drawText(name, { x, y: this.y - 28 - dy, size: 10, font: this.fontRegular, color: COLOR.text })
         this.page.drawText(sanitize(b.date ?? ''), {
-          x, y: this.y - 40, size: 7.5, font: this.fontRegular, color: COLOR.empty,
+          x, y: this.y - 40 - dy, size: 7.5, font: this.fontRegular, color: COLOR.empty,
         })
       } else {
         // Dashed signature line — emulate dashes by drawing short segments
-        const dashY = this.y - 34
+        const dashY = this.y - 34 - dy
         const dashLen = 3, dashGap = 2
         let dx = x
         while (dx < x + boxW - dashLen) {
@@ -529,7 +552,7 @@ export class Renderer {
           dx += dashLen + dashGap
         }
         this.page.drawText(sanitize(opts?.placeholder ?? 'Name / Date'), {
-          x, y: this.y - 46, size: 7.5, font: this.fontOblique, color: COLOR.empty,
+          x, y: this.y - 46 - dy, size: 7.5, font: this.fontOblique, color: COLOR.empty,
         })
       }
       x += boxW + gap

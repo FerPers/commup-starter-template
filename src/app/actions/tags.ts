@@ -4,6 +4,8 @@ import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
+import { accessError } from '@/lib/i18n/action-errors'
 import type { Enums } from '@/types/supabase.generated'
 import { isCriticality, type Criticality } from '@/lib/tags/criticality'
 import { TAG_MOVE_REASON_MIN, type TagMovePreview } from '@/lib/tags/move'
@@ -38,8 +40,9 @@ export interface TagUpdatePayload {
 export const deleteTag = withAuthOnly(
   { role: PRIVILEGED_ROLES },
   async (ctx, projectId: string, tagId: string): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
     const { error } = await ctx.supabase
       .from('tags')
@@ -49,7 +52,7 @@ export const deleteTag = withAuthOnly(
 
     // C-42 (S08): el historial de preservación protege al tag (ON DELETE RESTRICT).
     if (error?.code === '23503' && error.message.includes('preservation_')) {
-      return { error: 'El tag tiene historial de preservación: no se puede eliminar' }
+      return { error: t('tags.hasPreservationHistory') }
     }
     if (error) return { error: error.message }
 
@@ -66,10 +69,11 @@ export const updateTag = withAuthOnly(
     tagId: string,
     payload: TagUpdatePayload,
   ): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
     if ('criticality' in payload && !isCriticality(payload.criticality)) {
-      return { error: 'Criticidad no válida' }
+      return { error: t('tags.invalidCriticality') }
     }
 
     const { error } = await ctx.supabase
@@ -100,8 +104,9 @@ export const linkNfcToTag = withAuth(
     ctx,
     input: { projectId: string; tagId: string; nfcUid: string },
   ): Promise<{ error?: string; conflictTagNumber?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const trimmed = input.nfcUid.trim()
-    if (!trimmed) return { error: 'NFC UID vacío' }
+    if (!trimmed) return { error: t('tags.nfcEmpty') }
 
     // Pre-check uniqueness within the project to give a friendlier error than the
     // raw 23505 constraint violation (and surface which tag already has it).
@@ -112,7 +117,7 @@ export const linkNfcToTag = withAuth(
       .eq('nfc_uid', trimmed)
       .maybeSingle()
     if (existing && existing.id !== input.tagId) {
-      return { error: 'NFC ya vinculado a otro tag', conflictTagNumber: existing.tag_number }
+      return { error: t('tags.nfcConflict', { tag: existing.tag_number }), conflictTagNumber: existing.tag_number }
     }
 
     const { error } = await ctx.supabase
@@ -183,8 +188,9 @@ export const moveTagSubsystem = withAuth(
     ctx,
     input: { projectId: string; tagId: string; subsystemId: string; reason: string },
   ): Promise<{ error?: string; itrsMoved?: number; punchesMoved?: number }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = (input.reason ?? '').trim()
-    if (reason.length < TAG_MOVE_REASON_MIN) return { error: `Explica por qué se mueve (mínimo ${TAG_MOVE_REASON_MIN} caracteres)` }
+    if (reason.length < TAG_MOVE_REASON_MIN) return { error: t('tags.moveReason', { min: TAG_MOVE_REASON_MIN }) }
     const { data, error } = await ctx.supabase.rpc('move_tag_subsystem', {
       p_tag_id: input.tagId, p_subsystem_id: input.subsystemId, p_reason: reason,
     })

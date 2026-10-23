@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth/withAuth'
@@ -39,8 +40,9 @@ const capturedParam = (iso: string | undefined) => (iso && !Number.isNaN(Date.pa
 export const createProcedure = withAuth(
   { guards: [...projectGuard, systemGuard] },
   async (ctx, input: { projectId: string; title: string; kind: ProcedureKind; systemId?: string | null }): Promise<{ id?: string; error?: string }> => {
-    if (!PROCEDURE_KINDS.includes(input.kind)) return { error: 'Tipo de procedimiento no válido' }
-    if (!input.title?.trim()) return { error: 'El título es obligatorio' }
+    const t = await getTranslations('ActionErrors')
+    if (!PROCEDURE_KINDS.includes(input.kind)) return { error: t('startup.procedureKindInvalid') }
+    if (!input.title?.trim()) return { error: t('startup.titleRequired') }
     const { data, error } = await ctx.supabase.rpc('create_procedure', {
       p_project_id: input.projectId, p_title: input.title.trim().slice(0, 200), p_kind: input.kind,
       p_system_id: (input.systemId ?? '') === '' ? undefined : input.systemId!,
@@ -54,8 +56,9 @@ export const createProcedure = withAuth(
 export const updateProcedure = withAuth(
   { guards: [...projectGuard, systemGuard] },
   async (ctx, input: { projectId: string; procedureId: string; title: string; kind: ProcedureKind; systemId?: string | null }): Promise<{ error?: string }> => {
-    if (!PROCEDURE_KINDS.includes(input.kind)) return { error: 'Tipo de procedimiento no válido' }
-    if (!(await owned(ctx.supabase, 'procedures', input.procedureId, input.projectId))) return { error: 'Procedimiento no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!PROCEDURE_KINDS.includes(input.kind)) return { error: t('startup.procedureKindInvalid') }
+    if (!(await owned(ctx.supabase, 'procedures', input.procedureId, input.projectId))) return { error: t('startup.procedureNotFound') }
     const { error } = await ctx.supabase.rpc('update_procedure', {
       p_procedure_id: input.procedureId, p_title: input.title.trim().slice(0, 200), p_kind: input.kind, p_system_id: nullable(input.systemId),
     })
@@ -72,7 +75,8 @@ export const saveProcedureRevision = withAuth(
     ctx,
     input: { projectId: string; procedureId: string; revisionId: string; sections: Partial<Record<ProcedureSection, string>>; steps: StepDraft[]; changeReason?: string },
   ): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedure_revisions', input.revisionId, input.projectId))) return { error: 'Revisión no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedure_revisions', input.revisionId, input.projectId))) return { error: t('startup.revisionNotFound') }
     const sections = Object.fromEntries(
       PROCEDURE_SECTIONS.filter(k => typeof input.sections?.[k] === 'string' && input.sections[k]!.trim()).map(k => [k, input.sections[k]!.slice(0, 20000)]),
     )
@@ -101,7 +105,8 @@ export const saveProcedureRevision = withAuth(
 export const transitionProcedureRevision = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; procedureId: string; revisionId: string; to: 'in_review' | 'draft' | 'approved'; comment?: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedure_revisions', input.revisionId, input.projectId))) return { error: 'Revisión no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedure_revisions', input.revisionId, input.projectId))) return { error: t('startup.revisionNotFound') }
     const { error } = await ctx.supabase.rpc('transition_procedure_revision', {
       p_revision_id: input.revisionId, p_to: input.to, p_comment: input.comment?.trim() ? input.comment.trim().slice(0, 2000) : undefined,
     })
@@ -114,7 +119,8 @@ export const transitionProcedureRevision = withAuth(
 export const fieldVerifyProcedure = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; procedureId: string; revisionId: string; note: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedure_revisions', input.revisionId, input.projectId))) return { error: 'Revisión no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedure_revisions', input.revisionId, input.projectId))) return { error: t('startup.revisionNotFound') }
     const { error } = await ctx.supabase.rpc('field_verify_procedure_revision', { p_revision_id: input.revisionId, p_note: input.note.slice(0, 4000) })
     if (error) return { error: error.message }
     revalidate(input.projectId, `procedures/${input.procedureId}`)
@@ -125,7 +131,8 @@ export const fieldVerifyProcedure = withAuth(
 export const newProcedureRevision = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; procedureId: string; reason: string }): Promise<{ id?: string; error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedures', input.procedureId, input.projectId))) return { error: 'Procedimiento no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedures', input.procedureId, input.projectId))) return { error: t('startup.procedureNotFound') }
     const { data, error } = await ctx.supabase.rpc('new_procedure_revision', { p_procedure_id: input.procedureId, p_reason: input.reason.slice(0, 2000) })
     if (error) return { error: error.message }
     revalidate(input.projectId, `procedures/${input.procedureId}`)
@@ -147,7 +154,8 @@ export const copyProcedure = withAuth(
 export const deleteProcedureDraft = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; procedureId: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedures', input.procedureId, input.projectId))) return { error: 'Procedimiento no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedures', input.procedureId, input.projectId))) return { error: t('startup.procedureNotFound') }
     const { error } = await ctx.supabase.rpc('delete_procedure_draft', { p_procedure_id: input.procedureId })
     if (error) return { error: error.message }
     revalidate(input.projectId)
@@ -159,7 +167,8 @@ export const deleteProcedureDraft = withAuth(
 export const startProcedureRun = withAuth(
   { guards: [...projectGuard, systemGuard] },
   async (ctx, input: { projectId: string; procedureId: string; systemId?: string | null }): Promise<{ id?: string; error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedures', input.procedureId, input.projectId))) return { error: 'Procedimiento no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedures', input.procedureId, input.projectId))) return { error: t('startup.procedureNotFound') }
     const { data, error } = await ctx.supabase.rpc('start_procedure_run', {
       p_procedure_id: input.procedureId, p_system_id: (input.systemId ?? '') === '' ? undefined : input.systemId!,
     })
@@ -172,7 +181,8 @@ export const startProcedureRun = withAuth(
 export const completeRunStep = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; runId: string; stepId: string; actual?: string; comment?: string; na?: boolean; capturedAt?: string }): Promise<{ status?: string; error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedure_runs', input.runId, input.projectId))) return { error: 'Ejecución no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedure_runs', input.runId, input.projectId))) return { error: t('startup.runNotFound') }
     const { data, error } = await ctx.supabase.rpc('complete_run_step', {
       p_run_id: input.runId, p_step_id: input.stepId,
       p_actual: input.actual?.trim() ? input.actual.trim().slice(0, 500) : undefined,
@@ -188,7 +198,8 @@ export const completeRunStep = withAuth(
 export const releaseHoldPoint = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; runId: string; stepId: string; comment?: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedure_runs', input.runId, input.projectId))) return { error: 'Ejecución no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedure_runs', input.runId, input.projectId))) return { error: t('startup.runNotFound') }
     const { error } = await ctx.supabase.rpc('release_hold_point', {
       p_run_id: input.runId, p_step_id: input.stepId, p_comment: input.comment?.trim() ? input.comment.trim().slice(0, 2000) : undefined,
     })
@@ -201,7 +212,8 @@ export const releaseHoldPoint = withAuth(
 export const transitionProcedureRun = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; runId: string; to: 'stopped' | 'in_progress' | 'completed' | 'aborted'; comment?: string; capturedAt?: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'procedure_runs', input.runId, input.projectId))) return { error: 'Ejecución no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'procedure_runs', input.runId, input.projectId))) return { error: t('startup.runNotFound') }
     const { error } = await ctx.supabase.rpc('transition_procedure_run', {
       p_run_id: input.runId, p_to: input.to, p_comment: input.comment?.trim() ? input.comment.trim().slice(0, 2000) : undefined,
       p_captured_at: input.to === 'stopped' ? capturedParam(input.capturedAt) : undefined,
@@ -219,8 +231,9 @@ export const createLineupSheet = withAuth(
     ctx,
     input: { projectId: string; systemId: string; title: string; purpose: LineupPurpose; procedureId?: string | null; generate: boolean },
   ): Promise<{ id?: string; error?: string }> => {
-    if (!LINEUP_PURPOSES.includes(input.purpose)) return { error: 'Propósito no válido' }
-    if (!input.title?.trim()) return { error: 'El título es obligatorio' }
+    const t = await getTranslations('ActionErrors')
+    if (!LINEUP_PURPOSES.includes(input.purpose)) return { error: t('startup.purposeInvalid') }
+    if (!input.title?.trim()) return { error: t('startup.titleRequired') }
     const { data, error } = await ctx.supabase.rpc('create_lineup_sheet', {
       p_project_id: input.projectId, p_system_id: input.systemId, p_title: input.title.trim().slice(0, 200), p_purpose: input.purpose,
       p_procedure_id: (input.procedureId ?? '') === '' ? undefined : input.procedureId!, p_generate: !!input.generate,
@@ -236,7 +249,8 @@ export type LineupItemDraft = { tag_id: string | null; label: string; required_p
 export const saveLineupItems = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; sheetId: string; items: LineupItemDraft[] }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'lineup_sheets', input.sheetId, input.projectId))) return { error: 'Hoja no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'lineup_sheets', input.sheetId, input.projectId))) return { error: t('startup.sheetNotFound') }
     const items = (input.items ?? []).slice(0, 1000).map(i => ({
       tag_id: i.tag_id ?? null,
       label: i.label?.trim().slice(0, 200) ?? '',
@@ -254,7 +268,8 @@ export const saveLineupItems = withAuth(
 export const transitionLineupSheet = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; sheetId: string; to: 'issued' | 'verified' | 'deleted' }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'lineup_sheets', input.sheetId, input.projectId))) return { error: 'Hoja no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'lineup_sheets', input.sheetId, input.projectId))) return { error: t('startup.sheetNotFound') }
     const { error } = input.to === 'issued'
       ? await ctx.supabase.rpc('issue_lineup_sheet', { p_sheet_id: input.sheetId })
       : input.to === 'verified'
@@ -282,9 +297,10 @@ export const setLineupItem = withAuth(
       capturedAt?: string; check?: boolean; expectedSetAt?: string | null; expectedVerifiedAt?: string | null
     },
   ): Promise<{ status?: 'applied' | 'redundant'; error?: string; conflict?: LineupRemote }> => {
-    if (!VALVE_POSITIONS.includes(input.found)) return { error: 'Posición no válida' }
-    if (input.asFound && !VALVE_POSITIONS.includes(input.asFound)) return { error: 'Posición encontrada no válida' }
-    if (!(await owned(ctx.supabase, 'lineup_items', input.itemId, input.projectId))) return { error: 'Fila no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!VALVE_POSITIONS.includes(input.found)) return { error: t('startup.positionInvalid') }
+    if (input.asFound && !VALVE_POSITIONS.includes(input.asFound)) return { error: t('startup.asFoundInvalid') }
+    if (!(await owned(ctx.supabase, 'lineup_items', input.itemId, input.projectId))) return { error: t('startup.itemNotFound') }
     const { data, error } = await ctx.supabase.rpc('set_lineup_item', {
       p_item_id: input.itemId, p_found: input.found, p_remarks: input.remarks?.trim() ? input.remarks.trim().slice(0, 1000) : undefined,
       p_captured_at: capturedParam(input.capturedAt), p_check_expected: !!input.check,
@@ -312,7 +328,8 @@ export const setLineupItem = withAuth(
 export const verifyLineupItem = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; sheetId: string; itemId: string }): Promise<{ error?: string }> => {
-    if (!(await owned(ctx.supabase, 'lineup_items', input.itemId, input.projectId))) return { error: 'Fila no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await owned(ctx.supabase, 'lineup_items', input.itemId, input.projectId))) return { error: t('startup.itemNotFound') }
     const { error } = await ctx.supabase.rpc('verify_lineup_item', { p_item_id: input.itemId })
     if (error) return { error: error.message }
     revalidate(input.projectId, `lineups/${input.sheetId}`)

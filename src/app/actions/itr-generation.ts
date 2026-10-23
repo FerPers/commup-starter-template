@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -24,7 +25,8 @@ function rpcScope(input: GenerationScope) {
 export const previewItrGeneration = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: GenerationScope): Promise<{ summary?: GenerationSummary; error?: string }> => {
-    if (!scopeIds(input.phaseIds)) return { error: 'Elige al menos una fase' }
+    const t = await getTranslations('ActionErrors')
+    if (!scopeIds(input.phaseIds)) return { error: t('itrGeneration.phaseRequired') }
     const { data, error } = await ctx.supabase.rpc('itr_generation_summary', rpcScope(input))
     if (error) return { error: error.message }
     return { summary: data as unknown as GenerationSummary }
@@ -34,9 +36,10 @@ export const previewItrGeneration = withAuth(
 export const runItrGenerationBatch = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: GenerationScope & { assign: Assignment }): Promise<{ created?: number; remaining?: number; error?: string }> => {
-    if (!scopeIds(input.phaseIds)) return { error: 'Elige al menos una fase' }
+    const t = await getTranslations('ActionErrors')
+    if (!scopeIds(input.phaseIds)) return { error: t('itrGeneration.phaseRequired') }
     const clean = cleanAssignment(input.assign ?? {})
-    if ('error' in clean) return { error: 'Cada rol de firma lo asume una persona distinta' }
+    if ('error' in clean) return { error: t('itrGeneration.samePerson') }
 
     const { data, error } = await ctx.supabase.rpc('generate_itrs', {
       ...rpcScope(input), p_assign: clean.assign as unknown as Json, p_limit: 300,

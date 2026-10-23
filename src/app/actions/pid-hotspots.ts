@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { clampPct } from '@/lib/pid/geometry'
@@ -40,9 +41,10 @@ export const upsertHotspot = withAuth(
     ctx,
     input: { revision_id: string; tag_id: string; project_id: string; page_num: number; x_pct: number; y_pct: number },
   ): Promise<{ id?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const rev = await pidRevision(ctx.supabase, input.revision_id, input.project_id)
-    if (!rev) return { error: 'Revisión del P&ID no encontrada en el proyecto' }
-    if (!Number.isInteger(input.page_num) || input.page_num < 1) return { error: 'Página no válida' }
+    if (!rev) return { error: t('pidHotspots.revisionNotFound') }
+    if (!Number.isInteger(input.page_num) || input.page_num < 1) return { error: t('pidHotspots.invalidPage') }
 
     // Ubicar (o mover) un pin lo deja revisado: alguien lo puso en su lugar sobre esta revisión.
     const { data, error } = await ctx.supabase
@@ -72,8 +74,9 @@ export const upsertHotspot = withAuth(
 export const confirmHotspots = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'project_id' }] },
   async (ctx, input: { project_id: string; revision_id: string; hotspot_ids?: string[] }): Promise<{ error?: string; count?: number }> => {
+    const t = await getTranslations('ActionErrors')
     const rev = await pidRevision(ctx.supabase, input.revision_id, input.project_id)
-    if (!rev) return { error: 'Revisión del P&ID no encontrada en el proyecto' }
+    if (!rev) return { error: t('pidHotspots.revisionNotFound') }
     let q = ctx.supabase.from('pid_hotspots').update({ needs_review: false })
       .eq('project_id', input.project_id).eq('revision_id', input.revision_id).eq('needs_review', true)
     if (input.hotspot_ids?.length) q = q.in('id', input.hotspot_ids.slice(0, 500))

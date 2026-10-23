@@ -9,9 +9,10 @@
 
 import {
   Renderer, COLOR, A4_W, A4_H, MARGIN, CONTENT_W, FOOTER_H,
-  sanitize,
+  sanitize, bi,
   type Color, type TableCol,
 } from './renderer'
+import { todayIn } from '@/lib/time/zone'
 import { drawBrandBar, type PdfBranding } from './branding'
 
 export type DossierItr = {
@@ -61,13 +62,15 @@ export type CompletionDossierData = {
   openPunchA: number
   openPunchB: number
   openPunchC: number
+  /** Zona del proyecto: fecha «Generado» (el Worker corre en UTC). */
+  timezone?: string | null
 }
 
 const CERT_STATUS: Record<CompletionDossierData['certificateStatus'], { label: string; color: Color; bg: Color }> = {
-  issued:    { label: 'ISSUED', color: COLOR.green, bg: COLOR.greenBg },
-  in_review: { label: 'IN REVIEW', color: COLOR.blue, bg: COLOR.blueBg },
-  pending:   { label: 'PENDING', color: COLOR.muted, bg: COLOR.borderXlight },
-  rejected:  { label: 'REJECTED', color: COLOR.red, bg: COLOR.redBg },
+  issued:    { label: 'EMITIDO / ISSUED', color: COLOR.green, bg: COLOR.greenBg },
+  in_review: { label: 'EN REVISIÓN / IN REVIEW', color: COLOR.blue, bg: COLOR.blueBg },
+  pending:   { label: 'PENDIENTE / PENDING', color: COLOR.muted, bg: COLOR.borderXlight },
+  rejected:  { label: 'RECHAZADO / REJECTED', color: COLOR.red, bg: COLOR.redBg },
 }
 
 const ITR_STATUS_COLOR: Record<string, Color> = {
@@ -76,24 +79,36 @@ const ITR_STATUS_COLOR: Record<string, Color> = {
 }
 
 const ITR_STATUS_LABEL: Record<string, string> = {
-  not_started: 'Not started', in_progress: 'In progress', completed: 'Completed',
-  approved: 'Approved', rejected: 'Rejected',
+  not_started: 'No iniciado / Not started', in_progress: 'En progreso / In progress', completed: 'Completado / Completed',
+  approved: 'Aprobado / Approved', rejected: 'Rechazado / Rejected',
+}
+
+const PUNCH_STATUS_LABEL: Record<string, string> = {
+  open: 'Abierto / Open', in_progress: 'En progreso / In progress', resolved: 'Resuelto / Resolved',
+  closed: 'Cerrado / Closed', cancelled: 'Anulado / Cancelled',
+}
+
+/** Rol de la firma del certificado (`certificate_signatures.role`) → ES / EN, igual que certificate.ts. */
+const SIGNATURE_ROLE: Record<string, [string, string]> = {
+  completion: ['Gerente de completamiento', 'Completion Manager'],
+  client: ['Representante del cliente', 'Client Representative'],
+  authority: ['Autoridad', 'Authority'],
 }
 
 const ITR_COLS: TableCol[] = [
-  { w: 72, label: 'ITR' },
-  { w: 60, label: 'Template' },
-  { w: 90, label: 'Tag' },
-  { w: 90, label: 'Status', align: 'center' },
-  { w: 46, label: '%', align: 'right' },
+  { w: 72, label: 'N.º ITR', labelEn: 'ITR number' },
+  { w: 60, label: 'Plantilla', labelEn: 'Template' },
+  { w: 90, label: 'Tag', labelEn: 'Tag' },
+  { w: 116, label: 'Estado', labelEn: 'Status', align: 'center' },
+  { w: 46, label: 'Avance', labelEn: 'Progress', align: 'right' },
 ]
-const CLIENT_COL: TableCol = { w: 96, label: 'Client code' }
+const CLIENT_COL: TableCol = { w: 96, label: 'Código cliente', labelEn: 'Client code' }
 
 const EXC_COLS: TableCol[] = [
-  { w: 70, label: 'Punch' },
-  { w: 34, label: 'Cat', align: 'center' },
-  { w: 60, label: 'Status', align: 'center' },
-  { w: 195, label: 'Justification' },
+  { w: 70, label: 'Punch', labelEn: 'Punch' },
+  { w: 34, label: 'Cat', labelEn: 'Cat', align: 'center' },
+  { w: 110, label: 'Estado', labelEn: 'Status', align: 'center' },
+  { w: 309, label: 'Justificación', labelEn: 'Justification' },
 ]
 
 function pct(part: number, total: number): number {
@@ -102,11 +117,12 @@ function pct(part: number, total: number): number {
 
 export async function renderCompletionDossierPdf(data: CompletionDossierData): Promise<Uint8Array> {
   const r = await Renderer.create()
-  r.doc.setTitle(`Completion Dossier · ${data.certificateNumber}`)
+  // V3: PDF formal bilingüe (español / inglés), como el del ITR.
+  r.doc.setTitle(`Dossier de completamiento / Completion Dossier · ${data.certificateNumber}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('Completion Dossier')
+  r.doc.setSubject('Dossier de completamiento / Completion Dossier')
 
-  const generatedAt = new Date().toISOString().slice(0, 10)
+  const generatedAt = todayIn(data.timezone)
   const approvedItr = data.itrs.filter(i => i.status === 'approved').length
 
   r.setFooter(({ page, pageNum }) => {
@@ -119,12 +135,12 @@ export async function renderCompletionDossierPdf(data: CompletionDossierData): P
     page.drawText(sanitize(`CommUp · ${data.certificateNumber}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${generatedAt}`)
+    const centerText = sanitize(`Generado / Generated: ${generatedAt}`)
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `Pág. / Page ${pageNum} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -140,7 +156,9 @@ export async function renderCompletionDossierPdf(data: CompletionDossierData): P
   r.y = A4_H - MARGIN - 8
   await drawBrandBar(r, data.branding)
   r.y = A4_H - 190
-  r.drawTextCentered('COMPLETION DOSSIER', { y: r.y, size: 20, bold: true, color: COLOR.text })
+  r.drawTextCentered('DOSSIER DE COMPLETAMIENTO', { y: r.y, size: 20, bold: true, color: COLOR.text })
+  r.moveY(20)
+  r.drawTextCentered('COMPLETION DOSSIER', { y: r.y, size: 12, color: COLOR.muted })
   r.moveY(26)
   if (data.certificateTypeName) {
     r.drawTextCentered(data.certificateTypeName, { y: r.y, size: 13, color: COLOR.muted, maxWidth: CONTENT_W })
@@ -158,7 +176,7 @@ export async function renderCompletionDossierPdf(data: CompletionDossierData): P
     r.moveY(16)
   }
   if (data.projectClient) {
-    r.drawTextCentered(`Client: ${data.projectClient}`, { y: r.y, size: 10, oblique: true, color: COLOR.muted, maxWidth: CONTENT_W })
+    r.drawTextCentered(`${bi('Cliente', 'Client')}: ${data.projectClient}`, { y: r.y, size: 10, oblique: true, color: COLOR.muted, maxWidth: CONTENT_W })
     r.moveY(14)
   }
   // Status badge centered
@@ -172,31 +190,32 @@ export async function renderCompletionDossierPdf(data: CompletionDossierData): P
   // ─── Certificate summary ──────────────────────────────────────────────────
   r.newPage()
   r.y = A4_H - MARGIN - 4
-  r.accentSection('Certificate')
-  r.kv('Number', data.certificateNumber)
-  r.kv('Title', data.certificateTitle)
-  if (data.certificateTypeName) r.kv('Type', data.certificateTypeName)
-  r.kv('Phase', [data.phaseCode, data.phaseName].filter(Boolean).join(' — ') || '—')
-  if (data.systemLabel) r.kv('System', data.systemLabel)
-  if (data.subsystemLabel) r.kv('Subsystem', data.subsystemLabel)
-  r.kv('Status', CERT_STATUS[data.certificateStatus].label)
-  r.kv('Issued date', data.issuedDate ?? '—')
-  r.kv('Issued by', data.issuedBy ?? '—')
-  if (data.projectLocation) r.kv('Location', data.projectLocation)
+  r.accentSection(bi('Certificado', 'Certificate'))
+  const kvOpts = { keyW: 134 }
+  r.kv(bi('Número', 'Number'), data.certificateNumber, kvOpts)
+  r.kv(bi('Título', 'Title'), data.certificateTitle, kvOpts)
+  if (data.certificateTypeName) r.kv(bi('Tipo', 'Type'), data.certificateTypeName, kvOpts)
+  r.kv(bi('Fase', 'Phase'), [data.phaseCode, data.phaseName].filter(Boolean).join(' — ') || '—', kvOpts)
+  if (data.systemLabel) r.kv(bi('Sistema', 'System'), data.systemLabel, kvOpts)
+  if (data.subsystemLabel) r.kv(bi('Subsistema', 'Subsystem'), data.subsystemLabel, kvOpts)
+  r.kv(bi('Estado', 'Status'), CERT_STATUS[data.certificateStatus].label, kvOpts)
+  r.kv(bi('Fecha de emisión', 'Issued date'), data.issuedDate ?? '—', kvOpts)
+  r.kv(bi('Emitido por', 'Issued by'), data.issuedBy ?? '—', kvOpts)
+  if (data.projectLocation) r.kv(bi('Ubicación', 'Location'), data.projectLocation, kvOpts)
 
   // ─── Readiness snapshot ───────────────────────────────────────────────────
   r.moveY(4)
   r.infoCardRow([
-    { label: 'ITRs Approved', value: `${approvedItr} / ${data.itrs.length}`, sub: `${pct(approvedItr, data.itrs.length)}%` },
-    { label: 'Open Cat A', value: String(data.openPunchA), sub: data.openPunchA > 0 ? 'Blocking' : 'None' },
-    { label: 'Open Cat B', value: String(data.openPunchB) },
-    { label: 'Exceptions', value: String(data.exceptions.length) },
+    { label: bi('ITR aprobados', 'Approved'), value: `${approvedItr} / ${data.itrs.length}`, sub: `${pct(approvedItr, data.itrs.length)}%` },
+    { label: bi('Cat A abiertos', 'Open Cat A'), value: String(data.openPunchA), sub: data.openPunchA > 0 ? bi('Bloquea', 'Blocking') : bi('Ninguno', 'None') },
+    { label: bi('Cat B abiertos', 'Open Cat B'), value: String(data.openPunchB) },
+    { label: bi('Excepciones', 'Exceptions'), value: String(data.exceptions.length) },
   ])
 
   // ─── ITR register ─────────────────────────────────────────────────────────
-  r.accentSection('ITR Register')
+  r.accentSection(bi('Registro de ITR', 'ITR register'))
   if (data.itrs.length === 0) {
-    r.empty('No ITRs linked to this subsystem/phase.')
+    r.empty(bi('No hay ITR ligados a este subsistema / fase.', 'No ITRs linked to this subsystem / phase.'))
   } else {
     const withClient = data.itrs.some(x => x.clientCode)
     const cols = withClient ? [...ITR_COLS.slice(0, 2), CLIENT_COL, ...ITR_COLS.slice(2)] : ITR_COLS
@@ -211,15 +230,15 @@ export async function renderCompletionDossierPdf(data: CompletionDossierData): P
   }
 
   // ─── Punch exceptions ─────────────────────────────────────────────────────
-  r.accentSection('Punch Exceptions', COLOR.amber, COLOR.amberBg)
+  r.accentSection(bi('Excepciones de punch', 'Punch exceptions'), COLOR.amber, COLOR.amberBg)
   if (data.exceptions.length === 0) {
-    r.empty('No punch exceptions on this certificate.')
+    r.empty(bi('El certificado no tiene excepciones de punch.', 'No punch exceptions on this certificate.'))
   } else {
     r.tableHeader(EXC_COLS)
     data.exceptions.forEach((e, i) => {
       r.tableRow(
         EXC_COLS,
-        [e.punchNumber, e.category, e.status, e.justification],
+        [e.punchNumber, e.category, PUNCH_STATUS_LABEL[e.status] ?? e.status, e.justification],
         {
           alternate: i % 2 === 1,
           valueColors: [COLOR.text, e.category === 'A' ? COLOR.red : COLOR.muted, COLOR.muted, COLOR.textLight],
@@ -231,11 +250,15 @@ export async function renderCompletionDossierPdf(data: CompletionDossierData): P
 
   // ─── Signatures ───────────────────────────────────────────────────────────
   r.moveY(10)
-  r.accentSection('Signatures')
+  r.accentSection(bi('Firmas', 'Signatures'))
+  const roleBox = (role: string) => {
+    const [es, en] = SIGNATURE_ROLE[role] ?? [role, role]
+    return { role: es, roleEn: es === en ? undefined : en }
+  }
   const boxes = data.signatures.length > 0
-    ? data.signatures.map(s => ({ role: s.role, name: s.name ?? undefined, date: s.signedAt ?? undefined }))
-    : [{ role: 'Completion' }, { role: 'Client' }, { role: 'Authority' }]
-  r.signatureGrid(boxes)
+    ? data.signatures.map(s => ({ ...roleBox(s.role), name: s.name ?? undefined, date: s.signedAt ?? undefined }))
+    : ['completion', 'client', 'authority'].map(roleBox)
+  r.signatureGrid(boxes, { placeholder: 'Nombre / fecha · Name / date' })
 
   r.finalizePagePlaceholders()
   return await r.doc.save()

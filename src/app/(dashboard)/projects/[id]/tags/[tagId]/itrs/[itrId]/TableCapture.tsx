@@ -29,7 +29,9 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
   sourceRows?: SourceRow[] | null
 }) {
   const tx = useTranslations('TableCapture')
+  const te = useTranslations('ActionErrors')
   const evaluated = evaluateTable(options, value, sourceRows)
+  const issues = evaluated.errors.map(issue => te(`table.${issue.code}`, issue))
   const config = evaluated.config
   const initial = evaluated.data ?? blank(config, sourceRows)
   const [count, setCount] = useState(String(evaluated.data?.count ?? (config?.rows.mode === 'variable' ? config.rows.min : 1)))
@@ -140,7 +142,7 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
         </p>
       )}
       <p role="status" style={{ fontSize: '12px', margin: '6px 0 0', color: evaluated.hasFail ? 'var(--danger-700)' : 'var(--text-muted)' }}>
-        {evaluated.hasFail ? tx('statusFail') : evaluated.isComplete ? tx('statusComplete') : evaluated.data ? tx('statusPending', { errors: `${evaluated.errors.slice(0, 3).join(' · ')}${evaluated.errors.length > 3 ? ` · +${evaluated.errors.length - 3}` : ''}` }) : tx('statusFill')}
+        {evaluated.hasFail ? tx('statusFail') : evaluated.isComplete ? tx('statusComplete') : evaluated.data ? tx('statusPending', { errors: `${issues.slice(0, 3).join(' · ')}${issues.length > 3 ? ` · +${issues.length - 3}` : ''}` }) : tx('statusFill')}
       </p>
     </>}
   </fieldset>

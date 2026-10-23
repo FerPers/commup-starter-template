@@ -9,6 +9,8 @@ import {
   sanitize, truncateToWidth,
   type Color,
 } from './renderer'
+import { getTranslations } from 'next-intl/server'
+import { todayIn } from '@/lib/time/zone'
 
 export type PhaseProgressRow = {
   id: string
@@ -24,6 +26,8 @@ export type PhaseProgressData = {
   projectName: string
   projectCode: string
   projectClient: string | null
+  /** Zona del proyecto: define la fecha «Generado» (el Worker corre en UTC). */
+  timezone?: string | null
   phases: PhaseProgressRow[]
   unassignedOpenCatA: number
 }
@@ -44,12 +48,14 @@ function pct(part: number, total: number): number {
 }
 
 export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<Uint8Array> {
+  // V3: reporte en el idioma de quien descarga.
+  const t = await getTranslations('PdfReports')
   const r = await Renderer.create()
-  r.doc.setTitle(`Phase Progress · ${data.projectCode}`)
+  r.doc.setTitle(`${t('phaseProgress.short')} · ${data.projectCode}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('Phase Progress Report')
+  r.doc.setSubject(t('phaseProgress.title'))
 
-  const generatedAt = new Date().toISOString().slice(0, 10)
+  const generatedAt = todayIn(data.timezone)
 
   // Project-level aggregates
   const totals = data.phases.reduce(
@@ -77,12 +83,12 @@ export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<U
     page.drawText(sanitize(`CommUp · ${data.projectCode}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${generatedAt}`)
+    const centerText = sanitize(t('common.generated', { date: generatedAt }))
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `${t('common.page', { n: pageNum })} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -98,14 +104,14 @@ export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<U
   r.y = A4_H - MARGIN - 8
   r.drawTextCentered('CommUp', { y: r.y - 18, size: 18, bold: true, color: COLOR.purple })
   r.moveY(22)
-  r.drawTextCentered('Phase Progress Report', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
+  r.drawTextCentered(t('phaseProgress.title'), { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
   r.moveY(15)
   r.drawTextCentered(`${data.projectCode} — ${data.projectName}`, {
     y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: CONTENT_W,
   })
   r.moveY(13)
   if (data.projectClient) {
-    r.drawTextCentered(`Client: ${data.projectClient}`, {
+    r.drawTextCentered(t('common.client', { name: data.projectClient }), {
       y: r.y - 10, size: 10, oblique: true, color: COLOR.muted, maxWidth: CONTENT_W,
     })
     r.moveY(12)
@@ -116,10 +122,10 @@ export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<U
 
   // ─── Executive summary cards ──────────────────────────────────────────────
   r.infoCardRow([
-    { label: 'Overall ITR Progress', value: `${overallPct}%`, sub: `${totals.approved} / ${totals.itrs} approved` },
-    { label: 'Certificates Issued',  value: `${totals.certsIssued} / ${totals.certsTotal}` },
-    { label: 'Open Cat A Punches',   value: String(totalOpenCatA), sub: totalOpenCatA > 0 ? 'Blocking' : 'None' },
-    { label: 'Phases',               value: String(data.phases.length) },
+    { label: t('phaseProgress.itrProgress'),  value: `${overallPct}%`, sub: t('phaseProgress.approvedOf', { approved: totals.approved, total: totals.itrs }) },
+    { label: t('common.certsIssued'),         value: `${totals.certsIssued} / ${totals.certsTotal}` },
+    { label: t('phaseProgress.openCatA'),     value: String(totalOpenCatA), sub: totalOpenCatA > 0 ? t('phaseProgress.blocking') : t('common.none') },
+    { label: t('phaseProgress.phases'),       value: String(data.phases.length) },
   ])
 
   // Overall progress bar
@@ -127,7 +133,7 @@ export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<U
   const barTop = r.y
   const barH = 10
   const barY = barTop - 14 - barH
-  r.drawText('Overall Progress (Approved ITRs)', {
+  r.drawText(t('common.overallProgress'), {
     x: MARGIN, y: barTop - 10, size: 8, bold: true, color: COLOR.muted,
   })
   r.drawTextRight(`${overallPct}%`, {
@@ -142,10 +148,10 @@ export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<U
   r.y = barY - 4
 
   // ─── Per-phase detail ─────────────────────────────────────────────────────
-  r.accentSection('Phase Detail')
+  r.accentSection(t('phaseProgress.detail'))
 
   if (data.phases.length === 0) {
-    r.empty('No phases configured for this project.')
+    r.empty(t('phaseProgress.empty'))
   }
 
   for (const phase of data.phases) {
@@ -188,14 +194,14 @@ export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<U
     const innerW = CONTENT_W - 28
     const cellW = innerW / 4
     const cells = [
-      { label: 'TOTAL ITRS',      value: String(phase.itrs.total),      color: COLOR.text },
-      { label: 'IN PROGRESS',     value: String(phase.itrs.in_progress), color: COLOR.blue },
-      { label: 'COMPLETED',       value: String(phase.itrs.completed),  color: COLOR.amber },
-      { label: 'APPROVED',        value: `${phase.itrs.approved} (${phasePct}%)`, color: COLOR.greenStrong },
+      { label: t('common.itrsTotal'),   value: String(phase.itrs.total),      color: COLOR.text },
+      { label: t('common.inProgress'),  value: String(phase.itrs.in_progress), color: COLOR.blue },
+      { label: t('common.completed'),   value: String(phase.itrs.completed),  color: COLOR.amber },
+      { label: t('common.approved'),    value: `${phase.itrs.approved} (${phasePct}%)`, color: COLOR.greenStrong },
     ]
     cells.forEach((c, i) => {
       const cx = innerX + cellW * i
-      r.page.drawText(sanitize(c.label), {
+      r.page.drawText(sanitize(c.label.toUpperCase()), {
         x: cx, y: statY, size: 7, font: r.fontBold, color: COLOR.muted,
       })
       const v = truncateToWidth(c.value, r.fontBold, 12, cellW - 4)
@@ -217,11 +223,11 @@ export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<U
     // Bottom strip: certificates + Cat A badge
     const stripY = top - 86
     r.page.drawText(
-      sanitize(`Certificates: ${phase.certs.issued} / ${phase.certs.total} issued`),
+      sanitize(t('phaseProgress.certsLine', { issued: phase.certs.issued, total: phase.certs.total })),
       { x: innerX, y: stripY, size: 8, font: r.fontRegular, color: COLOR.muted },
     )
 
-    const catATxt = `Cat A open: ${phase.openCatA}`
+    const catATxt = t('phaseProgress.catAOpen', { n: phase.openCatA })
     const catAColor = phase.openCatA > 0 ? COLOR.red : COLOR.muted
     const catABg = phase.openCatA > 0 ? COLOR.redBg : COLOR.borderXlight
     const catAW = r.fontBold.widthOfTextAtSize(catATxt, 8) + 12
@@ -245,7 +251,7 @@ export async function renderPhaseProgressPdf(data: PhaseProgressData): Promise<U
       color: COLOR.amberBg, borderColor: COLOR.amberBorder, borderWidth: 0.5,
     })
     r.page.drawText(
-      sanitize(`Note: ${data.unassignedOpenCatA} open Cat A punch(es) without a phase assignment (subsystem has no current phase).`),
+      sanitize(t('phaseProgress.unassigned', { n: data.unassignedOpenCatA })),
       { x: MARGIN + 10, y: r.y - 12, size: 8, font: r.fontOblique, color: COLOR.amber },
     )
     r.moveY(noteH + 4)

@@ -8,9 +8,10 @@
 
 import {
   Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H,
-  sanitize,
+  sanitize, bi,
   type Color, type TableCol,
 } from './renderer'
+import { todayIn } from '@/lib/time/zone'
 
 export type TestPackItr = {
   number: string
@@ -34,6 +35,8 @@ export type ItrTestPackData = {
   projectCode: string
   projectClient: string | null
   subsystems: TestPackSubsystem[]
+  /** Zona del proyecto: fecha «Generado» (el Worker corre en UTC). */
+  timezone?: string | null
 }
 
 const STATUS_COLOR: Record<string, Color> = {
@@ -45,21 +48,21 @@ const STATUS_COLOR: Record<string, Color> = {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  not_started: 'Not started',
-  in_progress: 'In progress',
-  completed: 'Completed',
-  approved: 'Approved',
-  rejected: 'Rejected',
+  not_started: 'No iniciado / Not started',
+  in_progress: 'En progreso / In progress',
+  completed: 'Completado / Completed',
+  approved: 'Aprobado / Approved',
+  rejected: 'Rechazado / Rejected',
 }
 
 const COLS: TableCol[] = [
-  { w: 62, label: 'ITR' },
-  { w: 44, label: 'Template' },
-  { w: 62, label: 'Tag' },
-  { w: 150, label: 'Title' },
-  { w: 62, label: 'Status', align: 'center' },
-  { w: 34, label: '%', align: 'right' },
-  { w: 59, label: 'Completed', align: 'center' },
+  { w: 62, label: 'N.º ITR', labelEn: 'ITR number' },
+  { w: 48, label: 'Plantilla', labelEn: 'Template' },
+  { w: 62, label: 'Tag', labelEn: 'Tag' },
+  { w: 150, label: 'Título', labelEn: 'Title' },
+  { w: 106, label: 'Estado', labelEn: 'Status', align: 'center' },
+  { w: 38, label: 'Avance', labelEn: 'Progress', align: 'right' },
+  { w: 57, label: 'Completado', labelEn: 'Completed', align: 'center' },
 ]
 
 function pct(part: number, total: number): number {
@@ -68,11 +71,12 @@ function pct(part: number, total: number): number {
 
 export async function renderItrTestPackPdf(data: ItrTestPackData): Promise<Uint8Array> {
   const r = await Renderer.create()
-  r.doc.setTitle(`ITR Test Pack · ${data.projectCode}`)
+  // V3: PDF formal bilingüe (español / inglés), como el del ITR.
+  r.doc.setTitle(`Paquete de pruebas ITR / ITR Test Pack · ${data.projectCode}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('ITR Test Pack')
+  r.doc.setSubject('Paquete de pruebas ITR / ITR Test Pack')
 
-  const generatedAt = new Date().toISOString().slice(0, 10)
+  const generatedAt = todayIn(data.timezone)
 
   const allItrs = data.subsystems.flatMap(s => s.itrs)
   const total = allItrs.length
@@ -88,12 +92,12 @@ export async function renderItrTestPackPdf(data: ItrTestPackData): Promise<Uint8
     page.drawText(sanitize(`CommUp · ${data.projectCode}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${generatedAt}`)
+    const centerText = sanitize(`Generado / Generated: ${generatedAt}`)
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `Pág. / Page ${pageNum} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -109,14 +113,14 @@ export async function renderItrTestPackPdf(data: ItrTestPackData): Promise<Uint8
   r.moveY(8)
   r.drawTextCentered('CommUp', { y: r.y - 18, size: 18, bold: true, color: COLOR.purple })
   r.moveY(22)
-  r.drawTextCentered('ITR Test Pack', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
+  r.drawTextCentered(bi('Paquete de pruebas ITR', 'ITR Test Pack'), { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
   r.moveY(15)
   r.drawTextCentered(`${data.projectCode} — ${data.projectName}`, {
     y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: CONTENT_W,
   })
   r.moveY(13)
   if (data.projectClient) {
-    r.drawTextCentered(`Client: ${data.projectClient}`, {
+    r.drawTextCentered(`${bi('Cliente', 'Client')}: ${data.projectClient}`, {
       y: r.y - 10, size: 10, oblique: true, color: COLOR.muted, maxWidth: CONTENT_W,
     })
     r.moveY(12)
@@ -127,24 +131,24 @@ export async function renderItrTestPackPdf(data: ItrTestPackData): Promise<Uint8
 
   // ─── Summary cards ────────────────────────────────────────────────────────
   r.infoCardRow([
-    { label: 'Total ITRs', value: String(total) },
-    { label: 'Approved', value: `${approved} / ${total}`, sub: `${pct(approved, total)}%` },
-    { label: 'Subsystems', value: String(data.subsystems.length) },
+    { label: bi('Total de ITR', 'Total ITRs'), value: String(total) },
+    { label: bi('Aprobados', 'Approved'), value: `${approved} / ${total}`, sub: `${pct(approved, total)}%` },
+    { label: bi('Subsistemas', 'Subsystems'), value: String(data.subsystems.length) },
   ])
 
   // ─── Per-subsystem registers ──────────────────────────────────────────────
   if (data.subsystems.length === 0) {
-    r.accentSection('Subsystems')
-    r.empty('No ITRs recorded for this project.')
+    r.accentSection(bi('Subsistemas', 'Subsystems'))
+    r.empty(bi('El proyecto no tiene ITR registrados.', 'No ITRs recorded for this project.'))
   }
 
   for (const sub of data.subsystems) {
     const subApproved = sub.itrs.filter(i => i.status === 'approved').length
-    r.accentSection(`${sub.code} — ${sub.name}  (${subApproved}/${sub.itrs.length} approved)`)
+    r.accentSection(`${sub.code} — ${sub.name}  (${subApproved}/${sub.itrs.length} ${bi('aprobados', 'approved')})`)
     r.tableHeader(COLS)
 
     if (sub.itrs.length === 0) {
-      r.empty('No ITRs in this subsystem.')
+      r.empty(bi('El subsistema no tiene ITR.', 'No ITRs in this subsystem.'))
       continue
     }
 

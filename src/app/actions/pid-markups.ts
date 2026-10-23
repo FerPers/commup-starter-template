@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { normalizeRotation, type Pt } from '@/lib/pid/geometry'
@@ -7,6 +8,8 @@ import { MARKUP_KINDS, MAX_LABEL_LENGTH, toStoredPoints, validMarkupPoints, type
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
+
+type T = Awaited<ReturnType<typeof getTranslations<'ActionErrors'>>>
 
 // P2: marcas LOSH (línea resaltada, límite, etiqueta) sobre una revisión de un P&ID. Dibujan los editores (Líder en
 // adelante y Arquitecto), igual que los pines. La BD vuelve a comprobar todo: pid_hotspot_guard (revisión de un P&ID
@@ -41,9 +44,9 @@ async function pidRevisionDocument(supabase: SupabaseClient<Database>, revisionI
 
 const viewerPath = (projectId: string, documentId: string) => `/projects/${projectId}/documents/${documentId}/viewer`
 
-function cleanLabel(raw: string | null | undefined): string | null | { error: string } {
+function cleanLabel(raw: string | null | undefined, t: T): string | null | { error: string } {
   const label = raw?.trim() ? raw.trim() : null
-  if (label && label.length > MAX_LABEL_LENGTH) return { error: `La etiqueta admite hasta ${MAX_LABEL_LENGTH} caracteres` }
+  if (label && label.length > MAX_LABEL_LENGTH) return { error: t('pidMarkups.labelTooLong', { max: MAX_LABEL_LENGTH }) }
   return label
 }
 
@@ -57,17 +60,18 @@ export const createMarkup = withAuth(
     ],
   },
   async (ctx, input: MarkupInput): Promise<{ id?: string; error?: string }> => {
-    if (!MARKUP_KINDS.includes(input.kind)) return { error: 'Tipo de marca no válido' }
-    if (!Number.isInteger(input.page_num) || input.page_num < 1) return { error: 'Página no válida' }
-    if (!validMarkupPoints(input.kind, input.points)) return { error: 'Puntos de la marca no válidos' }
-    if (!(input.page_width > 0) || !(input.page_height > 0)) return { error: 'Tamaño de página no válido' }
+    const t = await getTranslations('ActionErrors')
+    if (!MARKUP_KINDS.includes(input.kind)) return { error: t('pidMarkups.invalidKind') }
+    if (!Number.isInteger(input.page_num) || input.page_num < 1) return { error: t('pidMarkups.invalidPage') }
+    if (!validMarkupPoints(input.kind, input.points)) return { error: t('pidMarkups.invalidPoints') }
+    if (!(input.page_width > 0) || !(input.page_height > 0)) return { error: t('pidMarkups.invalidPageSize') }
     const other = input.kind === 'limit' ? input.other_system_id ?? null : null
-    if (other && other === input.system_id) return { error: 'Los dos lados del límite deben ser sistemas distintos' }
-    const label = cleanLabel(input.label)
+    if (other && other === input.system_id) return { error: t('pidMarkups.sameSystem') }
+    const label = cleanLabel(input.label, t)
     if (label && typeof label === 'object') return label
 
     const documentId = await pidRevisionDocument(ctx.supabase, input.revision_id, input.project_id)
-    if (!documentId) return { error: 'Revisión del P&ID no encontrada en el proyecto' }
+    if (!documentId) return { error: t('pidMarkups.revisionNotFound') }
 
     const { data, error } = await ctx.supabase
       .from('pid_markups')
@@ -122,32 +126,33 @@ export const updateMarkup = withAuth(
       page_rotation?: number
     },
   ): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: current } = await ctx.supabase
       .from('pid_markups')
       .select('kind, system_id, other_system_id, revision_id')
       .eq('id', input.markup_id)
       .eq('project_id', input.project_id)
       .maybeSingle()
-    if (!current) return { error: 'Marca no encontrada' }
+    if (!current) return { error: t('pidMarkups.markupNotFound') }
     const kind = current.kind as MarkupKind
 
     const patch: Database['public']['Tables']['pid_markups']['Update'] = {}
     if ('system_id' in input && input.system_id) patch.system_id = input.system_id
     if ('other_system_id' in input) {
-      if (kind !== 'limit' && input.other_system_id) return { error: 'Solo un límite tiene sistema del otro lado' }
+      if (kind !== 'limit' && input.other_system_id) return { error: t('pidMarkups.otherSideLimitOnly') }
       patch.other_system_id = input.other_system_id ?? null
     }
     const sys = patch.system_id ?? current.system_id
     const other = 'other_system_id' in patch ? patch.other_system_id : current.other_system_id
-    if (other && other === sys) return { error: 'Los dos lados del límite deben ser sistemas distintos' }
+    if (other && other === sys) return { error: t('pidMarkups.sameSystem') }
     if ('label' in input) {
-      const label = cleanLabel(input.label)
+      const label = cleanLabel(input.label, t)
       if (label && typeof label === 'object') return label
       patch.label = label
     }
     if ('points' in input && input.points) {
-      if (!validMarkupPoints(kind, input.points)) return { error: 'Puntos de la marca no válidos' }
-      if (!((input.page_width ?? 0) > 0) || !((input.page_height ?? 0) > 0)) return { error: 'Tamaño de página no válido' }
+      if (!validMarkupPoints(kind, input.points)) return { error: t('pidMarkups.invalidPoints') }
+      if (!((input.page_width ?? 0) > 0) || !((input.page_height ?? 0) > 0)) return { error: t('pidMarkups.invalidPageSize') }
       patch.points = toStoredPoints(input.points)
       patch.page_width = Math.round(input.page_width! * 100) / 100
       patch.page_height = Math.round(input.page_height! * 100) / 100
@@ -178,8 +183,9 @@ export const deleteMarkup = withAuth(
 export const confirmMarkups = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'project_id' }] },
   async (ctx, input: { project_id: string; revision_id: string; markup_ids?: string[] }): Promise<{ error?: string; count?: number }> => {
+    const t = await getTranslations('ActionErrors')
     const documentId = await pidRevisionDocument(ctx.supabase, input.revision_id, input.project_id)
-    if (!documentId) return { error: 'Revisión del P&ID no encontrada en el proyecto' }
+    if (!documentId) return { error: t('pidMarkups.revisionNotFound') }
     let q = ctx.supabase.from('pid_markups').update({ needs_review: false })
       .eq('project_id', input.project_id).eq('revision_id', input.revision_id).eq('needs_review', true)
     if (input.markup_ids?.length) q = q.in('id', input.markup_ids.slice(0, 500))

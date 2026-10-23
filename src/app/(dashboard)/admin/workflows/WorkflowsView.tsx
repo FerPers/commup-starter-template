@@ -11,7 +11,7 @@ import {
   deleteWorkflowRule,
   type WorkflowActionType,
 } from '@/app/actions/workflows'
-import { reflexiveRuleError } from '@/lib/workflows/rules'
+import { isReflexiveRule } from '@/lib/workflows/rules'
 
 // ── Types ─────────────────────────────────────────────────────
 type Rule = {
@@ -320,6 +320,7 @@ function RuleEditorModal({
   onSaved: (rule: Rule) => void
 }) {
   const tx = useTranslations('Workflows')
+  const te = useTranslations('ActionErrors')
   const [name, setName] = useState(rule?.name ?? '')
   const [description, setDescription] = useState(rule?.description ?? '')
   const [triggerEvent, setTriggerEvent] = useState(rule?.trigger_event ?? TRIGGER_EVENTS[0])
@@ -341,8 +342,7 @@ function RuleEditorModal({
 
   const handleSave = async () => {
     setErr(null)
-    const loop = reflexiveRuleError(triggerEvent, actionType)
-    if (loop) return setErr(loop)
+    if (isReflexiveRule(triggerEvent, actionType)) return setErr(te('workflows.reflexive'))
 
     let conditionJsonlogic: Json
     if (advancedMode) {

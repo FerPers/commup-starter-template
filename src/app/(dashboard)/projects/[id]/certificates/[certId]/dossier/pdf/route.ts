@@ -1,5 +1,6 @@
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { loadPdfBranding } from '@/lib/pdf/branding'
+import { todayIn } from '@/lib/time/zone'
 import {
   renderCompletionDossierPdf,
   type CompletionDossierData,
@@ -27,7 +28,7 @@ export async function GET(
 
   const { data: project } = await supabase
     .from('projects')
-    .select('id, name, code, client, location')
+    .select('id, name, code, client, location, timezone')
     .eq('id', projectId)
     .eq('org_id', orgId)
     .single()
@@ -154,6 +155,7 @@ export async function GET(
     projectName: project.name,
     projectCode: project.code,
     projectClient: project.client ?? null,
+    timezone: project.timezone,
     projectLocation: project.location ?? null,
     certificateNumber: cert.certificate_number,
     certificateTitle: cert.title,
@@ -176,7 +178,7 @@ export async function GET(
 
   const bytes = await renderCompletionDossierPdf(reportData)
   const safeNum = cert.certificate_number.replace(/[^a-zA-Z0-9-]/g, '_')
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayIn(project.timezone)
   const filename = `dossier-${safeNum}-${today}.pdf`
 
   return new Response(bytes as BodyInit, {

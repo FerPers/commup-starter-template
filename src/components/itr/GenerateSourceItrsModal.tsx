@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { generateCauseItrs, generateLoopItrs } from '@/app/actions/source-itrs'
-import { assignmentError } from '@/lib/itr/signatures'
+import { assignmentIssue } from '@/lib/itr/signatures'
 
 export type GenerationTemplate = { id: string; code: string; title: string; version: number; requiredSignatures: string[] }
 export type GenerationMember = { user_id: string; name: string; role: string }
@@ -27,6 +27,7 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
 }) {
   const router = useRouter()
   const tg = useTranslations('SourceItrs')
+  const te = useTranslations('ActionErrors')
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? '')
   const [inspectorId, setInspectorId] = useState('')
   const [supervisorId, setSupervisorId] = useState('')
@@ -41,8 +42,8 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
   function submit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const invalid = assignmentError(required, { executor: inspectorId, supervisor: needs('supervisor') ? supervisorId : null, client: needs('client') ? clientId : null })
-    if (invalid) { setError(invalid); return }
+    const invalid = assignmentIssue(required, { executor: inspectorId, supervisor: needs('supervisor') ? supervisorId : null, client: needs('client') ? clientId : null })
+    if (invalid) { setError(te(`itrAssign.${invalid.code}`, invalid)); return }
     start(async () => {
       const input = { projectId, templateId, ids: items.map(i => i.id), inspectorId, supervisorId: needs('supervisor') ? supervisorId : null, clientId: needs('client') ? clientId : null }
       const res = kind === 'loop' ? await generateLoopItrs(input) : await generateCauseItrs(input)

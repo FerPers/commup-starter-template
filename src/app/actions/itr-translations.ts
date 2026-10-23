@@ -3,9 +3,10 @@
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
-import { isAiConfigured, AI_NOT_CONFIGURED } from '@/lib/ai/claude'
+import { isAiConfigured, aiNotConfigured } from '@/lib/ai/claude'
 import { runAi } from '@/lib/ai/run'
 import { DEFAULT_ITR_GLOSSARY, parseGlossary } from '@/lib/constants/itr-glossary'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -124,6 +125,7 @@ async function translateWithAi(
   itemsToTranslate: TranslationItem[],
   translateTitle: boolean,
 ): Promise<{ title_es: string | null; items: Map<string, string> }> {
+  const t = await getTranslations('ActionErrors')
   const glossary = await loadGlossary(ctx)
   const result = { title_es: null as string | null, items: new Map<string, string>() }
 
@@ -147,7 +149,7 @@ async function translateWithAi(
     }))
     if (!run.response) throw new Error(run.error)
     const parsed = run.response.parsed_output
-    if (!parsed) throw new Error('La respuesta de la IA no pudo interpretarse. Intenta de nuevo.')
+    if (!parsed) throw new Error(t('itrTranslations.aiUnparseable'))
     if (wantTitle && parsed.title_es?.trim()) result.title_es = parsed.title_es.trim()
     const valid = new Set(chunk.map(c => c.id))
     for (const it of parsed.items) {
@@ -162,8 +164,9 @@ async function translateWithAi(
 export const getTranslationReview = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, templateId: string): Promise<{ review?: TranslationReview; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const review = await loadTemplate(ctx, templateId)
-    if (!review) return { error: 'Plantilla no encontrada' }
+    if (!review) return { error: t('itrInstances.templateNotFound') }
     return { review }
   },
 )
@@ -177,9 +180,10 @@ export const proposeTranslations = withAuthOnly(
     templateId: string,
     mode: 'missing' | 'flagged' | 'all',
   ): Promise<{ title_es?: string | null; items?: { id: string; description_es: string }[]; error?: string }> => {
-    if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED }
+    const t = await getTranslations('ActionErrors')
+    if (!isAiConfigured()) return { error: await aiNotConfigured() }
     const review = await loadTemplate(ctx, templateId)
-    if (!review) return { error: 'Plantilla no encontrada' }
+    if (!review) return { error: t('itrInstances.templateNotFound') }
     const pick = (it: TranslationItem) => {
       if (it.flags.includes('not_translatable')) return false
       if (mode === 'all') return true
@@ -193,7 +197,7 @@ export const proposeTranslations = withAuthOnly(
       const res = await translateWithAi(ctx, review, targets, wantTitle)
       return { title_es: res.title_es ?? review.template.title_es, items: [...res.items].map(([id, description_es]) => ({ id, description_es })) }
     } catch (e) {
-      return { error: e instanceof Error ? e.message : 'Error de IA' }
+      return { error: e instanceof Error ? e.message : t('itrTranslations.aiError') }
     }
   },
 )
@@ -207,8 +211,9 @@ export const saveTranslations = withAuthOnly(
     templateId: string,
     payload: { title_es?: string | null; items: { id: string; description_es: string | null; source: 'human' | 'ai' }[] },
   ): Promise<{ error?: string; saved?: number }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: tpl } = await ctx.supabase.from('itr_templates').select('id').eq('id', templateId).eq('org_id', ctx.orgId).single()
-    if (!tpl) return { error: 'Plantilla no encontrada' }
+    if (!tpl) return { error: t('itrInstances.templateNotFound') }
 
     if (payload.title_es !== undefined) {
       const { error } = await ctx.supabase.from('itr_templates').update({ title_es: textOrNull(payload.title_es) }).eq('id', templateId)
@@ -258,15 +263,16 @@ export const listTranslationGaps = withAuthOnly(
 export const translateTemplateMissing = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, templateId: string): Promise<{ error?: string; title: boolean; items: number }> => {
-    if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED, title: false, items: 0 }
+    const t = await getTranslations('ActionErrors')
+    if (!isAiConfigured()) return { error: await aiNotConfigured(), title: false, items: 0 }
     const review = await loadTemplate(ctx, templateId)
-    if (!review) return { error: 'Plantilla no encontrada', title: false, items: 0 }
+    if (!review) return { error: t('itrInstances.templateNotFound'), title: false, items: 0 }
     const targets = review.items.filter(it => it.flags.includes('empty') && !it.flags.includes('not_translatable'))
     const wantTitle = !review.template.title_es?.trim()
     if (targets.length === 0 && !wantTitle) return { title: false, items: 0 }
     let res: Awaited<ReturnType<typeof translateWithAi>>
     try { res = await translateWithAi(ctx, review, targets, wantTitle) }
-    catch (e) { return { error: e instanceof Error ? e.message : 'Error de IA', title: false, items: 0 } }
+    catch (e) { return { error: e instanceof Error ? e.message : t('itrTranslations.aiError'), title: false, items: 0 } }
 
     let titleDone = false
     if (wantTitle && res.title_es) {

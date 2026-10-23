@@ -2,15 +2,17 @@
 
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { ACTIVE_ORG_COOKIE, isActiveMembership } from '@/lib/supabase/membership'
 
 // Manual a propósito (caso especial del plan wrapper): verifica membership en la
 // org DESTINO, no en la activa — getActiveMembership/withAuth no aplican aquí.
 export async function switchOrg(targetOrgId: string): Promise<{ error?: string }> {
+  const t = await getTranslations('ActionErrors')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
+  if (!user) return { error: t('auth.unauthenticated') }
 
   const { data: m } = await supabase
     .from('org_members')
@@ -20,7 +22,7 @@ export async function switchOrg(targetOrgId: string): Promise<{ error?: string }
     .maybeSingle()
 
   // S15 (I-21): el usuario ve también sus membresías invitadas o suspendidas; solo se entra a una activa.
-  if (!m || !isActiveMembership(m)) return { error: 'No eres miembro activo de esa organización' }
+  if (!m || !isActiveMembership(m)) return { error: t('org.notActiveMember') }
 
   const cookieStore = await cookies()
   cookieStore.set(ACTIVE_ORG_COOKIE, targetOrgId, {
@@ -41,9 +43,10 @@ export async function switchOrg(targetOrgId: string): Promise<{ error?: string }
  * invitación sea de quien llama.
  */
 export async function respondInvitation(orgId: string, accept: boolean): Promise<{ error?: string }> {
+  const t = await getTranslations('ActionErrors')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
+  if (!user) return { error: t('auth.unauthenticated') }
   const { error } = await supabase.rpc('respond_org_invitation', { p_org_id: orgId, p_accept: accept })
   if (error) return { error: error.message }
   if (accept) {

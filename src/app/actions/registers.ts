@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
@@ -60,11 +61,12 @@ export const createRegisterItem = withAuth(
     ctx,
     input: { projectId: string; kind: RegisterKind; title: string; description?: string; systemId?: string | null; data?: Record<string, unknown>; tags?: TagRef[]; linkToId?: string },
   ): Promise<{ id?: string; error?: string }> => {
-    if (!REGISTER_KINDS.includes(input.kind)) return { error: 'Tipo de registro no válido' }
+    const t = await getTranslations('ActionErrors')
+    if (!REGISTER_KINDS.includes(input.kind)) return { error: t('registers.kindInvalid') }
     const linkTo = input.linkToId ? await loadItem(ctx.supabase, input.projectId, input.linkToId) : null
-    if (input.linkToId && !linkTo) return { error: 'Registro a vincular no encontrado' }
+    if (input.linkToId && !linkTo) return { error: t('registers.linkTargetNotFound') }
     const title = input.title?.trim()
-    if (!title) return { error: 'El título es obligatorio' }
+    if (!title) return { error: t('registers.titleRequired') }
     const { data, error } = await ctx.supabase.rpc('create_register_item', {
       p_project_id: input.projectId,
       p_kind: input.kind,
@@ -91,10 +93,11 @@ export const updateRegisterItem = withAuth(
     ctx,
     input: { projectId: string; itemId: string; title: string; description?: string; systemId?: string | null; data: Record<string, unknown>; tags?: TagRef[] },
   ): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const item = await loadItem(ctx.supabase, input.projectId, input.itemId)
-    if (!item) return { error: 'Registro no encontrado' }
+    if (!item) return { error: t('registers.notFound') }
     const title = input.title?.trim()
-    if (!title) return { error: 'El título es obligatorio' }
+    if (!title) return { error: t('registers.titleRequired') }
     const { error } = await ctx.supabase.rpc('update_register_item', {
       p_item_id: item.id,
       p_title: title.slice(0, 200),
@@ -116,14 +119,15 @@ export const transitionRegisterItem = withAuth(
     ctx,
     input: { projectId: string; itemId: string; to: RegisterStatus; comment?: string; data?: Record<string, unknown> },
   ): Promise<{ error?: string; missing?: string[] }> => {
+    const t = await getTranslations('ActionErrors')
     const item = await loadItem(ctx.supabase, input.projectId, input.itemId)
-    if (!item) return { error: 'Registro no encontrado' }
+    if (!item) return { error: t('registers.notFound') }
     const data = input.data ? cleanRegisterData(item.kind, { ...item.data, ...input.data }) : item.data
     if (input.to !== 'cancelled') {
       const missing = missingFieldsFor(item.kind, input.to, data)
-      if (missing.length) return { error: 'Faltan campos obligatorios para este paso', missing }
+      if (missing.length) return { error: t('registers.missingFields'), missing }
       if (transitionBlockedReason(item.kind, input.to, data) === 'test_rejected') {
-        return { error: 'La prueba fue rechazada: repite la prueba antes de restituir o verificar' }
+        return { error: t('registers.testRejected') }
       }
     }
     const { error } = await ctx.supabase.rpc('transition_register_item', {
@@ -141,8 +145,9 @@ export const transitionRegisterItem = withAuth(
 export const deleteRegisterItem = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; itemId: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const item = await loadItem(ctx.supabase, input.projectId, input.itemId)
-    if (!item) return { error: 'Registro no encontrado' }
+    if (!item) return { error: t('registers.notFound') }
     const { error } = await ctx.supabase.rpc('delete_register_item', { p_item_id: item.id })
     if (error) return { error: error.message }
     revalidate(input.projectId)
@@ -170,11 +175,12 @@ export const configureRegisterType = withAuth(
 export const linkRegisterItems = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; itemId: string; linkedItemId: string; link: boolean }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const [a, b] = await Promise.all([
       loadItem(ctx.supabase, input.projectId, input.itemId),
       loadItem(ctx.supabase, input.projectId, input.linkedItemId),
     ])
-    if (!a || !b) return { error: 'Registro no encontrado' }
+    if (!a || !b) return { error: t('registers.notFound') }
     const { error } = await ctx.supabase.rpc('link_register_items', { p_item_id: a.id, p_linked_item_id: b.id, p_link: input.link })
     if (error) return { error: error.message }
     revalidate(input.projectId, a.id)
@@ -198,8 +204,9 @@ const MAX_IMPORT_ROWS = 5000
 export const importTestPacks = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; packs: PackImportRow[]; lines: LineImportRow[] }): Promise<TestPackImportResult> => {
+    const t = await getTranslations('ActionErrors')
     const result: TestPackImportResult = { created: 0, updated: 0, linesLinked: 0, errors: [] }
-    if (input.packs.length + input.lines.length > MAX_IMPORT_ROWS) return { ...result, error: `Máximo ${MAX_IMPORT_ROWS} filas por importación` }
+    if (input.packs.length + input.lines.length > MAX_IMPORT_ROWS) return { ...result, error: t('registers.maxRows', { max: MAX_IMPORT_ROWS }) }
 
     const [{ data: existing }, { data: systems }] = await Promise.all([
       ctx.supabase.from('register_items')
@@ -226,25 +233,25 @@ export const importTestPacks = withAuth(
     const linesByPack = new Map<string, string[]>()
     for (const l of input.lines) {
       const tagId = tagByNumber.get(l.line)
-      if (!tagId) { result.errors.push(`Líneas, fila ${l.row}: la línea ${l.line} no existe como tag del proyecto`); continue }
+      if (!tagId) { result.errors.push(t('registers.importLineMissing', { row: l.row, line: l.line })); continue }
       linesByPack.set(l.pack, [...(linesByPack.get(l.pack) ?? []), tagId])
     }
 
     const packRows = new Map(input.packs.map(p => [p.pack, p]))
     for (const key of new Set([...packRows.keys(), ...linesByPack.keys()])) {
       const row = packRows.get(key)
-      const where = row ? `Packs, fila ${row.row}` : `Pack ${key}`
+      const where = row ? t('registers.importWhereRow', { row: row.row }) : t('registers.importWherePack', { pack: key })
       let systemId: string | null | undefined
       if (row?.system_code) {
         systemId = systemByCode.get(row.system_code)
-        if (!systemId) { result.errors.push(`${where}: el sistema ${row.system_code} no existe en el proyecto`); continue }
+        if (!systemId) { result.errors.push(t('registers.importSystemMissing', { where, code: row.system_code })); continue }
       }
       const newLines = linesByPack.get(key) ?? []
       const rowData = cleanRegisterData('test_pack', { ...(row?.data ?? {}), ...(isRegisterNumber(key) ? {} : { pack_ref: key }) })
       const current = byKey.get(key)
 
       if (current) {
-        if (!OPEN_STATUSES.includes(current.status)) { result.errors.push(`${where}: ${current.number} está cerrado y no se modifica`); continue }
+        if (!OPEN_STATUSES.includes(current.status)) { result.errors.push(t('registers.importPackClosed', { where, number: current.number })); continue }
         const tags = [...current.register_item_tags.map(({ tag_id, role }) => ({ tag_id, role })), ...newLines.map(tag_id => ({ tag_id, role: 'line' as const }))]
         const before = current.register_item_tags.filter(x => x.role === 'line').length
         const cleaned = cleanTags('test_pack', tags)
@@ -260,7 +267,7 @@ export const importTestPacks = withAuth(
         result.updated++
         result.linesLinked += cleaned.filter(x => x.role === 'line').length - before
       } else {
-        if (isRegisterNumber(key)) { result.errors.push(`${where}: no existe el test pack ${key} (los números TPK los asigna CommUp)`); continue }
+        if (isRegisterNumber(key)) { result.errors.push(t('registers.importPackUnknown', { where, pack: key })); continue }
         const tags = cleanTags('test_pack', newLines.map(tag_id => ({ tag_id, role: 'line' as const })))
         const { error } = await ctx.supabase.rpc('create_register_item', {
           p_project_id: input.projectId,

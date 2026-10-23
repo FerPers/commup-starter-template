@@ -281,36 +281,47 @@ export function reshapeTable(config: TableConfig, previous: TableCapture | null,
 export type TableRowFlags = { fail: boolean; asFoundOut: boolean }
 export type TableStabilityResult = { ok: boolean | null; needed: number; have: number }
 
+/**
+ * V3: lo que falta o está mal en un registro de tabla, como código; el texto sale de `ActionErrors.table.<code>`
+ * (TableCapture en el cliente, upsertResponse en el servidor).
+ */
+type TableRecordIssue = 'invalid_config' | 'pending' | 'invalid_record' | 'no_source_rows' | 'source_count' | 'row_count' | 'rows_mismatch'
+export type TableIssue =
+  | { code: TableRecordIssue }
+  | { code: 'missing'; row: string; column: string }
+  | { code: 'na_reason'; row: string }
+  | { code: 'stability'; n: number }
+
 export function evaluateTable(options: unknown, value: string | null | undefined, sourceRows?: SourceRow[] | null): {
-  isComplete: boolean; hasFail: boolean; errors: string[]; data: TableCapture | null; config: TableConfig | null
+  isComplete: boolean; hasFail: boolean; errors: TableIssue[]; data: TableCapture | null; config: TableConfig | null
   /** v2: marcas por fila (rechazo / as found fuera de tolerancia) y criterio de estabilidad. */
   rowFlags: Record<string, TableRowFlags>; asFoundOut: number; stability: TableStabilityResult | null
 } {
   const config = parseTableConfig(options)
   const base = { rowFlags: {}, asFoundOut: 0, stability: null }
-  const invalid = (message: string) => ({ isComplete: false, hasFail: false, errors: [message], data: null, config, ...base })
-  if (!config) return invalid('Configuración de tabla inválida')
-  if (!text(value)) return { isComplete: false, hasFail: false, errors: ['Registro pendiente'], data: null, config, ...base }
+  const invalid = (code: TableRecordIssue = 'invalid_record') => ({ isComplete: false, hasFail: false, errors: [{ code }] as TableIssue[], data: null, config, ...base })
+  if (!config) return invalid('invalid_config')
+  if (!text(value)) return invalid('pending')
   let d: unknown
-  try { d = JSON.parse(value) } catch { return invalid('Registro de tabla inválido') }
+  try { d = JSON.parse(value) } catch { return invalid() }
   // jsonb cannot store NUL or unpaired surrogates: reject before submission so
   // the browser and the atomic SQL evaluation agree.
   const pending: unknown[] = [d]
   while (pending.length) {
     const part = pending.pop()
-    if (typeof part === 'string' && /[\u0000\uD800-\uDFFF]/u.test(part)) return invalid('Registro de tabla inválido')
+    if (typeof part === 'string' && /[\u0000\uD800-\uDFFF]/u.test(part)) return invalid()
     if (Array.isArray(part)) { for (const entry of part) pending.push(entry) }
     else if (object(part)) { for (const [key, entry] of Object.entries(part)) pending.push(key, entry) }
   }
-  if (!object(d) || d.version !== 1 || !Number.isInteger(d.count) || !Array.isArray(d.rows)) return invalid('Registro de tabla inválido')
+  if (!object(d) || d.version !== 1 || !Number.isInteger(d.count) || !Array.isArray(d.rows)) return invalid()
   const count = d.count as number
   if (config.rows.mode === 'source') {
-    if (!sourceRows?.length) return invalid('El ITR no tiene la foto de filas del lazo o de la causa')
-    if (count !== sourceRows.length) return invalid('Cantidad de filas distinta de la foto del ITR')
-  } else if (config.rows.mode === 'fixed' ? count !== config.rows.labels.length : count < config.rows.min || count > config.rows.max) return invalid('Cantidad de filas fuera de la configuración')
+    if (!sourceRows?.length) return invalid('no_source_rows')
+    if (count !== sourceRows.length) return invalid('source_count')
+  } else if (config.rows.mode === 'fixed' ? count !== config.rows.labels.length : count < config.rows.min || count > config.rows.max) return invalid('row_count')
   const expected = expectedTableRows(config, count, sourceRows)
-  if (d.rows.length !== expected.length) return invalid('Faltan o sobran filas')
-  const errors: string[] = []
+  if (d.rows.length !== expected.length) return invalid('rows_mismatch')
+  const errors: TableIssue[] = []
   const rows: TableRow[] = []
   const rowFlags: Record<string, TableRowFlags> = {}
   let hasFail = false
@@ -318,9 +329,9 @@ export function evaluateTable(options: unknown, value: string | null | undefined
   const series: Array<number | null> = []
   for (let i = 0; i < expected.length; i++) {
     const raw = d.rows[i]
-    if (!object(raw) || raw.id !== expected[i].id || !object(raw.cells)) return invalid('Registro de tabla inválido')
+    if (!object(raw) || raw.id !== expected[i].id || !object(raw.cells)) return invalid()
     const cells = raw.cells
-    for (const key of Object.keys(cells)) if (!config.columns.some(column => column.key === key)) return invalid('Registro de tabla inválido')
+    for (const key of Object.keys(cells)) if (!config.columns.some(column => column.key === key)) return invalid()
     const label = expected[i].label
     const out: Record<string, TableCellValue> = {}
     const flags: TableRowFlags = { fail: false, asFoundOut: false }
@@ -331,45 +342,45 @@ export function evaluateTable(options: unknown, value: string | null | undefined
       const cell = cells[column.key]
       if (column.type === 'reference') {
         // Dato de la foto: lo enviado no cuenta; se muestra el de itrs.source_rows.
-        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid('Registro de tabla inválido')
+        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid()
         out[column.key] = sourceRefText(column.ref!, sourceRows?.[i]?.refs[column.ref!])
         continue
       }
       if (column.type === 'computed' || (column.type === 'result' && column.auto_from)) {
         // Valor derivado: se acepta cualquier valor de la forma correcta y se recalcula abajo.
-        if (cell !== undefined && cell !== null && typeof cell !== (column.type === 'computed' ? 'number' : 'string')) return invalid('Registro de tabla inválido')
+        if (cell !== undefined && cell !== null && typeof cell !== (column.type === 'computed' ? 'number' : 'string')) return invalid()
         continue
       }
       if (column.type === 'text') {
-        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid('Registro de tabla inválido')
+        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid()
         const v = typeof cell === 'string' ? cell : ''
         if (v.trim()) hasText = true
-        else if (column.required) errors.push(`${label}: falta ${column.label}`)
+        else if (column.required) errors.push({ code: 'missing', row: label, column: column.label })
         out[column.key] = v
       } else if (column.type === 'datetime') {
-        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid('Registro de tabla inválido')
+        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid()
         const v = typeof cell === 'string' ? cell : ''
-        if (v === '') { if (column.required) errors.push(`${label}: falta ${column.label}`) }
-        else if (!DATETIME_PATTERN.test(v)) return invalid('Registro de tabla inválido')
+        if (v === '') { if (column.required) errors.push({ code: 'missing', row: label, column: column.label }) }
+        else if (!DATETIME_PATTERN.test(v)) return invalid()
         out[column.key] = v
       } else if (column.type === 'number') {
-        if (cell !== undefined && cell !== null && typeof cell !== 'number') return invalid('Registro de tabla inválido')
+        if (cell !== undefined && cell !== null && typeof cell !== 'number') return invalid()
         const v = finite(cell) ? cell : null
-        if (typeof cell === 'number' && !Number.isFinite(cell)) return invalid('Registro de tabla inválido')
-        if (v === null) { if (column.required) errors.push(`${label}: falta ${column.label}`) }
+        if (typeof cell === 'number' && !Number.isFinite(cell)) return invalid()
+        if (v === null) { if (column.required) errors.push({ code: 'missing', row: label, column: column.label }) }
         else if ((column.min !== null && v < column.min) || (column.max !== null && v > column.max)) { hasFail = true; flags.fail = true }
         out[column.key] = v
       } else if (column.type === 'select') {
-        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid('Registro de tabla inválido')
+        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid()
         const v = typeof cell === 'string' ? cell : ''
-        if (v === '') { if (column.required) errors.push(`${label}: falta ${column.label}`) }
-        else if (!column.options?.includes(v)) return invalid('Registro de tabla inválido')
+        if (v === '') { if (column.required) errors.push({ code: 'missing', row: label, column: column.label }) }
+        else if (!column.options?.includes(v)) return invalid()
         out[column.key] = v
       } else {
-        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid('Registro de tabla inválido')
+        if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid()
         const v = typeof cell === 'string' ? cell : ''
-        if (v === '') { if (column.required) errors.push(`${label}: falta ${column.label}`) }
-        else if (!(TABLE_RESULT_VALUES as readonly string[]).includes(v)) return invalid('Registro de tabla inválido')
+        if (v === '') { if (column.required) errors.push({ code: 'missing', row: label, column: column.label }) }
+        else if (!(TABLE_RESULT_VALUES as readonly string[]).includes(v)) return invalid()
         else if (v === 'fail') { hasFail = true; flags.fail = true }
         else if (v === 'not_applicable') notApplicable = true
         out[column.key] = v
@@ -399,7 +410,7 @@ export function evaluateTable(options: unknown, value: string | null | undefined
       const v = key in exact ? exact[key] : out[key]
       series.push(finite(v) ? v : null)
     }
-    if (notApplicable && !hasText) errors.push(`${label}: justifique No aplica`)
+    if (notApplicable && !hasText) errors.push({ code: 'na_reason', row: label })
     rows.push({ id: expected[i].id, label, cells: out })
     rowFlags[expected[i].id] = flags
   }
@@ -409,7 +420,7 @@ export function evaluateTable(options: unknown, value: string | null | undefined
     const s = config.stability
     const values = series.filter((v): v is number => v !== null)
     if (values.length < s.last_n) {
-      errors.push(`Se requieren al menos ${s.last_n} lecturas para el criterio de estabilidad`)
+      errors.push({ code: 'stability', n: s.last_n })
       stability = { ok: null, needed: s.last_n, have: values.length }
     } else {
       const ok = values.slice(-s.last_n).every(v => (s.min === null || v >= s.min - EPS) && (s.max === null || v <= s.max + EPS))

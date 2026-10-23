@@ -7,8 +7,7 @@ const REFLEXIVE: Record<string, string[]> = {
   create_punch: ['punches.created'],
 }
 
-export function reflexiveRuleError(triggerEvent: string, actionType: string): string | null {
-  return REFLEXIVE[actionType]?.includes(triggerEvent.trim())
-    ? 'Esta regla se dispararía a sí misma (el punch que crea vuelve a emitir «Punch creado»): elige otro evento'
-    : null
+/** El texto sale de `ActionErrors.workflows.reflexive` (acción y pantalla). */
+export function isReflexiveRule(triggerEvent: string, actionType: string): boolean {
+  return REFLEXIVE[actionType]?.includes(triggerEvent.trim()) ?? false
 }

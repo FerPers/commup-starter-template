@@ -210,7 +210,7 @@ function GroupCard({ g, choice, overridden, preview, doneCount, catalog, byId, c
     if (!choice) return
     setErr(null)
     const e = await onAccept(choice, reason.trim())
-    if (e) setErr(['reason_required', 'type_exists', 'invalid_type', 'no_tags'].includes(e) ? t(`error.${e as 'no_tags'}`) : e)
+    if (e) setErr(['reason_required', 'type_exists', 'invalid_type', 'no_tags', 'equipment_type_not_found'].includes(e) ? t(`error.${e as 'no_tags'}`) : e)
   }
   function applyPick() {
     if (pickId === '__new') {

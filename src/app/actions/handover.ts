@@ -4,6 +4,7 @@ import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { generateHandoverPackage, type HandoverFormat } from '@/lib/handover/generate'
 
 export type GenerateHandoverInput = {
@@ -27,7 +28,8 @@ export const generateHandoverPackageAction = withAuth(
     guards: [{ resource: 'project', field: 'projectId' }],
   },
   async (ctx, input: GenerateHandoverInput): Promise<GenerateHandoverResult> => {
-    if (!input.formats || input.formats.length === 0) return { error: 'Select at least one format' }
+    const t = await getTranslations('ActionErrors')
+    if (!input.formats || input.formats.length === 0) return { error: t('handover.formatRequired') }
 
   const admin = createAdminClient()
   try {
@@ -69,7 +71,7 @@ export const getSignedHandoverUrlsAction = withAuthOnly(
     ctx,
     packageId: string,
   ): Promise<{ error?: string; jsonUrl?: string | null; pdfUrl?: string | null; zipUrl?: string | null }> => {
-
+  const t = await getTranslations('ActionErrors')
   const admin = createAdminClient()
   const { data: pkg } = await admin
     .from('handover_packages')
@@ -77,7 +79,7 @@ export const getSignedHandoverUrlsAction = withAuthOnly(
     .eq('id', packageId)
     .maybeSingle()
 
-  if (!pkg || pkg.org_id !== ctx.orgId) return { error: 'Package not found' }
+  if (!pkg || pkg.org_id !== ctx.orgId) return { error: t('handover.packageNotFound') }
 
   const [j, p, z] = await Promise.all([
     pkg.json_path ? admin.storage.from('handover-packages').createSignedUrl(pkg.json_path, 3600) : null,

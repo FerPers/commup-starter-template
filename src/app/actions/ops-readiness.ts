@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth/withAuth'
@@ -37,7 +38,8 @@ export const upsertOpsPerson = withAuth(
     ctx,
     input: { projectId: string; personId?: string | null; fullName: string; company?: string; position?: string; shift?: string; userId?: string | null; active?: boolean },
   ): Promise<{ id?: string; error?: string }> => {
-    if (!input.fullName?.trim()) return { error: 'El nombre es obligatorio' }
+    const t = await getTranslations('ActionErrors')
+    if (!input.fullName?.trim()) return { error: t('opsReadiness.nameRequired') }
     const { data, error } = await ctx.supabase.rpc('upsert_ops_person', {
       p_project_id: input.projectId, p_person_id: (opt(input.personId) ?? null) as unknown as string, p_full_name: input.fullName.trim().slice(0, 200),
       p_company: opt(input.company?.trim()), p_position: opt(input.position?.trim()), p_shift: opt(input.shift?.trim()),
@@ -55,10 +57,11 @@ export const recordCompetency = withAuth(
     ctx,
     input: { projectId: string; systemId: string; personId: string; level: number; evidenceKind: EvidenceKind; evidence?: string; assessedAt?: string; expiresAt?: string | null },
   ): Promise<{ error?: string }> => {
-    if (!Number.isInteger(input.level) || input.level < 0 || input.level > 4) return { error: 'Nivel no válido (0–4)' }
-    if (!EVIDENCE_KINDS.includes(input.evidenceKind)) return { error: 'Tipo de evidencia no válido' }
+    const t = await getTranslations('ActionErrors')
+    if (!Number.isInteger(input.level) || input.level < 0 || input.level > 4) return { error: t('opsReadiness.levelInvalid') }
+    if (!EVIDENCE_KINDS.includes(input.evidenceKind)) return { error: t('opsReadiness.evidenceKindInvalid') }
     const { data: person } = await ctx.supabase.from('ops_personnel').select('id').eq('id', input.personId).eq('project_id', input.projectId).maybeSingle()
-    if (!person) return { error: 'Persona no encontrada' }
+    if (!person) return { error: t('opsReadiness.personNotFound') }
     const { error } = await ctx.supabase.rpc('record_competency', {
       p_person_id: input.personId, p_system_id: input.systemId, p_level: input.level, p_evidence_kind: input.evidenceKind,
       p_evidence: opt(input.evidence?.trim()), p_assessed_at: opt(input.assessedAt), p_expires_at: opt(input.expiresAt),
@@ -73,8 +76,9 @@ export const recordCompetency = withAuth(
 export const voidCompetencyRecord = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; recordId: string; reason: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: rec } = await ctx.supabase.from('competency_records').select('id').eq('id', input.recordId).eq('project_id', input.projectId).maybeSingle()
-    if (!rec) return { error: 'Registro no encontrado' }
+    if (!rec) return { error: t('opsReadiness.recordNotFound') }
     const { error } = await ctx.supabase.rpc('void_competency_record', { p_record_id: input.recordId, p_reason: input.reason.trim().slice(0, 2000) })
     if (error) return { error: error.message }
     revalidate(input.projectId)
@@ -102,9 +106,10 @@ export const upsertCriticalSpare = withAuth(
       isCritical: boolean; qtyRequired: number; qtyAvailable: number; status: SpareStatus; eta?: string | null; notes?: string
     },
   ): Promise<{ id?: string; error?: string }> => {
-    if (!SPARE_STATUSES.includes(input.status)) return { error: 'Estado no válido' }
-    if (!input.item?.trim()) return { error: 'El ítem es obligatorio' }
-    if (!(input.qtyRequired >= 0) || !(input.qtyAvailable >= 0)) return { error: 'Cantidades no válidas' }
+    const t = await getTranslations('ActionErrors')
+    if (!SPARE_STATUSES.includes(input.status)) return { error: t('opsReadiness.statusInvalid') }
+    if (!input.item?.trim()) return { error: t('opsReadiness.itemRequired') }
+    if (!(input.qtyRequired >= 0) || !(input.qtyAvailable >= 0)) return { error: t('opsReadiness.quantitiesInvalid') }
     const { data, error } = await ctx.supabase.rpc('upsert_critical_spare', {
       p_project_id: input.projectId, p_spare_id: (opt(input.spareId) ?? null) as unknown as string, p_system_id: input.systemId, p_item: input.item.trim().slice(0, 200),
       p_kind: input.kind, p_part_number: opt(input.partNumber?.trim()), p_tag_id: opt(input.tagId), p_is_critical: input.isCritical,
@@ -120,8 +125,9 @@ export const upsertCriticalSpare = withAuth(
 export const deleteCriticalSpare = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; spareId: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data } = await ctx.supabase.from('critical_spares').select('id').eq('id', input.spareId).eq('project_id', input.projectId).maybeSingle()
-    if (!data) return { error: 'Repuesto no encontrado' }
+    if (!data) return { error: t('opsReadiness.spareNotFound') }
     const { error } = await ctx.supabase.rpc('delete_critical_spare', { p_spare_id: input.spareId })
     if (error) return { error: error.message }
     revalidate(input.projectId)
@@ -136,7 +142,8 @@ export const requestOwnershipTransfer = withAuth(
     ctx,
     input: { projectId: string; systemId: string; toStage: OwnershipStage; exceptions?: { key: string; justification: string }[]; reason?: string },
   ): Promise<{ id?: string; error?: string }> => {
-    if (!OWNERSHIP_STAGES.includes(input.toStage)) return { error: 'Etapa no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!OWNERSHIP_STAGES.includes(input.toStage)) return { error: t('opsReadiness.stageInvalid') }
     const exceptions = (input.exceptions ?? []).filter(e => e.justification?.trim()).slice(0, 20)
       .map(e => ({ key: e.key.slice(0, 60), justification: e.justification.trim().slice(0, 2000) }))
     const { data, error } = await ctx.supabase.rpc('request_ownership_transfer', {
@@ -167,8 +174,9 @@ export const signOwnershipTransfer = withAuth(
     /** S25 (E-13): `acknowledged` = claves de las excepciones que el firmante reconoció una por una. */
     input: { projectId: string; transferId: string; capacity: 'commissioning' | 'operations'; acknowledged: string[] },
   ): Promise<{ status?: string; handoverError?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const tr = await transferOf(ctx.supabase, input.transferId, input.projectId)
-    if (!tr) return { error: 'Traspaso no encontrado' }
+    if (!tr) return { error: t('opsReadiness.transferNotFound') }
     const { data, error } = await ctx.supabase.rpc('sign_ownership_transfer', {
       p_transfer_id: input.transferId, p_capacity: input.capacity, p_acknowledged: input.acknowledged.slice(0, 20).map(k => k.slice(0, 60)),
     })
@@ -192,11 +200,12 @@ export const signOwnershipTransfer = withAuth(
 export const generateTransferHandover = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; transferId: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const tr = await transferOf(ctx.supabase, input.transferId, input.projectId)
-    if (!tr) return { error: 'Traspaso no encontrado' }
-    if (tr.status !== 'completed' || tr.to_stage !== 'operations' || tr.is_reversal) return { error: 'Solo para traspasos completados a Operaciones' }
-    if (tr.handover_package_id) return { error: 'El traspaso ya tiene paquete de handover' }
-    if (ctx.role === 'client') return { error: 'Access denied' }
+    if (!tr) return { error: t('opsReadiness.transferNotFound') }
+    if (tr.status !== 'completed' || tr.to_stage !== 'operations' || tr.is_reversal) return { error: t('opsReadiness.handoverOnlyCompleted') }
+    if (tr.handover_package_id) return { error: t('opsReadiness.handoverExists') }
+    if (ctx.role === 'client') return { error: t('auth.forbidden') }
     const res = await generateForTransfer(ctx.orgId, input.projectId, tr.id, tr.system_id, ctx.userId)
     revalidate(input.projectId, input.transferId)
     return res
@@ -206,7 +215,8 @@ export const generateTransferHandover = withAuth(
 export const cancelOwnershipTransfer = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; transferId: string; reason: string }): Promise<{ error?: string }> => {
-    if (!(await transferOf(ctx.supabase, input.transferId, input.projectId))) return { error: 'Traspaso no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await transferOf(ctx.supabase, input.transferId, input.projectId))) return { error: t('opsReadiness.transferNotFound') }
     const { error } = await ctx.supabase.rpc('cancel_ownership_transfer', { p_transfer_id: input.transferId, p_reason: input.reason.slice(0, 2000) })
     if (error) return { error: error.message }
     revalidate(input.projectId, input.transferId)
@@ -217,7 +227,8 @@ export const cancelOwnershipTransfer = withAuth(
 export const getOwnershipChecklist = withAuth(
   { guards: [...projectGuard, systemGuard] },
   async (ctx, input: { projectId: string; systemId: string; toStage: OwnershipStage }): Promise<{ items?: { key: string; ok: boolean; detail: Record<string, unknown> }[]; error?: string }> => {
-    if (!OWNERSHIP_STAGES.includes(input.toStage)) return { error: 'Etapa no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!OWNERSHIP_STAGES.includes(input.toStage)) return { error: t('opsReadiness.stageInvalid') }
     const { data, error } = await ctx.supabase.rpc('ownership_checklist', { p_system_id: input.systemId, p_to_stage: input.toStage })
     if (error) return { error: error.message }
     return { items: (data ?? []) as never }

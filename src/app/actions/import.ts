@@ -2,7 +2,9 @@
 
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
+import { getTranslations } from 'next-intl/server'
 import { checkProjectAccess } from '@/lib/auth/access'
+import { accessError } from '@/lib/i18n/action-errors'
 import { createAdminClient, emitImportSummary } from '@/lib/supabase/admin'
 import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
 import { normalizeCode } from '@/lib/excel/normalize'
@@ -59,7 +61,7 @@ export const findExistingTags = withAuthOnly(
   { role: PRIVILEGED_ROLES },
   async (ctx, projectId: string, tagNumbers: string[]): Promise<{ error?: string; existing?: string[] }> => {
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
     const existing: string[] = []
     const unique = [...new Set(tagNumbers.map(t => t.trim()).filter(Boolean))]
@@ -106,6 +108,7 @@ async function prepareTagImport(
   present: Set<TagField>,
   createHierarchy: boolean,
 ): Promise<Prepared | { error: string }> {
+  const t = await getTranslations('ActionErrors')
   const errors: ImportResult['errors'] = []
   const warnings: string[] = []
 
@@ -143,7 +146,7 @@ async function prepareTagImport(
   })
   if (dupes.size > 0) {
     const list = [...dupes]
-    warnings.push(`${dupes.size} tag(s) repetidos en el archivo; se usó la última fila de cada uno: ${list.slice(0, 5).join(', ')}${list.length > 5 ? '…' : ''}`)
+    warnings.push(t('import.duplicateTags', { count: dupes.size, list: `${list.slice(0, 5).join(', ')}${list.length > 5 ? '…' : ''}` }))
   }
   const uniqueRows = [...byTag.values()]
 
@@ -166,7 +169,7 @@ async function prepareTagImport(
         ])
       : [{ data: [] }, { data: [] }]
     const busy = new Set([...(withItr ?? []), ...(withPunch ?? [])].map(r => r.tag_id))
-    for (const t of found) existingByTag.set(t.tag_number, { ...t, has_work: busy.has(t.id) })
+    for (const tg of found) existingByTag.set(tg.tag_number, { ...tg, has_work: busy.has(tg.id) })
   }
 
   // ── Jerarquía (la vista previa solo lee la existente) ─────────
@@ -192,11 +195,11 @@ async function prepareTagImport(
     const disciplineId = disciplineMap.get(row.discipline_code.trim().toUpperCase())
     const existing = existingByTag.get(tagNumber) ?? null
     const subsystemId = subsystemIdMap.get(normalizeCode(row.subsystem_code, DEFAULT_SUBSYSTEM))
-    if (!disciplineId) { errors.push({ row: index + 2, tag: tagNumber, reason: `Disciplina "${row.discipline_code}" no existe en la organización` }); continue }
+    if (!disciplineId) { errors.push({ row: index + 2, tag: tagNumber, reason: t('import.disciplineNotFound', { code: row.discipline_code }) }); continue }
     // Sin columna de subsistema, un tag existente se queda en el suyo; uno nuevo necesita el del archivo (o el genérico).
     const target = subsystemId ?? (existing && !present.has('subsystem') ? existing.subsystem_id : undefined)
     if (!target) {
-      if (createHierarchy) { errors.push({ row: index + 2, tag: tagNumber, reason: `Subsistema "${row.subsystem_code}" no pudo crearse` }); continue }
+      if (createHierarchy) { errors.push({ row: index + 2, tag: tagNumber, reason: t('import.subsystemNotCreated', { code: row.subsystem_code }) }); continue }
     }
     const plan = planTag(row, present, existing, {
       projectId, subsystemId: target ?? `nuevo:${normalizeCode(row.subsystem_code, DEFAULT_SUBSYSTEM)}`, disciplineId,
@@ -207,14 +210,14 @@ async function prepareTagImport(
 
   if (unknownTypes.size > 0) {
     const list = [...unknownTypes]
-    warnings.push(`Tipos de equipo no reconocidos (se usó la detección por prefijo del tag): ${list.slice(0, 6).join(', ')}${list.length > 6 ? '…' : ''}. Créalos en Admin → Configuración → Tipos de equipo.`)
+    warnings.push(t('import.unknownEquipmentTypes', { list: `${list.slice(0, 6).join(', ')}${list.length > 6 ? '…' : ''}` }))
   }
   if ((eqtData ?? []).length === 0) {
-    warnings.push('La organización no tiene tipos de equipo configurados; los tags quedaron sin tipo. Carga el catálogo estándar en Admin → Configuración.')
+    warnings.push(t('import.noEquipmentTypes'))
   }
   const blocked = plans.filter(p => p.plan.move?.blocked).map(p => p.tag)
   if (blocked.length) {
-    warnings.push(`${blocked.length} tag(s) con ITR o punch no se movieron de subsistema (muévelos desde el detalle de cada tag → «Mover de subsistema»): ${blocked.slice(0, 6).join(', ')}${blocked.length > 6 ? '…' : ''}`)
+    warnings.push(t('import.movesBlocked', { count: blocked.length, list: `${blocked.slice(0, 6).join(', ')}${blocked.length > 6 ? '…' : ''}` }))
   }
   return { plans, errors, warnings }
 }
@@ -224,7 +227,7 @@ export const previewTagImport = withAuthOnly(
   { role: PRIVILEGED_ROLES },
   async (ctx, projectId: string, rows: TagRow[], columns: string[]): Promise<{ error?: string; preview?: TagImportPreview }> => {
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
     const prep = await prepareTagImport(ctx, createAdminClient(), projectId, rows, presentFromColumns(columns), false)
     if ('error' in prep) return { error: prep.error }
     const preview: TagImportPreview = { newTags: 0, updatedTags: 0, unchangedTags: 0, fieldChanges: {}, moves: [] }
@@ -251,7 +254,7 @@ export const importTags = withAuthOnly(
     columns: string[],
   ): Promise<{ error?: string; result?: ImportResult }> => {
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
     // S21 (B-03): sin un evento por fila (50k tags = 50k eventos); un resumen al final.
     const admin = createAdminClient({ bulk: 'tags' })

@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ADMIN_ROLES, EDITOR_ROLES } from '@/lib/auth/permissions'
@@ -35,13 +36,14 @@ function revalidateInventory() {
 export const saveTestEquipment = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, input: TestEquipmentInput): Promise<{ id?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const code = txt(input.code, 60)?.toUpperCase()
     const serial = txt(input.serialNumber, 100)
     const cert = txt(input.certificateNumber, 100)
-    if (!code || !serial || !cert) return { error: 'Código, serie y n.º de certificado son obligatorios' }
-    if (!TEST_EQUIPMENT_KINDS.includes(input.kind)) return { error: 'Tipo de equipo no válido' }
-    if (!DATE.test(input.calibratedOn) || !DATE.test(input.calibrationDue)) return { error: 'Fechas de calibración no válidas' }
-    if (input.calibrationDue < input.calibratedOn) return { error: 'El vencimiento no puede ser anterior a la calibración' }
+    if (!code || !serial || !cert) return { error: t('testEquipment.requiredFields') }
+    if (!TEST_EQUIPMENT_KINDS.includes(input.kind)) return { error: t('testEquipment.kindInvalid') }
+    if (!DATE.test(input.calibratedOn) || !DATE.test(input.calibrationDue)) return { error: t('testEquipment.datesInvalid') }
+    if (input.calibrationDue < input.calibratedOn) return { error: t('testEquipment.dueBeforeCalibration') }
 
     const row = {
       code, kind: input.kind, make: txt(input.make, 100), model: txt(input.model, 100), serial_number: serial,
@@ -52,8 +54,8 @@ export const saveTestEquipment = withAuthOnly(
       ? ctx.supabase.from('test_equipment').update(row).eq('id', input.id).eq('org_id', ctx.orgId).select('id').single()
       : ctx.supabase.from('test_equipment').insert({ ...row, org_id: ctx.orgId }).select('id').single()
     const { data, error } = await q
-    if (error?.code === '23505') return { error: `Ya existe un equipo con el código ${code}` }
-    if (error || !data) return { error: error?.message ?? 'No se pudo guardar' }
+    if (error?.code === '23505') return { error: t('testEquipment.codeExists', { code }) }
+    if (error || !data) return { error: error?.message ?? t('testEquipment.saveFailed') }
     revalidateInventory()
     return { id: data.id }
   },
@@ -73,8 +75,9 @@ export const setTestEquipmentActive = withAuthOnly(
 export const deleteTestEquipment = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, input: { id: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { error } = await ctx.supabase.from('test_equipment').delete().eq('id', input.id).eq('org_id', ctx.orgId)
-    if (error?.code === '23503') return { error: 'El equipo ya se usó en ITRs: dalo de baja en lugar de borrarlo' }
+    if (error?.code === '23503') return { error: t('testEquipment.inUse') }
     if (error) return { error: error.message }
     revalidateInventory()
     return {}
@@ -85,7 +88,8 @@ export const deleteTestEquipment = withAuthOnly(
 export const setTestEquipmentCertificate = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, input: { id: string; path: string }): Promise<{ error?: string }> => {
-    if (!input.path.startsWith(`${ctx.orgId}/${input.id}/`) || input.path.includes('..')) return { error: 'Ruta no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!input.path.startsWith(`${ctx.orgId}/${input.id}/`) || input.path.includes('..')) return { error: t('testEquipment.pathInvalid') }
     const { error } = await ctx.supabase.from('test_equipment').update({ certificate_path: input.path }).eq('id', input.id).eq('org_id', ctx.orgId)
     if (error) return { error: error.message }
     revalidateInventory()
@@ -97,9 +101,10 @@ export const setTestEquipmentCertificate = withAuthOnly(
 export const getTestEquipmentCertificateUrl = withAuthOnly(
   {},
   async (ctx, input: { path: string }): Promise<{ url?: string; error?: string }> => {
-    if (!input.path.startsWith(`${ctx.orgId}/`) || input.path.includes('..')) return { error: 'Ruta no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!input.path.startsWith(`${ctx.orgId}/`) || input.path.includes('..')) return { error: t('testEquipment.pathInvalid') }
     const { data, error } = await ctx.supabase.storage.from('test-equipment').createSignedUrl(input.path, 300)
-    if (error || !data) return { error: error?.message ?? 'No se pudo abrir el certificado' }
+    if (error || !data) return { error: error?.message ?? t('testEquipment.certificateOpenFailed') }
     return { url: data.signedUrl }
   },
 )
@@ -114,15 +119,16 @@ async function itrInProject(ctx: { supabase: SupabaseClient }, itrId: string, pr
 export const addItrTestEquipment = withAuth(
   { guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: { projectId: string; itrId: string; equipmentId: string }): Promise<{ error?: string }> => {
-    if (ctx.role === 'client') return { error: 'Sin permiso' }
+    const t = await getTranslations('ActionErrors')
+    if (ctx.role === 'client') return { error: t('auth.forbidden') }
     const itr = await itrInProject(ctx, input.itrId, input.projectId)
-    if (!itr) return { error: 'ITR no encontrado' }
+    if (!itr) return { error: t('itrInstances.itrNotFound') }
     // project_id y la calibración los completa el trigger; RLS exige un proyecto propio.
     const { error } = await ctx.supabase.from('itr_test_equipment').insert({
       itr_id: itr.id, equipment_id: input.equipmentId, project_id: input.projectId,
       calibrated_on: '1900-01-01', calibration_due: '1900-01-01', certificate_number: '-',
     })
-    if (error?.code === '23505') return { error: 'Ese equipo ya está registrado en este ITR' }
+    if (error?.code === '23505') return { error: t('testEquipment.alreadyInItr') }
     if (error) return { error: error.message }
     revalidatePath(`/projects/${input.projectId}/tags/${itr.tag_id}/itrs/${itr.id}`)
     return {}
@@ -132,8 +138,9 @@ export const addItrTestEquipment = withAuth(
 export const removeItrTestEquipment = withAuth(
   { guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: { projectId: string; itrId: string; equipmentId: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const itr = await itrInProject(ctx, input.itrId, input.projectId)
-    if (!itr) return { error: 'ITR no encontrado' }
+    if (!itr) return { error: t('itrInstances.itrNotFound') }
     const { error } = await ctx.supabase.from('itr_test_equipment').delete().eq('itr_id', itr.id).eq('equipment_id', input.equipmentId)
     if (error) return { error: error.message }
     revalidatePath(`/projects/${input.projectId}/tags/${itr.tag_id}/itrs/${itr.id}`)

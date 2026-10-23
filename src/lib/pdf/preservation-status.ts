@@ -10,6 +10,7 @@ import {
   sanitize,
   type Color, type TableCol,
 } from './renderer'
+import { getTranslations } from 'next-intl/server'
 
 export type PreservationPlanRow = {
   tag: string | null
@@ -43,27 +44,26 @@ const DUE_COLOR: Record<PreservationPlanRow['due'], Color> = {
   inactive: COLOR.muted,
 }
 
-const DUE_LABEL: Record<PreservationPlanRow['due'], string> = {
-  overdue: 'OVERDUE',
-  soon: 'Due soon',
-  ok: 'On track',
-  inactive: 'Inactive',
-}
-
+/** `label` = clave de `PdfReports.preservation.col`. */
 const COLS: TableCol[] = [
-  { w: 78, label: 'Tag' },
-  { w: 48, label: 'Proc' },
-  { w: 150, label: 'Procedure' },
-  { w: 58, label: 'Frequency', align: 'center' },
-  { w: 62, label: 'Next Due', align: 'center' },
-  { w: 69, label: 'Status', align: 'center' },
+  { w: 78, label: 'tag' },
+  { w: 48, label: 'proc' },
+  { w: 150, label: 'procedure' },
+  { w: 58, label: 'frequency', align: 'center' },
+  { w: 62, label: 'nextDue', align: 'center' },
+  { w: 69, label: 'status', align: 'center' },
 ]
 
 export async function renderPreservationStatusPdf(data: PreservationStatusData): Promise<Uint8Array> {
+  // V3: reporte en el idioma de quien descarga.
+  const t = await getTranslations('PdfReports')
+  const tp = await getTranslations('Preservation')
+  const frequency = (f: string | null) => !f ? '—' : tp.has(`freq.${f}`) ? tp(`freq.${f}`) : f
+  const cols: TableCol[] = COLS.map(c => ({ ...c, label: t(`preservation.col.${c.label}`) }))
   const r = await Renderer.create()
-  r.doc.setTitle(`Preservation Status · ${data.orgName}`)
+  r.doc.setTitle(`${t('preservation.title')} · ${data.orgName}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('Preservation Status Report')
+  r.doc.setSubject(t('preservation.title'))
 
   const allPlans = data.projects.flatMap(p => p.plans)
   const overdue = allPlans.filter(p => p.due === 'overdue').length
@@ -79,12 +79,12 @@ export async function renderPreservationStatusPdf(data: PreservationStatusData):
     page.drawText(sanitize(`CommUp · ${data.orgName}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${data.generatedAt}`)
+    const centerText = sanitize(t('common.generated', { date: data.generatedAt }))
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `${t('common.page', { n: pageNum })} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -100,7 +100,7 @@ export async function renderPreservationStatusPdf(data: PreservationStatusData):
   r.moveY(8)
   r.drawTextCentered('CommUp', { y: r.y - 18, size: 18, bold: true, color: COLOR.purple })
   r.moveY(22)
-  r.drawTextCentered('Preservation Status', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
+  r.drawTextCentered(t('preservation.title'), { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
   r.moveY(15)
   r.drawTextCentered(data.orgName, {
     y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: CONTENT_W,
@@ -112,38 +112,38 @@ export async function renderPreservationStatusPdf(data: PreservationStatusData):
 
   // ─── Summary cards ────────────────────────────────────────────────────────
   r.infoCardRow([
-    { label: 'Overdue', value: String(overdue), sub: overdue > 0 ? 'Action required' : 'None' },
-    { label: 'Due Soon', value: String(soon), sub: `Next ${data.soonWindowDays} days` },
-    { label: 'Total Plans', value: String(allPlans.length) },
-    { label: 'Projects', value: String(data.projects.length) },
+    { label: t('preservation.overdue'), value: String(overdue), sub: overdue > 0 ? t('preservation.actionRequired') : t('common.none') },
+    { label: t('preservation.dueSoon'), value: String(soon), sub: t('preservation.nextDays', { days: data.soonWindowDays }) },
+    { label: t('preservation.totalPlans'), value: String(allPlans.length) },
+    { label: t('preservation.projects'), value: String(data.projects.length) },
   ])
 
   // ─── Per-project registers ────────────────────────────────────────────────
   if (data.projects.length === 0) {
-    r.accentSection('Projects')
-    r.empty('No preservation plans recorded.')
+    r.accentSection(t('preservation.projects'))
+    r.empty(t('preservation.empty'))
   }
 
   for (const proj of data.projects) {
     const projOverdue = proj.plans.filter(p => p.due === 'overdue').length
-    r.accentSection(`${proj.code} — ${proj.name}  (${projOverdue} overdue)`)
-    r.tableHeader(COLS)
+    r.accentSection(`${proj.code} — ${proj.name}  (${t('preservation.projectOverdue', { n: projOverdue })})`)
+    r.tableHeader(cols)
 
     if (proj.plans.length === 0) {
-      r.empty('No plans in this project.')
+      r.empty(t('preservation.emptyProject'))
       continue
     }
 
     proj.plans.forEach((p, i) => {
       r.tableRow(
-        COLS,
+        cols,
         [
           p.tag ?? '—',
           p.procedureCode ?? '—',
           p.procedureTitle ?? '—',
-          p.frequency ?? '—',
+          frequency(p.frequency),
           p.nextDueDate,
-          DUE_LABEL[p.due],
+          t(`preservation.due.${p.due}`),
         ],
         {
           alternate: i % 2 === 1,

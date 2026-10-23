@@ -4,7 +4,8 @@ import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 import type { Enums, Json } from '@/types/supabase.generated'
-import { reflexiveRuleError } from '@/lib/workflows/rules'
+import { isReflexiveRule } from '@/lib/workflows/rules'
+import { getTranslations } from 'next-intl/server'
 
 export type WorkflowActionType = Enums<'workflow_action_type'>
 
@@ -19,17 +20,17 @@ export type WorkflowRuleInput = {
   enabled?: boolean
 }
 
-function validate(input: WorkflowRuleInput): string | null {
-  if (!input.name?.trim()) return 'Nombre requerido'
-  if (!input.triggerEvent?.trim()) return 'Evento requerido'
-  if (!input.actionType) return 'Acción requerida'
-  const loop = reflexiveRuleError(input.triggerEvent, input.actionType)
-  if (loop) return loop
+async function validate(input: WorkflowRuleInput): Promise<string | null> {
+  const t = await getTranslations('ActionErrors')
+  if (!input.name?.trim()) return t('workflows.nameRequired')
+  if (!input.triggerEvent?.trim()) return t('workflows.eventRequired')
+  if (!input.actionType) return t('workflows.actionRequired')
+  if (isReflexiveRule(input.triggerEvent, input.actionType)) return t('workflows.reflexive')
   if (typeof input.conditionJsonlogic !== 'object' || input.conditionJsonlogic === null) {
-    return 'Condición debe ser un objeto JsonLogic'
+    return t('workflows.conditionObject')
   }
   if (typeof input.actionPayload !== 'object' || input.actionPayload === null) {
-    return 'Payload debe ser un objeto'
+    return t('workflows.payloadObject')
   }
   return null
 }
@@ -37,7 +38,7 @@ function validate(input: WorkflowRuleInput): string | null {
 export const createWorkflowRule = withAuth(
   { role: PRIVILEGED_ROLES },
   async (ctx, input: WorkflowRuleInput): Promise<{ error?: string; id?: string }> => {
-    const err = validate(input)
+    const err = await validate(input)
     if (err) return { error: err }
 
     const { data, error } = await ctx.supabase
@@ -66,7 +67,7 @@ export const createWorkflowRule = withAuth(
 export const updateWorkflowRule = withAuthOnly(
   { role: PRIVILEGED_ROLES },
   async (ctx, id: string, input: WorkflowRuleInput): Promise<{ error?: string }> => {
-    const err = validate(input)
+    const err = await validate(input)
     if (err) return { error: err }
 
     const { error } = await ctx.supabase

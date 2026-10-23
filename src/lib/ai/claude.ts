@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { getTranslations } from 'next-intl/server'
 
 // ── Cliente Claude (server-only) ─────────────────────────────────────────────
 // La clave vive en ANTHROPIC_API_KEY (secreto de Wrangler en Cloudflare,
@@ -11,8 +12,11 @@ export function isAiConfigured(): boolean {
   return !!process.env.ANTHROPIC_API_KEY
 }
 
-export const AI_NOT_CONFIGURED =
-  'La IA no está configurada en este entorno (falta ANTHROPIC_API_KEY). Pídele al administrador de la plataforma que la active.'
+/** V3: texto en el idioma de quien llama (`ActionErrors.ai.notConfigured`). */
+export async function aiNotConfigured(): Promise<string> {
+  const t = await getTranslations('ActionErrors')
+  return t('ai.notConfigured')
+}
 
 export function createClaudeClient(): Anthropic {
   return new Anthropic({

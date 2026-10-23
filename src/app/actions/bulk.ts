@@ -5,6 +5,7 @@ import { withAuthOnly } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
 import { punchDeleteBlocker } from '@/lib/punches/deletable'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import type { Enums } from '@/types/supabase.generated'
 
 // D7 (S05): ya no hay cambio masivo de estado de ITR ni «aprobar seleccionados» (C-10/A-28): el estado sale
@@ -14,7 +15,8 @@ export const bulkRescheduleItrs = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, ids: string[], scheduledDate: string | null): Promise<{ updated?: number; error?: string }> => {
     if (!ids.length) return { updated: 0 }
-    if (scheduledDate !== null && !/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate)) return { error: 'Fecha no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (scheduledDate !== null && !/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate)) return { error: t('bulk.invalidDate') }
     const { data, error } = await ctx.supabase.from('itrs').update({ scheduled_date: scheduledDate }).in('id', ids).select('id')
     if (error) return { error: error.message }
     revalidatePath('/itrs')
@@ -26,10 +28,11 @@ export const bulkUpdatePunchStatus = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, ids: string[], status: Enums<'punch_status'>): Promise<{ error?: string }> => {
     if (!ids.length) return {}
+    const t = await getTranslations('ActionErrors')
     // Fase 4: cerrar exige verificación en campo por otra persona, punch por punch.
-    if (status === 'closed') return { error: 'Los punch se cierran verificándolos en campo, uno por uno' }
+    if (status === 'closed') return { error: t('bulk.closeOneByOne') }
     // S06 (C-11, D8): cancelar exige motivo y otra persona, punch por punch.
-    if (status === 'cancelled') return { error: 'Los punch se cancelan uno por uno, con motivo' }
+    if (status === 'cancelled') return { error: t('bulk.cancelOneByOne') }
 
     const { error } = await ctx.supabase
       .from('punches')
@@ -62,6 +65,7 @@ export const bulkDeletePunches = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, ids: string[]): Promise<{ deleted?: number; error?: string }> => {
     if (!ids.length) return { deleted: 0 }
+    const t = await getTranslations('ActionErrors')
 
     const { data: found, error: fetchErr } = await ctx.supabase
       .from('punches')
@@ -74,7 +78,7 @@ export const bulkDeletePunches = withAuthOnly(
     // C-27 (S08): solo los que son errores de carga (abiertos, sin evidencia ni vínculos); el resto se cancela.
     const blocked = found.filter(r => punchDeleteBlocker({ ...r, attachments: (r.punch_attachments as unknown as { count: number }[])[0]?.count ?? 0 }))
     if (blocked.length) {
-      return { deleted: 0, error: `No se borró nada: ${blocked.length} punch no se pueden borrar (en curso, cerrados o con evidencia): ${blocked.slice(0, 5).map(r => r.punch_number).join(', ')}${blocked.length > 5 ? '…' : ''}. Cancélalos con motivo.` }
+      return { deleted: 0, error: t('bulk.deleteBlocked', { count: blocked.length, list: `${blocked.slice(0, 5).map(r => r.punch_number).join(', ')}${blocked.length > 5 ? '…' : ''}` }) }
     }
     const rows = found
     const deletableIds = rows.map(r => r.id)
@@ -85,7 +89,7 @@ export const bulkDeletePunches = withAuthOnly(
       .select('id')
 
     if (error) return { deleted: 0, error: error.message }
-    if ((deleted?.length ?? 0) !== deletableIds.length) return { deleted: deleted?.length ?? 0, error: 'Algunos punch no se pudieron borrar (sin permiso)' }
+    if ((deleted?.length ?? 0) !== deletableIds.length) return { deleted: deleted?.length ?? 0, error: t('bulk.deletePartial') }
 
     await logActivity(ctx.supabase, {
       orgId: ctx.orgId,

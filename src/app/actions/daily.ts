@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth/withAuth'
@@ -24,6 +25,8 @@ import {
   type TqStatus,
   type VerificationMethod,
 } from '@/lib/daily/catalog'
+
+type T = Awaited<ReturnType<typeof getTranslations<'ActionErrors'>>>
 
 // Gestión diaria (fase 5 plan readiness, sesión 1). Toda escritura pasa por RPC SECURITY DEFINER
 // (migración 20261017120000), que aplica rol, ciclo de vida, «otra persona» y pertenencia de los ids.
@@ -68,22 +71,23 @@ type ActionInput = {
   sourceRef?: string
 }
 
-function badAction(input: Pick<ActionInput, 'priority' | 'verificationMethod' | 'title' | 'ownerId'>): string | null {
-  if (!ACTION_PRIORITIES.includes(input.priority)) return 'Prioridad no válida'
-  if (!VERIFICATION_METHODS.includes(input.verificationMethod)) return 'Método de verificación no válido'
-  if (!input.title?.trim()) return 'El título es obligatorio'
-  if (!input.ownerId) return 'La acción necesita un responsable'
+function badAction(input: Pick<ActionInput, 'priority' | 'verificationMethod' | 'title' | 'ownerId'>, t: T): string | null {
+  if (!ACTION_PRIORITIES.includes(input.priority)) return t('daily.invalidPriority')
+  if (!VERIFICATION_METHODS.includes(input.verificationMethod)) return t('daily.invalidVerificationMethod')
+  if (!input.title?.trim()) return t('daily.titleRequired')
+  if (!input.ownerId) return t('daily.ownerRequired')
   return null
 }
 
 export const createAction = withAuth(
   { guards: [...projectGuard, systemGuard] },
   async (ctx, input: ActionInput & { sourceKind?: ActionSource; sourceId?: string | null }): Promise<{ id?: string; error?: string }> => {
-    const bad = badAction(input)
+    const t = await getTranslations('ActionErrors')
+    const bad = badAction(input, t)
     if (bad) return { error: bad }
     const sourceKind = input.sourceKind ?? 'manual'
     // S23 (D-12): las acciones de origen «gate» las crea la BD al aprobar un gate con condiciones.
-    if (!ACTION_SOURCES.includes(sourceKind) || sourceKind === 'gate') return { error: 'Origen no válido' }
+    if (!ACTION_SOURCES.includes(sourceKind) || sourceKind === 'gate') return { error: t('daily.invalidSource') }
     const { data, error } = await ctx.supabase.rpc('create_action', {
       p_project_id: input.projectId,
       p_title: text(input.title, 200),
@@ -109,9 +113,10 @@ export const createAction = withAuth(
 export const updateAction = withAuth(
   { guards: [...projectGuard, systemGuard] },
   async (ctx, input: ActionInput & { actionId: string; reason?: string }): Promise<{ error?: string }> => {
-    const bad = badAction(input)
+    const t = await getTranslations('ActionErrors')
+    const bad = badAction(input, t)
     if (bad) return { error: bad }
-    if (!(await belongs(ctx.supabase, 'action', input.actionId, input.projectId))) return { error: 'Acción no encontrada' }
+    if (!(await belongs(ctx.supabase, 'action', input.actionId, input.projectId))) return { error: t('daily.actionNotFound') }
     const { error } = await ctx.supabase.rpc('update_action', {
       p_action_id: input.actionId,
       p_title: text(input.title, 200),
@@ -133,7 +138,8 @@ export const updateAction = withAuth(
 export const transitionAction = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; actionId: string; to: ActionStatus; comment?: string }): Promise<{ error?: string }> => {
-    if (!(await belongs(ctx.supabase, 'action', input.actionId, input.projectId))) return { error: 'Acción no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await belongs(ctx.supabase, 'action', input.actionId, input.projectId))) return { error: t('daily.actionNotFound') }
     const { error } = await ctx.supabase.rpc('transition_action', {
       p_action_id: input.actionId, p_to: input.to, p_comment: opt(text(input.comment, 2000)),
     })
@@ -157,20 +163,21 @@ type ConstraintInput = {
   recoveryPlan?: string
 }
 
-function badConstraint(input: ConstraintInput): string | null {
-  if (!IMPACT_KINDS.includes(input.impactKind)) return 'Tipo de impacto no válido'
-  if (!input.title?.trim() || !input.description?.trim()) return 'Título y descripción son obligatorios'
-  if (!input.systemId || !input.ownerId || !input.needDate) return 'Sistema, responsable y fecha requerida son obligatorios'
+function badConstraint(input: ConstraintInput, t: T): string | null {
+  if (!IMPACT_KINDS.includes(input.impactKind)) return t('daily.invalidImpactKind')
+  if (!input.title?.trim() || !input.description?.trim()) return t('daily.constraintFieldsRequired')
+  if (!input.systemId || !input.ownerId || !input.needDate) return t('daily.constraintScopeRequired')
   return null
 }
 
 export const createConstraint = withAuth(
   { guards: [...projectGuard, { ...systemGuard, optional: false }] },
   async (ctx, input: ConstraintInput & { level?: number }): Promise<{ id?: string; error?: string }> => {
-    const bad = badConstraint(input)
+    const t = await getTranslations('ActionErrors')
+    const bad = badConstraint(input, t)
     if (bad) return { error: bad }
     const level = input.level ?? 1
-    if (!ESCALATION_LEVELS.includes(level as 1)) return { error: 'Nivel de escalamiento no válido' }
+    if (!ESCALATION_LEVELS.includes(level as 1)) return { error: t('daily.invalidEscalationLevel') }
     const { data, error } = await ctx.supabase.rpc('create_constraint', {
       p_project_id: input.projectId,
       p_title: text(input.title, 200),
@@ -193,9 +200,10 @@ export const createConstraint = withAuth(
 export const updateConstraint = withAuth(
   { guards: [...projectGuard, { ...systemGuard, optional: false }] },
   async (ctx, input: ConstraintInput & { constraintId: string; reason?: string }): Promise<{ error?: string }> => {
-    const bad = badConstraint(input)
+    const t = await getTranslations('ActionErrors')
+    const bad = badConstraint(input, t)
     if (bad) return { error: bad }
-    if (!(await belongs(ctx.supabase, 'constraint', input.constraintId, input.projectId))) return { error: 'Restricción no encontrada' }
+    if (!(await belongs(ctx.supabase, 'constraint', input.constraintId, input.projectId))) return { error: t('daily.constraintNotFound') }
     const { error } = await ctx.supabase.rpc('update_constraint', {
       p_constraint_id: input.constraintId,
       p_title: text(input.title, 200),
@@ -218,8 +226,9 @@ export const updateConstraint = withAuth(
 export const escalateConstraint = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; constraintId: string; level: number; reason: string }): Promise<{ error?: string }> => {
-    if (!ESCALATION_LEVELS.includes(input.level as 1)) return { error: 'Nivel de escalamiento no válido' }
-    if (!(await belongs(ctx.supabase, 'constraint', input.constraintId, input.projectId))) return { error: 'Restricción no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!ESCALATION_LEVELS.includes(input.level as 1)) return { error: t('daily.invalidEscalationLevel') }
+    if (!(await belongs(ctx.supabase, 'constraint', input.constraintId, input.projectId))) return { error: t('daily.constraintNotFound') }
     const { error } = await ctx.supabase.rpc('escalate_constraint', {
       p_constraint_id: input.constraintId, p_level: input.level, p_reason: text(input.reason, 2000),
     })
@@ -232,7 +241,8 @@ export const escalateConstraint = withAuth(
 export const transitionConstraint = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; constraintId: string; to: ConstraintStatus; comment?: string }): Promise<{ error?: string }> => {
-    if (!(await belongs(ctx.supabase, 'constraint', input.constraintId, input.projectId))) return { error: 'Restricción no encontrada' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await belongs(ctx.supabase, 'constraint', input.constraintId, input.projectId))) return { error: t('daily.constraintNotFound') }
     const { error } = await ctx.supabase.rpc('transition_constraint', {
       p_constraint_id: input.constraintId, p_to: input.to, p_comment: opt(text(input.comment, 2000)),
     })
@@ -255,9 +265,9 @@ type TqInput = {
   tagIds?: string[]
 }
 
-function badTq(input: TqInput): string | null {
-  if (!TQ_ADDRESSEES.includes(input.addressedTo)) return 'Destinatario no válido'
-  if (!input.subject?.trim() || !input.question?.trim()) return 'Asunto y pregunta son obligatorios'
+function badTq(input: TqInput, t: T): string | null {
+  if (!TQ_ADDRESSEES.includes(input.addressedTo)) return t('daily.invalidAddressee')
+  if (!input.subject?.trim() || !input.question?.trim()) return t('daily.tqFieldsRequired')
   return null
 }
 
@@ -271,7 +281,8 @@ const tqGuards = [
 export const createTq = withAuth(
   { guards: tqGuards },
   async (ctx, input: TqInput): Promise<{ id?: string; error?: string }> => {
-    const bad = badTq(input)
+    const t = await getTranslations('ActionErrors')
+    const bad = badTq(input, t)
     if (bad) return { error: bad }
     const { data, error } = await ctx.supabase.rpc('create_tq', {
       p_project_id: input.projectId,
@@ -293,9 +304,10 @@ export const createTq = withAuth(
 export const updateTq = withAuth(
   { guards: tqGuards },
   async (ctx, input: TqInput & { tqId: string }): Promise<{ error?: string }> => {
-    const bad = badTq(input)
+    const t = await getTranslations('ActionErrors')
+    const bad = badTq(input, t)
     if (bad) return { error: bad }
-    if (!(await belongs(ctx.supabase, 'tq', input.tqId, input.projectId))) return { error: 'TQ no encontrado' }
+    if (!(await belongs(ctx.supabase, 'tq', input.tqId, input.projectId))) return { error: t('daily.tqNotFound') }
     const { error } = await ctx.supabase.rpc('update_tq', {
       p_tq_id: input.tqId,
       p_subject: text(input.subject, 200),
@@ -319,8 +331,9 @@ export const answerTq = withAuth(
     ctx,
     input: { projectId: string; tqId: string; response: string; respondedByName?: string; designChange?: boolean; mocRef?: string },
   ): Promise<{ error?: string }> => {
-    if (!input.response?.trim()) return { error: 'La respuesta es obligatoria' }
-    if (!(await belongs(ctx.supabase, 'tq', input.tqId, input.projectId))) return { error: 'TQ no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!input.response?.trim()) return { error: t('daily.responseRequired') }
+    if (!(await belongs(ctx.supabase, 'tq', input.tqId, input.projectId))) return { error: t('daily.tqNotFound') }
     const { error } = await ctx.supabase.rpc('answer_tq', {
       p_tq_id: input.tqId,
       p_response: text(input.response, 8000),
@@ -337,7 +350,8 @@ export const answerTq = withAuth(
 export const transitionTq = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; tqId: string; to: TqStatus; comment?: string }): Promise<{ error?: string }> => {
-    if (!(await belongs(ctx.supabase, 'tq', input.tqId, input.projectId))) return { error: 'TQ no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!(await belongs(ctx.supabase, 'tq', input.tqId, input.projectId))) return { error: t('daily.tqNotFound') }
     const { error } = await ctx.supabase.rpc('transition_tq', {
       p_tq_id: input.tqId, p_to: input.to, p_comment: opt(text(input.comment, 2000)),
     })
@@ -369,11 +383,12 @@ export const recordDecision = withAuth(
       supersedeReason?: string
     },
   ): Promise<{ id?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const sourceKind = input.sourceKind ?? 'other'
-    if (!DECISION_SOURCES.includes(sourceKind)) return { error: 'Origen no válido' }
-    if (!input.title?.trim() || !input.decision?.trim()) return { error: 'Título y decisión son obligatorios' }
+    if (!DECISION_SOURCES.includes(sourceKind)) return { error: t('daily.invalidSource') }
+    if (!input.title?.trim() || !input.decision?.trim()) return { error: t('daily.decisionFieldsRequired') }
     if (input.supersedesId && !(await belongs(ctx.supabase, 'decision', input.supersedesId, input.projectId))) {
-      return { error: 'Decisión a reemplazar no encontrada' }
+      return { error: t('daily.supersededNotFound') }
     }
     const { data, error } = await ctx.supabase.rpc('record_decision', {
       p_project_id: input.projectId,
@@ -409,8 +424,9 @@ export const addMgmtAttachment = withAuth(
     ctx,
     input: { projectId: string; kind: EvidenceKind; entityId: string; filePath: string; fileName: string; mimeType?: string; sizeBytes?: number },
   ): Promise<{ id?: string; error?: string }> => {
-    if (!EVIDENCE_KINDS.includes(input.kind)) return { error: 'Tipo no válido' }
-    if (!input.filePath.startsWith(`${input.projectId}/${input.kind}/${input.entityId}/`)) return { error: 'Ruta de evidencia no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!EVIDENCE_KINDS.includes(input.kind)) return { error: t('daily.invalidKind') }
+    if (!input.filePath.startsWith(`${input.projectId}/${input.kind}/${input.entityId}/`)) return { error: t('daily.invalidEvidencePath') }
     const { data, error } = await ctx.supabase.rpc('add_mgmt_attachment', {
       p_entity_kind: input.kind,
       p_entity_id: input.entityId,
@@ -430,9 +446,10 @@ export const addMgmtAttachment = withAuth(
 export const getMgmtEvidenceUrl = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; path: string }): Promise<{ url?: string; error?: string }> => {
-    if (!input.path.startsWith(`${input.projectId}/`)) return { error: 'Ruta de evidencia no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!input.path.startsWith(`${input.projectId}/`)) return { error: t('daily.invalidEvidencePath') }
     const { data, error } = await ctx.supabase.storage.from('mgmt-evidence').createSignedUrl(input.path, 300)
-    if (error || !data) return { error: error?.message ?? 'No se pudo abrir el archivo' }
+    if (error || !data) return { error: error?.message ?? t('daily.fileOpenFailed') }
     return { url: data.signedUrl }
   },
 )
@@ -440,8 +457,9 @@ export const getMgmtEvidenceUrl = withAuth(
 export const deleteMgmtItem = withAuth(
   { guards: projectGuard },
   async (ctx, input: { projectId: string; kind: Exclude<MgmtKind, 'decision'>; entityId: string }): Promise<{ error?: string }> => {
-    if (!['action', 'constraint', 'tq'].includes(input.kind)) return { error: 'Este tipo no se puede borrar' }
-    if (!(await belongs(ctx.supabase, input.kind, input.entityId, input.projectId))) return { error: 'Registro no encontrado' }
+    const t = await getTranslations('ActionErrors')
+    if (!['action', 'constraint', 'tq'].includes(input.kind)) return { error: t('daily.notDeletable') }
+    if (!(await belongs(ctx.supabase, input.kind, input.entityId, input.projectId))) return { error: t('daily.recordNotFound') }
     const { error } = await ctx.supabase.rpc('delete_mgmt_item', { p_entity_kind: input.kind, p_entity_id: input.entityId })
     if (error) return { error: error.message }
     revalidate(input.projectId)

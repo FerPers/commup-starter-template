@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { isCapacity, type Capacity } from '@/lib/constants/capacities'
@@ -21,7 +22,8 @@ function revalidate(projectId: string) {
 export const assignProjectCapacity = withAuth(
   { role: ADMIN_ROLES, guards: projectGuard },
   async (ctx, input: { projectId: string; userId: string; capacity: Capacity; note?: string }): Promise<{ error?: string }> => {
-    if (!isCapacity(input.capacity)) return { error: 'Capacidad no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!isCapacity(input.capacity)) return { error: t('capacities.invalidCapacity') }
     const { error } = await ctx.supabase.rpc('assign_project_capacity', {
       p_project_id: input.projectId, p_user_id: input.userId, p_capacity: input.capacity,
       ...(txt(input.note, 500) ? { p_note: txt(input.note, 500) } : {}),
@@ -35,10 +37,11 @@ export const assignProjectCapacity = withAuth(
 export const revokeProjectCapacity = withAuth(
   { role: ADMIN_ROLES, guards: projectGuard },
   async (ctx, input: { projectId: string; id: string; reason: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = txt(input.reason, 500)
-    if (reason.length < 3) return { error: 'Indica el motivo' }
+    if (reason.length < 3) return { error: t('capacities.reasonRequired') }
     const { data: row } = await ctx.supabase.from('project_capacities').select('id').eq('id', input.id).eq('project_id', input.projectId).maybeSingle()
-    if (!row) return { error: 'Designación no encontrada' }
+    if (!row) return { error: t('capacities.notFound') }
     const { error } = await ctx.supabase.rpc('revoke_project_capacity', { p_id: input.id, p_reason: reason })
     if (error) return { error: error.message }
     revalidate(input.projectId)

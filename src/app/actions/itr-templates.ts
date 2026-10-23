@@ -6,6 +6,7 @@ import type { Database, Json } from '@/types/supabase.generated'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
 import { checkTableConfig, type TableConfig } from '@/lib/itr/table'
 import { conditionRemaps, itemInsertRow, localState, orderedSections, templateContentHash, type CloneSectionSource, type LocalState } from '@/lib/itr/clone'
@@ -74,6 +75,7 @@ export const updateTemplateHeader = withAuthOnly(
 export const deleteTemplate = withAuthOnly(
   { role: PRIVILEGED_ROLES },
   async (ctx, templateId: string): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data, error } = await ctx.supabase
       .from('itr_templates')
       .delete()
@@ -81,8 +83,8 @@ export const deleteTemplate = withAuthOnly(
       .eq('org_id', ctx.orgId)
       .select('id')
 
-    if (error) return { error: /violates foreign key|Assigned revision/i.test(error.message) ? 'La plantilla tiene ITR: desactívala en lugar de borrarla' : error.message }
-    if (!data?.length) return { error: 'No se pudo borrar la plantilla (sin permiso o ya no existe)' }
+    if (error) return { error: /violates foreign key|Assigned revision/i.test(error.message) ? t('itrTemplates.hasItrs') : error.message }
+    if (!data?.length) return { error: t('itrTemplates.deleteFailed') }
     revalidatePath('/admin/templates')
     return {}
   },
@@ -184,10 +186,11 @@ export const createItem = withAuthOnly(
     templateId: string,
     data: ItemPayload,
   ): Promise<{ id?: string; error?: string }> => {
-    if (selectItemMissingOptions(data)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
-    if (data.item_type === 'table') { const c = checkTableConfig(data.options); if (!c.config) return { error: `Tabla inválida: ${c.issue}` } }
-    if (!validateOptionOutcomes(data.options ?? null, data.option_outcomes ?? {})) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
-    if (data.item_type !== 'select' && Object.keys(data.option_outcomes ?? {}).length) return { error: 'Solo las listas admiten resultados por opción' }
+    const t = await getTranslations('ActionErrors')
+    if (selectItemMissingOptions(data)) return { error: t('itrTemplates.selectNeedsOption') }
+    if (data.item_type === 'table') { const c = checkTableConfig(data.options); if (!c.config) return { error: t('itrTemplates.tableInvalid', { issue: c.issue ?? '' }) } }
+    if (!validateOptionOutcomes(data.options ?? null, data.option_outcomes ?? {})) return { error: t('itrTemplates.outcomesInvalid') }
+    if (data.item_type !== 'select' && Object.keys(data.option_outcomes ?? {}).length) return { error: t('itrTemplates.outcomesSelectOnly') }
     const { data: item, error } = await ctx.supabase
       .from('itr_template_items')
       .insert({ ...data, options: (data.options ?? null) as Json, section_id: sectionId, template_id: templateId })
@@ -202,15 +205,16 @@ export const createItem = withAuthOnly(
 export const updateItem = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, itemId: string, data: Partial<ItemPayload>): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: current, error: readError } = await ctx.supabase.from('itr_template_items')
       .select('item_type, options, option_outcomes').eq('id', itemId).single()
-    if (readError || !current) return { error: 'Ítem no encontrado o sin acceso' }
+    if (readError || !current) return { error: t('itrTemplates.itemNotFound') }
     const merged = { ...current, ...data }
-    if (merged.item_type === 'select' && !(Array.isArray(merged.options) && merged.options.length)) return { error: 'Un ítem de tipo lista requiere al menos una opción' }
-    if (merged.item_type === 'table') { const c = checkTableConfig(merged.options); if (!c.config) return { error: `Tabla inválida: ${c.issue}` } }
+    if (merged.item_type === 'select' && !(Array.isArray(merged.options) && merged.options.length)) return { error: t('itrTemplates.selectNeedsOption') }
+    if (merged.item_type === 'table') { const c = checkTableConfig(merged.options); if (!c.config) return { error: t('itrTemplates.tableInvalid', { issue: c.issue ?? '' }) } }
     const outcomes = data.option_outcomes ?? current.option_outcomes ?? {}
-    if (!validateOptionOutcomes(merged.options, outcomes)) return { error: 'Los resultados deben corresponder a opciones existentes y válidas' }
-    if (merged.item_type !== 'select' && Object.keys(outcomes).length) return { error: 'Solo las listas admiten resultados por opción' }
+    if (!validateOptionOutcomes(merged.options, outcomes)) return { error: t('itrTemplates.outcomesInvalid') }
+    if (merged.item_type !== 'select' && Object.keys(outcomes).length) return { error: t('itrTemplates.outcomesSelectOnly') }
     const { error } = await ctx.supabase
       .from('itr_template_items')
       .update({ ...data, ...('options' in data ? { options: (data.options ?? null) as Json } : {}) })
@@ -258,11 +262,12 @@ export const reorderItems = withAuthOnly(
 export const createTemplateRevision = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, templateId: string): Promise<{ newTemplateId?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: tpl } = await ctx.supabase
       .from('itr_templates').select('id').eq('id', templateId).eq('org_id', ctx.orgId).maybeSingle()
-    if (!tpl) return { error: 'Template no encontrado' }
+    if (!tpl) return { error: t('itrInstances.templateNotFound') }
     const { data, error } = await ctx.supabase.rpc('create_itr_template_revision', { p_template_id: templateId })
-    if (error || !data) return { error: error?.message ?? 'No se pudo crear la revisión' }
+    if (error || !data) return { error: error?.message ?? t('itrTemplates.revisionCreateFailed') }
     revalidatePath('/admin/templates')
     revalidatePath(`/admin/templates/${templateId}`)
     revalidatePath(`/admin/templates/${data}`)
@@ -273,23 +278,24 @@ export const createTemplateRevision = withAuthOnly(
 export const activateTemplateRevision = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, templateId: string): Promise<{ version?: number; deactivated?: number; matrixRepointed?: number; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: tpl } = await ctx.supabase
       .from('itr_templates')
       .select('id, itr_template_items(id, item_number, description, item_type, options)')
       .eq('id', templateId)
       .eq('org_id', ctx.orgId)
       .maybeSingle()
-    if (!tpl) return { error: 'Template no encontrado' }
-    if (tpl.itr_template_items.length === 0) return { error: 'La revisión no tiene ítems' }
+    if (!tpl) return { error: t('itrInstances.templateNotFound') }
+    if (tpl.itr_template_items.length === 0) return { error: t('itrTemplates.revisionNoItems') }
     // Un select sin opciones deja el ITR de campo sin poder completarse — no activable
     const badSelects = tpl.itr_template_items
       .filter(it => it.item_type === 'select' && !(Array.isArray(it.options) && it.options.length > 0))
     if (badSelects.length > 0) {
       const names = badSelects.map(it => it.item_number ?? it.description.slice(0, 40)).join(', ')
-      return { error: `Ítems de tipo lista sin opciones (agrega opciones antes de activar): ${names}` }
+      return { error: t('itrTemplates.selectsWithoutOptions', { names }) }
     }
     const { data, error } = await ctx.supabase.rpc('activate_itr_template_revision', { p_template_id: templateId })
-    if (error || !data) return { error: error?.message ?? 'No se pudo activar la revisión' }
+    if (error || !data) return { error: error?.message ?? t('itrTemplates.revisionActivateFailed') }
     const result = data as { version?: number; deactivated?: string[]; matrix_repointed?: number }
     revalidatePath('/admin/templates')
     revalidatePath(`/admin/templates/${templateId}`)
@@ -324,6 +330,7 @@ export const importTemplateItems = withAuthOnly(
     sections: ImportSection[],
     replace: boolean,
   ): Promise<{ error?: string; sectionsCreated?: number; itemsCreated?: number }> => {
+    const t = await getTranslations('ActionErrors')
     // Verify template belongs to org
     const { data: template } = await ctx.supabase
       .from('itr_templates')
@@ -332,7 +339,7 @@ export const importTemplateItems = withAuthOnly(
       .eq('org_id', ctx.orgId)
       .single()
 
-    if (!template) return { error: 'Template no encontrado', sectionsCreated: 0, itemsCreated: 0 }
+    if (!template) return { error: t('itrInstances.templateNotFound'), sectionsCreated: 0, itemsCreated: 0 }
 
     // Replace: delete all existing sections (CASCADE removes items)
     if (replace) {
@@ -430,6 +437,7 @@ export const bulkImportCatalog = withAuthOnly(
     disciplineMap: Record<string, string>, // discLetter → discipline_id
     phaseMap: Record<string, string>,      // 'A' | 'B' | 'C' → phase_id
   ): Promise<BulkImportResult> => {
+    const t = await getTranslations('ActionErrors')
     // Group rows by code
     const groups = new Map<string, CatalogRow[]>()
     for (const row of rows) {
@@ -459,12 +467,12 @@ export const bulkImportCatalog = withAuthOnly(
       const phaseId = phaseMap[phase]
 
       if (!disciplineId) {
-        result.errors.push(`${code}: disciplina "${discLetter}" sin mapeo — omitido`)
+        result.errors.push(t('itrTemplates.catalogDisciplineUnmapped', { code, discipline: discLetter }))
         result.templatesSkipped++
         continue
       }
       if (!phaseId) {
-        result.errors.push(`${code}: fase "${phase}" sin mapeo — omitido`)
+        result.errors.push(t('itrTemplates.catalogPhaseUnmapped', { code, phase }))
         result.templatesSkipped++
         continue
       }
@@ -479,7 +487,7 @@ export const bulkImportCatalog = withAuthOnly(
         .select('id')
         .single()
 
-      if (tErr || !template) return { ok: false, error: `${code}: ${tErr?.message ?? 'error al crear template'}`, count: 0 }
+      if (tErr || !template) return { ok: false, error: tErr ? `${code}: ${tErr.message}` : t('itrTemplates.catalogTemplateFailed', { code }), count: 0 }
 
       const { data: section, error: sErr } = await ctx.supabase
         .from('itr_template_sections')
@@ -487,7 +495,7 @@ export const bulkImportCatalog = withAuthOnly(
         .select('id')
         .single()
 
-      if (sErr || !section) return { ok: false, error: `${code}: error al crear sección`, count: 0 }
+      if (sErr || !section) return { ok: false, error: t('itrTemplates.catalogSectionFailed', { code }), count: 0 }
 
       const itemRows = codeRows.map((row, idx) => ({
         section_id: section.id,
@@ -504,7 +512,7 @@ export const bulkImportCatalog = withAuthOnly(
       }))
 
       const { error: iErr } = await ctx.supabase.from('itr_template_items').insert(itemRows)
-      if (iErr) return { ok: false, error: `${code}: error al insertar ítems — ${iErr.message}`, count: 0 }
+      if (iErr) return { ok: false, error: t('itrTemplates.catalogItemsFailed', { code, detail: iErr.message }), count: 0 }
       return { ok: true, error: null, count: itemRows.length }
     }))
 
@@ -658,6 +666,7 @@ async function cloneTemplateInternal(
   sourceTemplateId: string,
   options?: { codeSuffix?: string; updateExisting?: boolean },
 ): Promise<{ id?: string; kind?: CloneKind; error?: string }> {
+    const t = await getTranslations('ActionErrors')
     const { data: raw } = await ctx.supabase
       .from('itr_templates')
       .select(CLONE_SELECT)
@@ -665,14 +674,14 @@ async function cloneTemplateInternal(
       .single()
     const source = raw as unknown as CloneSource | null
 
-    if (!source) return { error: 'Template origen no encontrado o sin acceso' }
-    if (source.org_id === ctx.orgId) return { error: 'El template ya está en la org activa' }
+    if (!source) return { error: t('itrTemplates.sourceNotFound') }
+    if (source.org_id === ctx.orgId) return { error: t('itrTemplates.alreadyInOrg') }
 
     const discCode = codeOf(source.disciplines)
     const phaseCode = codeOf(source.project_phases)
     const equipmentCode = codeOf(source.equipment_types)
     if (!discCode || !phaseCode) {
-      return { error: 'Template origen sin disciplina o fase válida' }
+      return { error: t('itrTemplates.sourceNoDisciplinePhase') }
     }
 
     // Map source discipline + phase (+ tipo de equipo, opcional) by code into
@@ -687,10 +696,10 @@ async function cloneTemplateInternal(
     ])
 
     if (!targetDisc) {
-      return { error: `Falta la disciplina "${discCode}" en la org activa. Créala antes de importar.` }
+      return { error: t('itrTemplates.missingDiscipline', { code: discCode }) }
     }
     if (!targetPhase) {
-      return { error: `Falta la fase "${phaseCode}" en la org activa. Créala antes de importar.` }
+      return { error: t('itrTemplates.missingPhase', { code: phaseCode }) }
     }
 
     const newCode = `${source.code}${options?.codeSuffix ?? ''}`
@@ -708,7 +717,7 @@ async function cloneTemplateInternal(
     let kind: CloneKind = 'created'
     if (existing.length > 0) {
       if (!options?.updateExisting) {
-        return { error: `Ya existe un template con código "${newCode}" en esta org. Usa «Actualizar» para traer el contenido del catálogo como revisión nueva.` }
+        return { error: t('itrTemplates.codeExists', { code: newCode }) }
       }
       const latest = existing[0]
       if (templateContentHash(latest.itr_template_sections) === sourceHash) return { id: latest.id, kind: 'unchanged' }
@@ -740,7 +749,7 @@ async function cloneTemplateInternal(
       .select('id')
       .single()
 
-    if (tplErr || !cloned) return { error: tplErr?.message ?? 'No se pudo crear el template' }
+    if (tplErr || !cloned) return { error: tplErr?.message ?? t('itrTemplates.createFailed') }
 
     // Secciones e ítems en dos pasadas: primero las filas, luego las condiciones
     // re-mapeadas a los ids copiados (igual que create_itr_template_revision).
@@ -751,14 +760,14 @@ async function cloneTemplateInternal(
         .insert({ template_id: cloned.id, title: sec.title, order_index: sec.order_index })
         .select('id')
         .single()
-      if (secErr || !newSec) return { error: `No se pudo copiar la sección «${sec.title}»: ${secErr?.message ?? 'sin id'}` }
+      if (secErr || !newSec) return { error: t('itrTemplates.sectionCopyFailed', { section: sec.title, detail: secErr?.message ?? t('itrTemplates.noRowsReturned') }) }
       if (sec.itr_template_items.length === 0) continue
       const rows = sec.itr_template_items.map(item => itemInsertRow(item, newSec.id, cloned.id))
       const { data: inserted, error: itemErr } = await ctx.supabase
         .from('itr_template_items')
         .insert(rows as unknown as Database['public']['Tables']['itr_template_items']['Insert'][])
         .select('id, order_index')
-      if (itemErr || !inserted) return { error: `No se pudieron copiar los ítems de «${sec.title}»: ${itemErr?.message ?? 'sin filas'}` }
+      if (itemErr || !inserted) return { error: t('itrTemplates.itemsCopyFailed', { section: sec.title, detail: itemErr?.message ?? t('itrTemplates.noRowsReturned') }) }
       const byOrder = [...inserted].sort((a, b) => a.order_index - b.order_index)
       sec.itr_template_items.forEach((item, i) => { if (byOrder[i]) idMap.set(item.id, byOrder[i].id) })
     }
@@ -830,6 +839,7 @@ export interface BulkCloneResult {
 export const cloneTemplatesToActiveOrg = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, sourceTemplateIds: string[], options?: { updateExisting?: boolean }): Promise<{ result?: BulkCloneResult; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const result: BulkCloneResult = { created: 0, revisions: 0, unchanged: 0, skipped: 0, errors: [] }
     const ids = [...new Set(sourceTemplateIds)].slice(0, 1000)
 
@@ -847,13 +857,13 @@ export const cloneTemplatesToActiveOrg = withAuthOnly(
 
     for (const id of ids) {
       const code = codeById.get(id)
-      if (!code) { result.errors.push({ code: id, reason: 'Template origen no encontrado o sin acceso' }); continue }
+      if (!code) { result.errors.push({ code: id, reason: t('itrTemplates.sourceNotFound') }); continue }
       if (existingCodes.has(code) && !options?.updateExisting) { result.skipped++; continue }
       const res = await cloneTemplateInternal(ctx, id, { updateExisting: options?.updateExisting })
       if (res.kind === 'created') { result.created++; existingCodes.add(code) }
       else if (res.kind === 'revision') result.revisions++
       else if (res.kind === 'unchanged') result.unchanged++
-      else result.errors.push({ code, reason: res.error ?? 'No se pudo clonar' })
+      else result.errors.push({ code, reason: res.error ?? t('itrTemplates.cloneFailed') })
     }
 
     if (result.created > 0 || result.revisions > 0) revalidatePath('/admin/templates')

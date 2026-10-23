@@ -5,6 +5,7 @@ import { PUNCH_RAISE_ROLES } from '@/lib/constants/punch-roles'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { logActivity } from '@/lib/log-activity'
 import { punchDeleteBlocker } from '@/lib/punches/deletable'
 import type { TablesUpdate } from '@/types/supabase.generated'
@@ -44,9 +45,10 @@ export const createPunch = withAuth(
     },
   ): Promise<{ punchId?: string; punchNumber?: string; error?: string }> => {
     const { supabase, orgId, userId } = ctx
+    const t = await getTranslations('ActionErrors')
 
-    if (input.impact && !PUNCH_IMPACTS.includes(input.impact)) return { error: 'Impacto no válido' }
-    if (!input.impact && !input.legacyWithoutImpact) return { error: 'Indica el impacto del punch (seguridad, ambiente, proceso, equipo u operabilidad)' }
+    if (input.impact && !PUNCH_IMPACTS.includes(input.impact)) return { error: t('punches.impactInvalid') }
+    if (!input.impact && !input.legacyWithoutImpact) return { error: t('punches.impactRequired') }
 
     let subsystemId: string | null = null
     let disciplineId: string | null = null
@@ -57,15 +59,15 @@ export const createPunch = withAuth(
         .select('subsystem_id, discipline_id')
         .eq('id', input.tagId)
         .single()
-      if (!tag) return { error: 'Tag no encontrado' }
+      if (!tag) return { error: t('punches.tagNotFound') }
       subsystemId = tag.subsystem_id
       disciplineId = tag.discipline_id
     }
 
     if (!subsystemId || !disciplineId) {
-      return { error: 'No se puede resolver subsistema o disciplina del tag' }
+      return { error: t('punches.subsystemUnresolved') }
     }
-    if (input.id && !UUID_RE.test(input.id)) return { error: 'Identificador de punch inválido' }
+    if (input.id && !UUID_RE.test(input.id)) return { error: t('punches.idInvalid') }
 
     // Reintento de la bandeja: si ya se creó con este id, no se duplica.
     if (input.id) {
@@ -146,14 +148,15 @@ export const reassignPunch = withAuth(
     },
   ): Promise<{ error?: string }> => {
     const { supabase, userId, orgId } = ctx
+    const t = await getTranslations('ActionErrors')
 
     const { data: punch } = await supabase
       .from('punches')
       .select('id, punch_number, description, category, priority, project_id, tag_id, assigned_to')
       .eq('id', input.punchId)
       .single()
-    if (!punch) return { error: 'Punch no encontrado' }
-    if (punch.project_id !== input.projectId) return { error: 'Punch no pertenece al proyecto' }
+    if (!punch) return { error: t('punches.notFound') }
+    if (punch.project_id !== input.projectId) return { error: t('punches.notInProject') }
     if (punch.assigned_to === input.newAssignee) return {}
 
     const { error } = await supabase
@@ -220,10 +223,11 @@ export const updatePunchStatus = withAuth(
     },
   ): Promise<{ error?: string }> => {
     const { supabase } = ctx
+    const t = await getTranslations('ActionErrors')
     // Cerrar solo por verificación en campo (verifyPunch); el trigger lo rechazaría igual.
-    if (input.status === 'closed') return { error: 'Para cerrar un punch hay que verificarlo en campo' }
+    if (input.status === 'closed') return { error: t('punches.closeRequiresVerify') }
     // S06 (C-11, D8): cancelar va por cancelPunch (motivo, supervisor distinto de quien lo levantó).
-    if (input.status === 'cancelled') return { error: 'Para cancelar un punch indica el motivo con «Cancelar»' }
+    if (input.status === 'cancelled') return { error: t('punches.cancelUseAction') }
 
     const update: TablesUpdate<'punches'> = { status: input.status }
 
@@ -250,8 +254,9 @@ export const updatePunchStatus = withAuth(
 export const cancelPunch = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: { punchId: string; projectId: string; tagId?: string | null; reason: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = (input.reason ?? '').trim()
-    if (reason.length < 10) return { error: 'Explica por qué se cancela (mínimo 10 caracteres)' }
+    if (reason.length < 10) return { error: t('punches.cancelReasonMin') }
     const { error } = await ctx.supabase.rpc('cancel_punch', { p_punch_id: input.punchId, p_reason: reason })
     if (error) return { error: error.message }
     revalidatePunch(input.projectId, input.tagId)
@@ -307,7 +312,8 @@ export const reviewPunchCategory = withAuth(
     ctx,
     input: { punchId: string; projectId: string; tagId?: string | null; category: 'A' | 'B' | 'C'; note?: string },
   ): Promise<{ error?: string }> => {
-    if (!['A', 'B', 'C'].includes(input.category)) return { error: 'Categoría no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!['A', 'B', 'C'].includes(input.category)) return { error: t('punches.categoryInvalid') }
     const { error } = await ctx.supabase.rpc('review_punch_category', {
       p_punch_id: input.punchId,
       p_category: input.category,
@@ -326,14 +332,15 @@ export const updatePunchClassification = withAuth(
     ctx,
     input: { punchId: string; projectId: string; tagId?: string | null; impact?: PunchImpact | null; startupDisposition?: StartupDisposition | null },
   ): Promise<{ error?: string }> => {
-    if (ctx.role === 'client') return { error: 'Sin permiso' }
+    const t = await getTranslations('ActionErrors')
+    if (ctx.role === 'client') return { error: t('auth.forbidden') }
     const patch: TablesUpdate<'punches'> = {}
     if ('impact' in input) {
-      if (input.impact && !PUNCH_IMPACTS.includes(input.impact)) return { error: 'Impacto no válido' }
+      if (input.impact && !PUNCH_IMPACTS.includes(input.impact)) return { error: t('punches.impactInvalid') }
       patch.impact = input.impact ?? null
     }
     if ('startupDisposition' in input) {
-      if (input.startupDisposition && !STARTUP_DISPOSITIONS.includes(input.startupDisposition)) return { error: 'Disposición no válida' }
+      if (input.startupDisposition && !STARTUP_DISPOSITIONS.includes(input.startupDisposition)) return { error: t('punches.dispositionInvalid') }
       patch.startup_disposition = input.startupDisposition ?? null
     }
     if (!Object.keys(patch).length) return {}
@@ -396,6 +403,7 @@ export const deletePunch = withAuth(
     },
   ): Promise<{ error?: string }> => {
     const { supabase } = ctx
+    const t = await getTranslations('ActionErrors')
 
     // C-27 (S08): borrar es para errores de carga; con estado o evidencia se cancela con motivo. Auditado.
     const { data: punch } = await supabase
@@ -404,9 +412,9 @@ export const deletePunch = withAuth(
       .eq('id', input.punchId)
       .eq('project_id', input.projectId)
       .maybeSingle()
-    if (!punch) return { error: 'Punch no encontrado' }
+    if (!punch) return { error: t('punches.notFound') }
     const blocker = punchDeleteBlocker({ ...punch, attachments: (punch.punch_attachments as unknown as { count: number }[])[0]?.count ?? 0 })
-    if (blocker) return { error: `No se puede borrar: ${blocker}. Cancélalo con motivo.` }
+    if (blocker) return { error: t('punches.deleteBlocked', { reason: blocker }) }
 
     const { data: deleted, error } = await supabase
       .from('punches')
@@ -415,7 +423,7 @@ export const deletePunch = withAuth(
       .select('id')
 
     if (error) return { error: error.message }
-    if (!deleted?.length) return { error: 'No se pudo borrar el punch (sin permiso)' }
+    if (!deleted?.length) return { error: t('punches.deleteFailed') }
     await logActivity(supabase, {
       orgId: ctx.orgId, userId: ctx.userId, entityType: 'punch', entityId: input.punchId, action: 'deleted',
       payload: { punchNumber: punch.punch_number, category: punch.category, projectId: input.projectId },
@@ -534,6 +542,7 @@ export const deletePunchAttachment = withAuth(
       tagId?: string | null
     },
   ): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     // C-27 (S08): primero la fila (la RLS decide: la foto propia, o un supervisor) y solo si se borró, el
     // archivo. Antes se borraba el archivo primero y, si la RLS rechazaba la fila, quedaba un adjunto roto.
     const { data: deleted, error } = await ctx.supabase
@@ -543,7 +552,7 @@ export const deletePunchAttachment = withAuth(
       .eq('file_url', input.storagePath)
       .select('id')
     if (error) return { error: error.message }
-    if (!deleted?.length) return { error: 'No se pudo borrar la foto: solo la borra quien la subió o un supervisor' }
+    if (!deleted?.length) return { error: t('punches.photoDeleteFailed') }
 
     const { error: storageError } = await ctx.supabase.storage
       .from('punch-attachments')

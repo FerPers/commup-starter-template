@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
@@ -55,7 +56,8 @@ export const signSystemGate = withAuth(
     ctx,
     input: { projectId: string; systemId: string; approvalId: string; capacity: string; comments?: string },
   ): Promise<{ status?: string; error?: string }> => {
-    if (!(COSIGN_CAPACITIES as string[]).includes(input.capacity)) return { error: 'Firma no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!(COSIGN_CAPACITIES as string[]).includes(input.capacity)) return { error: t('gates.invalidCapacity') }
     const { data, error } = await ctx.supabase.rpc('sign_system_gate', {
       p_approval_id: input.approvalId,
       p_capacity: input.capacity,
@@ -82,7 +84,8 @@ export const revokeSystemGateApproval = withAuth(
     ctx,
     input: { projectId: string; systemId: string; approvalId: string; reason: string },
   ): Promise<{ error?: string }> => {
-    if (!input.reason.trim()) return { error: 'Indica el motivo de la revocación' }
+    const t = await getTranslations('ActionErrors')
+    if (!input.reason.trim()) return { error: t('gates.revokeReason') }
     const { error } = await ctx.supabase.rpc('revoke_system_gate_approval', {
       p_approval_id: input.approvalId,
       p_reason: input.reason,
@@ -108,8 +111,9 @@ export const attestGateCriterion = withAuth(
     ctx,
     input: { projectId: string; systemId: string; criterionId: string; comment: string; filePath: string },
   ): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     if (!isEvidencePathFor(input.filePath, ctx.orgId, input.systemId)) {
-      return { error: 'Adjunto de evidencia no válido' }
+      return { error: t('gates.invalidEvidence') }
     }
     const { error } = await ctx.supabase.rpc('attest_gate_criterion', {
       p_system_id: input.systemId,
@@ -147,9 +151,10 @@ export const getGateEvidenceUrl = withAuth(
     ctx,
     input: { projectId: string; systemId: string; path: string },
   ): Promise<{ url?: string; error?: string }> => {
-    if (!isEvidencePathFor(input.path, ctx.orgId, input.systemId)) return { error: 'Ruta no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!isEvidencePathFor(input.path, ctx.orgId, input.systemId)) return { error: t('gates.invalidPath') }
     const { data, error } = await ctx.supabase.storage.from('gate-evidence').createSignedUrl(input.path, 300)
-    if (error || !data) return { error: error?.message ?? 'No se pudo abrir el adjunto' }
+    if (error || !data) return { error: error?.message ?? t('gates.openEvidenceFailed') }
     return { url: data.signedUrl }
   },
 )

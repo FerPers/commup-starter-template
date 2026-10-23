@@ -11,7 +11,7 @@ export default defineConfig({
     environment: 'node',
     passWithNoTests: false,
     projects: [
-      { extends: true, test: { name: 'unit', include: ['src/**/*.test.ts'] } },
+      { extends: true, test: { name: 'unit', include: ['src/**/*.test.ts'], setupFiles: ['./vitest.setup.ts'] } },
       { extends: true, test: { name: 'db', include: ['tests/**/*.test.ts'], fileParallelism: false, testTimeout: 30_000, hookTimeout: 30_000 } },
     ],
   },

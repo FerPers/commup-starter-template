@@ -7,6 +7,7 @@
 // igual que theme/locale. RLS de profiles gobierna el update.
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import type { DashboardLayout } from '@/types/dashboard'
 import { WIDGET_REGISTRY } from '@/lib/dashboard/registry'
@@ -26,9 +27,10 @@ function sanitize(layout: DashboardLayout): DashboardLayout {
 }
 
 export async function saveDashboardLayout(layout: DashboardLayout) {
+  const t = await getTranslations('ActionErrors')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'unauthenticated' }
+  if (!user) return { error: t('auth.unauthenticated') }
 
   const clean = sanitize(layout)
   const { error } = await supabase
@@ -42,9 +44,10 @@ export async function saveDashboardLayout(layout: DashboardLayout) {
 }
 
 export async function resetDashboardLayout() {
+  const t = await getTranslations('ActionErrors')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'unauthenticated' }
+  if (!user) return { error: t('auth.unauthenticated') }
 
   const { error } = await supabase
     .from('profiles')

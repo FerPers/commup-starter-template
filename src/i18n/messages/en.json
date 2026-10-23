@@ -6738,7 +6738,8 @@
       "reason_required": "Explain the change (at least 10 characters): it leaves ITRs outside requirements.",
       "type_exists": "A type with that code already exists: pick it from the list.",
       "invalid_type": "Code (letters and digits, up to 12) and name are required.",
-      "no_tags": "No tags without type are left in this group."
+      "no_tags": "No tags without type are left in this group.",
+      "equipment_type_not_found": "The equipment type no longer exists or does not belong to this organization."
     },
     "tag": {
       "label": "Equipment type",
@@ -8119,5 +8120,630 @@
     "statusComplete": "Record completed; pending the applicable approvals.",
     "statusPending": "Record pending: {errors}",
     "statusFill": "Record pending: fill in the required cells."
+  },
+  "ActionErrors": {
+    "users": {
+      "invalidEmail": "Invalid email",
+      "invalidRole": "Invalid role",
+      "ownerInvitesOwner": "Only an Owner can invite another Owner",
+      "inviteFailed": "The invitation could not be sent: try again",
+      "inviteEmailFailed": "The invitation email could not be sent: {detail}. Check the SMTP settings in Supabase Auth",
+      "unknownError": "unknown error",
+      "profileFailed": "User invited, but their profile could not be created: {detail}",
+      "memberFailed": "User invited, but they could not be added to the organization: {detail}",
+      "memberNotFound": "Member not found",
+      "invalidStatus": "Invalid status",
+      "inviteSent": "Invitation sent"
+    },
+    "pssr": {
+      "templateNotFoundOrForbidden": "Template not found or no permission",
+      "deleteTemplateFailed": "The template could not be deleted (no permission or it no longer exists)",
+      "templateNotFound": "PSSR template not found",
+      "invalidCapacity": "Invalid signature",
+      "rejectReason": "Enter the rejection reason (at least 3 characters)",
+      "sourceNotFound": "Source template not found or no access",
+      "alreadyInOrg": "The template is already in the active organization",
+      "nameExists": "A template named «{name}» already exists in this organization",
+      "createFailed": "The template could not be created",
+      "cloneItemsFailed": "Template cloned, but its items could not be copied: {detail}"
+    },
+    "preservation": {
+      "procedureInUse": "Cannot delete: {count, plural, one {# plan uses} other {# plans use}} this procedure",
+      "procedureNotFound": "Procedure not found",
+      "openRecordFailed": "The record could not be opened",
+      "nokNeedsCategory": "A NOK result raises a punch: choose its category",
+      "sourceNotFound": "Source procedure not found or no access",
+      "alreadyInOrg": "The procedure is already in the active organization",
+      "missingDiscipline": "Discipline «{code}» is missing in the active organization: create it before importing",
+      "missingEquipmentType": "Equipment type «{code}» is missing in the active organization: create it before importing",
+      "codeExists": "A procedure with code «{code}» already exists in this organization",
+      "createFailed": "The procedure could not be created",
+      "cloneItemsFailed": "Procedure cloned, but its items could not be copied: {detail}"
+    },
+    "gatesAdmin": {
+      "codeNameRequired": "Enter the code and the name",
+      "codeExists": "A milestone with code {code} already exists",
+      "catalogNotFound": "Catalog milestone not found",
+      "nameRequired": "Enter the name",
+      "approvalRoleRequired": "At least one role must be able to approve the milestone",
+      "cosignRoleRequired": "At least one role must be able to co-sign the milestone",
+      "hasApprovals": "The milestone has recorded approvals: deactivate it instead of deleting it",
+      "hasAttestations": "The milestone has recorded attestations: deactivate it instead of deleting it",
+      "invalidCriterion": "Invalid criterion type",
+      "attestationLabelRequired": "Enter the attestation text"
+    },
+    "config": {
+      "phaseInUse": "Cannot delete: {count, plural, one {# ITR uses} other {# ITRs use}} this phase",
+      "disciplineInUse": "Cannot delete: {count, plural, one {# tag uses} other {# tags use}} this discipline",
+      "equipmentTypeInUse": "Cannot delete: {count, plural, one {# tag uses} other {# tags use}} this equipment type",
+      "invalidOrg": "Invalid organization",
+      "catBLimitRange": "The limit must be a whole number between 0 and 999",
+      "logoMissing": "No file was attached",
+      "logoTooLarge": "The file is larger than {mb} MB",
+      "logoType": "The logo must be PNG, JPG or WebP"
+    },
+    "webhooks": {
+      "nameRequired": "Enter the name",
+      "urlRequired": "Enter the URL",
+      "httpsRequired": "The URL must use https",
+      "eventRequired": "Choose at least one event type",
+      "emptyResponse": "The database did not return the new webhook"
+    },
+    "apiKeys": {
+      "nameRequired": "Enter the name",
+      "scopeRequired": "Choose at least one scope",
+      "emptyResponse": "The database did not return the new key"
+    },
+    "tags": {
+      "hasPreservationHistory": "The tag has preservation history: it cannot be deleted",
+      "invalidCriticality": "Invalid criticality",
+      "nfcEmpty": "The NFC UID is empty",
+      "nfcConflict": "This NFC is already linked to tag {tag}",
+      "moveReason": "Explain why it is being moved (at least {min} characters)"
+    },
+    "setup": {
+      "fullNameRequired": "Enter your full name",
+      "invalidInput": "Invalid setup data",
+      "alreadyMember": "You already belong to an organization: create the project from it",
+      "nameIsEmail": "The name cannot be your email address",
+      "scopeEmpty": "The scope needs at least one discipline"
+    },
+    "org": {
+      "notActiveMember": "You are not an active member of that organization"
+    },
+    "gates": {
+      "invalidCapacity": "Invalid signature",
+      "revokeReason": "Enter the revocation reason",
+      "invalidEvidence": "Invalid evidence attachment",
+      "invalidPath": "Invalid path",
+      "openEvidenceFailed": "The attachment could not be opened"
+    },
+    "bulk": {
+      "invalidDate": "Invalid date",
+      "closeOneByOne": "Punches are closed one by one, by verifying them in the field",
+      "cancelOneByOne": "Punches are cancelled one by one, with a reason",
+      "deleteBlocked": "Nothing was deleted: {count, plural, one {# punch cannot be deleted} other {# punches cannot be deleted}} (in progress, closed or with evidence): {list}. Cancel them with a reason",
+      "deletePartial": "Some punches could not be deleted (no permission)"
+    },
+    "projects": {
+      "invalidTimezone": "Invalid time zone"
+    },
+    "certificates": {
+      "noData": "No eligibility data",
+      "issueFailed": "The certificate could not be issued",
+      "notFound": "Certificate not found"
+    },
+    "planning": {
+      "invalidDate": "Invalid date",
+      "weightRange": "The weight must be between 0 and {max}"
+    },
+    "capacities": {
+      "invalidCapacity": "Invalid capacity",
+      "reasonRequired": "Enter the reason (at least 3 characters)",
+      "notFound": "Designation not found"
+    },
+    "handover": {
+      "formatRequired": "Choose at least one format",
+      "packageNotFound": "Package not found"
+    },
+    "ai": {
+      "notConfigured": "AI is not configured in this environment (ANTHROPIC_API_KEY is missing). Ask the platform administrator to enable it",
+      "quota": "The organization reached its daily AI limit ({budget} USD). It resets at 00:00 UTC; an Owner or Admin can raise it",
+      "badKey": "The AI key (ANTHROPIC_API_KEY) is not valid in this environment. Ask the platform administrator to renew it",
+      "rateLimited": "The AI is busy right now. Try again in a few minutes",
+      "badRequest": "The AI request is not valid (the document may be too large)",
+      "failed": "Could not reach the AI. Try again in a few minutes",
+      "refused": "The model declined the request"
+    },
+    "auth": {
+      "unauthenticated": "Your session ended: sign in again",
+      "forbidden": "Your role does not allow this action"
+    },
+    "guard": {
+      "invalidInput": "Invalid data for the permission check",
+      "missingField": "Missing required field: {field}",
+      "invalidField": "Field {field} is not a valid identifier",
+      "missingScope": "Missing the project to validate {field}"
+    },
+    "access": {
+      "notFound": "{resource, select, project {Project} subsystem {Subsystem} system {System} systems {Systems} discipline {Discipline} equipment_type {Equipment type} tag {Tag} template {ITR template} phase {Phase} other {Item}} not found or not accessible",
+      "invalid": "{resource, select, systems {Some systems do not belong to the project} other {Invalid reference}}"
+    },
+    "itrAssign": {
+      "missing_role": "This template requires the {role, select, executor {executor} supervisor {supervisor} other {client}} signature: assign one",
+      "same_person": "The same person cannot sign two ITR roles",
+      "same_person_db": "The same person cannot hold two signing roles on the same ITR",
+      "role_not_required": "This ITR does not require that signing role",
+      "role_signed": "That role already signed: reopen the ITR to change it",
+      "not_member": "The person is not a member of the organization",
+      "bulkNotRequired": "These ITRs do not require that signing role: {list}"
+    },
+    "workflows": {
+      "nameRequired": "Enter the rule name",
+      "eventRequired": "Choose the event",
+      "actionRequired": "Choose the action",
+      "reflexive": "This rule would trigger itself (the punch it creates emits «Punch created» again): choose another event",
+      "conditionObject": "The condition must be a JsonLogic object",
+      "payloadObject": "The action data must be an object"
+    },
+    "table": {
+      "invalid_config": "Invalid table configuration",
+      "pending": "Record pending",
+      "invalid_record": "Invalid table record",
+      "no_source_rows": "The ITR has no snapshot of the loop or cause rows",
+      "source_count": "Row count differs from the ITR snapshot",
+      "row_count": "Row count outside the configuration",
+      "rows_mismatch": "Rows are missing or extra",
+      "missing": "{row}: {column} missing",
+      "na_reason": "{row}: justify the N/A",
+      "stability": "At least {n} readings are required for the stability criterion"
+    },
+    "itrInstances": {
+      "tagNotFound": "Tag not found",
+      "templateNotFound": "Template not found",
+      "templateDraft": "The template is a draft: activate it before assigning ITRs",
+      "subsystemMismatch": "The subsystem does not match the tag's",
+      "executorNotMember": "The executor is not a member of the organization",
+      "clientExecutor": "The client cannot be the ITR executor",
+      "deleteFailed": "Could not delete the ITR (no permission or it no longer exists)",
+      "deleteSigned": "The ITR has signatures: reopen it before deleting",
+      "itrNotAccessible": "ITR not found or not accessible",
+      "revisionMismatch": "The given revision does not belong to this ITR",
+      "itrApproved": "The ITR is approved and cannot be modified",
+      "signatureCheckFailed": "Could not check whether the ITR has signatures",
+      "itrSigned": "This ITR has signatures: reopen it with a reason before modifying it",
+      "itrSignedEvidence": "The ITR has signatures: reopen it before changing evidence",
+      "captureNotAssigned": "Only the assigned executor (or a supervisor) fills in this ITR",
+      "itemNotInRevision": "The item does not belong to this ITR's revision or is not available",
+      "itemNotInTemplate": "The item does not belong to the ITR template",
+      "responseCheckFailed": "Could not check the existing answer",
+      "continuityInvalid": "The per-conductor structure is not valid",
+      "tableConfigInvalid": "The template does not define a valid table for this item",
+      "tableRecordInvalid": "The table record does not match its configuration",
+      "optionInvalid": "The option does not belong to this item",
+      "responseGone": "The answer no longer exists",
+      "progressFailed": "The answer was saved, but the ITR progress could not be updated",
+      "itrNotFound": "ITR not found",
+      "itrMismatch": "The ITR does not belong to the given project and tag",
+      "evidenceMissing": "Evidence reference or type missing",
+      "evidenceType": "Evidence type not allowed (image or PDF)",
+      "evidenceProgressFailed": "The evidence changed, but the updated progress could not be saved",
+      "attachmentMismatch": "The attachment does not belong to the ITR",
+      "signRoleInvalid": "Invalid signing role",
+      "signatureInvalid": "The signature is invalid or too large",
+      "reasonMin3": "Enter a reason (at least 3 characters)",
+      "reopenUnverified": "The reopening returned no verifiable detail; refresh the ITR before continuing",
+      "rejectReasonMin10": "Explain what must be corrected (at least 10 characters)"
+    },
+    "sourceItrs": {
+      "nothing": "Nothing to generate",
+      "maxBatch": "At most {max} at a time",
+      "templateNotFound": "Template not found",
+      "templateDraft": "The template is a draft: activate it before generating ITRs",
+      "noLoopTable": "The template has no loop signals table",
+      "noCeTable": "The template has no C&E matrix effects table",
+      "notMember": "The {role, select, executor {inspector} supervisor {supervisor} other {client}} is not a member of the organization",
+      "createFailed": "Could not create the ITR",
+      "loopNoSignals": "{code}: the loop has no active signals",
+      "loopNoInstrument": "{code}: the loop has no linked instrument",
+      "causeNoEffects": "{code}: the cause has no effects marked in the matrix",
+      "causeNoTag": "{code}: set the cause's initiating tag (or the final element of an effect)"
+    },
+    "itrTemplates": {
+      "hasItrs": "The template has ITRs: deactivate it instead of deleting it",
+      "deleteFailed": "Could not delete the template (no permission or it no longer exists)",
+      "selectNeedsOption": "A list item needs at least one option",
+      "tableInvalid": "Invalid table: {issue}",
+      "outcomesInvalid": "Outcomes must match existing, valid options",
+      "outcomesSelectOnly": "Only list items accept per-option outcomes",
+      "itemNotFound": "Item not found or no access",
+      "revisionCreateFailed": "Could not create the revision",
+      "revisionNoItems": "The revision has no items",
+      "selectsWithoutOptions": "List items without options (add options before activating): {names}",
+      "revisionActivateFailed": "Could not activate the revision",
+      "catalogDisciplineUnmapped": "{code}: discipline «{discipline}» has no mapping, skipped",
+      "catalogPhaseUnmapped": "{code}: phase «{phase}» has no mapping, skipped",
+      "catalogTemplateFailed": "{code}: could not create the template",
+      "catalogSectionFailed": "{code}: could not create the section",
+      "catalogItemsFailed": "{code}: could not insert the items ({detail})",
+      "sourceNotFound": "Source template not found or no access",
+      "alreadyInOrg": "The template is already in the active organization",
+      "sourceNoDisciplinePhase": "The source template has no valid discipline or phase",
+      "missingDiscipline": "Discipline «{code}» is missing in the active organization: create it before importing",
+      "missingPhase": "Phase «{code}» is missing in the active organization: create it before importing",
+      "codeExists": "A template with code «{code}» already exists in this organization. Use «Update» to bring the catalog content as a new revision",
+      "createFailed": "Could not create the template",
+      "sectionCopyFailed": "Could not copy section «{section}»: {detail}",
+      "itemsCopyFailed": "Could not copy the items of «{section}»: {detail}",
+      "noRowsReturned": "the database returned no rows",
+      "cloneFailed": "Could not clone"
+    },
+    "templatesBackup": {
+      "orgNotFound": "Organization not found",
+      "exportFailed": "{part, select, itr {ITR templates} preservation {Preservation} other {PSSR}}: {detail}",
+      "backupFailed": "Could not build the backup",
+      "procedureNotFound": "Procedure not found",
+      "pssrTemplateNotFound": "PSSR template not found",
+      "invalidFormat": "Invalid backup format",
+      "taxonomyFailed": "{kind, select, disciplines {Disciplines} phases {Phases} other {Equipment types}}: {detail}",
+      "rowOutcomesInvalid": "{code}: invalid selection outcomes",
+      "rowMissingDiscipline": "{code}: discipline «{discipline}» is missing in the active organization",
+      "rowMissingPhase": "{code}: phase «{phase}» is missing in the active organization",
+      "rowMissingEquipmentType": "{code}: equipment type «{equipmentType}» is missing in the active organization",
+      "rowCodeExists": "{code}: code «{newCode}» already exists, skipped",
+      "rowNameExists": "{code}: name «{newName}» already exists, skipped",
+      "rowError": "{code}: {detail}",
+      "rowSectionFailed": "{code}: section «{section}»: {detail}",
+      "rowSectionItemsFailed": "{code}: items of section «{section}»: {detail}",
+      "rowItemsFailed": "{code}: items: {detail}",
+      "noRowReturned": "the database did not return the created record",
+      "unexpected": "unexpected error"
+    },
+    "itrMatrix": {
+      "noTypes": "There are no equipment types to process",
+      "typesNotFound": "Equipment types not found in the organization",
+      "noActiveTemplates": "The organization has no active ITR templates: import the catalog first",
+      "truncated": "The response was incomplete: process fewer equipment types at a time",
+      "aiUnparseable": "The AI response could not be parsed: try again",
+      "importTypeNotFound": "Equipment type «{code}» does not exist in the organization",
+      "importTemplateNotFound": "Template «{code}» does not exist in the organization"
+    },
+    "itrTranslations": {
+      "aiUnparseable": "The AI response could not be parsed: try again",
+      "aiError": "AI error"
+    },
+    "itrGeneration": {
+      "phaseRequired": "Choose at least one phase",
+      "samePerson": "Each signing role must be taken by a different person"
+    },
+    "itrAiAdjust": {
+      "noCandidates": "There are no active templates within the project discipline scope",
+      "aiUnparseable": "The AI response could not be parsed: try again"
+    },
+    "tagTypes": {
+      "aiUnparseable": "The AI response could not be parsed: try again"
+    },
+    "daily": {
+      "invalidSource": "Invalid source",
+      "actionNotFound": "Action not found",
+      "invalidEscalationLevel": "Invalid escalation level",
+      "constraintNotFound": "Constraint not found",
+      "tqNotFound": "TQ not found",
+      "responseRequired": "Enter the response",
+      "decisionFieldsRequired": "Title and decision are required",
+      "supersededNotFound": "The decision to supersede was not found",
+      "invalidKind": "Invalid type",
+      "invalidEvidencePath": "Invalid evidence path",
+      "fileOpenFailed": "Could not open the file",
+      "notDeletable": "This type of record cannot be deleted",
+      "recordNotFound": "Record not found",
+      "invalidPriority": "Invalid priority",
+      "invalidVerificationMethod": "Invalid verification method",
+      "titleRequired": "The title is required",
+      "ownerRequired": "The action needs an owner",
+      "invalidImpactKind": "Invalid impact type",
+      "constraintFieldsRequired": "Title and description are required",
+      "constraintScopeRequired": "System, owner and need date are required",
+      "invalidAddressee": "Invalid addressee",
+      "tqFieldsRequired": "Subject and question are required"
+    },
+    "dailyReport": {
+      "invalidDate": "Invalid date",
+      "reportNotFound": "Report not found",
+      "reportIssued": "The report has already been issued",
+      "aiUnparseable": "The AI response could not be parsed. Try again",
+      "invalidShift": "Invalid shift",
+      "handoverNotFound": "Shift handover not found"
+    },
+    "vendors": {
+      "titleRequired": "The title is required",
+      "companyRequired": "Choose the vendor company",
+      "mobilizationPair": "Set the mobilization system and milestone together",
+      "invalidStatus": "Invalid status",
+      "packageNotFound": "Package not found",
+      "invalidItem": "Invalid item",
+      "invalidKind": "Invalid type",
+      "invalidResult": "Invalid result",
+      "invalidPerformedOn": "Invalid execution date",
+      "activityNotFound": "Activity not found",
+      "findingRequired": "Describe the finding",
+      "punchCategoryRequired": "Set the punch category",
+      "invalidDate": "Invalid date",
+      "activitiesRequired": "Describe the activities",
+      "recommendationRequired": "Describe the recommendation",
+      "invalidDecision": "Invalid decision",
+      "recommendationNotFound": "Recommendation not found"
+    },
+    "documents": {
+      "invalidCompanyKind": "Invalid company type",
+      "nameRequired": "The name is required",
+      "invalidDocType": "Invalid document type",
+      "numberTitleRequired": "Number and title are required",
+      "invalidStatus": "Invalid status",
+      "revisionRequired": "Enter the revision",
+      "invalidFile": "Invalid file",
+      "httpsRequired": "The link must start with https://",
+      "reasonMin": "Enter the reason (at least {min} characters)",
+      "noFile": "The revision has no file",
+      "fileOpenFailed": "Could not open the file",
+      "invalidReferenceKind": "Invalid reference type"
+    },
+    "pidMarkups": {
+      "labelTooLong": "The label allows up to {max} characters",
+      "invalidKind": "Invalid markup type",
+      "invalidPage": "Invalid page",
+      "invalidPoints": "Invalid markup points",
+      "invalidPageSize": "Invalid page size",
+      "sameSystem": "The two sides of the limit must be different systems",
+      "revisionNotFound": "P&ID revision not found in the project",
+      "markupNotFound": "Markup not found",
+      "otherSideLimitOnly": "Only a limit has a system on the other side"
+    },
+    "pidHotspots": {
+      "revisionNotFound": "P&ID revision not found in the project",
+      "invalidPage": "Invalid page"
+    },
+    "performance": {
+      "titleRequired": "Enter the test title",
+      "testNotFound": "Performance test not found",
+      "revisionNotFound": "Revision not found",
+      "transitionInvalid": "Invalid transition",
+      "runNotFound": "Run not found",
+      "disturbanceKindInvalid": "Invalid disturbance type",
+      "startTimeInvalid": "Invalid start time",
+      "disturbanceNotFound": "Disturbance not found",
+      "valueInvalid": "Invalid value",
+      "timeInvalid": "Invalid time",
+      "resultInvalid": "Invalid result",
+      "capacityInvalid": "Invalid signing capacity",
+      "certificateNotFound": "Certificate not found"
+    },
+    "startup": {
+      "procedureKindInvalid": "Invalid procedure type",
+      "titleRequired": "Enter the title",
+      "procedureNotFound": "Procedure not found",
+      "revisionNotFound": "Revision not found",
+      "runNotFound": "Run not found",
+      "purposeInvalid": "Invalid purpose",
+      "sheetNotFound": "Line-up sheet not found",
+      "positionInvalid": "Invalid position",
+      "asFoundInvalid": "Invalid as-found position",
+      "itemNotFound": "Line-up row not found"
+    },
+    "opsReadiness": {
+      "nameRequired": "Enter the name",
+      "levelInvalid": "Invalid level (0–4)",
+      "evidenceKindInvalid": "Invalid evidence type",
+      "personNotFound": "Person not found",
+      "recordNotFound": "Competency record not found",
+      "statusInvalid": "Invalid status",
+      "itemRequired": "Enter the item",
+      "quantitiesInvalid": "Invalid quantities",
+      "spareNotFound": "Spare part not found",
+      "stageInvalid": "Invalid stage",
+      "transferNotFound": "Transfer not found",
+      "handoverOnlyCompleted": "Only for completed transfers to Operations",
+      "handoverExists": "The transfer already has a handover package"
+    },
+    "startupEvents": {
+      "eventKindInvalid": "Invalid event type",
+      "timeInvalid": "Invalid time",
+      "titleRequired": "Enter the event title",
+      "eventNotFound": "Event not found"
+    },
+    "testEquipment": {
+      "requiredFields": "Code, serial number and certificate number are required",
+      "kindInvalid": "Invalid equipment type",
+      "datesInvalid": "Invalid calibration dates",
+      "dueBeforeCalibration": "The due date cannot be earlier than the calibration date",
+      "codeExists": "Equipment with code {code} already exists",
+      "saveFailed": "The equipment could not be saved",
+      "inUse": "The equipment has already been used in ITRs: deactivate it instead of deleting it",
+      "pathInvalid": "Invalid path",
+      "certificateOpenFailed": "The certificate could not be opened",
+      "alreadyInItr": "That equipment is already registered in this ITR"
+    },
+    "systems": {
+      "dependencyExists": "That dependency already exists",
+      "priorityRange": "Priority must be P1 to P5",
+      "colorInvalid": "Invalid color",
+      "batteryLimitsInvalid": "Invalid battery limits",
+      "nameRequired": "The name cannot be empty",
+      "typeInvalid": "Invalid system type",
+      "dependencyKindInvalid": "Invalid dependency type",
+      "selfDependency": "A system cannot depend on itself",
+      "noActiveGates": "The organization has no active milestones",
+      "gateInvalid": "Invalid milestone",
+      "dependencyNotFound": "Dependency not found",
+      "maxRows": "Maximum {max} rows per import",
+      "importSystemMissing": "Systems, row {row}: system {code} does not exist in the project",
+      "importSystemRowError": "Systems, row {row}: {error}",
+      "importDepSystemMissing": "Dependencies, row {row}: system {code} does not exist",
+      "importDepKindInvalid": "Dependencies, row {row}: invalid type",
+      "importDepGateMissing": "Dependencies, row {row}: milestone «{gate}» does not exist or is not active",
+      "importDepRowError": "Dependencies, row {row} ({system} → {provider}): {error}"
+    },
+    "systemsAi": {
+      "noSystems": "The project has no systems: import the hierarchy first",
+      "aiUnparsable": "The AI response could not be interpreted: try again",
+      "tooMany": "Too many suggestions in a single apply (maximum {max})",
+      "systemOutside": "System outside the project",
+      "typeOrPriorityInvalid": "{code}: invalid type or priority",
+      "dependencyKindInvalid": "Invalid dependency type",
+      "noActiveGates": "The organization has no active milestones"
+    },
+    "signals": {
+      "rangeNumeric": "The range must be numeric",
+      "notFound": "Signal not found"
+    },
+    "registers": {
+      "kindInvalid": "Invalid register type",
+      "linkTargetNotFound": "Register to link not found",
+      "titleRequired": "Enter the title",
+      "notFound": "Register not found",
+      "missingFields": "Required fields are missing for this step",
+      "testRejected": "The test was rejected: repeat the test before reinstating or verifying",
+      "maxRows": "Maximum {max} rows per import",
+      "importLineMissing": "Lines, row {row}: line {line} does not exist as a tag in the project",
+      "importWhereRow": "Packs, row {row}",
+      "importWherePack": "Pack {pack}",
+      "importSystemMissing": "{where}: system {code} does not exist in the project",
+      "importPackClosed": "{where}: {number} is closed and is not modified",
+      "importPackUnknown": "{where}: test pack {pack} does not exist (TPK numbers are assigned by CommUp)"
+    },
+    "punches": {
+      "impactInvalid": "Invalid impact",
+      "impactRequired": "Indicate the punch impact (safety, environment, process, equipment or operability)",
+      "tagNotFound": "Tag not found",
+      "subsystemUnresolved": "Could not resolve the subsystem or discipline of the tag",
+      "idInvalid": "Invalid punch identifier",
+      "notFound": "Punch not found",
+      "notInProject": "The punch does not belong to the project",
+      "closeRequiresVerify": "To close a punch it must be verified in the field",
+      "cancelUseAction": "To cancel a punch, give the reason with «Cancel»",
+      "cancelReasonMin": "Explain why it is cancelled (minimum 10 characters)",
+      "categoryInvalid": "Invalid category",
+      "dispositionInvalid": "Invalid disposition",
+      "deleteBlocked": "Cannot delete: {reason}. Cancel it with a reason",
+      "deleteFailed": "Could not delete the punch (no permission)",
+      "photoDeleteFailed": "Could not delete the photo: only the person who uploaded it or a supervisor can delete it"
+    },
+    "ceMatrix": {
+      "tagNotFound": "Tag {tag} does not exist in the project",
+      "tagAmbiguous": "There is more than one tag {tag}: use the exact number",
+      "signalNotFound": "Signal {signal} does not exist in the project",
+      "signalNotFoundInTag": "Signal {signal} does not exist in that instrument",
+      "signalAmbiguous": "Signal {signal} is in several instruments: also indicate the tag",
+      "codeTitleRequired": "Code and title are required",
+      "matrixExists": "A matrix {code} already exists in the project",
+      "matrixSaveFailed": "Could not save the matrix",
+      "matrixNotFound": "Matrix not found",
+      "codeDescriptionRequired": "Code (max. 30) and description are required",
+      "votingInvalid": "Invalid voting",
+      "causeExists": "Cause {code} already exists in this matrix",
+      "causeSaveFailed": "Could not save the cause",
+      "actionInvalid": "Invalid action",
+      "effectExists": "Effect {code} already exists in this matrix",
+      "effectSaveFailed": "Could not save the effect"
+    },
+    "ceImport": {
+      "sheetTooLarge": "The sheet is too large to import at once",
+      "pdfRequired": "The file must be a PDF",
+      "pdfTooLarge": "The PDF exceeds {mb} MB: send only the matrix pages",
+      "fileRequired": "Attach an Excel sheet or a PDF",
+      "tooLargeForOneRead": "The matrix is too large for a single read: split the document",
+      "aiUnparsable": "The AI response could not be interpreted: try again",
+      "noMatrix": "No cause and effect matrix was found in the document",
+      "noMatrixWithWarnings": "No cause and effect matrix was found in the document. {warnings}",
+      "codeTitleRequired": "Matrix code and title are required",
+      "tooLarge": "The matrix is too large",
+      "matrixExists": "A matrix {code} already exists in the project",
+      "createFailed": "Could not create the matrix"
+    },
+    "import": {
+      "duplicateTags": "{count, plural, one {# tag repeated in the file: its last row was used} other {# tags repeated in the file: the last row of each was used}}: {list}",
+      "disciplineNotFound": "Discipline «{code}» does not exist in the organization",
+      "subsystemNotCreated": "Subsystem «{code}» could not be created",
+      "unknownEquipmentTypes": "Unrecognized equipment types (detection by tag prefix was used): {list}. Create them in Admin → Configuration → Equipment types",
+      "noEquipmentTypes": "The organization has no equipment types configured: the tags were left without a type. Load the standard catalog in Admin → Configuration",
+      "movesBlocked": "{count, plural, one {# tag with ITR or punch was not moved} other {# tags with ITR or punch were not moved}} to another subsystem (move them from each tag detail → «Move subsystem»): {list}"
+    },
+    "importSignals": {
+      "disciplineNotFound": "Discipline «{code}» does not exist",
+      "signalTypeInvalid": "Invalid signal type «{type}». Valid: {valid}",
+      "duplicateSignals": "{count, plural, one {# signal repeated in the file: its last row was used} other {# signals repeated in the file: the last row of each was used}}: {list}",
+      "loopSubsystemMissing": "Loop «{loop}»: subsystem «{code}» is not available",
+      "loopsError": "Loops: {error}",
+      "instrumentTagError": "Instrument tag «{tag}»: {error}",
+      "instrumentTagNotCreated": "Instrument tag «{tag}» could not be created",
+      "subsystemNotCreated": "Subsystem «{code}» could not be created",
+      "loopTagsError": "Loops ↔ instruments: {error}"
+    }
+  },
+  "PdfReports": {
+    "common": {
+      "generated": "Generated: {date}",
+      "page": "Page {n}",
+      "client": "Client: {name}",
+      "none": "None",
+      "tags": "Tags",
+      "itrsApproved": "ITRs approved",
+      "itrsTotal": "ITRs total",
+      "certsIssued": "Certs issued",
+      "openPunches": "Open punches",
+      "overallProgress": "Overall progress (approved ITRs)",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "approved": "Approved"
+    },
+    "areaKpis": {
+      "short": "Area KPIs",
+      "title": "Area KPIs Report",
+      "areas": "Areas",
+      "detail": "Area detail",
+      "empty": "No areas configured for this project.",
+      "topSystems": "Top systems by open punches",
+      "certsShort": "Certs issued"
+    },
+    "phaseProgress": {
+      "short": "Phase Progress",
+      "title": "Phase Progress Report",
+      "itrProgress": "Overall ITR progress",
+      "approvedOf": "{approved} / {total} approved",
+      "openCatA": "Open Cat A punches",
+      "blocking": "Blocking",
+      "phases": "Phases",
+      "detail": "Phase detail",
+      "empty": "No phases configured for this project.",
+      "certsLine": "Certificates: {issued} / {total} issued",
+      "catAOpen": "Cat A open: {n}",
+      "unassigned": "Note: {n, plural, one {# open Cat A punch} other {# open Cat A punches}} without a phase (the subsystem has no current phase)."
+    },
+    "preservation": {
+      "title": "Preservation Status",
+      "overdue": "Overdue",
+      "actionRequired": "Action required",
+      "dueSoon": "Due soon",
+      "nextDays": "Next {days} days",
+      "totalPlans": "Total plans",
+      "projects": "Projects",
+      "empty": "No preservation plans recorded.",
+      "emptyProject": "No plans in this project.",
+      "projectOverdue": "{n} overdue",
+      "col": {
+        "tag": "Tag",
+        "proc": "Proc",
+        "procedure": "Procedure",
+        "frequency": "Frequency",
+        "nextDue": "Next due",
+        "status": "Status"
+      },
+      "due": {
+        "overdue": "OVERDUE",
+        "soon": "Due soon",
+        "ok": "On track",
+        "inactive": "Inactive"
+      }
+    }
   }
 }

@@ -5,9 +5,10 @@
 
 import {
   Renderer, COLOR, A4_W, A4_H, MARGIN, CONTENT_W, FOOTER_H,
-  sanitize, truncateToWidth, wrapText,
+  sanitize, truncateToWidth, wrapText, bi,
   type TableCol, type Color,
 } from './renderer'
+import { todayIn } from '@/lib/time/zone'
 import { drawBrandBar, drawRecordQr, type PdfBranding } from './branding'
 
 type ExceptionRow = {
@@ -65,25 +66,28 @@ export type CertPdfData = {
   branding?: PdfBranding | null
   /** E2: QR al certificado en la app. */
   recordUrl?: string | null
+  /** Zona del proyecto: fecha «Generado» (el Worker corre en UTC). */
+  timezone?: string | null
 }
 
 function statusVisual(status: string): { fg: Color; bg: Color; label: string } {
   const s = status.toLowerCase()
-  if (s === 'issued')    return { fg: COLOR.greenStrong, bg: COLOR.greenBg, label: 'ISSUED' }
-  if (s === 'in_review') return { fg: COLOR.amber, bg: COLOR.amberBg, label: 'IN REVIEW' }
-  if (s === 'pending')   return { fg: COLOR.muted, bg: COLOR.borderLight, label: 'PENDING' }
-  if (s === 'rejected')  return { fg: COLOR.red, bg: COLOR.redBg, label: 'REJECTED' }
-  if (s === 'revoked')   return { fg: COLOR.purple, bg: COLOR.purpleBg, label: 'REVOKED' }
+  if (s === 'issued')    return { fg: COLOR.greenStrong, bg: COLOR.greenBg, label: 'EMITIDO / ISSUED' }
+  if (s === 'in_review') return { fg: COLOR.amber, bg: COLOR.amberBg, label: 'EN REVISIÓN / IN REVIEW' }
+  if (s === 'pending')   return { fg: COLOR.muted, bg: COLOR.borderLight, label: 'PENDIENTE / PENDING' }
+  if (s === 'rejected')  return { fg: COLOR.red, bg: COLOR.redBg, label: 'RECHAZADO / REJECTED' }
+  if (s === 'revoked')   return { fg: COLOR.purple, bg: COLOR.purpleBg, label: 'REVOCADO / REVOKED' }
   return { fg: COLOR.muted, bg: COLOR.borderLight, label: status.toUpperCase() }
 }
 
 export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Array> {
   const r = await Renderer.create()
-  r.doc.setTitle(`Certificate ${cert.certificate_number}`)
+  // V3: PDF formal bilingüe (español / inglés), como el del ITR.
+  r.doc.setTitle(`Certificado / Certificate ${cert.certificate_number}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('Completion Certificate')
+  r.doc.setSubject('Certificado de completamiento / Completion Certificate')
 
-  const generatedAt = new Date().toISOString().slice(0, 10)
+  const generatedAt = todayIn(cert.timezone)
   const approvedItrs = cert.itrs.filter(i => i.status === 'approved')
   const visual = statusVisual(cert.status)
 
@@ -97,12 +101,12 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
     page.drawText(sanitize(`CommUp · ${cert.certificate_number}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${generatedAt}`)
+    const centerText = sanitize(`Generado / Generated: ${generatedAt}`)
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `Pág. / Page ${pageNum} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -124,7 +128,7 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
   if (cert.recordUrl) drawRecordQr(r, cert.recordUrl, A4_W - MARGIN - QR, headTop, QR)
   const headW = cert.recordUrl ? CONTENT_W - 2 * (QR + 12) : CONTENT_W
 
-  const certHeading = cert.project_phases?.certificate_name ?? 'Completion Certificate'
+  const certHeading = cert.project_phases?.certificate_name ?? 'Certificado de completamiento / Completion Certificate'
   r.drawTextCentered(certHeading, { y: r.y - 13, size: 13, bold: true, color: COLOR.text, maxWidth: headW })
   r.moveY(15)
   r.drawTextCentered(cert.certificate_number, { y: r.y - 11, size: 11, oblique: true, color: COLOR.muted })
@@ -152,42 +156,40 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
   // ─── Info card grid ───────────────────────────────────────────────────────
   const infoCards: Array<{ label: string; value: string; sub?: string }> = [
     {
-      label: 'Project',
+      label: bi('Proyecto', 'Project'),
       value: `${cert.projectCode} — ${cert.projectName}`,
-      sub: cert.projectClient ? `Client: ${cert.projectClient}` : undefined,
+      sub: cert.projectClient ? `${bi('Cliente', 'Client')}: ${cert.projectClient}` : undefined,
     },
     {
-      label: 'Phase',
+      label: bi('Fase', 'Phase'),
       value: `${cert.project_phases?.code ?? '-'} — ${cert.project_phases?.name ?? '-'}`,
     },
   ]
   if (cert.subsystems) {
     infoCards.push({
-      label: 'Subsystem',
+      label: bi('Subsistema', 'Subsystem'),
       value: `${cert.subsystems.code} — ${cert.subsystems.name}`,
-      sub: cert.subsystems.systems ? `System: ${cert.subsystems.systems.code}` : undefined,
+      sub: cert.subsystems.systems ? `${bi('Sistema', 'System')}: ${cert.subsystems.systems.code}` : undefined,
     })
   }
   infoCards.push({
-    label: 'Summary',
-    value: `${approvedItrs.length} ITRs approved`,
-    sub: cert.exceptions.length > 0
-      ? `${cert.exceptions.length} Cat B exception${cert.exceptions.length > 1 ? 's' : ''}`
-      : undefined,
+    label: bi('Aprobados', 'Approved'),
+    value: `${approvedItrs.length} ITR`,
+    sub: cert.exceptions.length > 0 ? `${cert.exceptions.length} exc. Cat B` : undefined,
   })
   r.infoCardRow(infoCards)
 
   // ─── ITR Table ────────────────────────────────────────────────────────────
-  r.accentSection(`Approved Inspection & Test Records (${approvedItrs.length})`)
+  r.accentSection(`${bi('ITR aprobados', 'Approved Inspection & Test Records')} (${approvedItrs.length})`)
   const itrCols: TableCol[] = [
-    { w: 75, label: 'ITR Number', bold: true },
-    { w: 60, label: 'Template' },
-    { w: 220, label: 'Description' },
-    { w: 80, label: 'Tag' },
-    { w: 88, label: 'Status', align: 'center' },
+    { w: 75, label: 'N.º ITR', labelEn: 'ITR number', bold: true },
+    { w: 60, label: 'Plantilla', labelEn: 'Template' },
+    { w: 190, label: 'Descripción', labelEn: 'Description' },
+    { w: 80, label: 'Tag', labelEn: 'Tag' },
+    { w: 118, label: 'Estado', labelEn: 'Status', align: 'center' },
   ]
   if (approvedItrs.length === 0) {
-    r.empty('No approved ITRs associated with this certificate.')
+    r.empty(bi('El certificado no tiene ITR aprobados.', 'No approved ITRs associated with this certificate.'))
   } else {
     r.tableHeader(itrCols)
     approvedItrs.forEach((itr, idx) => {
@@ -196,7 +198,7 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
         itr.itr_templates?.code ?? '-',
         itr.itr_templates?.title ?? '-',
         itr.tags?.tag_number ?? '-',
-        'APPROVED',
+        'APROBADO / APPROVED',
       ], {
         alternate: idx % 2 === 1,
         valueColors: [COLOR.text, COLOR.muted, COLOR.text, COLOR.textLight, COLOR.greenStrong],
@@ -207,12 +209,12 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
 
   // ─── Cat B exceptions ─────────────────────────────────────────────────────
   if (cert.exceptions.length > 0) {
-    r.accentSection(`Category B Punch Exceptions (${cert.exceptions.length})`, COLOR.amber, COLOR.amberBg)
+    r.accentSection(`${bi('Excepciones de punch Cat B', 'Category B Punch Exceptions')} (${cert.exceptions.length})`, COLOR.amber, COLOR.amberBg)
     for (const exc of cert.exceptions) {
       const punchTxt = `Punch ${exc.punches?.punch_number ?? '-'} · Cat B`
       const descTxt  = exc.punches?.description ?? '-'
-      const justTxt  = `Justification: ${exc.justification}`
-      const metaTxt  = `Approved by ${exc.approved_by_profile?.full_name ?? '-'} · ${exc.approved_at.slice(0, 10)}`
+      const justTxt  = `${bi('Justificación', 'Justification')}: ${exc.justification}`
+      const metaTxt  = `${bi('Aprobó', 'Approved by')} ${exc.approved_by_profile?.full_name ?? '-'} · ${exc.approved_at.slice(0, 10)}`
       // Pre-compute block height
       const wrapW = CONTENT_W - 20
       const lines = [
@@ -245,7 +247,7 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
 
   // ─── Notes ─────────────────────────────────────────────────────────────────
   if (cert.notes) {
-    r.accentSection('Notes')
+    r.accentSection(bi('Notas', 'Notes'))
     const notesLines = wrapText(cert.notes, r.fontRegular, 8.5, CONTENT_W - 20)
     const notesHeight = notesLines.length * 12 + 12
     r.ensureSpace(notesHeight + 4)
@@ -267,29 +269,31 @@ export async function renderCertificatePdf(cert: CertPdfData): Promise<Uint8Arra
   r.ensureSpace(80)
   r.drawHLine(MARGIN, A4_W - MARGIN, r.y, 1, COLOR.border)
   r.moveY(10)
-  r.drawText('AUTHORIZED SIGNATURES', { x: MARGIN, y: r.y - 9, size: 9, bold: true, color: COLOR.muted })
+  r.drawText('FIRMAS AUTORIZADAS / AUTHORIZED SIGNATURES', { x: MARGIN, y: r.y - 9, size: 9, bold: true, color: COLOR.muted })
   r.moveY(16)
 
-  const sigBoxes: Array<{ role: string; name?: string; date?: string }> = [
+  const sigBoxes: Array<{ role: string; roleEn: string; name?: string; date?: string }> = [
     {
-      role: 'Issued by',
+      role: 'Emitido por',
+      roleEn: 'Issued by',
       name: cert.issued_by_profile?.full_name,
       date: cert.issued_date ?? undefined,
     },
   ]
   for (const role of ['completion', 'client', 'authority'] as const) {
     const sig = cert.signatures.find(s => s.role === role)
-    const roleLabel =
-      role === 'completion' ? 'Completion Manager' :
-      role === 'client'     ? 'Client Representative' :
-                              'Authority'
+    const [roleEs, roleEn] =
+      role === 'completion' ? ['Gerente de completamiento', 'Completion Manager'] :
+      role === 'client'     ? ['Representante del cliente', 'Client Representative'] :
+                              ['Autoridad', 'Authority']
     sigBoxes.push({
-      role: roleLabel,
+      role: roleEs,
+      roleEn,
       name: sig?.signer_profile?.full_name,
       date: sig ? new Date(sig.signed_at).toISOString().split('T')[0] : undefined,
     })
   }
-  r.signatureGrid(sigBoxes, { accentColor: COLOR.purple })
+  r.signatureGrid(sigBoxes, { accentColor: COLOR.purple, placeholder: 'Nombre / fecha · Name / date' })
 
   r.finalizePagePlaceholders()
   return await r.doc.save()

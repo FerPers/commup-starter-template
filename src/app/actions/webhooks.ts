@@ -3,6 +3,7 @@
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 
 export type CreateWebhookInput = {
   name: string
@@ -20,11 +21,12 @@ export const createWebhookSubscription = withAuth(
     ctx,
     input: CreateWebhookInput,
   ): Promise<{ error?: string; id?: string; secret?: string }> => {
-    if (!input.name?.trim()) return { error: 'Nombre requerido' }
-    if (!input.endpointUrl?.trim()) return { error: 'URL requerida' }
-    if (!input.endpointUrl.startsWith('https://')) return { error: 'La URL debe usar https' }
+    const t = await getTranslations('ActionErrors')
+    if (!input.name?.trim()) return { error: t('webhooks.nameRequired') }
+    if (!input.endpointUrl?.trim()) return { error: t('webhooks.urlRequired') }
+    if (!input.endpointUrl.startsWith('https://')) return { error: t('webhooks.httpsRequired') }
     if (!input.eventTypes || input.eventTypes.length === 0) {
-      return { error: 'Al menos un event type es requerido' }
+      return { error: t('webhooks.eventRequired') }
     }
 
     const { data, error } = await ctx.supabase.rpc('create_webhook_subscription', {
@@ -40,7 +42,7 @@ export const createWebhookSubscription = withAuth(
     if (error) return { error: error.message }
 
     const row = Array.isArray(data) ? data[0] : data
-    if (!row) return { error: 'Respuesta vacía del RPC' }
+    if (!row) return { error: t('webhooks.emptyResponse') }
 
     revalidatePath('/admin/webhooks')
     return {

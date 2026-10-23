@@ -2,10 +2,12 @@
 
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { AI_NOT_CONFIGURED, isAiConfigured, type createClaudeClient } from '@/lib/ai/claude'
+import { aiNotConfigured, isAiConfigured, type createClaudeClient } from '@/lib/ai/claude'
 import { runAi } from '@/lib/ai/run'
 import { checkProjectAccess } from '@/lib/auth/access'
+import { accessError } from '@/lib/i18n/action-errors'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { AiCeOutput, MAX_PDF_BYTES, MAX_SHEET_CHARS, normalizeTag, reviewErrors, toReview, type ReviewState } from '@/lib/ce/import'
@@ -63,10 +65,11 @@ async function matchingTags(supabase: SupabaseClient, projectId: string, candida
 export const extractCeMatrixWithAi = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, form: FormData): Promise<ExtractResult> => {
-    if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED }
+    if (!isAiConfigured()) return { error: await aiNotConfigured() }
+    const t = await getTranslations('ActionErrors')
     const projectId = String(form.get('projectId') ?? '')
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
     const fileName = String(form.get('fileName') ?? 'documento').slice(0, 200)
     const hint = String(form.get('hint') ?? '').trim().slice(0, 300)
     const sheet = form.get('sheet')
@@ -75,17 +78,17 @@ export const extractCeMatrixWithAi = withAuthOnly(
     const instruction = `Archivo: ${fileName}.${hint ? ` Indicación del usuario: ${hint}.` : ''} Extrae la matriz causa-efecto.`
     let content: Parameters<ReturnType<typeof createClaudeClient>['messages']['parse']>[0]['messages'][0]['content']
     if (typeof sheet === 'string' && sheet.trim()) {
-      if (sheet.length > MAX_SHEET_CHARS) return { error: 'La hoja es demasiado grande para importarla de una vez' }
+      if (sheet.length > MAX_SHEET_CHARS) return { error: t('ceImport.sheetTooLarge') }
       content = `${instruction}\n\nHoja de cálculo en CSV (separador coma; las celdas vacías son comas seguidas):\n${sheet}`
     } else if (pdf instanceof File) {
-      if (pdf.type !== 'application/pdf') return { error: 'El archivo debe ser PDF' }
-      if (pdf.size > MAX_PDF_BYTES) return { error: 'El PDF supera 4 MB: envía solo las páginas de la matriz' }
+      if (pdf.type !== 'application/pdf') return { error: t('ceImport.pdfRequired') }
+      if (pdf.size > MAX_PDF_BYTES) return { error: t('ceImport.pdfTooLarge', { mb: MAX_PDF_BYTES / 1024 / 1024 }) }
       const data = Buffer.from(await pdf.arrayBuffer()).toString('base64')
       content = [
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data } },
         { type: 'text', text: instruction },
       ]
-    } else return { error: 'Adjunta una hoja de Excel o un PDF' }
+    } else return { error: t('ceImport.fileRequired') }
 
     const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, projectId, feature: 'ce_import' }, (client, model) => client.messages.parse({
       model,
@@ -95,10 +98,10 @@ export const extractCeMatrixWithAi = withAuthOnly(
       messages: [{ role: 'user', content }],
     }))
     if (!run.response) return { error: run.error }
-    if (run.response.stop_reason === 'max_tokens') return { error: 'La matriz es demasiado grande para una sola lectura: divide el documento.' }
+    if (run.response.stop_reason === 'max_tokens') return { error: t('ceImport.tooLargeForOneRead') }
     const parsed: AiCeOutput | null = run.response.parsed_output
-    if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
-    if (!parsed.causes.length || !parsed.effects.length) return { error: `No se encontró una matriz causa-efecto en el documento.${parsed.warnings.length ? ` ${parsed.warnings.join(' · ')}` : ''}` }
+    if (!parsed) return { error: t('ceImport.aiUnparsable') }
+    if (!parsed.causes.length || !parsed.effects.length) return { error: parsed.warnings.length ? t('ceImport.noMatrixWithWarnings', { warnings: parsed.warnings.join(' · ') }) : t('ceImport.noMatrix') }
 
     const tags = await matchingTags(ctx.supabase, projectId, [...parsed.causes.map(c => c.tag ?? ''), ...parsed.effects.map(e => e.tag ?? '')])
     const review = toReview(parsed, tags.keys())
@@ -124,13 +127,14 @@ export type CreateFromReviewInput = {
 export const createCeMatrixFromReview = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }, { resource: 'system', field: 'systemId', scopeField: 'projectId', optional: true }] },
   async (ctx, input: CreateFromReviewInput): Promise<{ id?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const code = input.code.trim().toUpperCase().slice(0, 60)
     const title = input.title.trim().slice(0, 200)
-    if (!code || !title) return { error: 'Código y título de la matriz son obligatorios' }
+    if (!code || !title) return { error: t('ceImport.codeTitleRequired') }
     const errors = reviewErrors(input.review)
     if (errors.length) return { error: errors.slice(0, 3).join(' · ') }
     const { causes, effects, links } = input.review
-    if (causes.length > 500 || effects.length > 500 || links.length > 5000) return { error: 'La matriz es demasiado grande' }
+    if (causes.length > 500 || effects.length > 500 || links.length > 5000) return { error: t('ceImport.tooLarge') }
 
     const tags = await matchingTags(ctx.supabase, input.projectId, [...causes.map(c => c.tag), ...effects.map(e => e.tag)])
     const tagId = (tag: string) => (tag.trim() ? tags.get(normalizeTag(tag)) ?? null : null)
@@ -162,8 +166,8 @@ export const createCeMatrixFromReview = withAuth(
       })),
       p_links: linkRows,
     })
-    if (mErr?.code === '23505') return { error: `Ya existe una matriz ${code} en el proyecto` }
-    if (mErr || !matrixId) return { error: mErr?.message ?? 'No se pudo crear la matriz' }
+    if (mErr?.code === '23505') return { error: t('ceImport.matrixExists', { code }) }
+    if (mErr || !matrixId) return { error: mErr?.message ?? t('ceImport.createFailed') }
     revalidatePath(`/projects/${input.projectId}/ce-matrices`)
     return { id: matrixId as string }
   },

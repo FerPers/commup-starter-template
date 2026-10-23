@@ -8,9 +8,10 @@
 
 import {
   Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H,
-  sanitize,
+  sanitize, bi,
   type Color, type TableCol,
 } from './renderer'
+import { todayIn } from '@/lib/time/zone'
 import { drawBrandBar, type PdfBranding } from './branding'
 
 export type PunchPdfRow = {
@@ -32,12 +33,14 @@ export type PunchListPdfData = {
   punches: PunchPdfRow[]
   /** E2: logos de la org y del cliente (sin ellos, «CommUp» como antes). */
   branding?: PdfBranding | null
+  /** Zona del proyecto: fecha «Generado» (el Worker corre en UTC). */
+  timezone?: string | null
 }
 
 const CAT_META: Record<'A' | 'B' | 'C', { label: string; color: Color; bg: Color }> = {
-  A: { label: 'Category A — Hard Blocker', color: COLOR.red, bg: COLOR.redBg },
-  B: { label: 'Category B — Transferable with Exception', color: COLOR.amber, bg: COLOR.amberBg },
-  C: { label: 'Category C — Minor', color: COLOR.muted, bg: COLOR.borderXlight },
+  A: { label: bi('Categoría A — Bloqueante', 'Category A — Hard blocker'), color: COLOR.red, bg: COLOR.redBg },
+  B: { label: bi('Categoría B — Transferible con excepción', 'Category B — Transferable with exception'), color: COLOR.amber, bg: COLOR.amberBg },
+  C: { label: bi('Categoría C — Menor', 'Category C — Minor'), color: COLOR.muted, bg: COLOR.borderXlight },
 }
 
 const STATUS_COLOR: Record<string, Color> = {
@@ -48,20 +51,20 @@ const STATUS_COLOR: Record<string, Color> = {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  open: 'Open',
-  in_progress: 'In progress',
-  closed: 'Closed',
-  cancelled: 'Cancelled',
+  open: bi('Abierto', 'Open'),
+  in_progress: bi('En curso', 'In progress'),
+  closed: bi('Cerrado', 'Closed'),
+  cancelled: bi('Anulado', 'Cancelled'),
 }
 
 const COLS: TableCol[] = [
-  { w: 58, label: 'Punch' },
-  { w: 62, label: 'Tag' },
-  { w: 40, label: 'Disc', align: 'center' },
-  { w: 70, label: 'Subsystem' },
-  { w: 158, label: 'Description' },
-  { w: 55, label: 'Status', align: 'center' },
-  { w: 50, label: 'Target', align: 'center' },
+  { w: 58, label: 'Punch', labelEn: 'Punch' },
+  { w: 62, label: 'Tag', labelEn: 'Tag' },
+  { w: 34, label: 'Disc.', labelEn: 'Disc.', align: 'center' },
+  { w: 70, label: 'Subsistema', labelEn: 'Subsystem' },
+  { w: 139, label: 'Descripción', labelEn: 'Description' },
+  { w: 94, label: 'Estado', labelEn: 'Status', align: 'center' },
+  { w: 66, label: 'Fecha objetivo', labelEn: 'Target date', align: 'center' },
 ]
 
 function isOpen(status: string): boolean {
@@ -70,11 +73,12 @@ function isOpen(status: string): boolean {
 
 export async function renderPunchListPdf(data: PunchListPdfData): Promise<Uint8Array> {
   const r = await Renderer.create()
-  r.doc.setTitle(`Punch List · ${data.projectCode}`)
+  // V3: PDF formal bilingüe (español / inglés), como el del ITR.
+  r.doc.setTitle(`Lista de punch / Punch List · ${data.projectCode}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('Punch List Report')
+  r.doc.setSubject('Reporte de lista de punch / Punch List Report')
 
-  const generatedAt = new Date().toISOString().slice(0, 10)
+  const generatedAt = todayIn(data.timezone)
 
   const openA = data.punches.filter(p => p.category === 'A' && isOpen(p.status)).length
   const openB = data.punches.filter(p => p.category === 'B' && isOpen(p.status)).length
@@ -90,12 +94,12 @@ export async function renderPunchListPdf(data: PunchListPdfData): Promise<Uint8A
     page.drawText(sanitize(`CommUp · ${data.projectCode}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${generatedAt}`)
+    const centerText = sanitize(`Generado / Generated: ${generatedAt}`)
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `Pág. / Page ${pageNum} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -110,14 +114,14 @@ export async function renderPunchListPdf(data: PunchListPdfData): Promise<Uint8A
   // ─── Header ───────────────────────────────────────────────────────────────
   r.moveY(8)
   await drawBrandBar(r, data.branding)
-  r.drawTextCentered('Punch List Report', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
+  r.drawTextCentered(bi('Reporte de lista de punch', 'Punch List Report'), { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
   r.moveY(15)
   r.drawTextCentered(`${data.projectCode} — ${data.projectName}`, {
     y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: CONTENT_W,
   })
   r.moveY(13)
   if (data.projectClient) {
-    r.drawTextCentered(`Client: ${data.projectClient}`, {
+    r.drawTextCentered(`${bi('Cliente', 'Client')}: ${data.projectClient}`, {
       y: r.y - 10, size: 10, oblique: true, color: COLOR.muted, maxWidth: CONTENT_W,
     })
     r.moveY(12)
@@ -128,10 +132,10 @@ export async function renderPunchListPdf(data: PunchListPdfData): Promise<Uint8A
 
   // ─── Summary cards ────────────────────────────────────────────────────────
   r.infoCardRow([
-    { label: 'Open Cat A', value: String(openA), sub: openA > 0 ? 'Blocking' : 'None' },
-    { label: 'Open Cat B', value: String(openB) },
-    { label: 'Open Cat C', value: String(openC) },
-    { label: 'Total Punches', value: String(data.punches.length) },
+    { label: bi('Cat A abiertos', 'Open'), value: String(openA), sub: openA > 0 ? bi('Bloqueante', 'Blocking') : bi('Ninguno', 'None') },
+    { label: bi('Cat B abiertos', 'Open'), value: String(openB) },
+    { label: bi('Cat C abiertos', 'Open'), value: String(openC) },
+    { label: bi('Total de punch', 'Total'), value: String(data.punches.length) },
   ])
 
   // ─── Per-category tables ──────────────────────────────────────────────────
@@ -170,18 +174,18 @@ export async function renderPunchListPdf(data: PunchListPdfData): Promise<Uint8A
   }
 
   if (!anyRows) {
-    r.accentSection('Punches')
-    r.empty('No punches recorded for this project.')
+    r.accentSection('Punch')
+    r.empty(bi('No hay punch registrados en este proyecto.', 'No punches recorded for this project.'))
   }
 
   // ─── Sign-off block ───────────────────────────────────────────────────────
   r.moveY(10)
-  r.accentSection('Sign-off')
+  r.accentSection(bi('Firmas', 'Sign-off'))
   r.signatureGrid([
-    { role: 'Prepared by' },
-    { role: 'Reviewed by' },
-    { role: 'Accepted by (Client)' },
-  ])
+    { role: 'Elaborado por', roleEn: 'Prepared by' },
+    { role: 'Revisado por', roleEn: 'Reviewed by' },
+    { role: 'Aceptado por (cliente)', roleEn: 'Accepted by (client)' },
+  ], { placeholder: 'Nombre / fecha · Name / date' })
 
   r.finalizePagePlaceholders()
   return await r.doc.save()

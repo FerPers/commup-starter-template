@@ -4,6 +4,8 @@ import { ADMIN_ROLES, OWNER_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissio
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
+import { accessError } from '@/lib/i18n/action-errors'
 import type { ProjectStatus } from '@/types/database'
 import { isValidTimeZone } from '@/lib/time/zone'
 import { LOGO_BUCKET, LOGO_MAX_BYTES, LOGO_MIME_EXT, clientLogoPath } from '@/lib/constants/logos'
@@ -31,10 +33,11 @@ export const updateProject = withAuthOnly(
     projectId: string,
     payload: ProjectUpdatePayload,
   ): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
-    if ('timezone' in payload && !isValidTimeZone(payload.timezone)) return { error: 'Zona horaria no válida' }
+    if ('timezone' in payload && !isValidTimeZone(payload.timezone)) return { error: t('projects.invalidTimezone') }
     // Solo los campos editables (el payload llega del cliente).
     const patch = Object.fromEntries(UPDATABLE.filter(k => k in payload).map(k => [k, payload[k]])) as ProjectUpdatePayload
 
@@ -56,7 +59,7 @@ export const deleteProject = withAuthOnly(
   { role: OWNER_ROLES },
   async (ctx, projectId: string): Promise<{ error?: string }> => {
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
     const { error } = await ctx.supabase
       .from('projects')
@@ -83,14 +86,15 @@ async function removeClientLogoFiles(storage: { from: (b: string) => { remove: (
 export const uploadProjectClientLogo = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, projectId: string, formData: FormData): Promise<{ url?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
     const file = formData.get('file') as File | null
-    if (!file) return { error: 'No se adjuntó archivo' }
-    if (file.size > LOGO_MAX_BYTES) return { error: 'El archivo supera 2 MB' }
+    if (!file) return { error: t('config.logoMissing') }
+    if (file.size > LOGO_MAX_BYTES) return { error: t('config.logoTooLarge', { mb: LOGO_MAX_BYTES / 1024 / 1024 }) }
     const ext = LOGO_MIME_EXT[file.type]
-    if (!ext) return { error: 'El logo debe ser PNG, JPG o WebP' }
+    if (!ext) return { error: t('config.logoType') }
 
     await removeClientLogoFiles(ctx.supabase.storage, ctx.orgId, projectId)
     const path = clientLogoPath(ctx.orgId, projectId, ext)
@@ -113,7 +117,7 @@ export const removeProjectClientLogo = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, projectId: string): Promise<{ error?: string }> => {
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
     await removeClientLogoFiles(ctx.supabase.storage, ctx.orgId, projectId)
     const { error } = await ctx.supabase.from('projects').update({ client_logo_url: null }).eq('id', projectId).eq('org_id', ctx.orgId)
@@ -139,7 +143,7 @@ export const setProjectDisciplines = withAuthOnly(
     reason?: string | null,
   ): Promise<{ error?: string; itrs?: number; result?: { added: number; removed: number; itrsOutOfScope: number } }> => {
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
+    if (!access.ok) return { error: await accessError(access) }
 
     const why = reason?.trim()
     const { data, error } = await ctx.supabase.rpc('set_project_disciplines', {

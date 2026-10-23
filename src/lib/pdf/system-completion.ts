@@ -8,9 +8,10 @@
 
 import {
   Renderer, COLOR, A4_W, MARGIN, CONTENT_W, FOOTER_H,
-  sanitize,
+  sanitize, bi,
   type Color, type TableCol,
 } from './renderer'
+import { todayIn } from '@/lib/time/zone'
 
 export type SubsystemStatus = {
   code: string
@@ -35,6 +36,8 @@ export type SystemCompletionData = {
   projectCode: string
   projectClient: string | null
   systems: SystemGroup[]
+  /** Zona del proyecto: fecha «Generado» (el Worker corre en UTC). */
+  timezone?: string | null
 }
 
 function pct(part: number, total: number): number {
@@ -47,33 +50,35 @@ function isReady(s: SubsystemStatus): boolean {
 }
 
 const CERT_LABEL: Record<SubsystemStatus['certStatus'], string> = {
-  issued: 'Issued',
-  in_review: 'In review',
-  pending: 'Pending',
-  rejected: 'Rejected',
+  issued: 'Emitido / Issued',
+  in_review: 'En revisión / In review',
+  pending: 'Pendiente / Pending',
+  rejected: 'Rechazado / Rejected',
   none: '—',
 }
 
+// V3: encabezado bilingüe; A / B / C son iguales en los dos idiomas (sin segunda línea).
 const COLS: TableCol[] = [
-  { w: 58, label: 'Subsys' },
-  { w: 132, label: 'Name' },
-  { w: 34, label: 'Phase', align: 'center' },
-  { w: 58, label: 'ITRs', align: 'center' },
-  { w: 40, label: '%', align: 'right' },
-  { w: 26, label: 'A', align: 'center' },
-  { w: 26, label: 'B', align: 'center' },
-  { w: 26, label: 'C', align: 'center' },
-  { w: 60, label: 'Cert', align: 'center' },
-  { w: 63, label: 'MC Ready', align: 'center' },
+  { w: 54, label: 'Subsistema', labelEn: 'Subsystem' },
+  { w: 121, label: 'Nombre', labelEn: 'Name' },
+  { w: 32, label: 'Fase', labelEn: 'Phase', align: 'center' },
+  { w: 46, label: 'ITR', labelEn: 'ITRs', align: 'center' },
+  { w: 40, label: 'Avance', labelEn: 'Progress', align: 'right' },
+  { w: 22, label: 'A', labelEn: '', align: 'center' },
+  { w: 22, label: 'B', labelEn: '', align: 'center' },
+  { w: 22, label: 'C', labelEn: '', align: 'center' },
+  { w: 94, label: 'Certificado', labelEn: 'Certificate', align: 'center' },
+  { w: 70, label: 'Listo MC', labelEn: 'MC ready', align: 'center' },
 ]
 
 export async function renderSystemCompletionPdf(data: SystemCompletionData): Promise<Uint8Array> {
   const r = await Renderer.create()
-  r.doc.setTitle(`System Completion · ${data.projectCode}`)
+  // V3: PDF formal bilingüe (español / inglés), como el del ITR.
+  r.doc.setTitle(`Completamiento de sistemas / System Completion · ${data.projectCode}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('System Completion Status Report')
+  r.doc.setSubject('Estado de completamiento de sistemas / System Completion Status Report')
 
-  const generatedAt = new Date().toISOString().slice(0, 10)
+  const generatedAt = todayIn(data.timezone)
 
   // Project-level aggregates
   const allSubs = data.systems.flatMap(s => s.subsystems)
@@ -94,12 +99,12 @@ export async function renderSystemCompletionPdf(data: SystemCompletionData): Pro
     page.drawText(sanitize(`CommUp · ${data.projectCode}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${generatedAt}`)
+    const centerText = sanitize(`Generado / Generated: ${generatedAt}`)
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `Pág. / Page ${pageNum} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -115,14 +120,14 @@ export async function renderSystemCompletionPdf(data: SystemCompletionData): Pro
   r.moveY(8)
   r.drawTextCentered('CommUp', { y: r.y - 18, size: 18, bold: true, color: COLOR.purple })
   r.moveY(22)
-  r.drawTextCentered('System Completion Status', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
+  r.drawTextCentered(bi('Estado de completamiento de sistemas', 'System Completion Status'), { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
   r.moveY(15)
   r.drawTextCentered(`${data.projectCode} — ${data.projectName}`, {
     y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: CONTENT_W,
   })
   r.moveY(13)
   if (data.projectClient) {
-    r.drawTextCentered(`Client: ${data.projectClient}`, {
+    r.drawTextCentered(`${bi('Cliente', 'Client')}: ${data.projectClient}`, {
       y: r.y - 10, size: 10, oblique: true, color: COLOR.muted, maxWidth: CONTENT_W,
     })
     r.moveY(12)
@@ -133,16 +138,16 @@ export async function renderSystemCompletionPdf(data: SystemCompletionData): Pro
 
   // ─── Executive summary cards ──────────────────────────────────────────────
   r.infoCardRow([
-    { label: 'Subsystems MC-Ready', value: `${readySubs} / ${totalSubs}`, sub: `${pct(readySubs, totalSubs)}%` },
-    { label: 'ITRs Approved', value: `${approvedItr} / ${totalItr}`, sub: `${pct(approvedItr, totalItr)}%` },
-    { label: 'Open Cat A Punches', value: String(totalOpenA), sub: totalOpenA > 0 ? 'Blocking' : 'None' },
-    { label: 'Certificates Issued', value: String(certsIssued) },
+    { label: bi('Listos para MC', 'MC-ready'), value: `${readySubs} / ${totalSubs}`, sub: `${pct(readySubs, totalSubs)}%` },
+    { label: bi('ITR aprobados', 'Approved'), value: `${approvedItr} / ${totalItr}`, sub: `${pct(approvedItr, totalItr)}%` },
+    { label: bi('Cat A abiertos', 'Open Cat A'), value: String(totalOpenA), sub: totalOpenA > 0 ? bi('Bloquea', 'Blocking') : bi('Ninguno', 'None') },
+    { label: bi('Cert. emitidos', 'Issued'), value: String(certsIssued) },
   ])
 
   // ─── Per-system tables ────────────────────────────────────────────────────
   if (data.systems.length === 0) {
-    r.accentSection('Systems')
-    r.empty('No systems configured for this project.')
+    r.accentSection(bi('Sistemas', 'Systems'))
+    r.empty(bi('El proyecto no tiene sistemas configurados.', 'No systems configured for this project.'))
   }
 
   for (const sys of data.systems) {
@@ -150,7 +155,7 @@ export async function renderSystemCompletionPdf(data: SystemCompletionData): Pro
     r.tableHeader(COLS)
 
     if (sys.subsystems.length === 0) {
-      r.empty('No subsystems in this system.')
+      r.empty(bi('El sistema no tiene subsistemas.', 'No subsystems in this system.'))
     }
 
     sys.subsystems.forEach((s, i) => {
@@ -176,7 +181,7 @@ export async function renderSystemCompletionPdf(data: SystemCompletionData): Pro
           String(s.punchOpenB),
           String(s.punchOpenC),
           CERT_LABEL[s.certStatus],
-          ready ? 'READY' : 'Not yet',
+          ready ? 'LISTO / READY' : 'Aún no / Not yet',
         ],
         {
           alternate: i % 2 === 1,
@@ -194,7 +199,7 @@ export async function renderSystemCompletionPdf(data: SystemCompletionData): Pro
     r.moveY(2)
     r.ensureSpace(12)
     r.drawText(
-      sanitize(`Subtotal: ${sysReady}/${sys.subsystems.length} MC-ready · ITRs ${sysItrApproved}/${sysItrTotal} (${pct(sysItrApproved, sysItrTotal)}%) · Cat A open ${sysOpenA}`),
+      sanitize(`Subtotal: ${bi('listos para MC', 'MC-ready')} ${sysReady}/${sys.subsystems.length} · ITR ${sysItrApproved}/${sysItrTotal} (${pct(sysItrApproved, sysItrTotal)}%) · ${bi('Cat A abiertos', 'open Cat A')} ${sysOpenA}`),
       { x: MARGIN + 4, y: r.y - 8, size: 7.5, oblique: true, color: COLOR.muted },
     )
     r.moveY(12)
@@ -202,9 +207,14 @@ export async function renderSystemCompletionPdf(data: SystemCompletionData): Pro
 
   // ─── Legend ───────────────────────────────────────────────────────────────
   r.moveY(6)
-  r.ensureSpace(24)
+  r.ensureSpace(26)
   r.drawText(
-    sanitize('A / B / C = open punches by category. MC-Ready = all ITRs approved and no open Cat A punch.'),
+    sanitize('A / B / C = punch abiertos por categoría. Listo MC = todos los ITR aprobados y ningún punch Cat A abierto.'),
+    { x: MARGIN, y: r.y - 8, size: 7.5, oblique: true, color: COLOR.empty, maxWidth: CONTENT_W },
+  )
+  r.moveY(11)
+  r.drawText(
+    sanitize('A / B / C = open punches by category. MC ready = all ITRs approved and no open Cat A punch.'),
     { x: MARGIN, y: r.y - 8, size: 7.5, oblique: true, color: COLOR.empty, maxWidth: CONTENT_W },
   )
   r.moveY(12)

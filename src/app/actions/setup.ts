@@ -1,5 +1,6 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
@@ -9,29 +10,30 @@ import { EQUIPMENT_TYPE_DEFAULTS } from '@/lib/equipment-types'
 import { setupInputSchema, type SetupInput } from '@/lib/setup/schema'
 
 export async function completeSetup(raw: SetupInput): Promise<{ error?: string; org_id?: string; project_id?: string }> {
+  const t = await getTranslations('ActionErrors')
   // Verify authentication with the user-scoped client
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
+  if (!user) return { error: t('auth.unauthenticated') }
 
   // A-20 (S02): escribe con service role → entrada validada campo a campo y una sola org por usuario
   // (el layout (setup) ya lo impide en la UI, pero la action se puede invocar directo).
   const parsed = setupInputSchema.safeParse(raw)
   if (!parsed.success) {
     const fullNameIssue = parsed.error.issues.some(i => i.path[0] === 'userFullName')
-    return { error: fullNameIssue ? 'Ingresa tu nombre completo' : 'Datos de configuración no válidos' }
+    return { error: fullNameIssue ? t('setup.fullNameRequired') : t('setup.invalidInput') }
   }
   const input = parsed.data
   const { count: memberships } = await supabase
     .from('org_members')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
-  if ((memberships ?? 0) > 0) return { error: 'Ya perteneces a una organización: crea el proyecto desde ella' }
+  if ((memberships ?? 0) > 0) return { error: t('setup.alreadyMember') }
 
   const fullName = input.userFullName
   // Evita que el nombre quede como el email (problema heredado: PDFs mostraban email como firmante)
   if (fullName.toLowerCase() === (user.email ?? '').toLowerCase()) {
-    return { error: 'El nombre no puede ser tu correo electrónico' }
+    return { error: t('setup.nameIsEmail') }
   }
 
   // S07 (C-28): todo en una transacción (RPC bootstrap_org, solo service role). Antes eran 8 inserciones
@@ -45,7 +47,7 @@ export async function completeSetup(raw: SetupInput): Promise<{ error?: string; 
       project: input.project,
       phases: input.phases,
       disciplines: input.disciplines,
-      equipmentTypes: EQUIPMENT_TYPE_DEFAULTS.map(t => ({ code: t.code, name: t.name, category: t.category })),
+      equipmentTypes: EQUIPMENT_TYPE_DEFAULTS.map(et => ({ code: et.code, name: et.name, category: et.category })),
       pssrItems: DEFAULT_PSSR_ITEMS,
     },
   })
@@ -70,6 +72,7 @@ interface ProjectInput {
 export const createProject = withAuth(
   { role: PRIVILEGED_ROLES },
   async (ctx, input: ProjectInput): Promise<{ error?: string; project_id?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const admin = createAdminClient()
 
     // R1: el alcance elegido se valida antes de crear (solo disciplinas de la org, al menos una).
@@ -77,7 +80,7 @@ export const createProject = withAuth(
     if (input.disciplineIds) {
       const { data: org } = await admin.from('disciplines').select('id').eq('org_id', ctx.orgId).in('id', input.disciplineIds)
       keep = new Set((org ?? []).map(d => d.id))
-      if (keep.size === 0) return { error: 'El alcance necesita al menos una disciplina' }
+      if (keep.size === 0) return { error: t('setup.scopeEmpty') }
     }
 
     const { data: project, error: projectError } = await admin

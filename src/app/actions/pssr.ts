@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
@@ -104,11 +105,12 @@ export const deletePssrTemplateItem = withAuthOnly(
 export const setPssrTemplateSignatures = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, input: { templateId: string; signatures: PssrCapacity[] }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const signatures = [...new Set(input.signatures)].filter(c => PSSR_CAPACITIES.includes(c))
     const { data, error } = await ctx.supabase.from('pssr_templates').update({ required_signatures: signatures, updated_at: new Date().toISOString() })
       .eq('id', input.templateId).eq('org_id', ctx.orgId).select('id')
     if (error) return { error: error.message }
-    if (!data?.length) return { error: 'Plantilla no encontrada o sin permiso' }
+    if (!data?.length) return { error: t('pssr.templateNotFoundOrForbidden') }
     revalidatePath(`/admin/templates/pssr/${input.templateId}`)
     return {}
   },
@@ -117,9 +119,10 @@ export const setPssrTemplateSignatures = withAuthOnly(
 export const deletePssrTemplate = withAuthOnly(
   { role: PRIVILEGED_ROLES },
   async (ctx, templateId: string): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data, error } = await ctx.supabase.from('pssr_templates').delete().eq('id', templateId).eq('org_id', ctx.orgId).select('id')
     if (error) return { error: error.message }
-    if (!data?.length) return { error: 'No se pudo borrar la plantilla (sin permiso o ya no existe)' }
+    if (!data?.length) return { error: t('pssr.deleteTemplateFailed') }
     revalidatePath('/admin/templates/pssr')
     return {}
   },
@@ -146,6 +149,7 @@ export const createPssrReview = withAuth(
       reviewDueDate?: string | null
     },
   ): Promise<{ review?: Tables<'pssr_reviews'>; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const supabase = ctx.supabase
 
     // El guard declarativo de 'template' valida itr_templates — los PSSR viven
@@ -156,7 +160,7 @@ export const createPssrReview = withAuth(
       .eq('id', input.templateId)
       .eq('org_id', ctx.orgId)
       .maybeSingle()
-    if (!tpl) return { error: 'Template PSSR no encontrado' }
+    if (!tpl) return { error: t('pssr.templateNotFound') }
 
     // Auto-number per system: PSSR-001, PSSR-002...
     const { count } = await supabase
@@ -220,7 +224,8 @@ export const updatePssrReviewItem = withAuth(
       completionDate?: string | null
     },
   ): Promise<{ error?: string }> => {
-    if (ctx.role === 'client') return { error: 'Sin permiso' }
+    const t = await getTranslations('ActionErrors')
+    if (ctx.role === 'client') return { error: t('auth.forbidden') }
     const payload: TablesUpdate<'pssr_review_items'> = { updated_by: ctx.userId, updated_at: new Date().toISOString() }
     if (input.status !== undefined)         payload.status = input.status
     if (input.responsible !== undefined)    payload.responsible = input.responsible
@@ -303,7 +308,8 @@ export const addPssrSignature = withAuth(
     ctx,
     input: { reviewId: string; projectId: string; capacity: PssrCapacity; signatureData: string },
   ): Promise<{ error?: string }> => {
-    if (!PSSR_CAPACITIES.includes(input.capacity)) return { error: 'Firma no válida' }
+    const t = await getTranslations('ActionErrors')
+    if (!PSSR_CAPACITIES.includes(input.capacity)) return { error: t('pssr.invalidCapacity') }
     const { error } = await ctx.supabase.rpc('sign_pssr', {
       p_review_id: input.reviewId, p_capacity: input.capacity, p_signature_data: input.signatureData,
     })
@@ -360,8 +366,9 @@ export const approvePssrAndIssueRfsu = withAuth(
 export const rejectPssrReview = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: { reviewId: string; projectId: string; reason: string }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const reason = (input.reason ?? '').trim()
-    if (reason.length < 3) return { error: 'Indica el motivo del rechazo' }
+    if (reason.length < 3) return { error: t('pssr.rejectReason') }
     const { error } = await ctx.supabase.rpc('reject_pssr', { p_review_id: input.reviewId, p_reason: reason })
     if (error) return { error: error.message }
 
@@ -462,6 +469,7 @@ export const clonePssrTemplateToActiveOrg = withAuthOnly(
     sourceTemplateId: string,
     options?: { nameSuffix?: string },
   ): Promise<{ id?: string; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const { data: source } = await ctx.supabase
       .from('pssr_templates')
       .select(`
@@ -473,8 +481,8 @@ export const clonePssrTemplateToActiveOrg = withAuthOnly(
       .eq('id', sourceTemplateId)
       .single()
 
-    if (!source) return { error: 'Template origen no encontrado o sin acceso' }
-    if (source.org_id === ctx.orgId) return { error: 'El template ya está en la org activa' }
+    if (!source) return { error: t('pssr.sourceNotFound') }
+    if (source.org_id === ctx.orgId) return { error: t('pssr.alreadyInOrg') }
 
     const newName = `${source.name}${options?.nameSuffix ?? ''}`
 
@@ -486,7 +494,7 @@ export const clonePssrTemplateToActiveOrg = withAuthOnly(
       .maybeSingle()
 
     if (existing) {
-      return { error: `Ya existe un template con nombre "${newName}" en esta org` }
+      return { error: t('pssr.nameExists', { name: newName }) }
     }
 
     const { data: cloned, error: tplErr } = await ctx.supabase
@@ -501,7 +509,7 @@ export const clonePssrTemplateToActiveOrg = withAuthOnly(
       .select('id')
       .single()
 
-    if (tplErr || !cloned) return { error: tplErr?.message ?? 'No se pudo crear el template' }
+    if (tplErr || !cloned) return { error: tplErr?.message ?? t('pssr.createFailed') }
 
     const items = source.pssr_template_items ?? []
     if (items.length > 0) {
@@ -509,7 +517,7 @@ export const clonePssrTemplateToActiveOrg = withAuthOnly(
       const { error: itemErr } = await ctx.supabase
         .from('pssr_template_items')
         .insert(itemRows)
-      if (itemErr) return { error: `Template clonado pero items fallaron: ${itemErr.message}` }
+      if (itemErr) return { error: t('pssr.cloneItemsFailed', { detail: itemErr.message }) }
     }
 
     revalidatePath('/admin/templates/pssr')

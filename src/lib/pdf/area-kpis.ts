@@ -9,6 +9,8 @@ import {
   sanitize, truncateToWidth,
   type Color,
 } from './renderer'
+import { getTranslations } from 'next-intl/server'
+import { todayIn } from '@/lib/time/zone'
 
 export type AreaSystemTopEntry = {
   code: string
@@ -31,6 +33,8 @@ export type AreaKpisData = {
   projectName: string
   projectCode: string
   projectClient: string | null
+  /** Zona del proyecto: define la fecha «Generado» (el Worker corre en UTC). */
+  timezone?: string | null
   areas: AreaKpisRow[]
 }
 
@@ -39,12 +43,14 @@ function pct(part: number, total: number): number {
 }
 
 export async function renderAreaKpisPdf(data: AreaKpisData): Promise<Uint8Array> {
+  // V3: reporte en el idioma de quien descarga.
+  const t = await getTranslations('PdfReports')
   const r = await Renderer.create()
-  r.doc.setTitle(`Area KPIs · ${data.projectCode}`)
+  r.doc.setTitle(`${t('areaKpis.short')} · ${data.projectCode}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('Area KPIs Report')
+  r.doc.setSubject(t('areaKpis.title'))
 
-  const generatedAt = new Date().toISOString().slice(0, 10)
+  const generatedAt = todayIn(data.timezone)
 
   // Global aggregates (sum across areas)
   const totals = data.areas.reduce(
@@ -74,12 +80,12 @@ export async function renderAreaKpisPdf(data: AreaKpisData): Promise<Uint8Array>
     page.drawText(sanitize(`CommUp · ${data.projectCode}`), {
       x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const centerText = sanitize(`Generated: ${generatedAt}`)
+    const centerText = sanitize(t('common.generated', { date: generatedAt }))
     const centerW = r.fontRegular.widthOfTextAtSize(centerText, 7)
     page.drawText(centerText, {
       x: (A4_W - centerW) / 2, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty,
     })
-    const pageStr = `Page ${pageNum} / `
+    const pageStr = `${t('common.page', { n: pageNum })} / `
     const pageStrW = r.fontRegular.widthOfTextAtSize(pageStr, 7)
     const totalX = A4_W - MARGIN - 12
     page.drawText(pageStr, {
@@ -95,14 +101,14 @@ export async function renderAreaKpisPdf(data: AreaKpisData): Promise<Uint8Array>
   r.y = A4_H - MARGIN - 8
   r.drawTextCentered('CommUp', { y: r.y - 18, size: 18, bold: true, color: COLOR.purple })
   r.moveY(22)
-  r.drawTextCentered('Area KPIs Report', { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
+  r.drawTextCentered(t('areaKpis.title'), { y: r.y - 13, size: 13, bold: true, color: COLOR.text })
   r.moveY(15)
   r.drawTextCentered(`${data.projectCode} — ${data.projectName}`, {
     y: r.y - 11, size: 11, bold: true, color: COLOR.text, maxWidth: CONTENT_W,
   })
   r.moveY(13)
   if (data.projectClient) {
-    r.drawTextCentered(`Client: ${data.projectClient}`, {
+    r.drawTextCentered(t('common.client', { name: data.projectClient }), {
       y: r.y - 10, size: 10, oblique: true, color: COLOR.muted, maxWidth: CONTENT_W,
     })
     r.moveY(12)
@@ -113,11 +119,11 @@ export async function renderAreaKpisPdf(data: AreaKpisData): Promise<Uint8Array>
 
   // ─── Project-level summary cards ──────────────────────────────────────────
   r.infoCardRow([
-    { label: 'Areas',            value: String(data.areas.length) },
-    { label: 'Tags',             value: String(totals.tags) },
-    { label: 'ITRs Approved',    value: `${totals.approved} / ${totals.itrs}`, sub: `${overallPct}%` },
-    { label: 'Certs Issued',     value: `${totals.certsIssued} / ${totals.certsTotal}` },
-    { label: 'Open Punches',     value: String(totalOpenPunches), sub: `A:${totals.openA} B:${totals.openB} C:${totals.openC}` },
+    { label: t('areaKpis.areas'),        value: String(data.areas.length) },
+    { label: t('common.tags'),           value: String(totals.tags) },
+    { label: t('common.itrsApproved'),   value: `${totals.approved} / ${totals.itrs}`, sub: `${overallPct}%` },
+    { label: t('areaKpis.certsShort'),   value: `${totals.certsIssued} / ${totals.certsTotal}` },
+    { label: t('common.openPunches'),    value: String(totalOpenPunches), sub: `A:${totals.openA} B:${totals.openB} C:${totals.openC}` },
   ])
 
   // Overall progress bar
@@ -125,7 +131,7 @@ export async function renderAreaKpisPdf(data: AreaKpisData): Promise<Uint8Array>
   const barTop = r.y
   const barH = 10
   const barY = barTop - 14 - barH
-  r.drawText('Overall Progress (Approved ITRs)', {
+  r.drawText(t('common.overallProgress'), {
     x: MARGIN, y: barTop - 10, size: 8, bold: true, color: COLOR.muted,
   })
   r.drawTextRight(`${overallPct}%`, {
@@ -140,10 +146,10 @@ export async function renderAreaKpisPdf(data: AreaKpisData): Promise<Uint8Array>
   r.y = barY - 4
 
   // ─── Per-area detail ──────────────────────────────────────────────────────
-  r.accentSection('Area Detail')
+  r.accentSection(t('areaKpis.detail'))
 
   if (data.areas.length === 0) {
-    r.empty('No areas configured for this project.')
+    r.empty(t('areaKpis.empty'))
   }
 
   for (const area of data.areas) {
@@ -188,15 +194,15 @@ export async function renderAreaKpisPdf(data: AreaKpisData): Promise<Uint8Array>
     const cellW = innerW / 5
     const statY = top - 38
     const cells = [
-      { label: 'TAGS',          value: String(area.tagCount),                color: COLOR.text },
-      { label: 'ITRS TOTAL',    value: String(area.itrs.total),              color: COLOR.text },
-      { label: 'COMPLETED',     value: String(area.itrs.completed),          color: COLOR.amber },
-      { label: 'APPROVED',      value: `${area.itrs.approved} (${areaPct}%)`, color: COLOR.greenStrong },
-      { label: 'CERTS ISSUED',  value: `${area.certs.issued}/${area.certs.total}`, color: COLOR.text },
+      { label: t('common.tags'),         value: String(area.tagCount),                color: COLOR.text },
+      { label: t('common.itrsTotal'),    value: String(area.itrs.total),              color: COLOR.text },
+      { label: t('common.completed'),    value: String(area.itrs.completed),          color: COLOR.amber },
+      { label: t('common.approved'),     value: `${area.itrs.approved} (${areaPct}%)`, color: COLOR.greenStrong },
+      { label: t('common.certsIssued'),  value: `${area.certs.issued}/${area.certs.total}`, color: COLOR.text },
     ]
     cells.forEach((c, i) => {
       const cx = innerX + cellW * i
-      r.page.drawText(sanitize(c.label), {
+      r.page.drawText(sanitize(c.label.toUpperCase()), {
         x: cx, y: statY, size: 7, font: r.fontBold, color: COLOR.muted,
       })
       const v = truncateToWidth(c.value, r.fontBold, 12, cellW - 4)
@@ -235,7 +241,7 @@ export async function renderAreaKpisPdf(data: AreaKpisData): Promise<Uint8Array>
     // Top systems drill-down
     if (topRows > 0) {
       const topYStart = top - baseH - 4
-      r.page.drawText('TOP SYSTEMS BY OPEN PUNCHES', {
+      r.page.drawText(sanitize(t('areaKpis.topSystems').toUpperCase()), {
         x: innerX, y: topYStart, size: 7, font: r.fontBold, color: COLOR.muted,
       })
       let ty = topYStart - 12

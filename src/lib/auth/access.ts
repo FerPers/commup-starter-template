@@ -15,21 +15,29 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 type Db = SupabaseClient
 
 export type AccessOk = { ok: true }
-export type AccessFail = { ok: false; error: string; reason: 'not_found' | 'invalid' }
+/** V3: recurso que falló; las acciones lo traducen con `accessError` (`src/lib/i18n/action-errors.ts`), la API usa `error`. */
+export type AccessResource = 'project' | 'subsystem' | 'system' | 'systems' | 'discipline' | 'equipment_type' | 'tag' | 'template' | 'phase'
+export type AccessFail = { ok: false; error: string; reason: 'not_found' | 'invalid'; resource: AccessResource }
 export type AccessResult = AccessOk | AccessFail
 
 const OK: AccessOk = { ok: true }
 
-function notFound(resource: string): AccessFail {
+const LABEL: Record<AccessResource, string> = {
+  project: 'Project', subsystem: 'Subsystem', system: 'System', systems: 'Systems', discipline: 'Discipline',
+  equipment_type: 'Equipment type', tag: 'Tag', template: 'ITR template', phase: 'Phase',
+}
+
+function notFound(resource: AccessResource): AccessFail {
   return {
     ok: false,
-    error: `${resource} not found or not accessible`,
+    error: `${LABEL[resource]} not found or not accessible`,
     reason: 'not_found',
+    resource,
   }
 }
 
-function invalid(message: string): AccessFail {
-  return { ok: false, error: message, reason: 'invalid' }
+function invalid(resource: AccessResource, message: string): AccessFail {
+  return { ok: false, error: message, reason: 'invalid', resource }
 }
 
 // ── Project (org-scoped) ─────────────────────────────────────────────────────
@@ -45,7 +53,7 @@ export async function checkProjectAccess(
     .eq('id', projectId)
     .eq('org_id', orgId)
     .maybeSingle()
-  return data ? OK : notFound('Project')
+  return data ? OK : notFound('project')
 }
 
 // ── Subsystem (project-scoped) ───────────────────────────────────────────────
@@ -61,7 +69,7 @@ export async function checkSubsystemAccess(
     .eq('id', subsystemId)
     .eq('project_id', projectId)
     .maybeSingle()
-  return data ? OK : notFound('Subsystem')
+  return data ? OK : notFound('subsystem')
 }
 
 // ── System (project-scoped) ──────────────────────────────────────────────────
@@ -77,7 +85,7 @@ export async function checkSystemAccess(
     .eq('id', systemId)
     .eq('project_id', projectId)
     .maybeSingle()
-  return data ? OK : notFound('System')
+  return data ? OK : notFound('system')
 }
 
 export async function checkSystemsAccess(
@@ -95,7 +103,7 @@ export async function checkSystemsAccess(
   const found = new Set((data ?? []).map(r => r.id as string))
   const missing = unique.filter(id => !found.has(id))
   if (missing.length > 0) {
-    return invalid(`Systems not found in project: ${missing.join(', ')}`)
+    return invalid('systems', `Systems not found in project: ${missing.join(', ')}`)
   }
   return OK
 }
@@ -113,7 +121,7 @@ export async function checkDisciplineAccess(
     .eq('id', disciplineId)
     .eq('org_id', orgId)
     .maybeSingle()
-  return data ? OK : notFound('Discipline')
+  return data ? OK : notFound('discipline')
 }
 
 // ── Equipment type (org-scoped) ──────────────────────────────────────────────
@@ -130,7 +138,7 @@ export async function checkEquipmentTypeAccess(
     .eq('id', equipmentTypeId)
     .eq('org_id', orgId)
     .maybeSingle()
-  return data ? OK : notFound('Equipment type')
+  return data ? OK : notFound('equipment_type')
 }
 
 // ── Tag (project-scoped) ─────────────────────────────────────────────────────
@@ -146,7 +154,7 @@ export async function checkTagAccess(
     .eq('id', tagId)
     .eq('project_id', projectId)
     .maybeSingle()
-  return data ? OK : notFound('Tag')
+  return data ? OK : notFound('tag')
 }
 
 // ── ITR template (org-scoped; is_global also accepted) ───────────────────────
@@ -161,9 +169,9 @@ export async function checkTemplateAccess(
     .select('id, org_id, is_global')
     .eq('id', templateId)
     .maybeSingle()
-  if (!data) return notFound('ITR template')
+  if (!data) return notFound('template')
   if (data.org_id === orgId || data.is_global === true) return OK
-  return notFound('ITR template')
+  return notFound('template')
 }
 
 // ── Project phase (org-scoped) ───────────────────────────────────────────────
@@ -179,5 +187,5 @@ export async function checkPhaseAccess(
     .eq('id', phaseId)
     .eq('org_id', orgId)
     .maybeSingle()
-  return data ? OK : notFound('Phase')
+  return data ? OK : notFound('phase')
 }

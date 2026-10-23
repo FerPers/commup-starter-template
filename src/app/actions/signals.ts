@@ -5,6 +5,7 @@
 // patch parcial y rastro en activity_log con el antes y el después.
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
@@ -17,6 +18,7 @@ export const updateSignalChain = withAuth(
     ctx,
     input: { projectId: string; signalId: string; patch: Partial<Record<SignalEditable, string | number | null>> },
   ): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const patch: Record<string, string | number | null> = {}
     for (const key of SIGNAL_EDITABLE) {
       if (!(key in input.patch)) continue
@@ -24,7 +26,7 @@ export const updateSignalChain = withAuth(
       if (key === 'range_min' || key === 'range_max') {
         if (raw === null || raw === '') { patch[key] = null; continue }
         const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'))
-        if (!Number.isFinite(n)) return { error: 'El rango debe ser numérico' }
+        if (!Number.isFinite(n)) return { error: t('signals.rangeNumeric') }
         patch[key] = n
       } else {
         const s = String(raw ?? '').trim()
@@ -40,7 +42,7 @@ export const updateSignalChain = withAuth(
       .eq('tags.project_id', input.projectId)
       .maybeSingle()
     if (readErr) return { error: readErr.message }
-    if (!before) return { error: 'Señal no encontrada' }
+    if (!before) return { error: t('signals.notFound') }
 
     const { error } = await ctx.supabase.from('signals').update(patch as TablesUpdate<'signals'>).eq('id', input.signalId)
     if (error) return { error: error.message }

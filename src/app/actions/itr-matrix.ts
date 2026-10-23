@@ -3,9 +3,10 @@
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
-import { isAiConfigured, AI_NOT_CONFIGURED } from '@/lib/ai/claude'
+import { isAiConfigured, aiNotConfigured } from '@/lib/ai/claude'
 import { runAi } from '@/lib/ai/run'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
@@ -154,17 +155,18 @@ export interface GenerateResult {
 export const generateMatrixWithAi = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, equipmentTypeIds: string[]): Promise<{ result?: GenerateResult; error?: string }> => {
-    if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED }
+    const t = await getTranslations('ActionErrors')
+    if (!isAiConfigured()) return { error: await aiNotConfigured() }
     const ids = [...new Set(equipmentTypeIds)].slice(0, MAX_TYPES_PER_CALL)
-    if (ids.length === 0) return { error: 'No hay tipos de equipo para procesar' }
+    if (ids.length === 0) return { error: t('itrMatrix.noTypes') }
 
     const [{ data: types }, { data: phases }, templates] = await Promise.all([
       ctx.supabase.from('equipment_types').select('id, code, name, category').eq('org_id', ctx.orgId).in('id', ids),
       ctx.supabase.from('project_phases').select('code, name, order_index').eq('org_id', ctx.orgId).order('order_index'),
       loadTemplates(ctx),
     ])
-    if (!types?.length) return { error: 'Tipos de equipo no encontrados en la organización' }
-    if (templates.length === 0) return { error: 'La organización no tiene plantillas ITR activas. Importa el catálogo primero.' }
+    if (!types?.length) return { error: t('itrMatrix.typesNotFound') }
+    if (templates.length === 0) return { error: t('itrMatrix.noActiveTemplates') }
 
     const phasesText = (phases ?? []).map(p => `${p.code} = ${p.name}`).join('; ')
     const typesText = types.map(t => `${t.code} | ${t.name}${t.category ? ` | categoría ${t.category}` : ''}`).join('\n')
@@ -186,9 +188,9 @@ export const generateMatrixWithAi = withAuthOnly(
     }))
     if (!run.response) return { error: run.error }
     const response = run.response
-    if (response.stop_reason === 'max_tokens') return { error: 'La respuesta quedó incompleta: procesa menos tipos de equipo por vez.' }
+    if (response.stop_reason === 'max_tokens') return { error: t('itrMatrix.truncated') }
     const parsed = response.parsed_output
-    if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
+    if (!parsed) return { error: t('itrMatrix.aiUnparseable') }
 
     const typeByCode = new Map(types.map(t => [t.code.toUpperCase(), t.id]))
     const templateByCode = new Map(templates.map(t => [t.code.toUpperCase(), t.id]))
@@ -322,6 +324,7 @@ export interface MatrixImportResult {
 export const importMatrixRows = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, rows: MatrixImportRow[]): Promise<{ result?: MatrixImportResult; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const result: MatrixImportResult = { imported: 0, updated: 0, skipped: 0, errors: [] }
     const [{ data: types }, { data: templates }, { data: existing }] = await Promise.all([
       ctx.supabase.from('equipment_types').select('id, code').eq('org_id', ctx.orgId),
@@ -336,8 +339,8 @@ export const importMatrixRows = withAuthOnly(
     rows.forEach((r, i) => {
       const typeId = typeByCode.get(r.equipment_type_code.trim().toUpperCase())
       const templateId = templateByCode.get(r.template_code.trim().toUpperCase())
-      if (!typeId) { result.errors.push({ row: i + 2, reason: `Tipo de equipo "${r.equipment_type_code}" no existe en la org` }); result.skipped++; return }
-      if (!templateId) { result.errors.push({ row: i + 2, reason: `Plantilla "${r.template_code}" no existe en la org` }); result.skipped++; return }
+      if (!typeId) { result.errors.push({ row: i + 2, reason: t('itrMatrix.importTypeNotFound', { code: r.equipment_type_code }) }); result.skipped++; return }
+      if (!templateId) { result.errors.push({ row: i + 2, reason: t('itrMatrix.importTemplateNotFound', { code: r.template_code }) }); result.skipped++; return }
       const key = `${typeId}|${templateId}`
       const parts = [r.required === false ? 'Opcional' : 'Obligatorio', textOrNull(r.condition), textOrNull(r.notes)].filter(Boolean)
       payload.set(key, {

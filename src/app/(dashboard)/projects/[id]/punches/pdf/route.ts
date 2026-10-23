@@ -1,6 +1,7 @@
 import { fetchAllRows } from '@/lib/list/fetch-all'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { renderPunchListPdf, type PunchListPdfData, type PunchPdfRow } from '@/lib/pdf/punch-list'
+import { todayIn } from '@/lib/time/zone'
 import { loadPdfBranding } from '@/lib/pdf/branding'
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +29,7 @@ export async function GET(
   ] = await Promise.all([
     supabase
       .from('projects')
-      .select('id, code, name, client')
+      .select('id, code, name, client, timezone')
       .eq('id', projectId)
       .eq('org_id', orgId)
       .single(),
@@ -76,13 +77,14 @@ export async function GET(
     projectName: project.name,
     projectCode: project.code,
     projectClient: project.client ?? null,
+    timezone: project.timezone,
     punches: rows,
     branding: await loadPdfBranding(supabase, projectId),
   }
 
   const bytes = await renderPunchListPdf(reportData)
   const safeCode = project.code.replace(/[^a-zA-Z0-9-]/g, '_')
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayIn(project.timezone)
   const filename = `${safeCode}-punch-list-${today}.pdf`
 
   return new Response(bytes as BodyInit, {

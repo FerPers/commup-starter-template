@@ -3,10 +3,11 @@
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
-import { AI_NOT_CONFIGURED, isAiConfigured } from '@/lib/ai/claude'
+import { aiNotConfigured, isAiConfigured } from '@/lib/ai/claude'
 import { runAi } from '@/lib/ai/run'
 import { reconcileSuggestions, type ReconciledSuggestions } from '@/lib/systems/ai'
 import { DEPENDENCY_KINDS, SYSTEM_TYPES, defaultDependencyGates, type DependencyKind, type SystemType } from '@/lib/systems/dependencies'
@@ -57,7 +58,8 @@ type SystemRow = { id: string; code: string; name: string; system_type: SystemTy
 export const suggestSystemization = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project' as const, field: 'projectId' }] },
   async (ctx, input: { projectId: string }): Promise<{ suggestions?: ReconciledSuggestions; truncated?: boolean; error?: string }> => {
-    if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED }
+    if (!isAiConfigured()) return { error: await aiNotConfigured() }
+    const te = await getTranslations('ActionErrors')
 
     const [{ data: sysData }, { data: subs }, { data: tags }, { data: deps }] = await Promise.all([
       ctx.supabase.from('systems').select('id, code, name, system_type, priority, areas(code, name)').eq('project_id', input.projectId).order('code'),
@@ -70,7 +72,7 @@ export const suggestSystemization = withAuth(
       const area = s.areas as { code: string; name: string } | null
       return { id: s.id, code: s.code, name: s.name, system_type: s.system_type as SystemType | null, priority: s.priority, area: area ? `${area.code} — ${area.name}` : '' }
     })
-    if (!all.length) return { error: 'El proyecto no tiene sistemas. Importa la jerarquía primero.' }
+    if (!all.length) return { error: te('systemsAi.noSystems') }
     const systems = all.slice(0, MAX_SYSTEMS_PER_CALL)
 
     const systemOfSub = new Map((subs ?? []).map(s => [s.id, s.system_id]))
@@ -108,7 +110,7 @@ export const suggestSystemization = withAuth(
     if (!run.response) return { error: run.error }
     const response = run.response
     const parsed = response.parsed_output
-    if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
+    if (!parsed) return { error: te('systemsAi.aiUnparsable') }
 
     const suggestions = reconcileSuggestions(parsed, all, deps ?? [])
     await logActivity(ctx.supabase, {
@@ -132,8 +134,9 @@ export const applySystemSuggestions = withAuth(
       dependencies: { systemId: string; providerId: string; kind: DependencyKind; notes?: string }[]
     },
   ): Promise<ApplySuggestionsResult> => {
+    const t = await getTranslations('ActionErrors')
     const result: ApplySuggestionsResult = { systemsUpdated: 0, dependenciesCreated: 0, errors: [] }
-    if (input.attributes.length + input.dependencies.length > 500) return { ...result, error: 'Demasiadas sugerencias en una sola aplicación' }
+    if (input.attributes.length + input.dependencies.length > 500) return { ...result, error: t('systemsAi.tooMany', { max: 500 }) }
 
     const [{ data: systems }, { data: gates }] = await Promise.all([
       ctx.supabase.from('systems').select('id, code').eq('project_id', input.projectId),
@@ -142,9 +145,9 @@ export const applySystemSuggestions = withAuth(
     const codeOf = new Map((systems ?? []).map(s => [s.id, s.code]))
 
     for (const a of input.attributes) {
-      if (!codeOf.has(a.systemId)) { result.errors.push('Sistema fuera del proyecto'); continue }
+      if (!codeOf.has(a.systemId)) { result.errors.push(t('systemsAi.systemOutside')); continue }
       if (!SYSTEM_TYPES.includes(a.system_type) || !(Number.isInteger(a.priority) && a.priority >= 1 && a.priority <= 5)) {
-        result.errors.push(`${codeOf.get(a.systemId)}: tipo o prioridad no válidos`); continue
+        result.errors.push(t('systemsAi.typeOrPriorityInvalid', { code: codeOf.get(a.systemId) ?? '' })); continue
       }
       const name = a.name?.trim().slice(0, 200)
       const { error } = await ctx.supabase.from('systems')
@@ -155,10 +158,10 @@ export const applySystemSuggestions = withAuth(
     }
 
     for (const d of input.dependencies) {
-      if (!codeOf.has(d.systemId) || !codeOf.has(d.providerId)) { result.errors.push('Sistema fuera del proyecto'); continue }
-      if (!DEPENDENCY_KINDS.includes(d.kind)) { result.errors.push('Tipo de dependencia no válido'); continue }
+      if (!codeOf.has(d.systemId) || !codeOf.has(d.providerId)) { result.errors.push(t('systemsAi.systemOutside')); continue }
+      if (!DEPENDENCY_KINDS.includes(d.kind)) { result.errors.push(t('systemsAi.dependencyKindInvalid')); continue }
       const def = defaultDependencyGates(d.kind, gates ?? [])
-      if (!def) { result.errors.push('La organización no tiene gates activos'); break }
+      if (!def) { result.errors.push(t('systemsAi.noActiveGates')); break }
       const { error } = await ctx.supabase.from('system_dependencies').insert({
         org_id: ctx.orgId,
         project_id: input.projectId,

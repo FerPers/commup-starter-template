@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 
@@ -22,8 +23,8 @@ function revalidate(projectId: string, systemId?: string) {
 
 type DateInput = { projectId: string; systemId: string; gateId: string; date: string | null; reason?: string }
 
-function badDate(date: string | null): string | null {
-  return date !== null && !ISO.test(date) ? 'Fecha no válida' : null
+function badDate(t: Awaited<ReturnType<typeof getTranslations>>, date: string | null): string | null {
+  return date !== null && !ISO.test(date) ? t('planning.invalidDate') : null
 }
 
 // Los tipos generados no admiten null en p_date, aunque SQL sí (null = quitar la fecha).
@@ -32,7 +33,8 @@ const nullableDate = (v: string | null) => v as unknown as string
 export const setGateForecast = withAuth(
   { guards: systemGuards },
   async (ctx, input: DateInput): Promise<{ error?: string }> => {
-    const bad = badDate(input.date)
+    const t = await getTranslations('ActionErrors')
+    const bad = badDate(t, input.date)
     if (bad) return { error: bad }
     const { error } = await ctx.supabase.rpc('set_gate_forecast', {
       p_system_id: input.systemId, p_gate_id: input.gateId, p_date: nullableDate(input.date),
@@ -47,7 +49,8 @@ export const setGateForecast = withAuth(
 export const setGateCommitment = withAuth(
   { guards: systemGuards },
   async (ctx, input: DateInput): Promise<{ error?: string }> => {
-    const bad = badDate(input.date)
+    const t = await getTranslations('ActionErrors')
+    const bad = badDate(t, input.date)
     if (bad) return { error: bad }
     const { error } = await ctx.supabase.rpc('set_gate_commitment', {
       p_system_id: input.systemId, p_gate_id: input.gateId, p_date: nullableDate(input.date),
@@ -72,15 +75,16 @@ export const saveGatePlanBatch = withAuth(
       changes: { systemId: string; gateId: string; field: 'forecast' | 'commitment'; date: string | null; reason?: string }[]
     },
   ): Promise<{ saved: number; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const changes = (input.changes ?? []).slice(0, 500)
     const systemIds = [...new Set(changes.map(c => c.systemId))]
     if (systemIds.length > 0) {
       const { data } = await ctx.supabase.from('systems').select('id').eq('project_id', input.projectId).in('id', systemIds)
-      if ((data ?? []).length !== systemIds.length) return { saved: 0, error: 'Hay sistemas que no pertenecen al proyecto' }
+      if ((data ?? []).length !== systemIds.length) return { saved: 0, error: t('access.invalid', { resource: 'systems' }) }
     }
     let saved = 0
     for (const c of changes) {
-      const bad = badDate(c.date)
+      const bad = badDate(t, c.date)
       if (bad) return { saved, error: bad }
       const reason = c.reason?.trim() ? c.reason.trim().slice(0, 2000) : undefined
       const { error } = c.field === 'forecast'
@@ -98,9 +102,10 @@ export const saveGatePlanBatch = withAuth(
 export const setGateWeights = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, input: { weights: { gateId: string; weight: number | null }[] }): Promise<{ error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const weights = (input.weights ?? []).slice(0, 100)
     if (weights.some(w => w.weight !== null && (!Number.isFinite(w.weight) || w.weight < 0 || w.weight > 1000))) {
-      return { error: 'Peso fuera de rango (0–1000)' }
+      return { error: t('planning.weightRange', { max: 1000 }) }
     }
     const { error } = await ctx.supabase.rpc('set_gate_weights', {
       p_org_id: ctx.orgId,

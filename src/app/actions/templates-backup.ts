@@ -5,6 +5,7 @@ import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
@@ -31,13 +32,14 @@ import type { Enums, Json } from '@/types/supabase.generated'
 async function buildFullBackup(
   ctx: ActiveContext,
 ): Promise<{ backup?: TemplatesBackup; error?: string }> {
+  const t = await getTranslations('ActionErrors')
   const { data: org } = await ctx.supabase
     .from('organizations')
     .select('id, name, slug')
     .eq('id', ctx.orgId)
     .maybeSingle()
 
-  if (!org) return { error: 'Org no encontrada' }
+  if (!org) return { error: t('templatesBackup.orgNotFound') }
 
   // ── ITR templates ──────────────────────────────────────
   const { data: itrRaw, error: itrErr } = await ctx.supabase
@@ -59,7 +61,7 @@ async function buildFullBackup(
     .eq('org_id', ctx.orgId)
     .order('code')
 
-  if (itrErr) return { error: `ITR templates: ${itrErr.message}` }
+  if (itrErr) return { error: t('templatesBackup.exportFailed', { part: 'itr', detail: itrErr.message }) }
 
   const itr_templates: ItrTemplateBackup[] = (itrRaw ?? []).map(t => {
     const disc = t.disciplines as { code: string } | { code: string }[] | null
@@ -136,7 +138,7 @@ async function buildFullBackup(
     .eq('org_id', ctx.orgId)
     .order('code')
 
-  if (presErr) return { error: `Preservation: ${presErr.message}` }
+  if (presErr) return { error: t('templatesBackup.exportFailed', { part: 'preservation', detail: presErr.message }) }
 
   const preservation_procedures: PreservationProcedureBackup[] = (presRaw ?? []).map(p => {
     const disc = p.disciplines as { code: string } | { code: string }[] | null
@@ -178,7 +180,7 @@ async function buildFullBackup(
     .eq('org_id', ctx.orgId)
     .order('name')
 
-  if (pssrErr) return { error: `PSSR: ${pssrErr.message}` }
+  if (pssrErr) return { error: t('templatesBackup.exportFailed', { part: 'pssr', detail: pssrErr.message }) }
 
   const pssr_templates: PssrTemplateBackup[] = (pssrRaw ?? []).map(t => {
     const items = ([...(t.pssr_template_items ?? [])] as Array<Record<string, unknown>>)
@@ -223,15 +225,16 @@ export const exportAllTemplates = withAuthOnly(
 export const exportItrTemplate = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, templateId: string): Promise<{ backup?: TemplatesBackup; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const all = await buildFullBackup(ctx)
-    if (all.error || !all.backup) return { error: all.error ?? 'Error' }
+    if (all.error || !all.backup) return { error: all.error ?? t('templatesBackup.backupFailed') }
     const { data: row } = await ctx.supabase
       .from('itr_templates')
       .select('code')
       .eq('id', templateId)
       .eq('org_id', ctx.orgId)
       .maybeSingle()
-    if (!row) return { error: 'Template no encontrado' }
+    if (!row) return { error: t('itrInstances.templateNotFound') }
     const filtered = all.backup.itr_templates.filter(t => t.code === row.code)
     return {
       backup: { ...all.backup, itr_templates: filtered, preservation_procedures: [], pssr_templates: [] },
@@ -242,15 +245,16 @@ export const exportItrTemplate = withAuthOnly(
 export const exportPreservationProcedure = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, procedureId: string): Promise<{ backup?: TemplatesBackup; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const all = await buildFullBackup(ctx)
-    if (all.error || !all.backup) return { error: all.error ?? 'Error' }
+    if (all.error || !all.backup) return { error: all.error ?? t('templatesBackup.backupFailed') }
     const { data: row } = await ctx.supabase
       .from('preservation_procedures')
       .select('code')
       .eq('id', procedureId)
       .eq('org_id', ctx.orgId)
       .maybeSingle()
-    if (!row) return { error: 'Procedimiento no encontrado' }
+    if (!row) return { error: t('templatesBackup.procedureNotFound') }
     const filtered = all.backup.preservation_procedures.filter(p => p.code === row.code)
     return {
       backup: { ...all.backup, itr_templates: [], preservation_procedures: filtered, pssr_templates: [] },
@@ -261,15 +265,16 @@ export const exportPreservationProcedure = withAuthOnly(
 export const exportPssrTemplate = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, templateId: string): Promise<{ backup?: TemplatesBackup; error?: string }> => {
+    const t = await getTranslations('ActionErrors')
     const all = await buildFullBackup(ctx)
-    if (all.error || !all.backup) return { error: all.error ?? 'Error' }
+    if (all.error || !all.backup) return { error: all.error ?? t('templatesBackup.backupFailed') }
     const { data: row } = await ctx.supabase
       .from('pssr_templates')
       .select('name')
       .eq('id', templateId)
       .eq('org_id', ctx.orgId)
       .maybeSingle()
-    if (!row) return { error: 'Template PSSR no encontrado' }
+    if (!row) return { error: t('templatesBackup.pssrTemplateNotFound') }
     const filtered = all.backup.pssr_templates.filter(t => t.name === row.name)
     return {
       backup: { ...all.backup, itr_templates: [], preservation_procedures: [], pssr_templates: filtered },
@@ -289,7 +294,8 @@ export const exportPssrTemplate = withAuthOnly(
 export const previewRestoreTaxonomy = withAuthOnly(
   { role: EDITOR_ROLES },
   async (ctx, payload: unknown): Promise<{ preview?: TaxonomyPreview; error?: string }> => {
-    if (!isValidBackup(payload)) return { error: 'Formato de backup inválido' }
+    const te = await getTranslations('ActionErrors')
+    if (!isValidBackup(payload)) return { error: te('templatesBackup.invalidFormat') }
     const backup = payload
 
     const neededDiscs = new Set<string>()
@@ -345,6 +351,7 @@ export const createMissingTaxonomy = withAuth(
     errors?: string[]
     error?: string
   }> => {
+    const t = await getTranslations('ActionErrors')
     const errors: string[] = []
     const created = { disciplines: 0, phases: 0, equipmentTypes: 0 }
 
@@ -362,7 +369,7 @@ export const createMissingTaxonomy = withAuth(
       const { error, count } = await ctx.supabase
         .from('disciplines')
         .insert(rows, { count: 'exact' })
-      if (error) errors.push(`Disciplinas: ${error.message}`)
+      if (error) errors.push(t('templatesBackup.taxonomyFailed', { kind: 'disciplines', detail: error.message }))
       else created.disciplines = count ?? rows.length
     }
 
@@ -399,7 +406,7 @@ export const createMissingTaxonomy = withAuth(
       const { error, count } = await ctx.supabase
         .from('project_phases')
         .insert(rows, { count: 'exact' })
-      if (error) errors.push(`Fases: ${error.message}`)
+      if (error) errors.push(t('templatesBackup.taxonomyFailed', { kind: 'phases', detail: error.message }))
       else created.phases = count ?? rows.length
     }
 
@@ -414,7 +421,7 @@ export const createMissingTaxonomy = withAuth(
       const { error, count } = await ctx.supabase
         .from('equipment_types')
         .insert(rows, { count: 'exact' })
-      if (error) errors.push(`Equipment types: ${error.message}`)
+      if (error) errors.push(t('templatesBackup.taxonomyFailed', { kind: 'equipment_types', detail: error.message }))
       else created.equipmentTypes = count ?? rows.length
     }
 
@@ -446,7 +453,8 @@ export const restoreTemplatesBackup = withAuthOnly(
     payload: unknown,
     options: RestoreOptions = {},
   ): Promise<{ result?: RestoreResult; error?: string }> => {
-    if (!isValidBackup(payload)) return { error: 'Formato de backup inválido' }
+    const te = await getTranslations('ActionErrors')
+    if (!isValidBackup(payload)) return { error: te('templatesBackup.invalidFormat') }
     const backup = payload
 
     const skipDuplicates = options.skipDuplicates ?? true
@@ -485,17 +493,17 @@ export const restoreTemplatesBackup = withAuthOnly(
             !validateOptionOutcomes(item.options, item.option_outcomes ?? {}) ||
             (item.item_type !== 'select' && Object.keys(item.option_outcomes ?? {}).length > 0)))
           if (invalidOutcomes) {
-            result.itr.errors.push(`${t.code}: resultados de selección inválidos`)
+            result.itr.errors.push(te('templatesBackup.rowOutcomesInvalid', { code: t.code }))
             result.itr.skipped++
             continue
           }
           if (!t.discipline_code || !discByCode.has(t.discipline_code)) {
-            result.itr.errors.push(`${t.code}: falta disciplina "${t.discipline_code ?? '—'}" en la org activa`)
+            result.itr.errors.push(te('templatesBackup.rowMissingDiscipline', { code: t.code, discipline: t.discipline_code ?? '—' }))
             result.itr.skipped++
             continue
           }
           if (!t.phase_code || !phaseByCode.has(t.phase_code)) {
-            result.itr.errors.push(`${t.code}: falta fase "${t.phase_code ?? '—'}" en la org activa`)
+            result.itr.errors.push(te('templatesBackup.rowMissingPhase', { code: t.code, phase: t.phase_code ?? '—' }))
             result.itr.skipped++
             continue
           }
@@ -505,7 +513,7 @@ export const restoreTemplatesBackup = withAuthOnly(
             if (skipDuplicates) { result.itr.skipped++; continue }
             code = `${t.code}${suffix}`
             if (existingItrCodes.has(code)) {
-              result.itr.errors.push(`${t.code}: código "${code}" ya existe — omitido`)
+              result.itr.errors.push(te('templatesBackup.rowCodeExists', { code: t.code, newCode: code }))
               result.itr.skipped++
               continue
             }
@@ -528,7 +536,7 @@ export const restoreTemplatesBackup = withAuthOnly(
             .single()
 
           if (tplErr || !newTpl) {
-            result.itr.errors.push(`${t.code}: ${tplErr?.message ?? 'sin id'}`)
+            result.itr.errors.push(te('templatesBackup.rowError', { code: t.code, detail: tplErr?.message ?? te('templatesBackup.noRowReturned') }))
             continue
           }
 
@@ -544,7 +552,7 @@ export const restoreTemplatesBackup = withAuthOnly(
               .select('id')
               .single()
             if (secErr || !newSec) {
-              result.itr.errors.push(`${t.code}: sección "${sec.title}" — ${secErr?.message ?? 'error'}`)
+              result.itr.errors.push(te('templatesBackup.rowSectionFailed', { code: t.code, section: sec.title, detail: secErr?.message ?? te('templatesBackup.noRowReturned') }))
               continue
             }
 
@@ -580,7 +588,7 @@ export const restoreTemplatesBackup = withAuthOnly(
               .select('id, order_index')
 
             if (itErr) {
-              result.itr.errors.push(`${t.code}: items sección "${sec.title}" — ${itErr.message}`)
+              result.itr.errors.push(te('templatesBackup.rowSectionItemsFailed', { code: t.code, section: sec.title, detail: itErr.message }))
               continue
             }
 
@@ -613,7 +621,7 @@ export const restoreTemplatesBackup = withAuthOnly(
           result.itr.created++
           existingItrCodes.add(code)
         } catch (e) {
-          result.itr.errors.push(`${t.code}: ${e instanceof Error ? e.message : 'error inesperado'}`)
+          result.itr.errors.push(te('templatesBackup.rowError', { code: t.code, detail: e instanceof Error ? e.message : te('templatesBackup.unexpected') }))
         }
       }
     }
@@ -629,12 +637,12 @@ export const restoreTemplatesBackup = withAuthOnly(
       for (const p of backup.preservation_procedures) {
         try {
           if (p.discipline_code && !discByCode.has(p.discipline_code)) {
-            result.preservation.errors.push(`${p.code}: falta disciplina "${p.discipline_code}" en la org activa`)
+            result.preservation.errors.push(te('templatesBackup.rowMissingDiscipline', { code: p.code, discipline: p.discipline_code }))
             result.preservation.skipped++
             continue
           }
           if (p.equipment_type_code && !eqtByCode.has(p.equipment_type_code)) {
-            result.preservation.errors.push(`${p.code}: falta tipo de equipo "${p.equipment_type_code}" en la org activa`)
+            result.preservation.errors.push(te('templatesBackup.rowMissingEquipmentType', { code: p.code, equipmentType: p.equipment_type_code }))
             result.preservation.skipped++
             continue
           }
@@ -644,7 +652,7 @@ export const restoreTemplatesBackup = withAuthOnly(
             if (skipDuplicates) { result.preservation.skipped++; continue }
             code = `${p.code}${suffix}`
             if (existingProcCodes.has(code)) {
-              result.preservation.errors.push(`${p.code}: código "${code}" ya existe — omitido`)
+              result.preservation.errors.push(te('templatesBackup.rowCodeExists', { code: p.code, newCode: code }))
               result.preservation.skipped++
               continue
             }
@@ -668,7 +676,7 @@ export const restoreTemplatesBackup = withAuthOnly(
             .single()
 
           if (procErr || !newProc) {
-            result.preservation.errors.push(`${p.code}: ${procErr?.message ?? 'sin id'}`)
+            result.preservation.errors.push(te('templatesBackup.rowError', { code: p.code, detail: procErr?.message ?? te('templatesBackup.noRowReturned') }))
             continue
           }
 
@@ -688,7 +696,7 @@ export const restoreTemplatesBackup = withAuthOnly(
               .from('preservation_procedure_items')
               .insert(rows)
             if (itErr) {
-              result.preservation.errors.push(`${p.code}: items — ${itErr.message}`)
+              result.preservation.errors.push(te('templatesBackup.rowItemsFailed', { code: p.code, detail: itErr.message }))
               continue
             }
           }
@@ -696,7 +704,7 @@ export const restoreTemplatesBackup = withAuthOnly(
           result.preservation.created++
           existingProcCodes.add(code)
         } catch (e) {
-          result.preservation.errors.push(`${p.code}: ${e instanceof Error ? e.message : 'error inesperado'}`)
+          result.preservation.errors.push(te('templatesBackup.rowError', { code: p.code, detail: e instanceof Error ? e.message : te('templatesBackup.unexpected') }))
         }
       }
     }
@@ -716,7 +724,7 @@ export const restoreTemplatesBackup = withAuthOnly(
             if (skipDuplicates) { result.pssr.skipped++; continue }
             name = `${t.name}${suffix}`
             if (existingPssrNames.has(name)) {
-              result.pssr.errors.push(`${t.name}: nombre "${name}" ya existe — omitido`)
+              result.pssr.errors.push(te('templatesBackup.rowNameExists', { code: t.name, newName: name }))
               result.pssr.skipped++
               continue
             }
@@ -735,7 +743,7 @@ export const restoreTemplatesBackup = withAuthOnly(
             .single()
 
           if (tplErr || !newTpl) {
-            result.pssr.errors.push(`${t.name}: ${tplErr?.message ?? 'sin id'}`)
+            result.pssr.errors.push(te('templatesBackup.rowError', { code: t.name, detail: tplErr?.message ?? te('templatesBackup.noRowReturned') }))
             continue
           }
 
@@ -753,7 +761,7 @@ export const restoreTemplatesBackup = withAuthOnly(
               .from('pssr_template_items')
               .insert(rows)
             if (itErr) {
-              result.pssr.errors.push(`${t.name}: items — ${itErr.message}`)
+              result.pssr.errors.push(te('templatesBackup.rowItemsFailed', { code: t.name, detail: itErr.message }))
               continue
             }
           }
@@ -761,7 +769,7 @@ export const restoreTemplatesBackup = withAuthOnly(
           result.pssr.created++
           existingPssrNames.add(name)
         } catch (e) {
-          result.pssr.errors.push(`${t.name}: ${e instanceof Error ? e.message : 'error inesperado'}`)
+          result.pssr.errors.push(te('templatesBackup.rowError', { code: t.name, detail: e instanceof Error ? e.message : te('templatesBackup.unexpected') }))
         }
       }
     }

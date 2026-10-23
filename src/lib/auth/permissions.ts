@@ -10,6 +10,7 @@
  *
  * Anything below EDITOR is read-only by convention.
  */
+import { getTranslations } from 'next-intl/server'
 import { getActiveMembership, type ActiveContext } from '@/lib/supabase/membership'
 
 export { getActiveMembership } from '@/lib/supabase/membership'
@@ -49,7 +50,10 @@ export function isAuthError(result: AuthResult): result is AuthError {
  */
 export async function requireAuth(): Promise<AuthResult> {
   const ctx = await getActiveMembership()
-  if (!ctx) return { error: 'No autenticado' }
+  if (!ctx) {
+    const t = await getTranslations('ActionErrors')
+    return { error: t('auth.unauthenticated') }
+  }
   return ctx
 }
 
@@ -62,7 +66,10 @@ export async function requireRole(
 ): Promise<AuthResult> {
   const ctx = await requireAuth()
   if (isAuthError(ctx)) return ctx
-  if (!allowedRoles.includes(ctx.role)) return { error: 'Sin permisos' }
+  if (!allowedRoles.includes(ctx.role)) {
+    const t = await getTranslations('ActionErrors')
+    return { error: t('auth.forbidden') }
+  }
   return ctx
 }
 

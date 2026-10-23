@@ -1,6 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
+import { accessError } from '@/lib/i18n/action-errors'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { withAuthOnly } from '@/lib/auth/withAuth'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -39,12 +41,13 @@ async function nextOrder(supabase: SupabaseClient<Database>, orgId: string) {
 export const createGate = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, input: { code: string; name: string; phaseId?: string | null }): Promise<Result> => {
+    const t = await getTranslations('ActionErrors')
     const code = cleanCode(input.code)
     const name = input.name.trim()
-    if (!code || !name) return { error: 'Código y nombre son obligatorios' }
+    if (!code || !name) return { error: t('gatesAdmin.codeNameRequired') }
     if (input.phaseId) {
       const access = await checkPhaseAccess(ctx.supabase, ctx.orgId, input.phaseId)
-      if (!access.ok) return { error: access.error }
+      if (!access.ok) return { error: await accessError(access) }
     }
 
     const { data: gate, error } = await ctx.supabase
@@ -59,7 +62,7 @@ export const createGate = withAuthOnly(
       })
       .select('id')
       .single()
-    if (error) return { error: error.code === '23505' ? `Ya existe un gate con código ${code}` : error.message }
+    if (error) return { error: error.code === '23505' ? t('gatesAdmin.codeExists', { code }) : error.message }
 
     const criteria = input.phaseId
       ? [
@@ -77,8 +80,9 @@ export const createGate = withAuthOnly(
 export const addCatalogGate = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, key: string): Promise<Result> => {
+    const t = await getTranslations('ActionErrors')
     const item = READINESS_GATE_CATALOG.find(c => c.key === key)
-    if (!item) return { error: 'Gate de catálogo no encontrado' }
+    if (!item) return { error: t('gatesAdmin.catalogNotFound') }
 
     const { data: gate, error } = await ctx.supabase
       .from('readiness_gates')
@@ -93,7 +97,7 @@ export const addCatalogGate = withAuthOnly(
       })
       .select('id')
       .single()
-    if (error) return { error: error.code === '23505' ? `El gate ${item.code} ya existe en la organización` : error.message }
+    if (error) return { error: error.code === '23505' ? t('gatesAdmin.codeExists', { code: item.code }) : error.message }
 
     await ctx.supabase.from('gate_criteria').insert(
       item.criteria.map((c, i) => ({
@@ -128,16 +132,17 @@ export const updateGate = withAuthOnly(
       cosignRoles?: string[]
     },
   ): Promise<Result> => {
+    const t = await getTranslations('ActionErrors')
     const row: TablesUpdate<'readiness_gates'> = {}
     if ('name' in patch) {
-      if (!patch.name?.trim()) return { error: 'El nombre es obligatorio' }
+      if (!patch.name?.trim()) return { error: t('gatesAdmin.nameRequired') }
       row.name = patch.name.trim()
     }
     if ('description' in patch) row.description = patch.description?.trim() ? patch.description.trim() : null
     if ('phaseId' in patch) {
       if (patch.phaseId) {
         const access = await checkPhaseAccess(ctx.supabase, ctx.orgId, patch.phaseId)
-        if (!access.ok) return { error: access.error }
+        if (!access.ok) return { error: await accessError(access) }
       }
       row.phase_id = patch.phaseId ?? null
     }
@@ -147,7 +152,7 @@ export const updateGate = withAuthOnly(
     if ('isActive' in patch) row.is_active = !!patch.isActive
     if ('approvalRoles' in patch) {
       const roles = (patch.approvalRoles ?? []).filter(r => (GATE_APPROVAL_ROLES as readonly string[]).includes(r))
-      if (roles.length === 0) return { error: 'Al menos un rol debe poder aprobar el gate' }
+      if (roles.length === 0) return { error: t('gatesAdmin.approvalRoleRequired') }
       row.approval_roles = roles
     }
 
@@ -156,7 +161,7 @@ export const updateGate = withAuthOnly(
     }
     if ('cosignRoles' in patch) {
       const roles = (patch.cosignRoles ?? []).filter(r => (GATE_APPROVAL_ROLES as readonly string[]).includes(r))
-      if (roles.length === 0) return { error: 'Al menos un rol debe poder co-firmar el gate' }
+      if (roles.length === 0) return { error: t('gatesAdmin.cosignRoleRequired') }
       row.cosign_roles = roles
     }
 
@@ -261,17 +266,18 @@ export const moveGate = withAuthOnly(
 export const deleteGate = withAuthOnly(
   { role: ADMIN_ROLES },
   async (ctx, gateId: string): Promise<Result> => {
+    const t = await getTranslations('ActionErrors')
     const { count } = await ctx.supabase
       .from('system_gate_approvals')
       .select('id', { count: 'exact', head: true })
       .eq('gate_id', gateId)
-    if ((count ?? 0) > 0) return { error: 'El gate tiene aprobaciones registradas: desactívalo en lugar de borrarlo' }
+    if ((count ?? 0) > 0) return { error: t('gatesAdmin.hasApprovals') }
     // S11 (D-20): tampoco si alguno de sus criterios tiene declaraciones (se perdería la evidencia).
     const { count: atts } = await ctx.supabase
       .from('system_gate_attestations')
       .select('id, gate_criteria!inner(gate_id)', { count: 'exact', head: true })
       .eq('gate_criteria.gate_id', gateId)
-    if ((atts ?? 0) > 0) return { error: 'El gate tiene declaraciones registradas: desactívalo en lugar de borrarlo' }
+    if ((atts ?? 0) > 0) return { error: t('gatesAdmin.hasAttestations') }
 
     const { error } = await ctx.supabase.from('readiness_gates').delete().eq('id', gateId).eq('org_id', ctx.orgId)
     if (error) return { error: error.message }
@@ -286,9 +292,10 @@ export const addGateCriterion = withAuthOnly(
     ctx,
     input: { gateId: string; kind: string; label?: string; isBlocking?: boolean },
   ): Promise<Result> => {
-    if (!(CONFIGURABLE_CRITERIA as string[]).includes(input.kind)) return { error: 'Tipo de criterio no válido' }
+    const t = await getTranslations('ActionErrors')
+    if (!(CONFIGURABLE_CRITERIA as string[]).includes(input.kind)) return { error: t('gatesAdmin.invalidCriterion') }
     const label = input.label?.trim().slice(0, 300) ?? ''
-    if (input.kind === 'manual_attestation' && !label) return { error: 'La declaración necesita un texto' }
+    if (input.kind === 'manual_attestation' && !label) return { error: t('gatesAdmin.attestationLabelRequired') }
 
     const { data: last } = await ctx.supabase
       .from('gate_criteria')
