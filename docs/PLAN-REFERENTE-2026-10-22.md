@@ -232,12 +232,12 @@ Una sola sesión de maquetas en un lienzo, como en N1–N3:
 
 | N.º | Punto | Decisión |
 |---|---|---|
-| 1–2 | Contadores del inspector («5 pendientes» vs «Todo 7») y colas de decidir en 0 que no son suyas | Hacer |
-| 3–4 | Listas de ITR y preservación en el teléfono; barra inferior del ITR | Hacer (maqueta antes) |
+| 1–2 | Contadores del inspector («5 pendientes» vs «Todo 7») y colas de decidir en 0 que no son suyas | ✅ Hecho (cf1158f) |
+| 3–4 | Listas de ITR y preservación en el teléfono; barra inferior del ITR | ✅ Hecho, opción A·A·A (fe271e4). Queda del maquetado: encabezado compacto del ITR y línea de progreso arriba |
 | 5 | D16 resumen diario por correo | **Descartado**: no genera valor; para eso está «Mi trabajo» en la app |
-| 6 | F-21 red-line de campo | Proponer |
-| 7 | Calidad de datos «ITR rechazado ≥ 3 veces» (evento viejo, enlace roto) | Hacer |
-| 8, 10, 12, 13 | G-11 resto (≤ 11 px, paletas en hex), autosave del ITR (C-19/B-15), casts (G-18), D2 base de pruebas aparte | Hacer |
+| 6 | F-21 red-line de campo | ✅ Hecho en prod: F-21a (5643273), F-21b (c47f38a), F-21c (67bafa3) |
+| 7 | Calidad de datos «ITR rechazado ≥ 3 veces» (evento viejo, enlace roto) | ✅ Hecho (74a6364) |
+| 8, 10, 12, 13 | G-11 resto (≤ 11 px, paletas en hex), autosave del ITR (C-19/B-15), casts (G-18), D2 base de pruebas aparte | **Pendiente** (siguiente) |
 | 9, 11 | G-09 design system, G-15 diccionario i18n por página | **Descartados** (G-09 cubierto por los tokens de G-10/G-11) |
 | 14–15 | Tareas de Luis (PTC con `+smtp2`, subida de PDF) | Más adelante, dentro de una validación completa con una organización nueva, datos reales de ingeniería, borrado de DEMO y pruebas de punta a punta |
 | 16 | Proyectos extra de Supabase | ✅ Verificado 2026-10-23: solo queda `commup-production` |
