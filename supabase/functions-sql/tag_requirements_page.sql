@@ -3,16 +3,16 @@
 CREATE OR REPLACE FUNCTION public.tag_requirements_page(p_project_id uuid, p_filter text DEFAULT 'all'::text, p_area_id uuid DEFAULT NULL::uuid, p_system_id uuid DEFAULT NULL::uuid, p_subsystem_id uuid DEFAULT NULL::uuid, p_q text DEFAULT NULL::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0)
  RETURNS jsonb
  LANGUAGE plpgsql
- STABLE
  SET search_path TO 'public', 'pg_temp'
  SET plan_cache_mode TO 'force_custom_plan'
  SET work_mem TO '32MB'
 AS $function$
 DECLARE v jsonb; v_systems uuid[]; v_q text := NULLIF(upper(btrim(COALESCE(p_q, ''))), '');
   v_limit int := LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200); v_offset int := GREATEST(COALESCE(p_offset, 0), 0);
-  v_fast boolean := COALESCE(p_filter, 'all') IN ('all', 'notype'); v_page uuid[]; v_total bigint;
+  v_fast boolean := COALESCE(p_filter, 'all') IN ('all', 'notype'); v_page uuid[]; v_total bigint; v_cached boolean;
 BEGIN
   IF NOT public.is_project_member(p_project_id) THEN RAISE EXCEPTION 'Access denied' USING ERRCODE = '42501'; END IF;
+  v_cached := public.tag_requirements_refresh(p_project_id);  -- materializado por tag (R2b); false = en vivo
   IF p_area_id IS NOT NULL THEN
     SELECT COALESCE(array_agg(s.id), '{}') INTO v_systems FROM systems s WHERE s.project_id = p_project_id AND s.area_id = p_area_id;
   ELSIF p_system_id IS NOT NULL THEN
@@ -45,9 +45,12 @@ BEGIN
       AND (v_page IS NULL OR t.id = ANY (v_page))
   ),
   r AS (
-    SELECT * FROM public.tag_itr_requirements(p_project_id, v_page, v_systems,
+    SELECT tag_id, template_code, template_title, discipline_id, phase_id, origin, state, itr_id, itr_status, reason FROM tag_requirement_rows r
+    WHERE v_cached AND r.project_id = p_project_id AND r.tag_id IN (SELECT id FROM t)
+    UNION ALL
+    SELECT tag_id, template_code, template_title, discipline_id, phase_id, origin, state, itr_id, itr_status, reason FROM public.tag_itr_requirements(p_project_id, v_page, v_systems,
       CASE WHEN p_subsystem_id IS NULL THEN NULL ELSE ARRAY[p_subsystem_id] END) r
-    WHERE r.tag_id IN (SELECT id FROM t)
+    WHERE NOT v_cached AND r.tag_id IN (SELECT id FROM t)
   ),
   cc AS (SELECT * FROM public.template_client_codes_for(p_project_id)),
   agg AS (

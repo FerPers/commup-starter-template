@@ -3,17 +3,22 @@
 CREATE OR REPLACE FUNCTION public.tag_requirements_summary(p_project_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
- STABLE
  SET search_path TO 'public', 'pg_temp'
  SET plan_cache_mode TO 'force_custom_plan'
  SET work_mem TO '32MB'
 AS $function$
-DECLARE v jsonb; v_org uuid;
+DECLARE v jsonb; v_org uuid; v_cached boolean;
 BEGIN
   IF NOT public.is_project_member(p_project_id) THEN RAISE EXCEPTION 'Access denied' USING ERRCODE = '42501'; END IF;
   SELECT org_id INTO v_org FROM projects WHERE id = p_project_id;
 
-  WITH r AS (SELECT * FROM public.tag_itr_requirements(p_project_id)),
+  -- Materializado por tag (R2b): recalcula solo lo que cambió; si el proyecto espera el cron, en vivo.
+  v_cached := public.tag_requirements_refresh(p_project_id);
+  WITH r AS (
+    SELECT tag_id, template_code, template_title, discipline_id, phase_id, origin, state, itr_id, itr_status, reason FROM tag_requirement_rows q WHERE v_cached AND q.project_id = p_project_id
+    UNION ALL
+    SELECT tag_id, template_code, template_title, discipline_id, phase_id, origin, state, itr_id, itr_status, reason FROM public.tag_itr_requirements(p_project_id) q WHERE NOT v_cached
+  ),
   req AS (SELECT * FROM r WHERE r.state NOT IN ('excluded', 'outside')),
   tg AS (
     SELECT t.id, t.subsystem_id, t.equipment_type_id FROM tags t WHERE t.project_id = p_project_id

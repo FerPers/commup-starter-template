@@ -9977,6 +9977,124 @@ export type Database = {
           },
         ]
       }
+      tag_requirement_dirty: {
+        Row: {
+          project_id: string
+          tag_id: string
+        }
+        Insert: {
+          project_id: string
+          tag_id: string
+        }
+        Update: {
+          project_id?: string
+          tag_id?: string
+        }
+        Relationships: []
+      }
+      tag_requirement_rows: {
+        Row: {
+          discipline_id: string | null
+          itr_id: string | null
+          itr_status: string | null
+          origin: string | null
+          phase_id: string | null
+          project_id: string
+          reason: string | null
+          state: string
+          subsystem_id: string | null
+          tag_id: string
+          template_code: string
+          template_title: string | null
+        }
+        Insert: {
+          discipline_id?: string | null
+          itr_id?: string | null
+          itr_status?: string | null
+          origin?: string | null
+          phase_id?: string | null
+          project_id: string
+          reason?: string | null
+          state: string
+          subsystem_id?: string | null
+          tag_id: string
+          template_code: string
+          template_title?: string | null
+        }
+        Update: {
+          discipline_id?: string | null
+          itr_id?: string | null
+          itr_status?: string | null
+          origin?: string | null
+          phase_id?: string | null
+          project_id?: string
+          reason?: string | null
+          state?: string
+          subsystem_id?: string | null
+          tag_id?: string
+          template_code?: string
+          template_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_requirement_rows_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_requirement_rows_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "tag_requirement_rows_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_requirement_rows_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tag_requirement_state: {
+        Row: {
+          computed_at: string | null
+          computed_version: number
+          project_id: string
+          version: number
+        }
+        Insert: {
+          computed_at?: string | null
+          computed_version?: number
+          project_id: string
+          version?: number
+        }
+        Update: {
+          computed_at?: string | null
+          computed_version?: number
+          project_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_requirement_state_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string
@@ -14129,6 +14247,27 @@ export type Database = {
           template_title: string
         }[]
       }
+      tag_itr_requirements_core: {
+        Args: {
+          p_project_id: string
+          p_subsystem_ids?: string[]
+          p_system_ids?: string[]
+          p_tag_ids?: string[]
+        }
+        Returns: {
+          discipline_id: string
+          itr_id: string
+          itr_status: string
+          origin: string
+          phase_id: string
+          reason: string
+          state: string
+          tag_id: string
+          template_code: string
+          template_title: string
+        }[]
+      }
+      tag_requirements_audit: { Args: { p_project_id: string }; Returns: Json }
       tag_requirements_export: {
         Args: {
           p_area_id?: string
@@ -14138,6 +14277,10 @@ export type Database = {
           p_system_id?: string
         }
         Returns: Json
+      }
+      tag_requirements_mark_projects: {
+        Args: { p_project_ids: string[] }
+        Returns: undefined
       }
       tag_requirements_page: {
         Args: {
@@ -14151,6 +14294,15 @@ export type Database = {
           p_system_id?: string
         }
         Returns: Json
+      }
+      tag_requirements_rebuild: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
+      tag_requirements_rebuild_pending: { Args: never; Returns: number }
+      tag_requirements_refresh: {
+        Args: { p_project_id: string }
+        Returns: boolean
       }
       tag_requirements_summary: {
         Args: { p_project_id: string }

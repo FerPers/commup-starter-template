@@ -3,12 +3,11 @@
 CREATE OR REPLACE FUNCTION public.tag_requirements_export(p_project_id uuid, p_area_id uuid DEFAULT NULL::uuid, p_system_id uuid DEFAULT NULL::uuid, p_subsystem_id uuid DEFAULT NULL::uuid, p_limit integer DEFAULT 20000)
  RETURNS jsonb
  LANGUAGE plpgsql
- STABLE
  SET search_path TO 'public', 'pg_temp'
  SET plan_cache_mode TO 'force_custom_plan'
  SET work_mem TO '32MB'
 AS $function$
-DECLARE v jsonb; v_org uuid; v_systems uuid[]; v_subs uuid[]; v_limit int := LEAST(GREATEST(COALESCE(p_limit, 20000), 1), 50000);
+DECLARE v jsonb; v_org uuid; v_systems uuid[]; v_subs uuid[]; v_cached boolean; v_limit int := LEAST(GREATEST(COALESCE(p_limit, 20000), 1), 50000);
 BEGIN
   IF NOT public.is_project_member(p_project_id) THEN RAISE EXCEPTION 'Access denied' USING ERRCODE = '42501'; END IF;
   SELECT org_id INTO v_org FROM projects WHERE id = p_project_id;
@@ -19,7 +18,15 @@ BEGIN
   END IF;
   IF p_subsystem_id IS NOT NULL THEN v_subs := ARRAY[p_subsystem_id]; END IF;
 
-  WITH r AS MATERIALIZED (SELECT * FROM public.tag_itr_requirements(p_project_id, NULL, v_systems, v_subs)),
+  v_cached := public.tag_requirements_refresh(p_project_id);  -- materializado por tag (R2b); false = en vivo
+  WITH r AS MATERIALIZED (
+    SELECT q.tag_id, q.template_code, q.template_title, q.discipline_id, q.phase_id, q.origin, q.state, q.itr_id, q.itr_status, q.reason FROM tag_requirement_rows q JOIN tags t ON t.id = q.tag_id LEFT JOIN subsystems s ON s.id = t.subsystem_id
+    WHERE v_cached AND q.project_id = p_project_id
+      AND (v_systems IS NULL OR s.system_id = ANY (v_systems))
+      AND (v_subs IS NULL OR t.subsystem_id = ANY (v_subs))
+    UNION ALL
+    SELECT q.tag_id, q.template_code, q.template_title, q.discipline_id, q.phase_id, q.origin, q.state, q.itr_id, q.itr_status, q.reason FROM public.tag_itr_requirements(p_project_id, NULL, v_systems, v_subs) q WHERE NOT v_cached
+  ),
   tg AS MATERIALIZED (
     SELECT t.id, t.tag_number, t.description, t.equipment_type_id, et.code AS type_code, t.subsystem_id,
            ar.code AS area_code, sy.code AS system_code, sy.name AS system_name, sb.code AS subsystem_code, sb.name AS subsystem_name

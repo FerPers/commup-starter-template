@@ -6,7 +6,7 @@
 -- límites congelados) y con los triggers de eventos y de estado de gates. Se apagan SOLO dentro de esta
 -- transacción y con lista explícita: los mismos que se apagan se vuelven a encender (nunca se toca un trigger
 -- que ya estuviera apagado). Los triggers internos de llave foránea (la cascada) siguen activos.
--- Lista = todos los triggers no internos ON DELETE del esquema public al 2026-10-22; si se agrega uno nuevo,
+-- Lista = todos los triggers no internos ON DELETE del esquema public al 2026-10-23 (con los de requisitos ITR, R2b); si se agrega uno nuevo,
 -- sumarlo aquí (la transacción falla y no borra nada si falta).
 -- Toma bloqueo exclusivo de estas tablas mientras dura (segundos): correr en una hora tranquila.
 BEGIN;
@@ -19,16 +19,17 @@ ALTER TABLE public.certificate_punch_exceptions DISABLE TRIGGER cert_exceptions_
 ALTER TABLE public.certificates DISABLE TRIGGER certificates_gate_dirty_del, DISABLE TRIGGER trg_events_certificates;
 ALTER TABLE public.document_references DISABLE TRIGGER document_references_gate_dirty_del;
 ALTER TABLE public.documents DISABLE TRIGGER documents_gate_dirty_del;
+ALTER TABLE public.equipment_type_templates DISABLE TRIGGER equipment_type_templates_req_dirty_del;
 ALTER TABLE public.gate_criteria DISABLE TRIGGER gate_config_audit, DISABLE TRIGGER gate_criteria_gate_dirty, DISABLE TRIGGER gate_criteria_soft_delete;
 ALTER TABLE public.itr_assignments DISABLE TRIGGER itr_assignments_integrity;
 ALTER TABLE public.itr_attachments DISABLE TRIGGER itr_attachments_integrity;
 ALTER TABLE public.itr_responses DISABLE TRIGGER itr_responses_integrity;
 ALTER TABLE public.itr_signatures DISABLE TRIGGER itr_signatures_gate_dirty_del;
-ALTER TABLE public.itr_template_items DISABLE TRIGGER itr_items_frozen;
+ALTER TABLE public.itr_template_items DISABLE TRIGGER itr_items_frozen, DISABLE TRIGGER itr_template_items_req_dirty_del;
 ALTER TABLE public.itr_template_sections DISABLE TRIGGER itr_sections_frozen;
-ALTER TABLE public.itr_templates DISABLE TRIGGER itr_template_frozen;
+ALTER TABLE public.itr_templates DISABLE TRIGGER itr_template_frozen, DISABLE TRIGGER itr_templates_req_dirty_del;
 ALTER TABLE public.itr_test_equipment DISABLE TRIGGER itr_test_equipment_integrity;
-ALTER TABLE public.itrs DISABLE TRIGGER itrs_certificate_base, DISABLE TRIGGER itrs_gate_dirty_del, DISABLE TRIGGER itrs_integrity, DISABLE TRIGGER trg_events_itrs;
+ALTER TABLE public.itrs DISABLE TRIGGER itrs_certificate_base, DISABLE TRIGGER itrs_gate_dirty_del, DISABLE TRIGGER itrs_integrity, DISABLE TRIGGER itrs_req_dirty_del, DISABLE TRIGGER trg_events_itrs;
 ALTER TABLE public.lineup_sheets DISABLE TRIGGER lineup_sheets_gate_dirty_del;
 ALTER TABLE public.loops DISABLE TRIGGER trg_events_loops;
 ALTER TABLE public.org_members DISABLE TRIGGER org_members_owner_guard;
@@ -38,6 +39,8 @@ ALTER TABLE public.performance_run_data DISABLE TRIGGER performance_eval_preview
 ALTER TABLE public.performance_test_revisions DISABLE TRIGGER performance_test_revisions_gate_dirty_del;
 ALTER TABLE public.performance_tests DISABLE TRIGGER performance_tests_gate_dirty_del;
 ALTER TABLE public.procedures DISABLE TRIGGER procedures_gate_dirty_del;
+ALTER TABLE public.project_disciplines DISABLE TRIGGER project_disciplines_req_dirty_del;
+ALTER TABLE public.project_phases DISABLE TRIGGER project_phases_req_dirty_del;
 ALTER TABLE public.project_constraints DISABLE TRIGGER project_constraints_gate_dirty_del;
 ALTER TABLE public.pssr_review_items DISABLE TRIGGER pssr_review_items_guard;
 ALTER TABLE public.pssr_reviews DISABLE TRIGGER pssr_reviews_gate_dirty_del;
@@ -54,6 +57,7 @@ ALTER TABLE public.system_gate_approvals DISABLE TRIGGER system_gate_approvals_g
 ALTER TABLE public.system_gate_attestations DISABLE TRIGGER system_gate_attestations_gate_dirty_del;
 ALTER TABLE public.system_gate_signatures DISABLE TRIGGER system_gate_signatures_gate_dirty_del;
 ALTER TABLE public.systems DISABLE TRIGGER trg_events_systems;
+ALTER TABLE public.tag_itr_overrides DISABLE TRIGGER tag_itr_overrides_req_dirty_del;
 ALTER TABLE public.tags DISABLE TRIGGER tags_frozen_boundary_log, DISABLE TRIGGER tags_gate_dirty_del, DISABLE TRIGGER trg_events_tags;
 
 -- Primero los proyectos (arrastran tags, ITR, punch…) y después la org: borrando solo la org, la cascada
@@ -67,16 +71,17 @@ ALTER TABLE public.certificate_punch_exceptions ENABLE TRIGGER cert_exceptions_c
 ALTER TABLE public.certificates ENABLE TRIGGER certificates_gate_dirty_del, ENABLE TRIGGER trg_events_certificates;
 ALTER TABLE public.document_references ENABLE TRIGGER document_references_gate_dirty_del;
 ALTER TABLE public.documents ENABLE TRIGGER documents_gate_dirty_del;
+ALTER TABLE public.equipment_type_templates ENABLE TRIGGER equipment_type_templates_req_dirty_del;
 ALTER TABLE public.gate_criteria ENABLE TRIGGER gate_config_audit, ENABLE TRIGGER gate_criteria_gate_dirty, ENABLE TRIGGER gate_criteria_soft_delete;
 ALTER TABLE public.itr_assignments ENABLE TRIGGER itr_assignments_integrity;
 ALTER TABLE public.itr_attachments ENABLE TRIGGER itr_attachments_integrity;
 ALTER TABLE public.itr_responses ENABLE TRIGGER itr_responses_integrity;
 ALTER TABLE public.itr_signatures ENABLE TRIGGER itr_signatures_gate_dirty_del;
-ALTER TABLE public.itr_template_items ENABLE TRIGGER itr_items_frozen;
+ALTER TABLE public.itr_template_items ENABLE TRIGGER itr_items_frozen, ENABLE TRIGGER itr_template_items_req_dirty_del;
 ALTER TABLE public.itr_template_sections ENABLE TRIGGER itr_sections_frozen;
-ALTER TABLE public.itr_templates ENABLE TRIGGER itr_template_frozen;
+ALTER TABLE public.itr_templates ENABLE TRIGGER itr_template_frozen, ENABLE TRIGGER itr_templates_req_dirty_del;
 ALTER TABLE public.itr_test_equipment ENABLE TRIGGER itr_test_equipment_integrity;
-ALTER TABLE public.itrs ENABLE TRIGGER itrs_certificate_base, ENABLE TRIGGER itrs_gate_dirty_del, ENABLE TRIGGER itrs_integrity, ENABLE TRIGGER trg_events_itrs;
+ALTER TABLE public.itrs ENABLE TRIGGER itrs_certificate_base, ENABLE TRIGGER itrs_gate_dirty_del, ENABLE TRIGGER itrs_integrity, ENABLE TRIGGER itrs_req_dirty_del, ENABLE TRIGGER trg_events_itrs;
 ALTER TABLE public.lineup_sheets ENABLE TRIGGER lineup_sheets_gate_dirty_del;
 ALTER TABLE public.loops ENABLE TRIGGER trg_events_loops;
 ALTER TABLE public.org_members ENABLE TRIGGER org_members_owner_guard;
@@ -86,6 +91,8 @@ ALTER TABLE public.performance_run_data ENABLE TRIGGER performance_eval_preview_
 ALTER TABLE public.performance_test_revisions ENABLE TRIGGER performance_test_revisions_gate_dirty_del;
 ALTER TABLE public.performance_tests ENABLE TRIGGER performance_tests_gate_dirty_del;
 ALTER TABLE public.procedures ENABLE TRIGGER procedures_gate_dirty_del;
+ALTER TABLE public.project_disciplines ENABLE TRIGGER project_disciplines_req_dirty_del;
+ALTER TABLE public.project_phases ENABLE TRIGGER project_phases_req_dirty_del;
 ALTER TABLE public.project_constraints ENABLE TRIGGER project_constraints_gate_dirty_del;
 ALTER TABLE public.pssr_review_items ENABLE TRIGGER pssr_review_items_guard;
 ALTER TABLE public.pssr_reviews ENABLE TRIGGER pssr_reviews_gate_dirty_del;
@@ -102,6 +109,7 @@ ALTER TABLE public.system_gate_approvals ENABLE TRIGGER system_gate_approvals_ga
 ALTER TABLE public.system_gate_attestations ENABLE TRIGGER system_gate_attestations_gate_dirty_del;
 ALTER TABLE public.system_gate_signatures ENABLE TRIGGER system_gate_signatures_gate_dirty_del;
 ALTER TABLE public.systems ENABLE TRIGGER trg_events_systems;
+ALTER TABLE public.tag_itr_overrides ENABLE TRIGGER tag_itr_overrides_req_dirty_del;
 ALTER TABLE public.tags ENABLE TRIGGER tags_frozen_boundary_log, ENABLE TRIGGER tags_gate_dirty_del, ENABLE TRIGGER trg_events_tags;
 
 COMMIT;
