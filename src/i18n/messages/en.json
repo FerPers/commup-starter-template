@@ -2155,7 +2155,9 @@
       "pointTitle": "Point red-line",
       "otherPoint": "Another point",
       "phoneOnlyPoint": "For cloud, stroke or text, open it on a tablet or desktop.",
-      "tool_rl_point": "Point"
+      "tool_rl_point": "Point",
+      "carriedFrom": "Comes from rev {rev}: check whether it still applies on this drawing.",
+      "incorporatedIn": "Incorporated in rev {rev}."
     }
   },
   "PreservationExecution": {
@@ -3573,7 +3575,10 @@
         "deliverable": "Deliverable",
         "pdf": "Download boundary drawings",
         "pdfEmpty": "Boundary drawings · no limits drawn",
-        "pdfPages": "{count, plural, one {# sheet with limits} other {# sheets with limits}} · also included in the handover package"
+        "pdfPages": "{count, plural, one {# sheet with limits} other {# sheets with limits}} · also included in the handover package",
+        "redlines": "Red-line",
+        "redlinesDetail": "{open} open · {accepted} accepted · {incorporated} incorporated",
+        "redlinesPdf": "Download red-lines PDF"
       },
       "empty": "No tag of the system cites a P&ID or has a pin, and the system has no limits drawn.",
       "col": {
@@ -5525,6 +5530,15 @@
       "reviewBanner": "Rev {rev} received {count, plural, one {# pin} other {# pins}} from the previous revision that still need confirming on the drawing.",
       "reviewPins": "Review pins →",
       "viewerPins": "Viewer · {count, plural, one {# pin} other {# pins}}"
+    },
+    "redlines": {
+      "pendingBanner": "{count, plural, one {# red-line from earlier revisions is not incorporated} other {# red-lines from earlier revisions are not incorporated}} in rev {rev}.",
+      "incorporateIn": "Incorporate in rev {rev}…",
+      "dialogTitle": "Red-lines in rev {rev}",
+      "dialogHelp": "Tick the ones rev {rev} incorporates. Accepted ones come ticked; the ones you leave unticked move to rev {rev} to be reviewed there.",
+      "fromRev": "from rev {rev}",
+      "summary": "On save: {incorporated, plural, =0 {none is incorporated} one {# is incorporated} other {# are incorporated}} in rev {rev}; {carried, plural, =0 {none moves} one {# moves} other {# move}} to rev {rev} to review.",
+      "confirm": "Save"
     }
   },
   "Companies": {

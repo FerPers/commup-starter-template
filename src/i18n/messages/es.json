@@ -2155,7 +2155,9 @@
       "pointTitle": "Red-line puntual",
       "otherPoint": "Otro punto",
       "phoneOnlyPoint": "Para nube, trazo o texto, ábrelo en tableta o escritorio.",
-      "tool_rl_point": "Punto"
+      "tool_rl_point": "Punto",
+      "carriedFrom": "Viene de la rev {rev}: revisar si sigue vigente en este plano.",
+      "incorporatedIn": "Incorporado en la rev {rev}."
     }
   },
   "PreservationExecution": {
@@ -3573,7 +3575,10 @@
         "deliverable": "Entregable",
         "pdf": "Descargar planos de límites",
         "pdfEmpty": "Planos de límites · sin límites dibujados",
-        "pdfPages": "{count, plural, one {# hoja con límites} other {# hojas con límites}} · también va en el paquete de handover"
+        "pdfPages": "{count, plural, one {# hoja con límites} other {# hojas con límites}} · también va en el paquete de handover",
+        "redlines": "Red-line",
+        "redlinesDetail": "{open} abiertos · {accepted} aceptados · {incorporated} incorporados",
+        "redlinesPdf": "Descargar PDF de red-lines"
       },
       "empty": "Ningún tag del sistema cita un P&ID ni tiene pin, y el sistema no tiene límites dibujados.",
       "col": {
@@ -5525,6 +5530,15 @@
       "reviewBanner": "La rev {rev} recibió {count, plural, one {# pin} other {# pines}} de la revisión anterior que falta confirmar en el plano.",
       "reviewPins": "Revisar pines →",
       "viewerPins": "Visor · {count, plural, one {# pin} other {# pines}}"
+    },
+    "redlines": {
+      "pendingBanner": "{count, plural, one {# red-line de revisiones anteriores no está incorporado} other {# red-lines de revisiones anteriores no están incorporados}} en la rev {rev}.",
+      "incorporateIn": "Incorporar en rev {rev}…",
+      "dialogTitle": "Red-lines en la rev {rev}",
+      "dialogHelp": "Marca los que la rev {rev} incorpora. Los aceptados vienen marcados; los que no marques pasan a la rev {rev} para revisarlos ahí.",
+      "fromRev": "de rev {rev}",
+      "summary": "Al guardar: {incorporated, plural, =0 {ninguno queda incorporado} one {# queda incorporado} other {# quedan incorporados}} en la rev {rev}; {carried, plural, =0 {ninguno pasa} one {# pasa} other {# pasan}} a la rev {rev} por revisar.",
+      "confirm": "Guardar"
     }
   },
   "Companies": {

@@ -38,12 +38,14 @@ function Bar({ pct }: { pct: number }) {
   )
 }
 
-export default async function SystemDrawingsTab({ projectId, systemId, data, losh, canEdit }: {
+export default async function SystemDrawingsTab({ projectId, systemId, data, losh, canEdit, redlines }: {
   projectId: string
   systemId: string
   data: SystemPidSheets
   losh: SystemLosh | null
   canEdit: boolean
+  /** F-21c: red-lines del sistema por estado (tarjeta y PDF). */
+  redlines: { total: number; open: number; accepted: number; incorporated: number }
 }) {
   const t = await getTranslations('Systems.drawings')
   const td2 = await getTranslations('Documents')
@@ -87,6 +89,22 @@ export default async function SystemDrawingsTab({ projectId, systemId, data, los
             </span>
           )}
           {loshPages > 0 && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('kpi.pdfPages', { count: loshPages })}</div>}
+        </div>
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={kpiLabel}>{t('kpi.redlines')}</div>
+          <div style={kpiValue}>{redlines.total}</div>
+          {redlines.total > 0 && (
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              {t('kpi.redlinesDetail', { open: redlines.open, accepted: redlines.accepted, incorporated: redlines.incorporated })}
+            </div>
+          )}
+          {redlines.total > 0 && (
+            // Descarga de un PDF (route handler): <a> y no Link.
+            <a href={`/projects/${projectId}/systems/${systemId}/redlines`} download
+              style={{ minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, border: '1px solid var(--danger-200)', background: 'var(--danger-50)', color: 'var(--danger-700)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+              {t('kpi.redlinesPdf')}
+            </a>
+          )}
         </div>
       </div>
 

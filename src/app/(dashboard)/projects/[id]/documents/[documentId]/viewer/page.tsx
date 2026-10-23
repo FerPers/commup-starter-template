@@ -112,7 +112,7 @@ export default async function PidViewerPage({
     supabase.from('pid_markups').select('id, revision_id, page_num, system_id, target_document_id, target_page')
       .eq('project_id', id).eq('layer', 'losh').eq('kind', 'connector').eq('target_document_id', documentId).limit(1000),
     supabase.from('pid_redlines')
-      .select('id, number, page_num, status, description, system_id, tag_id, marks, page_width, page_height, page_rotation, created_by, created_at, reviewed_by, reviewed_at, review_note, pid_redline_comments(id, body, created_by, created_at), pid_redline_photos(id)')
+      .select('id, number, page_num, status, description, system_id, tag_id, marks, page_width, page_height, page_rotation, created_by, created_at, reviewed_by, reviewed_at, review_note, carried_from_revision_id, incorporated_revision_id, pid_redline_comments(id, body, created_by, created_at), pid_redline_photos(id)')
       .eq('revision_id', revision.id).eq('project_id', id).order('seq').limit(1000),
   ])
   const redlines: RedlineView[] = (rawRedlines ?? []).map(r => ({
@@ -122,6 +122,8 @@ export default async function PidViewerPage({
     created_by: r.created_by, created_at: r.created_at, reviewed_by: r.reviewed_by, reviewed_at: r.reviewed_at, review_note: r.review_note,
     comments: [...(r.pid_redline_comments ?? [])].sort((a, b) => a.created_at.localeCompare(b.created_at)),
     photo_count: (r.pid_redline_photos ?? []).length,
+    carried_from_rev: r.carried_from_revision_id ? revs.find(x => x.id === r.carried_from_revision_id)?.rev ?? '?' : null,
+    incorporated_rev: r.incorporated_revision_id ? revs.find(x => x.id === r.incorporated_revision_id)?.rev ?? '?' : null,
   }))
   // Nombres de quien creó, revisó o comentó.
   const personIds = [...new Set(redlines.flatMap(r => [r.created_by, r.reviewed_by, ...r.comments.map(c => c.created_by)]).filter((x): x is string => !!x))]

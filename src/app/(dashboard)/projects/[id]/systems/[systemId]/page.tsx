@@ -188,12 +188,18 @@ export default async function SystemFilePage({ params, searchParams }: {
     content = <SystemVendorsTab project={projectRef} performance={performance} vendors={vendors} />
   } else if (tab === 'drawings') {
     // P4: controles del LOSH (pines cruzados, conectores sin par) y el PDF por sistema.
-    const [{ data: sheets, error }, losh] = await Promise.all([
+    // F-21c: estados de sus red-lines (tarjeta y PDF de red-lines).
+    const [{ data: sheets, error }, losh, { data: rls }] = await Promise.all([
       supabase.rpc('system_pid_sheets', { p_system_id: systemId }),
       loadSystemLosh(supabase, { projectId: project.id, systemId }),
+      // bounded: red-lines de un sistema (tope 1000)
+      supabase.from('pid_redlines').select('status').eq('project_id', project.id).eq('system_id', systemId).limit(1000),
     ])
     if (error) throw new Error(error.message)
-    content = <SystemDrawingsTab projectId={project.id} systemId={system.id} data={sheets as unknown as SystemPidSheets} losh={losh} canEdit={canEdit} />
+    const redlineCounts = { open: 0, accepted: 0, rejected: 0, incorporated: 0 } as Record<string, number>
+    for (const r of rls ?? []) redlineCounts[r.status] = (redlineCounts[r.status] ?? 0) + 1
+    content = <SystemDrawingsTab projectId={project.id} systemId={system.id} data={sheets as unknown as SystemPidSheets} losh={losh} canEdit={canEdit}
+      redlines={{ total: (rls ?? []).length, open: redlineCounts.open, accepted: redlineCounts.accepted, incorporated: redlineCounts.incorporated }} />
   } else {
     // Datos del sistema y Dependencias: la ficha de Sistemas (fase 2), sin su encabezado.
     const [subs, tags, { data: projectSystems }, { data: orgGates }, { data: frozenBy }, { data: events }] = await Promise.all([

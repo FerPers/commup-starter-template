@@ -277,6 +277,10 @@ function RedlineDetail({
       <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
         {[sys?.code, who(r.created_by), when(r.created_at)].filter(Boolean).join(' · ')}
       </span>
+      {r.carried_from_rev && r.status !== 'incorporated' && (
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--warning-700)' }}>{t('redline.carriedFrom', { rev: r.carried_from_rev })}</span>
+      )}
+      {r.incorporated_rev && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary-700)' }}>{t('redline.incorporatedIn', { rev: r.incorporated_rev })}</span>}
       {r.reviewed_at && (
         <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
           {t(r.status === 'rejected' ? 'redline.rejectedBy' : 'redline.acceptedBy', { who: who(r.reviewed_by), when: when(r.reviewed_at) })}

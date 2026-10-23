@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  canReviewRedline, cloudPath, countByStatus, displayMarks, fromStoredMarks, hitsRedline, redlineAnchor, toStoredMarks, validRedlineMarks,
+  canReviewRedline, cloudPath, cloudPoints, countByStatus, displayMarks, fromStoredMarks, hitsRedline, redlineAnchor, toStoredMarks, validRedlineMarks,
   type RedlineMark,
 } from './redlines'
 
@@ -49,6 +49,14 @@ describe('red-line: dibujo y toque', () => {
     expect(d.startsWith('M100.00 80.00')).toBe(true)
     expect(d.endsWith('Z')).toBe(true)
     expect((d.match(/A/g) ?? []).length).toBeGreaterThanOrEqual(4 * 4)
+  })
+
+  it('la nube del PDF rodea el rectángulo por fuera', () => {
+    const pts = cloudPoints({ x: 0.1, y: 0.1 }, { x: 0.2, y: 0.2 }, size, 20)
+    expect(pts.length).toBeGreaterThan(16)
+    const minY = Math.min(...pts.map(p => p.y)), maxX = Math.max(...pts.map(p => p.x))
+    expect(minY).toBeLessThanOrEqual(80) // arriba del borde superior (y = 80)
+    expect(maxX).toBeGreaterThanOrEqual(200) // a la derecha del borde derecho (x = 200)
   })
 
   it('tocar: dentro de la nube, cerca del trazo o del punto', () => {

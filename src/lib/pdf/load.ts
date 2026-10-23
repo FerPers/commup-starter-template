@@ -13,6 +13,9 @@ import type { CertPdfData } from './certificate'
 import type { ItrDocumentRef, ItrPdfData, ItrTestEquipmentRef } from './itr'
 import type { EventPdfInput, LineupPdfInput, RunPdfInput } from './startup-records'
 import type { LoshPdfInput } from './losh'
+import type { RedlinePdfItem, RedlinesPdfInput } from './redlines'
+import { fromStoredMarks, type RedlineStatus } from '@/lib/pid/redlines'
+import { normalizeRotation } from '@/lib/pid/geometry'
 import { bi } from './renderer'
 import { loadSystemLosh } from '@/lib/pid/losh-server'
 import { systemTabHref } from '@/lib/systems/file-tabs'
@@ -553,6 +556,72 @@ export async function loadLoshPdf(db: Db, x: { projectId: string; systemId: stri
     filename: `Limites-${losh.system.code.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
     input: {
       projectName: project.name, projectCode: project.code, timezone: project.timezone, branding, losh, sources, omitted,
+      recordUrl: `${siteUrl()}${systemTabHref(x.projectId, x.systemId, 'drawings')}`,
+    },
+  }
+}
+
+/**
+ * F-21c: PDF de red-lines de un sistema (pestaña «Planos» y anexo del paquete de handover). null si el sistema no es
+ * del proyecto; `input.redlines` vacío si no tiene (la ruta igual lo entrega; el paquete lo omite). Se descargan los PDF
+ * de las revisiones con red-lines sin incorporar (tope MAX_LOSH_SOURCE_BYTES, como el de límites).
+ */
+export async function loadRedlinesPdf(db: Db, x: { projectId: string; systemId: string; branding?: PdfBranding }): Promise<{ input: RedlinesPdfInput; filename: string } | null> {
+  const [{ data: system }, { data: project }, { data: rows }, branding] = await Promise.all([
+    db.from('systems').select('code, name, color').eq('id', x.systemId).eq('project_id', x.projectId).maybeSingle(),
+    db.from('projects').select('code, name, timezone').eq('id', x.projectId).maybeSingle(),
+    // bounded: red-lines de un sistema (tope 1000)
+    db.from('pid_redlines')
+      .select(`id, number, page_num, status, description, marks, page_rotation, created_at, created_by, reviewed_by, reviewed_at, review_note, revision_id,
+        documents(number),
+        rev:document_revisions!pid_redlines_revision_id_fkey(rev, file_path),
+        inc:document_revisions!pid_redlines_incorporated_revision_id_fkey(rev)`)
+      .eq('project_id', x.projectId).eq('system_id', x.systemId).order('seq').limit(1000),
+    x.branding ?? loadPdfBranding(db, x.projectId),
+  ])
+  if (!system || !project) return null
+
+  const people = [...new Set((rows ?? []).flatMap(r => [r.created_by, r.reviewed_by]).filter((v): v is string => !!v))]
+  const { data: profiles } = people.length ? await db.from('profiles').select('id, full_name').in('id', people) : { data: [] }
+  const nameOf = new Map((profiles ?? []).map(p => [p.id, p.full_name ?? '—']))
+
+  const redlines: RedlinePdfItem[] = (rows ?? []).map(r => ({
+    id: r.id, number: r.number, page_num: r.page_num, status: r.status as RedlineStatus, description: r.description,
+    marks: fromStoredMarks(r.marks), page_rotation: normalizeRotation(r.page_rotation), created_at: r.created_at,
+    reviewed_at: r.reviewed_at, review_note: r.review_note, revision_id: r.revision_id,
+    document_number: (r.documents as { number: string } | null)?.number ?? '?',
+    rev: (r.rev as { rev: string } | null)?.rev ?? '?',
+    incorporated_rev: (r.inc as { rev: string } | null)?.rev ?? null,
+    created_by_name: nameOf.get(r.created_by) ?? '—',
+    reviewed_by_name: r.reviewed_by ? nameOf.get(r.reviewed_by) ?? '—' : null,
+  }))
+
+  const sources: Record<string, Uint8Array> = {}
+  const omitted: { number: string; reason: string }[] = []
+  let bytes = 0
+  const revs = new Map<string, { label: string; file_path: string | null }>()
+  for (const r of rows ?? []) {
+    if (r.status !== 'open' && r.status !== 'accepted') continue
+    const rev = r.rev as { rev: string; file_path: string | null } | null
+    revs.set(r.revision_id, { label: `${(r.documents as { number: string } | null)?.number ?? '?'} rev ${rev?.rev ?? '?'}`, file_path: rev?.file_path ?? null })
+  }
+  for (const [revId, rev] of revs) {
+    if (!rev.file_path) { omitted.push({ number: rev.label, reason: bi('la revisión no tiene PDF', 'the revision has no PDF') }); continue }
+    const { data: blob, error } = await db.storage.from('project-documents').download(rev.file_path)
+    if (error || !blob) { omitted.push({ number: rev.label, reason: bi('no se pudo descargar el PDF', 'the PDF could not be downloaded') }); continue }
+    if (bytes + blob.size > MAX_LOSH_SOURCE_BYTES) {
+      omitted.push({ number: rev.label, reason: bi(`supera el tope de ${MAX_LOSH_SOURCE_BYTES / 1024 / 1024} MB de planos`, `exceeds the ${MAX_LOSH_SOURCE_BYTES / 1024 / 1024} MB drawing cap`) })
+      continue
+    }
+    bytes += blob.size
+    sources[revId] = new Uint8Array(await blob.arrayBuffer())
+  }
+
+  return {
+    filename: `Redlines-${system.code.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    input: {
+      projectName: project.name, projectCode: project.code, timezone: project.timezone, branding,
+      system: { code: system.code, name: system.name, color: system.color }, redlines, sources, omitted,
       recordUrl: `${siteUrl()}${systemTabHref(x.projectId, x.systemId, 'drawings')}`,
     },
   }

@@ -105,6 +105,38 @@ export function cloudPath(a: Pt, b: Pt, size: PageSize, bump: number): string {
   return `${d} Z`
 }
 
+/**
+ * Nube como polígono (para el PDF: los arcos no se giran con la hoja en pdf-lib): festones semicirculares hacia
+ * afuera sobre el rectángulo de esquinas `a` y `b`, en puntos de la página como se ve (origen arriba a la izquierda).
+ */
+export function cloudPoints(a: Pt, b: Pt, size: PageSize, bump: number, samples = 6): Pt[] {
+  const x0 = Math.min(a.x, b.x) * size.w, x1 = Math.max(a.x, b.x) * size.w
+  const y0 = Math.min(a.y, b.y) * size.h, y1 = Math.max(a.y, b.y) * size.h
+  // Recorrido horario (y hacia abajo): arriba, derecha, abajo, izquierda; normal hacia afuera de cada lado.
+  const edges: { from: Pt; to: Pt; out: Pt }[] = [
+    { from: { x: x0, y: y0 }, to: { x: x1, y: y0 }, out: { x: 0, y: -1 } },
+    { from: { x: x1, y: y0 }, to: { x: x1, y: y1 }, out: { x: 1, y: 0 } },
+    { from: { x: x1, y: y1 }, to: { x: x0, y: y1 }, out: { x: 0, y: 1 } },
+    { from: { x: x0, y: y1 }, to: { x: x0, y: y0 }, out: { x: -1, y: 0 } },
+  ]
+  const pts: Pt[] = []
+  for (const e of edges) {
+    const len = Math.hypot(e.to.x - e.from.x, e.to.y - e.from.y)
+    if (len === 0) continue
+    const dir = { x: (e.to.x - e.from.x) / len, y: (e.to.y - e.from.y) / len }
+    const n = Math.max(1, Math.round(len / bump))
+    const r = len / n / 2
+    for (let j = 0; j < n; j++) {
+      const c = { x: e.from.x + dir.x * r * (2 * j + 1), y: e.from.y + dir.y * r * (2 * j + 1) }
+      for (let k = 0; k < samples; k++) {
+        const t = (Math.PI * k) / samples
+        pts.push({ x: c.x - dir.x * r * Math.cos(t) + e.out.x * r * Math.sin(t), y: c.y - dir.y * r * Math.cos(t) + e.out.y * r * Math.sin(t) })
+      }
+    }
+  }
+  return pts
+}
+
 /** ¿El clic `p` toca alguna marca del red-line? (nube: dentro del rectángulo; trazo: cerca; texto/punto: cerca del ancla) */
 export function hitsRedline(p: Pt, marks: RedlineMark[], size: PageSize): boolean {
   const tol = markupMetrics(size).hit

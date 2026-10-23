@@ -38,6 +38,9 @@ export type Tool = 'select' | 'pan' | 'line' | 'limit' | 'label' | 'connector' |
 export type RedlineView = Redline & {
   comments: { id: string; body: string; created_by: string; created_at: string }[]
   photo_count: number
+  /** F-21c: revisión de la que vino (pasó a esta sin incorporar) y en la que quedó incorporado. */
+  carried_from_rev: string | null
+  incorporated_rev: string | null
 }
 
 /** Capas que se ven en el plano. */

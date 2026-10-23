@@ -5609,6 +5609,7 @@ export type Database = {
       }
       pid_redlines: {
         Row: {
+          carried_from_revision_id: string | null
           created_at: string
           created_by: string
           description: string
@@ -5636,6 +5637,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          carried_from_revision_id?: string | null
           created_at?: string
           created_by: string
           description: string
@@ -5663,6 +5665,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          carried_from_revision_id?: string | null
           created_at?: string
           created_by?: string
           description?: string
@@ -5690,6 +5693,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pid_redlines_carried_from_revision_id_fkey"
+            columns: ["carried_from_revision_id"]
+            isOneToOne: false
+            referencedRelation: "document_revisions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pid_redlines_created_by_fkey"
             columns: ["created_by"]
@@ -14015,6 +14025,10 @@ export type Database = {
       implement_vendor_recommendation: {
         Args: { p_id: string; p_moc_reference: string; p_note: string }
         Returns: undefined
+      }
+      incorporate_pid_redlines: {
+        Args: { p_incorporate?: string[]; p_revision_id: string }
+        Returns: Json
       }
       increment_webhook_failure_count: {
         Args: { sub_id: string }

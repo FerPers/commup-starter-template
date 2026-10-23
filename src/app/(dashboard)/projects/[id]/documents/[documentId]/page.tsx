@@ -3,6 +3,8 @@ import RememberRecent from '@/components/layout/RememberRecent'
 import { notFound, redirect } from 'next/navigation'
 import { documentPolicy, isDocumentController, type DocType, type RevisionRowStatus } from '@/lib/documents/catalog'
 import { fetchAllRows, fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import RedlineIncorporation, { type PendingRedline } from './RedlineIncorporation'
+import type { RedlineStatus } from '@/lib/pid/redlines'
 import DocumentDetail, { type RevisionRow, type UsageRow } from './DocumentDetail'
 
 // Ficha de un documento del registro maestro (fase 8, sesión 1): revisiones (PDF y/o enlace al EDMS), vigente,
@@ -72,6 +74,20 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     }
   }
 
+  // F-21c: red-lines abiertos o aceptados de revisiones anteriores a la vigente (por incorporar en ella).
+  const currentRev = (revisions ?? []).find(r => r.id === doc.current_revision_id) ?? null
+  let pendingRedlines: PendingRedline[] = []
+  if (doc.doc_type === 'pid' && currentRev) {
+    const older = new Map((revisions ?? []).filter(r => r.seq < currentRev.seq).map(r => [r.id, r.rev]))
+    if (older.size) {
+      // bounded: red-lines de un plano (tope 1000)
+      const { data: rls } = await supabase.from('pid_redlines').select('id, number, description, status, revision_id')
+        .eq('document_id', doc.id).eq('project_id', id).in('status', ['open', 'accepted']).in('revision_id', [...older.keys()])
+        .order('seq').limit(1000)
+      pendingRedlines = (rls ?? []).map(r => ({ id: r.id, number: r.number, description: r.description, status: r.status as RedlineStatus, rev: older.get(r.revision_id) ?? '?' }))
+    }
+  }
+
   return (
     <>
     <RememberRecent kind="document" code={doc.number} title={doc.title} href={`/projects/${id}/documents/${doc.id}`} projectCode={project.code} />
@@ -92,6 +108,10 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       canEdit={isDocumentController(ctx.role)}
       policy={documentPolicy(org?.settings)}
       lockedOutdated={usage.filter(u => u.outdated && u.locked).length}
+      redlinesSlot={currentRev && pendingRedlines.length > 0 ? (
+        <RedlineIncorporation projectId={id} documentId={doc.id} current={{ id: currentRev.id, rev: currentRev.rev }}
+          pending={pendingRedlines} canEdit={isDocumentController(ctx.role)} />
+      ) : null}
     />
     </>
   )

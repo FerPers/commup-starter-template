@@ -122,3 +122,16 @@ export const redlinePhotoUrls = withAuth(
     return { photos: data.flatMap(p => (urlOf.get(p.file_path) ? [{ id: p.id, url: urlOf.get(p.file_path)!, name: p.file_name }] : [])) }
   },
 )
+
+/** F-21c: incorpora en la revisión vigente los red-lines elegidos; los demás pendientes pasan a esa revisión. */
+export const incorporateRedlines = withAuth(
+  { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'project_id' }] },
+  async (ctx, input: { project_id: string; document_id: string; revision_id: string; ids: string[] }): Promise<{ incorporated?: number; carried?: number; error?: string }> => {
+    const { data, error } = await ctx.supabase.rpc('incorporate_pid_redlines', { p_revision_id: input.revision_id, p_incorporate: input.ids.slice(0, 1000) })
+    if (error) return { error: error.message }
+    const res = data as { incorporated: number; carried: number } | null
+    revalidatePath(`/projects/${input.project_id}/documents/${input.document_id}`)
+    revalidatePath(viewerPath(input.project_id, input.document_id))
+    return { incorporated: res?.incorporated ?? 0, carried: res?.carried ?? 0 }
+  },
+)

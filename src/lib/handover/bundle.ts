@@ -11,7 +11,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { zipSync, strToU8, type Zippable } from 'fflate'
 import type { Database } from '@/types/supabase.generated'
-import { loadCertificatePdf, loadEventPdf, loadItrPdf, loadLineupPdf, loadLoshPdf, loadPerformancePdf, loadProcedurePdf, loadPssrPdf, loadRunPdf } from '@/lib/pdf/load'
+import { loadCertificatePdf, loadEventPdf, loadItrPdf, loadLineupPdf, loadLoshPdf, loadPerformancePdf, loadProcedurePdf, loadPssrPdf, loadRedlinesPdf, loadRunPdf } from '@/lib/pdf/load'
 import { renderEventPdf, renderLineupPdf, renderRunPdf } from '@/lib/pdf/startup-records'
 import { renderProcedurePdf } from '@/lib/pdf/procedure'
 import { renderPerformancePdf } from '@/lib/pdf/performance-report'
@@ -19,6 +19,7 @@ import { renderPssrPdf } from '@/lib/pdf/pssr'
 import { renderCertificatePdf } from '@/lib/pdf/certificate'
 import { renderItrPdf } from '@/lib/pdf/itr'
 import { renderLoshPdf } from '@/lib/pdf/losh'
+import { renderRedlinesPdf } from '@/lib/pdf/redlines'
 import { renderHandoverPdf } from './pdf'
 import { loadPdfBranding } from '@/lib/pdf/branding'
 import { sha256Hex, signBytes, type SigningKey } from './sign'
@@ -165,6 +166,12 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
       const r = await loadLoshPdf(db, { projectId, systemId: sys.system_id, branding })
       if (!r) return fail(sys.code)
       return r.input.losh.sheets.length ? renderLoshPdf(r.input) : null
+    } })
+    // F-21c: red-lines del sistema (tabla + hojas con los que siguen sin incorporar); sin red-lines no hay PDF.
+    tasks.push({ path: `${dir}/redlines/Redlines-${safeName(sys.code)}.pdf`, run: async () => {
+      const r = await loadRedlinesPdf(db, { projectId, systemId: sys.system_id, branding })
+      if (!r) return fail(sys.code)
+      return r.input.redlines.length ? renderRedlinesPdf(r.input) : null
     } })
     for (const d of sys.documents ?? []) {
       const rev = d.revision

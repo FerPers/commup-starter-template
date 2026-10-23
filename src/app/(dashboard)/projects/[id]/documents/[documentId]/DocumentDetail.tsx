@@ -38,7 +38,7 @@ const th: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', ...lab
 const td: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const MAX_BYTES = 50 * 1024 * 1024
 
-export default function DocumentDetail({ project, doc, revisions, usage, systems, disciplines, companies, names, canEdit, policy, lockedOutdated, pidPins = {} }: {
+export default function DocumentDetail({ project, doc, revisions, usage, systems, disciplines, companies, names, canEdit, policy, lockedOutdated, pidPins = {}, redlinesSlot = null }: {
   project: { id: string; code: string; name: string }
   doc: Doc
   revisions: RevisionRow[]
@@ -54,6 +54,8 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
   lockedOutdated: number
   /** N2d: P&ID — pines por revisión (total y «por revisar»). */
   pidPins?: Record<string, { count: number; review: number }>
+  /** F-21c: red-lines por incorporar en la revisión vigente (RedlineIncorporation, armado en la página). */
+  redlinesSlot?: React.ReactNode
 }) {
   const t = useTranslations('Documents')
   const router = useRouter()
@@ -137,6 +139,7 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
             <Link href={`/projects/${project.id}/documents/${doc.id}/viewer`} style={{ ...linkStyle, fontWeight: 600 }}>{t('pid.reviewPins')}</Link>
           </div>
         )}
+        {redlinesSlot}
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}
