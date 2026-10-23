@@ -5,6 +5,13 @@
 -- quedó viva en el servidor con esos bloqueos, las escrituras de la app se encolaron, se agotaron las conexiones y
 -- prod quedó sin BD ~30 min (22:52–23:23 UTC) hasta reiniciar el proyecto. Usar una rama de Supabase o una BD local
 -- (supabase start) y apuntar ahí run.mjs / bench.sql.
+--
+-- Proyecto aparte (plan gratuito, sin ramas ni Docker; así se midió R2b el 2026-10-22):
+--   1. Crear el proyecto y enlazarlo en un directorio propio: supabase link --project-ref <ref> --workdir <dir>
+--   2. Clonar el esquema de prod: schema-ddl.sql (lectura en prod) + apply-ddl.mjs <ddl.json> <dir>
+--   3. node scripts/loadtest/run.mjs scripts/loadtest/seed.sql --workdir <dir>   (≈ 4 min)
+--   4. node scripts/loadtest/run.mjs scripts/loadtest/bench.sql --workdir <dir>
+--   5. Borrar el proyecto desde el panel.
 -- Escala: 10 áreas · 300 sistemas · 1.500 subsistemas · 50.000 tags · ~60.000 ITR · 10.000 punch · 450 certificados.
 -- Meta: Control Tower, Mi trabajo y la lista de ITR con p95 < 1,5 s (ver bench.sql).
 -- R2b (2026-10-22): matriz aceptada que reproduce los ITR sembrados + una regla con requisitos sin generar (12.500),
@@ -22,7 +29,7 @@
 
 -- @@chunk catálogos y jerarquía
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -35,6 +42,12 @@ DO $$ BEGIN
     RAISE EXCEPTION 'LOADTEST ya existe: correr teardown.sql antes de volver a sembrar';
   END IF;
 END $$;
+
+-- En un proyecto recién clonado el usuario del banco no existe (en prod es demo-glp@commup.test).
+INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+SELECT bench_user, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'bench@commup.test', '', now(), now(), now(), '{}', '{"full_name":"Bench"}'
+FROM lt_ids ON CONFLICT (id) DO NOTHING;
+INSERT INTO profiles (id, full_name) SELECT bench_user, 'Bench' FROM lt_ids ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO organizations (id, name, slug) SELECT org_id, 'LOADTEST (banco de carga)', 'loadtest-bench' FROM lt_ids;
 INSERT INTO org_members (org_id, user_id, role, status) SELECT org_id, bench_user, 'owner', 'active' FROM lt_ids;
@@ -75,7 +88,7 @@ COMMIT;
 
 -- @@chunk tags 1-10000
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -97,7 +110,7 @@ COMMIT;
 
 -- @@chunk tags 10001-20000
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -119,7 +132,7 @@ COMMIT;
 
 -- @@chunk tags 20001-30000
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -141,7 +154,7 @@ COMMIT;
 
 -- @@chunk tags 30001-40000
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -163,7 +176,7 @@ COMMIT;
 
 -- @@chunk tags 40001-50000
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -185,7 +198,7 @@ COMMIT;
 
 -- @@chunk itrs A01
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -219,7 +232,7 @@ COMMIT;
 
 -- @@chunk itrs A02
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -252,7 +265,7 @@ COMMIT;
 
 -- @@chunk itrs A03
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -285,7 +298,7 @@ COMMIT;
 
 -- @@chunk itrs A04
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -318,7 +331,7 @@ COMMIT;
 
 -- @@chunk itrs A05
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -351,7 +364,7 @@ COMMIT;
 
 -- @@chunk itrs A06
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -384,7 +397,7 @@ COMMIT;
 
 -- @@chunk itrs A07
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -417,7 +430,7 @@ COMMIT;
 
 -- @@chunk itrs A08
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -450,7 +463,7 @@ COMMIT;
 
 -- @@chunk itrs A09
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -483,7 +496,7 @@ COMMIT;
 
 -- @@chunk itrs A10
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -516,7 +529,7 @@ COMMIT;
 
 -- @@chunk asignaciones
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -532,7 +545,7 @@ COMMIT;
 
 -- @@chunk matriz, excepciones y códigos del cliente (R2b)
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -569,7 +582,7 @@ COMMIT;
 
 -- @@chunk punch y certificados
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,
@@ -602,7 +615,7 @@ COMMIT;
 
 -- @@chunk análisis y conteo
 BEGIN;
-SET LOCAL statement_timeout = 0;
+SET LOCAL statement_timeout = '100s';
 CREATE TEMP TABLE lt_ids ON COMMIT DROP AS SELECT
   '10ad7e57-0000-4000-8000-000000000001'::uuid AS org_id,
   '10ad7e57-0000-4000-8000-000000000002'::uuid AS project_id,

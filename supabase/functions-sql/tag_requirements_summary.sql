@@ -5,6 +5,8 @@ CREATE OR REPLACE FUNCTION public.tag_requirements_summary(p_project_id uuid)
  LANGUAGE plpgsql
  STABLE
  SET search_path TO 'public', 'pg_temp'
+ SET plan_cache_mode TO 'force_custom_plan'
+ SET work_mem TO '32MB'
 AS $function$
 DECLARE v jsonb; v_org uuid;
 BEGIN
@@ -26,7 +28,7 @@ BEGIN
     'outside', (SELECT count(*) FROM r WHERE state = 'outside'),
     'tags', (SELECT count(*) FROM tg),
     'tags_no_type', (SELECT count(*) FROM tg WHERE equipment_type_id IS NULL),
-    'tags_no_rule', (SELECT count(*) FROM tg WHERE equipment_type_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM r WHERE r.tag_id = tg.id AND r.state <> 'outside')),
+    'tags_no_rule', (SELECT count(*) FROM tg WHERE equipment_type_id IS NOT NULL AND tg.id NOT IN (SELECT r.tag_id FROM r WHERE r.state <> 'outside')),
     'proposed_rules', (SELECT count(*) FROM equipment_type_templates m WHERE m.org_id = v_org AND m.status = 'proposed'),
     'by_subsystem', COALESCE((
       SELECT jsonb_agg(jsonb_build_object('subsystem_id', x.subsystem_id, 'required', x.required, 'missing', x.missing))

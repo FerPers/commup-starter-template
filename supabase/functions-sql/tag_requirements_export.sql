@@ -5,6 +5,8 @@ CREATE OR REPLACE FUNCTION public.tag_requirements_export(p_project_id uuid, p_a
  LANGUAGE plpgsql
  STABLE
  SET search_path TO 'public', 'pg_temp'
+ SET plan_cache_mode TO 'force_custom_plan'
+ SET work_mem TO '32MB'
 AS $function$
 DECLARE v jsonb; v_org uuid; v_systems uuid[]; v_subs uuid[]; v_limit int := LEAST(GREATEST(COALESCE(p_limit, 20000), 1), 50000);
 BEGIN
@@ -33,7 +35,7 @@ BEGIN
   cc AS (SELECT * FROM public.template_client_codes_for(p_project_id)),
   req AS (SELECT * FROM r WHERE r.state NOT IN ('excluded', 'outside')),
   bare AS (  -- tags sin requisitos: sin tipo o sin regla (los que solo tienen ITR fuera de requisitos cuentan como sin regla)
-    SELECT tg.* FROM tg WHERE NOT EXISTS (SELECT 1 FROM r WHERE r.tag_id = tg.id AND r.state <> 'outside')
+    SELECT tg.* FROM tg WHERE tg.id NOT IN (SELECT r.tag_id FROM r WHERE r.state <> 'outside')  -- subplan con hash
   ),
   det AS (
     SELECT tg.tag_number, ph.order_index, r.template_code AS code,

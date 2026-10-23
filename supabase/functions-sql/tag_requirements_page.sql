@@ -5,14 +5,34 @@ CREATE OR REPLACE FUNCTION public.tag_requirements_page(p_project_id uuid, p_fil
  LANGUAGE plpgsql
  STABLE
  SET search_path TO 'public', 'pg_temp'
+ SET plan_cache_mode TO 'force_custom_plan'
+ SET work_mem TO '32MB'
 AS $function$
 DECLARE v jsonb; v_systems uuid[]; v_q text := NULLIF(upper(btrim(COALESCE(p_q, ''))), '');
+  v_limit int := LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200); v_offset int := GREATEST(COALESCE(p_offset, 0), 0);
+  v_fast boolean := COALESCE(p_filter, 'all') IN ('all', 'notype'); v_page uuid[]; v_total bigint;
 BEGIN
   IF NOT public.is_project_member(p_project_id) THEN RAISE EXCEPTION 'Access denied' USING ERRCODE = '42501'; END IF;
   IF p_area_id IS NOT NULL THEN
     SELECT COALESCE(array_agg(s.id), '{}') INTO v_systems FROM systems s WHERE s.project_id = p_project_id AND s.area_id = p_area_id;
   ELSIF p_system_id IS NOT NULL THEN
     v_systems := ARRAY[p_system_id];
+  END IF;
+
+  -- R2b (bench 50k): sin filtro o «sin tipo» el filtro no depende de los requisitos: se pagina sobre los tags y
+  -- solo se calculan los requisitos de la página (el registro abre así; antes calculaba los 50.000 tags).
+  IF v_fast THEN
+    WITH t0 AS (
+      SELECT t.id, t.tag_number FROM tags t LEFT JOIN subsystems s ON s.id = t.subsystem_id
+      WHERE t.project_id = p_project_id
+        AND (v_systems IS NULL OR s.system_id = ANY (v_systems))
+        AND (p_subsystem_id IS NULL OR t.subsystem_id = p_subsystem_id)
+        AND (v_q IS NULL OR upper(t.tag_number) LIKE '%' || v_q || '%' OR upper(COALESCE(t.description, '')) LIKE '%' || v_q || '%')
+        AND (COALESCE(p_filter, 'all') <> 'notype' OR t.equipment_type_id IS NULL)
+    )
+    SELECT (SELECT count(*) FROM t0),
+           COALESCE((SELECT array_agg(x.id ORDER BY x.tag_number) FROM (SELECT id, tag_number FROM t0 ORDER BY tag_number LIMIT v_limit OFFSET v_offset) x), '{}')
+    INTO v_total, v_page;
   END IF;
 
   WITH t AS (
@@ -22,9 +42,10 @@ BEGIN
       AND (v_systems IS NULL OR s.system_id = ANY (v_systems))
       AND (p_subsystem_id IS NULL OR t.subsystem_id = p_subsystem_id)
       AND (v_q IS NULL OR upper(t.tag_number) LIKE '%' || v_q || '%' OR upper(COALESCE(t.description, '')) LIKE '%' || v_q || '%')
+      AND (v_page IS NULL OR t.id = ANY (v_page))
   ),
   r AS (
-    SELECT * FROM public.tag_itr_requirements(p_project_id, NULL, v_systems,
+    SELECT * FROM public.tag_itr_requirements(p_project_id, v_page, v_systems,
       CASE WHEN p_subsystem_id IS NULL THEN NULL ELSE ARRAY[p_subsystem_id] END) r
     WHERE r.tag_id IN (SELECT id FROM t)
   ),
@@ -47,9 +68,9 @@ BEGIN
       WHEN 'outside' THEN outside > 0
       ELSE true END
   ),
-  pg AS (SELECT * FROM f ORDER BY tag_number LIMIT LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200) OFFSET GREATEST(COALESCE(p_offset, 0), 0))
+  pg AS (SELECT * FROM f ORDER BY tag_number LIMIT v_limit OFFSET CASE WHEN v_fast THEN 0 ELSE v_offset END)
   SELECT jsonb_build_object(
-    'total', (SELECT count(*) FROM f),
+    'total', COALESCE(v_total, (SELECT count(*) FROM f)),
     'rows', COALESCE((SELECT jsonb_agg(jsonb_build_object(
         'tag_id', pg.id, 'tag_number', pg.tag_number, 'description', pg.description, 'type_code', pg.type_code,
         'has_type', pg.equipment_type_id IS NOT NULL,

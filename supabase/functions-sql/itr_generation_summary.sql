@@ -5,6 +5,8 @@ CREATE OR REPLACE FUNCTION public.itr_generation_summary(p_project_id uuid, p_ph
  LANGUAGE plpgsql
  STABLE
  SET search_path TO 'public', 'pg_temp'
+ SET plan_cache_mode TO 'force_custom_plan'
+ SET work_mem TO '32MB'
 AS $function$
 DECLARE v jsonb;
 BEGIN

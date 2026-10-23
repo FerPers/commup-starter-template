@@ -5,6 +5,8 @@ CREATE OR REPLACE FUNCTION public.tag_itr_requirements(p_project_id uuid, p_tag_
  LANGUAGE plpgsql
  STABLE
  SET search_path TO 'public', 'pg_temp'
+ SET plan_cache_mode TO 'force_custom_plan'
+ SET work_mem TO '32MB'
 AS $function$
 #variable_conflict use_column
 DECLARE v_phases uuid[];
@@ -26,7 +28,7 @@ BEGIN
   ),
   itr AS (  -- el mejor ITR de cada tag × código: aprobado > en curso > generado
     SELECT DISTINCT ON (i.tag_id, tp.code) i.tag_id, tp.code, i.id, i.status::text AS status, tp.title, tp.discipline_id, tp.phase_id,
-           EXISTS (SELECT 1 FROM project_disciplines pd WHERE pd.project_id = p_project_id AND pd.discipline_id = tp.discipline_id) AS in_scope
+           tp.discipline_id IN (SELECT pd.discipline_id FROM project_disciplines pd WHERE pd.project_id = p_project_id) AS in_scope
     FROM itrs i JOIN itr_templates tp ON tp.id = i.template_id JOIN scoped ON scoped.tag_id = i.tag_id
     WHERE i.project_id = p_project_id
     ORDER BY i.tag_id, tp.code,
