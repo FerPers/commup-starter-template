@@ -36,7 +36,7 @@ const PROJECT: Record<string, string> = {
 /** Subpáginas con nombre propio (cualquier nivel por debajo de la sección). */
 const SUB: Record<string, string> = {
   performance: 'nav:performance', operations: 'sub:operations', events: 'sub:events', lookahead: 'sub:lookahead', handovers: 'sub:handovers',
-  reports: 'sub:reports', new: 'sub:new', generate: 'sub:generate', requirements: 'sub:requirements', report: 'sub:report', 'test-packs': 'sub:testPacks', import: 'sub:import',
+  reports: 'sub:reports', new: 'sub:new', generate: 'sub:generate', requirements: 'sub:requirements', untyped: 'sub:untyped', report: 'sub:report', 'test-packs': 'sub:testPacks', import: 'sub:import',
   constraints: 'sub:constraints', tqs: 'sub:tqs', decisions: 'sub:decisions', lineups: 'sub:lineups',
   viewer: 'sub:viewer', preview: 'sub:preview', translations: 'sub:translations', backup: 'sub:backup', matrix: 'sub:matrix', pssr: 'nav:pssrTemplates',
   preservation: 'nav:preservationTemplates', punches: 'nav:opsPunches',

@@ -2,7 +2,7 @@
 // Anthropic; escritura de caché = 1,25 × entrada). Decisión de Luis (2026-10-20): Opus solo donde la calidad del
 // razonamiento lo justifica (matriz ITR e importación C&E); Sonnet para redactar y traducir.
 
-export const AI_FEATURES = ['itr_matrix', 'ce_import', 'daily_report', 'itr_translations', 'systems'] as const
+export const AI_FEATURES = ['itr_matrix', 'ce_import', 'daily_report', 'itr_translations', 'systems', 'tag_types'] as const
 export type AiFeature = (typeof AI_FEATURES)[number]
 
 export const AI_MODELS: Record<AiFeature, string> = {
@@ -11,6 +11,8 @@ export const AI_MODELS: Record<AiFeature, string> = {
   daily_report: 'claude-sonnet-5-5',
   itr_translations: 'claude-sonnet-5-5',
   systems: 'claude-sonnet-5-5',
+  // R3: clasificar firmas de tags es una tarea corta y repetida; Haiku si la prueba de precisión alcanza.
+  tag_types: 'claude-haiku-5-5',
 }
 
 type Price = { input: number; output: number; cacheRead: number; cacheWrite: number }

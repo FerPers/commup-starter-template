@@ -135,7 +135,7 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
   - Sección «ITR requeridos» en la ficha del tag.
   - `itr_generation_candidates` se reescribe sobre los requisitos; con todas las disciplinas da exactamente lo mismo que hoy (test).
   - Los ITR que quedan fuera de requisitos se marcan en calidad de datos y nunca se borran solos.
-- **R3. Tipo de equipo editable y clasificación con IA:**
+- **R3. Tipo de equipo editable y clasificación con IA:** ✅ hecho 2026-10-23 (migración `20261208120000`; decisiones de Luis: elemento sin ITR propio = tipo sin reglas; crear tipo, asignar y correr la IA = Propietario, Administrador y Arquitecto; Haiku 5.5 alcanza: en DEMO los únicos «errores» con el prefijo oculto fueron sinónimos duplicados del catálogo, US$ 0,005 por corrida). Pantalla `/projects/[id]/itrs/requirements/untyped`, «Cambiar tipo» en la ficha del tag.
   - Guard de org para `tags.equipment_type_id`, más un recurso de guard en `withAuth`.
   - Vista previa «gana X, quedan fuera Y» antes de cambiar el tipo.
   - Primero la detección por prefijo (gratis) y después la IA barata (Haiku 5.5, o Sonnet si la prueba de precisión no alcanza) sobre **firmas** de tags: tipo + prefijo + disciplina + descripción normalizada.

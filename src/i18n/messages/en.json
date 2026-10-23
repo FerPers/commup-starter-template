@@ -202,7 +202,8 @@
       "tqs": "TQs",
       "decisions": "Decisions",
       "lineups": "Line-ups",
-      "requirements": "ITR requirements"
+      "requirements": "ITR requirements",
+      "untyped": "Without type"
     },
     "entity": {
       "tag": "Tag",
@@ -6399,7 +6400,8 @@
         "reason": "Reason"
       },
       "total": "Total"
-    }
+    },
+    "untyped": "Classify untyped ({count})"
   },
   "TagRequirements": {
     "title": "Required ITRs",
@@ -6452,6 +6454,88 @@
       "template_not_found": "One of the templates no longer exists in the organization.",
       "client_code_too_long": "A client code is longer than 60 characters.",
       "invalid_client_codes": "The codes are not valid."
+    }
+  },
+  "TagTypes": {
+    "back": "ITR requirements",
+    "title": "Tags without equipment type",
+    "subtitle": "{count, plural, one {# tag gets no ITR because it has no type.} other {# tags get no ITR because they have no type.}} They are grouped by signature: prefix + discipline + description.",
+    "summary": {
+      "groups": "{count, plural, one {# group to decide} other {# groups to decide}}",
+      "detail": "· {free} by free rule · {ai} proposed by AI · {none} without proposal · {pending} not classified",
+      "lastRun": "Last classification: {at} ({model})"
+    },
+    "ai": {
+      "run": "Classify {count, plural, one {# group} other {# groups}} with AI (≈ US$ {cost})",
+      "running": "Classifying…",
+      "hint": "The AI only proposes; nothing changes until you accept a group. What was already proposed is not sent again.",
+      "done": "{count, plural, one {# group classified} other {# groups classified}} · US$ {cost}"
+    },
+    "readOnly": "Read only: groups are accepted by an owner, admin or architect.",
+    "empty": "Every group is decided.",
+    "emptyAll": "There are no tags without type in this project.",
+    "more": "Show more ({count})",
+    "noDescription": "no description",
+    "noDiscipline": "No discipline",
+    "tags": "{count, plural, one {# tag} other {# tags}}",
+    "proposal": {
+      "label": "Proposal",
+      "empty": "No proposal",
+      "create": "Create type {code} “{name}”"
+    },
+    "source": {
+      "prefix": "By catalog code · free",
+      "learned": "By learned prefix · free",
+      "name": "By type name · free",
+      "ai": "AI · confidence {conf}",
+      "none": "The AI found no type",
+      "pending": "Not classified yet",
+      "rejected": "Proposal discarded · classify again",
+      "manual": "Picked by hand"
+    },
+    "preview": {
+      "label": "Preview",
+      "loading": "Calculating…",
+      "gain": "{count, plural, =0 {Gains no ITR} one {Gains # ITR} other {Gains # ITRs}}",
+      "noRules": "The type has no accepted rules: the tags move to “No rule”.",
+      "newType": "New type without rules: they move to “No rule” until the matrix covers it.",
+      "outside": "{count, plural, one {# ITR is left outside requirements} other {# ITRs are left outside requirements}} ({signed} signed); nothing is deleted",
+      "dropped": "{count, plural, one {# requirement without ITR is no longer required} other {# requirements without ITR are no longer required}}"
+    },
+    "accept": "Accept for {count, plural, one {# tag} other {# tags}}",
+    "applied": "Applied to {count, plural, one {# tag} other {# tags}}",
+    "other": "Other type…",
+    "reject": "Discard",
+    "pick": {
+      "label": "Equipment type",
+      "placeholder": "Pick a type…",
+      "new": "＋ Create a new type…",
+      "code": "Code",
+      "name": "Name",
+      "category": "Category",
+      "apply": "Use this"
+    },
+    "reason": {
+      "label": "Reason ({count, plural, one {# ITR is} other {# ITRs are}} left outside requirements: {codes})",
+      "placeholder": "Why the type changes…",
+      "hint": "At least 10 characters. It stays in the history; ITRs are not deleted."
+    },
+    "error": {
+      "reason_required": "Explain the change (at least 10 characters): it leaves ITRs outside requirements.",
+      "type_exists": "A type with that code already exists: pick it from the list.",
+      "invalid_type": "Code (letters and digits, up to 12) and name are required.",
+      "no_tags": "No tags without type are left in this group."
+    },
+    "tag": {
+      "label": "Equipment type",
+      "none": "No type: gets no ITR",
+      "groups": "Classify by groups ›",
+      "change": "Change type",
+      "close": "Close",
+      "target": "New type",
+      "removeType": "Remove the type",
+      "confirm": "Change the type",
+      "saving": "Saving…"
     }
   }
 }

@@ -10256,6 +10256,102 @@ export type Database = {
           },
         ]
       }
+      tag_type_proposals: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          created_by: string | null
+          decided_at: string | null
+          decided_by: string | null
+          desc_norm: string
+          discipline_id: string | null
+          equipment_type_id: string | null
+          id: string
+          model: string | null
+          new_type: Json | null
+          org_id: string
+          outcome: string
+          prefix: string
+          project_id: string
+          reason: string | null
+          status: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          desc_norm: string
+          discipline_id?: string | null
+          equipment_type_id?: string | null
+          id?: string
+          model?: string | null
+          new_type?: Json | null
+          org_id: string
+          outcome: string
+          prefix: string
+          project_id: string
+          reason?: string | null
+          status?: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          desc_norm?: string
+          discipline_id?: string | null
+          equipment_type_id?: string | null
+          id?: string
+          model?: string | null
+          new_type?: Json | null
+          org_id?: string
+          outcome?: string
+          prefix?: string
+          project_id?: string
+          reason?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_type_proposals_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_type_proposals_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["discipline_id"]
+          },
+          {
+            foreignKeyName: "tag_type_proposals_equipment_type_id_fkey"
+            columns: ["equipment_type_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_type_proposals_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_type_proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string
@@ -14384,6 +14480,7 @@ export type Database = {
         Args: { p_level: number; p_system_id: string }
         Returns: Json
       }
+      tag_desc_norm: { Args: { p: string }; Returns: string }
       tag_discipline_counts: {
         Args: { p_project_id: string; p_subsystem_id?: string }
         Returns: {
@@ -14433,6 +14530,7 @@ export type Database = {
           template_title: string
         }[]
       }
+      tag_number_prefix: { Args: { p: string }; Returns: string }
       tag_requirements_audit: { Args: { p_project_id: string }; Returns: Json }
       tag_requirements_export: {
         Args: {
@@ -14478,6 +14576,20 @@ export type Database = {
         Args: { p_subsystem_id: string; p_tag_id: string }
         Returns: Json
       }
+      tag_type_change_preview: {
+        Args: { p_project_id: string; p_tag_ids: string[]; p_type_id: string }
+        Returns: Json
+      }
+      tag_type_group_tags: {
+        Args: {
+          p_desc_norm: string
+          p_discipline_id: string
+          p_prefix: string
+          p_project_id: string
+        }
+        Returns: string[]
+      }
+      tag_type_groups: { Args: { p_project_id: string }; Returns: Json }
       take_kpi_snapshot: {
         Args: { p_date?: string; p_project_id: string }
         Returns: Json

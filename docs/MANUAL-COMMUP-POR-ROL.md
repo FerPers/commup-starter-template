@@ -121,6 +121,7 @@ Esta es la secuencia típica de un proyecto. Cada fase termina en una **liberaci
 | Importar el índice de señales y lazos (Excel) | Arquitecto | Señales y lazos › Importar señales |
 | Revisar sistemas, prioridades, límites y **dependencias** entre sistemas | Líder / Arquitecto | Proyecto › Sistemas → ficha › Dependencias |
 | Plantillas ITR (crear, importar del catálogo, activar revisiones) y matriz tipo de equipo × plantilla (con IA) | Arquitecto / Líder | Administración › Plantillas ITR › Matriz |
+| Tipo de equipo de los tags (por grupos con IA o uno a uno) | Arquitecto | ITR › Requisitos ITR › Clasificar sin tipo · ficha del tag › ITRs |
 | Plantillas de preservación y PSSR | Líder | Administración › Plantillas |
 | Inventario de equipos de prueba calibrados | Líder | Administración › Equipos de prueba |
 | Registro de documentos (P&ID, hojas de datos…) y sus revisiones | Líder | Proyecto › Documentos |
@@ -314,6 +315,7 @@ Todo lo del administrador, y además: borrar proyectos, elegir el catálogo de p
 3. Ítems: casilla, sí/no, texto, número, medición (mín/máx/unidad), selección (con resultado), foto, fecha, documento PDF, continuidad, tabla (fija, variable o desde lazo/C&E). Marcas: crítico, obligatorio, requiere foto/documento, condición.
 4. **Activar** la revisión. Una revisión usada no se edita: «Nueva revisión» → editar → activar.
 5. *Plantillas ITR › Matriz*: la IA propone tipo de equipo × plantilla con motivo; acepta o rechaza. Las filas aceptadas son las que usa «Generar ITR».
+6. **Tags sin tipo:** un tag sin tipo de equipo no recibe ningún ITR. *ITR › Requisitos ITR › Clasificar sin tipo* los agrupa por firma (prefijo + disciplina + descripción) y propone un tipo: gratis cuando el prefijo es un código del catálogo, coincide con lo ya tipado en la organización o la descripción es el nombre de un tipo; para el resto, «Clasificar con IA» (muestra el costo antes). «Aceptar para N tags» aplica a todo el grupo con vista previa (cuántos ITR gana y cuántos quedan fuera de requisitos); «Otro tipo…» elige otro o crea uno nuevo (un tipo sin reglas sirve para elementos sin ITR propio, como un spool). Un tag suelto se cambia en su ficha › ITRs › «Cambiar tipo». Cambiar el tipo nunca borra ITR: si alguno queda fuera de requisitos se pide un motivo. Lo deciden Propietario, Administrador y Arquitecto.
 
 **Asignar**
 1. **Por tag:** ficha del tag › ITRs › «+ Asignar ITR» (o «✦ Sugerir con IA») → plantilla → firmantes que pide la plantilla (por defecto ejecutor + supervisor; cliente si la fase lo exige) → fecha → Asignar. Número `CÓDIGO/TAG` (R2, R3… si se repite). Un rol sin firmar se puede completar o cambiar después.

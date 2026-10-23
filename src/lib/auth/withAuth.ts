@@ -49,6 +49,7 @@ import {
   checkTemplateAccess,
   checkDisciplineAccess,
   checkPhaseAccess,
+  checkEquipmentTypeAccess,
   type AccessResult,
 } from '@/lib/auth/access'
 
@@ -63,6 +64,7 @@ import {
  *   template       → org-scoped (or is_global=true)
  *   discipline     → org-scoped
  *   phase          → org-scoped
+ *   equipment_type → org-scoped (R3: nunca el catálogo de CommUp)
  */
 export type FKResource =
   | 'project'
@@ -72,6 +74,7 @@ export type FKResource =
   | 'template'
   | 'discipline'
   | 'phase'
+  | 'equipment_type'
 
 export type FKGuard = {
   /** Resource type — determines which `check*Access` helper runs. */
@@ -227,6 +230,8 @@ async function runSingleGuard(
       return checkDisciplineAccess(ctx.supabase, ctx.orgId, id)
     case 'phase':
       return checkPhaseAccess(ctx.supabase, ctx.orgId, id)
+    case 'equipment_type':
+      return checkEquipmentTypeAccess(ctx.supabase, ctx.orgId, id)
   }
 }
 

@@ -202,7 +202,8 @@
       "tqs": "TQ",
       "decisions": "Decisiones",
       "lineups": "Line-ups",
-      "requirements": "Requisitos ITR"
+      "requirements": "Requisitos ITR",
+      "untyped": "Sin tipo"
     },
     "entity": {
       "tag": "Tag",
@@ -6399,7 +6400,8 @@
         "reason": "Motivo"
       },
       "total": "Total"
-    }
+    },
+    "untyped": "Clasificar sin tipo ({count})"
   },
   "TagRequirements": {
     "title": "ITR requeridos",
@@ -6452,6 +6454,88 @@
       "template_not_found": "Una de las plantillas ya no existe en la organización.",
       "client_code_too_long": "Un código del cliente pasa de 60 caracteres.",
       "invalid_client_codes": "Los códigos no son válidos."
+    }
+  },
+  "TagTypes": {
+    "back": "Requisitos ITR",
+    "title": "Tags sin tipo de equipo",
+    "subtitle": "{count, plural, one {# tag no recibe ningún ITR porque no tiene tipo.} other {# tags no reciben ningún ITR porque no tienen tipo.}} Se agrupan por firma: prefijo + disciplina + descripción.",
+    "summary": {
+      "groups": "{count, plural, one {# grupo por decidir} other {# grupos por decidir}}",
+      "detail": "· {free} por regla gratis · {ai} propuestos por IA · {none} sin propuesta · {pending} sin clasificar",
+      "lastRun": "Última clasificación: {at} ({model})"
+    },
+    "ai": {
+      "run": "Clasificar {count, plural, one {# grupo} other {# grupos}} con IA (≈ US$ {cost})",
+      "running": "Clasificando…",
+      "hint": "La IA solo propone; nada cambia hasta que aceptas un grupo. Lo ya propuesto no se vuelve a enviar.",
+      "done": "{count, plural, one {# grupo clasificado} other {# grupos clasificados}} · US$ {cost}"
+    },
+    "readOnly": "Solo lectura: los grupos los acepta un propietario, administrador o arquitecto.",
+    "empty": "Todos los grupos están decididos.",
+    "emptyAll": "No hay tags sin tipo en este proyecto.",
+    "more": "Mostrar más ({count})",
+    "noDescription": "sin descripción",
+    "noDiscipline": "Sin disciplina",
+    "tags": "{count, plural, one {# tag} other {# tags}}",
+    "proposal": {
+      "label": "Propuesta",
+      "empty": "Sin propuesta",
+      "create": "Crear tipo {code} «{name}»"
+    },
+    "source": {
+      "prefix": "Por código del catálogo · gratis",
+      "learned": "Por prefijo aprendido · gratis",
+      "name": "Por nombre del tipo · gratis",
+      "ai": "IA · confianza {conf}",
+      "none": "La IA no encontró un tipo",
+      "pending": "Sin clasificar todavía",
+      "rejected": "Propuesta descartada · clasificar de nuevo",
+      "manual": "Elegido a mano"
+    },
+    "preview": {
+      "label": "Vista previa",
+      "loading": "Calculando…",
+      "gain": "{count, plural, =0 {No gana ITR} one {Gana # ITR} other {Gana # ITR}}",
+      "noRules": "El tipo no tiene reglas aceptadas: los tags pasan a «Sin regla».",
+      "newType": "Tipo nuevo sin reglas: pasan a «Sin regla» hasta que la matriz lo cubra.",
+      "outside": "{count, plural, one {# ITR queda fuera de requisitos} other {# ITR quedan fuera de requisitos}} ({signed} firmados); no se borran",
+      "dropped": "{count, plural, one {# requisito sin ITR deja de requerirse} other {# requisitos sin ITR dejan de requerirse}}"
+    },
+    "accept": "Aceptar para {count, plural, one {# tag} other {# tags}}",
+    "applied": "Aplicado a {count, plural, one {# tag} other {# tags}}",
+    "other": "Otro tipo…",
+    "reject": "Descartar",
+    "pick": {
+      "label": "Tipo de equipo",
+      "placeholder": "Elige un tipo…",
+      "new": "＋ Crear un tipo nuevo…",
+      "code": "Código",
+      "name": "Nombre",
+      "category": "Categoría",
+      "apply": "Usar este"
+    },
+    "reason": {
+      "label": "Motivo ({count, plural, one {# ITR queda} other {# ITR quedan}} fuera de requisitos: {codes})",
+      "placeholder": "Por qué cambia el tipo…",
+      "hint": "Mínimo 10 caracteres. Queda en el historial; los ITR no se borran."
+    },
+    "error": {
+      "reason_required": "Explica el cambio (mínimo 10 caracteres): deja ITR fuera de requisitos.",
+      "type_exists": "Ya existe un tipo con ese código: elígelo de la lista.",
+      "invalid_type": "Código (letras y dígitos, hasta 12) y nombre son obligatorios.",
+      "no_tags": "Ya no quedan tags sin tipo en este grupo."
+    },
+    "tag": {
+      "label": "Tipo de equipo",
+      "none": "Sin tipo: no recibe ITR",
+      "groups": "Clasificar por grupos ›",
+      "change": "Cambiar tipo",
+      "close": "Cerrar",
+      "target": "Tipo nuevo",
+      "removeType": "Quitar el tipo",
+      "confirm": "Cambiar el tipo",
+      "saving": "Guardando…"
     }
   }
 }

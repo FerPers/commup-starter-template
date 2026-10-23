@@ -6,6 +6,7 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import TagDetail from './TagDetail'
 import TagRequirementsPanel, { type TagReq } from './TagRequirementsPanel'
+import TagTypeControl from './TagTypeControl'
 import type { ReqState, ReqOrigin } from '@/lib/itr/requirements'
 import { loadPidDrawings } from '@/lib/documents/pid'
 import { normalizePidRef } from '@/lib/excel/normalize'
@@ -145,7 +146,7 @@ export default async function TagDetailPage({
 
   // S09 (B-07): subsistemas paginados (PostgREST corta en 1000) y navegación anterior/siguiente con dos
   // lecturas de 1 fila por tag_number (único por proyecto) en vez de cargar todos los ids del proyecto.
-  const [subsystemRes, { data: prevRow }, { data: nextRow }] = await Promise.all([
+  const [subsystemRes, { data: prevRow }, { data: nextRow }, { data: typeOptions }] = await Promise.all([
     canMove
       ? fetchAllRowsFlagged(() => supabase
           .from('subsystems')
@@ -169,6 +170,10 @@ export default async function TagDetailPage({
       .order('tag_number', { ascending: true })
       .limit(1)
       .maybeSingle(),
+    canEdit
+      // bounded: catálogo de tipos de la org para «Cambiar tipo» (R3; decenas a cientos)
+      ? supabase.from('equipment_types').select('id, code, name').eq('org_id', membership.org_id).order('code').limit(2000)
+      : Promise.resolve({ data: [] as { id: string; code: string; name: string }[] }),
   ])
   const subsystemOptions = subsystemRes.rows.map(s => ({ id: s.id, code: s.code, name: s.name, system_code: s.systems.code }))
   const prevTagId = prevRow?.id ?? null
@@ -251,6 +256,14 @@ export default async function TagDetailPage({
       tagPhotos={tagPhotos}
       initialTab={initialTab}
       requirementsSlot={
+        <>
+        <TagTypeControl
+          projectId={projectId}
+          tagId={tag.id}
+          current={tag.equipment_types ? { id: tag.equipment_types.id, code: tag.equipment_types.code, name: tag.equipment_types.name } : null}
+          types={typeOptions ?? []}
+          canEdit={canEdit}
+        />
         <TagRequirementsPanel
           projectId={projectId}
           tagId={tag.id}
@@ -261,6 +274,7 @@ export default async function TagDetailPage({
           canEdit={EDITOR_ROLES.includes(membership.role)}
           hasSubsystem={!!tag.subsystems?.id}
         />
+        </>
       }
     />
     </>

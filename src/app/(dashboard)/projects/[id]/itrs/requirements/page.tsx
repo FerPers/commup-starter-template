@@ -85,6 +85,8 @@ export default async function RequirementsPage({ params, searchParams }: {
           <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{t('subtitle', { project: project.code })}</p>
         </div>
         <Link href={`/projects/${id}/scope`} style={btn('outline')}>{t('scope')}</Link>
+        {/* R3: los tags sin tipo se clasifican por firma (gratis por prefijo/nombre, luego IA) en su propia página. */}
+        {summary.tags_no_type > 0 && <Link href={`${base}/untyped`} style={btn('outline')}>{t('untyped', { count: summary.tags_no_type })}</Link>}
         {/* R2b: el Excel es el plan completo del nodo del árbol (los chips de filtro no aplican). */}
         <a href={`${base}/export${reqQuery({ area: p.area, system: p.system, subsystem: p.subsystem })}`} download
           title={t('exportHint', { node: nodeLabel ?? project.code })} style={btn('outline')}>{t('export')}</a>

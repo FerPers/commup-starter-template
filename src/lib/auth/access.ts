@@ -116,6 +116,23 @@ export async function checkDisciplineAccess(
   return data ? OK : notFound('Discipline')
 }
 
+// ── Equipment type (org-scoped) ──────────────────────────────────────────────
+// R3: el catálogo de CommUp es legible por todas las orgs, pero un tag solo usa tipos de su propia org.
+
+export async function checkEquipmentTypeAccess(
+  db: Db,
+  orgId: string,
+  equipmentTypeId: string,
+): Promise<AccessResult> {
+  const { data } = await db
+    .from('equipment_types')
+    .select('id')
+    .eq('id', equipmentTypeId)
+    .eq('org_id', orgId)
+    .maybeSingle()
+  return data ? OK : notFound('Equipment type')
+}
+
 // ── Tag (project-scoped) ─────────────────────────────────────────────────────
 
 export async function checkTagAccess(
