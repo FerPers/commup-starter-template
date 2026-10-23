@@ -153,10 +153,12 @@ async function replayOutboxOnce(
   let flushed = 0
   let dropped = 0
   const entries = sendableBy(await getOutbox(), userId)
+  // G-17: ITR con fotos que en esta vuelta no se subieron (rechazadas o sin intentar): su firma espera.
+  const photosPending = new Set<string>()
 
   for (const entry of entries) {
     if (entry.id === undefined) continue
-    if (entry.kind === 'signature' && signatureWaits(entry.itrId, responsesPending)) continue
+    if (entry.kind === 'signature' && signatureWaits(entry.itrId, responsesPending, photosPending)) continue
     try {
       const result = await sendOutboxEntry(entry)
       if ('error' in result) {
@@ -182,6 +184,7 @@ async function replayOutboxOnce(
           }
         } else {
           await markOutboxAttempt(entry.id, result.error)
+          if (entry.kind === 'photo') photosPending.add(entry.itrId)
         }
         continue
       }
@@ -190,6 +193,7 @@ async function replayOutboxOnce(
     } catch (err) {
       if (isNetworkFailure(err)) break   // sin red todavía: reintentar luego
       await markOutboxAttempt(entry.id, err instanceof Error ? err.message : String(err))
+      if (entry.kind === 'photo') photosPending.add(entry.itrId)
     }
   }
 

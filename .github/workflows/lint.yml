@@ -58,6 +58,38 @@ jobs:
           TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
           TEST_PROJECT_A_ID: ${{ secrets.TEST_PROJECT_A_ID }}
 
+  # G-17 (2026-10-23): recorridos de campo con Playwright contra un Supabase LOCAL del runner (baseline +
+  # migraciones + supabase/seed/e2e.sql); nada toca prod. Por ahora no bloquea el deploy: se suma a `needs`
+  # cuando lleve varias corridas estables.
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.90.0
+      - name: Supabase local (migraciones + semilla E2E)
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
   # G-01 (2026-10-19): el deploy vive aquí y espera a los tres checks. Antes estaba en deploy.yml,
   # independiente, y 18 pushes con la CI roja llegaron igual a producción.
   deploy:

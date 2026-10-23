@@ -133,7 +133,8 @@ export default function PhotoUpload({
       {uploadError && (
         <p style={{ fontSize: '11px', color: 'var(--danger-500)', margin: '4px 0 0' }}>{uploadError}</p>
       )}
-      {queuedHint && (
+      {/* G-17: el aviso dura mientras alguna foto del ítem siga en la bandeja (antes quedaba tras subirla). */}
+      {queuedHint && shown.some(att => att.pending) && (
         <p style={{ fontSize: '11px', color: 'var(--warning-700)', margin: '4px 0 0' }}>{t('upload.queuedHint')}</p>
       )}
 

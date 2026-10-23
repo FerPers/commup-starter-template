@@ -129,6 +129,7 @@ export default function ItemRow({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <textarea
             ref={textRef}
+            aria-label={visibleDesc}
             rows={2}
             defaultValue={response?.value_text ?? ''}
             disabled={!canEdit}
@@ -151,6 +152,7 @@ export default function ItemRow({
         <input
           type="number"
           inputMode="decimal"
+          aria-label={visibleDesc}
           defaultValue={response?.value_numeric ?? ''}
           disabled={!canEdit}
           onBlur={e => onSave(item.id, { valueNumeric: e.target.value !== '' ? Number(e.target.value) : null })}
@@ -166,6 +168,7 @@ export default function ItemRow({
               type="number"
               inputMode="decimal"
               step="any"
+              aria-label={visibleDesc}
               defaultValue={response?.value_numeric ?? ''}
               disabled={!canEdit}
               onBlur={e => {
@@ -194,6 +197,7 @@ export default function ItemRow({
       {/* Select */}
       {item.item_type === 'select' && (
         <select
+          aria-label={visibleDesc}
           value={response?.value_option ?? ''}
           disabled={!canEdit}
           onChange={e => onSave(item.id, { valueOption: e.target.value || null, isPassed: evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, e.target.value).isPassed })}
@@ -210,6 +214,7 @@ export default function ItemRow({
       {item.item_type === 'date' && (
         <input
           type="date"
+          aria-label={visibleDesc}
           defaultValue={response?.value_text ?? ''}
           disabled={!canEdit}
           onBlur={e => onSave(item.id, { valueText: e.target.value || null })}

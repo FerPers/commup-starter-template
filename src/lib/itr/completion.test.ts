@@ -59,6 +59,13 @@ describe('evaluateItrCompletion', () => {
     const items = [item('a', { item_type: 'select', options: ['yes', 'no'] }), item('b', { condition_item_id: 'a', condition_value: 'yes' })]
     expect(evaluateItrCompletion(items, [response('a', { value_bool: false, value_option: 'yes' })]).missingRequiredItemIds).toEqual(['b'])
   })
+  it('G-17: una foto tomada sin red (en la bandeja, sin file_url) cuenta; un adjunto vacío no', () => {
+    const items = [item('a', { item_type: 'photo' }), item('b', { requires_photo: true, item_type: 'checkbox' })]
+    const responses = [response('b', { value_bool: true })]
+    expect(evaluateItrCompletion(items, responses, [{ item_id: 'a', file_url: '', file_type: 'image/jpeg' }]).isComplete).toBe(false)
+    const pending = [{ item_id: 'a', file_url: '', file_type: 'image/jpeg', pending: true }, { item_id: 'b', file_url: '', file_type: 'image/png', pending: true }]
+    expect(evaluateItrCompletion(items, responses, pending).isComplete).toBe(true)
+  })
   it('counts an uploaded photo without a synthetic response row and ignores unrelated evidence', () => {
     const items = [item('a', { item_type: 'photo' })]
     expect(evaluateItrCompletion(items, [], [{ item_id: 'a', file_url: 'image', file_type: 'image/png' }]).isComplete).toBe(true)

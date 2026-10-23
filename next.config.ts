@@ -10,11 +10,15 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 // En dev Next necesita 'unsafe-eval' (HMR / overlay).
 const isDev = process.env.NODE_ENV !== 'production';
 
-const supabaseHost = (() => {
-	try { return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').host; } catch { return ''; }
+const supabaseUrl = (() => {
+	try { return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''); } catch { return null; }
 })();
+const supabaseHost = supabaseUrl?.host ?? '';
+// G-17: Supabase local (`supabase start`, pruebas E2E) va por http; solo entonces se permite http/ws y no se
+// fuerza https (upgrade-insecure-requests rompería las llamadas a 127.0.0.1). Prod siempre es https.
+const localSupabase = supabaseUrl?.protocol === 'http:';
 const supabaseSrc = supabaseHost
-	? `https://${supabaseHost} wss://${supabaseHost}`
+	? localSupabase ? `http://${supabaseHost} ws://${supabaseHost}` : `https://${supabaseHost} wss://${supabaseHost}`
 	: 'https://*.supabase.co wss://*.supabase.co';
 
 const csp = [
@@ -32,7 +36,7 @@ const csp = [
 	"frame-src 'self' blob:",
 	"media-src 'self' blob: data:",
 	"manifest-src 'self'",
-	...(isDev ? [] : ['upgrade-insecure-requests']),
+	...(isDev || localSupabase ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
 const securityHeaders = [

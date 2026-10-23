@@ -64,9 +64,10 @@ export function outboxPolicy(kind: QueueKind, attemptsSoFar: number): 'retry' | 
 /**
  * S18 (C-07): una firma no se intenta mientras su ITR tenga respuestas en cola (aún no enviadas o rechazadas):
  * el servidor la rechazaría por «contenido incompleto» y, con 1 intento, se perdería.
+ * G-17: lo mismo con las fotos/PDF del ITR que siguen en la bandeja (una foto rechazada que se reintenta).
  */
-export function signatureWaits(itrId: string, pendingResponseItrIds: ReadonlySet<string>): boolean {
-  return pendingResponseItrIds.has(itrId)
+export function signatureWaits(itrId: string, pendingResponseItrIds: ReadonlySet<string>, pendingPhotoItrIds: ReadonlySet<string> = new Set()): boolean {
+  return pendingResponseItrIds.has(itrId) || pendingPhotoItrIds.has(itrId)
 }
 
 // ── Estado local del ITR (espejo de upsertResponse en el servidor) ─────

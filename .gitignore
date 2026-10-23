@@ -223,3 +223,9 @@ testsprite_tests/tmp/config.json
 ### Claude Code — configuración local y worktrees
 .claude/settings.local.json
 .claude/worktrees/
+
+# G-17: salidas de Playwright
+/playwright-report/
+/test-results/
+/blob-report/
+/supabase/.branches/

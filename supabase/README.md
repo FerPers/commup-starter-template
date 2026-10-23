@@ -32,6 +32,20 @@ Never edit `00000000000000_baseline.sql` after this point — additive migration
 
 **Every change to prod goes through a file in `migrations/` with the same version it is registered under.** `apply_migration` (MCP) registers its own timestamp and `supabase db query` registers nothing: after applying that way, register the file's version (`supabase migration repair --status applied <version>`). Nothing is created in prod from the SQL editor or the dashboard (extensions, publications, crons, RLS toggles): it goes in a migration.
 
+## Local Supabase for E2E tests (G-17, 2026-10-23)
+
+`config.toml` exists only for the LOCAL stack used by the Playwright field journeys (`e2e/`). Prod is unchanged.
+
+```bash
+colima start                                   # Docker runtime on the Mac (brew install colima docker)
+SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io supabase start   # docker.io: public.ecr.aws failed with EOF here
+supabase db reset --local                      # baseline + migrations + supabase/seed/e2e.sql
+npm run e2e                                    # builds the app against the local stack and runs Playwright
+npm run e2e -- --no-build --headed             # reuse the build, watch the browser
+```
+
+`scripts/e2e/run.mjs` refuses to run unless the Supabase URL is 127.0.0.1/localhost. The seed creates org «CommUp E2E», one inspector (`inspector@e2e.commup.test`) and template/ITR ids `e2e00000-…`; each test creates its own fresh ITR, so a reset is only needed when the schema changes. CI runs the same in the `e2e` job (`supabase start` on the runner).
+
 ## Reproducibility (2026-10-22)
 
 Baseline + migrations rebuild prod's `public` schema exactly: verified on an empty project by comparing `scripts/loadtest/schema-ddl.sql` against prod with `scripts/loadtest/compare-ddl.mjs` (0 differences). What it took:

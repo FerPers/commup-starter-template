@@ -112,4 +112,9 @@ describe('cola de respuestas sin bloqueo (S18, C-07)', () => {
     expect(signatureWaits('itr1', pending)).toBe(true)
     expect(signatureWaits('itr2', pending)).toBe(false)
   })
+
+  it('G-17: la firma espera mientras su ITR tenga fotos sin subir', () => {
+    expect(signatureWaits('itr1', new Set(), new Set(['itr1']))).toBe(true)
+    expect(signatureWaits('itr2', new Set(), new Set(['itr1']))).toBe(false)
+  })
 })

@@ -23,6 +23,7 @@
 		"zod": "^4.5.4"
 	},
 	"devDependencies": {
+		"@playwright/test": "1.60.0",
 		"@tailwindcss/postcss": "4.1.17",
 		"@types/node": "24.10.1",
 		"@types/react": "19.2.7",
@@ -56,7 +57,8 @@
 		"help:build": "node scripts/docs/build-help.mjs",
 		"prepare": "husky",
 		"test": "vitest run",
-		"test:watch": "vitest"
+		"test:watch": "vitest",
+		"e2e": "node scripts/e2e/run.mjs"
 	},
 	"lint-staged": {
 		"*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --max-warnings=9999"
