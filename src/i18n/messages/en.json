@@ -3024,7 +3024,8 @@
       "constraints_clear": "Milestone constraints closed",
       "lineup_verified": "Line-up verified and current",
       "performance_accepted": "Performance test accepted (PTC certificate)",
-      "documents_current": "Current documents"
+      "documents_current": "Current documents",
+      "requirements_generated": "Required ITRs generated"
     },
     "crit": {
       "previousOk": "The previous milestone is approved.",
@@ -3057,7 +3058,12 @@
       "documentsOutdated": "{count, plural, one {One signed record uses} other {# signed records use}} a superseded document revision (condition).",
       "documentsRow": "{doc}: uses Rev {used}, current Rev {current}",
       "documentsOpen": "Open procedure",
-      "documentsRegister": "View document register →"
+      "documentsRegister": "View document register →",
+      "requirementsOk": "All required ITRs for this phase exist.",
+      "requirementsMissing": "{count, plural, one {# required ITR not generated} other {# required ITRs not generated}} on {tags, plural, one {# tag} other {# tags}}: generate them or exclude them with a reason.",
+      "requirementsStale": "(The requirements register is updating: it may take a minute.)",
+      "requirementsRegister": "See the missing ones in the register →",
+      "requirementsGenerate": "Generate ITRs →"
     },
     "reason": {
       "cat_a": "{a} open Cat A punch(es)",
@@ -3176,13 +3182,15 @@
     "confirmRemoveCriterion": "Remove this criterion? It changes the status of every system.",
     "confirmRemoveCriterionImpact": "This criterion has {n} active attestation(s) in {systems} system(s). It will be archived (evidence kept) and no longer evaluated in any system. Continue?",
     "policy": {
-      "title": "Milestone regression",
-      "hint": "What happens when an approved milestone no longer meets its criteria (regressed).",
+      "title": "Milestone policy",
+      "hint": "What happens when an approved milestone stops meeting its criteria (regression) and how required ITRs that were not generated yet count.",
       "previous": "Previous milestone regressed",
       "dependency": "Provider system regressed",
       "block": "Blocks (red)",
       "condition": "Condition (yellow)",
-      "catA": "A new punch also regresses already approved milestones (by default it only holds the next one)"
+      "catA": "A new punch also regresses already approved milestones (by default it only holds the next one)",
+      "requirements": "Required ITRs not generated",
+      "off": "Does not count"
     },
     "title": "Milestones & criteria",
     "subtitle": "Each milestone is a per-system checkpoint: it is computed from its criteria and formally approved by someone with authority. By default there is one per phase (MC, RFPC, RFC, RFSU); you can add the optional milestones from the commissioning guide.",

@@ -3024,7 +3024,8 @@
       "constraints_clear": "Restricciones de la liberación cerradas",
       "lineup_verified": "Line-up verificado y vigente",
       "performance_accepted": "Prueba de desempeño aceptada (certificado PTC)",
-      "documents_current": "Documentos vigentes"
+      "documents_current": "Documentos vigentes",
+      "requirements_generated": "ITR requeridos generados"
     },
     "crit": {
       "previousOk": "La liberación anterior está aprobada.",
@@ -3057,7 +3058,12 @@
       "documentsOutdated": "{count, plural, one {Un registro firmado usa} other {# registros firmados usan}} una revisión de documento superada (condición).",
       "documentsRow": "{doc}: usa Rev {used}, vigente Rev {current}",
       "documentsOpen": "Abrir procedimiento",
-      "documentsRegister": "Ver registro de documentos →"
+      "documentsRegister": "Ver registro de documentos →",
+      "requirementsOk": "Todos los ITR requeridos de esta fase existen.",
+      "requirementsMissing": "{count, plural, one {# ITR requerido sin generar} other {# ITR requeridos sin generar}} en {tags, plural, one {# tag} other {# tags}}: genéralos o exclúyelos con motivo.",
+      "requirementsStale": "(El registro de requisitos se está actualizando: puede tardar un minuto.)",
+      "requirementsRegister": "Ver los que faltan en el registro →",
+      "requirementsGenerate": "Generar ITR →"
     },
     "reason": {
       "cat_a": "{a} punch(es) Cat A abiertos",
@@ -3176,13 +3182,15 @@
     "confirmRemoveCriterion": "¿Quitar este criterio? Cambia el estado de todos los sistemas.",
     "confirmRemoveCriterionImpact": "Este criterio tiene {n} declaración(es) vigente(s) en {systems} sistema(s). Se archiva (la evidencia se conserva) y deja de evaluarse en todos los sistemas. ¿Continuar?",
     "policy": {
-      "title": "Regresión de liberaciones",
-      "hint": "Qué pasa cuando una liberación ya aprobada deja de cumplir sus criterios (en regresión).",
+      "title": "Política de liberaciones",
+      "hint": "Qué pasa cuando una liberación aprobada deja de cumplir sus criterios (regresión) y cómo cuentan los ITR requeridos que todavía no se generaron.",
       "previous": "Liberación anterior en regresión",
       "dependency": "Sistema proveedor en regresión",
       "block": "Bloquea (rojo)",
       "condition": "Condición (amarillo)",
-      "catA": "Un punch nuevo regresa también las liberaciones ya aprobadas (por defecto solo frena la siguiente)"
+      "catA": "Un punch nuevo regresa también las liberaciones ya aprobadas (por defecto solo frena la siguiente)",
+      "requirements": "ITR requeridos sin generar",
+      "off": "No cuenta"
     },
     "title": "Liberaciones y criterios",
     "subtitle": "Cada liberación es un punto de control por sistema: se calcula con sus criterios y quien tenga autoridad la aprueba formalmente. Por defecto hay una por fase (MC, RFPC, RFC, RFSU); puedes sumar las liberaciones opcionales de la guía de comisionamiento.",

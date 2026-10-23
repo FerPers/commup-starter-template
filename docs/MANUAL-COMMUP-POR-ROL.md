@@ -370,7 +370,7 @@ Todo lo del administrador, y además: borrar proyectos, elegir el catálogo de p
 5. **Revocar** o **reabrir** (arquitecto o superior, con motivo).
 
 ### 5.8 Liberaciones y matriz de Liberación de sistemas
-**Cómo se calcula** (automático): para cada sistema y liberación, en orden: liberación anterior aprobada con firmas · sistemas de los que depende · registros controlados que bloquean · restricciones de la liberación (abierta = condición; nivel 4 = bloqueo) · line-up (si se exige) · documentos vigentes · prueba de desempeño (si se exige) · criterios configurados (ITR de la fase por subsistema, certificados, PSSR, tags críticos, declaraciones con evidencia). Resultado: **verde, amarillo o rojo**.
+**Cómo se calcula** (automático): para cada sistema y liberación, en orden: liberación anterior aprobada con firmas · sistemas de los que depende · registros controlados que bloquean · restricciones de la liberación (abierta = condición; nivel 4 = bloqueo) · line-up (si se exige) · documentos vigentes · ITR requeridos generados (los que pide el registro de requisitos para la fase; por defecto condición, la org puede hacerlo bloqueo o apagarlo en *Liberaciones y criterios*) · prueba de desempeño (si se exige) · criterios configurados (ITR de la fase por subsistema, certificados, PSSR, tags críticos, declaraciones con evidencia). Resultado: **verde, amarillo o rojo**.
 
 **Estados:** No listo · Listo · Listo con condiciones · Pendiente de firmas · Aprobado · Aprobado con condiciones · Aprobado, revisar · Regresión (estaba aprobado y hoy está en rojo).
 

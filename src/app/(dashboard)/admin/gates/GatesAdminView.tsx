@@ -124,6 +124,16 @@ export default function GatesAdminView({ gates, criteria, phases, weights, polic
               <option value="block">{t('policy.block')}</option>
             </select>
           </label>
+          {/* R5: ITR requeridos (registro de requisitos) que todavía no se generaron */}
+          <label style={{ ...small, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {t('policy.requirements')}
+            <select style={input} value={policy.missing_requirements} disabled={isPending}
+              onChange={e => act(() => updateGatePolicy({ missing_requirements: e.target.value as GatePolicy['missing_requirements'] }))}>
+              <option value="warn">{t('policy.condition')}</option>
+              <option value="block">{t('policy.block')}</option>
+              <option value="off">{t('policy.off')}</option>
+            </select>
+          </label>
           <label style={{ ...small, display: 'flex', alignItems: 'center', gap: 8, marginTop: 18 }}>
             <input type="checkbox" checked={policy.cat_a_regresses_approved} disabled={isPending}
               onChange={e => act(() => updateGatePolicy({ cat_a_regresses_approved: e.target.checked }))} />

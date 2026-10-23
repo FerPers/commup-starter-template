@@ -28,6 +28,8 @@ export type CriterionKind =
   | 'lineup_verified'
   | 'performance_accepted'
   | 'documents_current'
+  /** R5: ITR requeridos (registro de requisitos) de la fase del gate que todavía no existen. */
+  | 'requirements_generated'
   | 'itr_phase_approved'
   | 'certificates_issued'
   | 'pssr_approved'
@@ -42,9 +44,10 @@ export type CriterionKind =
  * implícito en los gates con `requires_lineup` (hoja de line-up verificada y vigente — fase 6) y
  * performance_accepted en los gates con `requires_performance` (certificado PTC aceptado — fase 7).
  * documents_current aparece cuando un ITR firmado o un procedimiento aprobado del sistema usa una revisión de
- * documento superada: condición, nunca bloqueo (fase 8).
+ * documento superada: condición, nunca bloqueo (fase 8). requirements_generated (R5) aparece en los gates con fase:
+ * ITR requeridos de esa fase sin generar en los tags del sistema; condición, bloqueo o nada según la política de la org.
  */
-export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready' | 'registers_clear' | 'constraints_clear' | 'lineup_verified' | 'performance_accepted' | 'documents_current'>[] = [
+export const CONFIGURABLE_CRITERIA: Exclude<CriterionKind, 'previous_gate' | 'dependencies_ready' | 'registers_clear' | 'constraints_clear' | 'lineup_verified' | 'performance_accepted' | 'documents_current' | 'requirements_generated'>[] = [
   'itr_phase_approved',
   'certificates_issued',
   'pssr_approved',
@@ -144,6 +147,8 @@ export type GatePolicy = {
   regressed_previous: 'block' | 'condition'
   regressed_dependency: 'condition' | 'block'
   cat_a_regresses_approved: boolean
+  /** R5: ITR requeridos sin generar. `warn` (defecto, decisión de Luis) = condición; `block` = rojo; `off` = no cuenta. */
+  missing_requirements: 'off' | 'warn' | 'block'
 }
 
 export function gatePolicy(settings: unknown): GatePolicy {
@@ -152,6 +157,7 @@ export function gatePolicy(settings: unknown): GatePolicy {
     regressed_previous: p?.regressed_previous === 'condition' ? 'condition' : 'block',
     regressed_dependency: p?.regressed_dependency === 'block' ? 'block' : 'condition',
     cat_a_regresses_approved: p?.cat_a_regresses_approved === true,
+    missing_requirements: p?.missing_requirements === 'off' || p?.missing_requirements === 'block' ? p.missing_requirements : 'warn',
   }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canApprove, canRevoke, evidencePath, isApproved, isEvidencePathFor, missingSignatures, parseConditions, signableCapacities, type Approval } from './gates'
+import { canApprove, canRevoke, evidencePath, gatePolicy, isApproved, isEvidencePathFor, missingSignatures, parseConditions, signableCapacities, type Approval } from './gates'
 
 const roles = ['owner', 'admin', 'architect']
 
@@ -63,5 +63,16 @@ describe('co-firmas Operaciones + HSE', () => {
     expect(signableCapacities(g, 'owner', 'u1')).toEqual([])
     expect(signableCapacities(g, 'owner', 'u2')).toEqual(['operations', 'hse'])
     expect(signableCapacities(g, 'inspector', 'u3')).toEqual([])
+  })
+})
+
+describe('gatePolicy (S11 + R5)', () => {
+  it('por defecto: anterior en regresión bloquea, proveedor es condición, requisitos faltantes son condición', () => {
+    expect(gatePolicy(null)).toEqual({ regressed_previous: 'block', regressed_dependency: 'condition', cat_a_regresses_approved: false, missing_requirements: 'warn' })
+  })
+  it('acepta off y block para los requisitos; lo desconocido vuelve a warn', () => {
+    expect(gatePolicy({ gate_policy: { missing_requirements: 'block' } }).missing_requirements).toBe('block')
+    expect(gatePolicy({ gate_policy: { missing_requirements: 'off' } }).missing_requirements).toBe('off')
+    expect(gatePolicy({ gate_policy: { missing_requirements: 'nope' } }).missing_requirements).toBe('warn')
   })
 })

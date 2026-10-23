@@ -224,6 +224,34 @@ BEGIN
     END IF;
     IF v_failn > 0 AND v_level = 'green' THEN v_level := 'yellow'; END IF;
 
+    -- R5: requisitos generados. Un ITR requerido (matriz aceptada × alcance × excepciones) que todavía no existe
+    -- era invisible para la liberación. Lee el registro materializado (tag_requirement_rows) de la fase del gate;
+    -- la política de la org decide si es condición (defecto), bloqueo o no cuenta. `stale` = el registro del
+    -- proyecto espera un recálculo (cron cada minuto).
+    IF g.phase_id IS NOT NULL AND v_pol ->> 'missing_requirements' <> 'off' THEN
+      SELECT COUNT(*)::int, COUNT(DISTINCT r.tag_id)::int,
+             COALESCE(jsonb_agg(jsonb_build_object('tag_id', r.tag_id, 'tag_number', r.tag_number, 'template_code', r.template_code)
+               ORDER BY r.template_code, r.tag_number) FILTER (WHERE r.rn <= 20), '[]'::jsonb)
+        INTO v_failn, v_total, v_fail
+      FROM (
+        SELECT rr.tag_id, t.tag_number, rr.template_code, row_number() OVER (ORDER BY rr.template_code, t.tag_number) AS rn
+        FROM tag_requirement_rows rr JOIN subsystems ss ON ss.id = rr.subsystem_id JOIN tags t ON t.id = rr.tag_id
+        WHERE ss.system_id = p_system_id AND rr.phase_id = g.phase_id AND rr.state = 'missing'
+      ) r;
+      v_crit := v_crit || jsonb_build_array(jsonb_build_object(
+        'criterion_id', NULL, 'kind', 'requirements_generated', 'label', NULL,
+        'blocking', v_pol ->> 'missing_requirements' = 'block',
+        'result', CASE WHEN v_failn = 0 THEN 'pass' WHEN v_pol ->> 'missing_requirements' = 'block' THEN 'fail' ELSE 'warn' END,
+        'detail', jsonb_build_object('missing_count', v_failn, 'tags_count', v_total, 'missing', v_fail,
+          'stale', NOT EXISTS (SELECT 1 FROM systems s JOIN tag_requirement_state st ON st.project_id = s.project_id
+                               WHERE s.id = p_system_id AND st.computed_version >= st.version))));
+      IF v_failn > 0 AND v_pol ->> 'missing_requirements' = 'block' THEN
+        v_level := 'red';
+      ELSIF v_failn > 0 AND v_level = 'green' THEN
+        v_level := 'yellow';
+      END IF;
+    END IF;
+
     -- Prueba de desempeño (F7): criterio implícito y bloqueante si el gate lo exige. Aplica solo a sistemas que son
     -- principales de alguna prueba; cumple cuando cada una tiene un certificado PTC aceptado (tres firmas).
     IF g.requires_performance THEN

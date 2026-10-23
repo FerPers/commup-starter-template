@@ -18,6 +18,7 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 | `compute_project_pid_coverage` / `compute_project_pid_drawing_coverage` | Cobertura del P&ID (E2): tags con pin en la revisión vigente de un P&ID, por sistema y por plano |
 | `system_palette` / `system_assign_color` | Paleta del color estable de cada sistema (P1, `systems.color`; = `SYSTEM_PALETTE` en `src/lib/systems/colors.ts`, test de paridad). El trigger da el menos usado del proyecto cuando llega vacío (`DEFAULT ''`) o NULL |
 | `org_gate_policy` / `system_pssr_status` / `system_phase_level` / `startup_prerequisites` | Política de regresión (D13), PSSR único, nivel por fase con corte de punch, prerrequisitos de arranque (S11) |
+| `tag_requirements_sync` / `tag_requirements_refresh` / `tag_requirements_rebuild_pending` / `gate_status_requirements_trg` | R5: puesta al día del registro de requisitos (al leer y por cron, también tags sucios) y marca de gates cuando cambian filas «falta» (criterio `requirements_generated`; política `missing_requirements` en `org_gate_policy`) |
 | `approve_system_gate` / `sign_system_gate` | Aprobación y multifirma de gates |
 | `my_work_counts` | Badge y colas de «Mi trabajo» |
 | `daily_report_data` / `take_mgmt_snapshot` | Reporte diario y KPIs de gestión (vendors: la FAT/SAT con re-prueba no cuenta, S13) |

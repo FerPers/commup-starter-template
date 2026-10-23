@@ -14,6 +14,11 @@ BEGIN
            WHERE s.computed_version < s.version ORDER BY s.computed_at NULLS FIRST LIMIT 3 LOOP
     IF public.tag_requirements_rebuild(r.project_id) THEN n := n + 1; END IF;
   END LOOP;
+  -- R5: también los tags sucios (ITR generados, excepciones, tags nuevos…), para que la liberación los vea al minuto
+  -- aunque nadie abra el registro. Hasta 10 proyectos por vuelta.
+  FOR r IN SELECT DISTINCT d.project_id FROM tag_requirement_dirty d LIMIT 10 LOOP
+    PERFORM public.tag_requirements_sync(r.project_id);
+  END LOOP;
   IF n > 0 THEN ANALYZE tag_requirement_rows; END IF;
   RETURN n;
 END;

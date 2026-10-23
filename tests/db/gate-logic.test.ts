@@ -33,7 +33,7 @@ describe.skipIf(!enabled)('lógica de gates (S11)', () => {
     const { gatePolicy } = await import('@/lib/readiness/gates')
     expect(policy).toEqual(gatePolicy(org?.settings))
     if (!(org?.settings as { gate_policy?: unknown } | null)?.gate_policy) {
-      expect(policy).toEqual({ regressed_previous: 'block', regressed_dependency: 'condition', cat_a_regresses_approved: false })
+      expect(policy).toEqual({ regressed_previous: 'block', regressed_dependency: 'condition', cat_a_regresses_approved: false, missing_requirements: 'warn' })
     }
   })
 

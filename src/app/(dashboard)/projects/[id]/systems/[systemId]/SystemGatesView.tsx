@@ -1,6 +1,7 @@
 'use client'
 
 import { startupTabHref } from '@/lib/navigation/hub-routes'
+import { reqQuery } from '@/lib/itr/requirements'
 import Link from 'next/link'
 import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
 import { useRouter } from 'next/navigation'
@@ -286,6 +287,36 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
               {rows.length > 10 && <li>{t('andMore', { count: rows.length - 10 })}</li>}
             </ul>
             <Link href={`/projects/${project.id}/documents`} style={linkStyle}>{t('crit.documentsRegister')}</Link>
+          </div>
+        )
+      }
+
+      case 'requirements_generated': {
+        // R5: ITR requeridos de la fase que no existen (registro de requisitos); lista con tope de 20 en la BD.
+        const rows = (d.missing as { tag_id: string; tag_number: string; template_code: string }[]) ?? []
+        const missing = Number(d.missing_count ?? 0)
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={small}>
+              {missing === 0 ? t('crit.requirementsOk') : t('crit.requirementsMissing', { count: missing, tags: Number(d.tags_count ?? 0) })}
+              {d.stale ? ` ${t('crit.requirementsStale')}` : ''}
+            </span>
+            {rows.length > 0 && (
+              <ul style={{ margin: 0, paddingLeft: 18, ...small }}>
+                {rows.slice(0, 10).map(r => (
+                  <li key={`${r.tag_id}:${r.template_code}`}>
+                    <Link href={`/projects/${project.id}/tags/${r.tag_id}?tab=itrs`} style={{ ...linkStyle, fontWeight: 700 }}>{r.tag_number}</Link>{' · '}{r.template_code}
+                  </li>
+                ))}
+                {missing > 10 && <li>{t('andMore', { count: missing - 10 })}</li>}
+              </ul>
+            )}
+            {missing > 0 && (
+              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                <Link href={`/projects/${project.id}/itrs/requirements${reqQuery({ filter: 'missing', system: system.id })}`} style={linkStyle}>{t('crit.requirementsRegister')}</Link>
+                <Link href={`/projects/${project.id}/itrs/generate`} style={linkStyle}>{t('crit.requirementsGenerate')}</Link>
+              </div>
+            )}
           </div>
         )
       }
