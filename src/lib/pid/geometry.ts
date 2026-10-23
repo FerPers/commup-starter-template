@@ -151,3 +151,16 @@ export function bounds(pts: Pt[]): { minX: number; minY: number; maxX: number; m
   }
   return { minX, minY, maxX, maxY }
 }
+
+/** Caja de una página PDF en su espacio de usuario SIN rotar (origen abajo a la izquierda), p. ej. el CropBox. */
+export type PdfBox = { x: number; y: number; width: number; height: number }
+
+/**
+ * P4 (PDF LOSH): punto en unidad de la hoja como se ve (girada `rotation`, origen arriba a la izquierda, como el
+ * visor y pdf.js) → coordenadas de dibujo de pdf-lib sobre la página sin rotar. Para que un texto se lea derecho en
+ * la hoja girada, se dibuja girado `rotation` grados (pdf-lib gira en sentido antihorario y /Rotate en horario).
+ */
+export function toPdfPoint(p: Pt, rotation: Rotation, box: PdfBox): Pt {
+  const u = unrotatePoint(p, rotation)
+  return { x: box.x + u.x * box.width, y: box.y + (1 - u.y) * box.height }
+}

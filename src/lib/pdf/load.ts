@@ -12,6 +12,10 @@ import type { PssrPdfData } from './pssr'
 import type { CertPdfData } from './certificate'
 import type { ItrDocumentRef, ItrPdfData, ItrTestEquipmentRef } from './itr'
 import type { EventPdfInput, LineupPdfInput, RunPdfInput } from './startup-records'
+import type { LoshPdfInput } from './losh'
+import { bi } from './renderer'
+import { loadSystemLosh } from '@/lib/pid/losh-server'
+import { systemTabHref } from '@/lib/systems/file-tabs'
 import type { Evaluation } from '@/lib/performance/catalog'
 import { PROCEDURE_SECTIONS, rangeLabel, type ProcedureSection } from '@/lib/startup/catalog'
 import { loadPdfBranding, type PdfBranding } from './branding'
@@ -511,6 +515,45 @@ export async function loadEventPdf(db: Db, x: StartupCommon & { eventId: string 
         label: p.label, value: p.value === null ? null : Number(p.value), valueText: p.value_text, unit: p.unit, quality: p.quality,
         sampledAt: p.sampled_at, offsetS: p.offset_s, source: p.source,
       })),
+    },
+  }
+}
+
+/** P4: tope de bytes de los PDF originales de P&ID que entran en un PDF LOSH (el resto queda listado en la portada). */
+export const MAX_LOSH_SOURCE_BYTES = 40 * 1024 * 1024
+
+/**
+ * P4: PDF LOSH de un sistema = sus hojas P&ID vigentes con sus marcas. null si el sistema no es del proyecto;
+ * `input.losh.sheets` vacío si no tiene límites marcados (la ruta igual lo entrega, con la portada que lo dice).
+ */
+export async function loadLoshPdf(db: Db, x: { projectId: string; systemId: string; branding?: PdfBranding }): Promise<{ input: LoshPdfInput; filename: string } | null> {
+  const [losh, { data: project }, branding] = await Promise.all([
+    loadSystemLosh(db, x),
+    db.from('projects').select('code, name, timezone').eq('id', x.projectId).maybeSingle(),
+    x.branding ?? loadPdfBranding(db, x.projectId),
+  ])
+  if (!losh || !project) return null
+
+  const sources: Record<string, Uint8Array> = {}
+  const omitted: { number: string; reason: string }[] = []
+  let bytes = 0
+  for (const sheet of losh.sheets) {
+    if (!sheet.file_path) { omitted.push({ number: sheet.number, reason: bi('la revisión no tiene PDF', 'the revision has no PDF') }); continue }
+    const { data: blob, error } = await db.storage.from('project-documents').download(sheet.file_path)
+    if (error || !blob) { omitted.push({ number: sheet.number, reason: bi('no se pudo descargar el PDF', 'the PDF could not be downloaded') }); continue }
+    if (bytes + blob.size > MAX_LOSH_SOURCE_BYTES) {
+      omitted.push({ number: sheet.number, reason: bi(`supera el tope de ${MAX_LOSH_SOURCE_BYTES / 1024 / 1024} MB de planos`, `exceeds the ${MAX_LOSH_SOURCE_BYTES / 1024 / 1024} MB drawing cap`) })
+      continue
+    }
+    bytes += blob.size
+    sources[sheet.revision_id] = new Uint8Array(await blob.arrayBuffer())
+  }
+
+  return {
+    filename: `LOSH-${losh.system.code.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    input: {
+      projectName: project.name, projectCode: project.code, timezone: project.timezone, branding, losh, sources, omitted,
+      recordUrl: `${siteUrl()}${systemTabHref(x.projectId, x.systemId, 'drawings')}`,
     },
   }
 }

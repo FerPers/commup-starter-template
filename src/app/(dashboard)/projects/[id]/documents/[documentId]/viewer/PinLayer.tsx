@@ -6,6 +6,8 @@ import type { Hotspot } from './types'
 
 // Capa de pines sobre la hoja: color = estado (semáforo) o sistema, glifo = disciplina. Posición en porcentaje de
 // la página. También pinta el pin pendiente (antes de confirmar) con su ventanita.
+// P4: un pin sobre el resalte de otro sistema lleva un anillo ámbar, y el pendiente lo avisa antes de confirmar
+// (solo avisa: decisión de Luis 2026-10-23).
 export default function PinLayer({
   pins,
   colorOf,
@@ -17,6 +19,8 @@ export default function PinLayer({
   pendingBusy,
   onConfirmPending,
   onCancelPending,
+  crossed,
+  pendingWarning,
 }: {
   pins: Hotspot[]
   colorOf: (h: Hotspot) => string
@@ -28,6 +32,10 @@ export default function PinLayer({
   pendingBusy: boolean
   onConfirmPending: () => void
   onCancelPending: () => void
+  /** Pines que caen sobre el resalte de otro sistema: id → texto del aviso. */
+  crossed?: Map<string, string>
+  /** Aviso del pin por confirmar (cae sobre otro sistema). */
+  pendingWarning?: string | null
 }) {
   const t = useTranslations('PidDocuments')
   const pinSize = isTouch ? 28 : 20
@@ -35,11 +43,12 @@ export default function PinLayer({
     <>
       {pins.map(h => {
         const color = colorOf(h)
+        const warn = crossed?.get(h.id)
         return (
           <div
             key={h.id}
             onClick={() => onSelect(h)}
-            title={`${h.tag.tag_number}${h.system ? ` · ${h.system.code}` : ''} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}${h.needs_review ? ` · ${t('viewer.needsReview')}` : ''}`}
+            title={`${h.tag.tag_number}${h.system ? ` · ${h.system.code}` : ''} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}${h.needs_review ? ` · ${t('viewer.needsReview')}` : ''}${warn ? ` · ${warn}` : ''}`}
             style={{
               position: 'absolute',
               left: `${h.x_pct}%`,
@@ -54,7 +63,7 @@ export default function PinLayer({
               opacity: dimmed(h) ? 0.2 : 1,
               boxShadow: selectedId === h.id
                 ? `0 0 0 3px color-mix(in srgb, ${color} 38%, transparent)`
-                : '0 2px 4px rgba(0,0,0,0.3)',
+                : warn ? '0 0 0 3px var(--warning-500), 0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'box-shadow 0.15s',
             }}
@@ -86,8 +95,14 @@ export default function PinLayer({
             position: 'absolute', top: '28px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--card-bg)', borderRadius: '8px', padding: '10px 12px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.2)', border: '1px solid var(--border)',
-            display: 'flex', gap: '8px', whiteSpace: 'nowrap',
+            display: 'flex', gap: '8px', whiteSpace: 'nowrap', flexWrap: 'wrap', justifyContent: 'center',
+            width: pendingWarning ? 240 : undefined,
           }}>
+            {pendingWarning && (
+              <p role="alert" style={{ margin: 0, width: '100%', whiteSpace: 'normal', fontSize: 12, color: 'var(--warning-800)', background: 'var(--warning-50)', border: '1px solid var(--warning-300)', borderRadius: 6, padding: '6px 8px' }}>
+                {pendingWarning}
+              </p>
+            )}
             <button
               onClick={e => { e.stopPropagation(); onConfirmPending() }}
               disabled={pendingBusy}

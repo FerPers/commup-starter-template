@@ -3,13 +3,15 @@
 import { useState, useEffect, useEffectEvent, useMemo, useRef, useTransition, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import TagQuickViewModal from '@/components/TagQuickViewModal'
 import { upsertHotspot, deleteHotspot, confirmHotspots } from '@/app/actions/pid-hotspots'
 import { createMarkup, updateMarkup, deleteMarkup, confirmMarkups } from '@/app/actions/pid-markups'
 import { NO_SYSTEM_COLOR } from '@/lib/systems/colors'
 import { pinStatusColor } from '@/lib/pid/pins'
-import { clampPct, snapOrthogonal, type Pt } from '@/lib/pid/geometry'
+import { bounds, clampPct, snapOrthogonal, type Pt } from '@/lib/pid/geometry'
 import { ROW_STATE_COLORS, systemFocus, type Box } from '@/lib/pid/view'
+import { connectorPairs, connectorText, pinConflicts, type ConnectorForControl } from '@/lib/pid/control'
 import {
   defaultLimitSides, displayPoints, finishLine, limitBar, markupMetrics, markupSystemIds, nearestLine, type MarkupKind,
 } from '@/lib/pid/markups'
@@ -19,8 +21,8 @@ import MarkupLayer from './MarkupLayer'
 import PidLegend from './PidLegend'
 import ToolRail from './ToolRail'
 import TagSelector from './TagSelector'
-import { LimitDraftPanel, SelectedMarkupPanel } from './MarkupPanel'
-import type { ApprovedGates, ColorBy, Hotspot, MarkupView, PageInfo, SystemRef, SystemStates, TagItem, Tool } from './types'
+import { ConnectorDraftPanel, LimitDraftPanel, SelectedMarkupPanel, type ConnectorInfo } from './MarkupPanel'
+import type { ApprovedGates, ColorBy, Hotspot, IncomingConnector, MarkupView, PageInfo, PidDoc, SystemRef, SystemStates, TagItem, Tool } from './types'
 
 // P1: el visor se separó en lienzo (PidCanvas), capa de pines (PinLayer), leyenda (PidLegend) y selector de tags.
 // P2 (maqueta aprobada): barra de herramientas a la izquierda (Elegir · Mover · Resaltar línea · Límite · Etiqueta ·
@@ -32,6 +34,10 @@ import type { ApprovedGates, ColorBy, Hotspot, MarkupView, PageInfo, SystemRef, 
 // grandes abajo; los vértices de la marca elegida se arrastran; la leyenda se pliega. «Por estado» colorea las marcas
 // con el estado de la liberación siguiente de su sistema. `?system=` aísla el sistema y encuadra su hoja;
 // `?place=<tag>` abre «Pin de tag» con ese tag elegido (desde la pestaña Planos de la ficha del sistema).
+// P4 (decisiones de Luis 2026-10-23): herramienta Conector (el sistema sigue en otra hoja: P&ID + página); elegir un
+// conector lleva a la otra hoja enfocando el conector de vuelta (`?mk=`) o, si no tiene, a la página destino con el
+// sistema aislado; «Controles de esta hoja» lista los conectores sin par y los pines que caen sobre el resalte de
+// otro sistema (solo avisa, también al colocar un pin).
 
 interface Props {
   signedUrl: string
@@ -46,6 +52,14 @@ interface Props {
   focusSystemId: string | null
   /** `?place=`: tag a ubicar con «Pin de tag» al abrir (editores). */
   placeTag: TagItem | null
+  /** P4 `?mk=`: marca a encuadrar y elegir al abrir (el conector de vuelta). */
+  focusMarkupId: string | null
+  /** P4 `?page=`: página a abrir. */
+  initialPage: number | null
+  /** P4: P&ID del proyecto (destino de los conectores). */
+  pidDocs: PidDoc[]
+  /** P4: conectores de otras hojas vigentes que apuntan a esta. */
+  incoming: IncomingConnector[]
   projectId: string
   /** N2d: documento P&ID y revisión abierta (pines y marcas son de la revisión). */
   documentId: string
@@ -53,7 +67,8 @@ interface Props {
   canEdit: boolean
 }
 
-type MarkupPatch = { system_id?: string; other_system_id?: string | null; label?: string | null; points?: Pt[] }
+type MarkupPatch = { system_id?: string; other_system_id?: string | null; label?: string | null; points?: Pt[]; target_document_id?: string | null; target_page?: number }
+type Target = { target_document_id: string | null; target_page: number | null }
 type UndoOp =
   | { type: 'created'; id: string }
   | { type: 'deleted'; markup: MarkupView }
@@ -66,11 +81,11 @@ const floatBtn: React.CSSProperties = {
   minWidth: 40, height: 40, padding: '0 10px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--card-bg)',
   color: 'var(--text-strong)', fontSize: 13, cursor: 'pointer',
 }
-const DRAW_TOOLS: Tool[] = ['line', 'limit', 'label']
+const DRAW_TOOLS: Tool[] = ['line', 'limit', 'label', 'connector']
 
 export default function PidViewer({
   signedUrl, hotspots: initialHotspots, markups: initialMarkups, systems: systemList, approvedGates, systemStates, focusSystemId, placeTag,
-  projectId, documentId, revisionId, canEdit,
+  focusMarkupId, initialPage, pidDocs, incoming, projectId, documentId, revisionId, canEdit,
 }: Props) {
   const t = useTranslations('PidDocuments')
   const searchParams = useSearchParams()
@@ -92,6 +107,7 @@ export default function PidViewer({
   const [hover, setHover] = useState<Pt | null>(null)
   const [redrawOf, setRedrawOf] = useState<string | null>(null)
   const [pendingLimit, setPendingLimit] = useState<{ bar: [Pt, Pt]; system_id: string | null; other_system_id: string | null } | null>(null)
+  const [pendingConnector, setPendingConnector] = useState<{ point: Pt; target_document_id: string | null; target_page: number } | null>(null)
   const [undoStack, setUndoStack] = useState<UndoOp[]>([])
   const [error, setError] = useState<string | null>(null)
   // Fase 2 / P2: colorear los pines por sistema (por defecto, como la maqueta) o por estado; «Aislar» atenúa el resto.
@@ -145,12 +161,40 @@ export default function PidViewer({
   }, [hotspots, markups])
 
   useEffect(() => {
-    if (!focusSystemId) return
+    if (!focusSystemId || focusMarkupId) return
+    // P4: `?page=` (conector sin par) abre esa página aunque el sistema aún no tenga nada en ella.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- encuadre inicial desde el enlace `?system=` (una vez al montar)
-    if (focusOn(focusSystemId)) setIsolated(focusSystemId)
+    if (initialPage) setCurrentPage(initialPage)
+    if (focusOn(focusSystemId, initialPage ?? undefined)) { setIsolated(focusSystemId); setFocusMissing(false) }
     else setFocusMissing(true)
     setActiveSystem(focusSystemId)
-  }, [focusSystemId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [focusSystemId, initialPage]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // P4 `?mk=`: hoja de la marca, encuadre y la marca elegida (al seguir un conector, el de vuelta).
+  useEffect(() => {
+    const mk = focusMarkupId ? markups.find(m => m.id === focusMarkupId) : null
+    if (!mk) return
+    const b = bounds(mk.points)!
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- encuadre inicial desde el enlace `?mk=`
+    setCurrentPage(mk.page_num)
+    setFocus(prev => ({ box: b, key: (prev?.key ?? 0) + 1 }))
+    setSelectedMarkupId(mk.id)
+    setIsolated(mk.system_id)
+    setActiveSystem(mk.system_id)
+  }, [focusMarkupId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // `?page=` sin `?system=`: solo la página.
+  useEffect(() => {
+    if (!initialPage || focusSystemId || focusMarkupId) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- página inicial desde el enlace `?page=`
+    setCurrentPage(initialPage)
+  }, [initialPage]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Una página del enlace que el PDF no tiene: la última.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- acota la página al conocer el total del PDF
+    if (numPages > 0 && currentPage > numPages) setCurrentPage(numPages)
+  }, [numPages, currentPage])
 
   const canDraw = canEdit && wide
 
@@ -167,7 +211,7 @@ export default function PidViewer({
   const size = page ? { w: page.w, h: page.h } : null
 
   const resetDrawing = useCallback(() => {
-    setDraft([]); setHover(null); setPendingLimit(null); setRedrawOf(null); setPendingPos(null)
+    setDraft([]); setHover(null); setPendingLimit(null); setPendingConnector(null); setRedrawOf(null); setPendingPos(null)
   }, [])
 
   function pickTool(next: Tool) {
@@ -251,19 +295,20 @@ export default function PidViewer({
   const selectedMarkup = markups.find(m => m.id === selectedMarkupId) ?? null
 
   /** Crea una marca (optimista). `record` = false cuando la crea «Deshacer» (no se apila). */
-  function addMarkup(kind: MarkupKind, points: Pt[], sides: { system_id: string; other_system_id: string | null }, label: string | null, record = true) {
+  function addMarkup(kind: MarkupKind, points: Pt[], sides: { system_id: string; other_system_id: string | null }, label: string | null, record = true,
+    target: Target = { target_document_id: null, target_page: null }) {
     if (!page) return
     const temp: MarkupView = {
       id: `temp-mk-${++tempSeq.current}`,
       page_num: currentPage, kind, system_id: sides.system_id, other_system_id: sides.other_system_id,
-      points, page_width: page.w, page_height: page.h, page_rotation: page.rotation, label, needs_review: false,
+      points, page_width: page.w, page_height: page.h, page_rotation: page.rotation, label, needs_review: false, ...target,
     }
     setMarkups(prev => [...prev, temp])
     setError(null)
     startTransition(async () => {
       const res = await createMarkup({
         project_id: projectId, revision_id: revisionId, page_num: temp.page_num, kind, system_id: sides.system_id,
-        other_system_id: sides.other_system_id, points, page_width: page.w, page_height: page.h, page_rotation: page.rotation, label,
+        other_system_id: sides.other_system_id, points, page_width: page.w, page_height: page.h, page_rotation: page.rotation, label, ...target,
       })
       if (res.id) {
         setMarkups(prev => prev.map(m => (m.id === temp.id ? { ...m, id: res.id! } : m)))
@@ -284,6 +329,7 @@ export default function PidViewer({
       ...('system_id' in patch && patch.system_id ? { system_id: patch.system_id } : {}),
       ...('other_system_id' in patch ? { other_system_id: patch.other_system_id ?? null } : {}),
       ...('label' in patch ? { label: patch.label ?? null } : {}),
+      ...('target_document_id' in patch ? { target_document_id: patch.target_document_id ?? null, target_page: patch.target_page ?? 1 } : {}),
       ...(patch.points ? { points: patch.points, page_width: page.w, page_height: page.h, page_rotation: page.rotation, needs_review: false } : {}),
     }
     setMarkups(prev => prev.map(m => (m.id === id ? next : m)))
@@ -339,7 +385,7 @@ export default function PidViewer({
         const res = await createMarkup({
           project_id: projectId, revision_id: revisionId, page_num: m.page_num, kind: m.kind, system_id: m.system_id,
           other_system_id: m.other_system_id, points: m.points, page_width: m.page_width, page_height: m.page_height,
-          page_rotation: m.page_rotation, label: m.label,
+          page_rotation: m.page_rotation, label: m.label, target_document_id: m.target_document_id, target_page: m.target_page,
         })
         if (res.id) setMarkups(prev => [...prev, { ...m, id: res.id!, needs_review: false }])
         else setError(res.error ?? t('markups.saveError'))
@@ -351,6 +397,7 @@ export default function PidViewer({
         const res = await updateMarkup({
           project_id: projectId, markup_id: b.id, system_id: b.system_id, other_system_id: b.other_system_id, label: b.label,
           points: b.points, page_width: b.page_width, page_height: b.page_height, page_rotation: b.page_rotation,
+          ...(b.kind === 'connector' && b.target_document_id ? { target_document_id: b.target_document_id, target_page: b.target_page ?? 1 } : {}),
         })
         if (res.error) setError(res.error)
       })
@@ -383,6 +430,13 @@ export default function PidViewer({
     setPendingLimit(null)
   }
 
+  function savePendingConnector() {
+    if (!pendingConnector || !activeSystem || !pendingConnector.target_document_id) return
+    addMarkup('connector', [pendingConnector.point], { system_id: activeSystem, other_system_id: null }, null, true,
+      { target_document_id: pendingConnector.target_document_id, target_page: pendingConnector.target_page })
+    setPendingConnector(null)
+  }
+
   function handlePoint(u: Pt) {
     setError(null)
     if (tool === 'pin') { if (placingTag) setPendingPos({ x: clampPct(u.x * 100), y: clampPct(u.y * 100) }); return }
@@ -399,6 +453,9 @@ export default function PidViewer({
       setDraft(d => [...d, d.length ? snapOrthogonal(d[d.length - 1], u, size) : u])
     } else if (tool === 'label') {
       addMarkup('label', [u], { system_id: activeSystem, other_system_id: null }, null)
+    } else if (tool === 'connector') {
+      // Destino por defecto: el último elegido (los conectores de una hoja suelen ir a la misma de al lado).
+      setPendingConnector(prev => ({ point: u, target_document_id: prev?.target_document_id ?? null, target_page: prev?.target_page ?? 1 }))
     }
   }
 
@@ -415,7 +472,7 @@ export default function PidViewer({
     else if (e.key === 'Enter' && draft.length) { e.preventDefault(); finishDraft() }
     else if (e.key === 'Backspace' && draft.length) { e.preventDefault(); setDraft(d => d.slice(0, -1)) }
   })
-  const listening = draft.length > 0 || !!pendingLimit || !!selectedMarkupId
+  const listening = draft.length > 0 || !!pendingLimit || !!pendingConnector || !!selectedMarkupId
   useEffect(() => {
     if (!listening) return
     const handler = (e: KeyboardEvent) => onKey(e)
@@ -460,6 +517,40 @@ export default function PidViewer({
     open_punches_b: selectedHotspot.open_punches_b,
     itr_completion_pct: selectedHotspot.itr_completion_pct,
   } : null
+
+  // ── P4: controles de esta hoja ──────────────────────────────────────────────
+  const docNumber = useMemo(() => new Map(pidDocs.map(d => [d.id, d.number])), [pidDocs])
+  const viewerHref = (docId: string, query: string) => `/projects/${projectId}/documents/${docId}/viewer?${query}`
+  const connectorLabel = (m: Pick<MarkupView, 'target_document_id' | 'target_page'>) =>
+    connectorText(m.target_document_id ? { number: docNumber.get(m.target_document_id) ?? '?' } : null, m.target_page, t('markups.sheetShort'))
+  const localConnectors: ConnectorForControl[] = markups.filter(m => m.kind === 'connector' && !m.id.startsWith('temp-'))
+    .map(m => ({ id: m.id, document_id: documentId, page_num: m.page_num, system_id: m.system_id, target_document_id: m.target_document_id, target_page: m.target_page }))
+  const pairs = connectorPairs([...localConnectors, ...incoming])
+  const unpaired = new Set(localConnectors.filter(c => !pairs.get(c.id)).map(c => c.id))
+  /** Conectores de otras hojas que llegan aquí sin conector de vuelta. */
+  const orphanIncoming = incoming.filter(c => !pairs.get(c.id))
+  function connectorInfo(m: MarkupView): ConnectorInfo {
+    const pair = pairs.get(m.id)
+    const href = !m.target_document_id ? null
+      : pair ? viewerHref(m.target_document_id, `mk=${pair}`)
+        : viewerHref(m.target_document_id, `system=${m.system_id}&page=${m.target_page ?? 1}`)
+    return { href, paired: !!pair, targetText: connectorLabel(m) }
+  }
+  const pageLines = page ? pageMarkups.filter(m => m.kind === 'line').map(m => ({ page_num: m.page_num, system_id: m.system_id, points: displayPoints(m, page.rotation) })) : []
+  const crossedPins = page ? pinConflicts(
+    pageHotspots.map(h => ({ id: h.id, page_num: h.page_num, x_pct: h.x_pct, y_pct: h.y_pct, system_id: h.system?.id ?? null })),
+    pageLines, () => page,
+  ) : []
+  const codeOf = (id: string) => systems.get(id)?.code ?? '?'
+  const crossedText = new Map(crossedPins.map(c => {
+    const h = pageHotspots.find(x => x.id === c.pin_id)
+    return [c.pin_id, t('markups.pinCrossed', { tag: h?.tag.tag_number ?? '', system: codeOf(c.system_id), other: codeOf(c.other_system_id) })]
+  }))
+  const pendingCross = page && pendingPos && placingTag?.system
+    ? pinConflicts([{ id: 'pending', page_num: currentPage, x_pct: pendingPos.x, y_pct: pendingPos.y, system_id: placingTag.system.id }], pageLines, () => page)[0] ?? null
+    : null
+  const pageUnpaired = pageMarkups.filter(m => unpaired.has(m.id))
+  const pageOrphans = orphanIncoming.filter(c => (c.target_page ?? 1) === currentPage)
 
   const effectiveTool: Tool = canDraw ? tool : 'select'
   const interaction = effectiveTool === 'pan' ? 'pan'
@@ -559,6 +650,8 @@ export default function PidViewer({
               colorFor={markupColor}
               editable={canDraw && effectiveTool === 'select' && !!selectedMarkupId && !selectedMarkupId.startsWith('temp-')}
               onEditPoints={(id, pts) => patchMarkup(id, { points: pts })}
+              connectorLabel={connectorLabel}
+              unpaired={unpaired}
             />
           )}
           <PinLayer
@@ -572,6 +665,10 @@ export default function PidViewer({
             pendingBusy={isPending}
             onConfirmPending={handleConfirmHotspot}
             onCancelPending={() => setPendingPos(null)}
+            crossed={crossedText}
+            pendingWarning={pendingCross && placingTag?.system
+              ? t('markups.pinCrossedPending', { system: placingTag.system.code, other: codeOf(pendingCross.other_system_id) })
+              : null}
           />
         </PidCanvas>
 
@@ -655,6 +752,16 @@ export default function PidViewer({
           />
         )}
 
+        {pendingConnector && page && (
+          <ConnectorDraftPanel
+            systemId={activeSystem} systems={systems} docs={pidDocs} documentId={documentId} page={currentPage}
+            value={{ target_document_id: pendingConnector.target_document_id, target_page: pendingConnector.target_page }}
+            busy={isPending}
+            onChange={v => setPendingConnector(p => (p ? { ...p, ...v } : p))}
+            onSave={savePendingConnector} onCancel={() => setPendingConnector(null)}
+          />
+        )}
+
         {selectedMarkup && page && (
           <SelectedMarkupPanel
             key={selectedMarkup.id}
@@ -669,7 +776,39 @@ export default function PidViewer({
             onConfirm={() => confirmMarkupIds([selectedMarkup.id])}
             onRedraw={() => redraw(selectedMarkup)}
             onClose={() => setSelectedMarkupId(null)}
+            connector={selectedMarkup.kind === 'connector' ? connectorInfo(selectedMarkup) : null}
+            pidDocs={pidDocs}
+            documentId={documentId}
           />
+        )}
+
+        {/* P4: controles de esta hoja (solo avisan) */}
+        {(crossedPins.length > 0 || pageUnpaired.length > 0 || pageOrphans.length > 0) && (
+          <section aria-label={t('markups.controls')} style={{ margin: '12px 16px 0', padding: 12, borderRadius: 10, border: '1px solid var(--warning-300)', background: 'var(--warning-50)', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--warning-800)' }}>
+            <strong style={{ fontSize: 13 }}>{t('markups.controls')}</strong>
+            {crossedPins.map(c => {
+              const h = pageHotspots.find(x => x.id === c.pin_id)
+              return (
+                <button key={c.pin_id} type="button" onClick={() => { if (h) { setSelectedHotspot(h); setSelectedMarkupId(null) } }}
+                  style={{ textAlign: 'left', border: 0, background: 'transparent', color: 'inherit', padding: '4px 0', cursor: 'pointer', fontSize: 12, minHeight: 28 }}>
+                  ⚠ {crossedText.get(c.pin_id)}
+                </button>
+              )
+            })}
+            {pageUnpaired.map(m => (
+              <button key={m.id} type="button" onClick={() => { setSelectedMarkupId(m.id); setSelectedHotspot(null) }}
+                style={{ textAlign: 'left', border: 0, background: 'transparent', color: 'inherit', padding: '4px 0', cursor: 'pointer', fontSize: 12, minHeight: 28 }}>
+                ⚠ {m.target_document_id
+                  ? t('markups.connectorUnpairedItem', { system: codeOf(m.system_id), target: connectorLabel(m) })
+                  : t('markups.connectorNoTargetItem', { system: codeOf(m.system_id) })}
+              </button>
+            ))}
+            {pageOrphans.map(c => (
+              <Link key={c.id} href={viewerHref(c.document_id, `mk=${c.id}`)} style={{ color: 'inherit', padding: '4px 0', fontSize: 12, minHeight: 28 }}>
+                ⚠ {t('markups.connectorIncoming', { system: codeOf(c.system_id), source: connectorLabel({ target_document_id: c.document_id, target_page: c.page_num }) })}
+              </Link>
+            ))}
+          </section>
         )}
 
         {/* Pin de tag: 1. elegir el tag, 2. clic en el plano */}

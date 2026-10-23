@@ -1,7 +1,7 @@
 /**
  * ZIP del paquete de handover (S24, D17): handover.json + índice PDF + anexos (PDF de procedimientos y de su
- * última ejecución, line-ups verificados, eventos de arranque, reportes de desempeño/PTC, PSSR, certificados, ITR y
- * los archivos de los documentos vigentes), manifest.json con el sha256 de
+ * última ejecución, line-ups verificados, eventos de arranque, reportes de desempeño/PTC, PSSR, certificados, ITR,
+ * los archivos de los documentos vigentes y, P4, el PDF LOSH del sistema), manifest.json con el sha256 de
  * cada archivo y manifest.sig (Ed25519 sobre los bytes de manifest.json).
  *
  * Corre en línea en el Worker, un sistema por paquete: los anexos se generan en lotes chicos y con topes (cantidad
@@ -11,13 +11,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { zipSync, strToU8, type Zippable } from 'fflate'
 import type { Database } from '@/types/supabase.generated'
-import { loadCertificatePdf, loadEventPdf, loadItrPdf, loadLineupPdf, loadPerformancePdf, loadProcedurePdf, loadPssrPdf, loadRunPdf } from '@/lib/pdf/load'
+import { loadCertificatePdf, loadEventPdf, loadItrPdf, loadLineupPdf, loadLoshPdf, loadPerformancePdf, loadProcedurePdf, loadPssrPdf, loadRunPdf } from '@/lib/pdf/load'
 import { renderEventPdf, renderLineupPdf, renderRunPdf } from '@/lib/pdf/startup-records'
 import { renderProcedurePdf } from '@/lib/pdf/procedure'
 import { renderPerformancePdf } from '@/lib/pdf/performance-report'
 import { renderPssrPdf } from '@/lib/pdf/pssr'
 import { renderCertificatePdf } from '@/lib/pdf/certificate'
 import { renderItrPdf } from '@/lib/pdf/itr'
+import { renderLoshPdf } from '@/lib/pdf/losh'
 import { renderHandoverPdf } from './pdf'
 import { loadPdfBranding } from '@/lib/pdf/branding'
 import { sha256Hex, signBytes, type SigningKey } from './sign'
@@ -31,7 +32,8 @@ export const MAX_DOCUMENT_BYTES = 40 * 1024 * 1024
 const BATCH = 4
 
 export type Annex = { path: string; bytes: Uint8Array }
-type Task = { path: string; run: () => Promise<Uint8Array | string> }
+/** Una tarea devuelve el archivo, el motivo por el que no entra (string) o null = no aplica (no se lista). */
+type Task = { path: string; run: () => Promise<Uint8Array | string | null> }
 
 /** Nombre seguro para una ruta dentro del ZIP. */
 export function safeName(s: string): string {
@@ -45,8 +47,9 @@ async function runTasks(tasks: Task[]): Promise<{ files: Annex[]; omitted: { pat
     const results = await Promise.allSettled(tasks.slice(i, i + BATCH).map(t => t.run()))
     results.forEach((r, j) => {
       const path = tasks[i + j].path
-      if (r.status === 'fulfilled' && typeof r.value !== 'string') files.push({ path, bytes: r.value })
-      else omitted.push({ path, reason: r.status === 'fulfilled' ? (r.value as string) : String((r.reason as Error)?.message ?? r.reason) })
+      if (r.status === 'rejected') omitted.push({ path, reason: String((r.reason as Error)?.message ?? r.reason) })
+      else if (typeof r.value === 'string') omitted.push({ path, reason: r.value })
+      else if (r.value) files.push({ path, bytes: r.value })
     })
   }
   return { files, omitted }
@@ -157,6 +160,12 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
         return r ? renderItrPdf(r.input) : fail(itr.itr_number)
       } })
     }
+    // P4: límites del sistema sobre sus hojas P&ID vigentes; sin marcas no hay PDF (no es una omisión).
+    tasks.push({ path: `${dir}/losh/LOSH-${safeName(sys.code)}.pdf`, run: async () => {
+      const r = await loadLoshPdf(db, { projectId, systemId: sys.system_id, branding })
+      if (!r) return fail(sys.code)
+      return r.input.losh.sheets.length ? renderLoshPdf(r.input) : null
+    } })
     for (const d of sys.documents ?? []) {
       const rev = d.revision
       if (!rev?.file_path) continue

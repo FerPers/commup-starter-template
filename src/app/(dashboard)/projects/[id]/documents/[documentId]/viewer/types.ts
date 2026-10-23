@@ -27,8 +27,16 @@ export type ColorBy = 'status' | 'system'
 /** P2: marca LOSH de la revisión abierta (pid_markups). */
 export type MarkupView = Markup
 
-/** Herramientas del visor (maqueta P2): elegir, mover, resaltar línea, límite, etiqueta, pin de tag. */
-export type Tool = 'select' | 'pan' | 'line' | 'limit' | 'label' | 'pin'
+/** Herramientas del visor (maqueta P2): elegir, mover, resaltar línea, límite, etiqueta, conector (P4), pin de tag. */
+export type Tool = 'select' | 'pan' | 'line' | 'limit' | 'label' | 'connector' | 'pin'
+
+/** P4: P&ID del proyecto (destino de un conector). */
+export type PidDoc = { id: string; number: string; title: string | null }
+
+/** P4: conector de otra hoja vigente que apunta a este documento (para saber si los de aquí tienen par). */
+export type IncomingConnector = {
+  id: string; document_id: string; page_num: number; system_id: string; target_document_id: string; target_page: number | null
+}
 
 /** Hoja abierta: tamaño en puntos PDF ya rotada y su rotación (las marcas se guardan con esto). */
 export type PageInfo = PageSize & { rotation: Rotation }

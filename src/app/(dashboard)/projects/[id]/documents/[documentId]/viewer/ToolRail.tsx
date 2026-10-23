@@ -10,6 +10,7 @@ const TOOLS: { tool: Tool; icon: string }[] = [
   { tool: 'line', icon: 'M3 17l6-6 4 4 8-8' },
   { tool: 'limit', icon: 'M12 3v18M7 8H3M21 8h-4' },
   { tool: 'label', icon: 'M4 7V4h16v3M9 20h6M12 4v16' },
+  { tool: 'connector', icon: 'M3 7h12l5 5-5 5H3zM7 12h6' },
   { tool: 'pin', icon: 'M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z' },
 ]
 

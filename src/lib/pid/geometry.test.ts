@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   bounds, clampPct, distance, distanceToPolyline, distanceToSegment, normalizeRotation, pointerToPct, pointerToUnit,
-  polylineLength, reprojectPoint, rotatePoint, rotatedSize, simplify, snapOrthogonal, unrotatePoint,
+  polylineLength, reprojectPoint, rotatePoint, rotatedSize, simplify, snapOrthogonal, toPdfPoint, unrotatePoint,
   type Pt, type Rotation,
 } from './geometry'
 
@@ -127,5 +127,30 @@ describe('simplificación', () => {
   it('caja de los puntos', () => {
     expect(bounds([])).toBeNull()
     expect(bounds([{ x: 0.2, y: 0.9 }, { x: 0.7, y: 0.1 }])).toEqual({ minX: 0.2, minY: 0.1, maxX: 0.7, maxY: 0.9 })
+  })
+})
+
+describe('a coordenadas de pdf-lib (PDF LOSH)', () => {
+  const box = { x: 10, y: 20, width: 800, height: 600 } // página sin rotar, apaisada
+
+  it('sin rotar: arriba a la izquierda de la hoja = (x, y + alto)', () => {
+    close(toPdfPoint({ x: 0, y: 0 }, 0, box), { x: 10, y: 620 })
+    close(toPdfPoint({ x: 1, y: 1 }, 0, box), { x: 810, y: 20 })
+    close(toPdfPoint({ x: 0.25, y: 0.5 }, 0, box), { x: 210, y: 320 })
+  })
+
+  it('/Rotate 90: la esquina de arriba a la izquierda que se ve es la de abajo a la izquierda sin rotar', () => {
+    // girada 90° horario, lo que se ve arriba a la izquierda era la esquina inferior izquierda del papel
+    close(toPdfPoint({ x: 0, y: 0 }, 90, box), { x: 10, y: 20 })
+    close(toPdfPoint({ x: 1, y: 0 }, 90, box), { x: 10, y: 620 })
+    close(toPdfPoint({ x: 0, y: 1 }, 90, box), { x: 810, y: 20 })
+  })
+
+  it('las cuatro rotaciones son la inversa de rotatePoint', () => {
+    const u = { x: 0.3, y: 0.7 } // unidad del papel sin rotar
+    for (const r of ROTATIONS) {
+      const seen = rotatePoint(u, r)
+      close(toPdfPoint(seen, r, box), { x: 10 + 0.3 * 800, y: 20 + (1 - 0.7) * 600 })
+    }
   })
 })

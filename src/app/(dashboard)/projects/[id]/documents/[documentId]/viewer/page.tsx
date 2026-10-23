@@ -9,17 +9,19 @@ import { fromStoredPoints, type MarkupKind } from '@/lib/pid/markups'
 import { normalizeRotation } from '@/lib/pid/geometry'
 import { nextGate, rowState } from '@/lib/readiness/matrix'
 import type { MatrixGate } from '@/lib/readiness/gates'
-import type { ApprovedGates, Hotspot, MarkupView, SystemRef, SystemStates, TagItem } from './types'
+import type { ApprovedGates, Hotspot, IncomingConnector, MarkupView, PidDoc, SystemRef, SystemStates, TagItem } from './types'
 
 // N2d: visor de un documento P&ID (doc_type = 'pid'). Abre la revisión vigente o la de `?rev=`; los pines son de esa
 // revisión. Al emitirse una revisión nueva, los de la anterior llegan copiados y «por revisar» hasta confirmarlos.
 // P3: `?system=<id>` abre el plano aislando y encuadrando ese sistema; `?place=<tagId>` abre «Pin de tag» con ese tag.
+// P4: `?mk=<id>` abre la hoja de esa marca, la encuadra y la elige (el conector de vuelta al seguir uno); `?page=<n>`
+// abre esa página (un conector sin par lleva a la página destino con `?system=`).
 export default async function PidViewerPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string; documentId: string }>
-  searchParams: Promise<{ rev?: string; system?: string; place?: string }>
+  searchParams: Promise<{ rev?: string; system?: string; place?: string; mk?: string; page?: string }>
 }) {
   const [{ id, documentId }, sp] = await Promise.all([params, searchParams])
 
@@ -79,10 +81,11 @@ export default async function PidViewerPage({
   // P2: marcas LOSH de la revisión (capa losh; redline llega con F-21), sistemas del proyecto para elegir a cuál
   // pertenece una marca, y liberaciones aprobadas por sistema (editar sus marcas queda registrado).
   // Topes = el de PostgREST (1000): una revisión de un plano no llega a mil marcas, ni un proyecto a mil sistemas.
-  const [{ data: rawMarkups }, { data: projectSystems }, { data: approvals }, { data: gateRows }, { data: placeRow }] = await Promise.all([
+  // P4: P&ID del proyecto (destino de los conectores) y conectores de otras hojas vigentes que apuntan a esta.
+  const [{ data: rawMarkups }, { data: projectSystems }, { data: approvals }, { data: gateRows }, { data: placeRow }, { data: pidDocRows }, { data: incomingRows }] = await Promise.all([
     supabase
       .from('pid_markups')
-      .select('id, page_num, kind, system_id, other_system_id, points, page_width, page_height, page_rotation, label, needs_review')
+      .select('id, page_num, kind, system_id, other_system_id, points, page_width, page_height, page_rotation, label, needs_review, target_document_id, target_page')
       .eq('revision_id', revision.id)
       .eq('project_id', id)
       .eq('layer', 'losh')
@@ -102,7 +105,18 @@ export default async function PidViewerPage({
         .select('id, tag_number, description, status, disciplines:discipline_id(id, code, name, color), subsystems:subsystem_id(systems:system_id(id, code, name, color))')
         .eq('id', sp.place).eq('project_id', id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.from('documents').select('id, number, title, current_revision_id').eq('project_id', id).eq('doc_type', 'pid').order('number').limit(1000),
+    supabase.from('pid_markups').select('id, revision_id, page_num, system_id, target_document_id, target_page')
+      .eq('project_id', id).eq('layer', 'losh').eq('kind', 'connector').eq('target_document_id', documentId).limit(1000),
   ])
+  const pidDocs: PidDoc[] = (pidDocRows ?? []).map(d => ({ id: d.id, number: d.number, title: d.title }))
+  const currentDocOf = new Map((pidDocRows ?? []).filter(d => d.current_revision_id && d.id !== documentId).map(d => [d.current_revision_id!, d.id]))
+  const incoming: IncomingConnector[] = (incomingRows ?? []).flatMap(c => {
+    const docId = currentDocOf.get(c.revision_id)
+    return docId && c.system_id && c.target_document_id
+      ? [{ id: c.id, document_id: docId, page_num: c.page_num, system_id: c.system_id, target_document_id: c.target_document_id, target_page: c.target_page }]
+      : []
+  })
   const markups: MarkupView[] = (rawMarkups ?? []).flatMap(m => (m.system_id ? [{
     id: m.id,
     page_num: m.page_num,
@@ -115,6 +129,8 @@ export default async function PidViewerPage({
     page_rotation: normalizeRotation(m.page_rotation),
     label: m.label,
     needs_review: m.needs_review,
+    target_document_id: m.target_document_id,
+    target_page: m.target_page,
   }] : []))
   const systems: SystemRef[] = projectSystems ?? []
   const systemStates: SystemStates = {}
@@ -123,6 +139,8 @@ export default async function PidViewerPage({
     systemStates[r.system_id] = { state: rowState(gates), gate: nextGate(gates)?.code ?? null }
   }
   const focusSystemId = sp.system && systems.some(s => s.id === sp.system) ? sp.system : null
+  const focusMarkupId = sp.mk && markups.some(m => m.id === sp.mk) ? sp.mk : null
+  const initialPage = Number.isInteger(Number(sp.page)) && Number(sp.page) >= 1 ? Number(sp.page) : null
   const placeTag: TagItem | null = placeRow ? {
     id: placeRow.id, tag_number: placeRow.tag_number, description: placeRow.description ?? '', status: placeRow.status,
     discipline: (placeRow.disciplines as TagItem['discipline'] | null) ?? { id: '', code: '??', name: '', color: '#94a3b8' },
@@ -273,6 +291,10 @@ export default async function PidViewerPage({
         approvedGates={approvedGates}
         systemStates={systemStates}
         focusSystemId={focusSystemId}
+        focusMarkupId={focusMarkupId}
+        initialPage={initialPage}
+        pidDocs={pidDocs}
+        incoming={incoming}
         placeTag={placeTag}
         projectId={id}
         documentId={documentId}

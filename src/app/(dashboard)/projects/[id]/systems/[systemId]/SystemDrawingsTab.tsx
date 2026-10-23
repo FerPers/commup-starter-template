@@ -1,10 +1,13 @@
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
+import type { SystemLosh } from '@/lib/pid/losh-server'
 
 // P3 (maqueta «Planos» aprobada 2026-10-22): pestaña Planos de la ficha del sistema. Hojas P&ID que lo tocan en su
 // revisión vigente (system_pid_sheets): tags del sistema en la hoja, cuántos con pin, estado de sus límites LOSH y
 // el enlace al visor con el sistema aislado y encuadrado (`?system=`); planos citados sin documento cargado; y los
-// tags sin pin con un atajo para ubicarlos (`?place=`). El PDF de límites por sistema llega en P4.
+// tags sin pin con un atajo para ubicarlos (`?place=`).
+// P4: PDF LOSH del sistema (`…/losh`, el mismo anexo del paquete de handover) y «Controles del LOSH»: pines que caen
+// sobre el resalte de otro sistema y conectores sin conector de vuelta (loadSystemLosh = mismos controles del visor).
 
 export type PidSheet = {
   document_id: string; number: string; title: string | null; revision_id: string; rev: string; rev_status: string
@@ -35,10 +38,11 @@ function Bar({ pct }: { pct: number }) {
   )
 }
 
-export default async function SystemDrawingsTab({ projectId, systemId, data, canEdit }: {
+export default async function SystemDrawingsTab({ projectId, systemId, data, losh, canEdit }: {
   projectId: string
   systemId: string
   data: SystemPidSheets
+  losh: SystemLosh | null
   canEdit: boolean
 }) {
   const t = await getTranslations('Systems.drawings')
@@ -47,6 +51,9 @@ export default async function SystemDrawingsTab({ projectId, systemId, data, can
   const drawn = data.sheets.filter(s => s.markups > 0).length
   const review = data.sheets.reduce((n, s) => n + s.markups_review, 0)
   const pinPct = data.tags_total ? Math.round((data.tags_pinned * 100) / data.tags_total) : 0
+  const loshPages = losh?.sheets.reduce((n, s) => n + s.pages.length, 0) ?? 0
+  const code = (id: string) => losh?.codes[id] ?? '?'
+  const sheetWord = t('controls.sheetShort')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -68,9 +75,18 @@ export default async function SystemDrawingsTab({ projectId, systemId, data, can
         </div>
         <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={kpiLabel}>{t('kpi.deliverable')}</div>
-          <button type="button" disabled style={{ minHeight: 40, border: '1px dashed var(--gray-400)', borderRadius: 8, background: 'var(--gray-50)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600 }}>
-            {t('kpi.pdfLater')}
-          </button>
+          {loshPages > 0 ? (
+            // Descarga de un PDF (route handler): <a> y no Link, que intentaría navegar en el cliente.
+            <a href={`/projects/${projectId}/systems/${systemId}/losh`} download
+              style={{ minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--primary-600)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+              {t('kpi.pdf')}
+            </a>
+          ) : (
+            <span style={{ minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--gray-400)', borderRadius: 8, background: 'var(--gray-50)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600 }}>
+              {t('kpi.pdfEmpty')}
+            </span>
+          )}
+          {loshPages > 0 && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('kpi.pdfPages', { count: loshPages })}</div>}
         </div>
       </div>
 
@@ -147,6 +163,36 @@ export default async function SystemDrawingsTab({ projectId, systemId, data, can
           </div>
         )}
       </section>
+
+      {losh && (losh.conflicts.length > 0 || losh.unpaired.length > 0) && (
+        <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10, borderColor: 'var(--warning-300)' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            <h2 style={{ margin: 0, fontSize: 16, color: 'var(--text-strong)' }}>{t('controls.title', { count: losh.conflicts.length + losh.unpaired.length })}</h2>
+            <span style={{ flex: 1 }} />
+            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('controls.hint')}</span>
+          </div>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {losh.conflicts.map(c => (
+              <li key={`${c.document_id}-${c.tag_id}-${c.page_num}`}>
+                <Link href={`/projects/${projectId}/documents/${c.document_id}/viewer?page=${c.page_num}&tag=${c.tag_id}`}
+                  style={{ fontSize: 13, color: 'var(--warning-800)', textDecoration: 'none' }}>
+                  ⚠ {t(c.own ? 'controls.ownOnOther' : 'controls.otherOnOwn', { tag: c.tag_number, system: code(c.system_id), other: code(c.other_system_id), sheet: `${c.number} · ${sheetWord} ${c.page_num}` })} ›
+                </Link>
+              </li>
+            ))}
+            {losh.unpaired.map(u => (
+              <li key={u.markup_id}>
+                <Link href={`/projects/${projectId}/documents/${u.document_id}/viewer?mk=${u.markup_id}`}
+                  style={{ fontSize: 13, color: 'var(--warning-800)', textDecoration: 'none' }}>
+                  ⚠ {u.target_number
+                    ? t('controls.unpaired', { sheet: `${u.number} · ${sheetWord} ${u.page_num}`, target: (u.target_page ?? 1) > 1 ? `${u.target_number} · ${sheetWord} ${u.target_page}` : u.target_number })
+                    : t('controls.noTarget', { sheet: `${u.number} · ${sheetWord} ${u.page_num}` })} ›
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {data.unpinned_total > 0 && (
         <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10 }}>

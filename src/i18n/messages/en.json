@@ -2054,7 +2054,27 @@
       "focus": "View",
       "focusHint": "Isolate and frame the system on this sheet",
       "markupStatus": "Markups: next milestone",
-      "vertex": "Vertex {n}: drag to move it"
+      "vertex": "Vertex {n}: drag to move it",
+      "tool_connector": "Connector",
+      "hint_connector": "Connector: click where the system leaves the sheet and choose the P&ID where it continues",
+      "kind_connector": "Off-sheet connector",
+      "sheetShort": "p.",
+      "connectorTarget": "Continues on P&ID",
+      "connectorPick": "Choose P&ID…",
+      "connectorThisSheet": "this sheet, another page",
+      "connectorPage": "Page",
+      "connectorTo": "The system continues on {target}.",
+      "connectorUnpaired": "Unpaired: the other sheet has no connector of this system pointing back here.",
+      "connectorNoTarget": "The target P&ID was deleted: choose another.",
+      "connectorOpen": "Open target sheet",
+      "newConnector": "New connector",
+      "newConnectorHelp": "Choose the P&ID and page where the run continues. On that sheet, a connector of the same system pointing back here makes the pair.",
+      "controls": "Checks on this sheet",
+      "pinCrossed": "{tag} ({system}) sits on the {other} highlight",
+      "pinCrossedPending": "This tag belongs to {system}, but the point sits on the {other} highlight. You can still confirm it.",
+      "connectorUnpairedItem": "{system} connector to {target} with no connector back",
+      "connectorNoTargetItem": "{system} connector with no target P&ID",
+      "connectorIncoming": "{source} says {system} continues here, but this page has no connector back"
     }
   },
   "PreservationExecution": {
@@ -3466,7 +3486,9 @@
         "ofSheets": "{a} of {b} sheets",
         "review": "{count, plural, one {# markup to review} other {# markups to review}}",
         "deliverable": "Deliverable",
-        "pdfLater": "Limits PDF · coming in P4"
+        "pdf": "Download LOSH PDF",
+        "pdfEmpty": "LOSH PDF · no limits drawn",
+        "pdfPages": "{count, plural, one {# sheet with limits} other {# sheets with limits}} · also included in the handover package"
       },
       "empty": "No tag of the system cites a P&ID or has a pin, and the system has no limits drawn.",
       "col": {
@@ -3493,7 +3515,16 @@
       "noDocument": "{drawing} without document",
       "noDrawing": "no drawing cited",
       "more": "and {count} more",
-      "missingMore": "{count, plural, one {And # more drawing cited without document} other {And # more drawings cited without document}}: {list}"
+      "missingMore": "{count, plural, one {And # more drawing cited without document} other {And # more drawings cited without document}}: {list}",
+      "controls": {
+        "title": "LOSH checks ({count})",
+        "hint": "Warnings only; fix them on the drawing",
+        "sheetShort": "p.",
+        "ownOnOther": "{tag} belongs to {system} but sits on the {other} highlight on {sheet}",
+        "otherOnOwn": "{tag}, from {system}, sits on this system's highlight ({other}) on {sheet}",
+        "unpaired": "Connector on {sheet} to {target} with no connector back",
+        "noTarget": "Connector on {sheet} with no target P&ID"
+      }
     }
   },
   "Registers": {
@@ -8505,7 +8536,10 @@
       "sameSystem": "The two sides of the limit must be different systems",
       "revisionNotFound": "P&ID revision not found in the project",
       "markupNotFound": "Markup not found",
-      "otherSideLimitOnly": "Only a limit has a system on the other side"
+      "otherSideLimitOnly": "Only a limit has a system on the other side",
+      "connectorTarget": "Choose the project P&ID where the system continues",
+      "connectorSelf": "A connector cannot point to the same page of the same sheet",
+      "targetConnectorOnly": "Only a connector has a target sheet"
     },
     "pidHotspots": {
       "revisionNotFound": "P&ID revision not found in the project",

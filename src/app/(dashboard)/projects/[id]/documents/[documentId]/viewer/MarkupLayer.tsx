@@ -14,6 +14,8 @@ import type { MarkupView, PageInfo, SystemRef } from './types'
 // etiqueta = chip con el código. «Por revisar» (copiadas de la revisión anterior) = contorno ámbar punteado.
 // P3: los vértices de la marca elegida se arrastran (mouse o dedo; en una línea, con ajuste a 90°) y al soltar se
 // guardan; `colorFor` colorea por sistema o por estado de la liberación siguiente.
+// P4: conector entre hojas = flecha fuera de hoja del color del sistema con el número de la hoja destino; sin
+// conector de vuelta en la otra hoja («sin par»), contorno ámbar punteado.
 
 const INK = '#14213d'
 const REVIEW = '#d48a1a'
@@ -40,6 +42,8 @@ export default function MarkupLayer({
   colorFor,
   editable = false,
   onEditPoints,
+  connectorLabel,
+  unpaired,
 }: {
   page: PageInfo
   markups: MarkupView[]
@@ -60,6 +64,10 @@ export default function MarkupLayer({
   /** La marca elegida se puede editar arrastrando sus vértices. */
   editable?: boolean
   onEditPoints?: (id: string, points: Pt[]) => void
+  /** Texto de un conector (número de la hoja destino). */
+  connectorLabel?: (mk: MarkupView) => string
+  /** Conectores sin conector de vuelta. */
+  unpaired?: Set<string>
 }) {
   const t = useTranslations('PidDocuments')
   const size = { w: page.w, h: page.h }
@@ -159,6 +167,27 @@ export default function MarkupLayer({
               {selectable && (
                 <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="transparent" strokeWidth={m.hit * 2}
                   style={{ pointerEvents: 'stroke', cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onSelect(mk.id) }} />
+              )}
+            </g>
+          )
+        }
+        if (mk.kind === 'connector' && pts.length === 1) {
+          const c = P(pts[0])
+          const text = connectorLabel?.(mk) ?? '?'
+          const h = m.font * 1.8, w = text.length * m.font * 0.62 + m.font * 1.4 + h / 2
+          const x0 = c.x - w / 2, y0 = c.y - h / 2
+          const shape = `M${x0} ${y0} L${x0 + w - h / 2} ${y0} L${x0 + w} ${c.y} L${x0 + w - h / 2} ${y0 + h} L${x0} ${y0 + h} Z`
+          const warn = mk.needs_review || unpaired?.has(mk.id)
+          return (
+            <g key={mk.id} opacity={op} style={selectable ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+              onClick={selectable ? e => { e.stopPropagation(); onSelect(mk.id) } : undefined}>
+              <title>{text}</title>
+              <path d={shape} fill={colorOf(mk.system_id)} />
+              <text x={x0 + m.font * 0.6} y={c.y} fill="#fff" fontSize={m.font} fontWeight={700} dominantBaseline="central"
+                style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>{text}</text>
+              {warn && (
+                <path d={shape} fill="none" stroke={REVIEW} strokeWidth={m.barStroke * 0.8} strokeDasharray={`${m.font * 0.4} ${m.font * 0.3}`}
+                  transform={`translate(${c.x} ${c.y}) scale(1.12) translate(${-c.x} ${-c.y})`} />
               )}
             </g>
           )

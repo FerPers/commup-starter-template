@@ -5348,6 +5348,8 @@ export type Database = {
           project_id: string
           revision_id: string
           system_id: string | null
+          target_document_id: string | null
+          target_page: number | null
           updated_at: string
           updated_by: string | null
         }
@@ -5369,6 +5371,8 @@ export type Database = {
           project_id: string
           revision_id: string
           system_id?: string | null
+          target_document_id?: string | null
+          target_page?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -5390,6 +5394,8 @@ export type Database = {
           project_id?: string
           revision_id?: string
           system_id?: string | null
+          target_document_id?: string | null
+          target_page?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -5448,6 +5454,13 @@ export type Database = {
             columns: ["revision_id"]
             isOneToOne: false
             referencedRelation: "document_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_markups_target_document_id_fkey"
+            columns: ["target_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
           {

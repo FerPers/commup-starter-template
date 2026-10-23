@@ -14,6 +14,7 @@ import SystemDetailView, { type DependencyRow, type BoundaryEvent } from './Syst
 import SystemGatesView from './SystemGatesView'
 import type { GatePlanEvent } from './GatePlanPanel'
 import SystemDrawingsTab, { type SystemPidSheets } from './SystemDrawingsTab'
+import { loadSystemLosh } from '@/lib/pid/losh-server'
 import {
   SystemFileShell, SystemPlanTab, SystemStartupTab, SystemTransferTab, SystemVendorsTab,
   type SystemPerformance, type SystemVendor,
@@ -186,9 +187,13 @@ export default async function SystemFilePage({ params, searchParams }: {
   } else if (tab === 'vendors') {
     content = <SystemVendorsTab project={projectRef} performance={performance} vendors={vendors} />
   } else if (tab === 'drawings') {
-    const { data: sheets, error } = await supabase.rpc('system_pid_sheets', { p_system_id: systemId })
+    // P4: controles del LOSH (pines cruzados, conectores sin par) y el PDF por sistema.
+    const [{ data: sheets, error }, losh] = await Promise.all([
+      supabase.rpc('system_pid_sheets', { p_system_id: systemId }),
+      loadSystemLosh(supabase, { projectId: project.id, systemId }),
+    ])
     if (error) throw new Error(error.message)
-    content = <SystemDrawingsTab projectId={project.id} systemId={system.id} data={sheets as unknown as SystemPidSheets} canEdit={canEdit} />
+    content = <SystemDrawingsTab projectId={project.id} systemId={system.id} data={sheets as unknown as SystemPidSheets} losh={losh} canEdit={canEdit} />
   } else {
     // Datos del sistema y Dependencias: la ficha de Sistemas (fase 2), sin su encabezado.
     const [subs, tags, { data: projectSystems }, { data: orgGates }, { data: frozenBy }, { data: events }] = await Promise.all([

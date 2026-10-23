@@ -1,15 +1,16 @@
 // P2 (plan referente): marcas LOSH sobre una revisión de un P&ID (tabla pid_markups). Lógica pura, sin DOM.
 //  - line  = recorrido resaltado de un sistema (2..500 vértices);
 //  - limit = barra de límite en un punto de aislamiento (2 puntos = extremos de la barra), sistema a cada lado;
-//  - label = etiqueta con el código del sistema (1 punto).
+//  - label = etiqueta con el código del sistema (1 punto);
+//  - connector = conector entre hojas (P4, 1 punto): el sistema sigue en otra hoja (`target_document_id` + página).
 // Los puntos se guardan en unidad 0..1 de la página YA ROTADA, con el tamaño y la rotación de esa página al dibujar
 // (= SQL pid_markup_points_ok); al mostrarlos se reproyectan a la rotación de la hoja abierta.
 
 import { clamp, distance, distanceToSegment, reprojectPoint, simplify, type PageSize, type Pt, type Rotation } from './geometry'
 
-export type MarkupKind = 'line' | 'limit' | 'label'
+export type MarkupKind = 'line' | 'limit' | 'label' | 'connector'
 
-export const MARKUP_KINDS: readonly MarkupKind[] = ['line', 'limit', 'label']
+export const MARKUP_KINDS: readonly MarkupKind[] = ['line', 'limit', 'label', 'connector']
 export const MAX_LINE_VERTICES = 500
 export const MAX_LABEL_LENGTH = 80
 
@@ -27,11 +28,14 @@ export type Markup = {
   page_rotation: Rotation
   label: string | null
   needs_review: boolean
+  /** P4, solo en un conector: P&ID donde sigue el sistema (null = destino borrado) y su página. */
+  target_document_id: string | null
+  target_page: number | null
 }
 
 /** Cantidad de puntos válida por tipo (= pid_markup_points_ok). */
 export function validMarkupPoints(kind: MarkupKind, pts: Pt[]): boolean {
-  const min = kind === 'label' ? 1 : 2
+  const min = kind === 'label' || kind === 'connector' ? 1 : 2
   const max = kind === 'line' ? MAX_LINE_VERTICES : kind === 'limit' ? 2 : 1
   if (pts.length < min || pts.length > max) return false
   return pts.every(p => Number.isFinite(p.x) && Number.isFinite(p.y) && p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1)

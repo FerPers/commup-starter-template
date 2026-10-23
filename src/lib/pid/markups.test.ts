@@ -17,6 +17,8 @@ describe('puntos guardados', () => {
     expect(validMarkupPoints('limit', [p, p, p])).toBe(false)
     expect(validMarkupPoints('label', [p])).toBe(true)
     expect(validMarkupPoints('label', [p, p])).toBe(false)
+    expect(validMarkupPoints('connector', [p])).toBe(true)
+    expect(validMarkupPoints('connector', [p, p])).toBe(false)
     expect(validMarkupPoints('line', [p, { x: 1.01, y: 0 }])).toBe(false)
     expect(validMarkupPoints('line', [p, { x: Number.NaN, y: 0 }])).toBe(false)
     expect(validMarkupPoints('line', Array.from({ length: 501 }, () => p))).toBe(false)

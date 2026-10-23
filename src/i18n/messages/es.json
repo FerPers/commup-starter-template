@@ -2054,7 +2054,27 @@
       "focus": "Ver",
       "focusHint": "Aislar y encuadrar el sistema en esta hoja",
       "markupStatus": "Marcas: liberación siguiente",
-      "vertex": "Vértice {n}: arrastra para moverlo"
+      "vertex": "Vértice {n}: arrastra para moverlo",
+      "tool_connector": "Conector",
+      "hint_connector": "Conector: clic donde el sistema sale de la hoja y elige el P&ID donde sigue",
+      "kind_connector": "Conector a otra hoja",
+      "sheetShort": "h.",
+      "connectorTarget": "Sigue en el P&ID",
+      "connectorPick": "Elegir P&ID…",
+      "connectorThisSheet": "esta hoja, otra página",
+      "connectorPage": "Página",
+      "connectorTo": "El sistema sigue en {target}.",
+      "connectorUnpaired": "Sin par: la otra hoja no tiene un conector de este sistema que vuelva aquí.",
+      "connectorNoTarget": "El P&ID destino se borró: elige otro.",
+      "connectorOpen": "Abrir la hoja destino",
+      "newConnector": "Nuevo conector",
+      "newConnectorHelp": "Elige el P&ID y la página donde sigue el recorrido. En esa hoja, un conector del mismo sistema que vuelva aquí hace el par.",
+      "controls": "Controles de esta hoja",
+      "pinCrossed": "{tag} ({system}) cae sobre el resalte de {other}",
+      "pinCrossedPending": "Este tag es de {system}, pero el punto cae sobre el resalte de {other}. Puedes confirmarlo igual.",
+      "connectorUnpairedItem": "Conector de {system} a {target} sin conector de vuelta",
+      "connectorNoTargetItem": "Conector de {system} sin P&ID destino",
+      "connectorIncoming": "{source} dice que {system} sigue aquí, pero esta página no tiene su conector de vuelta"
     }
   },
   "PreservationExecution": {
@@ -3466,7 +3486,9 @@
         "ofSheets": "{a} de {b} hojas",
         "review": "{count, plural, one {# marca por revisar} other {# marcas por revisar}}",
         "deliverable": "Entregable",
-        "pdfLater": "PDF de límites · llega en P4"
+        "pdf": "Descargar PDF LOSH",
+        "pdfEmpty": "PDF LOSH · sin límites dibujados",
+        "pdfPages": "{count, plural, one {# hoja con límites} other {# hojas con límites}} · también va en el paquete de handover"
       },
       "empty": "Ningún tag del sistema cita un P&ID ni tiene pin, y el sistema no tiene límites dibujados.",
       "col": {
@@ -3493,7 +3515,16 @@
       "noDocument": "{drawing} sin documento",
       "noDrawing": "sin plano citado",
       "more": "y {count} más",
-      "missingMore": "{count, plural, one {Y # plano más citado sin documento} other {Y # planos más citados sin documento}}: {list}"
+      "missingMore": "{count, plural, one {Y # plano más citado sin documento} other {Y # planos más citados sin documento}}: {list}",
+      "controls": {
+        "title": "Controles del LOSH ({count})",
+        "hint": "Solo avisan; se corrigen en el plano",
+        "sheetShort": "h.",
+        "ownOnOther": "{tag} es de {system} pero cae sobre el resalte de {other} en {sheet}",
+        "otherOnOwn": "{tag}, de {system}, cae sobre el resalte de este sistema ({other}) en {sheet}",
+        "unpaired": "Conector en {sheet} hacia {target} sin conector de vuelta",
+        "noTarget": "Conector en {sheet} sin P&ID destino"
+      }
     }
   },
   "Registers": {
@@ -8505,7 +8536,10 @@
       "sameSystem": "Los dos lados del límite deben ser sistemas distintos",
       "revisionNotFound": "Revisión del P&ID no encontrada en el proyecto",
       "markupNotFound": "Marca no encontrada",
-      "otherSideLimitOnly": "Solo un límite tiene sistema del otro lado"
+      "otherSideLimitOnly": "Solo un límite tiene sistema del otro lado",
+      "connectorTarget": "Elige el P&ID del proyecto donde sigue el sistema",
+      "connectorSelf": "El conector no puede apuntar a la misma página de la misma hoja",
+      "targetConnectorOnly": "Solo un conector lleva hoja destino"
     },
     "pidHotspots": {
       "revisionNotFound": "Revisión del P&ID no encontrada en el proyecto",
