@@ -28,10 +28,10 @@ describe('menú por fase y rol (N1)', () => {
     }
   })
 
-  it('metas de la propuesta: inspector ≤ 9, líder ≤ 17, cliente ≤ 10, arquitecto ≈ 10', () => {
+  it('metas de la propuesta: inspector ≤ 9, líder ≤ 17, cliente ≤ 11 (Portafolio = su inicio, Luis 2026-10-23), arquitecto ≈ 10', () => {
     expect(visibleEntries(buildMenu('inspector', P))).toBeLessThanOrEqual(9)
     expect(visibleEntries(buildMenu('leader', P))).toBeLessThanOrEqual(17)
-    expect(visibleEntries(buildMenu('client', P))).toBeLessThanOrEqual(10)
+    expect(visibleEntries(buildMenu('client', P))).toBeLessThanOrEqual(11)
     expect(visibleEntries(buildMenu('architect', P))).toBeLessThanOrEqual(10)
   })
 
@@ -53,6 +53,8 @@ describe('menú por fase y rol (N1)', () => {
     const arch = buildMenu('architect', P)
     expect(arch.project.map(l => l.key).slice(0, 3)).toEqual(['overview', 'readiness', 'planning'])
     const client = buildMenu('client', P)
+    // Su inicio (homeForRole) es el Portafolio: visible, no en «Más…»
+    expect(client.portfolio.map(l => l.key)).toContain('dashboard')
     const keys = [...client.personal, ...client.project, ...client.more].map(l => l.key)
     expect(keys).not.toContain('import')
     expect(keys).not.toContain('scan')
