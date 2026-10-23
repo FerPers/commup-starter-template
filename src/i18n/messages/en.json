@@ -1497,7 +1497,8 @@
     "backup": "Backup / Restore",
     "matrixHint": "Which ITRs apply to each equipment type (proposed by AI, approved by you)",
     "matrix": "Matrix by equipment type",
-    "importFromOrg": "Import from another org"
+    "importFromOrg": "Import from another org",
+    "pageSubtitle": "Inspection & Test Records library — define once, execute in the field"
   },
   "ItrExecution": {
     "status": {
@@ -7234,7 +7235,8 @@
     "notePlaceholder": "Check sizing calculations…",
     "mandatory": "Mandatory item (cannot be marked N/A)",
     "saving": "Saving…",
-    "save": "Save"
+    "save": "Save",
+    "pageSubtitle": "Pre-Startup Safety Review checklist — define the verification items for start-up"
   },
   "CeMatrix": {
     "cannotDeleteMatrix": "The matrix has {n} C&E test ITRs generated: it cannot be deleted (create a new revision of the matrix).",
@@ -7393,6 +7395,13 @@
         "import": "Imported",
         "ai": "AI (reviewed)"
       }
+    },
+    "votingOpt": {
+      "1oo1": "1oo1",
+      "1oo2": "1oo2",
+      "2oo2": "2oo2",
+      "2oo3": "2oo3",
+      "other": "Other"
     }
   },
   "SourceItrs": {

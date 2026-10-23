@@ -183,7 +183,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
                     <td style={{ padding: '4px', width: '100px' }}><input aria-label={ti('aria.causeSetpoint', { n: i + 1 })} style={field} value={c.setpoint} onChange={e => setCause(i, { setpoint: e.target.value })} /></td>
                     <td style={{ padding: '4px', width: '90px' }}>
                       <select aria-label={ti('aria.causeVoting', { n: i + 1 })} style={field} value={c.voting ?? ''} onChange={e => setCause(i, { voting: (e.target.value || null) as CeVoting | null })}>
-                        <option value="">—</option>{CE_VOTINGS.map(v => <option key={v} value={v}>{tc(`voting.${v}`)}</option>)}
+                        <option value="">—</option>{CE_VOTINGS.map(v => <option key={v} value={v}>{tc(`votingOpt.${v}`)}</option>)}
                       </select>
                     </td>
                     <td style={{ padding: '4px' }}><button type="button" aria-label={ti('aria.removeCause', { code: c.code })} onClick={() => removeRow('causes', c.key)} style={{ border: 0, background: 'none', cursor: 'pointer', color: '#b91c1c' }}>×</button></td>

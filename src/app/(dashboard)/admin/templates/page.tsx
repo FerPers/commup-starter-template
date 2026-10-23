@@ -7,6 +7,7 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 export default async function ItrTemplatesPage() {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = await getTranslations('Sidebar.nav')
+  const tPage = await getTranslations('ItrTemplates')
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
@@ -44,7 +45,7 @@ export default async function ItrTemplatesPage() {
           {tNav('itrTemplates')}
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-          Biblioteca de Inspection &amp; Test Records — define una vez, ejecuta en campo
+          {tPage('pageSubtitle')}
         </p>
       </div>
 

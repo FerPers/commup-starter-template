@@ -141,7 +141,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
                     <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'cause', row: c }) }} style={{ border: 0, background: 'transparent', padding: 0, cursor: canEdit ? 'pointer' : 'default', textAlign: 'left', color: 'var(--text-strong)', fontSize: '12px' }}>
                       <strong style={{ fontFamily: 'monospace' }}>{c.code}</strong> {c.description}
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        {[c.signal_tag ?? c.tag_number, [c.condition, c.setpoint].filter(Boolean).join(' '), c.voting && tc(`voting.${c.voting}`)].filter(Boolean).join(' · ') || '—'}
+                        {[c.signal_tag ?? c.tag_number, [c.condition, c.setpoint].filter(Boolean).join(' '), c.voting && tc(`votingOpt.${c.voting}`)].filter(Boolean).join(' · ') || '—'}
                       </div>
                     </button>
                   </th>
@@ -249,7 +249,7 @@ function CauseForm({ row, seq, pending, onSave, onDelete, onClose }: {
     </div>
     <label style={{ fontSize: '12px' }}>{tc('voting')}
       <select style={field} value={f.voting ?? ''} onChange={e => setF({ ...f, voting: (e.target.value || null) as CeVoting | null })}>
-        <option value="">—</option>{CE_VOTINGS.map(v => <option key={v} value={v}>{tc(`voting.${v}`)}</option>)}
+        <option value="">—</option>{CE_VOTINGS.map(v => <option key={v} value={v}>{tc(`votingOpt.${v}`)}</option>)}
       </select>
     </label>
     <label style={{ fontSize: '12px' }}>{tc('notes')}<textarea maxLength={1000} rows={2} style={field} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></label>

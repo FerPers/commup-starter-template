@@ -6,6 +6,7 @@ import PssrTemplatesView from './PssrTemplatesView'
 export default async function PssrTemplatesPage() {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = await getTranslations('Sidebar.nav')
+  const tPage = await getTranslations('PssrTemplates')
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
@@ -26,7 +27,7 @@ export default async function PssrTemplatesPage() {
           {tNav('pssrTemplates')}
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-          Checklist Pre-Startup Safety Review — define los ítems de verificación para el arranque
+          {tPage('pageSubtitle')}
         </p>
       </div>
       <PssrTemplatesView templates={templates ?? []} canEdit={canEdit} />

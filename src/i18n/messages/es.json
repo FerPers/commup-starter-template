@@ -1497,7 +1497,8 @@
     "backup": "Respaldo / Restaurar",
     "matrixHint": "Qué ITR aplican a cada tipo de equipo (propuesto por IA, aprobado por ti)",
     "matrix": "Matriz por tipo de equipo",
-    "importFromOrg": "Importar de otra org"
+    "importFromOrg": "Importar de otra org",
+    "pageSubtitle": "Biblioteca de Inspection & Test Records — define una vez, ejecuta en campo"
   },
   "ItrExecution": {
     "status": {
@@ -7234,7 +7235,8 @@
     "notePlaceholder": "Verificar los cálculos de dimensionamiento…",
     "mandatory": "Ítem obligatorio (no se puede marcar N/A)",
     "saving": "Guardando…",
-    "save": "Guardar"
+    "save": "Guardar",
+    "pageSubtitle": "Checklist Pre-Startup Safety Review — define los ítems de verificación para el arranque"
   },
   "CeMatrix": {
     "cannotDeleteMatrix": "La matriz tiene {n} ITR de prueba C&E generados: no se puede borrar (crea una nueva revisión de la matriz).",
@@ -7393,6 +7395,13 @@
         "import": "Importada",
         "ai": "IA (revisada)"
       }
+    },
+    "votingOpt": {
+      "1oo1": "1oo1",
+      "1oo2": "1oo2",
+      "2oo2": "2oo2",
+      "2oo3": "2oo3",
+      "other": "Otra"
     }
   },
   "SourceItrs": {
