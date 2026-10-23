@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest'
 // en el namespace equivocado y el menú de usuario mostraba la clave cruda; esto lo atrapa en CI.
 // Alcance: traductores declarados con useTranslations/getTranslations('Ns') (un solo namespace por nombre),
 // claves literales y las dos ramas de un ternario (`t(cond ? 'a' : 'b')`, V1: así se escapó Daily.detail.needDatePrompt
-// en en); las dinámicas (`t(\`x.${y}\`)`) no se revisan. Además es y en deben tener exactamente las mismas claves.
+// en en). En las dinámicas (`t(\`x.y.${z}\`)`) el prefijo fijo `x.y` debe ser un grupo de claves (V2: `CeMatrix.voting`
+// era el texto «Votación» y las opciones salían crudas). Además es y en deben tener exactamente las mismas claves.
 
 const get = (o: unknown, path: string) => path.split('.').reduce<unknown>((a, k) => (a && typeof a === 'object' ? (a as Record<string, unknown>)[k] : undefined), o)
 
@@ -39,6 +40,12 @@ function missingKeys(messages: unknown): string[] {
       for (const { key: k, at } of found) {
         const key = ns ? `${ns}.${k}` : k
         if (get(messages, key) === undefined) missing.push(`${file}:${src.slice(0, at).split('\n').length} ${key}`)
+      }
+      const dynamic = new RegExp(`(?<![\\w.])${name}(?:\\.rich|\\.raw|\\.markup)?\\(\\s*\`([\\w.]*)\\.\\$\\{`, 'g')
+      for (const m of src.matchAll(dynamic)) {
+        const group = ns ? `${ns}.${m[1]}` : m[1]
+        const node = get(messages, group)
+        if (!node || typeof node !== 'object') missing.push(`${file}:${src.slice(0, m.index).split('\n').length} ${group}.*`)
       }
     }
   }
