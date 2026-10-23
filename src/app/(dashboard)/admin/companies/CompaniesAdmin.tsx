@@ -81,7 +81,7 @@ export default function CompaniesAdmin({ rows, canEdit }: { rows: CompanyRow[]; 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr>
             <th style={th}>{t('f.name')}</th><th style={th}>{t('f.kind')}</th><th style={th}>{t('f.taxId')}</th>
-            <th style={th}>{t('col.members')}</th><th style={th}>{t('col.personnel')}</th><th style={th}>{t('col.equipment')}</th><th style={th} />
+            <th style={th}>{t('col.members')}</th><th style={th}>{t('col.personnel')}</th><th style={th}>{t('col.equipment')}</th><th style={th}><span className="sr-only">{t('edit')}</span></th>
           </tr></thead>
           <tbody>
             {rows.length === 0 && <tr><td colSpan={7} style={{ ...td, color: 'var(--text-muted)' }}>{t('empty')}</td></tr>}

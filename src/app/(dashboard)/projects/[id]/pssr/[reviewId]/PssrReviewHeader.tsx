@@ -4,7 +4,7 @@ import Link from 'next/link'
 // Header del review PSSR: breadcrumb, chips de estado, editor de fecha límite
 // (autocontenido) y botones de acción — extraído de PssrReviewForm.tsx (Q4).
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { updatePssrReviewDueDate } from '@/app/actions/pssr'
 import { STATUS_KEY_MAP, STATUS_STYLES, type ReviewStatus } from './pssr-review-shared'
@@ -46,6 +46,7 @@ export default function PssrReviewHeader({
   onError: (msg: string) => void
 }) {
   const t = useTranslations('PSSR')
+  const dueDateId = useId()
   const [datePending, startDateTransition] = useTransition()
   const [dueDate, setDueDate] = useState(review.review_due_date ?? '')
   const [editingDueDate, setEditingDueDate] = useState(false)
@@ -104,10 +105,11 @@ export default function PssrReviewHeader({
             if (editingDueDate && canEditDate) {
               return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-                  <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <label htmlFor={dueDateId} style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('review.dueDateLabel')}
                   </label>
                   <input
+                    id={dueDateId}
                     type="date"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}

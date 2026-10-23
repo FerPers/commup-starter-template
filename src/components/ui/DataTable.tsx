@@ -4,6 +4,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode, type Key } fro
 import { Table, THead, TBody, TR, TH, TD, TableWrapper } from './Table';
 import { EmptyState } from './EmptyState';
 import { SkeletonStack } from './Skeleton';
+import { pressable } from '@/lib/a11y/pressable';
 
 export type DataTableResponsive = 'scroll' | 'scroll-sticky' | 'stack';
 
@@ -81,7 +82,7 @@ export function DataTable<T>({
         {rows.map((row) => (
           <div
             key={rowKey(row)}
-            onClick={onRowClick ? () => onRowClick(row) : undefined}
+            {...(onRowClick ? pressable(() => onRowClick(row)) : {})}
             style={{
               background: 'var(--card-bg)',
               border: '1px solid var(--border)',

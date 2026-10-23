@@ -260,6 +260,7 @@ export default function TagsView({
                     type="checkbox"
                     checked={allFilteredSelected}
                     onChange={toggleAll}
+                    aria-label={allFilteredSelected ? t('list.bulkDeselect') : t('list.selectAll')}
                     style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
                   />
                 </th>

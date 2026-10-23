@@ -9,6 +9,7 @@
 // columnas de referencia que muestran datos de esa foto.
 
 import { SOURCE_REFS, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TABLE_PRESETS, checkTableConfig, type TableColumn, type TableConfig, type TableSource } from '@/lib/itr/table'
+import { useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { fieldInput, fieldLabel } from './template-builder-shared'
 
@@ -30,6 +31,7 @@ const num = (v: string) => (v === '' ? null : Number(v))
 
 export default function TableConfigEditor({ value, onChange }: { value: TableConfig | null; onChange: (config: TableConfig) => void }) {
   const t = useTranslations('ItrTemplates.table')
+  const uid = useId()
   const config = value ?? EMPTY
   const set = (patch: Partial<TableConfig>) => onChange(withVersion({ ...config, ...patch }))
   const setColumn = (index: number, patch: Partial<TableColumn>) => set({ columns: config.columns.map((column, i) => i === index ? { ...column, ...patch } : column) })
@@ -122,14 +124,14 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
                 </select>
               </label>
               <label style={fieldLabel}>{t('unit')}<input style={small} value={column.unit ?? ''} disabled={!numeric && column.type !== 'computed'} onChange={e => setColumn(index, { unit: e.target.value || null })} /></label>
-              <label style={fieldLabel}>{column.type === 'select' ? t('options') : t('criterion')}
+              <label htmlFor={`${uid}-${column.key}-criterion`} style={fieldLabel}>{column.type === 'select' ? t('options') : t('criterion')}
                 {column.type === 'reference' && source
-                  ? <select style={small} value={column.ref ?? ''} onChange={e => setColumn(index, { ref: e.target.value })}>
+                  ? <select id={`${uid}-${column.key}-criterion`} style={small} value={column.ref ?? ''} onChange={e => setColumn(index, { ref: e.target.value })}>
                       {Object.entries(SOURCE_REFS[source]).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
                     </select>
                   : column.type === 'select'
-                  ? <input style={small} value={(column.options ?? []).join(', ')} onChange={e => setColumn(index, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
-                  : <input style={{ ...small, color: 'var(--text-muted)' }} disabled value={numeric ? t('hintNumber') : column.type === 'result' ? (column.auto_from ? t('hintAuto') : t('hintResult')) : column.type === 'computed' ? t('hintComputed') : column.type === 'datetime' ? t('hintDatetime') : t('hintText')} />}
+                  ? <input id={`${uid}-${column.key}-criterion`} style={small} value={(column.options ?? []).join(', ')} onChange={e => setColumn(index, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
+                  : <input id={`${uid}-${column.key}-criterion`} style={{ ...small, color: 'var(--text-muted)' }} disabled value={numeric ? t('hintNumber') : column.type === 'result' ? (column.auto_from ? t('hintAuto') : t('hintResult')) : column.type === 'computed' ? t('hintComputed') : column.type === 'datetime' ? t('hintDatetime') : t('hintText')} />}
               </label>
               <label style={fieldLabel}>{t('min')}<input style={small} type="number" step="any" disabled={!numeric} value={column.min ?? ''} onChange={e => setColumn(index, { min: num(e.target.value) })} /></label>
               <label style={fieldLabel}>{t('max')}<input style={small} type="number" step="any" disabled={!numeric} value={column.max ?? ''} onChange={e => setColumn(index, { max: num(e.target.value) })} /></label>

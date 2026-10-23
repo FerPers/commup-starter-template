@@ -714,6 +714,7 @@ function CertSignModal({
 }) {
   const t = useTranslations('Certificates')
   const titleId = useId()
+  const commentsId = useId()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [hasDrawn, setHasDrawn] = useState(false)
@@ -783,6 +784,7 @@ function CertSignModal({
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
       padding: '20px',
     }}
+      role="presentation"
       onClick={e => { if (e.target === e.currentTarget) onCancel() }}
     >
       <DialogSurface onClose={isPending ? undefined : onCancel} labelledBy={titleId} style={{
@@ -799,9 +801,9 @@ function CertSignModal({
         {/* Canvas drawing pad */}
         <div style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>
               {t('detail.sigCanvasLabel')}
-            </label>
+            </span>
             <button
               onClick={clearCanvas}
               style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
@@ -828,10 +830,11 @@ function CertSignModal({
           </div>
         </div>
 
-        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+        <label htmlFor={commentsId} style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
           {t('detail.sigCommentsLabel')}
         </label>
         <textarea
+          id={commentsId}
           value={comments}
           onChange={e => onCommentsChange(e.target.value)}
           placeholder={t('detail.sigCommentsPlaceholder')}

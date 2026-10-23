@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -104,7 +105,6 @@ function ProgressMini({ pct, semaforo }: { pct: number; semaforo: string }) {
 // ── Tag Asset Card ────────────────────────────────────────────────────────────
 
 function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string; highlight: boolean }) {
-  const router = useRouter()
   const tw = useTranslations('TwinView')
   const locale = useLocale()
   const s = SEMAFORO[tag.semaforo_global] ?? SEMAFORO.grey
@@ -116,10 +116,13 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
   const hasCert    = tag.certs_issued > 0
   const hasPid     = tag.pid_hotspot_count > 0
 
+  // G-12: la tarjeta navega → enlace de verdad (Tab, Enter, abrir en otra pestaña).
   return (
-    <div
-      onClick={() => router.push(`/projects/${projectId}/tags/${tag.tag_id}`)}
+    <Link
+      href={`/projects/${projectId}/tags/${tag.tag_id}`}
+      prefetch={false}
       style={{
+        color: 'inherit', textDecoration: 'none',
         borderRadius: '12px',
         border: `1.5px solid ${highlight ? s.dot : s.border}`,
         background: highlight ? s.bg : 'var(--card-bg)',
@@ -198,7 +201,7 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
           ⏰ {new Date(tag.preservation_next_due).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}
         </div>
       )}
-    </div>
+    </Link>
   )
 }
 

@@ -126,20 +126,24 @@ export default function PreservationGlobal({
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '24px' }}>
-        <div
+        <button
+          type="button"
+          aria-pressed={filterDue === 'overdue'}
           onClick={() => setFilterDue(filterDue === 'overdue' ? '' : 'overdue')}
-          style={{ padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'overdue' ? '#fee2e2' : 'var(--card-bg)', border: `1px solid ${filterDue === 'overdue' ? '#fca5a540' : 'var(--border)'}` }}
+          style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'overdue' ? '#fee2e2' : 'var(--card-bg)', border: `1px solid ${filterDue === 'overdue' ? '#fca5a540' : 'var(--border)'}` }}
         >
-          <div style={{ fontSize: '22px', fontWeight: 700, color: '#ef4444' }}>{overdueCnt}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.overdue')}</div>
-        </div>
-        <div
+          <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: '#ef4444' }}>{overdueCnt}</span>
+          <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.overdue')}</span>
+        </button>
+        <button
+          type="button"
+          aria-pressed={filterDue === 'soon'}
           onClick={() => setFilterDue(filterDue === 'soon' ? '' : 'soon')}
-          style={{ padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'soon' ? '#fffbeb' : 'var(--card-bg)', border: `1px solid ${filterDue === 'soon' ? '#fde68a' : 'var(--border)'}` }}
+          style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'soon' ? '#fffbeb' : 'var(--card-bg)', border: `1px solid ${filterDue === 'soon' ? '#fde68a' : 'var(--border)'}` }}
         >
-          <div style={{ fontSize: '22px', fontWeight: 700, color: '#f59e0b' }}>{soonCnt}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.dueSoon')}</div>
-        </div>
+          <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: '#f59e0b' }}>{soonCnt}</span>
+          <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.dueSoon')}</span>
+        </button>
         <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#10b981' }}>{activeCnt}</div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.active')}</div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition, useEffect } from 'react'
+import { useId, useRef, useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import {
@@ -95,6 +95,7 @@ export default function PreservationExecution({
 }: Props) {
   const router = useRouter()
   const t = useTranslations('PreservationExecution')
+  const uid = useId()
   const locale = useLocale()
   const [isPending, startTransition] = useTransition()
   // G-08: diálogo propio
@@ -466,10 +467,11 @@ export default function PreservationExecution({
         </div>
 
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>
+          <label htmlFor={`${uid}-remarks`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>
             {t('labelRemarks')}
           </label>
           <textarea
+            id={`${uid}-remarks`}
             value={remarks}
             onChange={e => setRemarks(e.target.value)}
             rows={3}

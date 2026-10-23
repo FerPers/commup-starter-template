@@ -52,6 +52,7 @@ export default function PssrListView({
   const [isPending, startTransition] = useTransition()
   const [showModal, setShowModal] = useState(false)
   const titleId = useId()
+  const uid = useId()
   const [form, setForm] = useState({ systemId: '', templateId: templates[0]?.id ?? '', title: '', reviewDueDate: '' })
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -166,15 +167,15 @@ export default function PssrListView({
                 const statusKey = STATUS_KEY_MAP[review.status] ?? 'draft'
                 const sty = STATUS_STYLES[statusKey]
                 return (
-                  <div
+                  <Link
                     key={review.id}
+                    href={`/projects/${projectId}/pssr/${review.id}`}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '12px',
                       padding: '12px 16px', borderRadius: '8px',
                       background: 'var(--gray-50)', border: '1px solid #f1f5f9',
-                      cursor: 'pointer',
+                      cursor: 'pointer', textDecoration: 'none', color: 'inherit',
                     }}
-                    onClick={() => router.push(`/projects/${projectId}/pssr/${review.id}`)}
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -202,7 +203,7 @@ export default function PssrListView({
                       </div>
                     </div>
                     <span style={{ color: '#cbd5e1', fontSize: '18px' }}>›</span>
-                  </div>
+                  </Link>
                 )
               })}
             </div>
@@ -242,20 +243,21 @@ export default function PssrListView({
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
-        }} onClick={() => setShowModal(false)}>
+        }} role="presentation" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <DialogSurface onClose={() => setShowModal(false)} labelledBy={titleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', padding: '32px',
             width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-          }} onClick={e => e.stopPropagation()}>
+          }}>
             <h2 id={titleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               {t('createModal.title')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-systemLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   {t('createModal.systemLabel')}
                 </label>
                 <select
+                  id={`${uid}-systemLabel`}
                   value={form.systemId}
                   onChange={e => setForm(f => ({ ...f, systemId: e.target.value }))}
                   style={inputStyle}
@@ -268,10 +270,11 @@ export default function PssrListView({
               </div>
               {templates.length > 1 && (
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                  <label htmlFor={`${uid}-templateLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                     {t('createModal.templateLabel')}
                   </label>
                   <select
+                    id={`${uid}-templateLabel`}
                     value={form.templateId}
                     onChange={e => setForm(f => ({ ...f, templateId: e.target.value }))}
                     style={inputStyle}
@@ -283,10 +286,11 @@ export default function PssrListView({
                 </div>
               )}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-titleLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   {t('createModal.titleLabel')}
                 </label>
                 <input
+                  id={`${uid}-titleLabel`}
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder={t('createModal.titlePlaceholder')}
@@ -294,10 +298,11 @@ export default function PssrListView({
                 />
               </div>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-dueDateLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   {t('createModal.dueDateLabel')}
                 </label>
                 <input
+                  id={`${uid}-dueDateLabel`}
                   type="date"
                   value={form.reviewDueDate}
                   onChange={e => setForm(f => ({ ...f, reviewDueDate: e.target.value }))}

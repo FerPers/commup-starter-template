@@ -104,9 +104,9 @@ export default function PunchPhotosSection({
     <div style={{ marginBottom: 20 }}>
       {dialog}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
           {t('label', { count: attachments.length })}
-        </label>
+        </span>
         {canUpload && <>
         <label
           htmlFor={`punch-photo-${punchId}`}

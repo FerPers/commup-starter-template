@@ -99,8 +99,11 @@ export default function PhotoUpload({
                     📄 {att.file_url.split('/').pop() ?? t('upload.documentAlt')}
                   </a>
                 : att.signed_url
-                // eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL with rotating token, Image cache would break
-                ? <img src={att.signed_url} alt={t('upload.photoAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setLightbox(att.signed_url)} />
+                // G-12: la miniatura abre la foto en grande → botón (Tab, Enter) que envuelve la imagen.
+                ? <button type="button" onClick={() => setLightbox(att.signed_url)} style={{ display: 'block', width: '100%', height: '100%', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL with rotating token, Image cache would break */}
+                    <img src={att.signed_url} alt={t('upload.photoAlt')} style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </button>
                 : <div style={{ width: '100%', height: '100%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📷</div>
               }
               {att.pending && (

@@ -1,5 +1,6 @@
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 
 const eslintConfig = [
 	...nextCoreWebVitals,
@@ -51,6 +52,17 @@ const eslintConfig = [
 				{ ignoreVoid: true },
 			],
 			"@typescript-eslint/prefer-nullish-coalescing": "error",
+			// G-12: accesibilidad. El plugin ya lo registra eslint-config-next; aquí solo se encienden sus reglas.
+			...jsxA11y.flatConfigs.recommended.rules,
+			// G-12 (fuera de recommended): la regla nueva no ve los <label>{t('…')}</label> sueltos; esta (vieja) sí: label que envuelve su campo o con htmlFor.
+			"jsx-a11y/label-has-for": ["error", { required: { some: ["nesting", "id"] }, allowChildren: false }],
+			// Los diálogos enfocan su primer campo a propósito (AskDialog, motivo, búsqueda).
+			"jsx-a11y/no-autofocus": "off",
+			// G-12 (fuera de recommended): nombre para botones de ícono y encabezados vacíos; <option value> de un <datalist> y <td> vacíos no lo necesitan.
+			"jsx-a11y/control-has-associated-label": ["error", {
+				...jsxA11y.flatConfigs.recommended.rules["jsx-a11y/control-has-associated-label"][1],
+				ignoreElements: [...jsxA11y.flatConfigs.recommended.rules["jsx-a11y/control-has-associated-label"][1].ignoreElements, "option", "td"],
+			}],
 			// G-08: diálogos propios (useAskDialog / useToast), nunca los nativos del navegador.
 			"no-restricted-globals": [
 				"error",

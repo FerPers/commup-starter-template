@@ -224,21 +224,32 @@ export default function PunchListView({
           { labelKey: 'summary.catBOpen' as const, count: catBCnt, color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', filterVal: 'B' as const },
           { labelKey: 'summary.catCOpen' as const, count: catCCnt, color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)', filterVal: 'C' as const },
           { labelKey: 'summary.closed'   as const, count: closedCnt, color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', filterVal: null },
-        ]).map(card => (
-          <div
-            key={card.labelKey}
-            onClick={() => card.filterVal && url.set({ cat: filterCat === card.filterVal ? null : card.filterVal })}
-            style={{
-              padding: '16px 18px', borderRadius: '12px',
-              background: filterCat === card.filterVal && card.filterVal ? card.bg : 'var(--card-bg)',
-              border: `1px solid ${filterCat === card.filterVal && card.filterVal ? card.color + '40' : card.border}`,
-              cursor: card.filterVal ? 'pointer' : 'default',
-            }}
-          >
-            <div style={{ fontSize: '24px', fontWeight: 800, color: card.color }}>{card.count}</div>
-            <div style={{ fontSize: '11px', color: card.color, fontWeight: 600, marginTop: '2px' }}>{t(card.labelKey)}</div>
-          </div>
-        ))}
+        ]).map(card => {
+          const filterVal = card.filterVal
+          const on = !!filterVal && filterCat === filterVal
+          const style: React.CSSProperties = {
+            padding: '16px 18px', borderRadius: '12px',
+            background: on ? card.bg : 'var(--card-bg)',
+            border: `1px solid ${on ? card.color + '40' : card.border}`,
+            cursor: filterVal ? 'pointer' : 'default',
+          }
+          const body = (
+            <>
+              <span style={{ display: 'block', fontSize: '24px', fontWeight: 800, color: card.color }}>{card.count}</span>
+              <span style={{ display: 'block', fontSize: '11px', color: card.color, fontWeight: 600, marginTop: '2px' }}>{t(card.labelKey)}</span>
+            </>
+          )
+          // G-12: las tarjetas que filtran son botones (Tab + Enter/Espacio); «Cerrados» solo informa.
+          return filterVal ? (
+            <button key={card.labelKey} type="button" aria-pressed={on}
+              onClick={() => url.set({ cat: filterCat === filterVal ? null : filterVal })}
+              style={{ ...style, display: 'block', width: '100%', textAlign: 'left', font: 'inherit' }}>
+              {body}
+            </button>
+          ) : (
+            <div key={card.labelKey} style={style}>{body}</div>
+          )
+        })}
       </div>
 
       {/* Bulk toolbar */}
@@ -360,6 +371,7 @@ export default function PunchListView({
                     type="checkbox"
                     checked={allFilteredSelected}
                     onChange={toggleAll}
+                    aria-label={t('filters.selectAll', { count: filtered.length })}
                     style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
                   />
                 </th>

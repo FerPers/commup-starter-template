@@ -142,7 +142,7 @@ export default function OperationsView({ project, initialView, systems, transfer
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>
                 <th style={th}>{t('field.system')}</th><th style={th}>{t('ops.col.stage')}</th><th style={th}>{t('ops.col.required')}</th>
-                <th style={th}>{t('ops.col.pending')}</th><th style={th} />
+                <th style={th}>{t('ops.col.pending')}</th><th style={th}><span className="sr-only">{t('ops.request')}</span></th>
               </tr></thead>
               <tbody>
                 {systems.map(s => {
@@ -381,7 +381,7 @@ export default function OperationsView({ project, initialView, systems, transfer
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>
                   <th style={th}>{t('ops.fullName')}</th><th style={th}>{t('ops.company')}</th><th style={th}>{t('ops.position')}</th>
-                  <th style={th}>{t('ops.shift')}</th><th style={th}>{t('ops.user')}</th><th style={th} />
+                  <th style={th}>{t('ops.shift')}</th><th style={th}>{t('ops.user')}</th><th style={th}><span className="sr-only">{t('ops.edit')}</span></th>
                 </tr></thead>
                 <tbody>
                   {people.map(p => (
@@ -448,7 +448,7 @@ export default function OperationsView({ project, initialView, systems, transfer
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>
                   <th style={th}>{t('field.system')}</th><th style={th}>{t('ops.item')}</th><th style={th}>{t('ops.partNumber')}</th>
-                  <th style={th}>{t('ops.qty')}</th><th style={th}>{t('ops.col.status')}</th><th style={th}>{t('ops.eta')}</th><th style={th} />
+                  <th style={th}>{t('ops.qty')}</th><th style={th}>{t('ops.col.status')}</th><th style={th}>{t('ops.eta')}</th><th style={th}><span className="sr-only">{`${t('ops.edit')} · ${t('ops.delete')}`}</span></th>
                 </tr></thead>
                 <tbody>
                   {spares.filter(s => !spareFilter || s.system_id === spareFilter).map(s => (

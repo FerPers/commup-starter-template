@@ -8,6 +8,7 @@ import { importSignals, type SignalRow, type SignalImportResult } from '@/app/ac
 import { pickBestSheet, detectHeaderRow, cellText } from '@/lib/excel/detect-header'
 import { SIGNAL_COLS } from '@/lib/excel/signal-columns'
 import { dedupeLast, mergeCounts, runBatches } from '@/lib/import/batches'
+import { pressable } from '@/lib/a11y/pressable'
 
 const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
 
@@ -299,7 +300,8 @@ export default function ImportSignalsWizard({
             onDragOver={e => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
-            onClick={() => document.getElementById('sig-file-input')?.click()}
+            // G-12: la zona también se activa con Tab + Enter/Espacio (el input real está oculto).
+            {...pressable(() => document.getElementById('sig-file-input')?.click())}
             style={{
               border: `2px dashed ${dragging ? '#3b82f6' : 'var(--gray-300)'}`,
               borderRadius: '16px', padding: '64px 32px', textAlign: 'center',

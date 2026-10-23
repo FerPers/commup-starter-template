@@ -195,7 +195,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   <th style={th}>{t('board.col.itr')}</th>
                   <th style={th}>{t('board.col.blocker')}</th>
                   <th style={th}>{t('board.col.commitment')}</th>
-                  <th style={{ ...th, textAlign: 'right' }} />
+                  <th style={{ ...th, textAlign: 'right' }}><span className="sr-only">{t('board.open')}</span></th>
                 </tr>
               </thead>
               <tbody>

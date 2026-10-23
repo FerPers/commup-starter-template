@@ -48,7 +48,8 @@ export function Modal({
   const modal = (
     <div
       role="presentation"
-      onClick={closeOnBackdrop ? onClose : undefined}
+      // Solo el clic en el fondo mismo cierra (sin stopPropagation en el panel, que es un diálogo).
+      onClick={closeOnBackdrop ? (e) => { if (e.target === e.currentTarget) onClose(); } : undefined}
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(15, 23, 42, 0.55)',
@@ -64,7 +65,6 @@ export function Modal({
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
         style={{
           background: 'var(--card-bg)',
           borderRadius: 'var(--radius-lg)',

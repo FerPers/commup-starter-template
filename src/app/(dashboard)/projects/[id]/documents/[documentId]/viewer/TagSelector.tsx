@@ -65,27 +65,42 @@ export default function TagSelector({
 
   return (
     <div ref={ref} style={{ position: 'relative', minWidth: '200px' }}>
+      {/* G-12: la parte principal es un botón (abre/cierra) y la ✕ va al lado, no adentro. El relleno pasa del
+          contenedor a cada botón para que toda la caja siga respondiendo al clic. */}
       <div
-        onClick={() => setOpen(o => !o)}
         style={{
-          padding: '6px 10px', background: 'var(--card-bg)', border: '1px solid var(--border)',
-          borderRadius: '7px', fontSize: '12px', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: '6px', minWidth: '200px',
+          background: 'var(--card-bg)', border: '1px solid var(--border)',
+          borderRadius: '7px', fontSize: '12px',
+          display: 'flex', alignItems: 'center', minWidth: '200px',
           color: value ? 'var(--text-strong)' : 'var(--gray-400)',
         }}
       >
-        {value ? (
-          <>
-            <DisciplineChip discipline={value.discipline} />
-            <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}>{value.tag_number}</span>
-            <button
-              onClick={e => { e.stopPropagation(); onChange(null); setQuery('') }}
-              aria-label={t('viewer.tagClear')}
-              style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '14px', padding: 0 }}
-            >×</button>
-          </>
-        ) : (
-          <span>{t('viewer.tagSelectorPlaceholder')}</span>
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+          style={{
+            flex: 1, minWidth: 0, padding: value ? '6px 0 6px 10px' : '6px 10px', background: 'none', border: 'none',
+            font: 'inherit', color: 'inherit', textAlign: 'left', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '6px',
+          }}
+        >
+          {value ? (
+            <>
+              <DisciplineChip discipline={value.discipline} />
+              <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}>{value.tag_number}</span>
+            </>
+          ) : (
+            <span>{t('viewer.tagSelectorPlaceholder')}</span>
+          )}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => { onChange(null); setQuery('') }}
+            aria-label={t('viewer.tagClear')}
+            style={{ alignSelf: 'stretch', marginLeft: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '14px', padding: '0 10px 0 0' }}
+          >×</button>
         )}
       </div>
 
@@ -115,13 +130,15 @@ export default function TagSelector({
                 {searching ? t('viewer.tagSearching') : t('viewer.tagSearchEmpty')}
               </div>
             ) : hits.map(item => (
-              <div
+              <button
+                type="button"
                 key={item.id}
                 onClick={() => { onChange(item); setOpen(false); setQuery('') }}
                 style={{
-                  padding: '7px 12px', cursor: 'pointer', fontSize: '12px',
+                  font: 'inherit', padding: '7px 12px', cursor: 'pointer', fontSize: '12px',
                   display: 'flex', alignItems: 'center', gap: '6px',
                   transition: 'background 0.1s',
+                  width: '100%', border: 'none', background: 'transparent', textAlign: 'left',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--gray-50)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -129,7 +146,7 @@ export default function TagSelector({
                 <DisciplineChip discipline={item.discipline} />
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--text-strong)' }}>{item.tag_number}</span>
                 <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description}</span>
-              </div>
+              </button>
             ))}
             {hasMore && hits.length > 0 && (
               <button type="button" disabled={searching} onClick={() => load(query, hits.length)}

@@ -100,6 +100,7 @@ export default function SignModal({
 
   return (
     <div
+      role="presentation"
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -108,8 +109,8 @@ export default function SignModal({
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 18px' }}>{itrNumber}</p>
 
         {/* Role selector */}
-        <div style={{ marginBottom: '18px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('signModal.signAs')}</label>
+        <div role="group" aria-labelledby={`${titleId}-as`} style={{ marginBottom: '18px' }}>
+          <span id={`${titleId}-as`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('signModal.signAs')}</span>
           <div style={{ display: 'flex', gap: '8px' }}>
             {requiredRoles.map(role => {
               const alreadySigned = itrSignatures.some(s => s.role === role)
@@ -118,6 +119,7 @@ export default function SignModal({
                   key={role}
                   onClick={() => allowedRoles.includes(role) && setSignRole(role)}
                   disabled={alreadySigned || !allowedRoles.includes(role)}
+                  aria-pressed={signRole === role}
                   style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? 'var(--violet-600)' : 'var(--border)', background: alreadySigned ? 'var(--gray-50)' : signRole === role ? 'var(--violet-50)' : 'var(--card-bg)', color: alreadySigned ? 'var(--gray-400)' : signRole === role ? 'var(--violet-600)' : 'var(--gray-700)', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
                 >
                   {alreadySigned ? '✓ ' : ''}{t(`roles.${role}` as Parameters<typeof t>[0])}
@@ -130,7 +132,7 @@ export default function SignModal({
         {/* Canvas drawing pad */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</label>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</span>
             <button onClick={clearCanvas} style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
               {t('signModal.clearCanvas')}
             </button>

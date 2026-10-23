@@ -1708,7 +1708,8 @@
       "bulkChangeStatus": "Cambiar estado",
       "bulkDeselect": "Deseleccionar todo",
       "bulkApply": "Aplicar",
-      "qrLabels": "Etiquetas QR"
+      "qrLabels": "Etiquetas QR",
+      "selectAll": "Seleccionar todos los tags"
     },
     "detail": {
       "backLink": "← {project} / Tags",

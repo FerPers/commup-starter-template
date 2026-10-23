@@ -107,6 +107,7 @@ export default function UsersView({
   const t = useTranslations('Users')
   const { dialog, ask } = useAskDialog() // G-08: diálogo propio
   const removeTitleId = useId()
+  const uid = useId()
   const [isPending, startTransition] = useTransition()
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('inspector')
@@ -286,10 +287,11 @@ export default function UsersView({
           </p>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 260px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+              <label htmlFor={`${uid}-email`} style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
                 {t('invite.email')}
               </label>
               <input
+                id={`${uid}-email`}
                 type="email"
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
@@ -303,10 +305,11 @@ export default function UsersView({
               />
             </div>
             <div style={{ flex: '0 1 160px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+              <label htmlFor={`${uid}-role`} style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
                 {t('invite.role')}
               </label>
               <select
+                id={`${uid}-role`}
                 value={inviteRole}
                 onChange={e => setInviteRole(e.target.value)}
                 style={{
@@ -323,8 +326,8 @@ export default function UsersView({
               </select>
             </div>
             <div>
-              <label style={labelStyle}>{t('access.expiresLabel')}</label>
-              <input type="date" value={inviteExpires} onChange={e => setInviteExpires(e.target.value)} aria-label={t('access.expiresLabel')}
+              <label htmlFor={`${uid}-expires`} style={labelStyle}>{t('access.expiresLabel')}</label>
+              <input id={`${uid}-expires`} type="date" value={inviteExpires} onChange={e => setInviteExpires(e.target.value)}
                 style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '14px', background: 'var(--card-bg)', color: 'var(--text-strong)' }} />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -356,8 +359,9 @@ export default function UsersView({
       {/* Filters */}
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginBottom: '16px', flexWrap: 'wrap' }}>
         <div>
-          <label style={labelStyle}>{t('filters.role')}</label>
+          <label htmlFor={`${uid}-filterRole`} style={labelStyle}>{t('filters.role')}</label>
           <select
+            id={`${uid}-filterRole`}
             value={filterRole}
             onChange={e => setFilterRole(e.target.value)}
             style={selectStyle}
@@ -369,8 +373,9 @@ export default function UsersView({
           </select>
         </div>
         <div>
-          <label style={labelStyle}>{t('filters.status')}</label>
+          <label htmlFor={`${uid}-filterStatus`} style={labelStyle}>{t('filters.status')}</label>
           <select
+            id={`${uid}-filterStatus`}
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value as 'all' | 'active' | 'pending')}
             style={selectStyle}
@@ -579,6 +584,7 @@ export default function UsersView({
       {/* Remove member dialog */}
       {removeTarget && (
         <div
+          role="presentation"
           onClick={e => { if (e.target === e.currentTarget && !isPending) { setRemoveTarget(null); setRemoveCtx(null) } }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 60,

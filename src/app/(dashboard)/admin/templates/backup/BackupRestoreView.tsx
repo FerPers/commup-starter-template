@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/app/actions/templates-backup'
 import type { TemplatesBackup, RestoreResult, TaxonomyPreview } from '@/lib/constants/templates-backup'
 import BackupDocumentView from '@/components/templates/BackupDocumentView'
+import { pressable } from '@/lib/a11y/pressable'
 
 interface Props {
   orgName: string
@@ -62,7 +63,6 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
   const [includePssr, setIncludePssr] = useState(true)
 
   const [restoreResult, setRestoreResult] = useState<RestoreResult | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [taxonomyPreview, setTaxonomyPreview] = useState<TaxonomyPreview | null>(null)
   const [isCheckingTaxonomy, startTaxonomyCheck] = useTransition()
@@ -221,7 +221,11 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
         <div
           onDragOver={e => e.preventDefault()}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
+          {...pressable(e => {
+            // El input oculto vive dentro de la zona: su propio clic burbujea hasta aquí.
+            if (e.target instanceof HTMLInputElement) return
+            e.currentTarget.querySelector<HTMLInputElement>('input[type="file"]')?.click()
+          })}
           style={{
             border: '2px dashed var(--border)',
             borderRadius: '12px',
@@ -240,7 +244,6 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
             {tb('onlyCommup')}
           </p>
           <input
-            ref={fileInputRef}
             type="file"
             accept="application/json,.json"
             style={{ display: 'none' }}

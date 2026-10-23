@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { resolvePunch, verifyPunch } from '@/app/actions/punches'
 import { punchVerificationRights } from '@/lib/punches/verification'
@@ -38,6 +38,7 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
   onUpdated: () => void
 }) {
   const t = useTranslations('PunchVerification')
+  const uid = useId()
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -69,8 +70,8 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
     return (
       <div style={box}>
         {dialog}
-        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('resolveLabel')}</label>
-        <textarea rows={2} style={area} value={text} placeholder={t('resolvePlaceholder')} onChange={e => setText(e.target.value)} disabled={isPending} />
+        <label htmlFor={`${uid}-resolve`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('resolveLabel')}</label>
+        <textarea id={`${uid}-resolve`} rows={2} style={area} value={text} placeholder={t('resolvePlaceholder')} onChange={e => setText(e.target.value)} disabled={isPending} />
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap' }}>
           <button type="button" onClick={resolve} disabled={isPending || tooShort} style={btn('#f5f3ff', '#7c3aed', '#ddd6fe', isPending || tooShort)}>
             {t('resolve')}

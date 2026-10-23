@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { FolderOpen } from 'lucide-react'
 import type { ExplorerArea, ExplorerSystem, ExplorerSubsystem } from '@/types/database'
@@ -37,25 +37,27 @@ function rollupSystem(sys: ExplorerSystem) {
 
 function ProgressBar({ pct }: { pct: number }) {
   return (
-    <div style={{ width: '80px', height: '5px', background: 'var(--gray-100)', borderRadius: '999px', overflow: 'hidden', flexShrink: 0 }}>
-      <div style={{
+    <span style={{ display: 'block', width: '80px', height: '5px', background: 'var(--gray-100)', borderRadius: '999px', overflow: 'hidden', flexShrink: 0 }}>
+      <span style={{
+        display: 'block',
         height: '100%',
         width: `${pct}%`,
         background: pct === 100 ? '#10b981' : '#3b82f6',
         borderRadius: '999px',
       }} />
-    </div>
+    </span>
   )
 }
 
 function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: string }) {
-  const router = useRouter()
   const [hover, setHover] = useState(false)
   const pct = sub.itr_total > 0 ? Math.round((sub.itr_approved / sub.itr_total) * 100) : 0
 
+  // G-12: la fila navega → enlace de verdad (Tab, Enter, abrir en otra pestaña).
   return (
-    <div
-      onClick={() => router.push(`/projects/${projectId}/tags?subsystem=${sub.id}`)}
+    <Link
+      href={`/projects/${projectId}/tags?subsystem=${sub.id}`}
+      prefetch={false}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -65,6 +67,7 @@ function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: s
         background: hover ? 'var(--gray-50)' : 'transparent',
         borderRadius: '6px',
         transition: 'background 0.1s',
+        color: 'inherit', textDecoration: 'none',
       }}
     >
       <span style={{ color: '#94a3b8', fontSize: '13px', flexShrink: 0 }}>└─</span>
@@ -78,7 +81,7 @@ function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: s
       <span style={{ fontSize: '13px', color: 'var(--text-muted)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {sub.name}
       </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         {sub.open_punches_a > 0 && (
           <span style={{
             fontSize: '11px', fontWeight: 600, color: '#dc2626',
@@ -93,8 +96,8 @@ function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: s
         <span style={{ fontSize: '11px', fontWeight: 600, color: pct === 100 ? '#10b981' : 'var(--text-muted)', width: '32px', textAlign: 'right' }}>
           {pct}%
         </span>
-      </div>
-    </div>
+      </span>
+    </Link>
   )
 }
 
@@ -108,7 +111,9 @@ function SystemRow({
 
   return (
     <>
-      <div
+      <button
+        type="button"
+        aria-expanded={isOpen}
         onClick={onToggle}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
@@ -118,6 +123,7 @@ function SystemRow({
           cursor: 'pointer',
           background: hover ? 'var(--gray-50)' : 'transparent',
           borderRadius: '6px',
+          width: '100%', border: 'none', font: 'inherit', color: 'inherit', textAlign: 'left',
         }}
       >
         <span style={{ color: '#94a3b8', fontSize: '11px', width: '14px', textAlign: 'center', flexShrink: 0 }}>
@@ -133,7 +139,7 @@ function SystemRow({
         <span style={{ fontSize: '13px', color: '#334155', fontWeight: 500, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {sys.name}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           {roll.punches > 0 && (
             <span style={{
               fontSize: '11px', fontWeight: 600, color: '#dc2626',
@@ -148,8 +154,8 @@ function SystemRow({
           <span style={{ fontSize: '11px', fontWeight: 600, color: roll.pct === 100 ? '#10b981' : 'var(--text-muted)', width: '32px', textAlign: 'right' }}>
             {roll.pct}%
           </span>
-        </div>
-      </div>
+        </span>
+      </button>
       {isOpen && sys.subsystems.map(sub => (
         <SubsystemRow key={sub.id} sub={sub} projectId={projectId} />
       ))}
@@ -205,13 +211,16 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
         return (
           <div key={area.id} style={{ borderBottom: aIdx < explorerData.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
             {/* Area row */}
-            <div
+            <button
+              type="button"
+              aria-expanded={isAreaOpen}
               onClick={() => toggleArea(area.id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '12px 12px',
                 cursor: 'pointer',
                 background: 'var(--gray-50)',
+                width: '100%', border: 'none', font: 'inherit', color: 'inherit', textAlign: 'left',
               }}
             >
               <span style={{ color: 'var(--text-muted)', fontSize: '12px', width: '14px', textAlign: 'center', flexShrink: 0 }}>
@@ -227,7 +236,7 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
               <span style={{ fontSize: '14px', color: 'var(--text-strong)', fontWeight: 600, flex: 1 }}>
                 {area.name}
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                 {roll.punches > 0 && (
                   <span style={{
                     fontSize: '11px', fontWeight: 600, color: '#dc2626',
@@ -242,8 +251,8 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
                 <span style={{ fontSize: '12px', fontWeight: 700, color: roll.pct === 100 ? 'var(--success-500)' : 'var(--text-strong)', width: '36px', textAlign: 'right' }}>
                   {roll.pct}%
                 </span>
-              </div>
-            </div>
+              </span>
+            </button>
 
             {/* Systems */}
             {isAreaOpen && (

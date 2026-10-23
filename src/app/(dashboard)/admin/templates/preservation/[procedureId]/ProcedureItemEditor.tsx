@@ -109,6 +109,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
   const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const toast = useToast()
   const itemTitleId = useId()
+  const uid = useId()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [items, setItems] = useState<ProcItem[]>(procedure.preservation_procedure_items)
@@ -334,33 +335,33 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('codePlain')}</label>
-                  <input value={hdrForm.code} onChange={e => setHdrForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                  <label htmlFor={`${uid}-code`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('codePlain')}</label>
+                  <input id={`${uid}-code`} value={hdrForm.code} onChange={e => setHdrForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('titlePlain')}</label>
-                  <input value={hdrForm.title} onChange={e => setHdrForm(f => ({ ...f, title: e.target.value }))}
+                  <label htmlFor={`${uid}-title`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('titlePlain')}</label>
+                  <input id={`${uid}-title`} value={hdrForm.title} onChange={e => setHdrForm(f => ({ ...f, title: e.target.value }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('description')}</label>
-                <textarea value={hdrForm.description} onChange={e => setHdrForm(f => ({ ...f, description: e.target.value }))}
+                <label htmlFor={`${uid}-description`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('description')}</label>
+                <textarea id={`${uid}-description`} value={hdrForm.description} onChange={e => setHdrForm(f => ({ ...f, description: e.target.value }))}
                   rows={2} style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('discipline')}</label>
-                  <select value={hdrForm.disciplineId} onChange={e => setHdrForm(f => ({ ...f, disciplineId: e.target.value }))}
+                  <label htmlFor={`${uid}-discipline`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('discipline')}</label>
+                  <select id={`${uid}-discipline`} value={hdrForm.disciplineId} onChange={e => setHdrForm(f => ({ ...f, disciplineId: e.target.value }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
                     <option value="">{t('none')}</option>
                     {disciplines.map(d => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('frequencyPlain')}</label>
-                  <select value={hdrForm.frequency} onChange={e => setHdrForm(f => ({ ...f, frequency: e.target.value as Enums<'preservation_frequency'> }))}
+                  <label htmlFor={`${uid}-frequency`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('frequencyPlain')}</label>
+                  <select id={`${uid}-frequency`} value={hdrForm.frequency} onChange={e => setHdrForm(f => ({ ...f, frequency: e.target.value as Enums<'preservation_frequency'> }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
                     <option value="daily">{tp('freq.daily')}</option>
                     <option value="weekly">{tp('freq.weekly')}</option>
@@ -370,8 +371,8 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('daysLabel')}</label>
-                  <input type="number" min="1" value={hdrForm.intervalDays} onChange={e => setHdrForm(f => ({ ...f, intervalDays: e.target.value }))}
+                  <label htmlFor={`${uid}-days`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('daysLabel')}</label>
+                  <input id={`${uid}-days`} type="number" min="1" value={hdrForm.intervalDays} onChange={e => setHdrForm(f => ({ ...f, intervalDays: e.target.value }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
               </div>
@@ -510,8 +511,8 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('itemLabel')}</label>
-                <input
+                <label htmlFor={`${uid}-item-label`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('itemLabel')}</label>
+                <input id={`${uid}-item-label`}
                   value={itemForm.label}
                   onChange={e => setItemForm(f => ({ ...f, label: e.target.value }))}
                   placeholder={t('itemPlaceholder')}
@@ -520,8 +521,8 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('itemType')}</label>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <span id={`${uid}-item-type`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('itemType')}</span>
+                <div role="group" aria-labelledby={`${uid}-item-type`} style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {ITEM_TYPES.map(it => (
                     <button
                       key={it.value}
@@ -543,19 +544,19 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               {needsRange && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('unit')}</label>
-                    <input value={itemForm.unit} onChange={e => setItemForm(f => ({ ...f, unit: e.target.value }))}
+                    <label htmlFor={`${uid}-unit`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('unit')}</label>
+                    <input id={`${uid}-unit`} value={itemForm.unit} onChange={e => setItemForm(f => ({ ...f, unit: e.target.value }))}
                       placeholder="bar, °C, mA…"
                       style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('min')}</label>
-                    <input type="number" value={itemForm.minValue} onChange={e => setItemForm(f => ({ ...f, minValue: e.target.value }))}
+                    <label htmlFor={`${uid}-min`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('min')}</label>
+                    <input id={`${uid}-min`} type="number" value={itemForm.minValue} onChange={e => setItemForm(f => ({ ...f, minValue: e.target.value }))}
                       style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('max')}</label>
-                    <input type="number" value={itemForm.maxValue} onChange={e => setItemForm(f => ({ ...f, maxValue: e.target.value }))}
+                    <label htmlFor={`${uid}-max`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('max')}</label>
+                    <input id={`${uid}-max`} type="number" value={itemForm.maxValue} onChange={e => setItemForm(f => ({ ...f, maxValue: e.target.value }))}
                       style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
                 </div>

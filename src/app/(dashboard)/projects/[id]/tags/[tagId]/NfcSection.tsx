@@ -178,6 +178,7 @@ function LinkNfcModal({
 
   return (
     <div
+      role="presentation"
       style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -209,10 +210,11 @@ function LinkNfcModal({
           </button>
         </div>
 
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>
+        <label htmlFor={`${titleId}-uid`} style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>
           {t('labelUid')}
         </label>
         <input
+          id={`${titleId}-uid`}
           type="text"
           value={uid}
           onChange={e => setUid(e.target.value)}

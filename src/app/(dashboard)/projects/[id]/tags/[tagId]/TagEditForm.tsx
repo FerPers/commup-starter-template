@@ -1,7 +1,7 @@
 'use client'
 
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useTransition } from 'react'
+import { Children, cloneElement, isValidElement, useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updateTag, deleteTag } from '@/app/actions/tags'
@@ -341,13 +341,23 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
   )
 }
 
+// G-12: el rótulo apunta a su campo (primer input/select/textarea hijo, al que se le pone el id). Si el hijo no es
+// un campo (la casilla de preservación ya tiene su propio label), el rótulo queda como texto.
+const FIELD_TAGS = new Set(['input', 'select', 'textarea'])
+
 function FormField({ label, children, style }: { label: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  const id = useId()
+  const items = Children.toArray(children)
+  const fieldAt = items.findIndex(c => isValidElement(c) && typeof c.type === 'string' && FIELD_TAGS.has(c.type))
+  const linked = fieldAt >= 0
+  const content = items.map((c, i) => (i === fieldAt && isValidElement<{ id?: string }>(c) ? cloneElement(c, { id }) : c))
+  const labelStyle: React.CSSProperties = { display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }
   return (
     <div style={style}>
-      <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }}>
-        {label}
-      </label>
-      {children}
+      {linked
+        ? <label htmlFor={id} style={labelStyle}>{label}</label>
+        : <span style={labelStyle}>{label}</span>}
+      {content}
     </div>
   )
 }

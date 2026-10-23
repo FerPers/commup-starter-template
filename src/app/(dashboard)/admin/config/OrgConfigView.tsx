@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useId, useState, useTransition, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   createPhase, updatePhase, deletePhase,
@@ -31,6 +31,9 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
       {PRESET_COLORS.map(c => (
         <button
           key={c}
+          type="button"
+          aria-label={c}
+          aria-pressed={value === c}
           onClick={() => onChange(c)}
           style={{
             width: 22, height: 22, borderRadius: '50%', background: c, border: 'none',
@@ -264,6 +267,7 @@ export default function OrgConfigView({
 }) {
   const t = useTranslations('Config')
   const [isPending, startTransition] = useTransition()
+  const uid = useId()
   const [error, setError] = useState<string | null>(null)
 
   // Org profile state
@@ -397,10 +401,11 @@ export default function OrgConfigView({
 
             {/* Name */}
             <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
+              <label htmlFor={`${uid}-orgName`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
                 {t('org.namePh')}
               </label>
               <input
+                id={`${uid}-orgName`}
                 value={orgName}
                 onChange={e => setOrgName(e.target.value)}
                 placeholder={t('org.namePh')}

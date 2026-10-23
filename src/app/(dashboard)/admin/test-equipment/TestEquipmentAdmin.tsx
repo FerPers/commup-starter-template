@@ -189,7 +189,7 @@ export default function TestEquipmentAdmin({ orgId, rows, canDelete, companies =
               <th style={th}>{t('f.certificate')}</th>
               <th style={th}>{t('f.due')}</th>
               <th style={th}>{t('col.state')}</th>
-              <th style={th}></th>
+              <th style={th}><span className="sr-only">{t('edit')}</span></th>
             </tr>
           </thead>
           <tbody>

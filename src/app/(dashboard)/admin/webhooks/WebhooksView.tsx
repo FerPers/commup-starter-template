@@ -170,6 +170,7 @@ export default function WebhooksView({
                 onClick={() => handleToggle(s)}
                 disabled={isPending}
                 title={tw(s.enabled ? 'deactivate' : 'activate')}
+                aria-label={tw(s.enabled ? 'deactivate' : 'activate')}
                 style={{
                   width: 32, height: 18, borderRadius: 9, border: 'none', cursor: 'pointer', flexShrink: 0,
                   background: s.enabled ? '#10b981' : '#cbd5e1', position: 'relative', padding: 0,
@@ -346,6 +347,7 @@ function CreateSubscriptionModal({
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const titleId = useId()
+  const uid = useId()
 
   const toggleEvent = (v: string) => {
     setEventTypes(curr => {
@@ -395,8 +397,9 @@ function CreateSubscriptionModal({
         {err && <ModalError msg={err} />}
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>{tw('form.name')}</label>
+          <label htmlFor={`${uid}-name`} style={labelStyle}>{tw('form.name')}</label>
           <input
+            id={`${uid}-name`}
             style={input}
             value={name}
             onChange={e => setName(e.target.value)}
@@ -405,8 +408,9 @@ function CreateSubscriptionModal({
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>{tw('form.endpoint')}</label>
+          <label htmlFor={`${uid}-endpoint`} style={labelStyle}>{tw('form.endpoint')}</label>
           <input
+            id={`${uid}-endpoint`}
             style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12 }}
             value={endpointUrl}
             onChange={e => setEndpointUrl(e.target.value)}
@@ -415,8 +419,9 @@ function CreateSubscriptionModal({
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>{tw('form.project')}</label>
+          <label htmlFor={`${uid}-project`} style={labelStyle}>{tw('form.project')}</label>
           <select
+            id={`${uid}-project`}
             style={input}
             value={projectId}
             onChange={e => setProjectId(e.target.value)}
@@ -429,7 +434,7 @@ function CreateSubscriptionModal({
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={labelStyle}>{tw('form.eventTypes')}</label>
+          <span style={labelStyle}>{tw('form.eventTypes')}</span>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, maxHeight: 220, overflow: 'auto', padding: 2 }}>
             {WEBHOOK_EVENT_TYPES.map(ev => {
               const checked = eventTypes.includes(ev.value)
@@ -483,6 +488,7 @@ function SecretRevealModal({
   const [copied, setCopied] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const titleId = useId()
+  const uid = useId()
 
   const copy = async () => {
     try {
@@ -514,9 +520,10 @@ function SecretRevealModal({
           })}
         </div>
 
-        <label style={labelStyle}>{tw('secret.label')}</label>
+        <label htmlFor={`${uid}-secret`} style={labelStyle}>{tw('secret.label')}</label>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <input
+            id={`${uid}-secret`}
             readOnly
             value={secret}
             style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12, background: 'var(--gray-50)' }}

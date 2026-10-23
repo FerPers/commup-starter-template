@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Signature } from './types'
+import { DialogSurface } from '@/components/ui'
 
 export default function RevokeModal({
   itrNumber,
@@ -20,23 +21,24 @@ export default function RevokeModal({
   onRevoke: (reason: string) => void
 }) {
   const t = useTranslations('ItrExecution')
+  const titleId = useId()
   const [reason, setReason] = useState('')
   const trimmed = reason.trim()
   const canSubmit = trimmed.length >= 3 && !isPending
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
+      role="presentation"
       style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}
-      onClick={onClose}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div
-        onClick={e => e.stopPropagation()}
+      <DialogSurface
+        onClose={isPending ? undefined : onClose}
+        labelledBy={titleId}
         style={{ width: '100%', maxWidth: 480, background: 'var(--card-bg)', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.25)', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}
       >
         <div>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-strong)' }}>
+          <h3 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-strong)' }}>
             {t('revoke.title', { itrNumber })}
           </h3>
           <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
@@ -81,7 +83,7 @@ export default function RevokeModal({
             {isPending ? t('revoke.confirming') : t('revoke.confirm')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

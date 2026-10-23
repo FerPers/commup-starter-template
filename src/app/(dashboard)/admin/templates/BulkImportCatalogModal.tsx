@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useTransition, useRef, useId } from 'react'
+import { useState, useTransition, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { FileSpreadsheet } from 'lucide-react'
 import { bulkImportCatalog, type CatalogRow } from '@/app/actions/itr-templates'
 import { detectItrPhase } from '@/lib/utils'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { pressable } from '@/lib/a11y/pressable'
 
 interface Discipline { id: string; code: string; name: string; color: string }
 interface Phase { id: string; code: string; name: string; color: string; order_index: number }
@@ -67,7 +68,6 @@ function parseCatalog(raw: unknown[][]): ParsedCatalog {
 // ── Component ──────────────────────────────────────────────────
 
 export default function BulkImportCatalogModal({ disciplines, phases, onClose, onSuccess }: Props) {
-  const fileRef = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
   const titleId = useId()
   const tA11y = useTranslations('A11y')
@@ -169,6 +169,7 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
 
   return (
     <div
+      role="presentation"
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -196,7 +197,11 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
               onDragOver={e => { e.preventDefault(); setDragOver(true) }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
-              onClick={() => fileRef.current?.click()}
+              {...pressable(e => {
+                // El input oculto vive dentro de la zona: su propio clic burbujea hasta aquí.
+                if (e.target instanceof HTMLInputElement) return
+                e.currentTarget.querySelector<HTMLInputElement>('input[type="file"]')?.click()
+              })}
               style={{ border: `2px dashed ${dragOver ? '#3b82f6' : 'var(--gray-300)'}`, borderRadius: '12px', padding: '44px 20px', textAlign: 'center', cursor: 'pointer', background: dragOver ? '#eff6ff' : 'var(--gray-50)', transition: 'all 0.15s' }}
             >
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px', opacity: 0.5 }}>
@@ -207,7 +212,7 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0, padding: '8px 14px', background: 'var(--gray-100)', borderRadius: '6px', display: 'inline-block' }}>
                 {t('columns')}
               </p>
-              <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} style={{ display: 'none' }} />
+              <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} style={{ display: 'none' }} />
             </div>
             {parseError && <p style={{ fontSize: '13px', color: '#ef4444', margin: '12px 0 0', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px' }}>{parseError}</p>}
           </div>

@@ -27,6 +27,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
   const [isPending, startTransition] = useTransition()
   const [showModal, setShowModal] = useState(false)
   const titleId = useId()
+  const uid = useId()
   const [showImportFromOrg, setShowImportFromOrg] = useState(false)
   const [form, setForm] = useState({ name: '', description: '' })
   const [formError, setFormError] = useState<string | null>(null)
@@ -253,23 +254,23 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
 
       {/* Create modal */}
       {showModal && (
-        <div style={{
+        <div role="presentation" style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
-        }} onClick={() => setShowModal(false)}>
+        }} onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <DialogSurface onClose={() => setShowModal(false)} labelledBy={titleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '440px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-          }} onClick={e => e.stopPropagation()}>
+          }}>
             <h2 id={titleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               {tx('newTitle')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-name`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', display: 'block', marginBottom: '6px' }}>
                   {tx('name')}
                 </label>
-                <input
+                <input id={`${uid}-name`}
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder={tx('namePlaceholder')}
@@ -281,10 +282,10 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 />
               </div>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-description`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', display: 'block', marginBottom: '6px' }}>
                   {tx('description')}
                 </label>
-                <textarea
+                <textarea id={`${uid}-description`}
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2}

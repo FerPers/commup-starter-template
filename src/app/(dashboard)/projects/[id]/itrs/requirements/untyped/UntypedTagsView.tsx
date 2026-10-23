@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useId, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { assignEquipmentType, classifyTagTypes, previewTagTypeGroups, rejectTagTypeProposal } from '@/app/actions/tag-types'
@@ -184,6 +184,7 @@ function GroupCard({ g, choice, overridden, preview, doneCount, catalog, byId, c
   onReject: () => void
 }) {
   const t = useTranslations('TagTypes')
+  const reasonId = useId()
   const [picking, setPicking] = useState(false)
   const [pickId, setPickId] = useState('')
   const [nt, setNt] = useState({ code: g.prefix, name: g.description ?? '', category: '' })
@@ -311,10 +312,10 @@ function GroupCard({ g, choice, overridden, preview, doneCount, catalog, byId, c
 
       {needs && canEdit && !isDone && (
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-strong)', marginBottom: 6 }}>
+          <label htmlFor={reasonId} style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-strong)', marginBottom: 6 }}>
             {t('reason.label', { count: preview!.outside, codes: codeList(preview!.outside_codes) })}
           </label>
-          <textarea rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reason.placeholder')}
+          <textarea id={reasonId} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reason.placeholder')}
             style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)', fontFamily: 'inherit', resize: 'vertical' }} />
           <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 0' }}>{t('reason.hint')}</p>
         </div>

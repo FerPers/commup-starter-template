@@ -22,6 +22,7 @@ export default function PssrSignModal({
 }) {
   const t = useTranslations('PSSR')
   const titleId = useId()
+  const capacityId = useId()
   const [isPending, startTransition] = useTransition()
   const [capacity, setCapacity] = useState<PssrCapacity | ''>(capacities.length === 1 ? capacities[0] : '')
   const [isDrawing, setIsDrawing] = useState(false)
@@ -93,23 +94,23 @@ export default function PssrSignModal({
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50,
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
-    }} onClick={onClose}>
+    }} role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <DialogSurface onClose={onClose} labelledBy={titleId} style={{
         background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
         width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-      }} onClick={e => e.stopPropagation()}>
+      }}>
         <h3 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 16px' }}>
           {t('signModal.title')}
         </h3>
 
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+          <label htmlFor={capacityId} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
             {t('signModal.disciplineLabel')}
           </label>
           <select
+            id={capacityId}
             value={capacity}
             onChange={e => setCapacity(e.target.value as PssrCapacity)}
-            aria-label={t('signModal.disciplineLabel')}
             style={{
               width: '100%', padding: '9px 12px', borderRadius: '8px',
               border: '1.5px solid #d1d5db', fontSize: '13px', outline: 'none',
@@ -122,7 +123,7 @@ export default function PssrSignModal({
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</label>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</span>
           <button onClick={clearCanvas} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--gray-400)', cursor: 'pointer' }}>
             {t('signModal.clear')}
           </button>

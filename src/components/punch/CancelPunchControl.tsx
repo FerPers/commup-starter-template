@@ -4,7 +4,7 @@
 // quien lo levantó, con motivo (≥ 10); la RPC cancel_punch lo deja en los comentarios y en la auditoría.
 // La BD decide; aquí solo se explica por qué no se puede y se pide el motivo.
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { cancelPunch } from '@/app/actions/punches'
 import { canSupervisePunch } from '@/lib/constants/punch-roles'
@@ -18,6 +18,7 @@ export default function CancelPunchControl({ punch, projectId, tagId, userId, ro
   onDone: () => void
 }) {
   const t = useTranslations('PunchCancel')
+  const uid = useId()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -41,8 +42,8 @@ export default function CancelPunchControl({ punch, projectId, tagId, userId, ro
 
   return (
     <div style={{ flexBasis: '100%', padding: '10px 12px', border: '1px solid #fecaca', borderRadius: '8px', background: '#fef2f2' }}>
-      <label style={{ fontSize: '12px', fontWeight: 600, color: '#7f1d1d', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
-      <textarea rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
+      <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: '#7f1d1d', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
+      <textarea id={`${uid}-reason`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
         style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
       <p style={{ fontSize: '11px', color: '#991b1b', margin: '4px 0 8px' }}>{t('hint')}</p>
       {error && <p role="alert" style={{ fontSize: '12px', color: '#b91c1c', margin: '0 0 8px' }}>{error}</p>}

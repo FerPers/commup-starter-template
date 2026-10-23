@@ -46,6 +46,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
   const t = useTranslations('WorkPlans')
   const tA11y = useTranslations('A11y')
   const titleId = useId()
+  const uid = useId()
 
   // Context loaded from server
   const [loading, setLoading]           = useState(true)
@@ -121,6 +122,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
 
   return (
     <div
+      role="presentation"
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -166,8 +168,9 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
             {/* ── Existing plan form ── */}
             {mode === 'existing' && (
               <div>
-                <label style={labelStyle}>{t('addToPlanModal.selectPlanLabel')}</label>
+                <label htmlFor={`${uid}-plan`} style={labelStyle}>{t('addToPlanModal.selectPlanLabel')}</label>
                 <select
+                  id={`${uid}-plan`}
                   value={selectedPlanId}
                   onChange={e => setSelectedPlanId(e.target.value)}
                   style={inputStyle}
@@ -204,8 +207,8 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
             {mode === 'new' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <label style={labelStyle}>{t('createModal.discipline')}</label>
-                  <select value={newDisc} onChange={e => setNewDisc(e.target.value)} style={inputStyle}>
+                  <label htmlFor={`${uid}-disc`} style={labelStyle}>{t('createModal.discipline')}</label>
+                  <select id={`${uid}-disc`} value={newDisc} onChange={e => setNewDisc(e.target.value)} style={inputStyle}>
                     <option value="">{t('createModal.disciplinePh')}</option>
                     {disciplines.map(d => (
                       <option key={d.id} value={d.id}>{d.code} — {d.name}</option>
@@ -213,14 +216,15 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>{t('createModal.date')}</label>
-                  <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={inputStyle} />
+                  <label htmlFor={`${uid}-date`} style={labelStyle}>{t('createModal.date')}</label>
+                  <input id={`${uid}-date`} type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>
+                  <label htmlFor={`${uid}-notes`} style={labelStyle}>
                     {t('createModal.notes')} <span style={{ fontWeight: 400, color: '#94a3b8' }}>{t('createModal.notesOpt')}</span>
                   </label>
                   <textarea
+                    id={`${uid}-notes`}
                     value={newNotes}
                     onChange={e => setNewNotes(e.target.value)}
                     rows={2}

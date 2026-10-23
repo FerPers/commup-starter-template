@@ -279,8 +279,9 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{tx('fieldProcedure')}</label>
+                <label htmlFor={`${modalTitleId}-procedure`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{tx('fieldProcedure')}</label>
                 <select
+                  id={`${modalTitleId}-procedure`}
                   value={form.procedureId}
                   onChange={e => setForm(f => ({ ...f, procedureId: e.target.value }))}
                   style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
@@ -295,10 +296,11 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>
+                <label htmlFor={`${modalTitleId}-start`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>
                   {tx('fieldStartDate')}
                 </label>
                 <input
+                  id={`${modalTitleId}-start`}
                   type="date"
                   value={form.startDate}
                   onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
@@ -310,8 +312,9 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{tx('fieldResponsible')}</label>
+                <label htmlFor={`${modalTitleId}-responsible`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{tx('fieldResponsible')}</label>
                 <select
+                  id={`${modalTitleId}-responsible`}
                   value={form.responsibleUserId}
                   onChange={e => setForm(f => ({ ...f, responsibleUserId: e.target.value }))}
                   style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}

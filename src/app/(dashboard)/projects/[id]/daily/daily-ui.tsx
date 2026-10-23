@@ -72,6 +72,7 @@ export function OverdueChip({ days }: { days: number }) {
 
 export function Field({ text, children, wide, required }: { text: string; children: React.ReactNode; wide?: boolean; required?: boolean }) {
   return (
+    // eslint-disable-next-line jsx-a11y/label-has-for -- el campo llega por children y queda ANIDADO en el label (asociación implícita); la regla no ve a través de {children}
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: wide ? '1 / -1' : undefined }}>
       <span style={label}>{text}{required ? ' *' : ''}</span>
       {children}

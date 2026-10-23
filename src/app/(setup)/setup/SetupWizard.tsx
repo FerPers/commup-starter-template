@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { completeSetup, createProject } from '@/app/actions/setup'
@@ -62,6 +62,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
   const router = useRouter()
   const t = useTranslations('Setup')
 
+  const uid = useId()
   const [step, setStep] = useState(isNewProject ? 2 : 1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -220,8 +221,8 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
             <h2 style={stepTitleStyle}>{t('org.title')}</h2>
             <p style={stepDescStyle}>{t('org.desc')}</p>
 
-            <label style={labelStyle}>{t('org.fullName')}</label>
-            <input
+            <label htmlFor={`${uid}-org-fullName`} style={labelStyle}>{t('org.fullName')}</label>
+            <input id={`${uid}-org-fullName`}
               style={inputStyle}
               placeholder={t('org.fullNamePh')}
               value={userFullName}
@@ -229,8 +230,8 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
               autoComplete="name"
             />
 
-            <label style={labelStyle}>{t('org.name')}</label>
-            <input
+            <label htmlFor={`${uid}-org-name`} style={labelStyle}>{t('org.name')}</label>
+            <input id={`${uid}-org-name`}
               style={inputStyle}
               placeholder={t('org.namePh')}
               value={orgName}
@@ -240,8 +241,8 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
               }}
             />
 
-            <label style={labelStyle}>{t('org.slug')}</label>
-            <input
+            <label htmlFor={`${uid}-org-slug`} style={labelStyle}>{t('org.slug')}</label>
+            <input id={`${uid}-org-slug`}
               style={{ ...inputStyle, fontFamily: 'monospace', fontSize: '13px' }}
               placeholder="tecna-ingenieria"
               value={orgSlug}
@@ -261,46 +262,46 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>{t('project.name')}</label>
-                <input style={inputStyle} placeholder={t('project.namePh')} value={projName} onChange={e => setProjName(e.target.value)} />
+                <label htmlFor={`${uid}-project-name`} style={labelStyle}>{t('project.name')}</label>
+                <input id={`${uid}-project-name`} style={inputStyle} placeholder={t('project.namePh')} value={projName} onChange={e => setProjName(e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>{t('project.code')}</label>
-                <input style={{ ...inputStyle, textTransform: 'uppercase' }} placeholder="GLP-P2" value={projCode} onChange={e => setProjCode(e.target.value)} />
+                <label htmlFor={`${uid}-project-code`} style={labelStyle}>{t('project.code')}</label>
+                <input id={`${uid}-project-code`} style={{ ...inputStyle, textTransform: 'uppercase' }} placeholder="GLP-P2" value={projCode} onChange={e => setProjCode(e.target.value)} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>{t('project.location')}</label>
-                <input style={inputStyle} placeholder={t('project.locationPh')} value={projLocation} onChange={e => setProjLocation(e.target.value)} />
+                <label htmlFor={`${uid}-project-location`} style={labelStyle}>{t('project.location')}</label>
+                <input id={`${uid}-project-location`} style={inputStyle} placeholder={t('project.locationPh')} value={projLocation} onChange={e => setProjLocation(e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>{t('project.client')}</label>
-                <input style={inputStyle} placeholder={t('project.clientPh')} value={projClient} onChange={e => setProjClient(e.target.value)} />
+                <label htmlFor={`${uid}-project-client`} style={labelStyle}>{t('project.client')}</label>
+                <input id={`${uid}-project-client`} style={inputStyle} placeholder={t('project.clientPh')} value={projClient} onChange={e => setProjClient(e.target.value)} />
               </div>
             </div>
 
             {/* País / Región: jerarquía corporativa (País → Región → Campo). El proyecto es el Campo. */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>{t('project.country')}</label>
-                <input style={inputStyle} placeholder={t('project.countryPh')} value={projCountry} onChange={e => setProjCountry(e.target.value)} />
+                <label htmlFor={`${uid}-project-country`} style={labelStyle}>{t('project.country')}</label>
+                <input id={`${uid}-project-country`} style={inputStyle} placeholder={t('project.countryPh')} value={projCountry} onChange={e => setProjCountry(e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>{t('project.region')}</label>
-                <input style={inputStyle} placeholder={t('project.regionPh')} value={projRegion} onChange={e => setProjRegion(e.target.value)} />
+                <label htmlFor={`${uid}-project-region`} style={labelStyle}>{t('project.region')}</label>
+                <input id={`${uid}-project-region`} style={inputStyle} placeholder={t('project.regionPh')} value={projRegion} onChange={e => setProjRegion(e.target.value)} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>{t('project.start')}</label>
-                <input style={inputStyle} type="date" value={projStart} onChange={e => setProjStart(e.target.value)} />
+                <label htmlFor={`${uid}-project-start`} style={labelStyle}>{t('project.start')}</label>
+                <input id={`${uid}-project-start`} style={inputStyle} type="date" value={projStart} onChange={e => setProjStart(e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>{t('project.end')}</label>
-                <input style={inputStyle} type="date" value={projEnd} onChange={e => setProjEnd(e.target.value)} />
+                <label htmlFor={`${uid}-project-end`} style={labelStyle}>{t('project.end')}</label>
+                <input id={`${uid}-project-end`} style={inputStyle} type="date" value={projEnd} onChange={e => setProjEnd(e.target.value)} />
               </div>
             </div>
 

@@ -113,8 +113,8 @@ export default function ImportMatrixModal({ onClose }: { onClose: () => void }) 
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 100 }}>
-      <DialogSurface onClose={onClose} labelledBy={titleId} onClick={e => e.stopPropagation()} style={{ background: 'var(--card-bg)', borderRadius: 14, maxWidth: 640, width: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+    <div role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose() }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 100 }}>
+      <DialogSurface onClose={onClose} labelledBy={titleId} style={{ background: 'var(--card-bg)', borderRadius: 14, maxWidth: 640, width: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
           <div>
             <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-strong)' }}>{t('title')}</h2>

@@ -23,6 +23,7 @@ export default function TemplatePublishModal({
 
   return (
     <div
+      role="presentation"
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >

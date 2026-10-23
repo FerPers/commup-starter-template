@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
@@ -28,6 +28,7 @@ type Draft = { es: string; touched: boolean; fromAi: boolean }
 export default function TranslationsView({ initial, aiEnabled }: { initial: TranslationReview; aiEnabled: boolean }) {
   const t = useTranslations('TemplateTranslations')
   const router = useRouter()
+  const uid = useId()
   const [titleEs, setTitleEs] = useState(initial.template.title_es ?? '')
   const [titleFromAi, setTitleFromAi] = useState(false)
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() =>
@@ -101,8 +102,9 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
         <div style={{ flex: 1, minWidth: 320 }}>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>{t('title')} · <span style={{ fontFamily: 'ui-monospace, monospace' }}>{tpl.code}</span></h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 10px' }}>{tpl.title}</p>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('titleEs')}</label>
+          <label htmlFor={`${uid}-title-es`} style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('titleEs')}</label>
           <input
+            id={`${uid}-title-es`}
             value={titleEs}
             onChange={e => { setTitleEs(e.target.value); setTitleFromAi(false) }}
             placeholder={t('titleEsPlaceholder')}

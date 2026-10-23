@@ -2,6 +2,7 @@
 
 import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { createTemplate, deleteTemplate } from '@/app/actions/itr-templates'
 import BulkImportCatalogModal from './BulkImportCatalogModal'
@@ -309,7 +310,12 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             return (
               <div
                 key={tmpl.id}
-                onClick={() => !isDeleting && router.push(`/admin/templates/${tmpl.id}`)}
+                role="presentation"
+                onClick={e => {
+                  // El código es el enlace (teclado); el resto de la fila lo imita con el ratón.
+                  if (isDeleting || (e.target as HTMLElement).closest('a, button')) return
+                  router.push(`/admin/templates/${tmpl.id}`)
+                }}
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '90px 1fr 110px 80px 60px 80px 90px',
@@ -322,9 +328,13 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 {/* Code */}
-                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace' }}>
+                <Link
+                  href={`/admin/templates/${tmpl.id}`}
+                  onClick={e => { if (isDeleting) e.preventDefault() }}
+                  style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace', textDecoration: 'none' }}
+                >
                   {tmpl.code}
-                </span>
+                </Link>
 
                 {/* Title */}
                 <div>
@@ -367,7 +377,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>v{tmpl.version}</span>
 
                 {/* Status + actions */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                <div role="presentation" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   onClick={e => e.stopPropagation()}>
                   <span style={{
                     padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
@@ -402,7 +412,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
       {/* Create template modal */}
       {showModal && (
-        <div style={{
+        <div role="presentation" style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000, padding: '20px',

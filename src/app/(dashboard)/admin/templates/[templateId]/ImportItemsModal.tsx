@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useTransition, useRef, useId } from 'react'
+import { useState, useTransition, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importTemplateItems, type ImportSection } from '@/app/actions/itr-templates'
 import type { ItrItemType } from '@/types/database'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { pressable } from '@/lib/a11y/pressable'
 
 type Tx = ReturnType<typeof useTranslations>
 
@@ -146,7 +147,6 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
   const tx = useTranslations('ItemImport')
   const tA11y = useTranslations('A11y')
   const titleId = useId()
-  const fileRef = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState<'upload' | 'preview' | 'done'>('upload')
   const [parsed, setParsed] = useState<ParseResult | null>(null)
@@ -208,6 +208,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
 
   return (
     <div
+      role="presentation"
       style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -255,7 +256,11 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
               onDragOver={e => { e.preventDefault(); setDragOver(true) }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
-              onClick={() => fileRef.current?.click()}
+              {...pressable(e => {
+                // El input oculto vive dentro de la zona: su propio clic burbujea hasta aquí.
+                if (e.target instanceof HTMLInputElement) return
+                e.currentTarget.querySelector<HTMLInputElement>('input[type="file"]')?.click()
+              })}
               style={{
                 border: `2px dashed ${dragOver ? '#3b82f6' : 'var(--gray-300)'}`,
                 borderRadius: '12px', padding: '40px 20px', textAlign: 'center',
@@ -270,7 +275,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
               <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>
                 {tx('orClick')}
               </p>
-              <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} style={{ display: 'none' }} />
+              <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} style={{ display: 'none' }} />
             </div>
 
             {parseError && (
@@ -349,21 +354,19 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
 
             {/* Replace option */}
             {hasExistingContent && (
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '14px', padding: '12px 14px', background: replace ? '#fff7ed' : 'var(--gray-50)', borderRadius: '8px', border: `1px solid ${replace ? '#fed7aa' : 'var(--border)'}` }}>
+              <label style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'start', columnGap: '8px', cursor: 'pointer', marginBottom: '14px', padding: '12px 14px', background: replace ? '#fff7ed' : 'var(--gray-50)', borderRadius: '8px', border: `1px solid ${replace ? '#fed7aa' : 'var(--border)'}` }}>
                 <input
                   type="checkbox"
                   checked={replace}
                   onChange={e => setReplace(e.target.checked)}
-                  style={{ accentColor: '#f97316', marginTop: '1px', flexShrink: 0 }}
+                  style={{ accentColor: '#f97316', marginTop: '1px', flexShrink: 0, gridRow: 'span 2' }}
                 />
-                <div>
-                  <p style={{ fontSize: '13px', fontWeight: 500, color: replace ? '#c2410c' : 'var(--text-muted)', margin: '0 0 2px' }}>
-                    {tx('replaceTitle')}
-                  </p>
-                  <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
-                    {tx(replace ? 'replaceOn' : 'replaceOff')}
-                  </p>
-                </div>
+                <p style={{ fontSize: '13px', fontWeight: 500, color: replace ? '#c2410c' : 'var(--text-muted)', margin: '0 0 2px' }}>
+                  {tx('replaceTitle')}
+                </p>
+                <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
+                  {tx(replace ? 'replaceOn' : 'replaceOff')}
+                </p>
               </label>
             )}
 

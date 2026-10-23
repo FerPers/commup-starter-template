@@ -117,9 +117,9 @@ export default function PreservationPhotosSection({
       {dialog}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
             {t(required ? 'labelRequired' : 'labelOptional', { count: attachments.length })}
-          </label>
+          </span>
           {!recordId && (
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
               {t('hintStartRecord')}

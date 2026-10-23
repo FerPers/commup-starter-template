@@ -96,6 +96,7 @@ export default function WorkPlansView({
   const { dialog, confirm } = useAskDialog()
   const createTitleId = useId()
   const addItemTitleId = useId()
+  const uid = useId()
 
   const allScope = projects !== undefined
 
@@ -273,18 +274,21 @@ export default function WorkPlansView({
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '24px' }}>
         {Object.entries(PLAN_STATUS_STYLE).map(([key, style]) => (
-          <div
+          <button
+            type="button"
             key={key}
+            aria-pressed={filterStatus === key}
             onClick={() => { setFilterStatus(filterStatus === key ? '' : key); setPage(1) }}
             style={{
+              display: 'block', width: '100%', textAlign: 'left', font: 'inherit',
               padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s',
               background: filterStatus === key ? style.bg : 'var(--card-bg)',
               border: `1px solid ${filterStatus === key ? style.color + '40' : 'var(--border)'}`,
             }}
           >
-            <div style={{ fontSize: '22px', fontWeight: 700, color: style.color }}>{counts[key] ?? 0}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{planStatusLabels[key]}</div>
-          </div>
+            <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: style.color }}>{counts[key] ?? 0}</span>
+            <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{planStatusLabels[key]}</span>
+          </button>
         ))}
       </div>
 
@@ -292,6 +296,7 @@ export default function WorkPlansView({
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
         {allScope && (
           <select
+            aria-label={t('table.colProject')}
             value={filterProject}
             onChange={e => { setFilterProject(e.target.value); setPage(1) }}
             style={selStyle}
@@ -301,6 +306,7 @@ export default function WorkPlansView({
           </select>
         )}
         <select
+          aria-label={t('table.colDiscipline')}
           value={filterDisc}
           onChange={e => { setFilterDisc(e.target.value); setPage(1) }}
           style={selStyle}
@@ -310,6 +316,7 @@ export default function WorkPlansView({
         </select>
         <input
           type="date"
+          aria-label={t('table.colDate')}
           value={filterDate}
           onChange={e => { setFilterDate(e.target.value); setPage(1) }}
           style={selStyle}
@@ -358,8 +365,10 @@ export default function WorkPlansView({
 
             return (
               <div key={plan.id}>
-                {/* Plan row */}
+                {/* Plan row — G-12: el clic en la fila despliega (ratón); con teclado, el botón de la flecha. Los
+                    controles de la fila (enlace, estado, +, ✕) no despliegan: la fila ignora sus clics. */}
                 <div
+                  role="presentation"
                   style={{
                     display: 'grid', gridTemplateColumns: gridCols,
                     gap: '10px', padding: '12px 16px', borderBottom: isExp ? 'none' : '1px solid var(--gray-100)',
@@ -367,14 +376,16 @@ export default function WorkPlansView({
                     background: isExp ? 'var(--gray-50)' : 'var(--card-bg)',
                     transition: 'background 0.1s',
                   }}
-                  onClick={() => toggleExpand(plan.id)}
+                  onClick={e => {
+                    if ((e.target as HTMLElement).closest('button, a, input, select, label')) return
+                    toggleExpand(plan.id)
+                  }}
                 >
                   {allScope && (
                     <div>
                       {plan.projects && (
                         <Link
                           href={`/projects/${plan.projects.id}/work-plans`}
-                          onClick={e => e.stopPropagation()}
                           style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                           title={plan.projects.name}
                         >
@@ -416,9 +427,10 @@ export default function WorkPlansView({
                   </div>
 
                   {/* Estado */}
-                  <div onClick={e => e.stopPropagation()}>
+                  <div>
                     {canEdit ? (
                       <select
+                        aria-label={t('table.colStatus')}
                         value={plan.status}
                         onChange={e => handleStatusChange(plan.id, e.target.value as WorkPlan['status'])}
                         style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: st.color, border: `1px solid ${st.color}30`, fontFamily: 'inherit', cursor: 'pointer' }}
@@ -435,10 +447,11 @@ export default function WorkPlansView({
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', gap: '4px' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
                     {canEdit && (
                       <button
                         onClick={() => openAddItem(plan)}
+                        aria-label={t('addItemModal.title')}
                         style={{ padding: '4px 8px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '5px', fontSize: '11px', color: '#16a34a', cursor: 'pointer' }}
                       >
                         +
@@ -457,9 +470,15 @@ export default function WorkPlansView({
                   </div>
 
                   {/* Expand arrow */}
-                  <div style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(plan.id)}
+                    aria-expanded={isExp}
+                    aria-label={`${t('table.colItems')} · ${plan.plan_date}`}
+                    style={{ width: '100%', background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', fontSize: '10px', color: '#94a3b8', textAlign: 'center' }}
+                  >
                     {isExp ? '▲' : '▼'}
-                  </div>
+                  </button>
                 </div>
 
                 {/* Expanded items */}
@@ -550,6 +569,7 @@ export default function WorkPlansView({
       {showCreate && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+          role="presentation"
           onClick={e => { if (e.target === e.currentTarget) setShowCreate(false) }}
         >
           <DialogSurface onClose={() => setShowCreate(false)} labelledBy={createTitleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
@@ -561,29 +581,30 @@ export default function WorkPlansView({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {allScope && (
                 <div>
-                  <label style={labelStyle}>{t('createModal.project')}</label>
-                  <select value={createProject} onChange={e => setCreateProject(e.target.value)} style={inputStyle}>
+                  <label htmlFor={`${uid}-c-project`} style={labelStyle}>{t('createModal.project')}</label>
+                  <select id={`${uid}-c-project`} value={createProject} onChange={e => setCreateProject(e.target.value)} style={inputStyle}>
                     <option value="">{t('createModal.projectPh')}</option>
                     {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
                   </select>
                 </div>
               )}
               <div>
-                <label style={labelStyle}>{t('createModal.discipline')}</label>
-                <select value={createDisc} onChange={e => setCreateDisc(e.target.value)} style={inputStyle}>
+                <label htmlFor={`${uid}-c-discipline`} style={labelStyle}>{t('createModal.discipline')}</label>
+                <select id={`${uid}-c-discipline`} value={createDisc} onChange={e => setCreateDisc(e.target.value)} style={inputStyle}>
                   <option value="">{t('createModal.disciplinePh')}</option>
                   {disciplines.map(d => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}
                 </select>
               </div>
 
               <div>
-                <label style={labelStyle}>{t('createModal.date')}</label>
-                <input type="date" value={createDate} onChange={e => setCreateDate(e.target.value)} style={inputStyle} />
+                <label htmlFor={`${uid}-c-date`} style={labelStyle}>{t('createModal.date')}</label>
+                <input id={`${uid}-c-date`} type="date" value={createDate} onChange={e => setCreateDate(e.target.value)} style={inputStyle} />
               </div>
 
               <div>
-                <label style={labelStyle}>{t('createModal.notes')} <span style={{ fontWeight: 400, color: '#94a3b8' }}>{t('createModal.notesOpt')}</span></label>
+                <label htmlFor={`${uid}-c-notes`} style={labelStyle}>{t('createModal.notes')} <span style={{ fontWeight: 400, color: '#94a3b8' }}>{t('createModal.notesOpt')}</span></label>
                 <textarea
+                  id={`${uid}-c-notes`}
                   value={createNotes}
                   onChange={e => setCreateNotes(e.target.value)}
                   rows={3}
@@ -622,6 +643,7 @@ export default function WorkPlansView({
       {addItemPlanId && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+          role="presentation"
           onClick={e => { if (e.target === e.currentTarget) setAddItemPlanId(null) }}
         >
           <DialogSurface onClose={() => setAddItemPlanId(null)} labelledBy={addItemTitleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
@@ -632,8 +654,8 @@ export default function WorkPlansView({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={labelStyle}>{t('addItemModal.itr')}</label>
-                <select value={addItemItrId} onChange={e => setAddItemItrId(e.target.value)} style={inputStyle}>
+                <label htmlFor={`${uid}-a-itr`} style={labelStyle}>{t('addItemModal.itr')}</label>
+                <select id={`${uid}-a-itr`} value={addItemItrId} onChange={e => setAddItemItrId(e.target.value)} style={inputStyle}>
                   <option value="">{t('addItemModal.itrPh')}</option>
                   {availableItrs.map(itr => (
                     <option key={itr.id} value={itr.id}>{itr.itr_number} — {itr.tag_number} — {itr.title}</option>
@@ -645,8 +667,8 @@ export default function WorkPlansView({
               </div>
 
               <div>
-                <label style={labelStyle}>{t('addItemModal.assigned')}</label>
-                <select value={addItemUser} onChange={e => setAddItemUser(e.target.value)} style={inputStyle}>
+                <label htmlFor={`${uid}-a-assigned`} style={labelStyle}>{t('addItemModal.assigned')}</label>
+                <select id={`${uid}-a-assigned`} value={addItemUser} onChange={e => setAddItemUser(e.target.value)} style={inputStyle}>
                   <option value="">{t('addItemModal.assignedPh')}</option>
                   {orgMembers.map(m => (
                     <option key={m.user_id} value={m.user_id}>

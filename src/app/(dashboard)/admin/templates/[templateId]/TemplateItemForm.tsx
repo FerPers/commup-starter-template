@@ -6,7 +6,7 @@
 // es top-level y dueño de su propio estado; el caller recibe el form completo
 // en onSave.
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ItrItemType } from '@/types/database'
 import { checkTableConfig, type TableConfig } from '@/lib/itr/table'
@@ -38,6 +38,7 @@ export default function TemplateItemForm({
   onCancel: () => void
 }) {
   const t = useTranslations('ItrTemplates.builder')
+  const uid = useId()
   const [form, setForm] = useState<ItemFormValues>(() => normalizeItemType(initial, initial.item_type))
   const [optionsText, setOptionsText] = useState(Array.isArray(initial.options) ? initial.options.join(', ') : '')
   const [error, setError] = useState<string | null>(null)
@@ -267,10 +268,11 @@ export default function TemplateItemForm({
               </select>
             </label>
             {form.condition_item_id && (
-              <label style={fieldLabel}>
+              <label htmlFor={`${uid}-condition-value`} style={fieldLabel}>
                 {t('conditionValueLabel')}
                 {useBooleanValues ? (
                   <select
+                    id={`${uid}-condition-value`}
                     value={form.condition_value ?? ''}
                     onChange={e => setForm(f => ({ ...f, condition_value: e.target.value || null }))}
                     style={fieldInput}
@@ -281,6 +283,7 @@ export default function TemplateItemForm({
                   </select>
                 ) : (
                   <input
+                    id={`${uid}-condition-value`}
                     value={form.condition_value ?? ''}
                     onChange={e => setForm(f => ({ ...f, condition_value: e.target.value || null }))}
                     placeholder={t('conditionValuePlaceholder')}

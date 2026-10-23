@@ -279,6 +279,7 @@ export default function TagItrTab({
       {/* ── Assign Modal ──────────────────────────────────────────── */}
       {showAssign && (
         <div
+          role="presentation"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setShowAssign(false) }}
         >
@@ -297,7 +298,7 @@ export default function TagItrTab({
 
                 {/* Template selector */}
                 <div>
-                  <label style={labelStyle}>
+                  <label htmlFor={`${assignTitleId}-template`} style={labelStyle}>
                     {t('template')} *
                     {tagType && (
                       <span style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 400, color: 'var(--success-700)', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '4px', padding: '1px 6px' }}>
@@ -306,6 +307,7 @@ export default function TagItrTab({
                     )}
                   </label>
                   <select
+                    id={`${assignTitleId}-template`}
                     value={selectedTemplate}
                     onChange={e => setSelectedTemplate(e.target.value)}
                     style={selStyle}
@@ -337,8 +339,9 @@ export default function TagItrTab({
 
                 {/* Inspector selector */}
                 <div>
-                  <label style={labelStyle}>{t('executor')}</label>
+                  <label htmlFor={`${assignTitleId}-executor`} style={labelStyle}>{t('executor')}</label>
                   <select
+                    id={`${assignTitleId}-executor`}
                     value={selectedInspector}
                     onChange={e => setSelectedInspector(e.target.value)}
                     style={selStyle}
@@ -354,8 +357,9 @@ export default function TagItrTab({
 
                 {/* Supervisor selector — S04: solo si la plantilla lo pide, y entonces obligatorio */}
                 {needsSupervisor && <div>
-                  <label style={labelStyle}>{t('supervisor')}</label>
+                  <label htmlFor={`${assignTitleId}-supervisor`} style={labelStyle}>{t('supervisor')}</label>
                   <select
+                    id={`${assignTitleId}-supervisor`}
                     value={selectedSupervisor}
                     onChange={e => setSelectedSupervisor(e.target.value)}
                     style={selStyle}
@@ -371,8 +375,9 @@ export default function TagItrTab({
 
                 {/* Client selector — S04: solo si la plantilla o la fase lo piden */}
                 {needsClient && <div>
-                  <label style={labelStyle}>{t('client')}</label>
+                  <label htmlFor={`${assignTitleId}-client`} style={labelStyle}>{t('client')}</label>
                   <select
+                    id={`${assignTitleId}-client`}
                     value={selectedClient}
                     onChange={e => setSelectedClient(e.target.value)}
                     style={selStyle}
@@ -395,8 +400,9 @@ export default function TagItrTab({
 
                 {/* Scheduled date */}
                 <div>
-                  <label style={labelStyle}>{t('scheduled')}</label>
+                  <label htmlFor={`${assignTitleId}-scheduled`} style={labelStyle}>{t('scheduled')}</label>
                   <input
+                    id={`${assignTitleId}-scheduled`}
                     type="date"
                     value={scheduledDate}
                     onChange={e => setScheduledDate(e.target.value)}

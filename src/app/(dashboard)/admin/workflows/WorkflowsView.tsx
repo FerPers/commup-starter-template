@@ -264,6 +264,7 @@ function RuleRow({
           onClick={onToggle}
           disabled={isPending}
           title={tx(rule.enabled ? 'deactivate' : 'activate')}
+          aria-label={tx(rule.enabled ? 'deactivate' : 'activate')}
           style={{
             width: 32, height: 18, borderRadius: 9, border: 'none', cursor: 'pointer', flexShrink: 0,
             background: rule.enabled ? '#10b981' : 'var(--gray-300)', position: 'relative', padding: 0,
@@ -344,6 +345,7 @@ function RuleEditorModal({
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const titleId = useId()
+  const uid = useId()
 
   const handleSave = async () => {
     setErr(null)
@@ -410,30 +412,30 @@ function RuleEditorModal({
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
           <div>
-            <label style={label}>{tx('field.name')}</label>
-            <input style={input} value={name} onChange={e => setName(e.target.value)} placeholder={tx('field.namePlaceholder')} />
+            <label htmlFor={`${uid}-name`} style={label}>{tx('field.name')}</label>
+            <input id={`${uid}-name`} style={input} value={name} onChange={e => setName(e.target.value)} placeholder={tx('field.namePlaceholder')} />
           </div>
           <div>
-            <label style={label}>{tx('field.priority')}</label>
-            <input style={input} type="number" value={priority} onChange={e => setPriority(Number(e.target.value))} />
+            <label htmlFor={`${uid}-priority`} style={label}>{tx('field.priority')}</label>
+            <input id={`${uid}-priority`} style={input} type="number" value={priority} onChange={e => setPriority(Number(e.target.value))} />
           </div>
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={label}>{tx('field.description')}</label>
-          <input style={input} value={description ?? ''} onChange={e => setDescription(e.target.value)} />
+          <label htmlFor={`${uid}-description`} style={label}>{tx('field.description')}</label>
+          <input id={`${uid}-description`} style={input} value={description ?? ''} onChange={e => setDescription(e.target.value)} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18 }}>
           <div>
-            <label style={label}>{tx('field.trigger')}</label>
-            <select style={input} value={triggerEvent} onChange={e => setTriggerEvent(e.target.value)}>
+            <label htmlFor={`${uid}-trigger`} style={label}>{tx('field.trigger')}</label>
+            <select id={`${uid}-trigger`} style={input} value={triggerEvent} onChange={e => setTriggerEvent(e.target.value)}>
               {TRIGGER_EVENTS.map(t => <option key={t} value={t}>{tx(`trigger.${t}`)}</option>)}
             </select>
           </div>
           <div>
-            <label style={label}>{tx('field.action')}</label>
-            <select style={input} value={actionType} onChange={e => setActionType(e.target.value as WorkflowActionType)}>
+            <label htmlFor={`${uid}-action`} style={label}>{tx('field.action')}</label>
+            <select id={`${uid}-action`} style={input} value={actionType} onChange={e => setActionType(e.target.value as WorkflowActionType)}>
               {ACTION_TYPES.map(a => <option key={a} value={a}>{tx(`action.${a}.label`)}</option>)}
             </select>
             <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
@@ -445,7 +447,7 @@ function RuleEditorModal({
         {/* ── Condiciones ── */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <label style={{ ...label, marginBottom: 0 }}>{tx('conditions.title')}</label>
+            <span id={`${uid}-conditions`} style={{ ...label, marginBottom: 0 }}>{tx('conditions.title')}</span>
             <button
               type="button"
               onClick={() => {
@@ -504,6 +506,7 @@ function RuleEditorModal({
             </>
           ) : (
             <textarea
+              aria-labelledby={`${uid}-conditions`}
               style={{ ...input, fontFamily: 'ui-monospace, monospace', minHeight: 120, fontSize: 12 }}
               value={advancedJson}
               onChange={e => setAdvancedJson(e.target.value)}
@@ -517,8 +520,9 @@ function RuleEditorModal({
 
         {/* ── Payload ── */}
         <div style={{ marginBottom: 18 }}>
-          <label style={label}>{tx('payload.label')}</label>
+          <label htmlFor={`${uid}-payload`} style={label}>{tx('payload.label')}</label>
           <textarea
+            id={`${uid}-payload`}
             style={{ ...input, fontFamily: 'ui-monospace, monospace', minHeight: 100, fontSize: 12 }}
             value={payloadJson}
             onChange={e => setPayloadJson(e.target.value)}

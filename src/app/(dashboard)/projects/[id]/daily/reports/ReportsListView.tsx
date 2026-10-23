@@ -74,7 +74,7 @@ export default function ReportsListView({ project, reports, areas, canCreate }: 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr>
             {['number', 'date', 'area', 'status', 'issued'].map(c => <th key={c} style={th}>{t(`report.col.${c}`)}</th>)}
-            <th style={th} />
+            <th style={th}><span className="sr-only">PDF</span></th>
           </tr></thead>
           <tbody>
             {reports.map(r => (

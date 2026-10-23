@@ -129,7 +129,8 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
 
   return (
     <div
-      onClick={onClose}
+      role="presentation"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
       style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -137,7 +138,6 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
       }}
     >
       <DialogSurface onClose={onClose} labelledBy={titleId}
-        onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--card-bg)', borderRadius: 14,
           maxWidth: 760, width: '100%', maxHeight: '85vh',

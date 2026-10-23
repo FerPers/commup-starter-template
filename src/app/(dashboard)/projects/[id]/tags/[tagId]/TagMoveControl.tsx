@@ -5,7 +5,7 @@ import Link from 'next/link'
 // (tag_subsystem_move_preview) y la RPC mueve en una transacción: ITR sin firmar y punches abiertos.
 // Un ITR firmado bloquea hasta reabrirlo. Líder+, con motivo (≥ 10).
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { moveTagSubsystem, previewTagMove } from '@/app/actions/tags'
@@ -24,6 +24,7 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
   onClose: () => void
 }) {
   const t = useTranslations('TagMove')
+  const uid = useId()
   const router = useRouter()
   const [target, setTarget] = useState('')
   const [preview, setPreview] = useState<TagMovePreview | null>(null)
@@ -64,8 +65,8 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
 
       {done && <p role="status" style={{ fontSize: '12px', color: 'var(--success-800)', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', padding: '8px 10px', margin: '0 0 12px' }}>{done}</p>}
 
-      <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('targetLabel')}</label>
-      <select value={target} onChange={e => choose(e.target.value)} disabled={isPending}
+      <label htmlFor={`${uid}-target`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('targetLabel')}</label>
+      <select id={`${uid}-target`} value={target} onChange={e => choose(e.target.value)} disabled={isPending}
         style={{ width: '100%', maxWidth: '420px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit' }}>
         <option value="">{t('targetPlaceholder')}</option>
         {subsystems.filter(s => s.id !== currentSubsystemId).map(s => (
@@ -99,8 +100,8 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
 
           {!blocked && (
             <div style={{ marginTop: '12px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
-              <textarea rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
+              <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
+              <textarea id={`${uid}-reason`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 8px' }}>{t('hint')}</p>
               <button disabled={!ok || isPending} onClick={confirm}

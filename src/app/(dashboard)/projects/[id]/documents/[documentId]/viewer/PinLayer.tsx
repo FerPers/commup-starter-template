@@ -44,12 +44,17 @@ export default function PinLayer({
       {pins.map(h => {
         const color = colorOf(h)
         const warn = crossed?.get(h.id)
+        const label = `${h.tag.tag_number}${h.system ? ` · ${h.system.code}` : ''} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}${h.needs_review ? ` · ${t('viewer.needsReview')}` : ''}${warn ? ` · ${warn}` : ''}`
         return (
-          <div
+          <button
+            type="button"
             key={h.id}
             onClick={() => onSelect(h)}
-            title={`${h.tag.tag_number}${h.system ? ` · ${h.system.code}` : ''} · ${h.itr_completion_pct}% ITR${h.open_punches_a > 0 ? ` · ${h.open_punches_a} Cat A` : ''}${h.needs_review ? ` · ${t('viewer.needsReview')}` : ''}${warn ? ` · ${warn}` : ''}`}
+            title={label}
+            aria-label={label}
+            aria-pressed={selectedId === h.id}
             style={{
+              padding: 0, font: 'inherit',
               position: 'absolute',
               left: `${h.x_pct}%`,
               top: `${h.y_pct}%`,
@@ -71,7 +76,7 @@ export default function PinLayer({
             <span style={{ fontSize: isTouch ? '11px' : '8px', color: '#fff', fontWeight: 700, lineHeight: 1 }}>
               {h.discipline.code.substring(0, 1)}
             </span>
-          </div>
+          </button>
         )
       })}
 

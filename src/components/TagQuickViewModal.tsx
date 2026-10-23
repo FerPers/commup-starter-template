@@ -38,7 +38,8 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
 
   return (
     <div
-      onClick={onClose}
+      role="presentation"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
       style={{
         position: 'fixed', inset: 0,
         background: 'rgba(0,0,0,0.45)',
@@ -48,7 +49,6 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
       }}
     >
       <DialogSurface onClose={onClose} labelledBy={titleId}
-        onClick={e => e.stopPropagation()}
         style={{
           background: 'white',
           borderRadius: '14px',

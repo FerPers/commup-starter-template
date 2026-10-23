@@ -13,7 +13,7 @@
  */
 
 import { useLocale, useTranslations } from 'next-intl';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 interface VoiceInputProps {
@@ -248,6 +248,8 @@ export default function VoiceInput({
   className = '',
 }: VoiceInputProps) {
   const tx = useTranslations('VoiceInput');
+  const tCommon = useTranslations('Common');
+  const uid = useId();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [interimDisplay, setInterimDisplay] = useState('');
@@ -295,7 +297,7 @@ export default function VoiceInput({
   return (
     <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {label && (
-        <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-300)' }}>{label}</label>
+        <label htmlFor={`${uid}-text`} style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-300)' }}>{label}</label>
       )}
 
       <div style={{
@@ -308,6 +310,7 @@ export default function VoiceInput({
       }}>
         {/* Textarea */}
         <textarea
+          id={`${uid}-text`}
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -396,6 +399,7 @@ export default function VoiceInput({
             <button
               type="button"
               onClick={() => onChange('')}
+              aria-label={tCommon('clear')}
               style={{
                 padding: 6,
                 borderRadius: 'var(--radius-md)',

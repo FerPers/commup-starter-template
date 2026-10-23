@@ -81,6 +81,7 @@ export default function CertificatesView({
   const locale = useLocale()
   const tA11y  = useTranslations('A11y')
   const titleId = useId()
+  const notesId = useId()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -406,6 +407,7 @@ export default function CertificatesView({
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000, padding: '20px',
         }}
+          role="presentation"
           onClick={e => { if (e.target === e.currentTarget) setIssueModal(null) }}
         >
           <DialogSurface onClose={() => setIssueModal(null)} labelledBy={titleId} style={{
@@ -497,10 +499,11 @@ export default function CertificatesView({
 
               {/* Notes */}
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={notesId} style={{ fontSize: '13px', fontWeight: 500, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   {t('view.modal.notesLabel')}
                 </label>
                 <textarea
+                  id={notesId}
                   placeholder={t('view.modal.notesPlaceholder')}
                   value={notes}
                   onChange={e => setNotes(e.target.value)}

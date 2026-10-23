@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useId, useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { Modal } from './Modal'
 import { Button } from './Button'
@@ -52,6 +52,7 @@ export function useAskDialog(): {
   const [text, setText] = useState('')
   const [choice, setChoice] = useState<number | null>(null)
   const resolved = useRef(false)
+  const fieldId = useId()
 
   const ask = useCallback((o: AskOptions) => new Promise<string | null>(resolve => {
     resolved.current = false
@@ -108,12 +109,12 @@ export function useAskDialog(): {
           </fieldset>
         )}
         {pending.input && (
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-muted)' }}>
+          <label htmlFor={fieldId} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-muted)' }}>
             {pending.input.label}{min > 0 ? ` (${t('minChars', { n: min })})` : ''}
             {pending.input.multiline === false
-              ? <input autoFocus style={fieldStyle} value={text} placeholder={pending.input.placeholder} onChange={e => setText(e.target.value)}
+              ? <input id={fieldId} autoFocus style={fieldStyle} value={text} placeholder={pending.input.placeholder} onChange={e => setText(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && valid) finish(text.trim()) }} />
-              : <textarea autoFocus rows={3} style={{ ...fieldStyle, resize: 'vertical' }} value={text} placeholder={pending.input.placeholder}
+              : <textarea id={fieldId} autoFocus rows={3} style={{ ...fieldStyle, resize: 'vertical' }} value={text} placeholder={pending.input.placeholder}
                   onChange={e => setText(e.target.value)} />}
           </label>
         )}

@@ -97,6 +97,7 @@ export default function CreatePunchModal({
 
   return (
     <div
+      role="presentation"
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -106,8 +107,8 @@ export default function CreatePunchModal({
         {itemLabel && <p style={{ fontSize: '12px', color: 'var(--gray-700)', margin: '0 0 20px', fontWeight: 600 }}>{t('punchModal.fromItem', { item: itemLabel })}</p>}
 
         {/* Category */}
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('punchModal.labelCategory')}</label>
+        <div role="group" aria-labelledby={`${titleId}-cat`} style={{ marginBottom: '16px' }}>
+          <span id={`${titleId}-cat`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('punchModal.labelCategory')}</span>
           <div style={{ display: 'flex', gap: '8px' }}>
             {(['A', 'B', 'C'] as const).map(cat => {
               const cfg = CATEGORY_CONFIG[cat]
@@ -116,6 +117,7 @@ export default function CreatePunchModal({
                 <button
                   key={cat}
                   onClick={() => setCategory(cat)}
+                  aria-pressed={active}
                   style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: `2px solid ${active ? cfg.color : 'var(--border)'}`, background: active ? cfg.bg : 'var(--card-bg)', color: active ? cfg.color : 'var(--text-muted)', cursor: 'pointer', textAlign: 'center' }}
                 >
                   {cfg.label}
@@ -132,8 +134,9 @@ export default function CreatePunchModal({
 
         {/* Description */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelDescription')}</label>
+          <label htmlFor={`${titleId}-desc`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelDescription')}</label>
           <textarea
+            id={`${titleId}-desc`}
             rows={3}
             value={description}
             onChange={e => setDescription(e.target.value)}
@@ -143,8 +146,8 @@ export default function CreatePunchModal({
         </div>
 
         {/* Fotos del defecto (S06, C-22) */}
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelPhotos')}</label>
+        <div role="group" aria-labelledby={`${titleId}-photos`} style={{ marginBottom: '16px' }}>
+          <span id={`${titleId}-photos`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelPhotos')}</span>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
             {photos.map(p => (
               <div key={p.key} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--gray-50)' }}>
@@ -167,8 +170,8 @@ export default function CreatePunchModal({
         {/* Responsable opcional (S06, C-22) */}
         {assignees.length > 0 && (
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelAssignee')}</label>
-            <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)}
+            <label htmlFor={`${titleId}-assignee`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelAssignee')}</label>
+            <select id={`${titleId}-assignee`} value={assignedTo} onChange={e => setAssignedTo(e.target.value)}
               style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', color: 'var(--text-strong)' }}>
               <option value="">{t('punchModal.assigneeNone')}</option>
               {assignees.map(a => <option key={a.user_id} value={a.user_id}>{a.full_name}</option>)}
@@ -178,8 +181,9 @@ export default function CreatePunchModal({
 
         {/* Target date */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelTargetDate')}</label>
+          <label htmlFor={`${titleId}-date`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelTargetDate')}</label>
           <input
+            id={`${titleId}-date`}
             type="date"
             value={targetDate}
             onChange={e => setTargetDate(e.target.value)}

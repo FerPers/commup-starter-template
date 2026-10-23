@@ -330,6 +330,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
             <div className="w-12 h-6 bg-[var(--gray-700)] rounded-full peer peer-checked:bg-[var(--primary-600)] peer-disabled:opacity-50 transition-colors
               after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
               peer-checked:after:translate-x-6" />
+            <span className="sr-only">{tp('active')}</span>
           </label>
         </div>
 
@@ -406,6 +407,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
                   <div className="w-9 h-5 bg-[var(--gray-700)] rounded-full peer peer-checked:bg-[var(--primary-600)] transition-colors
                     after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all
                     peer-checked:after:translate-x-4" />
+                  <span className="sr-only">{tp(`topic.${topic}.label`)}</span>
                 </label>
               </div>
             )

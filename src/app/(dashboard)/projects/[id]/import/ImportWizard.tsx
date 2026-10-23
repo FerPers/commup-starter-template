@@ -10,6 +10,7 @@ import { detectTagType } from '@/lib/tag-types'
 import { parseCriticality, parseSilLevel } from '@/lib/tags/criticality'
 import { detectEquipmentTypeCode } from '@/lib/equipment-types'
 import { pickBestSheet, detectHeaderRow, cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
+import { pressable } from '@/lib/a11y/pressable'
 
 // ── Column keyword mapping ──────────────────────────────────────
 // Orden importante: cada columna se asigna una sola vez (exacta primero,
@@ -349,7 +350,8 @@ export default function ImportWizard({
             onDragOver={e => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
             onDrop={onDrop}
-            onClick={() => document.getElementById('file-input')?.click()}
+            // G-12: la zona también se activa con Tab + Enter/Espacio (el input real está oculto).
+            {...pressable(() => document.getElementById('file-input')?.click())}
             style={{
               border: `2px dashed ${dragging ? '#3b82f6' : 'var(--gray-300)'}`,
               borderRadius: '14px', padding: '56px 32px', textAlign: 'center',

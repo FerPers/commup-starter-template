@@ -1,10 +1,11 @@
 'use client'
 
 import type { Json } from '@/types/supabase.generated'
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { AUDIT_ENTITY_TYPES } from '@/lib/constants/domain-events'
+import { pressable } from '@/lib/a11y/pressable'
 
 type LogEntry = {
   id: string
@@ -49,6 +50,7 @@ export default function AuditLogView({
   const [, startTransition] = useTransition()
   const [expanded, setExpanded] = useState<string | null>(null)
 
+  const uid = useId()
   const [entityType, setEntityType] = useState(filters.entityType)
   const [userId, setUserId] = useState(filters.userId)
   const [from, setFrom] = useState(filters.from)
@@ -103,8 +105,9 @@ export default function AuditLogView({
         display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={labelStyle}>{t('filters.entityType')}</label>
+          <label htmlFor={`${uid}-entityType`} style={labelStyle}>{t('filters.entityType')}</label>
           <select
+            id={`${uid}-entityType`}
             value={entityType}
             onChange={e => setEntityType(e.target.value)}
             style={selectStyle}
@@ -117,8 +120,9 @@ export default function AuditLogView({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={labelStyle}>{t('filters.user')}</label>
+          <label htmlFor={`${uid}-user`} style={labelStyle}>{t('filters.user')}</label>
           <select
+            id={`${uid}-user`}
             value={userId}
             onChange={e => setUserId(e.target.value)}
             style={selectStyle}
@@ -131,8 +135,9 @@ export default function AuditLogView({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={labelStyle}>{t('filters.from')}</label>
+          <label htmlFor={`${uid}-from`} style={labelStyle}>{t('filters.from')}</label>
           <input
+            id={`${uid}-from`}
             type="date"
             value={from}
             onChange={e => setFrom(e.target.value)}
@@ -141,8 +146,9 @@ export default function AuditLogView({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={labelStyle}>{t('filters.to')}</label>
+          <label htmlFor={`${uid}-to`} style={labelStyle}>{t('filters.to')}</label>
           <input
+            id={`${uid}-to`}
             type="date"
             value={to}
             onChange={e => setTo(e.target.value)}
@@ -195,7 +201,7 @@ export default function AuditLogView({
                     padding: '12px 16px', alignItems: 'center',
                     cursor: log.payload ? 'pointer' : 'default',
                   }}
-                  onClick={() => log.payload && setExpanded(isExpanded ? null : log.id)}
+                  {...(log.payload ? { ...pressable(() => setExpanded(isExpanded ? null : log.id)), 'aria-expanded': isExpanded } : {})}
                 >
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{date}</span>
                   <span style={{ fontSize: '13px', color: 'var(--text-strong)' }}>

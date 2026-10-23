@@ -154,7 +154,7 @@ export default function DataQualityView({
                   <th style={thStyle}>{t('bottlenecks.itrs')}</th>
                   <th style={thStyle}>{t('bottlenecks.punches')}</th>
                   <th style={thStyle}>{t('bottlenecks.reasons')}</th>
-                  <th style={thStyle}></th>
+                  <th style={thStyle}><span className="sr-only">{t('bottlenecks.subsystem')}</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -304,7 +304,7 @@ export default function DataQualityView({
                 <th style={thStyle}>{t('issues.entity')}</th>
                 <th style={thStyle}>{t('issues.description')}</th>
                 <th style={thStyle}>{t('issues.fix')}</th>
-                <th style={thStyle}></th>
+                <th style={thStyle}><span className="sr-only">{t('issues.fix')}</span></th>
               </tr>
             </thead>
             <tbody>

@@ -43,9 +43,9 @@ const LINE_STYLE: Record<LineState, { bg: string; fg: string; border: string }> 
 
 const PACK_STAGE_PCT: Record<RegisterStatus, number> = { proposed: 0, authorized: 25, active: 50, removed: 75, verified: 100, cancelled: 0 }
 
-function Bar({ pct }: { pct: number }) {
+function Bar({ pct, label }: { pct: number; label: string }) {
   return (
-    <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}
+    <div role="progressbar" aria-label={label} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}
       style={{ height: 8, background: 'var(--gray-100, #f1f5f9)', borderRadius: 999, overflow: 'hidden', minWidth: 80 }}>
       <div style={{ width: `${pct}%`, height: '100%', background: 'var(--success-500, #16a34a)' }} />
     </div>
@@ -138,7 +138,7 @@ export default function TestPacksView({ project, packs, canEdit }: Props) {
                   <strong style={{ color: 'var(--text-strong)' }}>{s.system}</strong>
                   <span style={small}>{t('systemLine', { tested: s.tested, total: s.total, pct: s.pct })}</span>
                 </div>
-                <Bar pct={s.pct} />
+                <Bar pct={s.pct} label={`${t('col.progress')} · ${s.system}`} />
               </div>
             ))}
           </div>
@@ -205,7 +205,7 @@ export default function TestPacksView({ project, packs, canEdit }: Props) {
                       )}
                     </td>
                     <td style={td}><StatusChip kind="test_pack" status={p.status} /></td>
-                    <td style={{ ...td, minWidth: 120 }}><Bar pct={packPct(p)} /></td>
+                    <td style={{ ...td, minWidth: 120 }}><Bar pct={packPct(p)} label={`${t('col.progress')} · ${p.number}`} /></td>
                   </tr>
                 )
               })}

@@ -1708,7 +1708,8 @@
       "bulkChangeStatus": "Change status",
       "bulkDeselect": "Deselect all",
       "bulkApply": "Apply",
-      "qrLabels": "QR labels"
+      "qrLabels": "QR labels",
+      "selectAll": "Select all tags"
     },
     "detail": {
       "backLink": "← {project} / Tags",

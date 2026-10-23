@@ -220,6 +220,7 @@ function CreateKeyModal({
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const titleId = useId()
+  const uid = useId()
 
   const toggleScope = (s: ApiScope) => {
     setScopes(curr =>
@@ -262,8 +263,9 @@ function CreateKeyModal({
         {err && <ModalError msg={err} />}
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>{tx('create.name')}</label>
+          <label htmlFor={`${uid}-name`} style={labelStyle}>{tx('create.name')}</label>
           <input
+            id={`${uid}-name`}
             style={input}
             value={name}
             onChange={e => setName(e.target.value)}
@@ -272,7 +274,7 @@ function CreateKeyModal({
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>{tx('create.scopes')}</label>
+          <span style={labelStyle}>{tx('create.scopes')}</span>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
             {API_SCOPES.map(s => {
               const checked = scopes.includes(s.value)
@@ -280,8 +282,8 @@ function CreateKeyModal({
                 <label
                   key={s.value}
                   style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 8,
-                    padding: '8px 10px', borderRadius: 6, cursor: 'pointer',
+                    display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'start', columnGap: 8,
+                    padding: '8px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12,
                     background: checked ? '#eff6ff' : 'var(--gray-50)',
                     border: checked ? '1px solid #93c5fd' : '1px solid var(--border)',
                   }}
@@ -290,12 +292,10 @@ function CreateKeyModal({
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleScope(s.value)}
-                    style={{ marginTop: 2 }}
+                    style={{ marginTop: 2, gridRow: 'span 2' }}
                   />
-                  <div style={{ fontSize: 12 }}>
-                    <div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--text-strong)' }}>{s.label}</div>
-                    <div style={{ color: 'var(--text-muted)', marginTop: 1, fontSize: 11 }}>{tx(`scope.${scopeKey(s.value)}`)}</div>
-                  </div>
+                  <div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--text-strong)' }}>{s.label}</div>
+                  <div style={{ color: 'var(--text-muted)', marginTop: 1, fontSize: 11 }}>{tx(`scope.${scopeKey(s.value)}`)}</div>
                 </label>
               )
             })}
@@ -303,8 +303,9 @@ function CreateKeyModal({
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={labelStyle}>{tx('create.expiry')}</label>
+          <label htmlFor={`${uid}-expiry`} style={labelStyle}>{tx('create.expiry')}</label>
           <input
+            id={`${uid}-expiry`}
             style={input}
             type="date"
             value={expiresAt}
@@ -340,6 +341,7 @@ function TokenRevealModal({
   const [copied, setCopied] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const titleId = useId()
+  const uid = useId()
 
   const copy = async () => {
     try {
@@ -368,9 +370,10 @@ function TokenRevealModal({
           {tx.rich('reveal.warning', { strong: c => <strong>{c}</strong> })}
         </div>
 
-        <label style={labelStyle}>{tx('reveal.label')}</label>
+        <label htmlFor={`${uid}-token`} style={labelStyle}>{tx('reveal.label')}</label>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <input
+            id={`${uid}-token`}
             readOnly
             value={token}
             style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12, background: 'var(--gray-50)' }}

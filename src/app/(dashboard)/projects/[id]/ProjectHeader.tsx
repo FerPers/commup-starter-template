@@ -46,6 +46,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
   const [project, setProject] = useState(initial)
   const [showModal, setShowModal] = useState(false)
   const titleId = useId()
+  const uid = useId()
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const t = useTranslations('ProjectHeader')
@@ -214,14 +215,14 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
       {/* Edit Modal */}
       {showModal && (
         <div
-          onClick={() => setShowModal(false)}
+          role="presentation"
+          onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
             zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
           }}
         >
           <DialogSurface onClose={() => setShowModal(false)} labelledBy={titleId}
-            onClick={e => e.stopPropagation()}
             style={{
               background: 'var(--card-bg)', borderRadius: '14px', width: '100%', maxWidth: '480px',
               boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
@@ -237,24 +238,24 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
 
             {/* Form */}
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <Field label={t('f.name')}>
-                <input
+              <Field label={t('f.name')} htmlFor={`${uid}-name`}>
+                <input id={`${uid}-name`}
                   value={name}
                   onChange={e => setName(e.target.value)}
                   style={inputStyle}
                   placeholder={t('f.namePh')}
                 />
               </Field>
-              <Field label={t('f.code')}>
-                <input
+              <Field label={t('f.code')} htmlFor={`${uid}-code`}>
+                <input id={`${uid}-code`}
                   value={code}
                   onChange={e => setCode(e.target.value)}
                   style={inputStyle}
                   placeholder="COD-001"
                 />
               </Field>
-              <Field label={t('f.client')}>
-                <input value={client} onChange={e => setClient(e.target.value)} style={inputStyle} placeholder={t('f.clientPh')} />
+              <Field label={t('f.client')} htmlFor={`${uid}-client`}>
+                <input id={`${uid}-client`} value={client} onChange={e => setClient(e.target.value)} style={inputStyle} placeholder={t('f.clientPh')} />
               </Field>
               {canBrand && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -279,32 +280,32 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
                   <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('clientLogoHint')}</span>
                 </div>
               )}
-              <Field label={t('f.status')}>
-                <select value={status} onChange={e => setStatus(e.target.value as ProjectStatus)} style={inputStyle}>
+              <Field label={t('f.status')} htmlFor={`${uid}-status`}>
+                <select id={`${uid}-status`} value={status} onChange={e => setStatus(e.target.value as ProjectStatus)} style={inputStyle}>
                   {STATUS_OPTIONS.map(s => (
                     <option key={s} value={s}>{t(`status.${s}`)}</option>
                   ))}
                 </select>
               </Field>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <Field label={t('f.country')}>
-                  <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Colombia" style={inputStyle} />
+                <Field label={t('f.country')} htmlFor={`${uid}-country`}>
+                  <input id={`${uid}-country`} value={country} onChange={e => setCountry(e.target.value)} placeholder="Colombia" style={inputStyle} />
                 </Field>
-                <Field label={t('f.region')}>
-                  <input value={region} onChange={e => setRegion(e.target.value)} placeholder="Llanos" style={inputStyle} />
+                <Field label={t('f.region')} htmlFor={`${uid}-region`}>
+                  <input id={`${uid}-region`} value={region} onChange={e => setRegion(e.target.value)} placeholder="Llanos" style={inputStyle} />
                 </Field>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <Field label={t('f.start')}>
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} />
+                <Field label={t('f.start')} htmlFor={`${uid}-start`}>
+                  <input id={`${uid}-start`} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} />
                 </Field>
-                <Field label={t('f.end')}>
-                  <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={inputStyle} />
+                <Field label={t('f.end')} htmlFor={`${uid}-end`}>
+                  <input id={`${uid}-end`} type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={inputStyle} />
                 </Field>
               </div>
               {/* S10 (D12): define «hoy» y el corte del día en reportes, relevos, snapshots y vencimientos */}
-              <Field label={t('f.timezone')}>
-                <select value={timezone} onChange={e => setTimezone(e.target.value)} style={inputStyle}>
+              <Field label={t('f.timezone')} htmlFor={`${uid}-timezone`}>
+                <select id={`${uid}-timezone`} value={timezone} onChange={e => setTimezone(e.target.value)} style={inputStyle}>
                   {(TIMEZONE_OPTIONS as readonly string[]).includes(timezone) ? null : <option value={timezone}>{timezone}</option>}
                   {TIMEZONE_OPTIONS.map(z => <option key={z} value={z}>{z}</option>)}
                 </select>
@@ -397,10 +398,10 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box', background: 'var(--card-bg)',
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-      <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{label}</label>
+      <label htmlFor={htmlFor} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{label}</label>
       {children}
     </div>
   )

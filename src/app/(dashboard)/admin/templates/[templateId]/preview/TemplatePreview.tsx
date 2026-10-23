@@ -4,7 +4,7 @@ import { SOURCE_REFS, TABLE_SOURCE_LABELS, parseTableConfig } from '@/lib/itr/ta
 import { itemDescription } from '@/lib/itr/item-text'
 
 import type { Json } from '@/types/supabase.generated'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity' | 'table'
@@ -230,12 +230,14 @@ function ItemControl({ item, d }: { item: PreviewItem; d: Doc }) {
 // ── Remarks field (shared) ──────────────────────────────────────
 
 function RemarksField({ d }: { d: Doc }) {
+  const uid = useId()
   return (
     <div style={{ marginTop: '8px' }}>
-      <label style={{ fontSize: '11px', color: 'var(--gray-400)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
+      <label htmlFor={`${uid}-remarks`} style={{ fontSize: '11px', color: 'var(--gray-400)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
         {d.remarks}
       </label>
       <textarea
+        id={`${uid}-remarks`}
         disabled
         placeholder={d.remarksPh}
         rows={1}

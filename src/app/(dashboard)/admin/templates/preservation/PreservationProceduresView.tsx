@@ -4,6 +4,7 @@ import type { Enums } from '@/types/supabase.generated'
 import { useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createProcedure, deleteProcedure } from '@/app/actions/preservation'
 import { exportPreservationProcedure } from '@/app/actions/templates-backup'
 import type { TemplatesBackup } from '@/lib/constants/templates-backup'
@@ -56,6 +57,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
   const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const toast = useToast()
   const createTitleId = useId()
+  const uid = useId()
   const freqLabel = (f: string) => (FREQS.includes(f) ? tp(`freq.${f as 'daily'}`) : f)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -207,7 +209,12 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             return (
               <div
                 key={proc.id}
-                onClick={() => router.push(`/admin/templates/preservation/${proc.id}`)}
+                role="presentation"
+                onClick={e => {
+                  // El título es el enlace (teclado); el resto de la tarjeta lo imita con el ratón.
+                  if ((e.target as HTMLElement).closest('a, button')) return
+                  router.push(`/admin/templates/preservation/${proc.id}`)
+                }}
                 style={{
                   background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px',
                   padding: '20px', cursor: 'pointer', transition: 'box-shadow 0.15s',
@@ -221,9 +228,9 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '2px' }}>
                       {proc.code}
                     </div>
-                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.3 }}>
+                    <Link href={`/admin/templates/preservation/${proc.id}`} style={{ display: 'block', fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.3, textDecoration: 'none' }}>
                       {proc.title}
-                    </div>
+                    </Link>
                   </div>
                   {canEdit && (
                     <button
@@ -347,8 +354,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('code')}</label>
-                  <input
+                  <label htmlFor={`${uid}-code`} style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('code')}</label>
+                  <input id={`${uid}-code`}
                     value={form.code}
                     onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
                     placeholder="P-MECH-01"
@@ -356,8 +363,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('title')}</label>
-                  <input
+                  <label htmlFor={`${uid}-title`} style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('title')}</label>
+                  <input id={`${uid}-title`}
                     value={form.title}
                     onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                     placeholder={t('titlePlaceholder')}
@@ -367,8 +374,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('description')}</label>
-                <textarea
+                <label htmlFor={`${uid}-description`} style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('description')}</label>
+                <textarea id={`${uid}-description`}
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2}
@@ -379,8 +386,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('discipline')}</label>
-                  <select
+                  <label htmlFor={`${uid}-discipline`} style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('discipline')}</label>
+                  <select id={`${uid}-discipline`}
                     value={form.disciplineId}
                     onChange={e => setForm(f => ({ ...f, disciplineId: e.target.value }))}
                     style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
@@ -392,8 +399,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('frequency')}</label>
-                  <select
+                  <label htmlFor={`${uid}-frequency`} style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('frequency')}</label>
+                  <select id={`${uid}-frequency`}
                     value={form.frequency}
                     onChange={e => handleFreqChange(e.target.value as Enums<'preservation_frequency'>)}
                     style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
@@ -408,10 +415,10 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-interval`} style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>
                   {t('interval')}
                 </label>
-                <input
+                <input id={`${uid}-interval`}
                   type="number"
                   min="1"
                   value={form.intervalDays}

@@ -4,7 +4,7 @@
 // contrato { error } de actions/pssr.ts; la UI vive en PssrReviewHeader,
 // PssrItemsChecklist, PssrSignaturesPanel y PssrSignModal.
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useAskDialog } from '@/components/ui/AskDialog'
@@ -61,6 +61,7 @@ export default function PssrReviewForm({
   totalItems, systemPunches, canEditPunches, itemActions,
 }: Props) {
   const t = useTranslations('PSSR')
+  const notesId = useId()
   const { dialog, ask } = useAskDialog() // G-08: diálogo propio
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -260,10 +261,11 @@ export default function PssrReviewForm({
           background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
           padding: '20px 24px', marginBottom: '20px',
         }}>
-          <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>
+          <label htmlFor={notesId} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>
             {t('review.notesLabel')}
           </label>
           <textarea
+            id={notesId}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             onBlur={handleSaveNotes}

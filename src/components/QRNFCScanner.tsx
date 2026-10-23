@@ -239,6 +239,7 @@ function useQRScan(
 export default function QRNFCScanner() {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = useTranslations('Sidebar.nav')
+  const tAsk = useTranslations('AskDialog')
   const tx = useTranslations('Scanner')
   const locale = useLocale()
   const router = useRouter();
@@ -329,6 +330,7 @@ export default function QRNFCScanner() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottom: '1px solid var(--gray-700)' }}>
         <button
           onClick={() => router.back()}
+          aria-label={tAsk('back')}
           style={{ padding: 8, borderRadius: 'var(--radius-md)', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', transition: 'background 0.15s' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--gray-800)' }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
@@ -548,6 +550,7 @@ export default function QRNFCScanner() {
       {showHistory && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div
+            role="presentation"
             style={{ flex: 1, background: 'rgba(0, 0, 0, 0.5)' }}
             onClick={() => setShowHistory(false)}
           />

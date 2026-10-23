@@ -83,6 +83,7 @@ export default function PssrTemplateEditor({
   const tA = useTranslations('AskDialog')
   const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const itemTitleId = useId()
+  const uid = useId()
 
   function openNew() {
     setEditingItem(null)
@@ -340,25 +341,25 @@ export default function PssrTemplateEditor({
 
       {/* Edit/Create modal */}
       {showModal && (
-        <div style={{
+        <div role="presentation" style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
           overflowY: 'auto',
-        }} onClick={() => setShowModal(false)}>
+        }} onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <DialogSurface onClose={isPending ? undefined : () => setShowModal(false)} labelledBy={itemTitleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', padding: '32px',
             width: '100%', maxWidth: '560px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-          }} onClick={e => e.stopPropagation()}>
+          }}>
             <h2 id={itemTitleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               {editingItem ? tx('editItem') : tx('newItemTitle')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                  <label htmlFor={`${uid}-category`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                     {tx('category')}
                   </label>
-                  <input
+                  <input id={`${uid}-category`}
                     value={form.category}
                     onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
                     placeholder="Seguridad / HSE"
@@ -373,10 +374,10 @@ export default function PssrTemplateEditor({
                   </datalist>
                 </div>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                  <label htmlFor={`${uid}-element`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                     {tx('element')}
                   </label>
-                  <input
+                  <input id={`${uid}-element`}
                     value={form.element}
                     onChange={e => setForm(f => ({ ...f, element: e.target.value }))}
                     placeholder={tx('elementPlaceholder')}
@@ -385,10 +386,10 @@ export default function PssrTemplateEditor({
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-requirement`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   {tx('requirement')}
                 </label>
-                <textarea
+                <textarea id={`${uid}-requirement`}
                   value={form.requirement}
                   onChange={e => setForm(f => ({ ...f, requirement: e.target.value }))}
                   rows={3}
@@ -397,10 +398,10 @@ export default function PssrTemplateEditor({
                 />
               </div>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-note`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                   {tx('note')}
                 </label>
-                <input
+                <input id={`${uid}-note`}
                   value={form.notes_hint}
                   onChange={e => setForm(f => ({ ...f, notes_hint: e.target.value }))}
                   placeholder={tx('notePlaceholder')}

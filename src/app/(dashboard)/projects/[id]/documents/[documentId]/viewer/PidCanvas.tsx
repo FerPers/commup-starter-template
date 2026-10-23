@@ -320,8 +320,12 @@ export default function PidCanvas({
         </Document>
 
         {/* Capa de captura: sin pointer-events en 'none' para que el scroll nativo y los clics sobre pines y marcas
-            funcionen; activa, queda encima de pines y marcas (dibujar sobre un pin no lo abre). */}
+            funcionen; activa, queda encima de pines y marcas (dibujar sobre un pin no lo abre).
+            G-12: superficie solo de puntero, sin contenido ni foco → aria-hidden. Los pines y las marcas siguen en el
+            árbol de accesibilidad (son hermanos, no hijos) y el teclado termina/cancela/deshace con el atajo global
+            del visor (Enter · Esc · Retroceso, PidViewer). */}
         <div
+          aria-hidden="true"
           onClick={handleOverlayClick}
           onDoubleClick={handleOverlayDoubleClick}
           onMouseDown={handleOverlayMouseDown}

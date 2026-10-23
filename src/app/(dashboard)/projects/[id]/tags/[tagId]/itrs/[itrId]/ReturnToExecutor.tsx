@@ -3,7 +3,7 @@
 // S05 (C-23): el supervisor o el cliente asignado devuelve el ITR al ejecutor con observaciones (sin pasar
 // por un administrador). Se retiran las firmas y el ejecutor recibe el aviso.
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { returnItrToExecutor } from '@/app/actions/itr-instances'
@@ -11,6 +11,7 @@ import { returnItrToExecutor } from '@/app/actions/itr-instances'
 export default function ReturnToExecutor({ itrId, projectId, tagId }: { itrId: string; projectId: string; tagId: string | null }) {
   const t = useTranslations('ItrExecution.returnToExecutor')
   const router = useRouter()
+  const uid = useId()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -26,8 +27,8 @@ export default function ReturnToExecutor({ itrId, projectId, tagId }: { itrId: s
   }
   return (
     <div style={{ marginTop: '10px', padding: '10px 12px', border: '1px solid var(--warning-200)', borderRadius: '8px', background: 'var(--warning-50)' }}>
-      <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-800)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
-      <textarea rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
+      <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-800)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
+      <textarea id={`${uid}-reason`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
         style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--warning-200)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
       <p style={{ fontSize: '11px', color: 'var(--warning-800)', margin: '4px 0 8px' }}>{t('hint')}</p>
       {error && <p role="alert" style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '0 0 8px' }}>{error}</p>}

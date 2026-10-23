@@ -5,7 +5,7 @@ import { reqQuery } from '@/lib/itr/requirements'
 import Link from 'next/link'
 import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useId, useState, useTransition } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatInZone } from '@/lib/time/zone'
 import { Modal } from '@/components/ui'
@@ -87,6 +87,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
 
 export default function SystemGatesView({ orgId, role, userId, caps, canEdit, project, system, gates, names, phaseCodes, provides, focusGateId }: Props) {
   const t = useTranslations('Gates')
+  const uid = useId()
   const { dialog, ask } = useAskDialog() // G-08: diálogo propio
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -536,12 +537,12 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                 </div>
               ) : approvable ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 640 }}>
-                  <label style={{ ...small, fontWeight: 600 }}>
+                  <label htmlFor={`${uid}-${g.gate_id}-conditions`} style={{ ...small, fontWeight: 600 }}>
                     {mustCondition ? t('conditionsRequired') : t('conditionsOptional')}
                   </label>
-                  <textarea rows={2} style={input} placeholder={t('conditionsPlaceholder')}
+                  <textarea id={`${uid}-${g.gate_id}-conditions`} rows={2} style={input} placeholder={t('conditionsPlaceholder')}
                     value={conditions[g.gate_id] ?? ''} onChange={e => setConditions(s => ({ ...s, [g.gate_id]: e.target.value }))} />
-                  <input style={input} placeholder={t('notesPlaceholder')} value={notes[g.gate_id] ?? ''}
+                  <input style={input} aria-label={t('notes')} placeholder={t('notesPlaceholder')} value={notes[g.gate_id] ?? ''}
                     onChange={e => setNotes(s => ({ ...s, [g.gate_id]: e.target.value }))} />
                   <div>
                     <button type="button" disabled={isPending || (mustCondition && !(conditions[g.gate_id] ?? '').trim())}
@@ -595,8 +596,8 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                     ? <span style={{ color: 'var(--danger-700)' }}>{t('confirm.regressesGates', { gates: impact.ownGates.join(', ') })}</span>
                     : <span>{t('confirm.noOwnImpact')}</span>}
                   {impact.dependents.length > 0 && <span style={{ color: 'var(--danger-700)' }}>{t('confirm.affectsSystems', { systems: impact.dependents.join(', ') })}</span>}
-                  <label style={{ ...small, fontWeight: 600 }}>{t('revokePrompt', { gate: g.gate_code })}</label>
-                  <textarea rows={3} style={input} value={revokeReason} onChange={e => setRevokeReason(e.target.value)} autoFocus />
+                  <label htmlFor={`${uid}-revoke-reason`} style={{ ...small, fontWeight: 600 }}>{t('revokePrompt', { gate: g.gate_code })}</label>
+                  <textarea id={`${uid}-revoke-reason`} rows={3} style={input} value={revokeReason} onChange={e => setRevokeReason(e.target.value)} autoFocus />
                 </>
               )}
             </div>

@@ -143,9 +143,9 @@ export default function CommandPalette() {
       </button>
 
       {open && (
-        <div className="cmdk-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) close() }}
+        <div role="presentation" className="cmdk-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) close() }} onKeyDown={onKeyDown}
           style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(13,30,50,.45)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: '10vh' }}>
-          <div role="dialog" aria-modal="true" aria-label={t('title')} className="cmdk-panel" onKeyDown={onKeyDown}
+          <div role="dialog" aria-modal="true" aria-label={t('title')} className="cmdk-panel"
             style={{ width: 'min(720px, 100vw - 24px)', maxHeight: '70vh', background: 'var(--card-bg)', borderRadius: 14, boxShadow: '0 24px 60px rgba(13,30,50,.35)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
               <Search size={18} aria-hidden="true" color="var(--text-muted)" />

@@ -116,7 +116,7 @@ export default function CreateMenu({ role, projects, hideOnTabbar }: { role: str
   if (!kinds.length) return null
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative' }} className={hideOnTabbar ? 'create-trigger-wrap is-tabbar' : 'create-trigger-wrap'}
+    <div ref={wrapRef} role="presentation" style={{ position: 'relative' }} className={hideOnTabbar ? 'create-trigger-wrap is-tabbar' : 'create-trigger-wrap'}
       onKeyDown={e => { if (e.key === 'Escape' && snap) { setSnap(null); triggerRef.current?.focus() } }}>
       <button ref={triggerRef} type="button" aria-haspopup="true" aria-expanded={!!snap} aria-label={t('open')} className="create-trigger"
         onClick={() => setSnap(s => s ? null : snapshot(pathname, projects))}
@@ -144,7 +144,7 @@ export function CreateSheet({ role, projects, onClose }: { role: string; project
   useEffect(() => { closeRef.current?.focus() }, [])
 
   return (
-    <div onMouseDown={e => { if (e.target === e.currentTarget) onClose() }} onKeyDown={e => { if (e.key === 'Escape') onClose() }}
+    <div role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }} onKeyDown={e => { if (e.key === 'Escape') onClose() }}
       style={{ position: 'fixed', inset: 0, zIndex: 210, background: 'rgba(13,30,50,.45)', display: 'flex', alignItems: 'flex-end' }}>
       <div role="dialog" aria-modal="true" aria-label={t('title')}
         style={{ width: '100%', maxHeight: '85dvh', overflowY: 'auto', background: 'var(--card-bg)', borderRadius: '16px 16px 0 0', paddingBottom: 'env(safe-area-inset-bottom)' }}>
