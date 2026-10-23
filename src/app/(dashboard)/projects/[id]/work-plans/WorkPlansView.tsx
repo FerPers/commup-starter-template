@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useId, useState, useMemo, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { browserToday } from '@/lib/time/zone'
+import { DialogSurface, useAskDialog } from '@/components/ui'
 import {
   createWorkPlan,
   updateWorkPlanStatus,
@@ -87,8 +88,14 @@ export default function WorkPlansView({
 }) {
   const t  = useTranslations('WorkPlans')
   const tC = useTranslations('Common')
+  const tA = useTranslations('AskDialog')
+  const tX = useTranslations('A11y')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
+  const createTitleId = useId()
+  const addItemTitleId = useId()
 
   const allScope = projects !== undefined
 
@@ -214,16 +221,16 @@ export default function WorkPlansView({
     })
   }
 
-  function handleRemoveItem(itemId: string) {
-    if (!confirm(t('confirmRemoveItem'))) return
+  async function handleRemoveItem(itemId: string) {
+    if (!(await confirm({ message: t('confirmRemoveItem'), confirmLabel: tA('remove'), danger: true }))) return
     startTransition(async () => {
       await removeWorkPlanItem(itemId)
       router.refresh()
     })
   }
 
-  function handleDeletePlan(planId: string) {
-    if (!confirm(t('confirmDeletePlan'))) return
+  async function handleDeletePlan(planId: string) {
+    if (!(await confirm({ message: t('confirmDeletePlan'), confirmLabel: tA('delete'), danger: true }))) return
     startTransition(async () => {
       await deleteWorkPlan(planId)
       router.refresh()
@@ -243,6 +250,7 @@ export default function WorkPlansView({
 
   return (
     <div style={{ maxWidth: '1200px' }}>
+      {dialog}
 
       {/* Título (N2c: el h1 es el del hub Planificación) */}
       <div style={{ marginBottom: '24px' }}>
@@ -440,6 +448,7 @@ export default function WorkPlansView({
                       <button
                         onClick={() => handleDeletePlan(plan.id)}
                         disabled={isPending}
+                        aria-label={tA('delete')}
                         style={{ padding: '4px 8px', background: 'var(--card-bg)', border: '1px solid #fecaca', borderRadius: '5px', fontSize: '11px', color: '#ef4444', cursor: 'pointer' }}
                       >
                         ✕
@@ -509,6 +518,7 @@ export default function WorkPlansView({
                                 <button
                                   onClick={() => handleRemoveItem(item.id)}
                                   disabled={isPending}
+                                  aria-label={tA('remove')}
                                   style={{ width: '22px', height: '22px', background: 'var(--card-bg)', border: '1px solid #fecaca', borderRadius: '4px', color: '#ef4444', cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                                 >
                                   ✕
@@ -542,10 +552,10 @@ export default function WorkPlansView({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setShowCreate(false) }}
         >
-          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <DialogSurface onClose={() => setShowCreate(false)} labelledBy={createTitleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('createModal.title')}</h2>
-              <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
+              <h2 id={createTitleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('createModal.title')}</h2>
+              <button onClick={() => setShowCreate(false)} aria-label={tX('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -604,7 +614,7 @@ export default function WorkPlansView({
                 </button>
               </div>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
 
@@ -614,10 +624,10 @@ export default function WorkPlansView({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setAddItemPlanId(null) }}
         >
-          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <DialogSurface onClose={() => setAddItemPlanId(null)} labelledBy={addItemTitleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('addItemModal.title')}</h2>
-              <button onClick={() => setAddItemPlanId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
+              <h2 id={addItemTitleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('addItemModal.title')}</h2>
+              <button onClick={() => setAddItemPlanId(null)} aria-label={tX('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -668,7 +678,7 @@ export default function WorkPlansView({
                 </button>
               </div>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
     </div>

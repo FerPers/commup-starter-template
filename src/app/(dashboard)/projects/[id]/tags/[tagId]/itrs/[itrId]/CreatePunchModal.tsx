@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { createPunchOrQueue } from '@/lib/sync/outbox'
+import { DialogSurface } from '@/components/ui'
 import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
 import type { PunchImpact } from '@/lib/punches/category-guide'
 
@@ -39,6 +40,7 @@ export default function CreatePunchModal({
 }) {
   const t = useTranslations('ItrExecution')
   const tGuide = useTranslations('PunchGuide')
+  const titleId = useId()
   const CATEGORY_CONFIG = {
     A: { label: t('punchModal.catA'), color: 'var(--danger-500)', bg: 'var(--danger-100)', border: 'var(--danger-200)' },
     B: { label: t('punchModal.catB'), color: 'var(--warning-500)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
@@ -98,8 +100,8 @@ export default function CreatePunchModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('punchModal.title')}</h2>
+      <DialogSurface onClose={onClose} labelledBy={titleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <h2 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('punchModal.title')}</h2>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: itemLabel ? '0 0 6px' : '0 0 20px' }}>{t('punchModal.subtitle')}</p>
         {itemLabel && <p style={{ fontSize: '12px', color: 'var(--gray-700)', margin: '0 0 20px', fontWeight: 600 }}>{t('punchModal.fromItem', { item: itemLabel })}</p>}
 
@@ -206,7 +208,7 @@ export default function CreatePunchModal({
             {isPending ? t('punchModal.registering') : t('punchModal.register')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

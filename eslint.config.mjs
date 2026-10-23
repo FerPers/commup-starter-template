@@ -51,6 +51,19 @@ const eslintConfig = [
 				{ ignoreVoid: true },
 			],
 			"@typescript-eslint/prefer-nullish-coalescing": "error",
+			// G-08: diálogos propios (useAskDialog / useToast), nunca los nativos del navegador.
+			"no-restricted-globals": [
+				"error",
+				{ name: "confirm", message: "Usar useAskDialog().confirm (G-08)." },
+				{ name: "prompt", message: "Usar useAskDialog().ask con input (G-08)." },
+				{ name: "alert", message: "Usar useToast() o un aviso en la página (G-08)." },
+			],
+			"no-restricted-properties": [
+				"error",
+				{ object: "window", property: "confirm", message: "Usar useAskDialog().confirm (G-08)." },
+				{ object: "window", property: "prompt", message: "Usar useAskDialog().ask con input (G-08)." },
+				{ object: "window", property: "alert", message: "Usar useToast() o un aviso en la página (G-08)." },
+			],
 		},
 	},
 ];

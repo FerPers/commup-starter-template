@@ -1,7 +1,9 @@
 'use client'
 
+import { useId } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
   not_started: { color: '#94a3b8', bg: '#f1f5f9' },
@@ -29,6 +31,7 @@ interface Props {
 
 export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
   const tx = useTranslations('TagQuickView')
+  const titleId = useId()
   const statusKey = tag.status in STATUS_CONFIG ? tag.status : 'not_started'
   const status = STATUS_CONFIG[statusKey]
   const pct = Math.round(tag.itr_completion_pct)
@@ -44,7 +47,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
         padding: '16px',
       }}
     >
-      <div
+      <DialogSurface onClose={onClose} labelledBy={titleId}
         onClick={e => e.stopPropagation()}
         style={{
           background: 'white',
@@ -59,7 +62,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #f1f5f9' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{
+              <div id={titleId} style={{
                 fontFamily: 'ui-monospace, monospace',
                 fontSize: '20px',
                 fontWeight: 700,
@@ -172,7 +175,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
             </Link>
           </div>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

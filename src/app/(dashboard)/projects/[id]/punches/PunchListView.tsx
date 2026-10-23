@@ -1,6 +1,6 @@
 'use client'
 
-import { PersonName } from '@/components/ui'
+import { PersonName, useAskDialog } from '@/components/ui'
 import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
@@ -79,6 +79,8 @@ export default function PunchListView({
   // ── Bulk selection ───────────────────────────────────────────────────
   const [selected, setSelected]      = useState<Set<string>>(new Set())
   const [isBulkPending, startBulkTransition] = useTransition()
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
   const [bulkError, setBulkError]    = useState<string | null>(null)
 
   const punchStatusLabels: Record<string, string> = {
@@ -123,9 +125,9 @@ export default function PunchListView({
   const canDelete = EDITOR_ROLES.includes(currentUserRole)
   const canCreate = canRaisePunch(currentUserRole)
 
-  function handleBulkDelete() {
+  async function handleBulkDelete() {
     if (!selected.size) return
-    if (!confirm(t('bulk.deleteConfirm', { count: selected.size }))) return
+    if (!(await confirm({ message: t('bulk.deleteConfirm', { count: selected.size }), confirmLabel: t('bulk.delete'), danger: true }))) return
     setBulkError(null)
     startBulkTransition(async () => {
       const res = await bulkDeletePunches([...selected])
@@ -152,6 +154,7 @@ export default function PunchListView({
 
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 28px) clamp(12px, 4vw, 32px)', maxWidth: '1200px' }}>
+      {dialog}
 
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '6px' }}>

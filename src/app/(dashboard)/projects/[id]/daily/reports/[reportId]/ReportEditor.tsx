@@ -9,6 +9,7 @@ import {
 } from '@/app/actions/daily-report'
 import { REPORT_SECTIONS, cutInUtc, progressDelta, reportTotals, type ReportData, type ReportSections } from '@/lib/daily/report'
 import { formatInZone } from '@/lib/time/zone'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { Alert, Chip, btn, card, input, label, small } from '../../daily-ui'
 
 type Report = {
@@ -32,6 +33,8 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
 }) {
   const t = useTranslations('Daily')
   const tStartup = useTranslations('Startup')
+  const tA = useTranslations('AskDialog')
+  const { dialog, ask, confirm } = useAskDialog() // G-08: diálogo propio
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [busy, setBusy] = useState<string | null>(null)
@@ -69,9 +72,9 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
 
   function save() { run('save', () => updateDailyReportSections({ ...base, sections }), () => setSaved(true)) }
 
-  function ai() {
+  async function ai() {
     const hasText = REPORT_SECTIONS.some(s => sections[s].trim())
-    const replace = hasText ? window.confirm(t('report.aiReplaceConfirm')) : false
+    const replace = hasText ? await confirm({ title: t('report.ai'), message: t('report.aiReplaceConfirm'), confirmLabel: tA('replace') }) : false
     run('ai', async () => {
       const first = await saveFirst()
       if (first.error) return first
@@ -87,8 +90,8 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
     })
   }
 
-  function issue() {
-    if (!window.confirm(t('report.issueConfirm'))) return
+  async function issue() {
+    if (!(await confirm({ message: t('report.issueConfirm'), confirmLabel: t('report.issue') }))) return
     run('issue', async () => {
       const first = await saveFirst()
       if (first.error) return first
@@ -96,8 +99,8 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
     })
   }
 
-  function revise() {
-    const reason = window.prompt(t('report.revisePrompt'))
+  async function revise() {
+    const reason = await ask({ title: t('report.revise'), confirmLabel: t('report.revise'), input: { label: t('report.revisePrompt'), minLength: 3, multiline: true } })
     if (!reason?.trim()) return
     setError(null); setBusy('revise')
     startTransition(async () => {
@@ -108,8 +111,8 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
     })
   }
 
-  function remove() {
-    if (!window.confirm(t('detail.deleteConfirm'))) return
+  async function remove() {
+    if (!(await confirm({ message: t('detail.deleteConfirm'), confirmLabel: t('detail.delete'), danger: true }))) return
     run('delete', () => deleteDailyReportDraft(base), () => router.push(`/projects/${project.id}/daily/reports`))
   }
 
@@ -132,6 +135,7 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
 
   return (
     <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <Link href={`/projects/${project.id}/daily/reports`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>← {t('tab.reports')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>

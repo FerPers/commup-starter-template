@@ -2555,7 +2555,7 @@
       "errorNeedsSignature": "Se requiere al menos una firma antes de aprobar",
       "errorAlreadySigned": "Ya firmaste este PSSR. Elimina tu firma anterior para volver a firmar.",
       "rejectConfirm": "¿Rechazar este PSSR? El equipo deberá corregir los ítems y re-enviarlo.",
-      "rejectReasonPrompt": "Motivo del rechazo (opcional):",
+      "rejectReasonPrompt": "Motivo del rechazo",
       "approveSuccess": "PSSR aprobado. Certificado RFSU {certNumber} emitido.",
       "itemHideDetails": "▾ Ocultar detalles",
       "itemShowDetails": "▸ Responsable / Acciones",
@@ -5926,7 +5926,17 @@
   "AskDialog": {
     "cancel": "Cancelar",
     "choices": "Elige uno o escribe el motivo",
-    "minChars": "{n} caracteres o más"
+    "minChars": "{n} caracteres o más",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "discard": "Descartar",
+    "remove": "Quitar",
+    "revoke": "Revocar",
+    "continue": "Continuar",
+    "reason": "Motivo",
+    "value": "Valor",
+    "back": "Volver",
+    "replace": "Reemplazar"
   },
   "Errors": {
     "notFoundTitle": "No existe o no tienes acceso",
@@ -7399,7 +7409,8 @@
       "creating": "Creando…",
       "create": "Aceptar y crear matriz",
       "discardConfirm": "¿Descartar la propuesta de la IA?",
-      "discard": "Descartar"
+      "discard": "Descartar",
+      "delayTitle": "Retardo"
     },
     "list": {
       "createError": "No se pudo crear",

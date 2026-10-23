@@ -2,11 +2,12 @@
 
 // Modal de firma del PSSR (canvas) — extraído de PssrReviewForm.tsx (Q4).
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition, useRef, useEffect, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { addPssrSignature } from '@/app/actions/pssr'
 import { PSSR_ALREADY_SIGNED, type PssrCapacity } from '@/lib/constants/pssr'
 import type { Signature } from './pssr-review-shared'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 export default function PssrSignModal({
   reviewId, projectId, currentUserName, capacities, onSigned, onClose,
@@ -20,6 +21,7 @@ export default function PssrSignModal({
   onClose: () => void
 }) {
   const t = useTranslations('PSSR')
+  const titleId = useId()
   const [isPending, startTransition] = useTransition()
   const [capacity, setCapacity] = useState<PssrCapacity | ''>(capacities.length === 1 ? capacities[0] : '')
   const [isDrawing, setIsDrawing] = useState(false)
@@ -92,11 +94,11 @@ export default function PssrSignModal({
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50,
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
     }} onClick={onClose}>
-      <div style={{
+      <DialogSurface onClose={onClose} labelledBy={titleId} style={{
         background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
         width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
       }} onClick={e => e.stopPropagation()}>
-        <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 16px' }}>
+        <h3 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 16px' }}>
           {t('signModal.title')}
         </h3>
 
@@ -167,7 +169,7 @@ export default function PssrSignModal({
             {isPending ? t('signModal.saving') : t('signModal.confirm')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

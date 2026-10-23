@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { addVendorReport, decideVendorRecommendation, implementVendorRecommendation, proposeVendorRecommendation } from '@/app/actions/vendors'
 import { RECOMMENDATION_TONE, canImplement, type PackageStatus, type ReportKind } from '@/lib/vendors/catalog'
 import { useLocalToday } from '@/lib/use-local-today'
@@ -20,6 +21,7 @@ export default function ReportsSection({ projectId, pkgId, status, reports, reco
 }) {
   const t = useTranslations('Vendors')
   const router = useRouter()
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const today = useLocalToday()
   const [isPending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -44,6 +46,7 @@ export default function ReportsSection({ projectId, pkgId, status, reports, reco
 
   return (
     <>
+      {dialog}
       <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10 }} aria-labelledby="vnd-reports">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <h2 id="vnd-reports" style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text-strong)' }}>{t('reports.title')}</h2>
@@ -71,7 +74,7 @@ export default function ReportsSection({ projectId, pkgId, status, reports, reco
             {rep.kind === 'final' && <Alert kind="warn">{t('reports.finalWarn')}</Alert>}
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" disabled={isPending || !rep.activities.trim() || !rep.reportDate} style={btn('primary', isPending)}
-                onClick={() => { if (rep.kind !== 'final' || window.confirm(t('reports.finalConfirm'))) run(() => addVendorReport({
+                onClick={async () => { if (rep.kind !== 'final' || await confirm({ message: t('reports.finalConfirm'), confirmLabel: t('reports.save') })) run(() => addVendorReport({
                   projectId, packageId: pkgId, kind: rep.kind, reportDate: rep.reportDate, activities: rep.activities, issues: rep.issues,
                   headcount: rep.headcount === '' ? null : Number(rep.headcount), hours: rep.hours === '' ? null : Number(rep.hours),
                 }), () => setRep(null)) }}>{t('reports.save')}</button>

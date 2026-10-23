@@ -2,9 +2,11 @@
 
 import { useLocale, useTranslations } from 'next-intl'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { createApiKey, revokeApiKey } from '@/app/actions/api-keys'
 import { API_SCOPES, type ApiScope } from '@/lib/constants/api-scopes'
+import { useAskDialog } from '@/components/ui/AskDialog'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 type ApiKey = {
   id: string
@@ -66,9 +68,10 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
   const [justCreated, setJustCreated] = useState<{ token: string; name: string; scopes: string[] } | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
 
-  const handleRevoke = (k: ApiKey) => {
-    if (!confirm(tx('revokeConfirm', { name: k.name }))) return
+  const handleRevoke = async (k: ApiKey) => {
+    if (!(await confirm({ message: tx('revokeConfirm', { name: k.name }), confirmLabel: tx('revoke'), danger: true }))) return
     setError(null)
     startTransition(async () => {
       const res = await revokeApiKey(k.id)
@@ -79,6 +82,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+      {dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
@@ -215,6 +219,7 @@ function CreateKeyModal({
   const [expiresAt, setExpiresAt] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const titleId = useId()
 
   const toggleScope = (s: ApiScope) => {
     setScopes(curr =>
@@ -251,8 +256,8 @@ function CreateKeyModal({
 
   return (
     <div style={modalBackdrop}>
-      <div style={{ ...modalBox, maxWidth: 560 }}>
-        <ModalHeader title={tx('create.title')} onClose={onClose} />
+      <DialogSurface onClose={saving ? undefined : onClose} labelledBy={titleId} style={{ ...modalBox, maxWidth: 560 }}>
+        <ModalHeader id={titleId} title={tx('create.title')} onClose={onClose} />
 
         {err && <ModalError msg={err} />}
 
@@ -317,7 +322,7 @@ function CreateKeyModal({
           onSave={handleSave}
           saveLabel={tx('create.submit')}
         />
-      </div>
+      </DialogSurface>
     </div>
   )
 }
@@ -334,6 +339,7 @@ function TokenRevealModal({
   const tx = useTranslations('ApiKeys')
   const [copied, setCopied] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
+  const titleId = useId()
 
   const copy = async () => {
     try {
@@ -347,8 +353,8 @@ function TokenRevealModal({
 
   return (
     <div style={modalBackdrop}>
-      <div style={{ ...modalBox, maxWidth: 640 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-strong)' }}>
+      <DialogSurface onClose={confirmed ? onClose : undefined} labelledBy={titleId} style={{ ...modalBox, maxWidth: 640 }}>
+        <h2 id={titleId} style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-strong)' }}>
           {tx('reveal.title')}
         </h2>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 16px' }}>
@@ -407,7 +413,7 @@ function TokenRevealModal({
             {tx('close')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }
@@ -422,11 +428,11 @@ const modalBox: React.CSSProperties = {
   background: 'var(--card-bg)', borderRadius: 10, width: '100%', padding: 24,
 }
 
-function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
+function ModalHeader({ id, title, onClose }: { id?: string; title: string; onClose: () => void }) {
   const tx = useTranslations('ApiKeys')
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>{title}</h2>
+      <h2 id={id} style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>{title}</h2>
       <button onClick={onClose} aria-label={tx('close')} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
     </div>
   )

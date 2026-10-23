@@ -2555,7 +2555,7 @@
       "errorNeedsSignature": "At least one signature is required before approving",
       "errorAlreadySigned": "You have already signed this PSSR. Remove your previous signature to sign again.",
       "rejectConfirm": "Reject this PSSR? The team will need to address the items and resubmit.",
-      "rejectReasonPrompt": "Rejection reason (optional):",
+      "rejectReasonPrompt": "Rejection reason",
       "approveSuccess": "PSSR approved. RFSU certificate {certNumber} issued.",
       "itemHideDetails": "▾ Hide details",
       "itemShowDetails": "▸ Owner / Actions",
@@ -5926,7 +5926,17 @@
   "AskDialog": {
     "cancel": "Cancel",
     "choices": "Pick one or write the reason",
-    "minChars": "{n}+ characters"
+    "minChars": "{n}+ characters",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "discard": "Discard",
+    "remove": "Remove",
+    "revoke": "Revoke",
+    "continue": "Continue",
+    "reason": "Reason",
+    "value": "Value",
+    "back": "Back",
+    "replace": "Replace"
   },
   "Errors": {
     "notFoundTitle": "Not found or no access",
@@ -7399,7 +7409,8 @@
       "creating": "Creating…",
       "create": "Accept and create matrix",
       "discardConfirm": "Discard the AI proposal?",
-      "discard": "Discard"
+      "discard": "Discard",
+      "delayTitle": "Delay"
     },
     "list": {
       "createError": "Could not create",

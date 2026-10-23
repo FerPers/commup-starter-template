@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { getProjectPlanContext, addItrsToWorkPlan, createWorkPlanAndAddItrs } from '@/app/actions/work-plans'
 import { browserToday } from '@/lib/time/zone'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -43,6 +44,8 @@ const PLAN_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
 
 export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, onSuccess }: Props) {
   const t = useTranslations('WorkPlans')
+  const tA11y = useTranslations('A11y')
+  const titleId = useId()
 
   // Context loaded from server
   const [loading, setLoading]           = useState(true)
@@ -121,12 +124,12 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+      <DialogSurface onClose={onClose} labelledBy={titleId} style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-          <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('addToPlanModal.title')}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
+          <h2 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('addToPlanModal.title')}</h2>
+          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
         </div>
 
         {loading ? (
@@ -300,7 +303,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
             </div>
           </div>
         )}
-      </div>
+      </DialogSurface>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { addSystemDependency, removeSystemDependency, setSystemBoundaryFrozen, updateSystem } from '@/app/actions/systems'
 import {
   BATTERY_LIMIT_KEYS,
@@ -81,6 +82,7 @@ const btn = (variant: 'primary' | 'outline' | 'danger'): React.CSSProperties => 
 export default function SystemDetailView({ project, system, dependsOn, enables, otherSystems, gates, events, canEdit, section }: Props) {
   const t = useTranslations('Systems')
   const router = useRouter()
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
@@ -134,9 +136,9 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
     run(() => updateSystem({ ...base, battery_limits: limits }), t('detail.saved'))
   }
 
-  function toggleFrozen() {
+  async function toggleFrozen() {
     const frozen = !system.frozenAt
-    if (!window.confirm(frozen ? t('detail.freezeConfirm') : t('detail.unfreezeConfirm'))) return
+    if (!(await confirm({ message: frozen ? t('detail.freezeConfirm') : t('detail.unfreezeConfirm'), confirmLabel: frozen ? t('detail.freeze') : t('detail.unfreeze') }))) return
     run(() => setSystemBoundaryFrozen({ ...base, frozen }))
   }
 
@@ -149,8 +151,8 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
     )
   }
 
-  function removeDependency(d: DependencyRow) {
-    if (!window.confirm(t('detail.removeConfirm', { code: d.other.code }))) return
+  async function removeDependency(d: DependencyRow) {
+    if (!(await confirm({ message: t('detail.removeConfirm', { code: d.other.code }), confirmLabel: t('detail.remove'), danger: true }))) return
     run(() => removeSystemDependency({ ...base, dependencyId: d.id }))
   }
 
@@ -165,6 +167,7 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       {error && <div ref={alertRef} role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
       {saved && <div role="status" style={{ padding: '10px 14px', background: 'var(--success-50)', border: '1px solid #a7f3d0', borderRadius: 8, color: 'var(--success-700)', fontSize: 'var(--text-sm)' }}>{saved}</div>}
 

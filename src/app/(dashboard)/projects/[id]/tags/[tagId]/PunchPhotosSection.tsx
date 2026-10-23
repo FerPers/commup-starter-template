@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Camera, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useAskDialog } from '@/components/ui'
 import {
   listPunchAttachments,
   addPunchAttachment,
@@ -39,6 +40,8 @@ export default function PunchPhotosSection({
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const reload = useCallback(async () => {
@@ -86,7 +89,7 @@ export default function PunchPhotosSection({
   }
 
   async function handleDelete(att: PunchAttachmentRow) {
-    if (!confirm(t('confirmDelete'))) return
+    if (!(await confirm({ message: t('confirmDelete'), confirmLabel: t('delete'), danger: true }))) return
     const res = await deletePunchAttachment({
       attachmentId: att.id,
       storagePath: att.file_url,
@@ -99,6 +102,7 @@ export default function PunchPhotosSection({
 
   return (
     <div style={{ marginBottom: 20 }}>
+      {dialog}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
           {t('label', { count: attachments.length })}

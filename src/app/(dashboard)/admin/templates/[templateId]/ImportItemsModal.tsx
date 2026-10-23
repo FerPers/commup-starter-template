@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importTemplateItems, type ImportSection } from '@/app/actions/itr-templates'
 import type { ItrItemType } from '@/types/database'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 type Tx = ReturnType<typeof useTranslations>
 
@@ -143,6 +144,8 @@ function parseRows(rows: unknown[][], tx: Tx): ParseResult {
 
 export default function ImportItemsModal({ templateId, hasExistingContent, onClose, onSuccess }: Props) {
   const tx = useTranslations('ItemImport')
+  const tA11y = useTranslations('A11y')
+  const titleId = useId()
   const fileRef = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState<'upload' | 'preview' | 'done'>('upload')
@@ -212,7 +215,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
       }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{
+      <DialogSurface onClose={onClose} labelledBy={titleId} style={{
         background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
         width: '100%', maxWidth: '560px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
         maxHeight: '85vh', display: 'flex', flexDirection: 'column',
@@ -221,7 +224,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>
+            <h2 id={titleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>
               {tx('title')}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
@@ -230,7 +233,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
               {step === 'done' && tx('subtitleDone')}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px', lineHeight: 1, padding: '2px' }}>✕</button>
+          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px', lineHeight: 1, padding: '2px' }}>✕</button>
         </div>
 
         {/* Step: upload */}
@@ -413,7 +416,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             </button>
           </div>
         )}
-      </div>
+      </DialogSurface>
     </div>
   )
 }

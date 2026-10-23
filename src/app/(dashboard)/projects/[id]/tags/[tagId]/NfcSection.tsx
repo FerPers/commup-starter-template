@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Radio, X, Smartphone } from 'lucide-react'
 import { linkNfcToTag, unlinkNfc } from '@/app/actions/tags'
+import { DialogSurface, useAskDialog } from '@/components/ui'
 
 interface Props {
   projectId: string
@@ -117,6 +118,9 @@ function LinkNfcModal({
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
+  const titleId = useId()
 
   // Web NFC: Chrome Android only. Detect at render time.
   const hasWebNfc = typeof window !== 'undefined' && 'NDEFReader' in window
@@ -159,8 +163,8 @@ function LinkNfcModal({
     })
   }
 
-  function handleUnlink() {
-    if (!confirm(t('confirmUnlink'))) return
+  async function handleUnlink() {
+    if (!(await confirm({ message: t('confirmUnlink'), confirmLabel: t('btnUnlink'), danger: true }))) return
     setError(null)
     startTransition(async () => {
       const res = await unlinkNfc({ projectId, tagId })
@@ -181,14 +185,15 @@ function LinkNfcModal({
       }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{
+      {dialog}
+      <DialogSurface onClose={onClose} labelledBy={titleId} style={{
         background: 'var(--card-bg)', borderRadius: 14,
         padding: 24, width: '100%', maxWidth: 440,
         boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-strong)' }}>
+            <h3 id={titleId} style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-strong)' }}>
               {currentUid ? t('modalTitleEdit') : t('modalTitleLink')}
             </h3>
             <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
@@ -304,7 +309,7 @@ function LinkNfcModal({
             {isPending ? t('btnSaving') : t('btnSave')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

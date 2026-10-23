@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 import * as XLSX from 'xlsx'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { createCeMatrixFromReview, extractCeMatrixWithAi } from '@/app/actions/ce-import'
 import { MAX_PDF_BYTES, MAX_SHEET_CHARS, reviewErrors, type ReviewState } from '@/lib/ce/import'
 import { CE_ACTIONS, CE_VOTINGS, type CeAction, type CeVoting } from '@/lib/ce/matrix'
@@ -28,6 +29,8 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
 }) {
   const tc = useTranslations('CeMatrix')
   const ti = useTranslations('CeMatrix.import')
+  const tA = useTranslations('AskDialog')
+  const { dialog, ask, confirm } = useAskDialog() // G-08: diálogo propio
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null)
@@ -89,14 +92,20 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
     setReview(r => r && { ...r, [kind]: r[kind].filter(x => x.key !== key), links: r.links.filter(l => (kind === 'causes' ? l.cause : l.effect) !== key) })
   }
   /** Celda: sin cruce → directo → con retardo (pide segundos) → sin cruce. */
-  function cycle(cause: string, effect: string) {
+  async function cycle(cause: string, effect: string) {
+    // El retardo se pide antes de actualizar el estado (el diálogo es asíncrono).
+    const current = review?.links.find(l => l.cause === cause && l.effect === effect)
+    let delay: string | null = null
+    if (current && current.delay === '') {
+      delay = await ask({ title: ti('delayTitle'), confirmLabel: tA('confirm'), input: { label: ti('delayPrompt'), initial: '5', multiline: false } })
+      if (delay === null) return
+    }
     setReview(r => {
       if (!r) return r
       const idx = r.links.findIndex(l => l.cause === cause && l.effect === effect)
       if (idx < 0) return { ...r, links: [...r.links, { cause, effect, delay: '', uncertain: false }] }
       const link = r.links[idx]
       if (link.delay === '') {
-        const delay = window.prompt(ti('delayPrompt'), '5')
         if (delay === null) return r
         if (delay.trim() === '') return { ...r, links: r.links.filter((_, i) => i !== idx) }
         return { ...r, links: r.links.map((l, i) => i === idx ? { ...l, delay: delay.trim(), uncertain: false } : l) }
@@ -117,6 +126,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
 
   return (
     <div style={{ padding: '32px', maxWidth: '1400px' }}>
+      {dialog}
       <Link href={`/projects/${project.id}/ce-matrices`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {project.name} · {tc('back')}</Link>
       <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '12px 0 4px' }}>{ti('title')}</h1>
       <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', maxWidth: '760px' }}>
@@ -242,7 +252,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
           {errors.length > 0 && <ul role="alert" style={{ color: '#b91c1c', fontSize: '12px', margin: '12px 0 0' }}>{errors.map(e => <li key={e}>{e}</li>)}</ul>}
           <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
             <button type="button" style={primary} disabled={saving || errors.length > 0 || !meta.code.trim() || !meta.title.trim()} onClick={save}>{saving ? ti('creating') : ti('create')}</button>
-            <button type="button" onClick={() => { if (window.confirm(ti('discardConfirm'))) { setReview(null); setMeta(null) } }} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{ti('discard')}</button>
+            <button type="button" onClick={async () => { if (await confirm({ message: ti('discardConfirm'), confirmLabel: ti('discard'), danger: true })) { setReview(null); setMeta(null) } }} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{ti('discard')}</button>
           </div>
         </>
       )}

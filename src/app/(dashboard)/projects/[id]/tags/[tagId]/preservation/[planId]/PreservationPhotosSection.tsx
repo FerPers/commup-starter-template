@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Camera, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useAskDialog } from '@/components/ui'
 import {
   listPreservationAttachments,
   addPreservationAttachment,
@@ -40,6 +41,8 @@ export default function PreservationPhotosSection({
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const reload = useCallback(async () => {
@@ -91,7 +94,7 @@ export default function PreservationPhotosSection({
   }
 
   async function handleDelete(att: PreservationAttachmentRow) {
-    if (!confirm(t('confirmDelete'))) return
+    if (!(await confirm({ message: t('confirmDelete'), confirmLabel: t('delete'), danger: true }))) return
     const res = await deletePreservationAttachment({
       attachmentId: att.id,
       storagePath: att.file_url,
@@ -111,6 +114,7 @@ export default function PreservationPhotosSection({
       border: `1px solid ${required && attachments.length === 0 ? '#fde68a' : 'var(--border)'}`,
       borderRadius: 8,
     }}>
+      {dialog}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>

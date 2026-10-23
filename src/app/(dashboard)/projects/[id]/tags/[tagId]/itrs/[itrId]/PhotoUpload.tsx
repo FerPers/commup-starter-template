@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { deleteItrAttachment } from '@/app/actions/itr-instances'
 import { uploadOrQueuePhoto, uploadPhoto, discardPendingPhoto } from '@/lib/sync/outbox'
 import type { Attachment } from './types'
+import { DialogSurface } from '@/components/ui'
 
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
 
@@ -31,6 +32,7 @@ export default function PhotoUpload({
   onRemoved: (attId: string) => void
 }) {
   const t = useTranslations('ItrExecution')
+  const tA = useTranslations('AskDialog')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -109,6 +111,7 @@ export default function PhotoUpload({
               {canEdit && (
                 <button
                   onClick={() => handleDelete(att)}
+                  aria-label={tA('remove')}
                   style={{ position: 'absolute', top: '2px', right: '2px', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
                 >
                   ×
@@ -140,13 +143,15 @@ export default function PhotoUpload({
 
       {/* Lightbox */}
       {lightbox && (
-        <div
+        <DialogSurface
+          onClose={() => setLightbox(null)}
+          aria-label={t('upload.photoFullAlt')}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}
           onClick={() => setLightbox(null)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL lightbox, optimizer adds no value */}
           <img src={lightbox} alt={t('upload.photoFullAlt')} style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '10px', objectFit: 'contain' }} />
-        </div>
+        </DialogSurface>
       )}
     </div>
   )

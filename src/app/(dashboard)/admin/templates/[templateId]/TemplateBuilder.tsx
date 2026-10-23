@@ -21,6 +21,7 @@ import BackupDocumentView from '@/components/templates/BackupDocumentView'
 import TemplateHeaderCard from './TemplateHeaderCard'
 import TemplateSectionCard from './TemplateSectionCard'
 import TemplatePublishModal from './TemplatePublishModal'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import {
   buildSections,
   dateStamp,
@@ -44,6 +45,8 @@ interface Props {
 export default function TemplateBuilder({ template, canEdit }: Props) {
   const router = useRouter()
   const t = useTranslations('ItrTemplates.builder')
+  const tA = useTranslations('AskDialog')
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const [isPending, startTransition] = useTransition()
 
   // ── Template data state
@@ -120,8 +123,8 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
     return null
   }
 
-  function handleDeleteSection(sectionId: string, title: string) {
-    if (!confirm(t('confirmDeleteSection', { title }))) return
+  async function handleDeleteSection(sectionId: string, title: string) {
+    if (!(await confirm({ message: t('confirmDeleteSection', { title }), confirmLabel: tA('delete'), danger: true }))) return
     startTransition(async () => {
       const res = await deleteSection(sectionId)
       if (res.error) { setActionError(res.error); return }
@@ -195,8 +198,8 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
     return null
   }
 
-  function handleDeleteItem(itemId: string, sectionId: string) {
-    if (!confirm(t('confirmDeleteItem'))) return
+  async function handleDeleteItem(itemId: string, sectionId: string) {
+    if (!(await confirm({ message: t('confirmDeleteItem'), confirmLabel: tA('delete'), danger: true }))) return
     startTransition(async () => {
       const res = await deleteItem(itemId)
       if (res.error) { setActionError(res.error); return }
@@ -250,6 +253,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
   return (
     <div style={{ padding: '32px', maxWidth: '1000px' }}>
+      {dialog}
 
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>

@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { issueCertificate } from '@/app/actions/certificates'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,8 @@ export default function CertificatesView({
 }) {
   const t      = useTranslations('Certificates')
   const locale = useLocale()
+  const tA11y  = useTranslations('A11y')
+  const titleId = useId()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -405,7 +408,7 @@ export default function CertificatesView({
         }}
           onClick={e => { if (e.target === e.currentTarget) setIssueModal(null) }}
         >
-          <div style={{
+          <DialogSurface onClose={() => setIssueModal(null)} labelledBy={titleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', width: '100%', maxWidth: '540px',
             maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
           }}>
@@ -415,7 +418,7 @@ export default function CertificatesView({
               display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
             }}>
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
+                <h3 id={titleId} style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
                   {t('view.modal.title', { certName: issueModal.phase.certificate_name ?? issueModal.phase.code })}
                 </h3>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
@@ -424,6 +427,7 @@ export default function CertificatesView({
               </div>
               <button
                 onClick={() => setIssueModal(null)}
+                aria-label={tA11y('close')}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px', padding: '0 4px' }}
               >
                 ✕
@@ -545,7 +549,7 @@ export default function CertificatesView({
                 </button>
               </div>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
     </div>

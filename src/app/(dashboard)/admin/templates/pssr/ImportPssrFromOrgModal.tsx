@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { listImportablePssrTemplates, clonePssrTemplateToActiveOrg, type ImportablePssrTemplate } from '@/app/actions/pssr'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => void }) {
   const ti = useTranslations('TemplateImport')
+  const titleId = useId()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -57,7 +59,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
         padding: 20, zIndex: 100,
       }}
     >
-      <div
+      <DialogSurface onClose={onClose} labelledBy={titleId}
         onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--card-bg)', borderRadius: 14,
@@ -71,7 +73,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
           padding: '20px 24px', borderBottom: '1px solid var(--border)',
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-strong)' }}>
+            <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-strong)' }}>
               {ti('pssrTitle')}
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
@@ -157,7 +159,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
             </div>
           ))}
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

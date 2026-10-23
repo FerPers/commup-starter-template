@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { PSSR_CAPACITIES, type PssrCapacity } from '@/lib/constants/pssr'
 import { useRouter } from 'next/navigation'
@@ -8,6 +8,9 @@ import { upsertPssrTemplateItem, deletePssrTemplateItem, setPssrTemplateSignatur
 import { exportPssrTemplate } from '@/app/actions/templates-backup'
 import type { TemplatesBackup } from '@/lib/constants/templates-backup'
 import BackupDocumentView from '@/components/templates/BackupDocumentView'
+import { useAskDialog } from '@/components/ui/AskDialog'
+import { useToast } from '@/components/ui'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 function downloadJsonFile(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -69,12 +72,17 @@ export default function PssrTemplateEditor({
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [form, setForm] = useState(BLANK_FORM)
   const [formError, setFormError] = useState<string | null>(null)
+  // Errores fuera del modal: formError solo se ve con el modal abierto.
+  const toast = useToast()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [docPreview, setDocPreview] = useState<TemplatesBackup | null>(null)
 
   const grouped = groupByCategory(items)
   const tp = useTranslations('PSSR')
   const tx = useTranslations('PssrTemplates')
+  const tA = useTranslations('AskDialog')
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
+  const itemTitleId = useId()
 
   function openNew() {
     setEditingItem(null)
@@ -120,12 +128,12 @@ export default function PssrTemplateEditor({
   }
 
   async function handleDelete(item: Item) {
-    if (!confirm(tx('deleteItemConfirm', { name: item.element }))) return
+    if (!(await confirm({ message: tx('deleteItemConfirm', { name: item.element }), confirmLabel: tA('delete'), danger: true }))) return
     setDeletingId(item.id)
     startTransition(async () => {
       const res = await deletePssrTemplateItem(item.id, template.id)
       setDeletingId(null)
-      if (res.error) { setFormError(res.error); return }
+      if (res.error) { toast.error(res.error); return }
       router.refresh()
     })
   }
@@ -154,6 +162,7 @@ export default function PssrTemplateEditor({
 
   return (
     <>
+      {dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
           {tx.rich('summary', { items: items.length, categories: grouped.length, strong: c => <strong style={{ color: 'var(--text-strong)' }}>{c}</strong> })}
@@ -164,7 +173,7 @@ export default function PssrTemplateEditor({
               onClick={() => {
                 startTransition(async () => {
                   const res = await exportPssrTemplate(template.id)
-                  if (res.error || !res.backup) { setFormError(res.error ?? tx('previewError')); return }
+                  if (res.error || !res.backup) { toast.error(res.error ?? tx('previewError')); return }
                   setDocPreview(res.backup)
                 })
               }}
@@ -182,7 +191,7 @@ export default function PssrTemplateEditor({
               onClick={() => {
                 startTransition(async () => {
                   const res = await exportPssrTemplate(template.id)
-                  if (res.error || !res.backup) { setFormError(res.error ?? tx('exportError')); return }
+                  if (res.error || !res.backup) { toast.error(res.error ?? tx('exportError')); return }
                   downloadJsonFile(`commup-pssr-${slugifySimple(template.name)}-${dateStamp()}.json`, res.backup)
                 })
               }}
@@ -219,7 +228,7 @@ export default function PssrTemplateEditor({
                 const next = e.target.checked ? [...template.required_signatures, c] : template.required_signatures.filter(x => x !== c)
                 startTransition(async () => {
                   const res = await setPssrTemplateSignatures({ templateId: template.id, signatures: next as PssrCapacity[] })
-                  if (res.error) { setFormError(res.error); return }
+                  if (res.error) { toast.error(res.error); return }
                   router.refresh()
                 })
               }} />
@@ -302,6 +311,7 @@ export default function PssrTemplateEditor({
                     <button
                       onClick={() => handleDelete(item)}
                       disabled={deletingId === item.id}
+                      aria-label={tA('delete')}
                       style={{
                         padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
                         background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer',
@@ -335,11 +345,11 @@ export default function PssrTemplateEditor({
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
           overflowY: 'auto',
         }} onClick={() => setShowModal(false)}>
-          <div style={{
+          <DialogSurface onClose={isPending ? undefined : () => setShowModal(false)} labelledBy={itemTitleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', padding: '32px',
             width: '100%', maxWidth: '560px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
+            <h2 id={itemTitleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               {editingItem ? tx('editItem') : tx('newItemTitle')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -429,7 +439,7 @@ export default function PssrTemplateEditor({
                 </button>
               </div>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
 

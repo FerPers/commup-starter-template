@@ -1,6 +1,6 @@
 'use client'
 
-import { PersonName } from '@/components/ui'
+import { PersonName, useAskDialog } from '@/components/ui'
 import { ownershipOf } from '@/lib/sync/ownership'
 import { isInactiveMember } from '@/lib/people/inactive'
 // Pantalla de ejecución de ITR — orquestador (Q2). El estado de autosave vive
@@ -76,6 +76,8 @@ export default function ItrExecution({
   const executorName = itr.itr_assignments.find(a => a.user_id === currentUserId)?.profiles?.full_name ?? null
   const locale = useLocale()
   const [isModalPending, startModalTransition] = useTransition()
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
   // C-36 (S04): el idioma guardado se lee en un efecto; leerlo al inicializar desajustaba la hidratación.
   const [itemLang, setItemLangState] = useState<'es' | 'en'>(locale.startsWith('es') ? 'es' : 'en')
   useEffect(() => {
@@ -320,6 +322,7 @@ export default function ItrExecution({
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '150px' }}>
+      {dialog}
 
       {/* Back nav: vuelve a la pestaña ITRs del tag (N1b) */}
       <div style={{ padding: '16px 16px 0' }}>
@@ -524,7 +527,7 @@ export default function ItrExecution({
             {unsyncedPunches.map(u => (
               <div key={u.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '4px' }}>
                 <p style={{ fontSize: '12px', color: 'var(--danger-900)', margin: 0, flex: 1, wordBreak: 'break-word' }}>{t('sync.unsyncedPunch', { desc: u.description.slice(0, 60), error: u.error })}</p>
-                <button onClick={() => { if (window.confirm(t('sync.discardConfirm'))) void removeFromOutbox(u.id) }}
+                <button onClick={async () => { if (await confirm({ message: t('sync.discardConfirm'), confirmLabel: t('sync.discard'), danger: true })) void removeFromOutbox(u.id) }}
                   style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer', flexShrink: 0 }}>
                   {t('sync.discard')}
                 </button>

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { FileSpreadsheet } from 'lucide-react'
 import { bulkImportCatalog, type CatalogRow } from '@/app/actions/itr-templates'
 import { detectItrPhase } from '@/lib/utils'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 interface Discipline { id: string; code: string; name: string; color: string }
 interface Phase { id: string; code: string; name: string; color: string; order_index: number }
@@ -68,6 +69,8 @@ function parseCatalog(raw: unknown[][]): ParsedCatalog {
 export default function BulkImportCatalogModal({ disciplines, phases, onClose, onSuccess }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
+  const titleId = useId()
+  const tA11y = useTranslations('A11y')
   const t = useTranslations('CatalogImport')
   const [step, setStep] = useState<'upload' | 'map' | 'done'>('upload')
   const [parsed, setParsed] = useState<ParsedCatalog | null>(null)
@@ -169,12 +172,12 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '600px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
+      <DialogSurface onClose={onClose} labelledBy={titleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '600px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '22px' }}>
           <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>
+            <h2 id={titleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>
               {t('title')}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
@@ -183,7 +186,7 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
               {step === 'done' && t('done')}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px', padding: '2px' }}>✕</button>
+          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px', padding: '2px' }}>✕</button>
         </div>
 
         {/* STEP: upload */}
@@ -348,7 +351,7 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
             </button>
           </div>
         )}
-      </div>
+      </DialogSurface>
     </div>
   )
 }

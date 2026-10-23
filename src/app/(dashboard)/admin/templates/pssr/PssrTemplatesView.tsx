@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
@@ -9,6 +9,7 @@ import { exportPssrTemplate } from '@/app/actions/templates-backup'
 import type { TemplatesBackup } from '@/lib/constants/templates-backup'
 import BackupDocumentView from '@/components/templates/BackupDocumentView'
 import ImportPssrFromOrgModal from './ImportPssrFromOrgModal'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 interface Template {
   id: string
@@ -25,6 +26,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showModal, setShowModal] = useState(false)
+  const titleId = useId()
   const [showImportFromOrg, setShowImportFromOrg] = useState(false)
   const [form, setForm] = useState({ name: '', description: '' })
   const [formError, setFormError] = useState<string | null>(null)
@@ -255,11 +257,11 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }} onClick={() => setShowModal(false)}>
-          <div style={{
+          <DialogSurface onClose={() => setShowModal(false)} labelledBy={titleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '440px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
+            <h2 id={titleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               {tx('newTitle')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -320,7 +322,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 </button>
               </div>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
     </>

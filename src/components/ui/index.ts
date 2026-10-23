@@ -13,4 +13,5 @@ export { Table, THead, TBody, TR, TH, TD, TableWrapper, type TableWrapperProps }
 export { DataTable, type DataTableProps, type DataTableColumn, type DataTableResponsive } from './DataTable';
 export { Pagination, type PaginationProps } from './Pagination';
 export { PersonName, type PersonNameProps } from './PersonName';
-export { ASK_ALTERNATIVE, useAskDialog, type AskOptions } from './AskDialog';
+export { ASK_ALTERNATIVE, useAskDialog, type AskOptions, type ConfirmOptions } from './AskDialog';
+export { DialogSurface, useDialogA11y, type DialogSurfaceProps } from './dialog-a11y';

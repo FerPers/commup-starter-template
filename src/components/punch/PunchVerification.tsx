@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { resolvePunch, verifyPunch } from '@/app/actions/punches'
 import { punchVerificationRights } from '@/lib/punches/verification'
+import { useAskDialog } from '@/components/ui'
 
 // Resolver → verificar en campo (fase 4 · bloque A). Compartido por los modales de punch de la
 // lista del proyecto y del tag. Las RPC aplican las reglas; aquí solo se anticipan.
@@ -40,6 +41,8 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
   const rights = punchVerificationRights(punch, userId, role)
   if (!rights.canResolve && !rights.canVerify && !rights.waitingOther) return null
 
@@ -54,8 +57,8 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
   }
 
   const base = { punchId: punch.id, projectId, tagId: tagId ?? null }
-  const resolve = () => {
-    if (photoCount === 0 && !window.confirm(t('confirmNoPhotos'))) return
+  const resolve = async () => {
+    if (photoCount === 0 && !(await confirm({ message: t('confirmNoPhotos'), confirmLabel: t('resolve') }))) return
     run(() => resolvePunch({ ...base, comment: text }))
   }
   const accept = () => run(() => verifyPunch({ ...base, accept: true, comment: text }))
@@ -65,6 +68,7 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
     const tooShort = text.trim().length < 5
     return (
       <div style={box}>
+        {dialog}
         <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('resolveLabel')}</label>
         <textarea rows={2} style={area} value={text} placeholder={t('resolvePlaceholder')} onChange={e => setText(e.target.value)} disabled={isPending} />
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap' }}>

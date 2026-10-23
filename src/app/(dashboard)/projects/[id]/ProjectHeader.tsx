@@ -1,12 +1,13 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useId, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updateProject, deleteProject, removeProjectClientLogo, uploadProjectClientLogo } from '@/app/actions/projects'
 import { DEFAULT_TIMEZONE, TIMEZONE_OPTIONS } from '@/lib/time/zone'
 import type { ProjectStatus } from '@/types/database'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 const STATUS_OPTIONS: readonly ProjectStatus[] = ['planning', 'active', 'on_hold', 'completed', 'cancelled']
 
@@ -44,6 +45,7 @@ interface Props {
 export default function ProjectHeader({ project: initial, canEdit, canDelete, canBrand }: Props) {
   const [project, setProject] = useState(initial)
   const [showModal, setShowModal] = useState(false)
+  const titleId = useId()
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const t = useTranslations('ProjectHeader')
@@ -218,7 +220,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
             zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
           }}
         >
-          <div
+          <DialogSurface onClose={() => setShowModal(false)} labelledBy={titleId}
             onClick={e => e.stopPropagation()}
             style={{
               background: 'var(--card-bg)', borderRadius: '14px', width: '100%', maxWidth: '480px',
@@ -229,7 +231,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
           >
             {/* Modal header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)' }}>{t('edit')}</h2>
+              <h2 id={titleId} style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)' }}>{t('edit')}</h2>
               <button onClick={() => setShowModal(false)} aria-label={t('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '20px', padding: 0 }}>×</button>
             </div>
 
@@ -382,7 +384,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
                 {isPending ? t('saving') : t('save')}
               </button>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
     </>

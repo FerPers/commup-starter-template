@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { deleteMgmtItem, transitionAction, updateAction } from '@/app/actions/daily'
 import { actionNeedsEvidence, daysOverdue, todayIso, type ActionPriority, type ActionStatus, type VerificationMethod } from '@/lib/daily/catalog'
 import { Evidence, OverdueChip, PriorityChip, Timeline, btn, card, input, small } from '../../daily-ui'
@@ -17,6 +18,7 @@ export default function ActionDetail({ project, opts, names, userId, role, event
 }) {
   const t = useTranslations('Daily')
   const { run, isPending, error, saved, router } = useRunner()
+  const { dialog, ask, confirm } = useAskDialog() // G-08: diálogo propio
   const today = useMemo(() => todayIso(), [])
   const status = item.status as ActionStatus
   const method = item.verification_method as VerificationMethod
@@ -34,11 +36,11 @@ export default function ActionDetail({ project, opts, names, userId, role, event
   const needsEvidence = actionNeedsEvidence(method) && attachments.length === 0
   const base = { projectId: project.id, actionId: item.id }
 
-  function save() {
+  async function save() {
     // S11 (D-15): mover la fecha comprometida es replanificar: pide el motivo (el KPI mide contra la original).
     let reason: string | undefined
     if (item.due_date && form.dueDate !== item.due_date) {
-      const r = window.prompt(t('detail.replanPrompt'))
+      const r = await ask({ title: t('form.save'), confirmLabel: t('form.save'), input: { label: t('detail.replanPrompt'), minLength: 3, multiline: true } })
       if (r === null) return
       reason = r
     }
@@ -48,13 +50,13 @@ export default function ActionDetail({ project, opts, names, userId, role, event
     if (needComment && comment.trim().length < 3) return
     run(() => transitionAction({ ...base, to, comment }), () => setComment(''))
   }
-  function cancel() {
-    const reason = window.prompt(t('detail.cancelPrompt'))
+  async function cancel() {
+    const reason = await ask({ title: t('detail.cancel'), confirmLabel: t('detail.cancel'), danger: true, input: { label: t('detail.cancelPrompt'), minLength: 3, multiline: true } })
     if (!reason?.trim()) return
     run(() => transitionAction({ ...base, to: 'cancelled', comment: reason }))
   }
-  function remove() {
-    if (!window.confirm(t('detail.deleteConfirm'))) return
+  async function remove() {
+    if (!(await confirm({ message: t('detail.deleteConfirm'), confirmLabel: t('detail.delete'), danger: true }))) return
     run(() => deleteMgmtItem({ projectId: project.id, kind: 'action', entityId: item.id }), () => router.push(`/projects/${project.id}/daily`))
   }
 
@@ -64,6 +66,7 @@ export default function ActionDetail({ project, opts, names, userId, role, event
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <Header projectId={project.id} kind="action" number={item.number} title={item.title} status={status}>
         <PriorityChip priority={item.priority} />
         {(status === 'open' || status === 'in_progress') && <OverdueChip days={daysOverdue(item.due_date, today)} />}

@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui'
 import { evaluateTable, reshapeTable, sourceRefText, type SourceRow, type TableCapture as Capture, type TableCellValue, type TableConfig } from '@/lib/itr/table'
 
 /** Captura inicial cuando aún no hay registro: filas fijas o las de la foto; las variables esperan la cantidad. */
@@ -30,6 +31,9 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
 }) {
   const tx = useTranslations('TableCapture')
   const te = useTranslations('ActionErrors')
+  const tA = useTranslations('AskDialog')
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
   const evaluated = evaluateTable(options, value, sourceRows)
   const issues = evaluated.errors.map(issue => te(`table.${issue.code}`, issue))
   const config = evaluated.config
@@ -54,7 +58,7 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
     return JSON.stringify({ ...capture, rows: capture.rows.map(row => ({ ...row, cells: { ...row.cells, ...Object.fromEntries(derived.map(key => [key, null])) } })) })
   }
 
-  function configure() {
+  async function configure() {
     if (!config) return
     const n = Number(count)
     if (config.rows.mode === 'variable' && (!Number.isInteger(n) || n < config.rows.min || n > config.rows.max)) {
@@ -62,7 +66,7 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
     }
     const next = reshapeTable(config, current.current, config.rows.mode === 'fixed' ? config.rows.labels.length : n)
     const removed = current.current?.rows.filter(row => !next.rows.some(other => other.id === row.id)) ?? []
-    if (removed.some(row => Object.values(row.cells).some(cell => cell !== null && cell !== '')) && !window.confirm(tx('confirmRemoveRows'))) return
+    if (removed.some(row => Object.values(row.cells).some(cell => cell !== null && cell !== '')) && !(await confirm({ message: tx('confirmRemoveRows'), confirmLabel: tA('remove'), danger: true }))) return
     setError(''); current.current = next; onChange(serialize(next))
   }
 
@@ -77,6 +81,7 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
   const rowsLabel = config.rows.mode === 'fixed' ? tx('rowDefault') : config.rows.label
 
   return <fieldset disabled={disabled} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
+    {dialog}
     {config.rows.mode === 'variable' && (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'end', marginBottom: '10px' }}>
         <label style={{ fontSize: '12px' }}>{tx('countLabel', { label: config.rows.label.toLowerCase(), min: config.rows.min, max: config.rows.max })}

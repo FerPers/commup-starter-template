@@ -1,7 +1,7 @@
 'use client'
 
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
@@ -13,6 +13,9 @@ import {
 import { exportPreservationProcedure } from '@/app/actions/templates-backup'
 import type { TemplatesBackup } from '@/lib/constants/templates-backup'
 import BackupDocumentView from '@/components/templates/BackupDocumentView'
+import { useAskDialog } from '@/components/ui/AskDialog'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { useToast } from '@/components/ui/Toast'
 
 function downloadJsonFile(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -102,6 +105,10 @@ const DEFAULT_ITEM = {
 export default function ProcedureItemEditor({ procedure, disciplines, canEdit }: Props) {
   const t = useTranslations('PreservationTemplates')
   const tp = useTranslations('Preservation')
+  const tA11y = useTranslations('A11y')
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
+  const toast = useToast()
+  const itemTitleId = useId()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [items, setItems] = useState<ProcItem[]>(procedure.preservation_procedure_items)
@@ -179,10 +186,10 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
   }
 
   async function handleDeleteItem(itemId: string) {
-    if (!confirm(t('deleteItemConfirm'))) return
+    if (!(await confirm({ message: t('deleteItemConfirm'), confirmLabel: t('delete'), danger: true }))) return
     startTransition(async () => {
       const result = await deleteProcedureItem(itemId, procedure.id)
-      if (result.error) alert(result.error)
+      if (result.error) toast.error(result.error)
       else router.refresh()
     })
   }
@@ -232,6 +239,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
 
   return (
     <div style={{ padding: '32px', maxWidth: '900px' }}>
+      {dialog}
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
         <button
@@ -471,7 +479,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                     style={{ padding: '5px 10px', borderRadius: '6px', background: 'var(--gray-100)', color: 'var(--gray-700)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none' }}>
                     {t('edit')}
                   </button>
-                  <button onClick={() => handleDeleteItem(item.id)}
+                  <button onClick={() => handleDeleteItem(item.id)} aria-label={t('delete')}
                     style={{ padding: '5px 10px', borderRadius: '6px', background: '#fff5f5', color: '#dc2626', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none' }}>
                     ✕
                   </button>
@@ -485,12 +493,13 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
       {/* Add / Edit item modal */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px' }}>
-          <div style={{ background: 'var(--card-bg)', borderRadius: '14px', padding: '26px', width: '100%', maxWidth: '480px' }}>
+          <DialogSurface onClose={isPending ? undefined : () => setShowAddItem(false)} labelledBy={itemTitleId}
+            style={{ background: 'var(--card-bg)', borderRadius: '14px', padding: '26px', width: '100%', maxWidth: '480px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
+              <h3 id={itemTitleId} style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
                 {editingItemId ? t('editItem') : t('addItemTitle')}
               </h3>
-              <button onClick={() => setShowAddItem(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--gray-400)' }}>✕</button>
+              <button onClick={() => setShowAddItem(false)} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--gray-400)' }}>✕</button>
             </div>
 
             {itemError && (
@@ -574,7 +583,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                 {isPending ? t('saving') : (editingItemId ? t('update') : t('add'))}
               </button>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
 

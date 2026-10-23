@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { saveVendorInterface, saveVendorPackage, setVendorChecklistItem, transitionVendorPackage } from '@/app/actions/vendors'
 import {
   INTERFACE_STATUSES, INTERFACE_TONE, PACKAGE_TONE, VENDOR_CHECKLIST,
@@ -75,6 +76,7 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
 }) {
   const t = useTranslations('Vendors')
   const router = useRouter()
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const [isPending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [edit, setEdit] = useState(false)
@@ -144,6 +146,7 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <Link href={`/projects/${project.id}/vendors`} style={linkStyle}>← {t('title')}</Link>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 4px' }}>{pkg.number} — {pkg.title}</h1>
@@ -289,7 +292,7 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
                 <button type="button" disabled={isPending || !mob.ready} style={btn('primary', isPending || !mob.ready)}
                   onClick={() => run(() => transitionVendorPackage({ projectId: project.id, packageId: pkg.id, to: 'mobilize', note }), () => setNote(''))}>{t('mob.authorize')}</button>
                 <button type="button" disabled={isPending || note.trim().length < 3} style={btn('danger', isPending || note.trim().length < 3)} title={t('mob.cancelHint')}
-                  onClick={() => { if (window.confirm(t('mob.cancelConfirm'))) run(() => transitionVendorPackage({ projectId: project.id, packageId: pkg.id, to: 'cancel', note })) }}>{t('mob.cancel')}</button>
+                  onClick={async () => { if (await confirm({ message: t('mob.cancelConfirm'), confirmLabel: t('mob.cancel'), danger: true })) run(() => transitionVendorPackage({ projectId: project.id, packageId: pkg.id, to: 'cancel', note })) }}>{t('mob.cancel')}</button>
               </div>
             )}
           </>
@@ -324,7 +327,7 @@ export default function PackageView({ project, pkg, companies, systems, gates, t
                 <button type="button" disabled={isPending || !demob.ready} style={btn('primary', isPending || !demob.ready)}
                   onClick={() => run(() => transitionVendorPackage({ projectId: project.id, packageId: pkg.id, to: 'demobilize', note }), () => setNote(''))}>{t('demob.authorize')}</button>
                 <button type="button" disabled={isPending || note.trim().length < 10} style={btn('danger', isPending || note.trim().length < 10)} title={t('demob.terminateHint')}
-                  onClick={() => { if (window.confirm(t('demob.terminateConfirm'))) run(() => transitionVendorPackage({ projectId: project.id, packageId: pkg.id, to: 'cancel', note })) }}>{t('demob.terminate')}</button>
+                  onClick={async () => { if (await confirm({ message: t('demob.terminateConfirm'), confirmLabel: t('demob.terminate'), danger: true })) run(() => transitionVendorPackage({ projectId: project.id, packageId: pkg.id, to: 'cancel', note })) }}>{t('demob.terminate')}</button>
               </div>
             )}
           </>

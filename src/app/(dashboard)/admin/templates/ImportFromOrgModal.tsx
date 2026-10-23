@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useId, useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
@@ -10,6 +10,7 @@ import {
   type ImportableTemplate,
   type BulkCloneResult,
 } from '@/app/actions/itr-templates'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 // Banco de plantillas: una org marcada como catálogo expone sus templates a
 // todas las demás (RLS is_catalog_org). Una org nueva no necesita saber quién
@@ -24,6 +25,7 @@ type StateFilter = '' | 'new' | 'outdated' | 'same'
 export default function ImportFromOrgModal({ onClose }: { onClose: () => void }) {
   // `ti` (no `t`): las plantillas se recorren como `t`.
   const ti = useTranslations('TemplateImport')
+  const titleId = useId()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -134,7 +136,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
         padding: 20, zIndex: 100,
       }}
     >
-      <div
+      <DialogSurface onClose={onClose} labelledBy={titleId}
         onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--card-bg)', borderRadius: 14,
@@ -148,7 +150,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
           padding: '20px 24px', borderBottom: '1px solid var(--border)',
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-strong)' }}>
+            <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-strong)' }}>
               {ti('title')}
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
@@ -289,7 +291,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
             )
           })}
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

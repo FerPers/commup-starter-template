@@ -219,7 +219,7 @@ Una sola sesión de maquetas en un lienzo, como en N1–N3:
 | Advertencia de React «key» en la página del ITR | O |
 | D16 resumen diario por correo (elegir proveedor: Resend, SES o el SMTP de Supabase) | Sesión propia cuando elijas proveedor |
 | H-20: 37 archivos con `<a href="/…">` → `Link` | ✅ En V2 (2026-10-23) |
-| Q: `window.confirm` restantes → `useAskDialog` (G-08), modales accesibles (G-12), autosave del ITR (C-19, B-15), diccionario i18n por página (G-15), casts `as unknown as` (G-18), Playwright de recorridos de campo (G-17), tokens fuera de campo para oscuro y contraste (G-10) | De paso en cada bloque. G-17 en una sesión propia antes de R2 (protege la ejecución de ITR) |
+| Q: ✅ `window.confirm`/`prompt`/`alert` → `useAskDialog`/`useToast` (G-08, 2026-10-23, regla de ESLint) y overlays propios con `DialogSurface` (G-12, 2026-10-23; quedan `htmlFor` de labels, celdas clicables y `jsx-a11y`), modales accesibles (G-12), autosave del ITR (C-19, B-15), diccionario i18n por página (G-15), casts `as unknown as` (G-18), Playwright de recorridos de campo (G-17), tokens fuera de campo para oscuro y contraste (G-10) | De paso en cada bloque. G-17 en una sesión propia antes de R2 (protege la ejecución de ITR) |
 | B-17 (integridad del mismo proyecto, revertido) | Ya cubierto por `guard_same_project`; se cierra en la cobertura |
 | D2 base de pruebas aparte | Al recrear LOADTEST en R5 conviene decidirlo de nuevo (hoy los tests escriben en prod) |
 | Tuyos: invitar `+smtp2` como cliente y firmar PTC-0001; probar la subida de PDF en Documentos | Cuando puedas |

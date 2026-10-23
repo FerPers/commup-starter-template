@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { PersonName } from '@/components/ui'
+import { DialogSurface, PersonName, useToast } from '@/components/ui'
 import { isInactiveMember } from '@/lib/people/inactive'
-import { useMemo, useState, useTransition, useRef, useEffect } from 'react'
+import { useId, useMemo, useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeCertificate, reopenCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
@@ -115,6 +115,11 @@ export default function CertificateDetail({
   const [signRole, setSignRole]           = useState<CertSignatureRoleId | null>(null)
   const [signComments, setSignComments]   = useState('')
   const [signError, setSignError]         = useState('')
+  const toast = useToast()
+  const reopenTitleId = useId()
+  const revokeTitleId = useId()
+  const cancelReopen = () => { setReopenConfirm(false); setReopenReason(''); setReopenError('') }
+  const cancelRevoke = () => { setRevokeConfirm(false); setRevokeReason(''); setRevokeError('') }
 
   const phase     = cert.project_phases
   const subsystem = cert.subsystems
@@ -199,7 +204,7 @@ export default function CertificateDetail({
         projectId,
       })
       if (result.error) {
-        alert(result.error)
+        toast.error(result.error)
       } else {
         router.refresh()
       }
@@ -591,11 +596,11 @@ export default function CertificateDetail({
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
         }}>
-          <div style={{
+          <DialogSurface onClose={cancelReopen} labelledBy={reopenTitleId} style={{
             background: 'var(--card-bg)', borderRadius: '14px', padding: '28px',
             maxWidth: '400px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
           }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
+            <h3 id={reopenTitleId} style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
               {t('detail.reopenModal.title')}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
@@ -618,7 +623,7 @@ export default function CertificateDetail({
             )}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => { setReopenConfirm(false); setReopenReason(''); setReopenError('') }}
+                onClick={cancelReopen}
                 style={{ padding: '8px 18px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer' }}
               >
                 {t('detail.reopenModal.cancel')}
@@ -631,7 +636,7 @@ export default function CertificateDetail({
                 {isPending ? t('detail.reopenModal.submitting') : t('detail.reopenModal.confirm')}
               </button>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
 
@@ -641,11 +646,11 @@ export default function CertificateDetail({
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
         }}>
-          <div style={{
+          <DialogSurface onClose={cancelRevoke} labelledBy={revokeTitleId} style={{
             background: 'var(--card-bg)', borderRadius: '14px', padding: '28px',
             maxWidth: '400px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
           }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
+            <h3 id={revokeTitleId} style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
               {t('detail.revokeModal.title')}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
@@ -668,7 +673,7 @@ export default function CertificateDetail({
             )}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => { setRevokeConfirm(false); setRevokeReason(''); setRevokeError('') }}
+                onClick={cancelRevoke}
                 style={{ padding: '8px 18px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer' }}
               >
                 {t('detail.revokeModal.cancel')}
@@ -681,7 +686,7 @@ export default function CertificateDetail({
                 {isPending ? t('detail.revokeModal.submitting') : t('detail.revokeModal.confirm')}
               </button>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
     </div>
@@ -708,6 +713,7 @@ function CertSignModal({
   onSign: (signatureImage: string) => void
 }) {
   const t = useTranslations('Certificates')
+  const titleId = useId()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [hasDrawn, setHasDrawn] = useState(false)
@@ -779,11 +785,11 @@ function CertSignModal({
     }}
       onClick={e => { if (e.target === e.currentTarget) onCancel() }}
     >
-      <div style={{
+      <DialogSurface onClose={isPending ? undefined : onCancel} labelledBy={titleId} style={{
         background: 'var(--card-bg)', borderRadius: '14px', padding: '24px',
         maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
       }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
+        <h3 id={titleId} style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
           {t('detail.sigConfirmTitle', { role: t(`detail.sigRoles.${role}`) })}
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: '1.5' }}>
@@ -860,7 +866,7 @@ function CertSignModal({
             {isPending ? t('detail.sigSigning') : t('detail.sigConfirmAction')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

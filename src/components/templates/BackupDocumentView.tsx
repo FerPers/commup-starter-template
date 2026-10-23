@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 import { useMounted } from '@/hooks/useMounted'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 import type {
   TemplatesBackup,
   ItrTemplateBackup,
@@ -19,13 +20,10 @@ interface Props {
 export default function BackupDocumentView({ backup, onClose }: Props) {
   const t = useTranslations('BackupDocument')
   const mounted = useMounted()
+  const titleId = useId()
 
+  // Esc, foco y bloqueo del fondo: DialogSurface (G-12).
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
     // Browsers print the document <title> as the page header. Swap it
     // temporarily so the printed PDF doesn't say "CommUp — Completion ..."
     const prevTitle = document.title
@@ -33,11 +31,9 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
     document.title = `${t('docTitle')} — ${orgName}`
 
     return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
       document.title = prevTitle
     }
-  }, [onClose, backup.org?.name, t])
+  }, [backup.org?.name, t])
 
   const totalItr = backup.itr_templates.length
   const totalPres = backup.preservation_procedures.length
@@ -49,7 +45,7 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
   if (!mounted) return null
 
   const overlay = (
-    <div
+    <DialogSurface onClose={onClose} labelledBy={titleId}
       className="backup-doc-overlay"
       data-backup-doc-portal
       style={{
@@ -112,7 +108,7 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600 }}>{t('view')}</span>
+          <span id={titleId} style={{ fontSize: '13px', fontWeight: 600 }}>{t('view')}</span>
           <span style={{ fontSize: '12px', color: '#94a3b8' }}>
             {t('templates', { n: totalItr + totalPres + totalPssr })} · {backup.org?.name ?? '—'}
           </span>
@@ -240,7 +236,7 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </DialogSurface>
   )
 
   return createPortal(overlay, document.body)

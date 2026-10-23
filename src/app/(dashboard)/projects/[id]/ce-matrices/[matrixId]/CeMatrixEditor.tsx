@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { deleteCeMatrix, deleteCeRow, saveCeCause, saveCeEffect, setCeLink } from '@/app/actions/ce-matrix'
 import GenerateSourceItrsModal, { type GenerationMember, type GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
 import type { SourceItrInfo } from '@/lib/itr/source-itrs-server'
@@ -45,6 +46,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
 }) {
   const tc = useTranslations('CeMatrix')
   const router = useRouter()
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const [panel, setPanel] = useState<Panel>(null)
   const [error, setError] = useState('')
   const [pending, start] = useTransition()
@@ -72,9 +74,10 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
   const testedItrs = Object.keys(causeItrs).length
   const effectItrs = (effectId: string) => links.filter(l => l.effect_id === effectId && causeItrs[l.cause_id]).length
 
-  function removeMatrix() {
+  async function removeMatrix() {
     if (testedItrs > 0) { setError(tc('cannotDeleteMatrix', { n: testedItrs })); return }
-    if (!window.confirm(tc('deleteMatrixConfirm', { code: matrix.code, causes: causes.length, effects: effects.length, links: links.length }))) return
+    const message = tc('deleteMatrixConfirm', { code: matrix.code, causes: causes.length, effects: effects.length, links: links.length })
+    if (!(await confirm({ message, confirmLabel: tc('deleteMatrix'), danger: true }))) return
     setError('')
     start(async () => {
       const res = await deleteCeMatrix({ projectId, id: matrix.id })
@@ -92,6 +95,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
 
   return (
     <div style={{ padding: '32px' }}>
+      {dialog}
       <Link href={`/projects/${projectId}/ce-matrices`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {projectName} · {tc('back')}</Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap', margin: '12px 0 16px' }}>
         <div>
@@ -180,17 +184,17 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
             )}
             {panel.kind === 'cause' && <CauseForm key={panel.row?.id ?? `new-${causes.length}`} row={panel.row} seq={nextSeq(causes)} pending={pending}
               onSave={input => run(() => saveCeCause({ projectId, matrixId: matrix.id, ...input }), !!panel.row)}
-              onDelete={panel.row ? () => {
+              onDelete={panel.row ? async () => {
                 if (causeItrs[panel.row!.id]) { setError(tc('cannotDeleteCause', { code: panel.row!.code, itr: causeItrs[panel.row!.id].itrNumber })); return }
-                if (window.confirm(tc('deleteCauseConfirm', { code: panel.row!.code }))) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'cause', id: panel.row!.id }))
+                if (await confirm({ message: tc('deleteCauseConfirm', { code: panel.row!.code }), confirmLabel: tc('delete'), danger: true })) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'cause', id: panel.row!.id }))
               } : undefined}
               onClose={() => setPanel(null)} />}
             {panel.kind === 'effect' && <EffectForm key={panel.row?.id ?? `new-${effects.length}`} row={panel.row} seq={nextSeq(effects)} pending={pending}
               onSave={input => run(() => saveCeEffect({ projectId, matrixId: matrix.id, ...input }), !!panel.row)}
-              onDelete={panel.row ? () => {
+              onDelete={panel.row ? async () => {
                 const n = effectItrs(panel.row!.id)
                 if (n > 0) { setError(tc('cannotDeleteEffect', { code: panel.row!.code, n })); return }
-                if (window.confirm(tc('deleteEffectConfirm', { code: panel.row!.code }))) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'effect', id: panel.row!.id }))
+                if (await confirm({ message: tc('deleteEffectConfirm', { code: panel.row!.code }), confirmLabel: tc('delete'), danger: true })) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'effect', id: panel.row!.id }))
               } : undefined}
               onClose={() => setPanel(null)} />}
             {error && <p role="alert" style={{ color: '#b91c1c', fontSize: '12px', margin: '10px 0 0' }}>{error}</p>}

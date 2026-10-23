@@ -9,6 +9,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatInZone } from '@/lib/time/zone'
 import { Modal } from '@/components/ui'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { approveImpact, revokeImpact, type ProvidedDependency } from '@/lib/readiness/impact'
 import { isDone, nextGate } from '@/lib/readiness/matrix'
 import { createClient } from '@/lib/supabase/client'
@@ -86,6 +87,7 @@ export function StatusBadge({ status, label }: { status: GateStatus; label: stri
 
 export default function SystemGatesView({ orgId, role, userId, caps, canEdit, project, system, gates, names, phaseCodes, provides, focusGateId }: Props) {
   const t = useTranslations('Gates')
+  const { dialog, ask } = useAskDialog() // G-08: diálogo propio
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -409,8 +411,9 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                   onClick={() => openEvidence(String(d.file_path))}>{t('attest.view')}</button>
                 {canEdit && !g.approval && (
                   <button type="button" disabled={isPending} style={{ ...linkStyle, color: 'var(--danger-500)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                    onClick={() => {
-                      const reason = window.prompt(t('attest.revokePrompt'))
+                    onClick={async () => {
+                      // revoke_gate_attestation exige motivo ≥ 10.
+                      const reason = await ask({ title: t('attest.revoke'), confirmLabel: t('attest.revoke'), danger: true, input: { label: t('attest.revokePrompt'), minLength: 10 } })
                       if (reason !== null) run(() => revokeGateAttestation({ ...base, attestationId: attId, reason }))
                     }}>{t('attest.revoke')}</button>
                 )}
@@ -436,6 +439,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <p style={{ ...small, margin: 0, lineHeight: 1.5 }}>{t('intro')}</p>
 
       {error && (

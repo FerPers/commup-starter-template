@@ -9,6 +9,7 @@ import {
   finalizeRecord,
 } from '@/app/actions/preservation'
 import PreservationPhotosSection from './PreservationPhotosSection'
+import { useAskDialog } from '@/components/ui'
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -96,6 +97,8 @@ export default function PreservationExecution({
   const t = useTranslations('PreservationExecution')
   const locale = useLocale()
   const [isPending, startTransition] = useTransition()
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
 
   // Frequency label map — keys resolved via i18n
   const FREQ_LABELS: Record<string, string> = {
@@ -228,7 +231,7 @@ export default function PreservationExecution({
 
     // Soft warning: procedure requires photo and none uploaded
     if (procedure.requires_photo && photoCount === 0) {
-      if (!confirm(t('photos.confirmFinalizeWithoutPhotos'))) return
+      if (!(await confirm({ message: t('photos.confirmFinalizeWithoutPhotos'), confirmLabel: t('btnConfirm') }))) return
     }
 
     setSubmitError(null)
@@ -272,6 +275,7 @@ export default function PreservationExecution({
 
   return (
     <div style={{ padding: '32px', maxWidth: '800px' }}>
+      {dialog}
 
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>

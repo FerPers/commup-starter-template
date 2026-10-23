@@ -1,11 +1,13 @@
 'use client'
 
 import type { OrgMemberRole } from '@/types/database'
-import { useMemo, useState, useTransition } from 'react'
+import { useId, useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { inviteUser, updateMemberRole, removeMember, setMemberAccess, getMemberRemovalContext, type MemberRemovalContext } from '@/app/actions/users'
 import { setMemberCompany } from '@/app/actions/documents'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import { useAskDialog } from '@/components/ui/AskDialog'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 type Member = {
   id: string
@@ -103,6 +105,8 @@ export default function UsersView({
   companies?: { id: string; name: string }[]
 }) {
   const t = useTranslations('Users')
+  const { dialog, ask } = useAskDialog() // G-08: diálogo propio
+  const removeTitleId = useId()
   const [isPending, startTransition] = useTransition()
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('inspector')
@@ -172,10 +176,13 @@ export default function UsersView({
   }
 
   // S15 (I-21): suspender (con motivo), reactivar y fijar o quitar el vencimiento del acceso.
-  function handleAccess(m: Member, next: { status: 'active' | 'suspended'; expiresAt?: string | null }) {
+  async function handleAccess(m: Member, next: { status: 'active' | 'suspended'; expiresAt?: string | null }) {
     let reason: string | undefined
     if (next.status === 'suspended') {
-      reason = window.prompt(t('access.suspendPrompt', { name: m.fullName })) ?? undefined
+      reason = (await ask({
+        title: t('access.suspend'), confirmLabel: t('access.suspend'), danger: true,
+        input: { label: t('access.suspendPrompt', { name: m.fullName }), minLength: 3, multiline: true },
+      })) ?? undefined
       if (!reason || reason.trim().length < 3) return
     }
     setError(null)
@@ -229,6 +236,7 @@ export default function UsersView({
 
   return (
     <div style={{ padding: '32px' }}>
+      {dialog}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
@@ -571,19 +579,20 @@ export default function UsersView({
       {/* Remove member dialog */}
       {removeTarget && (
         <div
-          role="dialog"
-          aria-modal="true"
           onClick={e => { if (e.target === e.currentTarget && !isPending) { setRemoveTarget(null); setRemoveCtx(null) } }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 60,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
           }}
         >
-          <div style={{
-            width: '100%', maxWidth: 460, background: 'var(--card-bg)', borderRadius: 14,
-            border: '1px solid var(--border)', padding: 22, boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
-          }}>
-            <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: 'var(--text-strong)' }}>
+          <DialogSurface
+            onClose={isPending ? undefined : () => { setRemoveTarget(null); setRemoveCtx(null) }}
+            labelledBy={removeTitleId}
+            style={{
+              width: '100%', maxWidth: 460, background: 'var(--card-bg)', borderRadius: 14,
+              border: '1px solid var(--border)', padding: 22, boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+            }}>
+            <h3 id={removeTitleId} style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: 'var(--text-strong)' }}>
               {t('removeDialog.title', { name: removeTarget.name })}
             </h3>
 
@@ -645,7 +654,7 @@ export default function UsersView({
                 {t('removeDialog.confirm')}
               </button>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
 

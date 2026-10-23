@@ -1,7 +1,7 @@
 'use client'
 
 import type { Enums } from '@/types/supabase.generated'
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { createProcedure, deleteProcedure } from '@/app/actions/preservation'
@@ -9,6 +9,9 @@ import { exportPreservationProcedure } from '@/app/actions/templates-backup'
 import type { TemplatesBackup } from '@/lib/constants/templates-backup'
 import BackupDocumentView from '@/components/templates/BackupDocumentView'
 import ImportProcedureFromOrgModal from './ImportProcedureFromOrgModal'
+import { useAskDialog } from '@/components/ui/AskDialog'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { useToast } from '@/components/ui/Toast'
 
 interface Discipline { id: string; code: string; name: string; color: string }
 interface Procedure {
@@ -49,6 +52,10 @@ const DEFAULT_FORM = {
 export default function PreservationProceduresView({ procedures, disciplines, canEdit }: Props) {
   const t = useTranslations('PreservationTemplates')
   const tp = useTranslations('Preservation')
+  const tA11y = useTranslations('A11y')
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
+  const toast = useToast()
+  const createTitleId = useId()
   const freqLabel = (f: string) => (FREQS.includes(f) ? tp(`freq.${f as 'daily'}`) : f)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -96,12 +103,12 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
   }
 
   async function handleDelete(id: string) {
-    if (!confirm(t('deleteConfirm'))) return
+    if (!(await confirm({ message: t('deleteConfirm'), confirmLabel: t('delete'), danger: true }))) return
     setDeletingId(id)
     startTransition(async () => {
       const result = await deleteProcedure(id)
       setDeletingId(null)
-      if (result.error) alert(result.error)
+      if (result.error) toast.error(result.error)
       else router.refresh()
     })
   }
@@ -117,8 +124,13 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
   const discCodesInProcs = [...new Set(procedures.map(p => p.disciplines?.code).filter(Boolean))]
   const discTabs = disciplines.filter(d => discCodesInProcs.includes(d.code))
 
+  function closeCreate() {
+    setShowModal(false); setFormError(null); setForm(DEFAULT_FORM)
+  }
+
   return (
     <>
+      {dialog}
       {/* Filter tabs + actions */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -297,7 +309,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
       {previewError && (
         <div style={{ marginTop: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
           {previewError}
-          <button onClick={() => setPreviewError(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}>✕</button>
+          <button onClick={() => setPreviewError(null)} aria-label={tA11y('close')} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}>✕</button>
         </div>
       )}
 
@@ -315,15 +327,15 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex',
           alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px',
         }}>
-          <div style={{
+          <DialogSurface onClose={isPending ? undefined : closeCreate} labelledBy={createTitleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
             width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
+              <h2 id={createTitleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
                 {t('newTitle')}
               </h2>
-              <button onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={closeCreate} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--text-muted)' }}>✕</button>
             </div>
 
             {formError && (
@@ -433,7 +445,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '24px' }}>
               <button
-                onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }}
+                onClick={closeCreate}
                 style={{ padding: '9px 18px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none' }}
               >
                 {t('cancel')}
@@ -446,7 +458,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                 {isPending ? t('creating') : t('create')}
               </button>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
     </>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
@@ -10,6 +10,7 @@ import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 import { assignmentIssue, normalizeRequired, requiredForTemplate } from '@/lib/itr/signatures'
 import { ink } from '@/lib/theme'
+import { DialogSurface, useAskDialog, useToast } from '@/components/ui'
 
 // ── Status config ────────────────────────────────────────────────────
 
@@ -61,6 +62,10 @@ export default function TagItrTab({
   const [isPending, startTransition] = useTransition()
   const [showAssign, setShowAssign] = useState(false)
   const [assignError, setAssignError] = useState<string | null>(null)
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
+  const toast = useToast()
+  const assignTitleId = useId()
 
   // Assignment form state
   const [selectedTemplate, setSelectedTemplate] = useState('')
@@ -122,11 +127,11 @@ export default function TagItrTab({
     })
   }
 
-  function handleDelete(itrId: string) {
-    if (!confirm(t('deleteConfirm'))) return
+  async function handleDelete(itrId: string) {
+    if (!(await confirm({ message: t('deleteConfirm'), confirmLabel: t('delete'), danger: true }))) return
     startTransition(async () => {
       const res = await deleteItr(itrId, projectId, tagId)
-      if (res.error) { window.alert(res.error); return }
+      if (res.error) { toast.error(res.error); return }
       router.refresh()
     })
   }
@@ -135,6 +140,7 @@ export default function TagItrTab({
 
   return (
     <div style={{ padding: '24px 0' }}>
+      {dialog}
 
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
@@ -276,9 +282,9 @@ export default function TagItrTab({
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={e => { if (e.target === e.currentTarget) setShowAssign(false) }}
         >
-          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <DialogSurface onClose={() => setShowAssign(false)} labelledBy={assignTitleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('assign')}</h2>
+              <h2 id={assignTitleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('assign')}</h2>
               <button onClick={() => setShowAssign(false)} aria-label={t('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px' }}>✕</button>
             </div>
 
@@ -425,7 +431,7 @@ export default function TagItrTab({
                 </div>
               </div>
             )}
-          </div>
+          </DialogSurface>
         </div>
       )}
     </div>

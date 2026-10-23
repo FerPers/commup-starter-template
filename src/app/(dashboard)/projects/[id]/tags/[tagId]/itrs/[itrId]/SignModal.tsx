@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Item, Signature, SigningRole } from './types'
+import { DialogSurface } from '@/components/ui'
 
 // ── Sign Modal (canvas drawing pad) ──────────────────────────────────
 
@@ -31,6 +32,7 @@ export default function SignModal({
   onSign: (role: 'executor' | 'supervisor' | 'client', signatureImage: string) => void
 }) {
   const t = useTranslations('ItrExecution')
+  const titleId = useId()
   const [signRole, setSignRole] = useState<'executor' | 'supervisor' | 'client'>(() => {
     return allowedRoles[0] ?? 'executor'
   })
@@ -101,8 +103,8 @@ export default function SignModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('signModal.title')}</h2>
+      <DialogSurface onClose={isPending ? undefined : onClose} labelledBy={titleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <h2 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('signModal.title')}</h2>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 18px' }}>{itrNumber}</p>
 
         {/* Role selector */}
@@ -182,7 +184,7 @@ export default function SignModal({
             {isPending ? t('signModal.signing') : t('signModal.confirm')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

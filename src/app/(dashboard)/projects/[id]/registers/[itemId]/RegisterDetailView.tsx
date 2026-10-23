@@ -16,6 +16,7 @@ import {
 import { RegisterFields, TagPicker, type TagValue } from '../RegisterFields'
 import { STATUS_STYLE, StatusChip, btn, card, input, label, linkStyle, small, useStatusLabel } from '../register-ui'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import { useAskDialog } from '@/components/ui/AskDialog'
 
 type Step = { by: string | null; at: string | null }
 
@@ -73,6 +74,7 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
   const t = useTranslations('Registers')
   const statusLabel = useStatusLabel()
   const router = useRouter()
+  const { dialog, ask, confirm } = useAskDialog() // G-08: diálogo propio
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -137,8 +139,8 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
     }, () => setComment(''))
   }
 
-  function cancel() {
-    const reason = window.prompt(t('detail.cancelPrompt'))
+  async function cancel() {
+    const reason = await ask({ title: t('detail.cancel'), confirmLabel: t('detail.cancel'), danger: true, input: { label: t('detail.cancelPrompt'), minLength: 3, multiline: true } })
     if (!reason?.trim()) return
     run(() => transitionRegisterItem({ ...base, to: 'cancelled', comment: reason }))
   }
@@ -147,13 +149,14 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
     run(() => linkRegisterItems({ ...base, linkedItemId, link: on }), () => setBlindToLink(''))
   }
 
-  function remove() {
-    if (!window.confirm(t('detail.deleteConfirm'))) return
+  async function remove() {
+    if (!(await confirm({ message: t('detail.deleteConfirm'), confirmLabel: t('detail.delete'), danger: true }))) return
     run(() => deleteRegisterItem(base), () => router.push(`/projects/${project.id}/registers`))
   }
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <Link href={`/projects/${project.id}/registers`} style={linkStyle}>← {t('detail.back')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>

@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl'
 
 import type { Json, Enums } from '@/types/supabase.generated'
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, useId } from 'react'
 import {
   createWorkflowRule,
   updateWorkflowRule,
@@ -12,6 +12,8 @@ import {
   type WorkflowActionType,
 } from '@/app/actions/workflows'
 import { isReflexiveRule } from '@/lib/workflows/rules'
+import { useAskDialog } from '@/components/ui/AskDialog'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 // ── Types ─────────────────────────────────────────────────────
 type Rule = {
@@ -131,6 +133,7 @@ export default function WorkflowsView({
   // N0 (H-13): título = etiqueta del menú.
   const tNav = useTranslations('Sidebar.nav')
   const tx = useTranslations('Workflows')
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const [rules, setRules] = useState<Rule[]>(initialRules)
   const [editingRule, setEditingRule] = useState<Rule | null>(null)
   const [creating, setCreating] = useState(false)
@@ -160,8 +163,8 @@ export default function WorkflowsView({
     })
   }
 
-  const handleDelete = (rule: Rule) => {
-    if (!confirm(tx('deleteConfirm', { name: rule.name }))) return
+  const handleDelete = async (rule: Rule) => {
+    if (!(await confirm({ message: tx('deleteConfirm', { name: rule.name }), confirmLabel: tx('delete'), danger: true }))) return
     setError(null)
     startTransition(async () => {
       const res = await deleteWorkflowRule(rule.id)
@@ -172,6 +175,7 @@ export default function WorkflowsView({
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+      {dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
@@ -339,6 +343,7 @@ function RuleEditorModal({
   )
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const titleId = useId()
 
   const handleSave = async () => {
     setErr(null)
@@ -388,9 +393,10 @@ function RuleEditorModal({
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       padding: 40, zIndex: 100, overflow: 'auto',
     }}>
-      <div style={{ background: 'var(--card-bg)', borderRadius: 10, width: '100%', maxWidth: 720, padding: 24 }}>
+      <DialogSurface onClose={saving ? undefined : onClose} labelledBy={titleId}
+        style={{ background: 'var(--card-bg)', borderRadius: 10, width: '100%', maxWidth: 720, padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
+          <h2 id={titleId} style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
             {tx(rule ? 'editRule' : 'newRuleTitle')}
           </h2>
           <button onClick={onClose} aria-label={tx('close')} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
@@ -531,7 +537,7 @@ function RuleEditorModal({
             {tx(saving ? 'saving' : 'save')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

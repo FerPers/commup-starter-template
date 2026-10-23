@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { createClient } from '@/lib/supabase/client'
 import {
   deleteTestEquipment,
@@ -59,6 +60,7 @@ const EMPTY: Form = { code: '', kind: 'insulation_tester', make: '', model: '', 
 
 export default function TestEquipmentAdmin({ orgId, rows, canDelete, companies = [] }: { orgId: string; rows: EquipmentRow[]; canDelete: boolean; companies?: string[] }) {
   const t = useTranslations('TestEquipment')
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -122,6 +124,7 @@ export default function TestEquipmentAdmin({ orgId, rows, canDelete, companies =
 
   return (
     <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
@@ -217,7 +220,7 @@ export default function TestEquipmentAdmin({ orgId, rows, canDelete, companies =
                       onClick={() => run(() => setTestEquipmentActive({ id: r.id, active: !r.is_active }))}>{r.is_active ? t('deactivate') : t('activate')}</button>
                     {canDelete && (
                       <button type="button" style={{ ...btn(false), padding: '4px 10px', fontSize: 'var(--text-xs)', color: 'var(--danger-700)' }} disabled={isPending}
-                        onClick={() => { if (window.confirm(t('deleteConfirm', { code: r.code }))) run(() => deleteTestEquipment({ id: r.id })) }}>{t('delete')}</button>
+                        onClick={async () => { if (await confirm({ message: t('deleteConfirm', { code: r.code }), confirmLabel: t('delete'), danger: true })) run(() => deleteTestEquipment({ id: r.id })) }}>{t('delete')}</button>
                     )}
                   </div>
                 </td>

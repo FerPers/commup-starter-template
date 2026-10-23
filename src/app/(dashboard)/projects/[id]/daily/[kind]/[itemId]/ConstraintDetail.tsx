@@ -3,6 +3,7 @@
 import { dailyTabHref } from '@/lib/navigation/hub-routes'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { deleteMgmtItem, escalateConstraint, transitionConstraint, updateConstraint } from '@/app/actions/daily'
 import { ACTION_LIVE, BLOCKING_LEVEL, ESCALATION_LEVELS, daysOverdue, todayIso, type ActionStatus, type ConstraintStatus, type ImpactKind } from '@/lib/daily/catalog'
 import { Alert, Evidence, LevelChip, OverdueChip, Timeline, btn, card, input, small } from '../../daily-ui'
@@ -17,6 +18,7 @@ export default function ConstraintDetail({ project, opts, names, userId, role, e
 }) {
   const t = useTranslations('Daily')
   const { run, isPending, error, saved, router } = useRunner()
+  const { dialog, ask, confirm } = useAskDialog() // G-08: diálogo propio
   const today = useMemo(() => todayIso(), [])
   const status = item.status as ConstraintStatus
   const who = (id: string | null) => (id ? names[id] : undefined) ?? t('someone')
@@ -37,12 +39,12 @@ export default function ConstraintDetail({ project, opts, names, userId, role, e
   const base = { projectId: project.id, constraintId: item.id }
   const overdue = status === 'open' ? daysOverdue(item.need_date, today) : 0
 
-  function save() {
+  async function save() {
     // S11 (D-14): sacar una restricción abierta de su gate o sistema (líder+) o cambiar la fecha requerida pide motivo.
     let reason: string | undefined
     const moved = status === 'open' && ((form.gateId || null) !== (item.gate_id ?? null) || form.systemId !== item.system_id)
     if (moved || form.needDate !== item.need_date) {
-      const r = window.prompt(t(moved ? 'detail.movePrompt' : 'detail.needDatePrompt'))
+      const r = await ask({ title: t('form.save'), confirmLabel: t('form.save'), input: { label: t(moved ? 'detail.movePrompt' : 'detail.needDatePrompt'), minLength: 3, multiline: true } })
       if (r === null) return
       reason = r
     }
@@ -54,13 +56,13 @@ export default function ConstraintDetail({ project, opts, names, userId, role, e
   function escalate() {
     run(() => escalateConstraint({ ...base, level: newLevel, reason }), () => setReason(''))
   }
-  function cancel() {
-    const r = window.prompt(t('detail.cancelPrompt'))
+  async function cancel() {
+    const r = await ask({ title: t('detail.cancel'), confirmLabel: t('detail.cancel'), danger: true, input: { label: t('detail.cancelPrompt'), minLength: 3, multiline: true } })
     if (!r?.trim()) return
     run(() => transitionConstraint({ ...base, to: 'cancelled', comment: r }))
   }
-  function remove() {
-    if (!window.confirm(t('detail.deleteConfirm'))) return
+  async function remove() {
+    if (!(await confirm({ message: t('detail.deleteConfirm'), confirmLabel: t('detail.delete'), danger: true }))) return
     run(() => deleteMgmtItem({ projectId: project.id, kind: 'constraint', entityId: item.id }), () => router.push(dailyTabHref(project.id, 'constraints')))
   }
   const canDelete = status === 'open' && item.escalation_level === 1 && linked.actions.length === 0 && linked.decisions.length === 0 &&
@@ -69,6 +71,7 @@ export default function ConstraintDetail({ project, opts, names, userId, role, e
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <Header projectId={project.id} kind="constraint" number={item.number} title={item.title} status={status}>
         <LevelChip level={item.escalation_level} />
         <OverdueChip days={overdue} />

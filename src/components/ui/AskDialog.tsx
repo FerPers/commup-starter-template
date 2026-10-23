@@ -13,6 +13,7 @@ import { Button } from './Button'
  *   const { dialog, ask } = useAskDialog()
  *   const reason = await ask({ title, confirmLabel, input: { label, minLength: 3 }, choices })   // null = cancelado
  *   const ok = (await ask({ title, message, confirmLabel, danger: true })) !== null
+ *   if (!(await confirm({ message, confirmLabel, danger: true }))) return   // G-08 (en lugar de window.confirm)
  *   …
  *   return <>{dialog}…</>
  */
@@ -29,12 +30,23 @@ export type AskOptions = {
   alternative?: string
 }
 
+/** Solo confirmar (G-08, reemplazo de `window.confirm`): el texto de siempre va en `message`; título y botón
+ *  por defecto «Confirmar» (`AskDialog.confirm`, `delete`, `discard`, `remove`, `revoke`, `continue` sirven de botón). */
+export type ConfirmOptions = Omit<AskOptions, 'title' | 'confirmLabel' | 'input' | 'choices' | 'alternative'> & {
+  title?: string
+  confirmLabel?: string
+}
+
 /** Lo que devuelve `ask` cuando se elige la acción alternativa. */
 export const ASK_ALTERNATIVE = '\u0000alternative'
 
 type Pending = AskOptions & { resolve: (v: string | null) => void }
 
-export function useAskDialog(): { dialog: ReactNode; ask: (o: AskOptions) => Promise<string | null> } {
+export function useAskDialog(): {
+  dialog: ReactNode
+  ask: (o: AskOptions) => Promise<string | null>
+  confirm: (o: ConfirmOptions) => Promise<boolean>
+} {
   const t = useTranslations('AskDialog')
   const [pending, setPending] = useState<Pending | null>(null)
   const [text, setText] = useState('')
@@ -47,6 +59,11 @@ export function useAskDialog(): { dialog: ReactNode; ask: (o: AskOptions) => Pro
     setChoice(null)
     setPending({ ...o, resolve })
   }), [])
+
+  const confirm = useCallback(async (o: ConfirmOptions) => {
+    const label = o.confirmLabel ?? t('confirm')
+    return (await ask({ ...o, title: o.title ?? label, confirmLabel: label })) !== null
+  }, [ask, t])
 
   const finish = useCallback((v: string | null) => {
     if (!pending || resolved.current) return
@@ -62,11 +79,12 @@ export function useAskDialog(): { dialog: ReactNode; ask: (o: AskOptions) => Pro
     background: 'var(--surface, #fff)', color: 'var(--text-strong)', boxSizing: 'border-box',
   }
 
+  // Si la acción es «Cancelar» (cancelar una acción, una TQ…), el botón que cierra dice «Volver» para no repetir.
   const dialog = pending ? (
     <Modal open onClose={() => finish(null)} title={pending.title} size="md" closeOnBackdrop={false}
       footer={
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-          <Button variant="outline" size="lg" onClick={() => finish(null)}>{t('cancel')}</Button>
+          <Button variant="outline" size="lg" onClick={() => finish(null)}>{pending.confirmLabel === t('cancel') ? t('back') : t('cancel')}</Button>
           {pending.alternative && <Button variant="danger" size="lg" onClick={() => finish(ASK_ALTERNATIVE)}>{pending.alternative}</Button>}
           <Button variant={pending.danger ? 'danger' : 'primary'} size="lg" disabled={!valid}
             onClick={() => finish(pending.input ? text.trim() : '')}>{pending.confirmLabel}</Button>
@@ -103,5 +121,5 @@ export function useAskDialog(): { dialog: ReactNode; ask: (o: AskOptions) => Pro
     </Modal>
   ) : null
 
-  return { dialog, ask }
+  return { dialog, ask, confirm }
 }

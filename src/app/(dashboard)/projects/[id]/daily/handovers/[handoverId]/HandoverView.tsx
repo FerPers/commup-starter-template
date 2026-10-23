@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatInZone } from '@/lib/time/zone'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { acceptShiftHandover, deleteShiftHandoverDraft, handOverShift, updateShiftHandover } from '@/app/actions/daily-report'
 import type { HandoverSnapshot } from '@/lib/pdf/daily-report'
 import { Alert, Chip, btn, card, input, label, small } from '../../daily-ui'
@@ -26,6 +27,7 @@ export default function HandoverView({ project, handover: h, isOpener, canReceiv
 }) {
   const t = useTranslations('Daily')
   const router = useRouter()
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(h.pending)
@@ -48,8 +50,8 @@ export default function HandoverView({ project, handover: h, isOpener, canReceiv
     })
   }
   const save = () => run(() => updateShiftHandover({ ...base, pending, safety }))
-  function handOver() {
-    if (!window.confirm(t('handover.handOverConfirm'))) return
+  async function handOver() {
+    if (!(await confirm({ message: t('handover.handOverConfirm'), confirmLabel: t('handover.handOver') }))) return
     run(async () => {
       if (dirty) {
         const r = await updateShiftHandover({ ...base, pending, safety })
@@ -59,8 +61,8 @@ export default function HandoverView({ project, handover: h, isOpener, canReceiv
     })
   }
   const accept = () => run(() => acceptShiftHandover({ ...base, comment }))
-  function remove() {
-    if (!window.confirm(t('detail.deleteConfirm'))) return
+  async function remove() {
+    if (!(await confirm({ message: t('detail.deleteConfirm'), confirmLabel: t('detail.delete'), danger: true }))) return
     run(() => deleteShiftHandoverDraft(base), () => router.push(`/projects/${project.id}/daily/handovers`))
   }
 
@@ -80,6 +82,7 @@ export default function HandoverView({ project, handover: h, isOpener, canReceiv
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <Link href={`/projects/${project.id}/daily/handovers`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>← {t('tab.handovers')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>

@@ -2,13 +2,15 @@
 
 import { useTranslations, useLocale } from 'next-intl'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useId, useState, useTransition, useMemo } from 'react'
 import {
   createWebhookSubscription,
   setWebhookEnabled,
   deleteWebhookSubscription,
 } from '@/app/actions/webhooks'
 import { WEBHOOK_EVENT_TYPES } from '@/lib/constants/webhook-events'
+import { useAskDialog } from '@/components/ui/AskDialog'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 type Sub = {
   id: string
@@ -89,6 +91,7 @@ export default function WebhooksView({
   const [expandedSubId, setExpandedSubId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
 
   const projectsById = useMemo(() => {
     const m: Record<string, string> = {}
@@ -114,8 +117,8 @@ export default function WebhooksView({
     })
   }
 
-  const handleDelete = (s: Sub) => {
-    if (!confirm(tw('confirmDelete', { name: s.name }))) return
+  const handleDelete = async (s: Sub) => {
+    if (!(await confirm({ message: tw('confirmDelete', { name: s.name }), confirmLabel: tw('delete'), danger: true }))) return
     setError(null)
     startTransition(async () => {
       const res = await deleteWebhookSubscription(s.id)
@@ -127,6 +130,7 @@ export default function WebhooksView({
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+      {dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
@@ -341,6 +345,7 @@ function CreateSubscriptionModal({
   const [eventTypes, setEventTypes] = useState<string[]>(['*'])
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const titleId = useId()
 
   const toggleEvent = (v: string) => {
     setEventTypes(curr => {
@@ -384,8 +389,8 @@ function CreateSubscriptionModal({
 
   return (
     <div style={modalBackdrop}>
-      <div style={{ ...modalBox, maxWidth: 620 }}>
-        <ModalHeader title={tw('newTitle')} onClose={onClose} />
+      <DialogSurface onClose={saving ? undefined : onClose} labelledBy={titleId} style={{ ...modalBox, maxWidth: 620 }}>
+        <ModalHeader id={titleId} title={tw('newTitle')} onClose={onClose} />
 
         {err && <ModalError msg={err} />}
 
@@ -461,7 +466,7 @@ function CreateSubscriptionModal({
           onSave={handleSave}
           saveLabel={tw('form.create')}
         />
-      </div>
+      </DialogSurface>
     </div>
   )
 }
@@ -477,6 +482,7 @@ function SecretRevealModal({
   const tw = useTranslations('Webhooks')
   const [copied, setCopied] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
+  const titleId = useId()
 
   const copy = async () => {
     try {
@@ -490,8 +496,8 @@ function SecretRevealModal({
 
   return (
     <div style={modalBackdrop}>
-      <div style={{ ...modalBox, maxWidth: 640 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-strong)' }}>
+      <DialogSurface onClose={confirmed ? onClose : undefined} labelledBy={titleId} style={{ ...modalBox, maxWidth: 640 }}>
+        <h2 id={titleId} style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-strong)' }}>
           {tw('secret.title')}
         </h2>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 16px' }}>
@@ -560,7 +566,7 @@ if (sig !== expected) return res.status(401).end()`}
             {tw('close')}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }
@@ -575,11 +581,11 @@ const modalBox: React.CSSProperties = {
   background: 'var(--card-bg)', borderRadius: 10, width: '100%', padding: 24,
 }
 
-function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
+function ModalHeader({ id, title, onClose }: { id?: string; title: string; onClose: () => void }) {
   const tw = useTranslations('Webhooks')
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>{title}</h2>
+      <h2 id={id} style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>{title}</h2>
       <button onClick={onClose} aria-label={tw('close')} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
     </div>
   )

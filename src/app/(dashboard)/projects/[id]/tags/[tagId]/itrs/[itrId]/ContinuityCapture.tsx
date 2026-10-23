@@ -2,11 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui'
 import { evaluateContinuity, type ContinuityCapture as Capture, type ContinuityRow } from '@/lib/itr/continuity'
 import { reshapeContinuity } from '@/lib/itr/continuity-editor'
 
 export default function ContinuityCapture({ value, disabled, onChange }: { value: string | null; disabled: boolean; onChange: (value: string) => void }) {
   const t = useTranslations('Continuity')
+  const tA = useTranslations('AskDialog')
+  // G-08: diálogo propio
+  const { dialog, confirm } = useAskDialog()
   const evaluated = evaluateContinuity(value)
   const data = evaluated.data
   const [grouping, setGrouping] = useState<Capture['grouping']>(data?.grouping ?? 'pairs')
@@ -17,7 +21,7 @@ export default function ContinuityCapture({ value, disabled, onChange }: { value
   const current = useRef(data)
   useEffect(() => { current.current = evaluateContinuity(value).data }, [value])
   const field = { width: '100%', minWidth: '95px', padding: '8px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', color: 'var(--text-strong)' } as const
-  function configure() {
+  async function configure() {
     const n = Number(count)
     const ids = shields.split('\n').map(s => s.trim()).filter(Boolean)
     if (!Number.isInteger(n) || n < 1 || n > 500 || new Set(ids).size !== ids.length) {
@@ -25,7 +29,7 @@ export default function ContinuityCapture({ value, disabled, onChange }: { value
     }
     const next = reshapeContinuity(current.current, grouping, n, ids, measurement)
     const removed = current.current?.rows.filter(row => !next.rows.some(other => other.id === row.id)) ?? []
-    if (removed.some(row => [row.result, row.from, row.to, row.remarks, row.unit].some(value => value.length > 0) || row.reading !== null) && !window.confirm(t('confirmRemove'))) return
+    if (removed.some(row => [row.result, row.from, row.to, row.remarks, row.unit].some(value => value.length > 0) || row.reading !== null) && !(await confirm({ message: t('confirmRemove'), confirmLabel: tA('remove'), danger: true }))) return
     setError(''); current.current = next; onChange(JSON.stringify(next))
   }
   function changeRow(id: string, patch: Partial<ContinuityRow>) {
@@ -35,6 +39,7 @@ export default function ContinuityCapture({ value, disabled, onChange }: { value
   }
   return <fieldset disabled={disabled} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
     <legend style={{ fontWeight: 600, marginBottom: '10px' }}>{t('legend')}</legend>
+    {dialog}
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'end' }}>
       <label>{t('grouping')}<select aria-label={t('groupingAria')} style={field} value={grouping} onChange={e => setGrouping(e.target.value as Capture['grouping'])}><option value="pairs">{t('pairs')}</option><option value="conductors">{t('conductors')}</option></select></label>
       <label>{grouping === 'pairs' ? t('pairCount') : t('conductorCount')}<input aria-label={t('countAria')} style={field} type="number" min={1} max={500} step={1} value={count} onChange={e => setCount(e.target.value)} /></label>

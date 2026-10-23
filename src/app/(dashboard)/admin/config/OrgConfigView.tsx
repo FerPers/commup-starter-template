@@ -10,6 +10,7 @@ import {
 } from '@/app/actions/config'
 import { DEFAULT_ITR_GLOSSARY } from '@/lib/constants/itr-glossary'
 import { EQUIPMENT_CATEGORIES } from '@/lib/equipment-types'
+import { useToast } from '@/components/ui/Toast'
 
 type Org = { id: string; name: string; logo_url: string | null }
 type Phase = { id: string; code: string; name: string; color: string; order_index: number; certificate_name: string | null; itr_client_signature: boolean }
@@ -750,6 +751,7 @@ export default function OrgConfigView({
 function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) => string }) {
   const [selectedProject, setSelectedProject] = useState(projects[0]?.id ?? '')
   const [exporting, setExporting] = useState(false)
+  const toast = useToast()
 
   async function handleExport() {
     if (!selectedProject) return
@@ -758,7 +760,7 @@ function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) 
       const res = await fetch(`/api/admin/export?projectId=${selectedProject}`)
       if (!res.ok) {
         const err = await res.json() as { error?: string }
-        alert(err.error ?? t('export.failed'))
+        toast.error(err.error ?? t('export.failed'))
         return
       }
       const blob = await res.blob()

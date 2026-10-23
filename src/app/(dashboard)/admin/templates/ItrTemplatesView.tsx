@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createTemplate, deleteTemplate } from '@/app/actions/itr-templates'
 import BulkImportCatalogModal from './BulkImportCatalogModal'
 import ImportFromOrgModal from './ImportFromOrgModal'
 import { listTranslationGaps, translateTemplateMissing } from '@/app/actions/itr-translations'
+import { useAskDialog } from '@/components/ui/AskDialog'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { useToast } from '@/components/ui/Toast'
 
 interface Discipline { id: string; code: string; name: string; color: string }
 interface Phase { id: string; code: string; name: string; color: string; order_index: number }
@@ -36,6 +39,10 @@ const DEFAULT_FORM = { code: '', title: '', phase_id: '', discipline_id: '', des
 export default function ItrTemplatesView({ templates, disciplines, phases, canEdit }: Props) {
   const router = useRouter()
   const t = useTranslations('ItrTemplates')
+  const tA = useTranslations('AskDialog')
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
+  const toast = useToast()
+  const createTitleId = useId()
   const [isPending, startTransition] = useTransition()
   const [activeDisc, setActiveDisc] = useState('all')
   const [showModal, setShowModal] = useState(false)
@@ -104,19 +111,24 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
   }
 
   async function handleDelete(id: string, code: string) {
-    if (!confirm(t('deleteConfirm', { code }))) return
+    if (!(await confirm({ message: t('deleteConfirm', { code }), confirmLabel: tA('delete'), danger: true }))) return
     setDeletingId(id)
     startTransition(async () => {
       // I-14 (S08): antes el error se ignoraba y la UI daba por borrada una plantilla que seguía ahí.
       const res = await deleteTemplate(id)
       setDeletingId(null)
-      if (res.error) { window.alert(res.error); return }
+      if (res.error) { toast.error(res.error); return }
       router.refresh()
     })
   }
 
+  function closeCreate() {
+    setShowModal(false); setForm(DEFAULT_FORM); setFormError(null)
+  }
+
   return (
     <div>
+      {dialog}
       {/* Top bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '16px' }}>
         {/* Discipline filter tabs */}
@@ -369,6 +381,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                     <button
                       onClick={() => handleDelete(tmpl.id, tmpl.code)}
                       disabled={isPending}
+                      aria-label={tA('delete')}
                       style={{
                         width: '28px', height: '28px', display: 'flex', alignItems: 'center',
                         justifyContent: 'center', borderRadius: '6px', border: 'none',
@@ -394,13 +407,13 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000, padding: '20px',
         }}
-          onClick={e => { if (e.target === e.currentTarget) { setShowModal(false); setForm(DEFAULT_FORM); setFormError(null) } }}
+          onClick={e => { if (e.target === e.currentTarget) closeCreate() }}
         >
-          <div style={{
+          <DialogSurface onClose={isPending ? undefined : closeCreate} labelledBy={createTitleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', padding: '28px',
             width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 6px' }}>
+            <h2 id={createTitleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 6px' }}>
               {t('modal.title')}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 24px' }}>
@@ -481,7 +494,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '24px', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => { setShowModal(false); setForm(DEFAULT_FORM); setFormError(null) }}
+                onClick={closeCreate}
                 style={{
                   padding: '9px 18px', background: 'var(--card-bg)', border: '1px solid var(--border)',
                   borderRadius: '8px', fontSize: '13px', color: 'var(--text-strong)', cursor: 'pointer',
@@ -501,7 +514,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 {isPending ? t('modal.creating') : t('modal.createBtn')}
               </button>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
 

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { useId, useRef, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
+import { useDialogA11y } from './dialog-a11y';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -37,37 +38,10 @@ export function Modal({
 }: ModalProps) {
   const t = useTranslations('A11y');
   const dialogRef = useRef<HTMLDivElement>(null);
-  const previouslyFocused = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    previouslyFocused.current = document.activeElement as HTMLElement | null;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const onKey = (e: KeyboardEvent) => {
-      if (closeOnEsc && e.key === 'Escape') onClose();
-      if (e.key === 'Tab' && dialogRef.current) {
-        const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusables.length === 0) return;
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-      }
-    };
-
-    document.addEventListener('keydown', onKey);
-    setTimeout(() => dialogRef.current?.focus(), 0);
-
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-      previouslyFocused.current?.focus?.();
-    };
-  }, [open, onClose, closeOnEsc]);
+  // G-12: Esc, foco atrapado y pila de diálogos anidados en `useDialogA11y`; ids únicos (un AskDialog sobre otro Modal).
+  useDialogA11y(dialogRef, { open, onClose, closeOnEsc });
+  const titleId = useId();
+  const descId = useId();
 
   if (!open || typeof window === 'undefined') return null;
 
@@ -87,8 +61,8 @@ export function Modal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? 'commup-modal-title' : undefined}
-        aria-describedby={description ? 'commup-modal-desc' : undefined}
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -115,12 +89,12 @@ export function Modal({
           }}>
             <div style={{ minWidth: 0 }}>
               {title && (
-                <h2 id="commup-modal-title" style={{
+                <h2 id={titleId} style={{
                   fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--text-strong)', lineHeight: 1.3,
                 }}>{title}</h2>
               )}
               {description && (
-                <p id="commup-modal-desc" style={{
+                <p id={descId} style={{
                   fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.5,
                 }}>{description}</p>
               )}

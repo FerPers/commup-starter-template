@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { addVendorFinding, createVendorRetest, recordVendorActivityResult, saveVendorActivity } from '@/app/actions/vendors'
 import { ACTIVITY_KINDS, ACTIVITY_RESULTS, PUNCH_CATEGORIES, RESULT_TONE, resultNeedsFindings, type ActivityKind, type ActivityResult, type PunchCategory } from '@/lib/vendors/catalog'
 import { useLocalToday } from '@/lib/use-local-today'
@@ -18,6 +19,7 @@ export default function ActivitiesSection({ projectId, pkgId, pkgNumber, closed,
   tags: { id: string; tag_number: string }[]; members: Member[]; names: Record<string, string>; userId: string; canEdit: boolean; canLead: boolean
 }) {
   const t = useTranslations('Vendors')
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const router = useRouter()
   const today = useLocalToday()
   const [isPending, start] = useTransition()
@@ -39,6 +41,7 @@ export default function ActivitiesSection({ projectId, pkgId, pkgNumber, closed,
 
   return (
     <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10 }} aria-labelledby="vnd-tests">
+      {dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <h2 id="vnd-tests" style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text-strong)' }}>{t('tests.title')}</h2>
         {canEdit && !closed && !form && (
@@ -161,7 +164,7 @@ export default function ActivitiesSection({ projectId, pkgId, pkgNumber, closed,
                     <Field text={t('tests.performed')}><input type="date" style={input} value={result.performedOn} max={today ?? undefined} onChange={e => setResult({ ...result, performedOn: e.target.value })} /></Field>
                     <button type="button" disabled={isPending || !result.performedOn || (resultNeedsFindings(result.result) && a.findings.length === 0)}
                       style={btn('primary', isPending || !result.performedOn)} title={resultNeedsFindings(result.result) && a.findings.length === 0 ? t('tests.needFindings') : undefined}
-                      onClick={() => { if (window.confirm(t('tests.resultConfirm'))) run(() => recordVendorActivityResult({ projectId, packageId: pkgId, activityId: a.id, ...result })) }}>{t('tests.record')}</button>
+                      onClick={async () => { if (await confirm({ message: t('tests.resultConfirm'), confirmLabel: t('tests.record') })) run(() => recordVendorActivityResult({ projectId, packageId: pkgId, activityId: a.id, ...result })) }}>{t('tests.record')}</button>
                   </div>
                 )}
                 {canRetest && canEdit && !closed && (

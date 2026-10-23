@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { ShieldCheck, AlertTriangle } from 'lucide-react'
 import { createPssrReview } from '@/app/actions/pssr'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 interface System { id: string; code: string; name: string }
 interface Review {
@@ -50,6 +51,7 @@ export default function PssrListView({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showModal, setShowModal] = useState(false)
+  const titleId = useId()
   const [form, setForm] = useState({ systemId: '', templateId: templates[0]?.id ?? '', title: '', reviewDueDate: '' })
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -241,11 +243,11 @@ export default function PssrListView({
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }} onClick={() => setShowModal(false)}>
-          <div style={{
+          <DialogSurface onClose={() => setShowModal(false)} labelledBy={titleId} style={{
             background: 'var(--card-bg)', borderRadius: '16px', padding: '32px',
             width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
+            <h2 id={titleId} style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
               {t('createModal.title')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -322,7 +324,7 @@ export default function PssrListView({
                 </button>
               </div>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
     </>

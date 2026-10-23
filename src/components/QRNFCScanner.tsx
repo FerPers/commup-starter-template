@@ -9,11 +9,12 @@
  */
 
 import { useLocale, useTranslations } from 'next-intl'
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseRegisterQr } from '@/lib/registers/qr';
 import { parseTagScan, tag360Path } from '@/lib/tags/qr';
 import { NAV_STORAGE } from '@/lib/constants/navigation';
+import { DialogSurface } from '@/components/ui/dialog-a11y';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 interface ScanResult {
@@ -249,6 +250,7 @@ export default function QRNFCScanner() {
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const [manualInput, setManualInput] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const historyTitleId = useId();
 
   // Cargar historial desde localStorage
   useEffect(() => {
@@ -338,6 +340,7 @@ export default function QRNFCScanner() {
         <h1 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, margin: 0 }}>{tNav('scan')}</h1>
         <button
           onClick={() => setShowHistory(!showHistory)}
+          aria-label={tx('history.title')}
           style={{ padding: 8, borderRadius: 'var(--radius-md)', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', transition: 'background 0.15s', position: 'relative' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--gray-800)' }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
@@ -548,9 +551,9 @@ export default function QRNFCScanner() {
             style={{ flex: 1, background: 'rgba(0, 0, 0, 0.5)' }}
             onClick={() => setShowHistory(false)}
           />
-          <div style={{ background: 'var(--gray-800)', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, maxHeight: '60vh', overflowY: 'auto' }}>
+          <DialogSurface onClose={() => setShowHistory(false)} labelledBy={historyTitleId} style={{ background: 'var(--gray-800)', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, maxHeight: '60vh', overflowY: 'auto' }}>
             <div style={{ width: 48, height: 4, background: 'var(--gray-600)', borderRadius: 'var(--radius-pill)', margin: '0 auto 16px' }} />
-            <h2 style={{ fontWeight: 700, fontSize: 'var(--text-lg)', marginBottom: 16, marginTop: 0 }}>{tx('history.title')}</h2>
+            <h2 id={historyTitleId} style={{ fontWeight: 700, fontSize: 'var(--text-lg)', marginBottom: 16, marginTop: 0 }}>{tx('history.title')}</h2>
             {recentScans.length === 0 ? (
               <p style={{ color: 'var(--gray-500)', textAlign: 'center', padding: '32px 0' }}>{tx('history.empty')}</p>
             ) : (
@@ -581,7 +584,7 @@ export default function QRNFCScanner() {
                 ))}
               </div>
             )}
-          </div>
+          </DialogSurface>
         </div>
       )}
 

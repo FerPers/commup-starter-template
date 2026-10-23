@@ -3,6 +3,7 @@
 import { dailyTabHref } from '@/lib/navigation/hub-routes'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { answerTq, deleteMgmtItem, transitionTq, updateTq } from '@/app/actions/daily'
 import { daysOverdue, todayIso, type TqAddressee, type TqStatus } from '@/lib/daily/catalog'
 import type { TagValue } from '../../../registers/RegisterFields'
@@ -19,6 +20,7 @@ export default function TqDetail({ project, opts, names, userId, role, events, a
 }) {
   const t = useTranslations('Daily')
   const { run, isPending, error, saved, router } = useRunner()
+  const { dialog, ask, confirm } = useAskDialog() // G-08: diálogo propio
   const today = useMemo(() => todayIso(), [])
   const status = item.status as TqStatus
   const who = (id: string | null) => (id ? names[id] : undefined) ?? t('someone')
@@ -50,19 +52,20 @@ export default function TqDetail({ project, opts, names, userId, role, events, a
   function answer() {
     run(() => answerTq({ ...base, response, respondedByName: respondedBy, designChange, mocRef }), () => setResponse(''))
   }
-  function cancel() {
-    const r = window.prompt(t('detail.cancelPrompt'))
+  async function cancel() {
+    const r = await ask({ title: t('detail.cancel'), confirmLabel: t('detail.cancel'), danger: true, input: { label: t('detail.cancelPrompt'), minLength: 3, multiline: true } })
     if (!r?.trim()) return
     run(() => transitionTq({ ...base, to: 'cancelled', comment: r }))
   }
-  function remove() {
-    if (!window.confirm(t('detail.deleteConfirm'))) return
+  async function remove() {
+    if (!(await confirm({ message: t('detail.deleteConfirm'), confirmLabel: t('detail.delete'), danger: true }))) return
     run(() => deleteMgmtItem({ projectId: project.id, kind: 'tq', entityId: item.id }), () => router.push(dailyTabHref(project.id, 'tqs')))
   }
   const canDelete = status === 'draft' && attachments.length === 0 && (item.raised_by === userId || role === 'owner' || role === 'admin')
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <Header projectId={project.id} kind="tq" number={item.number} title={item.subject} status={status}>
         {status === 'issued' && <OverdueChip days={daysOverdue(item.required_by, today)} />}
       </Header>

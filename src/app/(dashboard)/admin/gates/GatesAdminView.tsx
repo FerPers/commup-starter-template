@@ -19,6 +19,7 @@ import {
 } from '@/app/actions/gates-admin'
 import { COSIGN_CAPACITIES, CONFIGURABLE_CRITERIA, type GatePolicy } from '@/lib/readiness/gates'
 import { GATE_APPROVAL_ROLES, READINESS_GATE_CATALOG } from '@/lib/constants/readiness-gates'
+import { useAskDialog } from '@/components/ui/AskDialog'
 
 type Gate = {
   id: string
@@ -60,11 +61,13 @@ export default function GatesAdminView({ gates, criteria, phases, weights, polic
   const t = useTranslations('GatesAdmin')
   const ts = useTranslations('Startup')
   const tg = useTranslations('Gates')
+  const tA = useTranslations('AskDialog')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [newGate, setNewGate] = useState({ code: '', name: '', phaseId: '' })
   const [newCrit, setNewCrit] = useState<Record<string, { kind: string; label: string }>>({})
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
 
   function act(fn: () => Promise<{ error?: string }>) {
     setError(null)
@@ -87,11 +90,12 @@ export default function GatesAdminView({ gates, criteria, phases, weights, polic
     const msg = (impact.attestations ?? 0) > 0
       ? t('confirmRemoveCriterionImpact', { n: impact.attestations ?? 0, systems: impact.systems ?? 0 })
       : t('confirmRemoveCriterion')
-    if (window.confirm(msg)) act(() => deleteGateCriterion(id))
+    if (await confirm({ message: msg, confirmLabel: tA('remove'), danger: true })) act(() => deleteGateCriterion(id))
   }
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
         <p style={{ ...small, margin: '6px 0 0', lineHeight: 1.5 }}>{t('subtitle')}</p>
@@ -188,7 +192,7 @@ export default function GatesAdminView({ gates, criteria, phases, weights, polic
                   {g.is_active ? t('deactivate') : t('activate')}
                 </button>
                 <button type="button" style={{ ...btn(), color: 'var(--danger-500)' }} disabled={isPending}
-                  onClick={() => window.confirm(t('confirmDelete', { code: g.code })) && act(() => deleteGate(g.id))}>
+                  onClick={async () => { if (await confirm({ message: t('confirmDelete', { code: g.code }), confirmLabel: t('delete'), danger: true })) act(() => deleteGate(g.id)) }}>
                   {t('delete')}
                 </button>
               </div>

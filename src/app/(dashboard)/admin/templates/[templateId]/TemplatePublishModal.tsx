@@ -1,6 +1,8 @@
 'use client'
 
+import { useId } from 'react'
 import { useTranslations } from 'next-intl'
+import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 export default function TemplatePublishModal({
   mode,
@@ -17,14 +19,15 @@ export default function TemplatePublishModal({
   onClose: () => void
 }) {
   const t = useTranslations('ItrTemplates.builder')
+  const titleId = useId()
 
   return (
     <div
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
+      <DialogSurface onClose={onClose} labelledBy={titleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+        <h2 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 10px' }}>
           {mode === 'create' ? t('createRevisionTitle') : t('activateRevisionTitle')}
         </h2>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 6px' }}>
@@ -48,7 +51,7 @@ export default function TemplatePublishModal({
             {isPending ? t('btnSaving') : mode === 'create' ? t('btnCreateRevisionConfirm', { version }) : t('btnActivateRevisionConfirm', { version })}
           </button>
         </div>
-      </div>
+      </DialogSurface>
     </div>
   )
 }

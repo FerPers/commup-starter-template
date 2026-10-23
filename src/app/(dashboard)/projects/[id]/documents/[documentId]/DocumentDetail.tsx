@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import { createClient } from '@/lib/supabase/client'
 import {
   addDocumentRevision, getDocumentFileUrl, issueDocumentRevision, referenceDocumentInOpenItrs, revalidateDocumentReferences, saveDocument, voidDocumentRevision,
@@ -56,6 +57,7 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
 }) {
   const t = useTranslations('Documents')
   const router = useRouter()
+  const { dialog, confirm } = useAskDialog() // G-08: diálogo propio
   const [isPending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [edit, setEdit] = useState<Doc | null>(null)
@@ -113,6 +115,7 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {dialog}
       <div>
         <Link href={`/projects/${project.id}/documents`} style={linkStyle}>← {t('title')}</Link>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 4px' }}>{doc.number}</h1>
@@ -231,7 +234,7 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
             <button type="button" disabled={isPending} style={btn('primary', isPending)}
               onClick={() => run(() => issueDocumentRevision({ projectId: project.id, documentId: doc.id, revisionId: draft.id, status: issueStatus }))}>{t('rev.issue')}</button>
             <button type="button" disabled={isPending} style={btn('danger', isPending)}
-              onClick={() => { if (window.confirm(t('rev.discardConfirm'))) run(() => issueDocumentRevision({ projectId: project.id, documentId: doc.id, revisionId: draft.id, status: null })) }}>{t('rev.discard')}</button>
+              onClick={async () => { if (await confirm({ message: t('rev.discardConfirm'), confirmLabel: t('rev.discard'), danger: true })) run(() => issueDocumentRevision({ projectId: project.id, documentId: doc.id, revisionId: draft.id, status: null })) }}>{t('rev.discard')}</button>
           </div>
         )}
 

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { assignPreservationPlan, updatePlanStatus } from '@/app/actions/preservation'
+import { DialogSurface, useToast } from '@/components/ui'
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -88,6 +89,9 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(DEFAULT_FORM)
   const [formError, setFormError] = useState<string | null>(null)
+  const toast = useToast()
+  const modalTitleId = useId()
+  const closeModal = () => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }
 
   async function handleAssign() {
     if (!form.procedureId || !form.startDate) {
@@ -113,7 +117,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
   async function handleStatusChange(planId: string, newStatus: 'active' | 'suspended' | 'completed') {
     startTransition(async () => {
       const result = await updatePlanStatus(planId, newStatus, projectId, tagId)
-      if (result.error) alert(result.error)
+      if (result.error) toast.error(result.error)
       else router.refresh()
     })
   }
@@ -261,10 +265,10 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
       {/* Assign Plan modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px' }}>
-          <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px' }}>
+          <DialogSurface onClose={closeModal} labelledBy={modalTitleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{tx('modalTitle')}</h2>
-              <button onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }} aria-label={tx('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--gray-400)' }}>✕</button>
+              <h2 id={modalTitleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{tx('modalTitle')}</h2>
+              <button onClick={closeModal} aria-label={tx('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--gray-400)' }}>✕</button>
             </div>
 
             {formError && (
@@ -324,7 +328,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '22px' }}>
               <button
-                onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }}
+                onClick={closeModal}
                 style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
               >
                 {tx('cancel')}
@@ -337,7 +341,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                 {isPending ? tx('assigning') : tx('assignPlan')}
               </button>
             </div>
-          </div>
+          </DialogSurface>
         </div>
       )}
     </div>

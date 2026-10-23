@@ -7,6 +7,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useAskDialog } from '@/components/ui/AskDialog'
 import {
   updatePssrReviewItem,
   updatePssrReviewNotes,
@@ -60,6 +61,7 @@ export default function PssrReviewForm({
   totalItems, systemPunches, canEditPunches, itemActions,
 }: Props) {
   const t = useTranslations('PSSR')
+  const { dialog, ask } = useAskDialog() // G-08: diálogo propio
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [items, setItems] = useState(initialItems)
@@ -143,9 +145,12 @@ export default function PssrReviewForm({
     })
   }
 
-  function handleReject() {
-    if (!confirm(t('review.rejectConfirm'))) return
-    const reason = window.prompt(t('review.rejectReasonPrompt'))?.trim() ?? ''
+  async function handleReject() {
+    const reason = await ask({
+      title: t('review.reject'), confirmLabel: t('review.reject'), danger: true, message: t('review.rejectConfirm'),
+      input: { label: t('review.rejectReasonPrompt'), minLength: 3, multiline: true },
+    })
+    if (reason === null) return
     if (reason.length < 3) { setActionError(t('review.rejectReasonRequired')); return }
     startTransition(async () => {
       const res = await rejectPssrReview({ reviewId: review.id, projectId, reason })
@@ -164,6 +169,7 @@ export default function PssrReviewForm({
 
   return (
     <>
+      {dialog}
       {/* Back + Header ───────────────────────────────────────── */}
       <PssrReviewHeader
         projectId={projectId}
