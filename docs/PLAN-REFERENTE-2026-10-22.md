@@ -169,7 +169,7 @@ Más adelante, si se pide: **reglas condicionales en la matriz** (SIL, tipo de s
   - Tabla `pid_markups` con capa `losh` / `redline`, que reutiliza `pid_hotspot_guard` y `guard_same_project`, con las RLS de los pines.
   - Trigger `pid_carry_markups`: lleva las marcas LOSH a la revisión nueva «por revisar».
   - Herramientas Resaltar línea · Límite · Etiqueta; leyenda con aislar o atenuar y confirmar lo que está por revisar.
-- **P3. Tableta y lectura:**
+- **P3. Tableta y lectura:** ✅ hecho 2026-10-23 (migración `20261209120000`, `system_pid_sheets`). Además: el PDF ya no se recarga en cada guardado (URL firmada estable por revisión) y la hora de «Tags sin tipo» sale en la zona del proyecto.
   - Dibujo táctil (dos dedos mueven, botón «Terminar», deshacer), edición de vértices.
   - Color por estado de la liberación siguiente (de `compute_project_gates`).
   - `?system=` abre el plano con zoom al sistema.

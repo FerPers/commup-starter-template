@@ -40,6 +40,7 @@ export default function UntypedTagsView({ projectId, groups, catalog, untyped, p
   untyped: number
   pendingAi: number
   estimateUsd: number
+  /** `at` ya formateada en la zona del proyecto. */
   lastRun: { at: string; model: string } | null
   canEdit: boolean
 }) {
@@ -128,7 +129,7 @@ export default function UntypedTagsView({ projectId, groups, catalog, untyped, p
         <strong>{t('summary.groups', { count: groups.length })}</strong>
         <span style={{ color: 'var(--text-muted)' }}>{t('summary.detail', { free: counts.free, ai: counts.ai, none: counts.none, pending: pendingAi })}</span>
         <span style={{ flex: 1 }} />
-        {lastRun && <span style={{ color: 'var(--text-muted)' }}>{t('summary.lastRun', { at: new Date(lastRun.at).toLocaleString(), model: lastRun.model })}</span>}
+        {lastRun && <span style={{ color: 'var(--text-muted)' }}>{t('summary.lastRun', { at: lastRun.at, model: lastRun.model })}</span>}
         {canEdit && pendingAi > 0 && (
           <button type="button" onClick={classify} disabled={isPending} style={{ ...outline, opacity: isPending ? 0.6 : 1 }}
             title={t('ai.hint')}>

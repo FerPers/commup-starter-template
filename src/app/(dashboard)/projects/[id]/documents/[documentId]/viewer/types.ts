@@ -1,6 +1,7 @@
 import type { PidTagHit } from '@/app/actions/tag-search'
 import type { PageSize, Rotation } from '@/lib/pid/geometry'
 import type { Markup } from '@/lib/pid/markups'
+import type { RowState } from '@/lib/readiness/matrix'
 
 /** P1: el sistema trae su color estable del proyecto (`systems.color`). */
 export type SystemRef = { id: string; code: string; name: string; color: string }
@@ -34,3 +35,6 @@ export type PageInfo = PageSize & { rotation: Rotation }
 
 /** Liberaciones aprobadas (sin revocar) por sistema: editar sus marcas queda registrado. */
 export type ApprovedGates = Record<string, string[]>
+
+/** P3: liberación siguiente de cada sistema (de compute_project_gates) para colorear «Por estado». */
+export type SystemStates = Record<string, { state: RowState; gate: string | null }>

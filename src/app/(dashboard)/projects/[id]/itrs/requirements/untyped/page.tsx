@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { formatInZone } from '@/lib/time/zone'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 import { detectFree, learnedMap, signatureKey, type CatalogType, type LearnedPrefix, type TypeGroup } from '@/lib/tags/type-signature'
@@ -17,7 +18,7 @@ export default async function UntypedTagsPage({ params }: { params: Promise<{ id
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
 
-  const { data: project } = await supabase.from('projects').select('id, code').eq('id', id).eq('org_id', ctx.orgId).single()
+  const { data: project } = await supabase.from('projects').select('id, code, timezone').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
 
   const [groupsRes, { data: catalog }, { data: proposals }, t] = await Promise.all([
@@ -52,6 +53,8 @@ export default async function UntypedTagsPage({ params }: { params: Promise<{ id
   })
   const pendingAi = groups.filter(g => g.proposal.kind === 'pending').length
   const lastRun = (proposals ?? []).find(p => p.status === 'proposed')
+  // Hora en la zona del proyecto y rotulada (formatearla en el navegador rompía la hidratación).
+  const locale = await getLocale()
 
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 32px)', maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -69,7 +72,7 @@ export default async function UntypedTagsPage({ params }: { params: Promise<{ id
         untyped={data.untyped}
         pendingAi={pendingAi}
         estimateUsd={estimateClassifyUsd(pendingAi, cat.length)}
-        lastRun={lastRun ? { at: lastRun.created_at, model: lastRun.model ?? '' } : null}
+        lastRun={lastRun ? { at: formatInZone(lastRun.created_at, project.timezone, locale), model: lastRun.model ?? '' } : null}
         canEdit={ROLE_TIERS.privileged.includes(ctx.role)}
       />
     </div>

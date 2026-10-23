@@ -1,15 +1,19 @@
 'use client'
 
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { NO_SYSTEM_COLOR } from '@/lib/systems/colors'
 import { displayPoints, labelText, limitNormal, markupMetrics } from '@/lib/pid/markups'
-import type { Pt } from '@/lib/pid/geometry'
+import { pointerToUnit, type Pt } from '@/lib/pid/geometry'
+import { moveVertex } from '@/lib/pid/view'
 import type { MarkupView, PageInfo, SystemRef } from './types'
 
 // P2: capa SVG de las marcas LOSH sobre la hoja. viewBox = la página en puntos PDF (ya rotada), así que el SVG escala
 // uniforme con el zoom, como la tinta del plano: el resalte tiene el grosor de la línea en el papel a cualquier zoom.
 // Línea = trazo grueso y translúcido del color del sistema; límite = barra oscura con el código de cada lado;
 // etiqueta = chip con el código. «Por revisar» (copiadas de la revisión anterior) = contorno ámbar punteado.
+// P3: los vértices de la marca elegida se arrastran (mouse o dedo; en una línea, con ajuste a 90°) y al soltar se
+// guardan; `colorFor` colorea por sistema o por estado de la liberación siguiente.
 
 const INK = '#14213d'
 const REVIEW = '#d48a1a'
@@ -33,6 +37,9 @@ export default function MarkupLayer({
   draftColor,
   hover,
   pendingLimit,
+  colorFor,
+  editable = false,
+  onEditPoints,
 }: {
   page: PageInfo
   markups: MarkupView[]
@@ -48,13 +55,22 @@ export default function MarkupLayer({
   draftColor: string
   hover: Pt | null
   pendingLimit: { bar: [Pt, Pt]; system_id: string | null; other_system_id: string | null } | null
+  /** Color de las marcas de un sistema (por defecto, el color del sistema). */
+  colorFor?: (systemId: string | null) => string
+  /** La marca elegida se puede editar arrastrando sus vértices. */
+  editable?: boolean
+  onEditPoints?: (id: string, points: Pt[]) => void
 }) {
   const t = useTranslations('PidDocuments')
   const size = { w: page.w, h: page.h }
   const m = markupMetrics(size)
   const P = (p: Pt) => ({ x: p.x * size.w, y: p.y * size.h })
   const path = (pts: Pt[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${(p.x * size.w).toFixed(2)} ${(p.y * size.h).toFixed(2)}`).join(' ')
-  const colorOf = (id: string | null) => (id ? systems.get(id)?.color : undefined) ?? NO_SYSTEM_COLOR
+  const colorOf = colorFor ?? ((id: string | null) => (id ? systems.get(id)?.color : undefined) ?? NO_SYSTEM_COLOR)
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [drag, setDrag] = useState<{ id: string; idx: number; points: Pt[]; moved: boolean } | null>(null)
+  /** Puntos que se dibujan: los del arrastre en curso para la marca que se edita. */
+  const ptsOf = (mk: MarkupView) => (drag && drag.id === mk.id ? drag.points : displayPoints(mk, page.rotation))
   const codeOf = (id: string) => systems.get(id)?.code
   const dim = (mk: { system_id: string; other_system_id: string | null }) =>
     !!isolated && mk.system_id !== isolated && mk.other_system_id !== isolated
@@ -97,6 +113,7 @@ export default function MarkupLayer({
 
   return (
     <svg
+      ref={svgRef}
       viewBox={`0 0 ${size.w} ${size.h}`}
       preserveAspectRatio="none"
       role="img"
@@ -106,7 +123,7 @@ export default function MarkupLayer({
       {/* Recorridos resaltados (debajo de todo, translúcidos). */}
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {lines.map(mk => {
-          const pts = displayPoints(mk, page.rotation)
+          const pts = ptsOf(mk)
           const d = path(pts)
           return (
             <g key={mk.id}>
@@ -127,7 +144,7 @@ export default function MarkupLayer({
 
       {/* Límites y etiquetas. */}
       {others.map(mk => {
-        const pts = displayPoints(mk, page.rotation)
+        const pts = ptsOf(mk)
         const op = dim(mk) ? 0.25 : 1
         if (mk.kind === 'limit' && pts.length === 2) {
           const bar = pts as [Pt, Pt]
@@ -164,16 +181,40 @@ export default function MarkupLayer({
         return null
       })}
 
-      {/* Marca elegida: contorno y vértices. */}
+      {/* Marca elegida: contorno y vértices (arrastrables si se puede editar). */}
       {selected && (() => {
-        const pts = displayPoints(selected, page.rotation)
+        const pts = ptsOf(selected)
         const hs = m.font * 0.7
+        const unitAt = (e: React.PointerEvent) => pointerToUnit(e.clientX, e.clientY, svgRef.current!.getBoundingClientRect())
         return (
-          <g pointerEvents="none">
-            {pts.length > 1 && <path d={path(pts)} fill="none" stroke={SELECT} strokeWidth={m.barStroke * 0.5} strokeDasharray={`${m.font * 0.5} ${m.font * 0.35}`} />}
+          <g>
+            {pts.length > 1 && <path d={path(pts)} fill="none" stroke={SELECT} strokeWidth={m.barStroke * 0.5} strokeDasharray={`${m.font * 0.5} ${m.font * 0.35}`} pointerEvents="none" />}
             {pts.map((p, i) => {
               const q = P(p)
-              return <rect key={i} x={q.x - hs / 2} y={q.y - hs / 2} width={hs} height={hs} fill="#fff" stroke={SELECT} strokeWidth={m.barStroke * 0.5} />
+              return (
+                <g key={i}>
+                  <rect x={q.x - hs / 2} y={q.y - hs / 2} width={hs} height={hs} fill="#fff" stroke={SELECT} strokeWidth={m.barStroke * 0.5} pointerEvents="none" />
+                  {editable && (
+                    // Zona de agarre más grande que el cuadro (dedo): arrastrar mueve el vértice.
+                    <circle cx={q.x} cy={q.y} r={m.hit} fill="transparent" aria-label={t('markups.vertex', { n: i + 1 })}
+                      style={{ pointerEvents: 'all', cursor: 'move', touchAction: 'none' }}
+                      onPointerDown={e => {
+                        e.stopPropagation()
+                        try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* puntero ya liberado */ }
+                        setDrag({ id: selected.id, idx: i, points: pts, moved: false })
+                      }}
+                      onPointerMove={e => {
+                        if (!drag || drag.id !== selected.id || drag.idx !== i) return
+                        setDrag({ ...drag, moved: true, points: moveVertex(drag.points, i, unitAt(e), size, selected.kind === 'line') })
+                      }}
+                      onPointerUp={() => {
+                        if (drag && drag.id === selected.id && drag.moved) onEditPoints?.(selected.id, drag.points)
+                        setDrag(null)
+                      }}
+                      onPointerCancel={() => setDrag(null)} />
+                  )}
+                </g>
+              )
             })}
           </g>
         )

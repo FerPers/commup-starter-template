@@ -14475,6 +14475,7 @@ export type Database = {
         }
         Returns: Json
       }
+      system_pid_sheets: { Args: { p_system_id: string }; Returns: Json }
       system_pssr_status: { Args: { p_system_id: string }; Returns: Json }
       system_staffing: {
         Args: { p_level: number; p_system_id: string }

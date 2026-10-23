@@ -9,6 +9,7 @@ import { createMarkup, updateMarkup, deleteMarkup, confirmMarkups } from '@/app/
 import { NO_SYSTEM_COLOR } from '@/lib/systems/colors'
 import { pinStatusColor } from '@/lib/pid/pins'
 import { clampPct, snapOrthogonal, type Pt } from '@/lib/pid/geometry'
+import { ROW_STATE_COLORS, systemFocus, type Box } from '@/lib/pid/view'
 import {
   defaultLimitSides, displayPoints, finishLine, limitBar, markupMetrics, markupSystemIds, nearestLine, type MarkupKind,
 } from '@/lib/pid/markups'
@@ -19,7 +20,7 @@ import PidLegend from './PidLegend'
 import ToolRail from './ToolRail'
 import TagSelector from './TagSelector'
 import { LimitDraftPanel, SelectedMarkupPanel } from './MarkupPanel'
-import type { ApprovedGates, ColorBy, Hotspot, MarkupView, PageInfo, SystemRef, TagItem, Tool } from './types'
+import type { ApprovedGates, ColorBy, Hotspot, MarkupView, PageInfo, SystemRef, SystemStates, TagItem, Tool } from './types'
 
 // P1: el visor se separó en lienzo (PidCanvas), capa de pines (PinLayer), leyenda (PidLegend) y selector de tags.
 // P2 (maqueta aprobada): barra de herramientas a la izquierda (Elegir · Mover · Resaltar línea · Límite · Etiqueta ·
@@ -27,6 +28,10 @@ import type { ApprovedGates, ColorBy, Hotspot, MarkupView, PageInfo, SystemRef, 
 // llegó «por revisar» de la revisión anterior y la marca elegida. Dibujan los editores en escritorio y tableta; en el
 // teléfono el plano solo se ve (el dibujo táctil llega en P3). Las marcas se guardan en unidad 0..1 de la hoja ya
 // rotada, con su tamaño y rotación (`PageInfo`).
+// P3 (maqueta «Tableta»): en tableta un dedo dibuja y dos mueven (PidCanvas), con Deshacer · Cancelar · Terminar
+// grandes abajo; los vértices de la marca elegida se arrastran; la leyenda se pliega. «Por estado» colorea las marcas
+// con el estado de la liberación siguiente de su sistema. `?system=` aísla el sistema y encuadra su hoja;
+// `?place=<tag>` abre «Pin de tag» con ese tag elegido (desde la pestaña Planos de la ficha del sistema).
 
 interface Props {
   signedUrl: string
@@ -35,6 +40,12 @@ interface Props {
   /** Sistemas del proyecto (para elegir a qué sistema pertenece una marca). */
   systems: SystemRef[]
   approvedGates: ApprovedGates
+  /** P3: liberación siguiente de cada sistema del proyecto (color «Por estado»). */
+  systemStates: SystemStates
+  /** `?system=`: sistema a aislar y encuadrar al abrir. */
+  focusSystemId: string | null
+  /** `?place=`: tag a ubicar con «Pin de tag» al abrir (editores). */
+  placeTag: TagItem | null
   projectId: string
   /** N2d: documento P&ID y revisión abierta (pines y marcas son de la revisión). */
   documentId: string
@@ -58,7 +69,8 @@ const floatBtn: React.CSSProperties = {
 const DRAW_TOOLS: Tool[] = ['line', 'limit', 'label']
 
 export default function PidViewer({
-  signedUrl, hotspots: initialHotspots, markups: initialMarkups, systems: systemList, approvedGates, projectId, documentId, revisionId, canEdit,
+  signedUrl, hotspots: initialHotspots, markups: initialMarkups, systems: systemList, approvedGates, systemStates, focusSystemId, placeTag,
+  projectId, documentId, revisionId, canEdit,
 }: Props) {
   const t = useTranslations('PidDocuments')
   const searchParams = useSearchParams()
@@ -85,6 +97,9 @@ export default function PidViewer({
   // Fase 2 / P2: colorear los pines por sistema (por defecto, como la maqueta) o por estado; «Aislar» atenúa el resto.
   const [colorBy, setColorBy] = useState<ColorBy>('system')
   const [isolated, setIsolated] = useState<string | null>(null)
+  const [focus, setFocus] = useState<{ box: Box; key: number } | null>(null)
+  const [focusMissing, setFocusMissing] = useState(false)
+  const [legendOpen, setLegendOpen] = useState(true)
   const [isPending, startTransition] = useTransition()
   const [isTouch, setIsTouch] = useState(false)
   const [wide, setWide] = useState(true)
@@ -116,7 +131,38 @@ export default function PidViewer({
     }
   }, [highlightTagId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // `?system=` / botón «Ver» de la leyenda: hoja con más presencia del sistema y caja a encuadrar.
+  const focusOn = useCallback((systemId: string, onlyPage?: number) => {
+    const items = [
+      ...hotspots.map(h => ({ page: h.page_num, systemIds: h.system ? [h.system.id] : [], points: [{ x: h.x_pct / 100, y: h.y_pct / 100 }] })),
+      ...markups.map(m => ({ page: m.page_num, systemIds: markupSystemIds([m]), points: m.points })),
+    ].filter(it => onlyPage == null || it.page === onlyPage)
+    const f = systemFocus(systemId, items)
+    if (!f) return false
+    setCurrentPage(f.page)
+    setFocus(prev => ({ box: f.box, key: (prev?.key ?? 0) + 1 }))
+    return true
+  }, [hotspots, markups])
+
+  useEffect(() => {
+    if (!focusSystemId) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- encuadre inicial desde el enlace `?system=` (una vez al montar)
+    if (focusOn(focusSystemId)) setIsolated(focusSystemId)
+    else setFocusMissing(true)
+    setActiveSystem(focusSystemId)
+  }, [focusSystemId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const canDraw = canEdit && wide
+
+  // `?place=`: abre «Pin de tag» con el tag elegido (solo quien puede dibujar).
+  // Por id: guardar revalida la página y el tag llega como objeto nuevo; no debe volver a elegir la herramienta.
+  const placeId = placeTag?.id ?? null
+  useEffect(() => {
+    if (!placeTag || !canDraw) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- herramienta inicial desde el enlace `?place=`
+    setTool('pin')
+    setPlacingTag(placeTag)
+  }, [placeId, canDraw]) // eslint-disable-line react-hooks/exhaustive-deps
   const systems = useMemo(() => new Map(systemList.map(s => [s.id, s])), [systemList])
   const size = page ? { w: page.w, h: page.h } : null
 
@@ -396,6 +442,12 @@ export default function PidViewer({
     .filter((s): s is SystemRef => !!s)
     .sort((a, b) => a.code.localeCompare(b.code))
 
+  // «Por estado»: las marcas toman el color de la liberación siguiente de su sistema; los pines, el de su tag.
+  const markupColor = (id: string | null) => {
+    if (!id) return NO_SYSTEM_COLOR
+    if (colorBy === 'status') { const st = systemStates[id]; return st ? ROW_STATE_COLORS[st.state] : NO_SYSTEM_COLOR }
+    return systems.get(id)?.color ?? NO_SYSTEM_COLOR
+  }
   const pinColor = (h: Hotspot) => colorBy === 'system' ? (systems.get(h.system?.id ?? '')?.color ?? h.system?.color ?? NO_SYSTEM_COLOR) : pinStatusColor(h)
   const dimmed = (h: Hotspot) => !!isolated && h.system?.id !== isolated
   const selectedTagData = selectedHotspot ? {
@@ -415,6 +467,8 @@ export default function PidViewer({
       : 'none'
   const needsSystem = DRAW_TOOLS.includes(effectiveTool)
   const hint = redrawOf ? t('markups.hint_redraw') : t(`markups.hint_${effectiveTool}`)
+  const touchDrawing = isTouch && canDraw && DRAW_TOOLS.includes(effectiveTool)
+  const bigBtn: React.CSSProperties = { minWidth: 112, height: 56, padding: '0 16px', borderRadius: 12, fontSize: 16, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)' }
 
   return (
     // Teléfono: el plano arriba y la leyenda abajo (antes la barra lateral dejaba el plano en ~130 px).
@@ -444,7 +498,7 @@ export default function PidViewer({
                 </label>
               )}
               <strong style={{ color: 'var(--text-strong)', fontWeight: 600 }}>{hint}</strong>
-              {effectiveTool === 'line' && draft.length > 0 && (
+              {effectiveTool === 'line' && draft.length > 0 && !isTouch && (
                 <>
                   <button type="button" onClick={finishDraft} disabled={isPending}
                     style={{ minHeight: 30, padding: '0 10px', border: 0, borderRadius: 6, background: 'var(--primary-600)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
@@ -457,6 +511,16 @@ export default function PidViewer({
                 </>
               )}
             </div>
+            {touchDrawing && (
+              <div style={{ pointerEvents: 'none', background: 'var(--text-strong)', color: 'var(--card-bg)', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600 }}>
+                {t('markups.touchHint')}
+              </div>
+            )}
+            {!legendOpen && wide && (
+              <button type="button" onClick={() => setLegendOpen(true)} style={{ ...floatBtn, pointerEvents: 'auto', marginLeft: 'auto', height: 44, fontWeight: 600 }}>
+                {t('markups.legendOpen', { count: sheetSystems.length })}
+              </button>
+            )}
             {error && (
               <div role="alert" style={{ pointerEvents: 'auto', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>
                 {error}
@@ -466,6 +530,7 @@ export default function PidViewer({
         )}
 
         <PidCanvas
+          key={revisionId}
           signedUrl={signedUrl}
           pageNumber={currentPage}
           scale={scale}
@@ -476,6 +541,7 @@ export default function PidViewer({
           onDoublePoint={() => { if (effectiveTool === 'line') finishDraft() }}
           onHover={handleHover}
           onPageInfo={setPage}
+          focus={focus}
         >
           {page && (
             <MarkupLayer
@@ -490,6 +556,9 @@ export default function PidViewer({
               draftColor={systems.get(activeSystem ?? '')?.color ?? NO_SYSTEM_COLOR}
               hover={hover}
               pendingLimit={pendingLimit}
+              colorFor={markupColor}
+              editable={canDraw && effectiveTool === 'select' && !!selectedMarkupId && !selectedMarkupId.startsWith('temp-')}
+              onEditPoints={(id, pts) => patchMarkup(id, { points: pts })}
             />
           )}
           <PinLayer
@@ -518,16 +587,37 @@ export default function PidViewer({
             </div>
           )}
         </div>
+        {/* P3: en tableta, Deshacer · Cancelar · Terminar grandes mientras se dibuja una línea. */}
+        {touchDrawing && effectiveTool === 'line' && (draft.length > 0 || undoStack.length > 0) && (
+          <div style={{ position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 35, display: 'flex', gap: 10, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, boxShadow: '0 10px 30px rgba(13,30,50,.18)' }}>
+            <button type="button" onClick={undo} disabled={isPending} style={bigBtn}>{t('markups.undo')}</button>
+            <button type="button" onClick={resetDrawing} disabled={!draft.length} style={{ ...bigBtn, opacity: draft.length ? 1 : 0.5 }}>{t('viewer.cancel')}</button>
+            <button type="button" onClick={finishDraft} disabled={isPending || draft.length < 2}
+              style={{ ...bigBtn, minWidth: 160, border: 0, fontWeight: 700, background: draft.length >= 2 ? 'var(--primary-700)' : 'var(--gray-200)', color: draft.length >= 2 ? '#ffffff' : 'var(--gray-500)' }}>
+              {t('markups.finishSegment')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Barra derecha: sistemas de la hoja, por revisar, límite por confirmar, marca elegida, pines */}
-      <aside aria-label={t('markups.sidebar')} style={{
+      {(legendOpen || !wide) && <aside aria-label={t('markups.sidebar')} style={{
         ...(wide
           ? { width: 'clamp(240px, 26vw, 330px)', borderLeft: '1px solid var(--border)' }
           : { width: '100%', maxHeight: '38%', borderTop: '1px solid var(--border)' }),
         flexShrink: 0, background: 'var(--card-bg)', display: 'flex', flexDirection: 'column', overflowY: 'auto',
       }}>
-        <PidLegend colorBy={colorBy} onColorBy={setColorBy} systems={sheetSystems} counts={counts} isolated={isolated} onIsolate={setIsolated} />
+        {wide && (
+          <button type="button" onClick={() => setLegendOpen(false)} aria-label={t('markups.legendClose')}
+            style={{ alignSelf: 'flex-end', minWidth: 44, minHeight: 44, margin: '4px 4px -8px 0', border: 0, background: 'transparent', color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer' }}>›</button>
+        )}
+        {focusMissing && focusSystemId && (
+          <p role="status" style={{ margin: '8px 16px 0', fontSize: 12, color: 'var(--text-muted)' }}>
+            {t('markups.focusMissing', { system: systems.get(focusSystemId)?.code ?? '' })}
+          </p>
+        )}
+        <PidLegend colorBy={colorBy} onColorBy={setColorBy} systems={sheetSystems} counts={counts} isolated={isolated} onIsolate={setIsolated}
+          states={systemStates} onFocus={id => { setIsolated(id); focusOn(id, currentPage) }} />
 
         {(markupsToReview.length > 0 || pinsToReview.length > 0) && (
           <div role="status" style={{ margin: '12px 16px 0', padding: 12, borderRadius: 10, background: 'var(--warning-50)', border: '1px solid var(--warning-300)', fontSize: 13, color: 'var(--warning-800)', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -618,7 +708,7 @@ export default function PidViewer({
             </div>
           </div>
         )}
-      </aside>
+      </aside>}
 
       {/* Tag Quick View Modal */}
       {selectedHotspot && selectedTagData && (

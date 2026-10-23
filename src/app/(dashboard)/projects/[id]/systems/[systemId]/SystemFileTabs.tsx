@@ -119,7 +119,7 @@ export function SystemFileShell({ project, system, tab, summary, ownership, perf
             <div style={{ minWidth: 130 }}>
               <div style={kpiLabel}>{t('file.pidCoverage')}</div>
               <div style={kpiValue}>{Math.round(summary.pid.pinned * 100 / summary.pid.total)} %</div>
-              <Link href={`/projects/${project.id}/documents?type=pid`} style={{ ...small, textDecoration: 'none' }}>
+              <Link href={systemTabHref(project.id, system.id, 'drawings')} style={{ ...small, textDecoration: 'none' }}>
                 {t('file.pidCoverageDetail', { pinned: summary.pid.pinned, total: summary.pid.total })}
               </Link>
             </div>

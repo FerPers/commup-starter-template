@@ -1918,7 +1918,16 @@
       "fit": "Fit",
       "prevPage": "Previous sheet",
       "nextPage": "Next sheet",
-      "sheet": "Sheet {page} of {total}"
+      "sheet": "Sheet {page} of {total}",
+      "touchHint": "One finger draws · two fingers pan and zoom",
+      "legendOpen": "Systems ({count})",
+      "legendClose": "Fold the legend",
+      "finishSegment": "Finish run",
+      "focusMissing": "{system} has no pins or limits on this drawing: pick a tool to draw them.",
+      "focus": "View",
+      "focusHint": "Isolate and frame the system on this sheet",
+      "markupStatus": "Markups: next milestone",
+      "vertex": "Vertex {n}: drag to move it"
     }
   },
   "PreservationExecution": {
@@ -3266,7 +3275,8 @@
         "startup": "Start-up",
         "transfer": "Handover",
         "vendors": "Vendors and performance",
-        "data": "System data"
+        "data": "System data",
+        "drawings": "Drawings"
       },
       "planIntro": "Forecast and commitment per milestone (changing a commitment requires a reason; leader+), with the weighted progress of its phase.",
       "noDaily": "No open constraints or actions on this system.",
@@ -3278,6 +3288,45 @@
       "noVendors": "No vendor package covers this system.",
       "performance": "Performance tests",
       "noPerformance": "This system is not the primary system of any performance test."
+    },
+    "drawings": {
+      "kpi": {
+        "sheets": "P&ID sheets",
+        "missing": "{count, plural, one {+# cited without document} other {+# cited without document}}",
+        "pinned": "Tags with pin",
+        "of": "{a} of {b}",
+        "limits": "Limits drawn",
+        "ofSheets": "{a} of {b} sheets",
+        "review": "{count, plural, one {# markup to review} other {# markups to review}}",
+        "deliverable": "Deliverable",
+        "pdfLater": "Limits PDF · coming in P4"
+      },
+      "empty": "No tag of the system cites a P&ID or has a pin, and the system has no limits drawn.",
+      "col": {
+        "sheet": "Sheet",
+        "rev": "Current revision",
+        "tags": "System tags on the sheet",
+        "pinned": "With pin",
+        "limits": "Limits",
+        "open": "Open"
+      },
+      "revLabel": "Rev {rev}",
+      "limits": {
+        "none": "Not drawn",
+        "drawn": "{count, plural, one {Drawn · # markup} other {Drawn · # markups}}",
+        "review": "Drawn · {count} to review"
+      },
+      "openOnSheet": "Open on the sheet",
+      "drawLimits": "Draw limits",
+      "loadDocument": "Load in Documents",
+      "missingRow": "{count, plural, one {Cited by # tag} other {Cited by # tags}} · no document loaded",
+      "unpinned": "System tags without pin ({count})",
+      "unpinnedHint": "They count in coverage and in Data quality",
+      "placeOn": "place on {drawing}",
+      "noDocument": "{drawing} without document",
+      "noDrawing": "no drawing cited",
+      "more": "and {count} more",
+      "missingMore": "{count, plural, one {And # more drawing cited without document} other {And # more drawings cited without document}}: {list}"
     }
   },
   "Registers": {

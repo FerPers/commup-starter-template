@@ -7,16 +7,19 @@ import { getTranslations } from 'next-intl/server'
 import { fetchAllRows } from '@/lib/list/fetch-all'
 import { fromStoredPoints, type MarkupKind } from '@/lib/pid/markups'
 import { normalizeRotation } from '@/lib/pid/geometry'
-import type { ApprovedGates, Hotspot, MarkupView, SystemRef } from './types'
+import { nextGate, rowState } from '@/lib/readiness/matrix'
+import type { MatrixGate } from '@/lib/readiness/gates'
+import type { ApprovedGates, Hotspot, MarkupView, SystemRef, SystemStates, TagItem } from './types'
 
 // N2d: visor de un documento P&ID (doc_type = 'pid'). Abre la revisión vigente o la de `?rev=`; los pines son de esa
 // revisión. Al emitirse una revisión nueva, los de la anterior llegan copiados y «por revisar» hasta confirmarlos.
+// P3: `?system=<id>` abre el plano aislando y encuadrando ese sistema; `?place=<tagId>` abre «Pin de tag» con ese tag.
 export default async function PidViewerPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string; documentId: string }>
-  searchParams: Promise<{ rev?: string }>
+  searchParams: Promise<{ rev?: string; system?: string; place?: string }>
 }) {
   const [{ id, documentId }, sp] = await Promise.all([params, searchParams])
 
@@ -76,7 +79,7 @@ export default async function PidViewerPage({
   // P2: marcas LOSH de la revisión (capa losh; redline llega con F-21), sistemas del proyecto para elegir a cuál
   // pertenece una marca, y liberaciones aprobadas por sistema (editar sus marcas queda registrado).
   // Topes = el de PostgREST (1000): una revisión de un plano no llega a mil marcas, ni un proyecto a mil sistemas.
-  const [{ data: rawMarkups }, { data: projectSystems }, { data: approvals }] = await Promise.all([
+  const [{ data: rawMarkups }, { data: projectSystems }, { data: approvals }, { data: gateRows }, { data: placeRow }] = await Promise.all([
     supabase
       .from('pid_markups')
       .select('id, page_num, kind, system_id, other_system_id, points, page_width, page_height, page_rotation, label, needs_review')
@@ -92,6 +95,13 @@ export default async function PidViewerPage({
       .eq('project_id', id)
       .is('revoked_at', null)
       .limit(1000),
+    // P3: liberación siguiente de cada sistema (estado materializado de gates) para colorear «Por estado».
+    supabase.rpc('compute_project_gates', { p_project_id: id }),
+    sp.place && canEdit
+      ? supabase.from('tags')
+        .select('id, tag_number, description, status, disciplines:discipline_id(id, code, name, color), subsystems:subsystem_id(systems:system_id(id, code, name, color))')
+        .eq('id', sp.place).eq('project_id', id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
   const markups: MarkupView[] = (rawMarkups ?? []).flatMap(m => (m.system_id ? [{
     id: m.id,
@@ -107,6 +117,17 @@ export default async function PidViewerPage({
     needs_review: m.needs_review,
   }] : []))
   const systems: SystemRef[] = projectSystems ?? []
+  const systemStates: SystemStates = {}
+  for (const r of gateRows ?? []) {
+    const gates = (r.gates ?? []) as unknown as MatrixGate[]
+    systemStates[r.system_id] = { state: rowState(gates), gate: nextGate(gates)?.code ?? null }
+  }
+  const focusSystemId = sp.system && systems.some(s => s.id === sp.system) ? sp.system : null
+  const placeTag: TagItem | null = placeRow ? {
+    id: placeRow.id, tag_number: placeRow.tag_number, description: placeRow.description ?? '', status: placeRow.status,
+    discipline: (placeRow.disciplines as TagItem['discipline'] | null) ?? { id: '', code: '??', name: '', color: '#94a3b8' },
+    system: (placeRow.subsystems as { systems: TagItem['system'] } | null)?.systems ?? null,
+  } : null
   const approvedGates: ApprovedGates = {}
   for (const a of [...(approvals ?? [])].sort((x, y) => (x.readiness_gates?.order_index ?? 0) - (y.readiness_gates?.order_index ?? 0))) {
     const code = a.readiness_gates?.code
@@ -227,7 +248,7 @@ export default async function PidViewerPage({
           {revs.filter(r => r.file_path).map(r => {
             const on = r.id === revision.id
             return (
-              <Link key={r.id} href={`/projects/${id}/documents/${documentId}/viewer?rev=${r.id}`} aria-current={on ? 'page' : undefined}
+              <Link key={r.id} href={`/projects/${id}/documents/${documentId}/viewer?rev=${r.id}${focusSystemId ? `&system=${focusSystemId}` : ''}`} aria-current={on ? 'page' : undefined}
                 style={{ padding: '3px 9px', borderRadius: 999, fontSize: 12, fontWeight: 700, textDecoration: 'none',
                   border: `1px solid ${on ? 'var(--text-strong)' : 'var(--border)'}`, background: on ? 'var(--text-strong)' : 'transparent', color: on ? 'var(--card-bg)' : 'var(--text-muted)' }}>
                 {t('rev', { rev: r.rev })}{r.id === doc.current_revision_id ? ` · ${t('current')}` : ''}
@@ -250,6 +271,9 @@ export default async function PidViewerPage({
         markups={markups}
         systems={systems}
         approvedGates={approvedGates}
+        systemStates={systemStates}
+        focusSystemId={focusSystemId}
+        placeTag={placeTag}
         projectId={id}
         documentId={documentId}
         revisionId={revision.id}

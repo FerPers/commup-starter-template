@@ -13,6 +13,7 @@ import type { BatteryLimits, DependencyKind, SystemType } from '@/lib/systems/de
 import SystemDetailView, { type DependencyRow, type BoundaryEvent } from './SystemDetailView'
 import SystemGatesView from './SystemGatesView'
 import type { GatePlanEvent } from './GatePlanPanel'
+import SystemDrawingsTab, { type SystemPidSheets } from './SystemDrawingsTab'
 import {
   SystemFileShell, SystemPlanTab, SystemStartupTab, SystemTransferTab, SystemVendorsTab,
   type SystemPerformance, type SystemVendor,
@@ -184,6 +185,10 @@ export default async function SystemFilePage({ params, searchParams }: {
     content = <SystemTransferTab project={projectRef} ownership={ownershipState} transfers={transfers ?? []} />
   } else if (tab === 'vendors') {
     content = <SystemVendorsTab project={projectRef} performance={performance} vendors={vendors} />
+  } else if (tab === 'drawings') {
+    const { data: sheets, error } = await supabase.rpc('system_pid_sheets', { p_system_id: systemId })
+    if (error) throw new Error(error.message)
+    content = <SystemDrawingsTab projectId={project.id} systemId={system.id} data={sheets as unknown as SystemPidSheets} canEdit={canEdit} />
   } else {
     // Datos del sistema y Dependencias: la ficha de Sistemas (fase 2), sin su encabezado.
     const [subs, tags, { data: projectSystems }, { data: orgGates }, { data: frozenBy }, { data: events }] = await Promise.all([
