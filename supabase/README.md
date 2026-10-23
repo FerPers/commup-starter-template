@@ -38,7 +38,7 @@ Baseline + migrations rebuild prod's `public` schema exactly: verified on an emp
 
 - Three migrations applied in prod without a file were recovered from `supabase_migrations.schema_migrations.statements` (`20260909252000`, `20260909253000`, `20260910110000`); the rest of the manual changes live in `20261204120000_catchup_prod_drift.sql`; `00000000000001_platform_extensions.sql` enables `pg_cron` and `pg_net` (a new project lacks them).
 - What `supabase db push` (CLI 2.90) cannot run: psql metacommands (`\restrict`) and `CREATE SCHEMA public` without IF NOT EXISTS in the baseline; `CREATE INDEX CONCURRENTLY` (each migration goes in one pipeline); and an unquoted name ending in `_atomic` (`sign_itr_atomic`, …) in `CREATE FUNCTION`/`GRANT`/`REVOKE`, which its statement splitter mistakes for `BEGIN ATOMIC` — write `public."sign_itr_atomic"(…)` there.
-- Prod's migration registry still has the MCP timestamps (~89 rows that do not match the file names); repairing it is pending.
+- Prod's migration registry was repaired the same day (158 → 104 rows, one per file: pre-baseline history deleted, MCP timestamps renamed to the file's version, unregistered files registered). `supabase migration list` must show Local = Remote; any row out of line is drift again.
 
 ## Applying to a fresh environment
 
