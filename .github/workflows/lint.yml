@@ -59,8 +59,7 @@ jobs:
           TEST_PROJECT_A_ID: ${{ secrets.TEST_PROJECT_A_ID }}
 
   # G-17 (2026-10-23): recorridos de campo con Playwright contra un Supabase LOCAL del runner (baseline +
-  # migraciones + supabase/seed/e2e.sql); nada toca prod. Por ahora no bloquea el deploy: se suma a `needs`
-  # cuando lleve varias corridas estables.
+  # migraciones + supabase/seed/e2e.sql); nada toca prod. Bloquea el deploy (decisión de Luis 2026-10-23).
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
@@ -90,11 +89,11 @@ jobs:
             test-results/
           retention-days: 7
 
-  # G-01 (2026-10-19): el deploy vive aquí y espera a los tres checks. Antes estaba en deploy.yml,
+  # G-01 (2026-10-19): el deploy vive aquí y espera a los checks (G-17: también al E2E). Antes estaba en deploy.yml,
   # independiente, y 18 pushes con la CI roja llegaron igual a producción.
   deploy:
     name: Deploy to Cloudflare Workers
-    needs: [typecheck, lint, test]
+    needs: [typecheck, lint, test, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency:
